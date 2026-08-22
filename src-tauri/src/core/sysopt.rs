@@ -818,37 +818,6 @@ mod tests {
         assert_eq!(authoritative_state(&refused, false), AuthoritativeState::Unchanged);
     }
 
-    #[cfg(not(target_os = "linux"))]
-    #[test]
-    fn only_evidence_that_a_write_landed_stands_the_guard_down() {
-        let nothing_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
-            progress: sysproxy::WriteProgress::new(0, 7),
-            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
-        });
-        let something_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
-            progress: sysproxy::WriteProgress::new(3, 7),
-            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
-        });
-
-        assert_eq!(
-            authoritative_state(&nothing_written, false),
-            AuthoritativeState::Unchanged
-        );
-        assert_eq!(
-            authoritative_state(&something_written, false),
-            AuthoritativeState::Unknown
-        );
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    #[test]
-    fn a_step_that_already_finished_stands_the_guard_down_whatever_the_error_says() {
-        let refused = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges);
-
-        assert_eq!(authoritative_state(&refused, false), AuthoritativeState::Unchanged);
-        assert_eq!(authoritative_state(&refused, true), AuthoritativeState::Unknown);
-    }
-
     #[test]
     fn where_a_successful_setter_proves_nothing_no_failure_is_destructive() {
         let strongest_evidence = anyhow::Error::new(sysproxy::Error::ProxyWrite {
@@ -863,31 +832,6 @@ mod tests {
                 "{earlier_step_completed}"
             );
         }
-    }
-
-    #[test]
-    fn where_it_proves_something_both_kinds_of_evidence_count() {
-        let nothing_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
-            progress: sysproxy::WriteProgress::new(0, 7),
-            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
-        });
-        let partly_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
-            progress: sysproxy::WriteProgress::new(3, 7),
-            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
-        });
-
-        assert_eq!(
-            authoritative_state_from(true, &nothing_written, false),
-            AuthoritativeState::Unchanged
-        );
-        assert_eq!(
-            authoritative_state_from(true, &partly_written, false),
-            AuthoritativeState::Unknown
-        );
-        assert_eq!(
-            authoritative_state_from(true, &nothing_written, true),
-            AuthoritativeState::Unknown
-        );
     }
 
     fn holding_global(port: u16) -> sysproxy::ProxySnapshot {

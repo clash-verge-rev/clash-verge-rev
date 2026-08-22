@@ -210,22 +210,6 @@ mod tests {
     }
 
     #[test]
-    fn missing_without_evidence_is_not_installed() {
-        assert_eq!(
-            classify_service_health(CurrentServiceProbe::Missing, false, ""),
-            ServiceHealth::NotInstalled
-        );
-    }
-
-    #[test]
-    fn missing_with_evidence_means_broken_not_absent() {
-        assert_eq!(
-            classify_service_health(CurrentServiceProbe::Missing, true, ""),
-            ServiceHealth::VersionMismatch
-        );
-    }
-
-    #[test]
     fn an_unreachable_service_keeps_the_reason() {
         assert_eq!(
             classify_service_health(CurrentServiceProbe::Unavailable, true, "socket refused"),

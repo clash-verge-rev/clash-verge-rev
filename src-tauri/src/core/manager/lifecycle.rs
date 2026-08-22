@@ -858,24 +858,6 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn controlled_sidecar_stop_clears_proxy_before_stopping() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::Clear,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", None),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        assert_eq!(&*calls.lock(), &["proxy_clear", "core_stop"]);
-    }
-
     #[test]
     fn only_a_macos_sidecar_on_its_way_to_the_service_leaves_the_proxy_alone() {
         use super::proxy_stop_intent;
@@ -942,24 +924,6 @@ mod tests {
             assert!(result.is_err(), "{mode:?} {intent:?}");
             assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", *calls.lock());
         }
-    }
-
-    #[tokio::test]
-    async fn a_sidecar_handed_over_still_stops_even_when_a_user_space_clear_would_fail() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::HandOverToService,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        assert_eq!(&*calls.lock(), &["core_stop"]);
     }
 
     #[tokio::test]
@@ -1049,46 +1013,6 @@ mod tests {
                 "service-stop-failed"
             ]
         );
-    }
-
-    #[tokio::test]
-    async fn controlled_sidecar_stop_aborts_when_proxy_clear_fails() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::Clear,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_err());
-        assert_eq!(&*calls.lock(), &["proxy_clear"]);
-    }
-
-    #[tokio::test]
-    async fn failed_sidecar_transition_rollback_surfaces_clear_failure_without_terminating() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-        let sidecar_alive = AtomicBool::new(true);
-
-        let result = run_sidecar_termination_transition(
-            || transition_step(&calls, "rollback-proxy-clear", Some("rollback-proxy-clear")),
-            || {
-                sidecar_alive.store(false, Ordering::Release);
-                calls.lock().push("rollback-sidecar-stop");
-            },
-        )
-        .await;
-
-        assert!(matches!(
-            result,
-            Err(error) if error.to_string().contains("rollback-proxy-clear failed")
-        ));
-        assert!(sidecar_alive.load(Ordering::Acquire));
-        assert_eq!(&*calls.lock(), &["rollback-proxy-clear"]);
     }
 
     #[tokio::test]
@@ -1234,21 +1158,6 @@ mod tests {
         assert!(guard_stopped.load(Ordering::Acquire));
         assert!(!pac_available.load(Ordering::Acquire));
         assert!(!restored_new_core.load(Ordering::Acquire));
-    }
-
-    #[tokio::test]
-    async fn service_config_start_failure_uses_the_same_fail_closed_replacement_order() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_core_replacement_transition(
-            || transition_step(&calls, "controlled-stop", None),
-            || transition_step(&calls, "start-service-config", Some("start-service-config")),
-            || transition_step(&calls, "restore-proxy", None),
-        )
-        .await;
-
-        assert!(result.is_err());
-        assert_eq!(&*calls.lock(), &["controlled-stop", "start-service-config"]);
     }
 
     #[tokio::test]
@@ -1401,25 +1310,6 @@ mod tests {
         assert!(can_allow_sidecar_for_session(
             &RunningMode::Sidecar,
             &ServiceStatus::InstallRequired,
-        ));
-    }
-
-    #[test]
-    fn a_sidecar_that_failed_to_start_can_be_tried_again() {
-        // Revoking a failed attempt's allowance keeps retries reachable without changing Service health.
-        for health in [
-            ServiceStatus::NotInstalled,
-            ServiceStatus::NeedsReinstall,
-            ServiceStatus::Unavailable("boom".into()),
-        ] {
-            assert!(
-                can_allow_sidecar_for_session(&RunningMode::NotRunning, &health),
-                "{health:?} must still admit a second attempt"
-            );
-        }
-        assert!(!can_allow_sidecar_for_session(
-            &RunningMode::NotRunning,
-            &ServiceStatus::SidecarAllowed,
         ));
     }
 

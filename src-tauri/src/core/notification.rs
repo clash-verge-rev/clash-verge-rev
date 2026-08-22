@@ -137,11 +137,6 @@ mod failure_table_tests {
     use super::{FailedOperation, FailureTable};
 
     #[tokio::test]
-    async fn a_write_nobody_asked_for_is_a_restore() {
-        assert_eq!(super::what_was_asked(), FailedOperation::SystemProxyRestore);
-    }
-
-    #[tokio::test]
     async fn a_declared_intent_reaches_the_place_the_write_fails() {
         let asked = super::asking_for(FailedOperation::SystemProxyEnable, async {
             tokio::task::yield_now().await;

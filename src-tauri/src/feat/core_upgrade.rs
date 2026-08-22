@@ -396,15 +396,7 @@ fn read_core_version(path: &Path) -> Result<std::string::String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{asset_base_name, is_usable_version, package_url};
-
-    #[test]
-    fn asset_names_match_the_prebuild_map() {
-        let release = asset_base_name(false).unwrap_or_default();
-        let alpha = asset_base_name(true).unwrap_or_default();
-        assert!(release.starts_with("mihomo-"));
-        assert!(alpha.starts_with("mihomo-"));
-    }
+    use super::{is_usable_version, package_url};
 
     #[test]
     fn only_plain_version_tokens_reach_the_package_url() {

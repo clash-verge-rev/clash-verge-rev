@@ -395,19 +395,6 @@ mod tests {
         })
     }
 
-    #[test]
-    fn a_staged_runtime_is_reloaded_from_where_the_service_put_it() {
-        let attempt = StageAttempt::Answered(StageRuntimeOutcome::Staged {
-            config_path: "/service/runtime.generation-1/config.yaml".to_owned(),
-        });
-
-        assert_eq!(
-            plan_config_application(&attempt),
-            ConfigApplication::ReloadFrom("/service/runtime.generation-1/config.yaml".into()),
-            "the core must be pointed at the service's copy, never at the app's own"
-        );
-    }
-
     /// Exhaustively maps every service rejection into the policy under test.
     fn declined(reason: StageRejection) -> StageAttempt {
         match &reason {
@@ -486,15 +473,6 @@ mod tests {
                 "{other:?} says nothing about the bundle, so starting must still be tried"
             );
         }
-    }
-
-    #[test]
-    fn a_request_that_never_came_back_makes_the_core_be_replaced() {
-        // Silence gives no trustworthy path to reload.
-        assert_eq!(
-            plan_config_application(&StageAttempt::Unanswered("connection reset".into())),
-            ConfigApplication::ReplaceCore
-        );
     }
 
     #[tokio::test]

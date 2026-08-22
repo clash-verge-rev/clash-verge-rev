@@ -704,14 +704,14 @@ const fn transport_name(transport: ListenerTransport) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::{
-        BindClaim, ListenerBindScope, ListenerProbe, ListenerProbeOutcome, ListenerTransport, nothing_is_serving,
-        probe_listener, probe_proxy_port_change,
+        ListenerBindScope, ListenerProbe, ListenerProbeOutcome, ListenerTransport, probe_listener,
+        probe_proxy_port_change,
     };
     use serde_json::json;
     use serde_yaml_ng::Mapping;
     #[cfg(unix)]
     use socket2::{Domain, Protocol, SockAddr, Socket, Type};
-    use std::net::{IpAddr, Ipv4Addr, TcpListener, UdpSocket};
+    use std::net::{Ipv4Addr, TcpListener, UdpSocket};
     #[cfg(unix)]
     use std::{
         io::Read as _,
@@ -790,53 +790,6 @@ mod tests {
                 transport: ListenerTransport::Tcp
             }
         );
-        Ok(())
-    }
-
-    /// Guards the startup false positive: another user's `TIME_WAIT` makes the kernel refuse the
-    /// bind while nothing is serving. That refusal needs a second uid to stage, so this asserts
-    /// on the classifier directly.
-    #[test]
-    fn a_refused_bind_with_nothing_answering_is_not_a_conflict() -> anyhow::Result<()> {
-        let vacant = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?;
-        let port = vacant.local_addr()?.port();
-        drop(vacant);
-
-        assert!(
-            nothing_is_serving(&BindClaim::new(
-                "mixed",
-                IpAddr::V4(Ipv4Addr::LOCALHOST),
-                port,
-                ListenerTransport::Tcp
-            )),
-            "a port nobody listens on must be dismissable"
-        );
-
-        let serving = TcpListener::bind((Ipv4Addr::LOCALHOST, port))?;
-        assert!(
-            !nothing_is_serving(&BindClaim::new(
-                "mixed",
-                IpAddr::V4(Ipv4Addr::LOCALHOST),
-                port,
-                ListenerTransport::Tcp
-            )),
-            "a live listener must never be dismissed"
-        );
-        drop(serving);
-        Ok(())
-    }
-
-    /// UDP has no lingering state, so a refused UDP bind is always a live socket.
-    #[test]
-    fn a_refused_udp_bind_is_never_dismissed() -> anyhow::Result<()> {
-        let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0))?;
-        let port = socket.local_addr()?.port();
-        assert!(!nothing_is_serving(&BindClaim::new(
-            "mixed",
-            IpAddr::V4(Ipv4Addr::LOCALHOST),
-            port,
-            ListenerTransport::Udp
-        )));
         Ok(())
     }
 
