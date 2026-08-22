@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "Configuración de DNS",
-        "fallbackFilter": "Configuración de filtrado de respaldo",
         "hosts": "Configuración de hosts"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "Servidor DNS",
           "description": "Lista de servidores DNS, separados por comas"
         },
-        "fallback": {
-          "label": "Servidor de respaldo",
-          "description": "Lista de servidores DNS de respaldo, separados por comas"
-        },
         "proxy": {
           "label": "DNS del servidor proxy",
           "description": "Servidor de resolución de nombres de dominio del nodo de proxy, separados por comas"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "Política de servidores DNS",
           "description": "Servidor DNS específico de dominio, múltiples servidores separados por punto y coma, formato: dominio=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "Filtrado GeoIP",
-          "description": "Habilitar el filtrado GeoIP de respaldo"
-        },
-        "geoipCode": "Código de país GeoIP",
-        "fallbackIpCidr": {
-          "label": "IP CIDR de respaldo",
-          "description": "IP CIDR que no utilizan servidores de respaldo, separados por comas"
-        },
-        "fallbackDomain": {
-          "label": "Dominio de respaldo",
-          "description": "Dominios que utilizan servidores de respaldo, separados por comas"
         },
         "hosts": {
           "label": "Hosts",

@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS Settings",
-        "fallbackFilter": "Fallback Filter Settings",
         "hosts": "Hosts Settings"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "Nameserver",
           "description": "List of DNS servers, comma separated"
         },
-        "fallback": {
-          "label": "Fallback",
-          "description": "List of fallback DNS servers, comma separated"
-        },
         "proxy": {
           "label": "Proxy Server Nameserver",
           "description": "DNS servers for proxy node domain resolution"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "Nameserver Policy",
           "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP Filtering",
-          "description": "Enable GeoIP filtering for fallback"
-        },
-        "geoipCode": "GeoIP Code",
-        "fallbackIpCidr": {
-          "label": "Fallback IP CIDR",
-          "description": "IP CIDRs not using fallback servers, comma separated"
-        },
-        "fallbackDomain": {
-          "label": "Fallback Domain",
-          "description": "Domains using fallback servers, comma separated"
         },
         "hosts": {
           "label": "Hosts",
