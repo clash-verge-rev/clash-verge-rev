@@ -250,7 +250,7 @@ const PersistentProxySelect = ({
   const anchorRef = useRef<HTMLDivElement>(null)
   const listboxId = 'current-proxy-node-listbox'
   const labelId = 'proxy-select-label'
-  const selectedNameIsFixed = selectedName === fixed
+  const fixedProxyInUsed = selectedName === fixed
 
   useEffect(() => {
     if (!open) return
@@ -304,7 +304,7 @@ const PersistentProxySelect = ({
                   label={delayManager.formatDelay(selectedDelay)}
                   color={convertDelayColor(selectedDelay)}
                 />
-                {selectedNameIsFixed && (
+                {fixedProxyInUsed && (
                   <span
                     style={{
                       position: 'absolute',
@@ -379,7 +379,7 @@ const PersistentProxySelect = ({
                           fontSize: '12px',
                           top: '-5px',
                           right: '5px',
-                          ...(!selectedNameIsFixed && {
+                          ...(!fixedProxyInUsed && {
                             filter: 'grayscale(1)',
                           }),
                         }}
