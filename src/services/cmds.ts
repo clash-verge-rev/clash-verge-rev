@@ -243,6 +243,10 @@ export async function openLogsDir() {
 
 export const openWebUrl = async (url: string) => {
   try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:' || !parsed.host) {
+      throw new Error('Only HTTPS protocol is allowed')
+    }
     await invoke('open_web_url', { url })
   } catch (err: any) {
     showNotice.error(err)

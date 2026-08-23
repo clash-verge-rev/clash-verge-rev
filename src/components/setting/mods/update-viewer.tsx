@@ -1,5 +1,4 @@
 import { alpha, Box, Button, LinearProgress } from '@mui/material'
-import { open as openUrl } from '@tauri-apps/plugin-shell'
 import type { DownloadEvent } from '@tauri-apps/plugin-updater'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
@@ -14,9 +13,9 @@ import {
 import { useTranslation } from 'react-i18next'
 import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, type DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
-import { restartApp } from '@/services/cmds'
+import { openWebUrl, restartApp } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -276,7 +275,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
             size="small"
             sx={{ whiteSpace: 'nowrap' }}
             onClick={() => {
-              openUrl(
+              openWebUrl(
                 `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`,
               )
             }}

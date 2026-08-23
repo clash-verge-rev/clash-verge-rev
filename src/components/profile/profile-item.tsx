@@ -18,7 +18,6 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
-import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import {
@@ -38,6 +37,7 @@ import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
 import { useEditorDocument } from '@/hooks/use-editor-document'
 import {
   getNextUpdateTime,
+  openWebUrl,
   readProfileFile,
   saveProfileFile,
   updateProfile,
@@ -316,7 +316,9 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const onOpenHome = () => {
     setAnchorEl(null)
-    open(itemData.home ?? '')
+    if (itemData.home) {
+      openWebUrl(itemData.home)
+    }
   }
 
   const onEditInfo = () => {

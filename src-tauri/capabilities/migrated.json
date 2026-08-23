@@ -64,7 +64,6 @@
     "core:window:allow-set-minimizable",
     "core:webview:allow-print",
     "shell:allow-execute",
-    "shell:allow-open",
     "shell:allow-kill",
     "shell:allow-spawn",
     "shell:allow-stdin-write",

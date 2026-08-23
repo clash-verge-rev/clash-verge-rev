@@ -25,7 +25,11 @@ pub async fn open_logs_dir() -> CmdResult<()> {
 
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {
-    open::that(url.as_str()).stringify_err()
+    let parsed_url = reqwest::Url::parse(url.as_str()).map_err(|e| format!("invalid url: {e}"))?;
+    if parsed_url.scheme() != "https" || !parsed_url.has_host() {
+        anyhow::bail!("only https protocol is allowed");
+    }
+    open::that(parsed_url.as_str()).stringify_err()
 }
 
 #[tauri::command]

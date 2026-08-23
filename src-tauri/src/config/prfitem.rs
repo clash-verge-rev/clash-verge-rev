@@ -339,7 +339,10 @@ impl PrfItem {
         let home = match header.get("profile-web-page-url") {
             Some(value) => {
                 let str_value = value.to_str().unwrap_or("");
-                Some(str_value.into())
+                match reqwest::Url::parse(str_value) {
+                    Ok(parsed_url) if parsed_url.scheme() == "https" && parsed_url.has_host() => Some(str_value.into()),
+                    _ => None,
+                }
             }
             None => None,
         };
