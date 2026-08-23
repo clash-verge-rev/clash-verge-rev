@@ -1,9 +1,11 @@
 import {
   closestCenter,
+  type CollisionDetection,
   DndContext,
   type DragEndEvent,
   DragOverlay,
   KeyboardSensor,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
@@ -76,6 +78,11 @@ import { debugLog } from '@/utils/debug'
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
 const PROFILE_UPDATE_WORKER_LIMIT = 8
 const PROFILE_SWITCH_LOADING_DELAY = 400
+
+const profileCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args)
+  return pointerCollisions.length > 0 ? pointerCollisions : closestCenter(args)
+}
 
 // Equivalent to rectSortingStrategy without copying the full rect array for every item.
 const profileRectSortingStrategy: SortingStrategy = ({
@@ -928,7 +935,7 @@ const ProfilePage = () => {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={profileCollisionDetection}
         onDragEnd={onDragEnd}
       >
         <Box
