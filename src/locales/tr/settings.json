@@ -661,7 +661,8 @@
         "directFallback": "Sistem vekil sunucusu ayarlanamadı; trafik doğrudan bağlantıya geri döndürüldü.",
         "guardStopped": "Sistem vekil sunucusu koruması art arda birkaç başarısızlıktan sonra durdu. Sistem vekil sunucusu artık otomatik olarak korunmuyor.",
         "sidecarWhileServiceReady": "Sistem vekil sunucusu ayarlanamadı: Clash Verge hizmeti hazır ancak çekirdek hâlâ Sidecar olarak çalışıyor. Hizmet moduna geçmek için çekirdeği yeniden başlatın.",
-        "coreNotReady": "Çekirdek çalışmadığı için sistem vekil sunucusu etkinleştirilemedi. Çekirdeği başlatın (veya Clash Verge hizmetini kurun/onarın) ve yeniden deneyin."
+        "coreNotReady": "Çekirdek çalışmadığı için sistem vekil sunucusu etkinleştirilemedi. Çekirdeği başlatın (veya Clash Verge hizmetini kurun/onarın) ve yeniden deneyin.",
+        "systemCallFailed": "Bir Windows sistem çağrısı başarısız olduğu için sistem vekil sunucusu yazılamadı. Bu genellikle geçicidir, yeniden deneyin."
       }
     },
     "notifications": {

@@ -780,6 +780,7 @@ export const translationKeys = [
   'settings.feedback.errors.sysproxy.guardStopped',
   'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
   'settings.feedback.errors.sysproxy.coreNotReady',
+  'settings.feedback.errors.sysproxy.systemCallFailed',
   'settings.feedback.notifications.clash.restartSuccess',
   'settings.feedback.notifications.clash.versionUpdated',
   'settings.feedback.notifications.clash.alreadyLatestVersion',

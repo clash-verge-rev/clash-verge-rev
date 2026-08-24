@@ -661,7 +661,8 @@
         "directFallback": "No se pudo establecer el proxy del sistema; el tráfico volvió a una conexión directa.",
         "guardStopped": "El guardián del proxy del sistema se detuvo tras varios fallos seguidos. El proxy del sistema ya no se mantiene automáticamente.",
         "sidecarWhileServiceReady": "No se pudo establecer el proxy del sistema: el servicio de Clash Verge está listo, pero el núcleo sigue ejecutándose como Sidecar. Reinicie el núcleo para cambiar al modo de servicio.",
-        "coreNotReady": "No se pudo activar el proxy del sistema porque el núcleo no está en ejecución. Inicie el núcleo (o instale/repare el servicio de Clash Verge) e inténtelo de nuevo."
+        "coreNotReady": "No se pudo activar el proxy del sistema porque el núcleo no está en ejecución. Inicie el núcleo (o instale/repare el servicio de Clash Verge) e inténtelo de nuevo.",
+        "systemCallFailed": "No se pudo escribir el proxy del sistema porque falló una llamada al sistema de Windows. Suele ser transitorio; inténtelo de nuevo."
       }
     },
     "notifications": {

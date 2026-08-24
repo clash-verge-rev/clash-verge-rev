@@ -89,6 +89,8 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
     'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
   SYSPROXY_PRIVILEGE_REQUIRED:
     'settings.feedback.errors.sysproxy.privilegeRequired',
+  SYSPROXY_SYSTEM_CALL_FAILED:
+    'settings.feedback.errors.sysproxy.systemCallFailed',
 }
 
 let nextId = 0

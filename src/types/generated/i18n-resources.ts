@@ -817,6 +817,7 @@ export interface TranslationResources {
             guardStopped: string
             privilegeRequired: string
             sidecarWhileServiceReady: string
+            systemCallFailed: string
           }
         }
         notifications: {

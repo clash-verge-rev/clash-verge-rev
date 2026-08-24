@@ -25,6 +25,9 @@ use std::{
 };
 use tokio::{sync::Mutex, time::timeout};
 
+const CLEAR_ATTEMPTS: u32 = 3;
+const CLEAR_RETRY_DELAY: Duration = Duration::from_millis(100);
+
 /// Actionable system-proxy failure attached to an `anyhow` chain.
 ///
 /// Classification remains downcastable while the original error stays available for diagnostics.
@@ -40,6 +43,8 @@ pub enum SysproxyFailure {
     GuardStopped { detail: String },
     /// The Core was not ready, so enabling the system proxy was refused.
     CoreNotReady,
+    /// A Windows system call refused the write, usually a transient RPC hiccup.
+    SystemCallFailed,
 }
 
 impl SysproxyFailure {
@@ -51,6 +56,7 @@ impl SysproxyFailure {
             Self::SidecarWhileServiceReady => "SYSPROXY_SIDECAR_WHILE_SERVICE_READY",
             Self::GuardStopped { .. } => "SYSPROXY_GUARD_STOPPED",
             Self::CoreNotReady => "SYSPROXY_CORE_NOT_READY",
+            Self::SystemCallFailed => "SYSPROXY_SYSTEM_CALL_FAILED",
         }
     }
 
@@ -74,6 +80,7 @@ impl std::fmt::Display for SysproxyFailure {
                 write!(f, "system proxy guard stopped after repeated failures: {detail}")
             }
             Self::CoreNotReady => f.write_str("the core is not ready, so the system proxy was not enabled"),
+            Self::SystemCallFailed => f.write_str("a Windows system call failed while writing the system proxy"),
         }
     }
 }
@@ -121,10 +128,28 @@ pub fn rollback_failure(caused_by: anyhow::Error, rollback: anyhow::Error) -> an
 }
 
 fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
-    if !was_refused_locally(&error) {
-        return error;
+    if was_refused_locally(&error) {
+        return error.context(SysproxyFailure::PrivilegeRequired);
     }
-    error.context(SysproxyFailure::PrivilegeRequired)
+    if was_a_failed_system_call(&error) {
+        return error.context(SysproxyFailure::SystemCallFailed);
+    }
+    error
+}
+
+#[cfg(target_os = "windows")]
+fn was_a_failed_system_call(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| {
+        matches!(
+            cause.downcast_ref::<sysproxy::Error>(),
+            Some(sysproxy::Error::SystemCall(_))
+        )
+    })
+}
+
+#[cfg(not(target_os = "windows"))]
+const fn was_a_failed_system_call(_error: &anyhow::Error) -> bool {
+    false
 }
 
 fn was_refused_locally(error: &anyhow::Error) -> bool {
@@ -447,7 +472,7 @@ pub async fn apply() -> Result<()> {
 }
 
 pub async fn clear() -> Result<()> {
-    let result = clear_inner().await;
+    let result = clear_with_retry().await;
     // Clear failures must be filed even when a restart aborts before apply.
     settle_table(
         clear_table_effect(&result),
@@ -457,6 +482,29 @@ pub async fn clear() -> Result<()> {
         },
     );
     result
+}
+
+/// A failed system call is usually a transient RPC hiccup, so give it a few tries.
+async fn clear_with_retry() -> Result<()> {
+    for _ in 1..CLEAR_ATTEMPTS {
+        match clear_inner().await {
+            Err(error)
+                if matches!(
+                    SysproxyFailure::from_chain(&error),
+                    Some(SysproxyFailure::SystemCallFailed)
+                ) =>
+            {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "clearing the system proxy failed; retrying: {error:#}"
+                );
+                tokio::time::sleep(CLEAR_RETRY_DELAY).await;
+            }
+            other => return other,
+        }
+    }
+    clear_inner().await
 }
 
 async fn clear_inner() -> Result<()> {

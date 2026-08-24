@@ -661,7 +661,8 @@
         "directFallback": "系統代理設定失敗，已回退為直連。",
         "guardStopped": "系統代理守衛連續多次失敗後已停止，系統代理不再被自動維持。",
         "sidecarWhileServiceReady": "系統代理設定失敗：Clash Verge 服務已就緒，但內核仍以 Sidecar 執行。重新啟動內核即可切換到服務模式。",
-        "coreNotReady": "無法開啟系統代理：內核尚未執行。請先啟動內核（或安裝/修復 Clash Verge 服務）後重試。"
+        "coreNotReady": "無法開啟系統代理：內核尚未執行。請先啟動內核（或安裝/修復 Clash Verge 服務）後重試。",
+        "systemCallFailed": "系統代理寫入失敗：Windows 系統呼叫未成功，通常是瞬時故障。請稍後重試。"
       }
     },
     "notifications": {
