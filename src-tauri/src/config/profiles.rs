@@ -200,26 +200,18 @@ impl IProfiles {
     }
 
     async fn reorder(&mut self, active_id: &str, over_id: &str) -> Result<()> {
-        let mut items = self.items.take().unwrap_or_default();
-        let mut old_index = None;
-        let mut new_index = None;
-
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid.as_deref() == Some(active_id) {
-                old_index = Some(i);
-            }
-            if items[i].uid.as_deref() == Some(over_id) {
-                new_index = Some(i);
-            }
+        {
+            let Some(items) = self.items.as_mut() else {
+                return Ok(());
+            };
+            let old_index = items.iter().rposition(|item| item.uid.as_deref() == Some(active_id));
+            let new_index = items.iter().rposition(|item| item.uid.as_deref() == Some(over_id));
+            let (Some(old_idx), Some(new_idx)) = (old_index, new_index) else {
+                return Ok(());
+            };
+            let item = items.remove(old_idx);
+            items.insert(new_idx, item);
         }
-
-        let (old_idx, new_idx) = match (old_index, new_index) {
-            (Some(old), Some(new)) => (old, new),
-            _ => return Ok(()),
-        };
-        let item = items.remove(old_idx);
-        items.insert(new_idx, item);
-        self.items = Some(items);
         self.save_file().await
     }
 
@@ -1221,6 +1213,43 @@ mod tests {
             }),
             ..PrfItem::default()
         }
+    }
+
+    #[tokio::test]
+    async fn missing_reorder_ids_preserve_ordered_items() -> Result<()> {
+        let mut profiles = IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![
+                PrfItem {
+                    uid: Some("a".into()),
+                    ..PrfItem::default()
+                },
+                PrfItem {
+                    uid: Some("b".into()),
+                    ..PrfItem::default()
+                },
+                PrfItem {
+                    uid: Some("c".into()),
+                    ..PrfItem::default()
+                },
+            ]),
+        };
+        let expected = Some(vec![Some("a"), Some("b"), Some("c")]);
+
+        profiles.reorder("missing", "b").await?;
+        let ordered_uids = profiles
+            .items
+            .as_ref()
+            .map(|items| items.iter().map(|item| item.uid.as_deref()).collect::<Vec<_>>());
+        assert_eq!(ordered_uids, expected);
+
+        profiles.reorder("a", "missing").await?;
+        let ordered_uids = profiles
+            .items
+            .as_ref()
+            .map(|items| items.iter().map(|item| item.uid.as_deref()).collect::<Vec<_>>());
+        assert_eq!(ordered_uids, expected);
+        Ok(())
     }
 
     #[test]
