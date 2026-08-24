@@ -349,7 +349,7 @@ impl PrfItem {
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text_with_charset()?;
+        let data = resp.text_with_charset();
 
         let data = data.trim_start_matches('\u{feff}');
 

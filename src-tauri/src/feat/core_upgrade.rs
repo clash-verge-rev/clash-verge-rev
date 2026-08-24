@@ -191,7 +191,7 @@ async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::
         match attempt {
             Ok(response) if response.status().is_success() => {
                 // An error page answered with 200 must not become a version, nor reach the URL.
-                let version = response.text_with_charset()?.trim().to_owned();
+                let version = response.text_with_charset().trim().to_owned();
                 if !is_usable_version(&version) {
                     last_error = Some(anyhow!("{url} returned an unusable version"));
                     continue;

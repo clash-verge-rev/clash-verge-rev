@@ -18,7 +18,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
+    const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
         Self { status, headers, body }
     }
 
@@ -30,8 +30,8 @@ impl HttpResponse {
         &self.headers
     }
 
-    pub fn text_with_charset(&self) -> Result<&str> {
-        Ok(&self.body)
+    pub fn text_with_charset(&self) -> &str {
+        &self.body
     }
 }
 
@@ -159,23 +159,6 @@ impl NetworkManager {
     fn is_legacy_tls_protocol_error(err: &(dyn std::error::Error + 'static)) -> bool {
         let detail = format!("{err:#?}").to_ascii_lowercase();
         detail.contains("protocolversion") || detail.contains("protocol version")
-    }
-
-    pub async fn create_request(
-        &self,
-        proxy_type: ProxyType,
-        timeout_secs: Option<u64>,
-        user_agent: Option<String>,
-        accept_invalid_certs: bool,
-    ) -> Result<Client> {
-        self.create_request_with_tls_mode(
-            proxy_type,
-            timeout_secs,
-            user_agent,
-            accept_invalid_certs,
-            TlsRootMode::PlatformVerifier,
-        )
-        .await
     }
 
     async fn get_with_tls_mode(
