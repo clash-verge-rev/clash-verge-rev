@@ -812,6 +812,7 @@ export interface TranslationResources {
             uninstallFailed: string
           }
           sysproxy: {
+            coreNotReady: string
             directFallback: string
             guardStopped: string
             privilegeRequired: string

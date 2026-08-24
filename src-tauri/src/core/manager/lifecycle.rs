@@ -2,7 +2,7 @@ use super::{CoreManager, RunningMode};
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
-use crate::core::proxy_control;
+use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
@@ -304,7 +304,10 @@ impl CoreManager {
         let _life = self.lifecycle_lock.lock().await;
         run_core_start_transition(
             || self.start_core_inner(),
-            || !matches!(*self.get_running_mode(), RunningMode::NotRunning),
+            || {
+                !matches!(*self.get_running_mode(), RunningMode::NotRunning)
+                    && self.current_core_readiness_generation().is_some()
+            },
             || self.apply_proxy_after_start(),
         )
         .await
@@ -330,7 +333,9 @@ impl CoreManager {
         proxy_control::stop_guard().await;
         let result = async {
             self.start_core_inner().await?;
-            if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
+            if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                || self.current_core_readiness_generation().is_none()
+            {
                 anyhow::bail!("Sidecar did not become ready");
             }
             self.apply_proxy_after_start().await
@@ -371,7 +376,9 @@ impl CoreManager {
             },
             || async {
                 self.start_core_inner().await?;
-                if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
+                if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                    || self.current_core_readiness_generation().is_none()
+                {
                     anyhow::bail!("Sidecar did not become ready after service uninstall");
                 }
                 self.apply_proxy_after_start().await
@@ -423,7 +430,9 @@ impl CoreManager {
             self.current_core_readiness_generation(),
             crate::core::service::owner_monitor_generation(),
         )
-        .ok_or_else(|| anyhow::anyhow!("cannot apply system proxy before core readiness"))?;
+        .ok_or_else(|| {
+            anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
+        })?;
         proxy_control::apply().await?;
         if !expectation.is_valid(
             self.get_running_mode().as_ref(),
@@ -433,7 +442,8 @@ impl CoreManager {
             let clear_result = proxy_control::clear().await;
             proxy_control::stop_guard().await;
             clear_result?;
-            anyhow::bail!("core readiness changed while applying system proxy");
+            return Err(anyhow::anyhow!("core readiness changed while applying system proxy")
+                .context(SysproxyFailure::CoreNotReady));
         }
         proxy_control::refresh_guard().await?;
         if !expectation.is_valid(
@@ -444,7 +454,10 @@ impl CoreManager {
             let clear_result = proxy_control::clear().await;
             proxy_control::stop_guard().await;
             clear_result?;
-            anyhow::bail!("core readiness changed while refreshing the system proxy guard");
+            return Err(
+                anyhow::anyhow!("core readiness changed while refreshing the system proxy guard")
+                    .context(SysproxyFailure::CoreNotReady),
+            );
         }
         Ok(())
     }
@@ -553,7 +566,9 @@ impl CoreManager {
             || self.controlled_stop_core_with_intent(proxy_intent),
             || async {
                 self.start_core_inner().await?;
-                if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+                if matches!(*self.get_running_mode(), RunningMode::NotRunning)
+                    || self.current_core_readiness_generation().is_none()
+                {
                     anyhow::bail!("core did not become ready after restart");
                 }
                 Ok(())

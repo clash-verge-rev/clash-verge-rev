@@ -38,6 +38,8 @@ pub enum SysproxyFailure {
     SidecarWhileServiceReady,
     /// The proxy guard stopped after repeated failures.
     GuardStopped { detail: String },
+    /// The Core was not ready, so enabling the system proxy was refused.
+    CoreNotReady,
 }
 
 impl SysproxyFailure {
@@ -48,6 +50,7 @@ impl SysproxyFailure {
             Self::DirectFallback { .. } => "SYSPROXY_DIRECT_FALLBACK",
             Self::SidecarWhileServiceReady => "SYSPROXY_SIDECAR_WHILE_SERVICE_READY",
             Self::GuardStopped { .. } => "SYSPROXY_GUARD_STOPPED",
+            Self::CoreNotReady => "SYSPROXY_CORE_NOT_READY",
         }
     }
 
@@ -70,6 +73,7 @@ impl std::fmt::Display for SysproxyFailure {
             Self::GuardStopped { detail } => {
                 write!(f, "system proxy guard stopped after repeated failures: {detail}")
             }
+            Self::CoreNotReady => f.write_str("the core is not ready, so the system proxy was not enabled"),
         }
     }
 }

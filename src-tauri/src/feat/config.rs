@@ -1,6 +1,9 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger::Logger, proxy_control::SystemProxyStateUnknown, tray},
+    core::{
+        CoreManager, autostart, handle, hotkey, logger::Logger, proxy_control, proxy_control::SystemProxyStateUnknown,
+        tray,
+    },
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -223,7 +226,18 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     if update_flags.contains(UpdateFlags::SYS_PROXY) {
         let manager = CoreManager::global();
         let _lifecycle = manager.lifecycle_lock.lock().await;
-        manager.apply_proxy_after_start().await?;
+        // Turning it off only writes OS state, so it must stay available while the Core is down.
+        if Config::verge()
+            .await
+            .latest_arc()
+            .enable_system_proxy
+            .unwrap_or_default()
+        {
+            manager.apply_proxy_after_start().await?;
+        } else {
+            proxy_control::apply().await?;
+            proxy_control::refresh_guard().await?;
+        }
     }
     if update_flags.contains(UpdateFlags::HOTKEY)
         && let Some(hotkeys) = &patch.hotkeys
