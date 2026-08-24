@@ -1110,11 +1110,10 @@ pub enum SelectionRepair {
     KeepRecords,
 }
 
-pub fn activate_selected_nodes() -> Result<()> {
+pub fn activate_selected_nodes() {
     // The first-pass signal is for callers that wait; a profile switch does not, and dropping
     // the receiver simply makes the send a no-op.
     drop(activate_selected_nodes_with(SelectionRepair::Prune));
-    Ok(())
 }
 
 /// Restores available selections before the system proxy points at the core, then retries the rest.

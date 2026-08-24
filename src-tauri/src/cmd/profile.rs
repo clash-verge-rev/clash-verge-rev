@@ -177,7 +177,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
         }
     };
     if should_update {
-        logging_error!(Type::Config, profiles::activate_selected_nodes());
+        profiles::activate_selected_nodes();
     }
     drop(config_update_guard);
     drop(profile_write_guard);
@@ -241,7 +241,7 @@ async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationO
         .await
         .stringify_err()?;
     // Runtime refresh and tray rebuilding happen after saved node selections are restored.
-    profiles::activate_selected_nodes().stringify_err()?;
+    profiles::activate_selected_nodes();
 
     if let Err(e) = profiles_save_file_safe().await {
         logging!(warn, Type::Cmd, "Warning: 异步保存配置文件失败: {e}");
