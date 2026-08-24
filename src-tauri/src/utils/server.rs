@@ -426,35 +426,7 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
         file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
     }
     drop(file);
-    replace_file_atomic(&temporary, path).context("failed to replace singleton record")?;
-    Ok(())
-}
-
-#[cfg(not(windows))]
-pub(crate) fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
-    std::fs::rename(source, destination)?;
-    Ok(())
-}
-
-#[cfg(windows)]
-pub(crate) fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt as _;
-    use windows_sys::Win32::Storage::FileSystem::{MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW};
-
-    let mut source: Vec<u16> = source.as_os_str().encode_wide().collect();
-    source.push(0);
-    let mut destination: Vec<u16> = destination.as_os_str().encode_wide().collect();
-    destination.push(0);
-    if unsafe {
-        MoveFileExW(
-            source.as_ptr(),
-            destination.as_ptr(),
-            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
-        )
-    } == 0
-    {
-        return Err(std::io::Error::last_os_error().into());
-    }
+    std::fs::rename(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
 }
 

@@ -2,12 +2,14 @@ use crate::{config::with_encryption, enhance::seq::SeqMap};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
+use scopeguard::{ScopeGuard, guard};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
     path::{Path, PathBuf},
     str::FromStr,
 };
+use tokio::io::AsyncWriteExt as _;
 
 pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     if !tokio::fs::try_exists(path).await.unwrap_or(false) {
@@ -53,7 +55,7 @@ pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
     read_yaml(path).await
 }
 
-pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
+pub async fn save_yaml<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
     let data_str = with_encryption(|| async { serde_yaml_ng::to_string(data) }).await?;
 
     let yaml_str = match prefix {
@@ -61,20 +63,55 @@ pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Op
         None => data_str,
     };
 
-    tokio::fs::write(path, yaml_str.as_bytes())
-        .await
-        .with_context(|| format!("failed to save file \"{}\"", path.display()))?;
-    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-    Ok(())
-}
+    let (temporary, file) = loop {
+        let temporary = path.with_extension(format!("tmp-{}-{}", std::process::id(), nanoid!()));
+        match std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)
+        {
+            Ok(file) => break (temporary, file),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => {
+                return Err(error).with_context(|| {
+                    format!(
+                        "failed to create temporary file \"{}\" for \"{}\"",
+                        temporary.display(),
+                        path.display()
+                    )
+                });
+            }
+        }
+    };
 
-pub async fn save_yaml_atomic<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
-    let temporary = path.with_extension("delete.tmp");
-    save_yaml(&temporary, data, prefix).await?;
-    if let Err(error) = super::server::replace_file_atomic(&temporary, path) {
-        let _ = tokio::fs::remove_file(&temporary).await;
-        return Err(error).with_context(|| format!("failed to replace file \"{}\"", path.display()));
+    let temporary = guard(temporary, |path| {
+        let _ = std::fs::remove_file(path);
+    });
+    let mut file = tokio::fs::File::from_std(file);
+    file.write_all(yaml_str.as_bytes())
+        .await
+        .with_context(|| format!("failed to write temporary file for \"{}\"", path.display()))?;
+    file.flush()
+        .await
+        .with_context(|| format!("failed to flush temporary file for \"{}\"", path.display()))?;
+    drop(file);
+
+    match tokio::fs::symlink_metadata(path).await {
+        Ok(metadata) if metadata.file_type().is_file() => {
+            tokio::fs::set_permissions(temporary.as_path(), metadata.permissions())
+                .await
+                .with_context(|| format!("failed to preserve permissions for \"{}\"", path.display()))?;
+        }
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => {
+            return Err(error).with_context(|| format!("failed to inspect file \"{}\"", path.display()));
+        }
     }
+
+    std::fs::rename(temporary.as_path(), path)
+        .with_context(|| format!("failed to replace file \"{}\"", path.display()))?;
+    let _ = ScopeGuard::into_inner(temporary);
     Ok(())
 }
 
