@@ -1,6 +1,6 @@
 #[cfg(test)]
 use super::claim_core_readiness_generation;
-use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode, inactive_core_readiness_state};
 use crate::{
     AsyncHandler,
     config::Config,
@@ -60,8 +60,53 @@ where
         .context("Mihomo API did not become ready"))
 }
 
-fn should_clear_terminated_sidecar(running_mode: &RunningMode, current_pid: Option<u32>, terminated_pid: u32) -> bool {
-    matches!(running_mode, RunningMode::Sidecar) && current_pid == Some(terminated_pid)
+fn should_clear_terminated_sidecar(
+    running_mode: &RunningMode,
+    current_pid: Option<u32>,
+    terminated_pid: u32,
+    claimed_readiness: bool,
+    current_readiness_state: u64,
+    terminated_readiness_generation: u64,
+) -> bool {
+    claimed_readiness
+        && current_readiness_state == inactive_core_readiness_state(terminated_readiness_generation)
+        && matches!(running_mode, RunningMode::Sidecar)
+        && current_pid == Some(terminated_pid)
+}
+
+const SIDECAR_PROXY_CLEAR_ATTEMPTS: usize = 3;
+#[cfg(not(test))]
+const SIDECAR_PROXY_CLEAR_RETRY_DELAY: std::time::Duration = std::time::Duration::from_millis(100);
+#[cfg(test)]
+const SIDECAR_PROXY_CLEAR_RETRY_DELAY: std::time::Duration = std::time::Duration::ZERO;
+
+async fn clear_proxy_after_sidecar_termination<Clear, ClearFuture, StopGuard, StopGuardFuture>(
+    mut clear_proxy: Clear,
+    stop_guard: StopGuard,
+) -> Result<()>
+where
+    Clear: FnMut() -> ClearFuture,
+    ClearFuture: std::future::Future<Output = Result<()>>,
+    StopGuard: FnOnce() -> StopGuardFuture,
+    StopGuardFuture: std::future::Future<Output = bool>,
+{
+    let guard_stopped = stop_guard().await;
+    let mut last_error = None;
+    for attempt in 0..SIDECAR_PROXY_CLEAR_ATTEMPTS {
+        match clear_proxy().await {
+            Ok(()) => return Ok(()),
+            Err(error) => last_error = Some(error),
+        }
+        if attempt + 1 < SIDECAR_PROXY_CLEAR_ATTEMPTS {
+            tokio::time::sleep(SIDECAR_PROXY_CLEAR_RETRY_DELAY).await;
+        }
+    }
+    let error = last_error.unwrap_or_else(|| unreachable!("proxy cleanup always has at least one attempt"));
+    if guard_stopped {
+        Err(error)
+    } else {
+        Err(error.context("system proxy guard did not stop before cleanup"))
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -198,7 +243,7 @@ impl CoreManager {
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let manager = Self::global();
-                        let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
+                        let claimed_readiness = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
                             CompactString::from(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
@@ -208,7 +253,9 @@ impl CoreManager {
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
                         CLASH_LOGGER.clear_logs().await;
-                        manager.clear_terminated_sidecar(pid).await;
+                        manager
+                            .clear_terminated_sidecar(pid, core_readiness_generation, claimed_readiness)
+                            .await;
                         break;
                     }
                     _ => {}
@@ -313,23 +360,45 @@ impl CoreManager {
         Ok(())
     }
 
-    async fn clear_terminated_sidecar(&self, terminated_pid: u32) {
+    async fn clear_terminated_sidecar(
+        &self,
+        terminated_pid: u32,
+        terminated_readiness_generation: u64,
+        claimed_readiness: bool,
+    ) {
         let _life = self.lifecycle_lock.lock().await;
-        if !should_clear_terminated_sidecar(&self.get_running_mode(), self.get_running_sidecar_pid(), terminated_pid) {
+        if !should_clear_terminated_sidecar(
+            &self.get_running_mode(),
+            self.get_running_sidecar_pid(),
+            terminated_pid,
+            claimed_readiness,
+            self.core_readiness_state.load(std::sync::atomic::Ordering::Acquire),
+            terminated_readiness_generation,
+        ) {
             return;
         }
 
+        if let Err(error) = clear_proxy_after_sidecar_termination(proxy_control::clear, proxy_control::stop_guard).await
+        {
+            logging!(
+                error,
+                Type::Core,
+                "Failed to clear system proxy after sidecar termination: {error:#}"
+            );
+        }
         let _ = self.take_child_sidecar();
         #[cfg(target_os = "windows")]
         self.set_job_handle(None);
-        proxy_control::stop_guard().await;
         self.core_stopped();
     }
 }
 
 #[cfg(test)]
 mod readiness_tests {
-    use super::{claim_core_readiness_generation, poll_sidecar_readiness, should_clear_terminated_sidecar};
+    use super::{
+        claim_core_readiness_generation, clear_proxy_after_sidecar_termination, poll_sidecar_readiness,
+        should_clear_terminated_sidecar,
+    };
     use crate::core::manager::{CoreManager, RunningMode};
     use std::{
         sync::{
@@ -372,10 +441,75 @@ mod readiness_tests {
 
     #[test]
     fn only_the_current_sidecar_termination_clears_local_state() {
-        assert!(should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(42), 42));
-        assert!(!should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(43), 42));
-        assert!(!should_clear_terminated_sidecar(&RunningMode::Service, Some(42), 42));
-        assert!(!should_clear_terminated_sidecar(&RunningMode::NotRunning, None, 42));
+        let generation = 7;
+        let invalidated_generation = 8;
+
+        assert!(should_clear_terminated_sidecar(
+            &RunningMode::Sidecar,
+            Some(42),
+            42,
+            true,
+            invalidated_generation,
+            generation,
+        ));
+        for (mode, pid, claimed, state) in [
+            (RunningMode::Sidecar, Some(43), true, invalidated_generation),
+            (RunningMode::Service, Some(42), true, invalidated_generation),
+            (RunningMode::NotRunning, None, true, invalidated_generation),
+            (RunningMode::Sidecar, Some(42), false, invalidated_generation),
+            (RunningMode::Sidecar, Some(42), true, invalidated_generation + 2),
+        ] {
+            assert!(!should_clear_terminated_sidecar(
+                &mode, pid, 42, claimed, state, generation,
+            ));
+        }
+    }
+
+    #[tokio::test]
+    async fn terminated_sidecar_retries_cleanup_when_guard_did_not_drain() {
+        let calls = parking_lot::Mutex::new(Vec::new());
+        let attempts = AtomicUsize::new(0);
+
+        let result = clear_proxy_after_sidecar_termination(
+            || {
+                let attempt = attempts.fetch_add(1, Ordering::SeqCst);
+                calls.lock().push("clear");
+                async move {
+                    if attempt == 0 {
+                        anyhow::bail!("proxy cleanup failed")
+                    }
+                    Ok(())
+                }
+            },
+            || async {
+                calls.lock().push("stop_guard");
+                false
+            },
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(calls.into_inner(), ["stop_guard", "clear", "clear"]);
+    }
+
+    #[tokio::test]
+    async fn terminated_sidecar_reports_exhausted_proxy_cleanup() {
+        let attempts = AtomicUsize::new(0);
+
+        let result = clear_proxy_after_sidecar_termination(
+            || {
+                attempts.fetch_add(1, Ordering::SeqCst);
+                async { Err(anyhow::anyhow!("still failed")) }
+            },
+            || async { false },
+        )
+        .await;
+
+        let error = result
+            .err()
+            .unwrap_or_else(|| unreachable!("cleanup exhaustion must fail"));
+        assert!(format!("{error:#}").contains("guard did not stop"));
+        assert_eq!(attempts.load(Ordering::SeqCst), 3);
     }
 
     #[test]
