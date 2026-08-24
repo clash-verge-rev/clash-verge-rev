@@ -67,7 +67,7 @@ export const AppDataProvider = ({
   } = useQuery({
     queryKey: ['getProxyView'],
     queryFn: getProxyView,
-    refetchInterval: 3000,
+    refetchInterval: 15000,
     refetchIntervalInBackground: false,
     ...TQ_MIHOMO,
   })
