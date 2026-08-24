@@ -63,14 +63,6 @@ pub struct IProfilePreview<'a> {
     pub is_current: bool,
 }
 
-/// 清理结果
-#[derive(Debug, Clone)]
-pub struct CleanupResult {
-    pub total_files: usize,
-    pub deleted_files: usize,
-    pub failed_deletions: usize,
-}
-
 pub(crate) struct ProfileDeletePlan {
     files: Vec<String>,
 }
@@ -495,19 +487,13 @@ impl IProfiles {
             }
         }
 
-        let result = CleanupResult {
-            total_files,
-            deleted_files,
-            failed_deletions,
-        };
-
         logging!(
             info,
             Type::Config,
             "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
-            result.total_files,
-            result.deleted_files,
-            result.failed_deletions
+            total_files,
+            deleted_files,
+            failed_deletions
         );
 
         Ok(())

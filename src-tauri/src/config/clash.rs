@@ -1,4 +1,3 @@
-use crate::config::Config;
 use crate::constants::{network, tun as tun_const};
 use crate::utils::dirs::{path_to_str, sidecar_ipc_path};
 use crate::utils::{dirs, help};
@@ -154,16 +153,6 @@ impl IClashTemp {
         Self::guard_mixed_port(&self.0)
     }
 
-    #[allow(unused)]
-    pub fn get_socks_port(&self) -> u16 {
-        Self::guard_socks_port(&self.0)
-    }
-
-    #[allow(unused)]
-    pub fn get_port(&self) -> u16 {
-        Self::guard_port(&self.0)
-    }
-
     pub fn get_client_info(&self) -> ClashInfo {
         let config = &self.0;
 
@@ -294,21 +283,6 @@ impl IClashTemp {
         // 在初始化阶段，直接返回配置中的值，不进行额外检查
         // 这样可以避免在配置加载期间的循环依赖
         Self::guard_server_ctrl(config)
-    }
-
-    pub async fn guard_external_controller_with_setting(config: &Mapping) -> String {
-        // 检查 enable_external_controller 设置，用于运行时配置生成
-        let enable_external_controller = Config::verge()
-            .await
-            .latest_arc()
-            .enable_external_controller
-            .unwrap_or(false);
-
-        if enable_external_controller {
-            Self::guard_server_ctrl(config)
-        } else {
-            "".into()
-        }
     }
 
     pub fn guard_client_ctrl(config: &Mapping) -> String {

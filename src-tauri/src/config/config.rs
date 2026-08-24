@@ -46,7 +46,7 @@ impl Config {
                     clash_config: Draft::new(IClashTemp::new().await),
                     verge_config: Draft::new(IVerge::new().await),
                     profiles_config: Draft::new(IProfiles::new().await),
-                    runtime_config: Draft::new(IRuntime::new()),
+                    runtime_config: Draft::new(IRuntime::default()),
                 }
             })
             .await
@@ -71,11 +71,6 @@ impl Config {
     /// Serializes transactions sharing configuration draft layers.
     pub(crate) async fn lock_config_write() -> MutexGuard<'static, ()> {
         CONFIG_WRITE_LOCK.lock().await
-    }
-
-    pub async fn init_config() -> Result<()> {
-        Self::init_config_before_window().await?;
-        Self::init_runtime_config().await
     }
 
     pub async fn init_config_before_window() -> Result<()> {
