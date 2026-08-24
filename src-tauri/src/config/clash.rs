@@ -221,10 +221,10 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7897);
+            .unwrap_or(network::ports::DEFAULT_MIXED);
 
         if port == 0 {
-            port = 7897;
+            port = network::ports::DEFAULT_MIXED;
         }
 
         port

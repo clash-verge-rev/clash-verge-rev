@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
+    constants::network,
     utils::{dirs, help},
 };
 use anyhow::Result;
@@ -357,7 +358,7 @@ impl IVerge {
             verge_tproxy_port: Some(7896),
             #[cfg(target_os = "linux")]
             verge_tproxy_enabled: Some(false),
-            verge_mixed_port: Some(7897),
+            verge_mixed_port: Some(network::ports::DEFAULT_MIXED),
             verge_socks_port: Some(7898),
             verge_socks_enabled: Some(false),
             verge_port: Some(7899),

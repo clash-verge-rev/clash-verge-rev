@@ -35,7 +35,7 @@ static STARTUP_CORE_BLOCKED: AtomicBool = AtomicBool::new(false);
 static STARTUP_CORE_BLOCK_REASON: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
 
 impl Config {
-    pub(crate) async fn resolve_startup_mixed_port() -> Result<bool> {
+    pub(super) async fn resolve_startup_mixed_port() -> Result<bool> {
         Self::resolve_startup_mixed_port_inner().await
     }
 
