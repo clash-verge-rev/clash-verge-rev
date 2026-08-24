@@ -179,27 +179,27 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -360,27 +360,27 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -410,7 +410,7 @@ impl PrfItem {
         })
     }
 
-    pub fn from_merge(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_merge(uid: Option<String>) -> Self {
         let (id, template) = if let Some(uid) = uid {
             (uid, tmpl::ITEM_MERGE.into())
         } else {
@@ -418,73 +418,73 @@ impl PrfItem {
         };
         let file = format!("{id}.yaml").into();
 
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("merge".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(template),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_script(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_script(uid: Option<String>) -> Self {
         let id = if let Some(uid) = uid {
             uid
         } else {
             help::get_uid("s").into()
         };
         let file = format!("{id}.js").into(); // js ext
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("script".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_rules() -> Result<Self> {
+    fn from_rules() -> Self {
         let uid = help::get_uid("r").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("rules".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_RULES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_proxies() -> Result<Self> {
+    fn from_proxies() -> Self {
         let uid = help::get_uid("p").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("proxies".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_PROXIES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_groups() -> Result<Self> {
+    fn from_groups() -> Self {
         let uid = help::get_uid("g").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("groups".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_GROUPS.into()),
             ..Default::default()
-        })
+        }
     }
 
     pub async fn read_file(&self) -> Result<String> {
