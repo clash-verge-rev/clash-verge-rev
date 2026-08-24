@@ -1,20 +1,11 @@
+import { arrayMove } from '@dnd-kit/helpers'
 import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
+  DragDropProvider,
   KeyboardSensor,
   PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+  type DragEndEvent,
+} from '@dnd-kit/react'
+import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import {
   ArrowDownward,
   Delete as DeleteIcon,
@@ -73,7 +64,8 @@ interface ProxyChainProps {
   selectedGroup?: string | null
 }
 
-interface SortableItemProps {
+interface ProxyChainItemProps {
+  id: string
   proxy: ProxyChainItem
   index: number
   isFirst: boolean
@@ -96,30 +88,24 @@ const toChainItems = (
   )
 }
 
-const SortableItem = ({
+const ProxyChainItem = ({
+  id,
   proxy,
   index,
   isFirst,
   isLast,
   onRemove,
-}: SortableItemProps) => {
+}: ProxyChainItemProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: proxy.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
+  const [element, setElement] = useState<Element | null>(null)
+  const handleRef = useRef<HTMLElement | null>(null)
+  const { isDragging } = useSortable({
+    id,
+    index,
+    element,
+    handle: handleRef,
+  })
   const roleLabel = isFirst
     ? t('proxies.page.chain.entryNode')
     : isLast
@@ -134,37 +120,33 @@ const SortableItem = ({
 
   return (
     <Box
-      ref={setNodeRef}
-      style={style}
+      ref={setElement}
       sx={{
         mb: 0,
         display: 'flex',
         alignItems: 'center',
         p: 1,
-        backgroundColor: isDragging
-          ? theme.palette.action.selected
-          : theme.palette.background.default,
+        backgroundColor: theme.palette.background.default,
         borderRadius: 1,
         border: roleColor
           ? `1.5px solid ${roleColor}`
           : `1px solid ${theme.palette.divider}`,
-        boxShadow: isDragging ? theme.shadows[4] : theme.shadows[1],
         transition: 'box-shadow 0.2s, background-color 0.2s',
-        opacity: proxy.recordId === undefined ? 0.55 : undefined,
+        opacity: isDragging
+          ? 0.5
+          : proxy.recordId === undefined
+            ? 0.55
+            : undefined,
       }}
     >
       <Box
-        {...attributes}
-        {...listeners}
+        ref={handleRef}
         sx={{
           display: 'flex',
           alignItems: 'center',
           mr: 1,
           color: theme.palette.text.secondary,
-          cursor: 'grab',
-          '&:active': {
-            cursor: 'grabbing',
-          },
+          cursor: isDragging ? 'grabbing' : 'grab',
         }}
       >
         <DragIndicator />
@@ -330,30 +312,25 @@ export const ProxyChain = ({
     chainLengthRef.current = currentProxyChain.length
   }, [currentProxyChain.length, markUnsavedChanges])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
-
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event
+      const { operation, canceled } = event
+      const { source, target } = operation
+      if (canceled || !target || !isSortable(source)) return
 
-      if (active.id !== over?.id) {
-        const oldIndex = currentProxyChain.findIndex(
-          (item) => item.id === active.id,
-        )
-        const newIndex = currentProxyChain.findIndex(
-          (item) => item.id === over?.id,
-        )
-
-        onUpdateChain(arrayMove(currentProxyChain, oldIndex, newIndex))
-        markUnsavedChanges()
+      const { index: newIndex, initialIndex: oldIndex } = source.sortable
+      if (
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        oldIndex >= currentProxyChain.length ||
+        newIndex >= currentProxyChain.length ||
+        oldIndex === newIndex
+      ) {
+        return
       }
+
+      onUpdateChain(arrayMove(currentProxyChain, oldIndex, newIndex))
+      markUnsavedChanges()
     },
     [currentProxyChain, onUpdateChain, markUnsavedChanges],
   )
@@ -594,56 +571,51 @@ export const ProxyChain = ({
             <Typography>{t('proxies.page.chain.empty')}</Typography>
           </Box>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
+          <DragDropProvider
+            sensors={[PointerSensor, KeyboardSensor]}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={currentProxyChain.map((proxy) => proxy.id)}
-              strategy={verticalListSortingStrategy}
+            <Box
+              sx={{
+                borderRadius: 1,
+                minHeight: 60,
+                p: 1,
+              }}
             >
-              <Box
-                sx={{
-                  borderRadius: 1,
-                  minHeight: 60,
-                  p: 1,
-                }}
-              >
-                {currentProxyChain.map((proxy, index) => (
-                  <Box key={proxy.id}>
-                    <SortableItem
-                      proxy={proxy}
-                      index={index}
-                      isFirst={index === 0}
-                      isLast={
-                        index === currentProxyChain.length - 1 &&
-                        currentProxyChain.length > 1
-                      }
-                      onRemove={handleRemoveProxy}
-                    />
-                    {index < currentProxyChain.length - 1 && (
-                      <Box
+              {currentProxyChain.map((proxy, index) => (
+                <Box key={proxy.id}>
+                  <ProxyChainItem
+                    id={proxy.id}
+                    proxy={proxy}
+                    index={index}
+                    isFirst={index === 0}
+                    isLast={
+                      index === currentProxyChain.length - 1 &&
+                      currentProxyChain.length > 1
+                    }
+                    onRemove={handleRemoveProxy}
+                  />
+                  {index < currentProxyChain.length - 1 && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        py: 0.25,
+                      }}
+                    >
+                      <ArrowDownward
                         sx={{
-                          display: 'flex',
-                          justifyContent: 'center',
-                          py: 0.25,
+                          fontSize: 20,
+                          color: theme.palette.primary.main,
+                          opacity: 0.7,
                         }}
-                      >
-                        <ArrowDownward
-                          sx={{
-                            fontSize: 20,
-                            color: theme.palette.primary.main,
-                            opacity: 0.7,
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-                ))}
-              </Box>
-            </SortableContext>
-          </DndContext>
+                      />
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </DragDropProvider>
         )}
       </Box>
     </Paper>

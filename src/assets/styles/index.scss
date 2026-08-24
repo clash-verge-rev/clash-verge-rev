@@ -1,12 +1,12 @@
-@use './layout.scss';
-@use './page.scss';
-@use './font.scss';
+@use "./layout.scss";
+@use "./page.scss";
+@use "./font.scss";
 
 body {
   margin: 0;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
 
   user-select: none;
@@ -58,4 +58,13 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+/*
+ * dnd-kit 拖拽中被拾起的元素固定带有 [data-dnd-dragging] 属性。
+ * 通过全局 CSS（而非组件内联样式）施加投影，确保在 React 重渲染、
+ * WebView 等场景下阴影仍能稳定显示。
+ */
+[data-dnd-dragging] {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32) !important;
 }

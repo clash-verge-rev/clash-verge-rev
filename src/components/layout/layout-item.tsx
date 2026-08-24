@@ -1,7 +1,3 @@
-import type {
-  DraggableAttributes,
-  DraggableSyntheticListeners,
-} from '@dnd-kit/core'
 import {
   alpha,
   ListItem,
@@ -9,29 +5,18 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material'
-import type { CSSProperties, PointerEvent, ReactNode } from 'react'
-import { useCallback } from 'react'
+import type { ReactNode } from 'react'
 import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
 import { useVerge } from '@/hooks/use-verge'
-
-interface SortableProps {
-  setNodeRef?: (element: HTMLElement | null) => void
-  attributes?: DraggableAttributes
-  listeners?: DraggableSyntheticListeners
-  style?: CSSProperties
-  isDragging?: boolean
-  disabled?: boolean
-}
 
 interface Props {
   to: string
   children: string
   icon: ReactNode[]
-  sortable?: SortableProps
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon, sortable } = props
+  const { to, children, icon } = props
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -42,34 +27,10 @@ export const LayoutItem = (props: Props) => {
   const effectiveMenuIcon =
     navCollapsed && menu_icon === 'disable' ? 'monochrome' : menu_icon
 
-  const { setNodeRef, attributes, listeners, style, isDragging, disabled } =
-    sortable ?? {}
-
-  const draggable = Boolean(sortable) && !disabled
-  const { onPointerDown, ...otherListeners } = draggable
-    ? (listeners ?? {})
-    : {}
-
-  const handlePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      onPointerDown?.(event)
-    },
-    [onPointerDown],
-  )
-
   return (
-    <ListItem
-      ref={setNodeRef}
-      style={style}
-      sx={[
-        { py: 0.5, maxWidth: 250, mx: 'auto', padding: '4px 0px' },
-        isDragging ? { opacity: 0.78 } : {},
-      ]}
-    >
+    <ListItem sx={{ py: 0.5, maxWidth: 250, mx: 'auto', padding: '4px 0px' }}>
       <ListItemButton
         selected={!!match}
-        {...(draggable ? (attributes ?? {}) : {})}
-        {...(draggable ? otherListeners : {})}
         sx={[
           {
             borderRadius: 2,
@@ -77,8 +38,7 @@ export const LayoutItem = (props: Props) => {
             paddingLeft: 1,
             paddingRight: 1,
             marginRight: 1.25,
-            cursor: draggable ? 'grab' : 'pointer',
-            '&:active': draggable ? { cursor: 'grabbing' } : {},
+            cursor: 'pointer',
             '& .MuiListItemText-primary': {
               color: 'text.primary',
               fontWeight: '700',
@@ -99,7 +59,6 @@ export const LayoutItem = (props: Props) => {
         ]}
         title={navCollapsed ? children : undefined}
         aria-label={navCollapsed ? children : undefined}
-        onPointerDown={handlePointerDown}
         onClick={() => navigate(to)}
       >
         {(effectiveMenuIcon === 'monochrome' || !effectiveMenuIcon) && (
@@ -107,16 +66,14 @@ export const LayoutItem = (props: Props) => {
             sx={{
               color: 'text.primary',
               marginLeft: '6px',
-              cursor: draggable ? 'grab' : 'inherit',
+              cursor: 'inherit',
             }}
           >
             {icon[0]}
           </ListItemIcon>
         )}
         {effectiveMenuIcon === 'colorful' && (
-          <ListItemIcon sx={{ cursor: draggable ? 'grab' : 'inherit' }}>
-            {icon[1]}
-          </ListItemIcon>
+          <ListItemIcon sx={{ cursor: 'inherit' }}>{icon[1]}</ListItemIcon>
         )}
         <ListItemText
           sx={{

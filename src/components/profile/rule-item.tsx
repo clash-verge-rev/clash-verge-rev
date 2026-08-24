@@ -1,5 +1,3 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import {
   DeleteForeverRounded,
   UndoRounded,
@@ -14,6 +12,7 @@ import {
   alpha,
   styled,
 } from '@mui/material'
+
 interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   ruleRaw: string
@@ -24,32 +23,13 @@ interface Props {
 
 export const RuleItem = (props: Props) => {
   const { type, ruleRaw, onDelete, onPrepend, onAppend } = props
-  const sortable = type === 'prepend' || type === 'append'
+  const isSortable = type === 'prepend' || type === 'append'
   const rule = ruleRaw.replace(',no-resolve', '')
 
   const ruleType = rule.match(/^[^,]+/)?.[0] ?? ''
   const proxyPolicy = rule.match(/[^,]+$/)?.[0] ?? ''
   const ruleContent = rule.slice(ruleType.length + 1, -proxyPolicy.length - 1)
 
-  const $sortable = useSortable({ id: ruleRaw })
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = sortable
-    ? $sortable
-    : {
-        attributes: {},
-        listeners: {},
-        setNodeRef: null,
-        transform: null,
-        transition: null,
-        isDragging: false,
-      }
   return (
     <ListItem
       dense
@@ -64,18 +44,11 @@ export const RuleItem = (props: Props) => {
               ? alpha(palette.error.main, 0.3)
               : alpha(palette.success.main, 0.3),
         height: '100%',
-        margin: '8px 0',
         borderRadius: '8px',
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 'calc(infinity)' : undefined,
       })}
     >
       <ListItemText
-        {...attributes}
-        {...listeners}
-        ref={setNodeRef}
-        sx={{ cursor: sortable ? 'move' : '' }}
+        sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary
             title={ruleContent || '-'}

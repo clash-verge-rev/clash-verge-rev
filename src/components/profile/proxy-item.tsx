@@ -1,5 +1,3 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
   Box,
@@ -18,22 +16,7 @@ interface Props {
 
 export const ProxyItem = (props: Props) => {
   const { type, proxy, onDelete } = props
-  const sortable = type === 'prepend' || type === 'append'
-
-  const {
-    attributes: sortableAttributes,
-    listeners: sortableListeners,
-    setNodeRef: sortableSetNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: proxy.name,
-    disabled: !sortable,
-  })
-  const dragAttributes = sortable ? sortableAttributes : undefined
-  const dragListeners = sortable ? sortableListeners : undefined
-  const dragNodeRef = sortable ? sortableSetNodeRef : undefined
+  const isSortable = type === 'prepend' || type === 'append'
 
   return (
     <ListItem
@@ -49,18 +32,11 @@ export const ProxyItem = (props: Props) => {
               ? alpha(palette.error.main, 0.3)
               : alpha(palette.success.main, 0.3),
         height: '100%',
-        margin: '8px 0',
         borderRadius: '8px',
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 'calc(infinity)' : undefined,
       })}
     >
       <ListItemText
-        {...(dragAttributes ?? {})}
-        {...(dragListeners ?? {})}
-        ref={dragNodeRef}
-        sx={{ cursor: sortable ? 'move' : '' }}
+        sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary
             title={proxy.name}
