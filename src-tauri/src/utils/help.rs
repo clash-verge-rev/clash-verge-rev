@@ -1,4 +1,4 @@
-use crate::{config::with_encryption, enhance::seq::SeqMap};
+use crate::config::with_encryption;
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
@@ -11,7 +11,7 @@ use std::{
 };
 use tokio::io::AsyncWriteExt as _;
 
-pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
+pub async fn read_yaml<T: DeserializeOwned>(path: &Path) -> Result<T> {
     if !tokio::fs::try_exists(path).await.unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
@@ -21,7 +21,7 @@ pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
     Ok(with_encryption(|| async { serde_yaml_ng::from_str::<T>(&yaml_str) }).await?)
 }
 
-pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
+pub async fn read_mapping(path: &Path) -> Result<Mapping> {
     if !tokio::fs::try_exists(path).await.unwrap_or(false) {
         bail!("file not found \"{}\"", path.display());
     }
@@ -49,10 +49,6 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
             bail!("YAML syntax error: {}", err)
         }
     }
-}
-
-pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
-    read_yaml(path).await
 }
 
 pub async fn save_yaml<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {

@@ -169,7 +169,6 @@ mod app_init {
             cmd::forget_selected_node,
             cmd::save_dns_config,
             cmd::apply_dns_config,
-            cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
             cmd::get_clash_logs,
