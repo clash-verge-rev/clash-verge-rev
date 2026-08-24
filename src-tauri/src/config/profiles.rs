@@ -146,14 +146,6 @@ impl IProfiles {
         }
     }
 
-    pub const fn get_current(&self) -> Option<&String> {
-        self.current.as_ref()
-    }
-
-    pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
-        self.items.as_ref()
-    }
-
     pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
         let uid_str = uid.as_ref();
 
@@ -170,7 +162,7 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
-    pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
+    async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
         let uid = &item.uid;
         if uid.is_none() {
             bail!("the uid should not be null");
@@ -207,16 +199,16 @@ impl IProfiles {
         Ok(())
     }
 
-    pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
+    async fn reorder(&mut self, active_id: &str, over_id: &str) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
 
         for (i, _) in items.iter().enumerate() {
-            if items[i].uid.as_ref() == Some(active_id) {
+            if items[i].uid.as_deref() == Some(active_id) {
                 old_index = Some(i);
             }
-            if items[i].uid.as_ref() == Some(over_id) {
+            if items[i].uid.as_deref() == Some(over_id) {
                 new_index = Some(i);
             }
         }
@@ -231,7 +223,7 @@ impl IProfiles {
         self.save_file().await
     }
 
-    pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
+    async fn patch_item(&mut self, uid: &str, item: &PrfItem) -> Result<()> {
         if let Some(file) = &item.file {
             Self::validate_profile_file(file)?;
         }
@@ -239,7 +231,7 @@ impl IProfiles {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
-            if each.uid.as_ref() == Some(uid) {
+            if each.uid.as_deref() == Some(uid) {
                 patch!(each, item, itype);
                 patch!(each, item, name);
                 patch!(each, item, desc);
@@ -276,7 +268,7 @@ impl IProfiles {
     }
 
     /// Updates fields returned by a remote profile refresh.
-    pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
+    async fn update_item(&mut self, uid: &str, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
@@ -284,10 +276,8 @@ impl IProfiles {
         let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
-            let some_uid = Some(uid.clone());
-
             for each in items.iter_mut() {
-                if each.uid == some_uid {
+                if each.uid.as_deref() == Some(uid) {
                     each.extra = item.extra;
                     each.updated = item.updated;
                     each.home = item.home.to_owned();
@@ -335,8 +325,8 @@ impl IProfiles {
         raised
     }
 
-    pub(crate) fn plan_delete_item(&mut self, uid: &String) -> Result<(bool, ProfileDeletePlan)> {
-        let current = self.current.as_ref().unwrap_or(uid).clone();
+    pub(crate) fn plan_delete_item(&mut self, uid: &str) -> Result<(bool, ProfileDeletePlan)> {
+        let deleting_current = self.current.as_deref().is_none_or(|current| current == uid);
         let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
             [
                 op.merge.clone(),
@@ -351,7 +341,7 @@ impl IProfiles {
         let mut items = self.items.take().unwrap_or_default();
         let mut files = Vec::new();
 
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid)) {
             files.push(file);
         }
 
@@ -361,7 +351,7 @@ impl IProfiles {
             }
         }
 
-        if current == *uid {
+        if deleting_current {
             self.current = None;
             for item in items.iter() {
                 if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
@@ -372,7 +362,7 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        Ok((current == *uid, ProfileDeletePlan { files }))
+        Ok((deleting_current, ProfileDeletePlan { files }))
     }
 
     /// 获取current指向的订阅内容
@@ -392,17 +382,13 @@ impl IProfiles {
         }
     }
 
-    pub fn is_current_profile_index(&self, index: &String) -> bool {
-        self.current.as_ref() == Some(index)
-    }
-
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
         self.items.as_ref().map(|items| {
             items
                 .iter()
                 .filter_map(|e| {
                     if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
-                        let is_current = self.is_current_profile_index(uid);
+                        let is_current = self.current.as_ref() == Some(uid);
                         let preview = IProfilePreview { uid, name, is_current };
                         Some(preview)
                     } else {
@@ -411,17 +397,6 @@ impl IProfiles {
                 })
                 .collect()
         })
-    }
-
-    pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
-        if let Some(items) = &self.items {
-            for item in items {
-                if item.uid.as_ref() == Some(uid) {
-                    return item.name.as_ref();
-                }
-            }
-        }
-        None
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
@@ -567,15 +542,15 @@ impl IProfiles {
     }
 }
 
-// These helpers avoid holding a parking_lot guard across `await`.
+// These helpers serialize asynchronous operations against committed profile data.
 use crate::config::Config;
 
-pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: Option<String>) -> Result<()> {
+pub(crate) async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: Option<String>) -> Result<()> {
     let item = &mut PrfItem::from(item, file_data).await?;
     profiles_append_item_safe(item).await
 }
 
-pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
+pub(crate) async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
     let profiles = Config::profiles().await;
     profiles_append_item_to_safe(&profiles, item).await
 }
@@ -589,7 +564,7 @@ pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, it
         .await
 }
 
-pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<()> {
+pub(crate) async fn profiles_patch_item_safe(index: &str, item: &PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -599,7 +574,7 @@ pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<
         .await
 }
 
-pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Result<()> {
+pub(crate) async fn profiles_reorder_safe(active_id: &str, over_id: &str) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -609,7 +584,7 @@ pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Resu
         .await
 }
 
-pub async fn profiles_save_file_safe() -> Result<()> {
+pub(crate) async fn profiles_save_file_safe() -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|profiles| async move {
@@ -619,7 +594,7 @@ pub async fn profiles_save_file_safe() -> Result<()> {
         .await
 }
 
-pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem) -> Result<()> {
+pub(crate) async fn profiles_update_item_safe(index: &str, item: &mut PrfItem) -> Result<()> {
     Config::profiles()
         .await
         .with_data_modify(|mut profiles| async move {
@@ -1185,7 +1160,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
         let result = async {
             // A draft may be a profile switch that has not passed validation yet.
             let profiles = Config::profiles().await.data_arc();
-            let current = profiles.get_current().context("no current profile running")?.clone();
+            let current = profiles.current.clone().context("no current profile running")?;
             let selected = profiles
                 .get_item(&current)
                 .context("failed to get current profile")?
@@ -1299,7 +1274,7 @@ mod tests {
             ]),
         };
 
-        let (should_update, plan) = profiles.plan_delete_item(&"a".into())?;
+        let (should_update, plan) = profiles.plan_delete_item("a")?;
 
         assert!(should_update);
         assert_eq!(profiles.current.as_deref(), Some("b"));

@@ -146,7 +146,7 @@ impl Config {
     }
 
     async fn ensure_default_profile_items_for(profiles: &Draft<IProfiles>) -> Result<()> {
-        if profiles.latest_arc().get_items().is_none() {
+        if profiles.latest_arc().items.is_none() {
             logging!(
                 warn,
                 Type::Config,
@@ -400,7 +400,7 @@ mod tests {
         tokio::fs::remove_dir_all(&profiles_dir).await?;
 
         assert!(profile_was_preserved);
-        assert!(profiles.data_arc().get_items().is_none());
+        assert!(profiles.data_arc().items.is_none());
         Ok(())
     }
 }

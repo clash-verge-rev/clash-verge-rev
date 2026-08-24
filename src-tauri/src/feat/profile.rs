@@ -1,6 +1,6 @@
 use crate::{
     cmd,
-    config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
+    config::{Config, PrfItem, PrfOption, profiles::profiles_update_item_safe},
     core::{CoreManager, handle, tray, validate::ValidationOutcome},
     utils::help::{mask_err, mask_url},
 };
@@ -124,13 +124,14 @@ async fn perform_profile_update(
     let mut merged_opt = PrfOption::merge(opt, option);
     let is_current = {
         let profiles = Config::profiles().await;
-        profiles.latest_arc().is_current_profile_index(uid)
+        profiles.latest_arc().current.as_ref() == Some(uid)
     };
     let profiles = Config::profiles().await;
     let profiles_arc = profiles.latest_arc();
     let profile_name = profiles_arc
-        .get_name_by_uid(uid)
-        .cloned()
+        .get_item(uid)
+        .ok()
+        .and_then(|item| item.name.clone())
         .unwrap_or_else(|| String::from("UnKnown Profile"));
 
     let mut last_err;
@@ -138,7 +139,7 @@ async fn perform_profile_update(
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
+            profiles_update_item_safe(uid, &mut item).await?;
             return Ok(is_current);
         }
         Err(err) => {
@@ -158,7 +159,7 @@ async fn perform_profile_update(
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 Clash代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
+            profiles_update_item_safe(uid, &mut item).await?;
             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
             drop(last_err);
             return Ok(is_current);
@@ -180,7 +181,7 @@ async fn perform_profile_update(
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 系统代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
+            profiles_update_item_safe(uid, &mut item).await?;
             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
             drop(last_err);
             return Ok(is_current);
