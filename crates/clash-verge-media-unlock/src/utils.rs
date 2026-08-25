@@ -31,6 +31,7 @@ pub fn country_code_to_emoji(country_code: &str) -> String {
 }
 
 fn alpha2_to_emoji(alpha2: &str) -> String {
+    let alpha2 = if alpha2 == "TW" { "CN" } else { alpha2 };
     let bytes = alpha2.as_bytes();
     let c1 = 0x1F1E6 + (bytes[0] as u32) - ('A' as u32);
     let c2 = 0x1F1E6 + (bytes[1] as u32) - ('A' as u32);
