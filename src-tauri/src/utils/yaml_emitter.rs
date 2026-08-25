@@ -3,7 +3,65 @@ use serde_yaml_ng::Result;
 
 pub fn to_mihomo_config_string<T: Serialize>(data: &T) -> Result<String> {
     let yaml = serde_yaml_ng::to_string(data)?;
-    Ok(quote_fake_ip_filter_wildcards(&yaml))
+    let yaml = quote_fake_ip_filter_wildcards(&yaml);
+    Ok(quote_date_like_values(&yaml))
+}
+
+fn quote_date_like_values(yaml: &str) -> String {
+    let mut result = String::with_capacity(yaml.len());
+
+    for line in yaml.lines() {
+        let indent = leading_spaces(line);
+        let trimmed = &line[indent..];
+
+        if let Some((key, val)) = trimmed.split_once(':') {
+            let trimmed_val = val.trim();
+            if !trimmed_val.is_empty()
+                && !trimmed_val.starts_with('\"')
+                && !trimmed_val.starts_with('\'')
+                && is_date_like(trimmed_val)
+            {
+                result.push_str(&line[..indent]);
+                result.push_str(key);
+                result.push_str(": ");
+                result.push_str(&quote_string(trimmed_val));
+                result.push('\n');
+                continue;
+            }
+        } else if trimmed.starts_with("- ") {
+            let item = trimmed[2..].trim();
+            if !item.is_empty()
+                && !item.starts_with('\"')
+                && !item.starts_with('\'')
+                && is_date_like(item)
+            {
+                result.push_str(&line[..indent]);
+                result.push_str("- ");
+                result.push_str(&quote_string(item));
+                result.push('\n');
+                continue;
+            }
+        }
+
+        result.push_str(line);
+        result.push('\n');
+    }
+
+    result
+}
+
+fn is_date_like(s: &str) -> bool {
+    let parts: Vec<&str> = s.split('-').collect();
+    if parts.len() == 3 {
+        parts[0].len() == 4
+            && parts[0].chars().all(|c| c.is_ascii_digit())
+            && (1..=2).contains(&parts[1].len())
+            && parts[1].chars().all(|c| c.is_ascii_digit())
+            && (1..=2).contains(&parts[2].len())
+            && parts[2].chars().all(|c| c.is_ascii_digit())
+    } else {
+        false
+    }
 }
 
 fn quote_fake_ip_filter_wildcards(yaml: &str) -> String {
@@ -110,5 +168,25 @@ items:
       line2
 ",
         );
+    }
+
+    #[test]
+    fn quotes_date_like_strings_in_proxies() {
+        let input = r#"
+proxies:
+  - name: SS-Date-Password
+    type: ss
+    server: 1.2.3.4
+    port: 4321
+    cipher: aes-128-gcm
+    password: "2026-9-14"
+"#;
+
+        roundtrip(input);
+
+        let value: serde_yaml_ng::Value = serde_yaml_ng::from_str(input).expect("input yaml should parse");
+        let output = to_mihomo_config_string(&value).expect("yaml should serialize");
+
+        assert!(output.contains("password: '2026-9-14'"));
     }
 }
