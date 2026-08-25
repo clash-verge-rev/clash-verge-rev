@@ -145,8 +145,7 @@ const SortableColumnItem = ({
         py: 0.5,
         borderRadius: 1,
         border: (theme) => `1px solid ${theme.palette.divider}`,
-        // 拖拽中的行置为不透明背景，避免透出下方内容；投影由全局
-        // [data-dnd-dragging] 规则统一施加。
+        // 拖拽中的行置为不透明背景，避免透出下方内容；投影由全局 [data-dnd-dragging] 规则统一施加。
         backgroundColor: isDragging ? 'background.paper' : 'transparent',
         display: 'flex',
         alignItems: 'center',

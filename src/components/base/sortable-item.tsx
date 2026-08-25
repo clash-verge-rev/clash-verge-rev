@@ -30,8 +30,7 @@ export const SortableItem = (props: SortableItemProps) => {
     }),
     ...(isDragging && {
       zIndex: 100,
-      // 拖拽中的元素置为不透明背景，避免半透明卡片透出下层内容。
-      // 投影由全局 [data-dnd-dragging] 规则统一施加。
+      // 拖拽中的元素置为不透明背景，避免半透明卡片透出下层内容。 投影由全局 [data-dnd-dragging] 规则统一施加。
       backgroundColor: theme.palette.background.paper,
     }),
   }
