@@ -1,7 +1,7 @@
 import { arrayMove } from '@dnd-kit/helpers'
 import {
   DragDropProvider,
-  DragOverEvent,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
   type DragEndEvent,
@@ -784,7 +784,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
+                          field.onChange(parseInt(e.target.value, 10))
                         }}
                       />
                     </Item>
@@ -807,7 +807,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
+                          field.onChange(parseInt(e.target.value, 10))
                         }}
                         slotProps={{
                           input: {
@@ -835,7 +835,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
+                          field.onChange(parseInt(e.target.value, 10))
                         }}
                         slotProps={{
                           input: {
@@ -867,7 +867,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
+                          field.onChange(parseInt(e.target.value, 10))
                         }}
                       />
                     </Item>
@@ -910,7 +910,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         onChange={(e) => {
-                          field.onChange(parseInt(e.target.value))
+                          field.onChange(parseInt(e.target.value, 10))
                         }}
                       />
                     </Item>
