@@ -472,18 +472,7 @@ impl Timer {
 
         run_timer_profile_update_transition(
             || Self::emit_update_event(uid, true),
-            || async {
-                let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
-                logging!(
-                    debug,
-                    Type::Timer,
-                    "Profile {} is current active profile: {}",
-                    uid,
-                    is_current
-                );
-
-                feat::update_profile(uid, None, is_current, false, false).await
-            },
+            || feat::update_profile(uid, None, false),
             |result| match result {
                 Ok(_) => {
                     logging!(

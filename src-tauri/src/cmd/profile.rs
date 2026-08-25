@@ -133,7 +133,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    match feat::update_profile(&index, option.as_ref(), true, true, true).await {
+    match feat::update_profile(&index, option.as_ref(), true).await {
         Ok(_) => Ok(()),
         Err(e) => {
             logging!(error, Type::Cmd, "{}", e);
