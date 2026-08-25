@@ -30,11 +30,6 @@
       "semicolons": "asNeeded"
     }
   },
-  "css": {
-    "formatter": {
-      "enabled": true
-    }
-  },
   "files": {
     "includes": [
       "**",

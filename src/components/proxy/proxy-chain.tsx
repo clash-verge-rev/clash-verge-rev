@@ -25,7 +25,14 @@ import {
   useTheme,
 } from '@mui/material'
 import * as yaml from 'js-yaml'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type Ref,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   closeAllConnections,
@@ -88,24 +95,28 @@ const toChainItems = (
   )
 }
 
-const ProxyChainItem = ({
-  id,
+interface ChainCardProps {
+  proxy: ProxyChainItem
+  index: number
+  isFirst: boolean
+  isLast: boolean
+  isDragging?: boolean
+  handleRef?: Ref<HTMLElement> | null
+  onRemove?: (id: string) => void
+}
+
+const ChainCard = ({
   proxy,
   index,
   isFirst,
   isLast,
+  isDragging,
+  handleRef,
   onRemove,
-}: ProxyChainItemProps) => {
+}: ChainCardProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
-  const [element, setElement] = useState<Element | null>(null)
-  const handleRef = useRef<HTMLElement | null>(null)
-  const { isDragging } = useSortable({
-    id,
-    index,
-    element,
-    handle: handleRef,
-  })
+
   const roleLabel = isFirst
     ? t('proxies.page.chain.entryNode')
     : isLast
@@ -120,7 +131,6 @@ const ProxyChainItem = ({
 
   return (
     <Box
-      ref={setElement}
       sx={{
         mb: 0,
         display: 'flex',
@@ -132,11 +142,6 @@ const ProxyChainItem = ({
           ? `1.5px solid ${roleColor}`
           : `1px solid ${theme.palette.divider}`,
         transition: 'box-shadow 0.2s, background-color 0.2s',
-        opacity: isDragging
-          ? 0.5
-          : proxy.recordId === undefined
-            ? 0.55
-            : undefined,
       }}
     >
       <Box
@@ -211,18 +216,71 @@ const ProxyChainItem = ({
         />
       )}
 
-      <IconButton
-        size="small"
-        onClick={() => onRemove(proxy.id)}
-        sx={{
-          color: theme.palette.error.main,
-          '&:hover': {
-            backgroundColor: theme.palette.error.light + '20',
-          },
-        }}
-      >
-        <DeleteIcon fontSize="small" />
-      </IconButton>
+      {onRemove && (
+        <IconButton
+          size="small"
+          onClick={() => onRemove(proxy.id)}
+          sx={{
+            color: theme.palette.error.main,
+            '&:hover': {
+              backgroundColor: theme.palette.error.light + '20',
+            },
+          }}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      )}
+    </Box>
+  )
+}
+
+const SortableProxyChainItem = ({
+  id,
+  proxy,
+  index,
+  isFirst,
+  isLast,
+  onRemove,
+}: ProxyChainItemProps) => {
+  const theme = useTheme()
+  const [element, setElement] = useState<Element | null>(null)
+  const handleRef = useRef<HTMLElement | null>(null)
+  const { isDragging } = useSortable({
+    id,
+    index,
+    element,
+    handle: handleRef,
+  })
+
+  return (
+    <Box ref={setElement} className="proxy-chain-item" sx={{ width: '100%' }}>
+      <ChainCard
+        proxy={proxy}
+        index={index}
+        isFirst={isFirst}
+        isLast={isLast}
+        isDragging={isDragging}
+        handleRef={handleRef}
+        onRemove={onRemove}
+      />
+      {!isLast && (
+        <Box
+          className="proxy-chain-arrow"
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            py: 0.25,
+          }}
+        >
+          <ArrowDownward
+            sx={{
+              fontSize: 20,
+              color: theme.palette.primary.main,
+              opacity: 0.7,
+            }}
+          />
+        </Box>
+      )}
     </Box>
   )
 }
@@ -575,44 +633,20 @@ export const ProxyChain = ({
             sensors={[PointerSensor, KeyboardSensor]}
             onDragEnd={handleDragEnd}
           >
-            <Box
-              sx={{
-                borderRadius: 1,
-                minHeight: 60,
-                p: 1,
-              }}
-            >
+            <Box sx={{ borderRadius: 1, minHeight: 60, p: 1 }}>
               {currentProxyChain.map((proxy, index) => (
-                <Box key={proxy.id}>
-                  <ProxyChainItem
-                    id={proxy.id}
-                    proxy={proxy}
-                    index={index}
-                    isFirst={index === 0}
-                    isLast={
-                      index === currentProxyChain.length - 1 &&
-                      currentProxyChain.length > 1
-                    }
-                    onRemove={handleRemoveProxy}
-                  />
-                  {index < currentProxyChain.length - 1 && (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        py: 0.25,
-                      }}
-                    >
-                      <ArrowDownward
-                        sx={{
-                          fontSize: 20,
-                          color: theme.palette.primary.main,
-                          opacity: 0.7,
-                        }}
-                      />
-                    </Box>
-                  )}
-                </Box>
+                <SortableProxyChainItem
+                  key={proxy.id}
+                  id={proxy.id}
+                  proxy={proxy}
+                  index={index}
+                  isFirst={index === 0}
+                  isLast={
+                    index === currentProxyChain.length - 1 &&
+                    currentProxyChain.length > 1
+                  }
+                  onRemove={handleRemoveProxy}
+                />
               ))}
             </Box>
           </DragDropProvider>

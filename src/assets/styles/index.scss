@@ -63,3 +63,11 @@ body {
 [data-dnd-dragging] {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32) !important;
 }
+
+[data-dnd-dragging] .proxy-chain-arrow {
+  display: none;
+}
+
+[data-dnd-dragging].proxy-chain-item {
+  height: auto !important;
+}
