@@ -5,6 +5,7 @@ mod icon;
 mod listener;
 mod profile;
 mod proxy;
+mod stateful_proxy;
 mod tun;
 mod window;
 
@@ -16,5 +17,6 @@ pub use icon::*;
 pub use listener::*;
 pub use profile::*;
 pub use proxy::*;
+pub use stateful_proxy::*;
 pub use tun::*;
 pub use window::*;

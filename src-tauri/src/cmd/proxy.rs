@@ -1,4 +1,4 @@
-use super::CmdResult;
+use super::{CmdResult, coded_error};
 use crate::{
     cmd::StringifyErr as _,
     config::Config,
@@ -32,6 +32,27 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
         .stringify_err()
 }
 
+/// Atomically changes a selector and closes exactly one stateful Inner UDP
+/// underlay so the existing outbound can redial through the new selection.
+#[tauri::command]
+pub async fn redial_stateful_proxy_underlay(
+    request: crate::feat::StatefulProxyRedialRequest,
+) -> CmdResult<crate::feat::StatefulProxyRedialReport> {
+    crate::feat::redial_stateful_proxy_underlay(Handle::mihomo(), &request)
+        .await
+        .map_err(|error| coded_error(error.code(), error))
+}
+
+/// Restores a selector after failed validation. A unique underlay is redialed;
+/// an idle selector is restored without closing unrelated connections.
+#[tauri::command]
+pub async fn restore_stateful_proxy_underlay(
+    request: crate::feat::StatefulProxyRedialRequest,
+) -> CmdResult<crate::feat::StatefulProxyRedialReport> {
+    crate::feat::restore_stateful_proxy_underlay(Handle::mihomo(), &request)
+        .await
+        .map_err(|error| coded_error(error.code(), error))
+}
 static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
 static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 

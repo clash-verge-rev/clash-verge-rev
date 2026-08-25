@@ -165,6 +165,8 @@ mod app_init {
             cmd::copy_clash_env,
             cmd::sync_tray_proxy_selection,
             cmd::record_selected_node,
+            cmd::redial_stateful_proxy_underlay,
+            cmd::restore_stateful_proxy_underlay,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,
