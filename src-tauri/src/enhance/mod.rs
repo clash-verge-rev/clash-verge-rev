@@ -158,7 +158,7 @@ async fn get_config_values() -> ConfigValues {
 
 #[allow(clippy::cognitive_complexity)]
 async fn collect_profile_items(profiles: &IProfiles) -> Result<ProfileItems> {
-    let current_profile_uid = match profiles.get_current().cloned() {
+    let current_profile_uid = match profiles.current.clone() {
         Some(uid) => uid,
         None => return Ok(ProfileItems::default()),
     };

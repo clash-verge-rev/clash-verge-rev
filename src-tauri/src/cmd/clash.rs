@@ -203,27 +203,17 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
 }
 
 #[tauri::command]
-pub fn check_dns_config_exists() -> CmdResult<bool> {
-    use crate::utils::dirs;
-
-    let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
-
-    Ok(dns_path.exists())
-}
-
-#[tauri::command]
-pub async fn get_dns_config_content() -> CmdResult<String> {
+pub async fn get_dns_config_content() -> CmdResult<Option<String>> {
     use crate::utils::dirs;
     use tokio::fs;
 
     let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
-    if !fs::try_exists(&dns_path).await.stringify_err()? {
-        return Err("DNS config file not found".into());
+    match fs::read_to_string(&dns_path).await {
+        Ok(content) => Ok(Some(content.into())),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(CommandFailure::plain(error)),
     }
-
-    let content = fs::read_to_string(&dns_path).await.stringify_err()?.into();
-    Ok(content)
 }
 
 #[tauri::command]

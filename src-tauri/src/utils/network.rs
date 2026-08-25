@@ -18,7 +18,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
+    const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
         Self { status, headers, body }
     }
 
@@ -30,8 +30,8 @@ impl HttpResponse {
         &self.headers
     }
 
-    pub fn text_with_charset(&self) -> Result<&str> {
-        Ok(&self.body)
+    pub fn text(&self) -> &str {
+        &self.body
     }
 }
 
@@ -49,12 +49,6 @@ enum TlsRootMode {
 }
 
 pub struct NetworkManager;
-
-impl Default for NetworkManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl NetworkManager {
     pub const fn new() -> Self {
@@ -161,23 +155,6 @@ impl NetworkManager {
         detail.contains("protocolversion") || detail.contains("protocol version")
     }
 
-    pub async fn create_request(
-        &self,
-        proxy_type: ProxyType,
-        timeout_secs: Option<u64>,
-        user_agent: Option<String>,
-        accept_invalid_certs: bool,
-    ) -> Result<Client> {
-        self.create_request_with_tls_mode(
-            proxy_type,
-            timeout_secs,
-            user_agent,
-            accept_invalid_certs,
-            TlsRootMode::PlatformVerifier,
-        )
-        .await
-    }
-
     async fn get_with_tls_mode(
         &self,
         url: &str,
@@ -279,7 +256,7 @@ impl NetworkManager {
         self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs, tls_root_mode)
     }
 
-    pub async fn get_with_interrupt(
+    pub async fn get(
         &self,
         url: &str,
         proxy_type: ProxyType,
@@ -355,8 +332,8 @@ impl NetworkManager {
         Ok(body)
     }
 
-    /// Downloads a binary body, mirroring the TLS fallback of [`Self::get_with_interrupt`].
-    pub async fn get_bytes_with_interrupt(
+    /// Downloads a binary body, mirroring the TLS fallback of [`Self::get`].
+    pub async fn get_bytes(
         &self,
         url: &str,
         proxy_type: ProxyType,
