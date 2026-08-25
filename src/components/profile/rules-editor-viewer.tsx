@@ -1,6 +1,6 @@
 import {
   DragDropProvider,
-  DragOverEvent,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
   type DragEndEvent,

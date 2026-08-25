@@ -1,7 +1,7 @@
 import { arrayMove } from '@dnd-kit/helpers'
 import {
   DragDropProvider,
-  DragOverEvent,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
   type DragEndEvent,
@@ -68,6 +68,14 @@ const findRealIndex = (
   return list.findIndex((proxy) => proxy.name === item.name)
 }
 
+// 节点的 name 会被用作 sortable item id、React key 以及拖拽排序的
+// 依据。当 name 为空/null（例如高级模式下粘贴了缺少 name 的节点）时，
+// 无效 name 不能作为 sortable item id，否则会导致拖拽注册失败。
+// 这里统一过滤掉没有有效 name 的节点，避免可视化编辑页崩溃；原始 YAML
+// 数据仍然保留，用户可在高级(文本)模式中查看并修正这些节点。
+const hasValidName = (proxy: IProxyConfig) =>
+  typeof proxy?.name === 'string' && proxy.name.length > 0
+
 export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, property, open, onClose, onSave } = props
   const { t } = useTranslation()
@@ -85,13 +93,6 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
   const hasLoadedSeqConfigRef = useRef(false)
 
-  // 节点的 name 会被用作 sortable item id、React key 以及拖拽排序的
-  // 依据。当 name 为空/null（例如高级模式下粘贴了缺少 name 的节点）时，
-  // 无效 name 不能作为 sortable item id，否则会导致拖拽注册失败。
-  // 这里统一过滤掉没有有效 name 的节点，避免可视化编辑页崩溃；原始 YAML
-  // 数据仍然保留，用户可在高级(文本)模式中查看并修正这些节点。
-  const hasValidName = (proxy: IProxyConfig) =>
-    typeof proxy?.name === 'string' && proxy.name.length > 0
   const filteredPrependSeq = useMemo(
     () =>
       prependSeq.filter((proxy) => hasValidName(proxy) && match(proxy.name)),
