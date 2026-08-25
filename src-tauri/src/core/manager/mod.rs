@@ -263,7 +263,7 @@ impl CoreManager {
                         crate::config::Config::notify_startup_mixed_port_fallback();
                         return Err(start_error);
                     }
-                    match crate::config::Config::retry_startup_mixed_port_fallback().await {
+                    match crate::config::Config::resolve_startup_mixed_port().await {
                         Ok(true) => {
                             retries += 1;
                             logging!(

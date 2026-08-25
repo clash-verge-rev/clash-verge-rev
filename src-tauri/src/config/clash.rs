@@ -117,7 +117,7 @@ impl IClashTemp {
         let mixed_port = Self::guard_mixed_port(&config);
         let socks_port = Self::guard_socks_port(&config);
         let port = Self::guard_port(&config);
-        let ctrl = Self::guard_external_controller(&config);
+        let ctrl = Self::guard_server_ctrl(&config);
         #[cfg(unix)]
         let external_controller_unix = Self::guard_external_controller_ipc();
         #[cfg(windows)]
@@ -181,7 +181,7 @@ impl IClashTemp {
         })
     }
     #[cfg(not(target_os = "windows"))]
-    pub fn guard_redir_port(config: &Mapping) -> u16 {
+    fn guard_redir_port(config: &Mapping) -> u16 {
         let mut port = config
             .get("redir-port")
             .and_then(|value| match value {
@@ -197,7 +197,7 @@ impl IClashTemp {
     }
 
     #[cfg(target_os = "linux")]
-    pub fn guard_tproxy_port(config: &Mapping) -> u16 {
+    fn guard_tproxy_port(config: &Mapping) -> u16 {
         let mut port = config
             .get("tproxy-port")
             .and_then(|value| match value {
@@ -212,7 +212,7 @@ impl IClashTemp {
         port
     }
 
-    pub fn guard_mixed_port(config: &Mapping) -> u16 {
+    fn guard_mixed_port(config: &Mapping) -> u16 {
         let raw_value = config.get("mixed-port");
 
         let mut port = raw_value
@@ -230,7 +230,7 @@ impl IClashTemp {
         port
     }
 
-    pub fn guard_socks_port(config: &Mapping) -> u16 {
+    fn guard_socks_port(config: &Mapping) -> u16 {
         let mut port = config
             .get("socks-port")
             .and_then(|value| match value {
@@ -245,7 +245,7 @@ impl IClashTemp {
         port
     }
 
-    pub fn guard_port(config: &Mapping) -> u16 {
+    fn guard_port(config: &Mapping) -> u16 {
         let mut port = config
             .get("port")
             .and_then(|value| match value {
@@ -260,7 +260,7 @@ impl IClashTemp {
         port
     }
 
-    pub fn guard_server_ctrl(config: &Mapping) -> String {
+    pub(super) fn guard_server_ctrl(config: &Mapping) -> String {
         config
             .get("external-controller")
             .and_then(|value| match value.as_str() {
@@ -279,13 +279,7 @@ impl IClashTemp {
             .unwrap_or_else(|| "127.0.0.1:9097".into())
     }
 
-    pub fn guard_external_controller(config: &Mapping) -> String {
-        // 在初始化阶段，直接返回配置中的值，不进行额外检查
-        // 这样可以避免在配置加载期间的循环依赖
-        Self::guard_server_ctrl(config)
-    }
-
-    pub fn guard_client_ctrl(config: &Mapping) -> String {
+    fn guard_client_ctrl(config: &Mapping) -> String {
         let value = Self::guard_server_ctrl(config);
         match SocketAddr::from_str(value.as_str()) {
             Ok(mut socket) => {
@@ -298,7 +292,7 @@ impl IClashTemp {
         }
     }
 
-    pub fn guard_external_controller_ipc() -> String {
+    pub(crate) fn guard_external_controller_ipc() -> String {
         // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
         sidecar_ipc_path()
             .ok()
