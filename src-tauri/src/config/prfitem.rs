@@ -16,6 +16,17 @@ use tokio::fs;
 use reqwest_dav::re_exports::url::form_urlencoded;
 use tauri::Url;
 
+pub(super) fn normalize_profile_home_url(raw: &str) -> Option<String> {
+    let url = Url::parse(raw.trim()).ok()?;
+
+    if !matches!(url.scheme(), "http" | "https") {
+        return None;
+    }
+
+    url.host_str()?;
+    Some(url.to_string().into())
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
     pub uid: Option<String>,
@@ -332,13 +343,10 @@ impl PrfItem {
             },
         };
 
-        let home = match header.get("profile-web-page-url") {
-            Some(value) => {
-                let str_value = value.to_str().unwrap_or("");
-                Some(str_value.into())
-            }
-            None => None,
-        };
+        let home = header
+            .get("profile-web-page-url")
+            .and_then(|value| value.to_str().ok())
+            .and_then(normalize_profile_home_url);
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();

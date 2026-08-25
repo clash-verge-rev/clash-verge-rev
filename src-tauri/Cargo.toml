@@ -74,6 +74,7 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", rev = "
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.3.5"
+tauri-plugin-opener = "2.5.4"
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-process = "2.3.1"

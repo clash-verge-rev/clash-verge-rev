@@ -1,6 +1,6 @@
 use super::{
     PrfOption,
-    prfitem::{PrfItem, PrfSelected},
+    prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
 };
 use crate::{
     core::{handle, tray::Tray},
@@ -106,6 +106,7 @@ impl IProfiles {
         match help::read_yaml::<Self>(&path).await {
             Ok(mut profiles) => {
                 let items = profiles.items.get_or_insert_with(Vec::new);
+                let mut home_changed = false;
                 for item in items.iter_mut() {
                     if item.uid.is_none() {
                         item.uid = Some(help::get_uid("d").into());
@@ -116,6 +117,19 @@ impl IProfiles {
                             .allow_auto_update
                             .get_or_insert(true);
                     }
+
+                    if item
+                        .home
+                        .as_deref()
+                        .is_some_and(|home| normalize_profile_home_url(home).is_none())
+                    {
+                        item.home = None;
+                        home_changed = true;
+                    }
+                }
+
+                if home_changed && let Err(err) = profiles.save_file().await {
+                    logging!(error, Type::Config, "无法保存已清理的 profiles.yaml: {err}");
                 }
                 profiles
             }

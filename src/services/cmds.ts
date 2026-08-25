@@ -241,14 +241,6 @@ export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
 }
 
-export const openWebUrl = async (url: string) => {
-  try {
-    await invoke('open_web_url', { url })
-  } catch (err: any) {
-    showNotice.error(err)
-  }
-}
-
 export async function cmdTestDelay(url: string) {
   return invoke<number>('test_delay', { url })
 }
