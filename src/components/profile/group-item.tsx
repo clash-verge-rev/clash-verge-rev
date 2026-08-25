@@ -41,8 +41,9 @@ export const GroupItem = (props: Props) => {
         borderRadius: '8px',
       })}
     >
-      {group.icon && group.icon?.trim().startsWith('http') && (
+      {group?.icon?.trim().startsWith('http') && (
         <img
+          alt="group icon"
           src={iconCachePath === '' ? group.icon : iconCachePath}
           width="32px"
           style={{
@@ -51,8 +52,9 @@ export const GroupItem = (props: Props) => {
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith('data') && (
+      {group?.icon?.trim().startsWith('data') && (
         <img
+          alt="group icon"
           src={group.icon}
           width="32px"
           style={{
@@ -61,8 +63,9 @@ export const GroupItem = (props: Props) => {
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith('<svg') && (
+      {group?.icon?.trim().startsWith('<svg') && (
         <img
+          alt="group icon"
           src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
           width="32px"
           style={{
