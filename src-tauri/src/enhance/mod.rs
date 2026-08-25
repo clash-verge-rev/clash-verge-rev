@@ -662,7 +662,7 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
         .unwrap_or(true);
 
     if ipv6_enabled && is_fake_ip && range6_missing {
-        dns.insert(Value::from("fake-ip-range6"), Value::from("fdfe:dcba:9876::1/64"));
+        dns.insert(Value::from("fake-ip-range6"), Value::from("2001:2::0/64"));
     }
 }
 
@@ -790,7 +790,7 @@ mod fake_ip_tests {
         map
     }
 
-    const RANGE6: &str = "fdfe:dcba:9876::1/64";
+    const RANGE6: &str = "2001:2::0/64";
 
     #[test]
     fn an_ipv6_fake_ip_setup_missing_its_range_gets_one() {
@@ -942,7 +942,7 @@ mod use_tun_tests {
         assert_eq!(dns.get(Value::from("ipv6")), Some(&Value::from(true)));
         assert_eq!(
             dns.get(Value::from("fake-ip-range6")),
-            Some(&Value::from("fdfe:dcba:9876::1/64"))
+            Some(&Value::from("2001:2::0/64"))
         );
 
         let without_ipv6 = use_tun(Mapping::new(), true);
