@@ -718,7 +718,7 @@ fn reconcile_selected_nodes(
 }
 
 /// Cancels restoration so it cannot overwrite a newer selection or profile snapshot.
-pub fn supersede_selected_activation() {
+pub(crate) fn supersede_selected_activation() {
     ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
 
@@ -819,7 +819,7 @@ async fn update_tray_after_activation(generation: u64) {
 }
 
 /// Records a backend-made selection so the next core start restores it.
-pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
+pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     let group_name = String::from(group_name);
     let node = String::from(node);
     let recorded = Config::profiles()
@@ -871,7 +871,7 @@ fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bo
     selected.len() != original_len
 }
 
-pub async fn forget_selected_node(group_name: &str) -> Result<()> {
+pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
     let cleared = Config::profiles()
         .await
         .with_data_modify(move |mut profiles| async move {
@@ -1103,21 +1103,21 @@ async fn activate_selected_nodes_worker(
 
 /// Whether an activation may also prune the records it cannot match.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum SelectionRepair {
+enum SelectionRepair {
     /// Prune records after a fully loaded profile switch.
     Prune,
     /// Preserve records during startup while provider-backed groups may still be absent.
     KeepRecords,
 }
 
-pub fn activate_selected_nodes() {
+pub(crate) fn activate_selected_nodes() {
     // The first-pass signal is for callers that wait; a profile switch does not, and dropping
     // the receiver simply makes the send a no-op.
     drop(activate_selected_nodes_with(SelectionRepair::Prune));
 }
 
 /// Restores available selections before the system proxy points at the core, then retries the rest.
-pub async fn restore_selected_nodes() {
+pub(crate) async fn restore_selected_nodes() {
     let first_pass = activate_selected_nodes_with(SelectionRepair::KeepRecords);
     if tokio::time::timeout(SELECTED_NODES_FIRST_PASS_BUDGET, first_pass)
         .await

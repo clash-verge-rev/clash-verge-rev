@@ -6,7 +6,7 @@ use crate::{
     utils::{dirs, window_manager::WindowManager},
 };
 use anyhow::{Context as _, Result, bail};
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
@@ -250,7 +250,7 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
                 ));
             }
             AsyncHandler::spawn(|| async move {
-                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+                resolve::resolve_scheme(&query.param).await;
             });
             Ok::<_, warp::Rejection>(warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK))
         });

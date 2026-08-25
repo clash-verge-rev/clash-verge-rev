@@ -104,7 +104,7 @@ pub struct PrfOption {
 }
 
 impl PrfOption {
-    pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
+    pub(crate) fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
@@ -132,11 +132,7 @@ impl PrfOption {
 
 impl PrfItem {
     /// Builds an item from a partial value that must include `itype`.
-    pub async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
-        if item.itype.is_none() {
-            bail!("type should not be null");
-        }
-
+    pub(super) async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
         let itype = item
             .itype
             .as_ref()
@@ -162,7 +158,7 @@ impl PrfItem {
         }
     }
 
-    pub async fn from_local(
+    async fn from_local(
         name: String,
         desc: String,
         file_data: Option<String>,
@@ -227,7 +223,7 @@ impl PrfItem {
         })
     }
 
-    pub async fn from_url(
+    pub(crate) async fn from_url(
         url: &str,
         name: Option<&String>,
         desc: Option<&String>,
@@ -257,7 +253,7 @@ impl PrfItem {
         let url = fix_dirty_url(url)?;
 
         let resp = match NetworkManager::new()
-            .get_with_interrupt(
+            .get(
                 url.as_str(),
                 proxy_type,
                 Some(timeout),
@@ -349,7 +345,7 @@ impl PrfItem {
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text_with_charset();
+        let data = resp.text();
 
         let data = data.trim_start_matches('\u{feff}');
 
@@ -487,7 +483,7 @@ impl PrfItem {
         }
     }
 
-    pub async fn read_file(&self) -> Result<String> {
+    pub(crate) async fn read_file(&self) -> Result<String> {
         let file = self
             .file
             .as_ref()
@@ -501,23 +497,23 @@ impl PrfItem {
 }
 
 impl PrfItem {
-    pub fn current_merge(&self) -> Option<&String> {
+    pub(crate) fn current_merge(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.merge.as_ref())
     }
 
-    pub fn current_script(&self) -> Option<&String> {
+    pub(crate) fn current_script(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.script.as_ref())
     }
 
-    pub fn current_rules(&self) -> Option<&String> {
+    pub(crate) fn current_rules(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.rules.as_ref())
     }
 
-    pub fn current_proxies(&self) -> Option<&String> {
+    pub(crate) fn current_proxies(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.proxies.as_ref())
     }
 
-    pub fn current_groups(&self) -> Option<&String> {
+    pub(crate) fn current_groups(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.groups.as_ref())
     }
 }

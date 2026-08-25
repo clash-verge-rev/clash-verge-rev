@@ -21,13 +21,13 @@ use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_signal;
 
 pub mod dns;
-pub mod scheme;
-pub mod window;
-pub mod window_script;
+mod scheme;
+pub(crate) mod window;
+mod window_script;
 
 static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
 
-pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
+pub(crate) fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
         logging!(info, Type::Setup, "Initializing logger");
@@ -36,7 +36,7 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
     })
 }
 
-pub fn resolve_setup_sync() {
+pub(crate) fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(server::embed_server);
@@ -45,7 +45,7 @@ pub fn resolve_setup_sync() {
     });
 }
 
-pub fn resolve_setup_async() {
+pub(crate) fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
         logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
@@ -104,9 +104,8 @@ fn init_scheme() {
     logging_error!(Type::Setup, init::init_scheme());
 }
 
-pub async fn resolve_scheme(param: &str) -> Result<()> {
+pub(crate) async fn resolve_scheme(param: &str) {
     logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
-    Ok(())
 }
 
 #[cfg(target_os = "linux")]
@@ -180,12 +179,12 @@ async fn init_silent_updater() {
     logging!(info, Type::Setup, "Silent updater initialized");
 }
 
-pub fn init_signal() {
+pub(crate) fn init_signal() {
     logging!(info, Type::Setup, "Initializing signal handlers...");
     clash_verge_signal::register(feat::quit);
 }
 
-pub async fn init_work_config() {
+async fn init_work_config() {
     logging_error!(Type::Setup, init::init_config().await);
 }
 
@@ -237,10 +236,10 @@ async fn resolve_dock_show() {
     }
 }
 
-pub fn resolve_done() {
+fn resolve_done() {
     RESOLVE_DONE.store(true, Ordering::Release);
 }
 
-pub fn is_resolve_done() -> bool {
+pub(crate) fn is_resolve_done() -> bool {
     RESOLVE_DONE.load(Ordering::Acquire)
 }

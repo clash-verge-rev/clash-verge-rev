@@ -27,7 +27,7 @@ use std::{
 use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
-pub struct Config {
+pub(crate) struct Config {
     clash_config: Draft<IClashTemp>,
     verge_config: Draft<IVerge>,
     profiles_config: Draft<IProfiles>,
@@ -38,7 +38,7 @@ static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 impl Config {
-    pub async fn global() -> &'static Self {
+    async fn global() -> &'static Self {
         static CONFIG: OnceCell<Config> = OnceCell::const_new();
         CONFIG
             .get_or_init(|| async {
@@ -376,7 +376,7 @@ fn collect_names(config: &Mapping, list_key: &str, out: &mut HashSet<String>) {
 }
 
 #[derive(Debug)]
-pub enum ConfigType {
+pub(crate) enum ConfigType {
     Run,
     Check,
 }

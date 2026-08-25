@@ -30,7 +30,7 @@ impl HttpResponse {
         &self.headers
     }
 
-    pub fn text_with_charset(&self) -> &str {
+    pub fn text(&self) -> &str {
         &self.body
     }
 }
@@ -49,12 +49,6 @@ enum TlsRootMode {
 }
 
 pub struct NetworkManager;
-
-impl Default for NetworkManager {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl NetworkManager {
     pub const fn new() -> Self {
@@ -262,7 +256,7 @@ impl NetworkManager {
         self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs, tls_root_mode)
     }
 
-    pub async fn get_with_interrupt(
+    pub async fn get(
         &self,
         url: &str,
         proxy_type: ProxyType,
@@ -338,8 +332,8 @@ impl NetworkManager {
         Ok(body)
     }
 
-    /// Downloads a binary body, mirroring the TLS fallback of [`Self::get_with_interrupt`].
-    pub async fn get_bytes_with_interrupt(
+    /// Downloads a binary body, mirroring the TLS fallback of [`Self::get`].
+    pub async fn get_bytes(
         &self,
         url: &str,
         proxy_type: ProxyType,

@@ -80,10 +80,8 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let urls = event.urls();
             AsyncHandler::spawn(move || async move {
-                if let Some(url) = urls.first()
-                    && let Err(e) = resolve::resolve_scheme(url.as_ref()).await
-                {
-                    logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
+                if let Some(url) = urls.first() {
+                    resolve::resolve_scheme(url.as_ref()).await;
                 }
             });
         });
