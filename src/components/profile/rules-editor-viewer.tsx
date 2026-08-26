@@ -336,24 +336,26 @@ export const RulesEditorViewer = (props: Props) => {
     } else if (index < filteredRuleList.length + shift) {
       const newIndex = index - shift
       return (
-        <RuleItem
-          key={filteredRuleList[newIndex]}
-          type={
-            deleteSeq.includes(filteredRuleList[newIndex])
-              ? 'delete'
-              : 'original'
-          }
-          ruleRaw={filteredRuleList[newIndex]}
-          onDelete={() => {
-            if (deleteSeq.includes(filteredRuleList[newIndex])) {
-              setDeleteSeq(
-                deleteSeq.filter((v) => v !== filteredRuleList[newIndex]),
-              )
-            } else {
-              setDeleteSeq((prev) => [...prev, filteredRuleList[newIndex]])
+        <Box sx={{ margin: '8px 0' }}>
+          <RuleItem
+            key={filteredRuleList[newIndex]}
+            type={
+              deleteSeq.includes(filteredRuleList[newIndex])
+                ? 'delete'
+                : 'original'
             }
-          }}
-        />
+            ruleRaw={filteredRuleList[newIndex]}
+            onDelete={() => {
+              if (deleteSeq.includes(filteredRuleList[newIndex])) {
+                setDeleteSeq(
+                  deleteSeq.filter((v) => v !== filteredRuleList[newIndex]),
+                )
+              } else {
+                setDeleteSeq((prev) => [...prev, filteredRuleList[newIndex]])
+              }
+            }}
+          />
+        </Box>
       )
     } else {
       return (

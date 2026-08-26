@@ -138,27 +138,31 @@ export const ProxiesEditorViewer = (props: Props) => {
     } else if (index < filteredProxyList.length + shift) {
       const newIndex = index - shift
       return (
-        <ProxyItem
-          key={filteredProxyList[newIndex].name}
-          type={
-            deleteSeq.includes(filteredProxyList[newIndex].name)
-              ? 'delete'
-              : 'original'
-          }
-          proxy={filteredProxyList[newIndex]}
-          onDelete={() => {
-            if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
-              setDeleteSeq(
-                deleteSeq.filter((v) => v !== filteredProxyList[newIndex].name),
-              )
-            } else {
-              setDeleteSeq((prev) => [
-                ...prev,
-                filteredProxyList[newIndex].name,
-              ])
+        <Box sx={{ margin: '8px 0' }}>
+          <ProxyItem
+            key={filteredProxyList[newIndex].name}
+            type={
+              deleteSeq.includes(filteredProxyList[newIndex].name)
+                ? 'delete'
+                : 'original'
             }
-          }}
-        />
+            proxy={filteredProxyList[newIndex]}
+            onDelete={() => {
+              if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
+                setDeleteSeq(
+                  deleteSeq.filter(
+                    (v) => v !== filteredProxyList[newIndex].name,
+                  ),
+                )
+              } else {
+                setDeleteSeq((prev) => [
+                  ...prev,
+                  filteredProxyList[newIndex].name,
+                ])
+              }
+            }}
+          />
+        </Box>
       )
     } else {
       return (

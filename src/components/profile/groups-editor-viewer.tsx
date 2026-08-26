@@ -234,27 +234,31 @@ export const GroupsEditorViewer = (props: Props) => {
     } else if (index < filteredGroupList.length + shift) {
       const newIndex = index - shift
       return (
-        <GroupItem
-          key={filteredGroupList[newIndex].name}
-          type={
-            deleteSeq.includes(filteredGroupList[newIndex].name)
-              ? 'delete'
-              : 'original'
-          }
-          group={filteredGroupList[newIndex]}
-          onDelete={() => {
-            if (deleteSeq.includes(filteredGroupList[newIndex].name)) {
-              setDeleteSeq(
-                deleteSeq.filter((v) => v !== filteredGroupList[newIndex].name),
-              )
-            } else {
-              setDeleteSeq((prev) => [
-                ...prev,
-                filteredGroupList[newIndex].name,
-              ])
+        <Box sx={{ margin: '8px 0' }}>
+          <GroupItem
+            key={filteredGroupList[newIndex].name}
+            type={
+              deleteSeq.includes(filteredGroupList[newIndex].name)
+                ? 'delete'
+                : 'original'
             }
-          }}
-        />
+            group={filteredGroupList[newIndex]}
+            onDelete={() => {
+              if (deleteSeq.includes(filteredGroupList[newIndex].name)) {
+                setDeleteSeq(
+                  deleteSeq.filter(
+                    (v) => v !== filteredGroupList[newIndex].name,
+                  ),
+                )
+              } else {
+                setDeleteSeq((prev) => [
+                  ...prev,
+                  filteredGroupList[newIndex].name,
+                ])
+              }
+            }}
+          />
+        </Box>
       )
     } else {
       return (
