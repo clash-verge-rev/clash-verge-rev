@@ -22,6 +22,7 @@ import {
   IconButton,
   Paper,
   Typography,
+  keyframes,
   useTheme,
 } from '@mui/material'
 import * as yaml from 'js-yaml'
@@ -80,6 +81,17 @@ interface ProxyChainItemProps {
   onRemove: (id: string) => void
 }
 
+const arrowFadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`
+
 const toChainItems = (
   parsedConfig: ParsedChainConfig | null | undefined,
 ): ProxyChainItem[] => {
@@ -101,6 +113,7 @@ interface ChainCardProps {
   isFirst: boolean
   isLast: boolean
   isDragging?: boolean
+  isDropping?: boolean
   handleRef?: Ref<HTMLElement> | null
   onRemove?: (id: string) => void
 }
@@ -111,6 +124,7 @@ const ChainCard = ({
   isFirst,
   isLast,
   isDragging,
+  isDropping,
   handleRef,
   onRemove,
 }: ChainCardProps) => {
@@ -142,6 +156,9 @@ const ChainCard = ({
           ? `1.5px solid ${roleColor}`
           : `1px solid ${theme.palette.divider}`,
         transition: 'box-shadow 0.2s, background-color 0.2s',
+        boxShadow: isDropping
+          ? `0 0 0 2px ${theme.palette.primary.main}66`
+          : undefined,
       }}
     >
       <Box
@@ -245,7 +262,7 @@ const SortableProxyChainItem = ({
   const theme = useTheme()
   const [element, setElement] = useState<Element | null>(null)
   const handleRef = useRef<HTMLElement | null>(null)
-  const { isDragging } = useSortable({
+  const { isDragging, isDropping } = useSortable({
     id,
     index,
     element,
@@ -253,13 +270,29 @@ const SortableProxyChainItem = ({
   })
 
   return (
-    <Box ref={setElement} className="proxy-chain-item" sx={{ width: '100%' }}>
+    <Box
+      ref={setElement}
+      sx={{
+        width: '100%',
+        '&[data-dnd-dragging]': {
+          height: 'auto',
+          boxShadow: 'none !important',
+          '.proxy-chain-arrow': {
+            display: 'none',
+          },
+        },
+        '& .proxy-chain-arrow': {
+          animation: `${arrowFadeIn} 0.25s ease`,
+        },
+      }}
+    >
       <ChainCard
         proxy={proxy}
         index={index}
         isFirst={isFirst}
         isLast={isLast}
         isDragging={isDragging}
+        isDropping={isDropping}
         handleRef={handleRef}
         onRemove={onRemove}
       />
