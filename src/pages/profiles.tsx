@@ -906,7 +906,7 @@ const ProfilePage = () => {
               overflow: 'hidden',
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
               gap: 1,
-              px: 1,
+              px: 0.5,
             }}
           >
             {profileItems.map((item, index) => (
