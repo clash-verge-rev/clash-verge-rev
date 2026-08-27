@@ -131,8 +131,7 @@ async fn get_config_values() -> ConfigValues {
         // the user is admin) the capability overrides it. Fixes #7821 where the
         // panel switch flipped `enable_tun_mode` but the kernel kept `tun.enable`
         // false because `continue_with_sidecar` had suppressed the session.
-        enable_tun_mode.unwrap_or(false)
-            && (!Config::tun_suppressed_for_session() || RUN_STATE.state().tun_capable()),
+        enable_tun_mode.unwrap_or(false) && (!Config::tun_suppressed_for_session() || RUN_STATE.state().tun_capable()),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
