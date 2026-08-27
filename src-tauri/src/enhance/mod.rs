@@ -17,6 +17,7 @@ use crate::utils::dirs;
 use crate::{
     config::{Config, IProfiles, IVerge, PrfItem},
     constants,
+    core::runstate::RUN_STATE,
     utils::tmpl,
 };
 use anyhow::{Context as _, Result};
@@ -124,7 +125,14 @@ async fn get_config_values() -> ConfigValues {
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
-        enable_tun_mode.unwrap_or(false) && !Config::tun_suppressed_for_session(),
+        // A stale session TUN suppression must not veto an explicitly requested
+        // TUN when the current run state can actually support it. The suppression
+        // only means "this session cannot do TUN"; once the Service is ready (or
+        // the user is admin) the capability overrides it. Fixes #7821 where the
+        // panel switch flipped `enable_tun_mode` but the kernel kept `tun.enable`
+        // false because `continue_with_sidecar` had suppressed the session.
+        enable_tun_mode.unwrap_or(false)
+            && (!Config::tun_suppressed_for_session() || RUN_STATE.state().tun_capable()),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
