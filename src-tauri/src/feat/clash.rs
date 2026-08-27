@@ -5,23 +5,12 @@ use crate::{
     process::AsyncHandler,
     utils,
 };
-use bytes::BytesMut;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
+use reqwest::{Client, Proxy};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::sync::Arc;
-
-#[allow(clippy::expect_used)]
-static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
-    let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-        .with_safe_default_protocol_versions()
-        .expect("Failed to set TLS versions")
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-    Arc::new(config)
-});
+use std::time::Duration;
+use tokio::time::Instant;
 
 pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
@@ -116,70 +105,23 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 }
 
 /// Test delay to a URL through proxy.
-/// HTTPS: measures TLS handshake time. HTTP: measures HEAD round-trip time.
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
-    use std::sync::Arc;
-    use std::time::Duration;
-    use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
-    use tokio::net::TcpStream;
-    use tokio::time::Instant;
+    let proxy_port = MixedPort::effective().await;
+    let proxy = Proxy::all(format!("http://127.0.0.1:{proxy_port}"))?;
 
-    let parsed = tauri::Url::parse(&url)?;
-    let is_https = parsed.scheme() == "https";
-    let host = parsed
-        .host_str()
-        .ok_or_else(|| anyhow::anyhow!("Invalid URL: no host"))?
-        .to_string();
-    let port = parsed.port().unwrap_or(if is_https { 443 } else { 80 });
+    let client = Client::builder()
+        .proxy(proxy)
+        .timeout(Duration::from_secs(10))
+        .danger_accept_invalid_certs(true)
+        .build()?;
 
-    let verge = Config::verge().await.latest_arc();
-    let proxy_enabled = verge.enable_system_proxy.unwrap_or(false) || verge.enable_tun_mode.unwrap_or(false);
-    let proxy_port = if proxy_enabled {
-        Some(MixedPort::desired().await)
-    } else {
-        None
-    };
-
-    tokio::time::timeout(Duration::from_secs(10), async {
-        let start = Instant::now();
-        let mut buf = BytesMut::with_capacity(1024);
-
-        if is_https {
-            let stream = match proxy_port {
-                Some(pp) => {
-                    let mut s = TcpStream::connect(format!("127.0.0.1:{pp}")).await?;
-                    s.write_all(format!("CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n\r\n").as_bytes())
-                        .await?;
-                    s.read_buf(&mut buf).await?;
-                    if !buf.windows(3).any(|w| w == b"200") {
-                        return Err(anyhow::anyhow!("Proxy CONNECT failed"));
-                    }
-                    s
-                }
-                None => TcpStream::connect(format!("{host}:{port}")).await?,
-            };
-            let connector = tokio_rustls::TlsConnector::from(Arc::clone(&TLS_CONFIG));
-            let server_name = rustls::pki_types::ServerName::try_from(host.as_str())
-                .map_err(|_| anyhow::anyhow!("Invalid DNS name: {host}"))?
-                .to_owned();
-            connector.connect(server_name, stream).await?;
-        } else {
-            let (mut stream, req) = match proxy_port {
-                Some(pp) => (
-                    TcpStream::connect(format!("127.0.0.1:{pp}")).await?,
-                    format!("HEAD {url} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
-                ),
-                None => (
-                    TcpStream::connect(format!("{host}:{port}")).await?,
-                    format!("HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
-                ),
-            };
-            stream.write_all(req.as_bytes()).await?;
-            let _ = stream.read(&mut buf).await?;
+    let start = Instant::now();
+    let resp = client.head(url.as_str()).send().await;
+    match resp {
+        Ok(_) => Ok((start.elapsed().as_millis() as u32).max(1)),
+        Err(_) => {
+            client.get(url.as_str()).send().await?;
+            Ok((start.elapsed().as_millis() as u32).max(1))
         }
-
-        Ok((start.elapsed().as_millis() as u32).max(1))
-    })
-    .await
-    .unwrap_or(Ok(10000u32))
+    }
 }
