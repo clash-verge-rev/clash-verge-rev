@@ -1,6 +1,6 @@
 use crate::{
     cmd,
-    config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
+    config::{Config, PrfItem, PrfOption, profiles::profiles_update_item_safe},
     core::{CoreManager, handle, tray, validate::ValidationOutcome},
     utils::help::{mask_err, mask_url},
 };
@@ -119,27 +119,22 @@ async fn perform_profile_update(
     opt: Option<&PrfOption>,
     option: Option<&PrfOption>,
     is_mannual_trigger: bool,
-) -> Result<bool> {
+) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始下载新的订阅内容");
     let mut merged_opt = PrfOption::merge(opt, option);
-    let is_current = {
-        let profiles = Config::profiles().await;
-        profiles.latest_arc().is_current_profile_index(uid)
-    };
     let profiles = Config::profiles().await;
     let profiles_arc = profiles.latest_arc();
     let profile_name = profiles_arc
-        .get_name_by_uid(uid)
-        .cloned()
+        .get_item(uid)
+        .ok()
+        .and_then(|item| item.name.clone())
         .unwrap_or_else(|| String::from("UnKnown Profile"));
-
-    let mut last_err;
 
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
-            return Ok(is_current);
+            profiles_update_item_safe(uid, &mut item).await?;
+            return Ok(());
         }
         Err(err) => {
             logging!(
@@ -148,7 +143,6 @@ async fn perform_profile_update(
                 "Warning: [订阅更新] 正常更新失败: {}，尝试使用Clash代理更新",
                 mask_err(&err.to_string())
             );
-            last_err = err;
         }
     }
 
@@ -158,10 +152,9 @@ async fn perform_profile_update(
     match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 Clash代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
+            profiles_update_item_safe(uid, &mut item).await?;
             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
-            drop(last_err);
-            return Ok(is_current);
+            return Ok(());
         }
         Err(err) => {
             logging!(
@@ -170,20 +163,18 @@ async fn perform_profile_update(
                 "Warning: [订阅更新] Clash代理更新失败: {}，尝试使用系统代理更新",
                 mask_err(&err.to_string())
             );
-            last_err = err;
         }
     }
 
     merged_opt.get_or_insert_with(PrfOption::default).self_proxy = Some(false);
     merged_opt.get_or_insert_with(PrfOption::default).with_proxy = Some(true);
 
-    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
+    let last_err = match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 系统代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
+            profiles_update_item_safe(uid, &mut item).await?;
             handle::Handle::notice_message("update_with_clash_proxy", profile_name);
-            drop(last_err);
-            return Ok(is_current);
+            return Ok(());
         }
         Err(err) => {
             logging!(
@@ -192,32 +183,31 @@ async fn perform_profile_update(
                 "Warning: [订阅更新] 系统代理更新失败: {}，所有重试均已失败",
                 mask_err(&err.to_string())
             );
-            last_err = err;
+            err
         }
-    }
+    };
 
+    let last_err = mask_err(&last_err.to_string());
     if is_mannual_trigger {
         handle::Handle::notice_message("update_failed_even_with_clash", format!("{profile_name} - {last_err}"));
     }
-    Ok(is_current)
+    bail!(last_err)
 }
 
-pub async fn update_profile(
-    uid: &String,
-    option: Option<&PrfOption>,
-    auto_refresh: bool,
-    ignore_auto_update: bool,
-    is_mannual_trigger: bool,
-) -> Result<()> {
+pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual_trigger: bool) -> Result<()> {
     logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
-    let url_opt = should_update_profile(uid, ignore_auto_update).await?;
+    let url_opt = should_update_profile(uid, is_mannual_trigger).await?;
 
-    let should_refresh = match url_opt {
+    let profile_persisted = match url_opt {
         Some((url, opt)) => {
-            perform_profile_update(uid, &url, opt.as_ref(), option, is_mannual_trigger).await? && auto_refresh
+            perform_profile_update(uid, &url, opt.as_ref(), option, is_mannual_trigger).await?;
+            true
         }
-        None => auto_refresh,
+        None => false,
     };
+    let profiles = Config::profiles().await;
+    let is_current = profiles.latest_arc().current.as_ref() == Some(uid);
+    let should_refresh = is_current || (!profile_persisted && is_mannual_trigger);
 
     if should_refresh {
         logging!(info, Type::Config, "[订阅更新] 更新内核配置");
@@ -229,15 +219,20 @@ pub async fn update_profile(
             Ok(outcome @ (ValidationOutcome::Skipped { .. } | ValidationOutcome::Busy)) if !is_mannual_trigger => {
                 logging!(info, Type::Config, "[订阅更新] 本次配置刷新已跳过: {}", outcome);
             }
-            Ok(outcome) => {
-                let message = outcome.to_string();
+            result => {
+                let message = match result {
+                    Ok(outcome) => outcome.to_string(),
+                    Err(err) => err.to_string(),
+                };
+                let message = mask_err(&message);
+                let message = if profile_persisted {
+                    format!("订阅已保存，但未能确认已应用到内核: {message}")
+                } else {
+                    message
+                };
                 logging!(error, Type::Config, "[订阅更新] 更新失败: {}", message);
-                handle::Handle::notice_message("update_failed", message);
-            }
-            Err(err) => {
-                logging!(error, Type::Config, "[订阅更新] 更新失败: {}", err);
-                handle::Handle::notice_message("update_failed", format!("{err}"));
-                logging!(error, Type::Config, "{err}");
+                handle::Handle::notice_message("update_failed", &message);
+                bail!(message);
             }
         }
     }

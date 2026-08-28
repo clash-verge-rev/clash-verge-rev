@@ -82,12 +82,15 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   SERVICE_SIDECAR_FAILED: 'settings.feedback.errors.clashService.sidecarFailed',
   SERVICE_UNINSTALL_FAILED:
     'settings.feedback.errors.clashService.uninstallFailed',
+  SYSPROXY_CORE_NOT_READY: 'settings.feedback.errors.sysproxy.coreNotReady',
   SYSPROXY_DIRECT_FALLBACK: 'settings.feedback.errors.sysproxy.directFallback',
   SYSPROXY_GUARD_STOPPED: 'settings.feedback.errors.sysproxy.guardStopped',
   SYSPROXY_SIDECAR_WHILE_SERVICE_READY:
     'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
   SYSPROXY_PRIVILEGE_REQUIRED:
     'settings.feedback.errors.sysproxy.privilegeRequired',
+  SYSPROXY_SYSTEM_CALL_FAILED:
+    'settings.feedback.errors.sysproxy.systemCallFailed',
 }
 
 let nextId = 0

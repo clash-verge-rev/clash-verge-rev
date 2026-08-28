@@ -44,7 +44,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             }
 
             if ipv6_val && !dns_val.contains_key(Value::from("fake-ip-range6")) {
-                revise!(dns_val, "fake-ip-range6", "fdfe:dcba:9876::1/64");
+                revise!(dns_val, "fake-ip-range6", "2001:2::0/64");
             }
 
             #[cfg(target_os = "macos")]

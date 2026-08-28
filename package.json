@@ -55,7 +55,7 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-http": "~2.5.9",
-    "@tauri-apps/plugin-shell": "2.3.5",
+    "@tauri-apps/plugin-opener": "2.5.4",
     "@tauri-apps/plugin-updater": "2.10.1",
     "ahooks": "^3.9.7",
     "cidr-block": "^2.3.0",
@@ -136,5 +136,5 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@12.0.0"
 }

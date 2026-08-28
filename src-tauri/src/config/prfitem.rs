@@ -16,6 +16,17 @@ use tokio::fs;
 use reqwest_dav::re_exports::url::form_urlencoded;
 use tauri::Url;
 
+pub(super) fn normalize_profile_home_url(raw: &str) -> Option<String> {
+    let url = Url::parse(raw.trim()).ok()?;
+
+    if !matches!(url.scheme(), "http" | "https") {
+        return None;
+    }
+
+    url.host_str()?;
+    Some(url.to_string().into())
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
     pub uid: Option<String>,
@@ -104,7 +115,7 @@ pub struct PrfOption {
 }
 
 impl PrfOption {
-    pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
+    pub(crate) fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
@@ -132,11 +143,7 @@ impl PrfOption {
 
 impl PrfItem {
     /// Builds an item from a partial value that must include `itype`.
-    pub async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
-        if item.itype.is_none() {
-            bail!("type should not be null");
-        }
-
+    pub(super) async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
         let itype = item
             .itype
             .as_ref()
@@ -162,7 +169,7 @@ impl PrfItem {
         }
     }
 
-    pub async fn from_local(
+    async fn from_local(
         name: String,
         desc: String,
         file_data: Option<String>,
@@ -179,27 +186,27 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -227,7 +234,7 @@ impl PrfItem {
         })
     }
 
-    pub async fn from_url(
+    pub(crate) async fn from_url(
         url: &str,
         name: Option<&String>,
         desc: Option<&String>,
@@ -257,7 +264,7 @@ impl PrfItem {
         let url = fix_dirty_url(url)?;
 
         let resp = match NetworkManager::new()
-            .get_with_interrupt(
+            .get(
                 url.as_str(),
                 proxy_type,
                 Some(timeout),
@@ -336,20 +343,17 @@ impl PrfItem {
             },
         };
 
-        let home = match header.get("profile-web-page-url") {
-            Some(value) => {
-                let str_value = value.to_str().unwrap_or("");
-                Some(str_value.into())
-            }
-            None => None,
-        };
+        let home = header
+            .get("profile-web-page-url")
+            .and_then(|value| value.to_str().ok())
+            .and_then(normalize_profile_home_url);
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text_with_charset()?;
+        let data = resp.text();
 
         let data = data.trim_start_matches('\u{feff}');
 
@@ -360,27 +364,27 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -410,7 +414,7 @@ impl PrfItem {
         })
     }
 
-    pub fn from_merge(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_merge(uid: Option<String>) -> Self {
         let (id, template) = if let Some(uid) = uid {
             (uid, tmpl::ITEM_MERGE.into())
         } else {
@@ -418,76 +422,76 @@ impl PrfItem {
         };
         let file = format!("{id}.yaml").into();
 
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("merge".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(template),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_script(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_script(uid: Option<String>) -> Self {
         let id = if let Some(uid) = uid {
             uid
         } else {
             help::get_uid("s").into()
         };
         let file = format!("{id}.js").into(); // js ext
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("script".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_rules() -> Result<Self> {
+    fn from_rules() -> Self {
         let uid = help::get_uid("r").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("rules".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_RULES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_proxies() -> Result<Self> {
+    fn from_proxies() -> Self {
         let uid = help::get_uid("p").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("proxies".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_PROXIES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub fn from_groups() -> Result<Self> {
+    fn from_groups() -> Self {
         let uid = help::get_uid("g").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("groups".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_GROUPS.into()),
             ..Default::default()
-        })
+        }
     }
 
-    pub async fn read_file(&self) -> Result<String> {
+    pub(crate) async fn read_file(&self) -> Result<String> {
         let file = self
             .file
             .as_ref()
@@ -498,37 +502,26 @@ impl PrfItem {
             .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
         Ok(content.into())
     }
-
-    pub async fn save_file(&self, data: String) -> Result<()> {
-        let file = self
-            .file
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file.as_str());
-        fs::write(path, data.as_bytes())
-            .await
-            .context("failed to save the file")
-    }
 }
 
 impl PrfItem {
-    pub fn current_merge(&self) -> Option<&String> {
+    pub(crate) fn current_merge(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.merge.as_ref())
     }
 
-    pub fn current_script(&self) -> Option<&String> {
+    pub(crate) fn current_script(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.script.as_ref())
     }
 
-    pub fn current_rules(&self) -> Option<&String> {
+    pub(crate) fn current_rules(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.rules.as_ref())
     }
 
-    pub fn current_proxies(&self) -> Option<&String> {
+    pub(crate) fn current_proxies(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.proxies.as_ref())
     }
 
-    pub fn current_groups(&self) -> Option<&String> {
+    pub(crate) fn current_groups(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.groups.as_ref())
     }
 }

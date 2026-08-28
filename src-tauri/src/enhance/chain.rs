@@ -54,21 +54,21 @@ impl AsyncChainItemFrom for Option<ChainItem> {
                 data: ChainType::Merge(help::read_mapping(&path).await.ok()?),
             }),
             "rules" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Rules(seq_map),
                 })
             }
             "proxies" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Proxies(seq_map),
                 })
             }
             "groups" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Groups(seq_map),

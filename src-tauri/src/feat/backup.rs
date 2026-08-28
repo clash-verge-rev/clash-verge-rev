@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IClashTemp, IProfiles, IVerge},
-    core::{backup, proxy_control::SystemProxyStateUnknown},
+    core::{CoreManager, backup, proxy_control, proxy_control::SystemProxyStateUnknown},
     process::AsyncHandler,
     utils::{
         dirs::{PathBufExec as _, app_home_dir, local_backup_dir, verge_path},
@@ -52,10 +52,30 @@ async fn finalize_restored_verge_config(
     profiles_draft.apply();
 
     let verge_draft = Config::verge().await;
-    verge_draft.edit_draft(|d| {
-        *d = restored.clone();
-    });
-    verge_draft.apply();
+    {
+        // Hold the write lock so a concurrent patch cannot stage a draft the proxy write reads.
+        let _config_write = Config::lock_config_write().await;
+        verge_draft.edit_draft(|d| {
+            *d = restored.clone();
+        });
+        verge_draft.apply();
+
+        // Turn it off here; a failing core side effect below would otherwise skip this step.
+        if !restored.enable_system_proxy.unwrap_or_default() {
+            let result = async {
+                let _lifecycle = CoreManager::global().lifecycle_lock.lock().await;
+                proxy_control::apply().await?;
+                proxy_control::refresh_guard().await
+            }
+            .await;
+            if let Err(err) = result {
+                logging!(error, Type::Backup, "Failed to turn the system proxy off: {err:#?}");
+                if SystemProxyStateUnknown::is_in(&err) {
+                    return Err(err);
+                }
+            }
+        }
+    }
 
     // Run configuration side effects without rewriting the already-restored file.
     if let Err(err) = super::patch_verge(&restored, true).await {

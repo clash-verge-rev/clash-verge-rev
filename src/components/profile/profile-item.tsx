@@ -15,7 +15,6 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
-import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import {
@@ -44,6 +43,7 @@ import { showNotice } from '@/services/notice-service'
 import { useLoadingCache, useSetLoadingCache } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { debugLog } from '@/utils/debug'
+import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { ProfileBox } from './profile-box'
@@ -320,7 +320,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const onOpenHome = () => {
     setAnchorEl(null)
-    open(itemData.home ?? '')
+    if (!itemData.home) return
+    void openExternalUrl(itemData.home).catch(showNotice.error)
   }
 
   const onEditInfo = () => {

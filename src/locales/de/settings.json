@@ -660,7 +660,9 @@
         "privilegeRequired": "Systemproxy kann nicht gesetzt werden: macOS hat die Änderung mangels Berechtigung abgelehnt. Installieren Sie den Clash-Verge-Dienst; als Administrator können Sie in den erweiterten Optionen unter Systemeinstellungen → Datenschutz & Sicherheit auch die Passwortpflicht für systemweite Einstellungen deaktivieren.",
         "directFallback": "Systemproxy konnte nicht gesetzt werden; der Datenverkehr wurde auf eine direkte Verbindung zurückgesetzt.",
         "guardStopped": "Der Systemproxy-Wächter wurde nach mehreren Fehlversuchen in Folge gestoppt. Der Systemproxy wird nicht mehr automatisch aufrechterhalten.",
-        "sidecarWhileServiceReady": "Der Systemproxy konnte nicht gesetzt werden: Der Clash-Verge-Dienst ist bereit, der Kern läuft aber noch als Sidecar. Starten Sie den Kern neu, um in den Dienstmodus zu wechseln."
+        "sidecarWhileServiceReady": "Der Systemproxy konnte nicht gesetzt werden: Der Clash-Verge-Dienst ist bereit, der Kern läuft aber noch als Sidecar. Starten Sie den Kern neu, um in den Dienstmodus zu wechseln.",
+        "coreNotReady": "Der Systemproxy konnte nicht aktiviert werden, da der Kern nicht läuft. Starten Sie den Kern (oder installieren/reparieren Sie den Clash-Verge-Dienst) und versuchen Sie es erneut.",
+        "systemCallFailed": "Der Systemproxy konnte nicht geschrieben werden, da ein Windows-Systemaufruf fehlschlug. Das ist meist vorübergehend, versuchen Sie es erneut."
       }
     },
     "notifications": {

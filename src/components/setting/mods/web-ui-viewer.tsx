@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
-import { openWebUrl } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { openExternalUrl } from '@/utils/open-external-url'
 
 import { WebUIItem } from './web-ui-item'
 
@@ -98,7 +98,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         )
       }
 
-      await openWebUrl(url)
+      await openExternalUrl(url)
     } catch (e: any) {
       showNotice.error('settings.modals.webUI.errors.openFailed', e)
     }

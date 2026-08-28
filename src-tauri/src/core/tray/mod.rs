@@ -294,7 +294,7 @@ impl Tray {
         {
             let profiles = Config::profiles().await;
             let profiles = profiles.latest_arc();
-            if let Some(current_profile_uid) = profiles.get_current()
+            if let Some(current_profile_uid) = profiles.current.as_ref()
                 && let Ok(profile) = profiles.get_item(current_profile_uid)
             {
                 current_profile_name = match &profile.name {

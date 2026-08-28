@@ -51,6 +51,7 @@ mod app_init {
             .plugin(tauri_plugin_fs::init())
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_shell::init())
+            .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_http::init())
             .plugin(
@@ -80,10 +81,8 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let urls = event.urls();
             AsyncHandler::spawn(move || async move {
-                if let Some(url) = urls.first()
-                    && let Err(e) = resolve::resolve_scheme(url.as_ref()).await
-                {
-                    logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
+                if let Some(url) = urls.first() {
+                    resolve::resolve_scheme(url.as_ref()).await;
                 }
             });
         });
@@ -130,7 +129,6 @@ mod app_init {
             cmd::get_embedded_server_port,
             cmd::open_app_dir,
             cmd::open_logs_dir,
-            cmd::open_web_url,
             cmd::open_core_dir,
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
@@ -169,7 +167,6 @@ mod app_init {
             cmd::forget_selected_node,
             cmd::save_dns_config,
             cmd::apply_dns_config,
-            cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
             cmd::get_clash_logs,
