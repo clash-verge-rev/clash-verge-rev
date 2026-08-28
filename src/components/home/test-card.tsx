@@ -1,15 +1,11 @@
 import {
-  DndContext,
-  closestCenter,
+  DragDropProvider,
   PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverlay,
-} from '@dnd-kit/core'
-import { SortableContext } from '@dnd-kit/sortable'
+  type DragEndEvent,
+} from '@dnd-kit/react'
+import { isSortable } from '@dnd-kit/react/sortable'
 import { Add, NetworkCheck } from '@mui/icons-material'
-import { Box, IconButton, Tooltip, alpha, styled, Grid } from '@mui/material'
+import { Box, IconButton, Tooltip, alpha, styled } from '@mui/material'
 import { emit } from '@tauri-apps/api/event'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useMemo, useCallback } from 'react'
@@ -20,8 +16,9 @@ import apple from '@/assets/image/test/apple.svg?raw'
 import github from '@/assets/image/test/github.svg?raw'
 import google from '@/assets/image/test/google.svg?raw'
 import youtube from '@/assets/image/test/youtube.svg?raw'
+import { SortableItem } from '@/components/base'
 import { TestItem } from '@/components/test/test-item'
-import { TestViewer, TestViewerRef } from '@/components/test/test-viewer'
+import { TestViewer, type TestViewerRef } from '@/components/test/test-viewer'
 import { useVerge } from '@/hooks/use-verge'
 
 import { EnhancedCard } from './enhanced-card'
@@ -70,11 +67,6 @@ const DEFAULT_TEST_LIST = [
 
 export const TestCard = () => {
   const { t } = useTranslation()
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-  )
   const { verge, mutateVerge, patchVerge } = useVerge()
   const viewerRef = useRef<TestViewerRef>(null)
 
@@ -111,29 +103,42 @@ export const TestCard = () => {
 
   const onDragEnd = useCallback(
     async (event: DragEndEvent) => {
-      const { active, over } = event
-      if (!over || active.id === over.id) return
+      const { operation, canceled } = event
+      const { source, target } = operation
 
-      const old_index = testList.findIndex((x) => x.uid === active.id)
-      const new_index = testList.findIndex((x) => x.uid === over.id)
+      if (canceled || !target || !isSortable(source)) return
 
-      if (old_index >= 0 && new_index >= 0) {
-        const newList = [...testList]
-        const [removed] = newList.splice(old_index, 1)
-        newList.splice(new_index, 0, removed)
+      const { index: newIndex, initialIndex: oldIndex } = source.sortable
+      if (
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        oldIndex >= testList.length ||
+        newIndex >= testList.length ||
+        oldIndex === newIndex
+      ) {
+        return
+      }
 
-        // 优化：先本地更新，再异步 patch，避免UI卡死
-        mutateVerge({ ...verge, test_list: newList }, false)
-        const patchFn = () => {
-          try {
-            patchVerge({ test_list: newList })
-          } catch {}
-        }
-        if (window.requestIdleCallback) {
-          window.requestIdleCallback(patchFn)
-        } else {
-          setTimeout(patchFn, 0)
-        }
+      const activeId = testList[oldIndex].uid
+      const overId = testList[newIndex].uid
+
+      if (activeId == null || overId == null || activeId === overId) return
+
+      const newList = [...testList]
+      const [removed] = newList.splice(oldIndex, 1)
+      newList.splice(newIndex, 0, removed)
+
+      // 优化：先本地更新，再异步 patch，避免UI卡死
+      mutateVerge({ ...verge, test_list: newList }, false)
+      const patchFn = () => {
+        try {
+          patchVerge({ test_list: newList })
+        } catch {}
+      }
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(patchFn)
+      } else {
+        setTimeout(patchFn, 0)
       }
     },
     [testList, verge, mutateVerge, patchVerge],
@@ -149,20 +154,25 @@ export const TestCard = () => {
   // 使用useMemo优化UI内容，减少渲染计算
   const renderTestItems = useMemo(
     () => (
-      <Grid container spacing={1} columns={12}>
-        <SortableContext items={testList.map((x) => x.uid)}>
-          {testList.map((item) => (
-            <Grid key={item.uid} size={3}>
-              <TestItem
-                id={item.uid}
-                itemData={item}
-                onEdit={() => viewerRef.current?.edit(item)}
-                onDelete={onDeleteTestListItem}
-              />
-            </Grid>
-          ))}
-        </SortableContext>
-      </Grid>
+      <Box
+        sx={{
+          mb: 1.5,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gap: 1,
+          px: 1,
+        }}
+      >
+        {testList.map((item, index) => (
+          <SortableItem key={item.uid} id={item.uid} index={index}>
+            <TestItem
+              itemData={item}
+              onEdit={() => viewerRef.current?.edit(item)}
+              onDelete={onDeleteTestListItem}
+            />
+          </SortableItem>
+        ))}
+      </Box>
     ),
     [testList, onDeleteTestListItem],
   )
@@ -195,14 +205,9 @@ export const TestCard = () => {
       }
     >
       <ScrollBox>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onDragEnd}
-        >
+        <DragDropProvider sensors={[PointerSensor]} onDragEnd={onDragEnd}>
           {renderTestItems}
-          <DragOverlay />
-        </DndContext>
+        </DragDropProvider>
       </ScrollBox>
 
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />

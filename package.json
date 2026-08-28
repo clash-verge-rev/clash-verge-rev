@@ -41,9 +41,8 @@
     "knip:report": "knip --no-exit-code"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
+    "@dnd-kit/helpers": "^0.5.0",
+    "@dnd-kit/react": "^0.5.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@juggle/resize-observer": "^3.4.0",
@@ -132,7 +131,7 @@
       "eslint --fix --max-warnings=0",
       "biome format --write"
     ],
-    "*.{css,scss,json}": [
+    "*.{css,json}": [
       "biome format --write"
     ]
   },
