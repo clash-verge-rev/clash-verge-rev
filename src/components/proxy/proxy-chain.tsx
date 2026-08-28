@@ -53,6 +53,10 @@ import { debugLog } from '@/utils/debug'
 
 import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
 
+const chainPointerSensor = PointerSensor.configure({
+  activationConstraints: () => undefined,
+})
+
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
 
 interface ParsedChainConfig {
@@ -155,6 +159,7 @@ const ChainCard = ({
         border: roleColor
           ? `1.5px solid ${roleColor}`
           : `1px solid ${theme.palette.divider}`,
+        opacity: proxy.recordId === undefined ? 0.55 : undefined,
         transition: 'box-shadow 0.2s, background-color 0.2s',
         boxShadow: isDropping
           ? `0 0 0 2px ${theme.palette.primary.main}66`
@@ -663,7 +668,7 @@ export const ProxyChain = ({
           </Box>
         ) : (
           <DragDropProvider
-            sensors={[PointerSensor, KeyboardSensor]}
+            sensors={[chainPointerSensor, KeyboardSensor]}
             onDragEnd={handleDragEnd}
           >
             <Box sx={{ borderRadius: 1, minHeight: 60, p: 1 }}>

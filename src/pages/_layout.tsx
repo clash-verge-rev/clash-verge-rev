@@ -64,9 +64,11 @@ const SortableNavMenuItem = ({
 }: SortableNavMenuItemProps) => {
   return (
     <SortableItem id={item.path} index={index}>
-      <LayoutItem to={item.path} icon={item.icon}>
-        {label}
-      </LayoutItem>
+      {(sortable) => (
+        <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
+          {label}
+        </LayoutItem>
+      )}
     </SortableItem>
   )
 }

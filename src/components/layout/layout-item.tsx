@@ -8,15 +8,17 @@ import {
 import type { ReactNode } from 'react'
 import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
+import type { SortableItemRenderProps } from '@/components/base/sortable-item'
 import { useVerge } from '@/hooks/use-verge'
 
 interface Props {
   to: string
   children: string
   icon: ReactNode[]
+  sortable?: SortableItemRenderProps
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon } = props
+  const { to, children, icon, sortable } = props
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -28,8 +30,13 @@ export const LayoutItem = (props: Props) => {
     navCollapsed && menu_icon === 'disable' ? 'monochrome' : menu_icon
 
   return (
-    <ListItem sx={{ py: 0.5, maxWidth: 250, mx: 'auto', padding: '4px 0px' }}>
+    <ListItem
+      ref={sortable?.ref}
+      style={sortable?.style}
+      sx={{ py: 0.5, maxWidth: 250, mx: 'auto', padding: '4px 0px' }}
+    >
       <ListItemButton
+        ref={sortable?.handleRef}
         selected={!!match}
         sx={[
           {

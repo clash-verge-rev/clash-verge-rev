@@ -1,6 +1,12 @@
 import { useSortable } from '@dnd-kit/react/sortable'
 import { useTheme } from '@mui/material'
-import type { CSSProperties, ReactNode } from 'react'
+import { type CSSProperties, type ReactNode, useCallback } from 'react'
+
+export interface SortableItemRenderProps {
+  ref: (element: HTMLElement | null) => void
+  handleRef: (element: HTMLElement | null) => void
+  style: CSSProperties
+}
 
 interface SortableItemProps {
   id: string
@@ -8,18 +14,25 @@ interface SortableItemProps {
   group?: string
   disabled?: boolean
   style?: CSSProperties
-  children: ReactNode
+  children: ReactNode | ((props: SortableItemRenderProps) => ReactNode)
 }
 
 export const SortableItem = (props: SortableItemProps) => {
   const { id, index, group, disabled, children, style } = props
-  const { ref, sortable, isDragging } = useSortable({
+  const { ref, handleRef, sortable, isDragging } = useSortable({
     id,
     index,
     group,
     disabled,
   })
   const theme = useTheme()
+  const setRef = useCallback(
+    (element: HTMLDivElement | null) => {
+      handleRef(element?.querySelector('[data-sortable-handle]') ?? null)
+      ref(element)
+    },
+    [handleRef, ref],
+  )
 
   const mergedStyle: CSSProperties = {
     position: 'relative',
@@ -35,8 +48,12 @@ export const SortableItem = (props: SortableItemProps) => {
     }),
   }
 
+  if (typeof children === 'function') {
+    return children({ ref, handleRef, style: mergedStyle })
+  }
+
   return (
-    <div ref={ref} style={mergedStyle}>
+    <div ref={setRef} style={mergedStyle}>
       {children}
     </div>
   )

@@ -75,6 +75,7 @@ export const GroupItem = (props: Props) => {
         />
       )}
       <ListItemText
+        data-sortable-handle
         sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary

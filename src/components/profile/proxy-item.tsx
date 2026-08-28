@@ -36,6 +36,7 @@ export const ProxyItem = (props: Props) => {
       })}
     >
       <ListItemText
+        data-sortable-handle
         sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary

@@ -67,7 +67,7 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
           event.preventDefault()
         }}
       >
-        <Box sx={{ position: 'relative', cursor: 'move' }}>
+        <Box data-sortable-handle sx={{ position: 'relative', cursor: 'move' }}>
           {icon && icon.trim() !== '' ? (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               {icon.trim().startsWith('http') && (

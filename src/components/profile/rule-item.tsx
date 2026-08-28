@@ -48,6 +48,7 @@ export const RuleItem = (props: Props) => {
       })}
     >
       <ListItemText
+        data-sortable-handle
         sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary

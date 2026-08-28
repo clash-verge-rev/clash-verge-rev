@@ -21,6 +21,10 @@ import {
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+const columnPointerSensor = PointerSensor.configure({
+  activationConstraints: () => undefined,
+})
+
 export interface ConnectionColumnOption {
   id: string
   label: string
@@ -79,7 +83,10 @@ export const ConnectionColumnManager = ({
         {t('connections.components.columnManager.title')}
       </DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
-        <DragDropProvider sensors={[PointerSensor]} onDragEnd={handleDragEnd}>
+        <DragDropProvider
+          sensors={[columnPointerSensor]}
+          onDragEnd={handleDragEnd}
+        >
           <List
             dense
             disablePadding

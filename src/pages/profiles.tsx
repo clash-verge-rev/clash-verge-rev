@@ -68,6 +68,9 @@ import { debugLog } from '@/utils/debug'
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
 const PROFILE_UPDATE_WORKER_LIMIT = 8
 const PROFILE_SWITCH_LOADING_DELAY = 400
+const profilePointerSensor = PointerSensor.configure({
+  activationConstraints: () => undefined,
+})
 
 interface ProfileSwitchRequest {
   profile: string
@@ -86,6 +89,7 @@ const ProfilePage = () => {
   const { addListener } = useListen()
   const [url, setUrl] = useState('')
   const [disabled, setDisabled] = useState(false)
+  const [profileDndRevision, setProfileDndRevision] = useState(0)
   const [activatings, setActivatings] = useState<string[]>([])
   const [switchTarget, setSwitchTarget] = useState<string | null>(null)
   const [visibleSwitchingProfile, setVisibleSwitchingProfile] = useState<
@@ -325,8 +329,13 @@ const ProfilePage = () => {
     const overId = profileItems[newIndex]?.uid
     if (activeId == null || overId == null || activeId === overId) return
 
-    await reorderProfile(activeId, overId)
-    mutateProfiles()
+    try {
+      await reorderProfile(activeId, overId)
+      mutateProfiles()
+    } catch (error) {
+      setProfileDndRevision((revision) => revision + 1)
+      showNotice.error(error)
+    }
   }
 
   const executeProfileSwitch = useCallback(
@@ -896,7 +905,8 @@ const ProfilePage = () => {
         }}
       >
         <DragDropProvider
-          sensors={[PointerSensor, KeyboardSensor]}
+          key={profileDndRevision}
+          sensors={[profilePointerSensor, KeyboardSensor]}
           onDragEnd={onDragEnd}
         >
           <Box
