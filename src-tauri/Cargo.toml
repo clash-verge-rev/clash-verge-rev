@@ -69,7 +69,7 @@ once_cell = { version = "1.21.4", features = ["parking_lot"] }
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
 regex = { workspace = true }
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", rev = "62c952b3a60c39a360f7e6cecde2bef5448659eb", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
