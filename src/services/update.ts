@@ -3,13 +3,9 @@ import {
   type CheckOptions,
   type Update,
 } from '@tauri-apps/plugin-updater'
+import { compareVersions as compareSemver } from 'compare-versions'
 
 import { version as appVersion } from '@root/package.json'
-
-type VersionParts = {
-  main: number[]
-  pre: (number | string)[]
-}
 
 const SEMVER_FULL_REGEX =
   /^\d+(?:\.\d+){1,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
@@ -36,62 +32,13 @@ const extractSemver = (input: string | null | undefined): string | null => {
   return normalizeVersion(match[0])
 }
 
-const splitVersion = (version: string | null): VersionParts | null => {
-  if (!version) return null
-  const [mainPart, preRelease] = version.split('-')
-  const main = mainPart
-    .split('.')
-    .map((part) => Number.parseInt(part, 10))
-    .map((num) => (Number.isNaN(num) ? 0 : num))
-
-  const pre =
-    preRelease?.split('.').map((token) => {
-      const numeric = Number.parseInt(token, 10)
-      return Number.isNaN(numeric) ? token : numeric
-    }) ?? []
-
-  return { main, pre }
-}
-
-const compareVersionParts = (a: VersionParts, b: VersionParts): number => {
-  const length = Math.max(a.main.length, b.main.length)
-  for (let i = 0; i < length; i += 1) {
-    const diff = (a.main[i] ?? 0) - (b.main[i] ?? 0)
-    if (diff !== 0) return diff > 0 ? 1 : -1
-  }
-
-  if (a.pre.length === 0 && b.pre.length === 0) return 0
-  if (a.pre.length === 0) return 1
-  if (b.pre.length === 0) return -1
-
-  const preLen = Math.max(a.pre.length, b.pre.length)
-  for (let i = 0; i < preLen; i += 1) {
-    const aToken = a.pre[i]
-    const bToken = b.pre[i]
-    if (aToken === undefined) return -1
-    if (bToken === undefined) return 1
-
-    if (typeof aToken === 'number' && typeof bToken === 'number') {
-      if (aToken > bToken) return 1
-      if (aToken < bToken) return -1
-      continue
-    }
-
-    if (typeof aToken === 'number') return -1
-    if (typeof bToken === 'number') return 1
-
-    if (aToken > bToken) return 1
-    if (aToken < bToken) return -1
-  }
-
-  return 0
-}
-
 const compareVersions = (a: string | null, b: string | null): number | null => {
-  const partsA = splitVersion(a)
-  const partsB = splitVersion(b)
-  if (!partsA || !partsB) return null
-  return compareVersionParts(partsA, partsB)
+  if (!a || !b) return null
+  try {
+    return compareSemver(a, b)
+  } catch {
+    return null
+  }
 }
 
 const resolveRemoteVersion = (update: Update): string | null => {

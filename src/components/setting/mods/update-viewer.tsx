@@ -58,16 +58,50 @@ const GITHUB_ALERT_PATTERN =
   /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][\t ]*\n?/i
 const GITHUB_ALERT_CLASS_PATTERN =
   /markdown-alert-(note|tip|important|warning|caution)/
+const UPDATE_MARKDOWN_ID_PREFIX = 'update-markdown-'
 
 const shouldShowReleaseNotes = (language: string) => language === 'zh'
 
 const LazyReactMarkdown = lazy(async () => {
-  const [{ default: ReactMarkdown }, { default: rehypeRaw }] =
-    await Promise.all([import('react-markdown'), import('rehype-raw')])
+  const [
+    { default: ReactMarkdown },
+    { default: rehypeRaw },
+    { default: rehypeSanitize, defaultSchema },
+    { default: remarkGfm },
+  ] = await Promise.all([
+    import('react-markdown'),
+    import('rehype-raw'),
+    import('rehype-sanitize'),
+    import('remark-gfm'),
+  ])
+
+  const sanitizeSchema = {
+    ...defaultSchema,
+    clobberPrefix: UPDATE_MARKDOWN_ID_PREFIX,
+    attributes: {
+      ...defaultSchema.attributes,
+      blockquote: [
+        ...(defaultSchema.attributes?.blockquote ?? []),
+        [
+          'className',
+          'markdown-alert',
+          ...Object.keys(GITHUB_ALERTS).map((type) => `markdown-alert-${type}`),
+        ],
+      ],
+      p: [
+        ...(defaultSchema.attributes?.p ?? []),
+        ['className', 'markdown-alert-title'],
+      ],
+    },
+  }
 
   return {
     default: (props: ReactMarkdownOptions) => (
-      <ReactMarkdown {...props} rehypePlugins={[rehypeRaw]} />
+      <ReactMarkdown
+        {...props}
+        remarkPlugins={[remarkGfm, ...(props.remarkPlugins ?? [])]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
+      />
     ),
   }
 })
@@ -425,18 +459,27 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
               remarkPlugins={[remarkGitHubAlertsPlugin]}
               components={{
                 a: ({ href, children, ...props }) => {
+                  const isFragment = href?.startsWith('#') ?? false
+                  const renderedHref = isFragment
+                    ? `#${UPDATE_MARKDOWN_ID_PREFIX}${href?.slice(1)}`
+                    : href
+                      ? '#'
+                      : undefined
+
                   return (
                     <a
                       {...props}
-                      href={href ? '#' : undefined}
+                      href={renderedHref}
                       target={undefined}
                       rel={undefined}
                       onClick={(event) => {
+                        if (isFragment) return
                         event.preventDefault()
                         if (!href) return
                         openUrlWithNotice(href)
                       }}
                       onAuxClick={(event) => {
+                        if (isFragment) return
                         event.preventDefault()
                         if (event.button === 1 && href) {
                           openUrlWithNotice(href)
