@@ -22,6 +22,7 @@ import {
 import { swrConfig } from './services/query-client'
 import {
   LoadingCacheProvider,
+  PageSearchStateProvider,
   ThemeModeProvider,
   UpdateStateProvider,
 } from './services/states'
@@ -45,6 +46,7 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
     <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
     <LoadingCacheProvider key="loading" />,
     <UpdateStateProvider key="update" />,
+    <PageSearchStateProvider key="page-search" />,
   ]
 
   const root = createRoot(container)

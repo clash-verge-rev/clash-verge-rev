@@ -14,12 +14,17 @@ import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
 import { useVisibility } from '@/hooks/use-visibility'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
+import { usePageSearchState } from '@/services/states'
 
 const RulesPage = () => {
   const { t } = useTranslation()
   const { rules = [] } = useRulesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
-  const [match, setMatch] = useState(() => (_: string) => true)
+  const {
+    matcher: match,
+    searchState,
+    setSearchState,
+  } = usePageSearchState('rules')
   const virtuosoRef = useRef<VirtualListHandle>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const pageVisible = useVisibility()
@@ -79,7 +84,11 @@ const RulesPage = () => {
           alignItems: 'center',
         }}
       >
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        <BaseSearchBox
+          value={searchState.text}
+          searchState={searchState}
+          onSearch={(_, state) => setSearchState(state)}
+        />
       </Box>
 
       {filteredRules && filteredRules.length > 0 ? (
