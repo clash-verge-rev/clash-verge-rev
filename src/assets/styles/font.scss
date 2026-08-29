@@ -2,3 +2,9 @@
   font-family: 'twemoji mozilla';
   src: url('../fonts/Twemoji.Mozilla.ttf');
 }
+
+@font-face {
+  font-family: 'MiSans';
+  src: url('../fonts/Misans.ttf');
+  font-display: swap;
+}

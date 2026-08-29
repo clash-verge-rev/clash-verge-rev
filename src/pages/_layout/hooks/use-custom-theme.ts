@@ -9,6 +9,7 @@ import { useEffect, useMemo } from 'react'
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
+import getSystem from '@/utils/get-system'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -144,6 +145,13 @@ export const useCustomTheme = () => {
   const theme = useMemo(() => {
     const setting = theme_setting || {}
     const dt = mode === 'light' ? defaultTheme : defaultDarkTheme
+    // 默认使用Misans
+    const dtFontFamily = dt.font_family
+    const defaultFontFamily =
+      getSystem() === 'windows' ? `'MiSans', ${dtFontFamily}` : dtFontFamily
+    const fontFamily = setting.font_family
+      ? `${setting.font_family}, ${dtFontFamily}`
+      : defaultFontFamily
     let muiTheme: MuiTheme
 
     try {
@@ -170,9 +178,7 @@ export const useCustomTheme = () => {
         },
         shadows: Array(25).fill('none') as Shadows,
         typography: {
-          fontFamily: setting.font_family
-            ? `${setting.font_family}, ${dt.font_family}`
-            : dt.font_family,
+          fontFamily,
         },
       })
     } catch (e) {
@@ -195,7 +201,7 @@ export const useCustomTheme = () => {
             default: dt.background_color,
           },
         },
-        typography: { fontFamily: dt.font_family },
+        typography: { fontFamily },
       })
     }
 
