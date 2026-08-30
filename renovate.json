@@ -1,4 +1,5 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":disableDependencyDashboard"],
   "baseBranchPatterns": ["dev"],
   "enabledManagers": ["cargo", "npm", "github-actions"],
@@ -26,9 +27,9 @@
       "semanticCommitType": "chore"
     },
     {
-      "description": "Disable node/pnpm version updates",
-      "matchPackageNames": ["node", "pnpm"],
-      "matchDepTypes": ["engines", "packageManager"],
+      "description": "Disable Nodejs, PNPM and Rust version updates",
+      "matchPackageNames": ["node", "pnpm", "rust"],
+      "matchDepTypes": ["engines", "packageManager", "uses-with"],
       "enabled": false
     },
     {
