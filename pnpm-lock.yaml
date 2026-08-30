@@ -154,18 +154,12 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: 2.5.4
         version: 2.5.4
-      '@tauri-apps/plugin-updater':
-        specifier: 2.10.1
-        version: 2.10.1
       ahooks:
         specifier: ^3.9.7
         version: 3.9.7(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       cidr-block:
         specifier: ^2.3.0
         version: 2.3.0
-      compare-versions:
-        specifier: ^6.1.1
-        version: 6.1.1
       dayjs:
         specifier: 1.11.21
         version: 1.11.21
@@ -223,15 +217,15 @@ importers:
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
-      semver:
-        specifier: ^7.8.5
-        version: 7.8.5
       rehype-sanitize:
         specifier: ^6.0.0
         version: 6.0.0
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      semver:
+        specifier: ^7.8.5
+        version: 7.8.5
       swr:
         specifier: ^2.4.2
         version: 2.5.1(react@19.2.8)
@@ -1939,9 +1933,6 @@ packages:
 
   '@tauri-apps/plugin-opener@2.5.4':
     resolution: {integrity: sha512-1HnPkb+AmgO29HBazm4uPLKB+r7zzcTBW1d0fyYp1uP+jwtpoiNDGKMMzz58SFp49nOIrxdE3aUJtT57lfO9CQ==}
-
-  '@tauri-apps/plugin-updater@2.10.1':
-    resolution: {integrity: sha512-NFYMg+tWOZPJdzE/PpFj2qfqwAWwNS3kXrb1tm1gnBJ9mYzZ4WDRrwy8udzWoAnfGCHLuePNLY1WVCNHnh3eRA==}
 
   '@tybys/wasm-util@0.10.3':
     resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
@@ -5742,10 +5733,6 @@ snapshots:
       '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-opener@2.5.4':
-    dependencies:
-      '@tauri-apps/api': 2.11.1
-
-  '@tauri-apps/plugin-updater@2.10.1':
     dependencies:
       '@tauri-apps/api': 2.11.1
 
