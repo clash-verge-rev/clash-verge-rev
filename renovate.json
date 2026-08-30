@@ -2,7 +2,15 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":disableDependencyDashboard"],
   "baseBranchPatterns": ["dev"],
-  "enabledManagers": ["cargo", "npm", "github-actions"],
+  "enabledManagers": [
+    "asdf",
+    "cargo",
+    "custom.regex",
+    "devcontainer",
+    "github-actions",
+    "npm",
+    "rust-toolchain"
+  ],
   "labels": ["dependencies"],
   "ignorePaths": [
     "**/node_modules/**",
@@ -25,12 +33,6 @@
     {
       "matchPackageNames": ["*"],
       "semanticCommitType": "chore"
-    },
-    {
-      "description": "Disable Nodejs, PNPM and Rust version updates",
-      "matchPackageNames": ["node", "pnpm", "rust"],
-      "matchDepTypes": ["engines", "packageManager", "uses-with"],
-      "enabled": false
     },
     {
       "description": "Group all cargo dependencies into a single PR and bump Cargo.toml ranges",
@@ -58,6 +60,71 @@
       "description": "Prevent project from supply chain attack",
       "matchDatasources": ["npm"],
       "minimumReleaseAge": "1 days"
+    },
+    {
+      "description": "Group Node.js version updates across workflows, devcontainer, tool-versions, and package.json",
+      "matchPackageNames": [
+        "node",
+        "nodejs",
+        "ghcr.io/devcontainers/features/node"
+      ],
+      "groupName": "Node.js"
+    },
+    {
+      "description": "Group PNPM version updates across package.json, tool-versions, workflows, and devcontainer",
+      "matchPackageNames": ["pnpm", "ghcr.io/devcontainers/features/pnpm"],
+      "groupName": "pnpm"
+    },
+    {
+      "description": "Group Rust toolchain updates across rust-toolchain.toml, workflows, devcontainer, and tool-versions",
+      "matchPackageNames": [
+        "rust",
+        "rust-lang/rust",
+        "ghcr.io/devcontainers/features/rust"
+      ],
+      "groupName": "Rust toolchain"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Node.js in GitHub Workflows",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "node-version:\\s*['\"]?(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Rust toolchain in GitHub Workflows",
+      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "(?:toolchain:\\s*['\"]|--toolchain\\s+|dtolnay/rust-toolchain@)(?<currentValue>\\d+\\.\\d+\\.\\d+)['\"]?"
+      ],
+      "depNameTemplate": "rust-lang/rust",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Node.js in devcontainer.json",
+      "fileMatch": ["^\\.devcontainer/devcontainer\\.json$"],
+      "matchStrings": [
+        "\"ghcr\\.io/devcontainers/features/node:[^\"]+\":\\s*\\{[^}]*\"version\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version"
+    },
+    {
+      "customType": "regex",
+      "description": "Update Rust in devcontainer.json",
+      "fileMatch": ["^\\.devcontainer/devcontainer\\.json$"],
+      "matchStrings": [
+        "\"ghcr\\.io/devcontainers/features/rust:[^\"]+\":\\s*\\{[^}]*\"version\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "rust-lang/rust",
+      "datasourceTemplate": "github-releases"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
