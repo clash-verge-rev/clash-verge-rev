@@ -19,8 +19,8 @@ use tokio::sync::oneshot;
 use warp::Filter as _;
 
 const INSTANCE_TOKEN_HEADER: &str = "x-instance-token";
-const INSTANCE_RECORD_FILE: &str = "singleton-instance.json";
-const INSTANCE_LOCK_FILE: &str = "singleton-instance.lock";
+pub(crate) const INSTANCE_RECORD_FILE: &str = "singleton-instance.json";
+pub(crate) const INSTANCE_LOCK_FILE: &str = "singleton-instance.lock";
 
 #[derive(Deserialize, Debug)]
 struct QueryParam {
