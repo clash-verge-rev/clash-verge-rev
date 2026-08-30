@@ -12,9 +12,40 @@ on:
   workflow_dispatch:
 
 checkout: false
+max-daily-ai-credits: 5000
 permissions:
   issues: read
   pull-requests: read
+
+pre-agent-steps:
+  - name: Make Copilot quota exhaustion non-blocking
+    run: |
+      node <<'NODE'
+      const fs = require('fs');
+      const harnessPath = `${process.env.RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs`;
+      const harness = fs.readFileSync(harnessPath, 'utf8');
+      const quotaBranch = [
+        '          if (isQuotaExceeded) {',
+        '            log(`attempt ${attempt + 1}: Copilot quota exceeded — not retrying`);',
+        '            return { action: "stop" };',
+        '          }',
+      ].join('\n');
+      const nonBlockingQuotaBranch = [
+        '          if (isQuotaExceeded) {',
+        '            log(`attempt ${attempt + 1}: Copilot quota exceeded — not retrying`);',
+        '            if (/\\b429\\b|Too Many Requests/i.test(result.output)) {',
+        '              log(`attempt ${attempt + 1}: Copilot quota unavailable — exiting 0`);',
+        '              return { action: "stop", exitCode: 0 };',
+        '            }',
+        '            return { action: "stop" };',
+        '          }',
+      ].join('\n');
+
+      if (harness.split(quotaBranch).length !== 2) {
+        throw new Error('Unexpected Copilot quota branch; re-audit the gh-aw upgrade');
+      }
+      fs.writeFileSync(harnessPath, harness.replace(quotaBranch, nonBlockingQuotaBranch));
+      NODE
 
 tools:
   github:

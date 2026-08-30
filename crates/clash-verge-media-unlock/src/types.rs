@@ -38,26 +38,3 @@ impl UnlockItem {
         }
     }
 }
-
-const DEFAULT_UNLOCK_ITEM_NAMES: [&str; 13] = [
-    "哔哩哔哩大陆",
-    "哔哩哔哩港澳台",
-    "ChatGPT iOS",
-    "ChatGPT Web",
-    "Claude",
-    "Gemini",
-    "YouTube Premium",
-    "Bahamut Anime",
-    "Netflix",
-    "Disney+",
-    "Prime Video",
-    "Spotify",
-    "TikTok",
-];
-
-pub fn default_unlock_items() -> Vec<UnlockItem> {
-    DEFAULT_UNLOCK_ITEM_NAMES
-        .iter()
-        .map(|name| UnlockItem::pending(name))
-        .collect()
-}

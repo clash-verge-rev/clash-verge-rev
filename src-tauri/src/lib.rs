@@ -51,6 +51,7 @@ mod app_init {
             .plugin(tauri_plugin_fs::init())
             .plugin(tauri_plugin_dialog::init())
             .plugin(tauri_plugin_shell::init())
+            .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_http::init())
             .plugin(
@@ -80,10 +81,8 @@ mod app_init {
         app.deep_link().on_open_url(|event| {
             let urls = event.urls();
             AsyncHandler::spawn(move || async move {
-                if let Some(url) = urls.first()
-                    && let Err(e) = resolve::resolve_scheme(url.as_ref()).await
-                {
-                    logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
+                if let Some(url) = urls.first() {
+                    resolve::resolve_scheme(url.as_ref()).await;
                 }
             });
         });
@@ -130,7 +129,6 @@ mod app_init {
             cmd::get_embedded_server_port,
             cmd::open_app_dir,
             cmd::open_logs_dir,
-            cmd::open_web_url,
             cmd::open_core_dir,
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
@@ -139,6 +137,7 @@ mod app_init {
             cmd::start_core,
             cmd::stop_core,
             cmd::restart_core,
+            cmd::upgrade_clash_core,
             cmd::get_runtime_state,
             cmd::get_pending_failures,
             cmd::get_auto_launch_status,
@@ -168,7 +167,6 @@ mod app_init {
             cmd::forget_selected_node,
             cmd::save_dns_config,
             cmd::apply_dns_config,
-            cmd::check_dns_config_exists,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
             cmd::get_clash_logs,
@@ -209,6 +207,7 @@ mod app_init {
             cmd::restore_webdav_backup,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
+            cmd::check_media_unlock_item,
             cmd::check_update,
             cmd::download_and_install_update,
         ]
@@ -244,6 +243,16 @@ pub fn run() -> std::process::ExitCode {
     }
 
     let _ = utils::dirs::init_portable_flag();
+
+    // Runs before the singleton check, which is the first thing to open a file in that directory.
+    #[cfg(windows)]
+    if let Err(error) =
+        utils::dirs::preinit_app_data_dir().and_then(|root| core::owner_identity::repair_app_data_root_owner(&root))
+    {
+        // The logger is installed later in setup(), so this would otherwise be lost.
+        eprintln!("[clash-verge] 应用数据目录所有权修复失败: {error:#}");
+        logging!(error, Type::Setup, "应用数据目录所有权修复失败: {error:#}");
+    }
 
     match handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error) {
         StartupAction::Continue => {}

@@ -50,7 +50,7 @@ impl WindowManager {
         handle::Handle::global().set_activation_policy_regular();
     }
 
-    pub fn get_main_window_with_state() -> (Option<WebviewWindow<Wry>>, WindowState) {
+    fn get_main_window_with_state() -> (Option<WebviewWindow<Wry>>, WindowState) {
         let Some(window) = Self::get_main_window() else {
             return (None, WindowState::NotExist);
         };
@@ -73,28 +73,7 @@ impl WindowManager {
     }
 
     pub fn get_main_window_state() -> WindowState {
-        match Self::get_main_window() {
-            Some(window) => {
-                let is_minimized = window.is_minimized().unwrap_or(false);
-                let is_visible = window.is_visible().unwrap_or(false);
-                let is_focused = window.is_focused().unwrap_or(false);
-
-                if is_minimized {
-                    return WindowState::Minimized;
-                }
-
-                if !is_visible {
-                    return WindowState::Hidden;
-                }
-
-                if is_focused {
-                    WindowState::VisibleFocused
-                } else {
-                    WindowState::VisibleUnfocused
-                }
-            }
-            None => WindowState::NotExist,
-        }
+        Self::get_main_window_with_state().1
     }
 
     pub fn get_main_window() -> Option<WebviewWindow<Wry>> {
@@ -262,7 +241,7 @@ impl WindowManager {
         window.map(|w| w.is_focused().unwrap_or(false)).unwrap_or(false)
     }
 
-    pub fn is_main_window_minimized(window: Option<&WebviewWindow<Wry>>) -> bool {
+    fn is_main_window_minimized(window: Option<&WebviewWindow<Wry>>) -> bool {
         window.map(|w| w.is_minimized().unwrap_or(false)).unwrap_or(false)
     }
 

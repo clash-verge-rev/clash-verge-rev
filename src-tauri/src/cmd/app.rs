@@ -24,11 +24,6 @@ pub async fn open_logs_dir() -> CmdResult<()> {
 }
 
 #[tauri::command]
-pub fn open_web_url(url: String) -> CmdResult<()> {
-    open::that(url.as_str()).stringify_err()
-}
-
-#[tauri::command]
 pub fn open_devtools(app_handle: AppHandle) {
     if let Some(window) = app_handle.get_webview_window("main") {
         if !window.is_devtools_open() {

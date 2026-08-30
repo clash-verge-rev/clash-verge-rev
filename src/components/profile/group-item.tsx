@@ -1,5 +1,3 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
   Box,
@@ -19,22 +17,7 @@ interface Props {
 
 export const GroupItem = (props: Props) => {
   const { type, group, onDelete } = props
-  const sortable = type === 'prepend' || type === 'append'
-
-  const {
-    attributes: sortableAttributes,
-    listeners: sortableListeners,
-    setNodeRef: sortableSetNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: group.name,
-    disabled: !sortable,
-  })
-  const dragAttributes = sortable ? sortableAttributes : undefined
-  const dragListeners = sortable ? sortableListeners : undefined
-  const dragNodeRef = sortable ? sortableSetNodeRef : undefined
+  const isSortable = type === 'prepend' || type === 'append'
 
   const iconCachePath = useIconCache({
     icon: group.icon,
@@ -55,15 +38,12 @@ export const GroupItem = (props: Props) => {
               ? alpha(palette.error.main, 0.3)
               : alpha(palette.success.main, 0.3),
         height: '100%',
-        margin: '8px 0',
         borderRadius: '8px',
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 'calc(infinity)' : undefined,
       })}
     >
-      {group.icon && group.icon?.trim().startsWith('http') && (
+      {group?.icon?.trim().startsWith('http') && (
         <img
+          alt="group icon"
           src={iconCachePath === '' ? group.icon : iconCachePath}
           width="32px"
           style={{
@@ -72,8 +52,9 @@ export const GroupItem = (props: Props) => {
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith('data') && (
+      {group?.icon?.trim().startsWith('data') && (
         <img
+          alt="group icon"
           src={group.icon}
           width="32px"
           style={{
@@ -82,8 +63,9 @@ export const GroupItem = (props: Props) => {
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith('<svg') && (
+      {group?.icon?.trim().startsWith('<svg') && (
         <img
+          alt="group icon"
           src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
           width="32px"
           style={{
@@ -93,10 +75,8 @@ export const GroupItem = (props: Props) => {
         />
       )}
       <ListItemText
-        {...(dragAttributes ?? {})}
-        {...(dragListeners ?? {})}
-        ref={dragNodeRef}
-        sx={{ cursor: sortable ? 'move' : '' }}
+        data-sortable-handle
+        sx={{ cursor: isSortable ? 'move' : undefined }}
         primary={
           <StyledPrimary
             sx={{ textDecoration: type === 'delete' ? 'line-through' : '' }}

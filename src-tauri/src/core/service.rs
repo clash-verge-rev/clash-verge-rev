@@ -1067,7 +1067,7 @@ fn mark_service_unavailable_after_owner_loss<E: RunStateEnv>(store: &RunStateSto
 }
 
 /// How often the owner monitor samples Service status.
-const OWNER_MONITOR_INTERVAL: Duration = Duration::from_secs(2);
+const OWNER_MONITOR_INTERVAL: Duration = Duration::from_secs(5);
 /// Mirrors `OwnerWatch`'s tolerance, for the log line only.
 const SUSTAINED_OWNER_SAMPLES: u8 = 3;
 

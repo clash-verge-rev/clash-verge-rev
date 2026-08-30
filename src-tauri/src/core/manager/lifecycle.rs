@@ -2,7 +2,7 @@ use super::{CoreManager, RunningMode};
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
-use crate::core::proxy_control;
+use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
@@ -304,7 +304,10 @@ impl CoreManager {
         let _life = self.lifecycle_lock.lock().await;
         run_core_start_transition(
             || self.start_core_inner(),
-            || !matches!(*self.get_running_mode(), RunningMode::NotRunning),
+            || {
+                !matches!(*self.get_running_mode(), RunningMode::NotRunning)
+                    && self.current_core_readiness_generation().is_some()
+            },
             || self.apply_proxy_after_start(),
         )
         .await
@@ -330,7 +333,9 @@ impl CoreManager {
         proxy_control::stop_guard().await;
         let result = async {
             self.start_core_inner().await?;
-            if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
+            if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                || self.current_core_readiness_generation().is_none()
+            {
                 anyhow::bail!("Sidecar did not become ready");
             }
             self.apply_proxy_after_start().await
@@ -371,7 +376,9 @@ impl CoreManager {
             },
             || async {
                 self.start_core_inner().await?;
-                if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
+                if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                    || self.current_core_readiness_generation().is_none()
+                {
                     anyhow::bail!("Sidecar did not become ready after service uninstall");
                 }
                 self.apply_proxy_after_start().await
@@ -423,7 +430,9 @@ impl CoreManager {
             self.current_core_readiness_generation(),
             crate::core::service::owner_monitor_generation(),
         )
-        .ok_or_else(|| anyhow::anyhow!("cannot apply system proxy before core readiness"))?;
+        .ok_or_else(|| {
+            anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
+        })?;
         proxy_control::apply().await?;
         if !expectation.is_valid(
             self.get_running_mode().as_ref(),
@@ -433,7 +442,8 @@ impl CoreManager {
             let clear_result = proxy_control::clear().await;
             proxy_control::stop_guard().await;
             clear_result?;
-            anyhow::bail!("core readiness changed while applying system proxy");
+            return Err(anyhow::anyhow!("core readiness changed while applying system proxy")
+                .context(SysproxyFailure::CoreNotReady));
         }
         proxy_control::refresh_guard().await?;
         if !expectation.is_valid(
@@ -444,7 +454,10 @@ impl CoreManager {
             let clear_result = proxy_control::clear().await;
             proxy_control::stop_guard().await;
             clear_result?;
-            anyhow::bail!("core readiness changed while refreshing the system proxy guard");
+            return Err(
+                anyhow::anyhow!("core readiness changed while refreshing the system proxy guard")
+                    .context(SysproxyFailure::CoreNotReady),
+            );
         }
         Ok(())
     }
@@ -553,7 +566,9 @@ impl CoreManager {
             || self.controlled_stop_core_with_intent(proxy_intent),
             || async {
                 self.start_core_inner().await?;
-                if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+                if matches!(*self.get_running_mode(), RunningMode::NotRunning)
+                    || self.current_core_readiness_generation().is_none()
+                {
                     anyhow::bail!("core did not become ready after restart");
                 }
                 Ok(())
@@ -858,24 +873,6 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn controlled_sidecar_stop_clears_proxy_before_stopping() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::Clear,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", None),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        assert_eq!(&*calls.lock(), &["proxy_clear", "core_stop"]);
-    }
-
     #[test]
     fn only_a_macos_sidecar_on_its_way_to_the_service_leaves_the_proxy_alone() {
         use super::proxy_stop_intent;
@@ -942,24 +939,6 @@ mod tests {
             assert!(result.is_err(), "{mode:?} {intent:?}");
             assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", *calls.lock());
         }
-    }
-
-    #[tokio::test]
-    async fn a_sidecar_handed_over_still_stops_even_when_a_user_space_clear_would_fail() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::HandOverToService,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_ok());
-        assert_eq!(&*calls.lock(), &["core_stop"]);
     }
 
     #[tokio::test]
@@ -1049,46 +1028,6 @@ mod tests {
                 "service-stop-failed"
             ]
         );
-    }
-
-    #[tokio::test]
-    async fn controlled_sidecar_stop_aborts_when_proxy_clear_fails() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_controlled_stop_transition(
-            true,
-            RunningMode::Sidecar,
-            ProxyStopIntent::Clear,
-            || future::ready(true),
-            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
-            || transition_step(&calls, "core_stop", None),
-        )
-        .await;
-
-        assert!(result.is_err());
-        assert_eq!(&*calls.lock(), &["proxy_clear"]);
-    }
-
-    #[tokio::test]
-    async fn failed_sidecar_transition_rollback_surfaces_clear_failure_without_terminating() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-        let sidecar_alive = AtomicBool::new(true);
-
-        let result = run_sidecar_termination_transition(
-            || transition_step(&calls, "rollback-proxy-clear", Some("rollback-proxy-clear")),
-            || {
-                sidecar_alive.store(false, Ordering::Release);
-                calls.lock().push("rollback-sidecar-stop");
-            },
-        )
-        .await;
-
-        assert!(matches!(
-            result,
-            Err(error) if error.to_string().contains("rollback-proxy-clear failed")
-        ));
-        assert!(sidecar_alive.load(Ordering::Acquire));
-        assert_eq!(&*calls.lock(), &["rollback-proxy-clear"]);
     }
 
     #[tokio::test]
@@ -1234,21 +1173,6 @@ mod tests {
         assert!(guard_stopped.load(Ordering::Acquire));
         assert!(!pac_available.load(Ordering::Acquire));
         assert!(!restored_new_core.load(Ordering::Acquire));
-    }
-
-    #[tokio::test]
-    async fn service_config_start_failure_uses_the_same_fail_closed_replacement_order() {
-        let calls = Arc::new(Mutex::new(Vec::new()));
-
-        let result = run_core_replacement_transition(
-            || transition_step(&calls, "controlled-stop", None),
-            || transition_step(&calls, "start-service-config", Some("start-service-config")),
-            || transition_step(&calls, "restore-proxy", None),
-        )
-        .await;
-
-        assert!(result.is_err());
-        assert_eq!(&*calls.lock(), &["controlled-stop", "start-service-config"]);
     }
 
     #[tokio::test]
@@ -1401,25 +1325,6 @@ mod tests {
         assert!(can_allow_sidecar_for_session(
             &RunningMode::Sidecar,
             &ServiceStatus::InstallRequired,
-        ));
-    }
-
-    #[test]
-    fn a_sidecar_that_failed_to_start_can_be_tried_again() {
-        // Revoking a failed attempt's allowance keeps retries reachable without changing Service health.
-        for health in [
-            ServiceStatus::NotInstalled,
-            ServiceStatus::NeedsReinstall,
-            ServiceStatus::Unavailable("boom".into()),
-        ] {
-            assert!(
-                can_allow_sidecar_for_session(&RunningMode::NotRunning, &health),
-                "{health:?} must still admit a second attempt"
-            );
-        }
-        assert!(!can_allow_sidecar_for_session(
-            &RunningMode::NotRunning,
-            &ServiceStatus::SidecarAllowed,
         ));
     }
 

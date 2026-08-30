@@ -8,9 +8,6 @@ use anyhow::Result;
 use super::Config;
 use crate::core::handle::Handle;
 
-/// The port mihomo listens on when nothing else is configured.
-pub const DEFAULT_MIXED_PORT: u16 = 7897;
-
 /// A startup fallback for this session only; persistence would make the port climb across launches.
 static SESSION_FALLBACK: AtomicU16 = AtomicU16::new(0);
 

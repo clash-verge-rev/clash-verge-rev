@@ -1,5 +1,4 @@
 import { alpha, Box, Button, LinearProgress } from '@mui/material'
-import { open as openUrl } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import {
@@ -18,6 +17,7 @@ import { useUpdate } from '@/hooks/use-update'
 import { restartApp, downloadAndInstallUpdate } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
+import { openExternalUrl } from '@/utils/open-external-url'
 
 type MarkdownNode = {
   type: string
@@ -57,16 +57,50 @@ const GITHUB_ALERT_PATTERN =
   /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][\t ]*\n?/i
 const GITHUB_ALERT_CLASS_PATTERN =
   /markdown-alert-(note|tip|important|warning|caution)/
+const UPDATE_MARKDOWN_ID_PREFIX = 'update-markdown-'
 
 const shouldShowReleaseNotes = (language: string) => language === 'zh'
 
 const LazyReactMarkdown = lazy(async () => {
-  const [{ default: ReactMarkdown }, { default: rehypeRaw }] =
-    await Promise.all([import('react-markdown'), import('rehype-raw')])
+  const [
+    { default: ReactMarkdown },
+    { default: rehypeRaw },
+    { default: rehypeSanitize, defaultSchema },
+    { default: remarkGfm },
+  ] = await Promise.all([
+    import('react-markdown'),
+    import('rehype-raw'),
+    import('rehype-sanitize'),
+    import('remark-gfm'),
+  ])
+
+  const sanitizeSchema = {
+    ...defaultSchema,
+    clobberPrefix: UPDATE_MARKDOWN_ID_PREFIX,
+    attributes: {
+      ...defaultSchema.attributes,
+      blockquote: [
+        ...(defaultSchema.attributes?.blockquote ?? []),
+        [
+          'className',
+          'markdown-alert',
+          ...Object.keys(GITHUB_ALERTS).map((type) => `markdown-alert-${type}`),
+        ],
+      ],
+      p: [
+        ...(defaultSchema.attributes?.p ?? []),
+        ['className', 'markdown-alert-title'],
+      ],
+    },
+  }
 
   return {
     default: (props: ReactMarkdownOptions) => (
-      <ReactMarkdown {...props} rehypePlugins={[rehypeRaw]} />
+      <ReactMarkdown
+        {...props}
+        remarkPlugins={[remarkGfm, ...(props.remarkPlugins ?? [])]}
+        rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
+      />
     ),
   }
 })
@@ -149,6 +183,10 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [total, setTotal] = useState(0)
   const downloadedRef = useRef(0)
   const totalRef = useRef(0)
+
+  const openUrlWithNotice = (url: string) => {
+    void openExternalUrl(url).catch(showNotice.error)
+  }
 
   const progress = useMemo(() => {
     if (total <= 0) return 0
@@ -270,7 +308,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
             size="small"
             sx={{ whiteSpace: 'nowrap' }}
             onClick={() => {
-              openUrl(
+              openUrlWithNotice(
                 `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`,
               )
             }}
@@ -414,10 +452,34 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
             <LazyReactMarkdown
               remarkPlugins={[remarkGitHubAlertsPlugin]}
               components={{
-                a: ({ ...props }) => {
-                  const { children } = props
+                a: ({ href, children, ...props }) => {
+                  const isFragment = href?.startsWith('#') ?? false
+                  const renderedHref = isFragment
+                    ? `#${UPDATE_MARKDOWN_ID_PREFIX}${href?.slice(1)}`
+                    : href
+                      ? '#'
+                      : undefined
+
                   return (
-                    <a {...props} target="_blank" rel="noreferrer">
+                    <a
+                      {...props}
+                      href={renderedHref}
+                      target={undefined}
+                      rel={undefined}
+                      onClick={(event) => {
+                        if (isFragment) return
+                        event.preventDefault()
+                        if (!href) return
+                        openUrlWithNotice(href)
+                      }}
+                      onAuxClick={(event) => {
+                        if (isFragment) return
+                        event.preventDefault()
+                        if (event.button === 1 && href) {
+                          openUrlWithNotice(href)
+                        }
+                      }}
+                    >
                       {children}
                     </a>
                   )

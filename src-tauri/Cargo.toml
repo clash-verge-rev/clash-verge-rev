@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.5.3"
+version = "2.5.4"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -69,17 +69,19 @@ once_cell = { version = "1.21.4", features = ["parking_lot"] }
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
 regex = { workspace = true }
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "main", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.3.5"
+tauri-plugin-opener = "2.5.4"
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-window-state = "2.4.1"
 zip = "8.6.0"
+flate2 = "1.1.9"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.0" }
 base64 = "0.23.1"
@@ -93,18 +95,17 @@ backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.5.9"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.1.0" }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "refactor-use-reqwest-ipc" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "main" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.2", version = "2.6.2", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.6", version = "2.6.6", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.43", features = ["ring"] }
 webpki-roots = "1.0.9"
-# Use the git repo until the next release after v2.0.0.
-dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
+dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
 semver = "1.0.28"

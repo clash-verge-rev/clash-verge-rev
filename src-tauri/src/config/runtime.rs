@@ -17,11 +17,6 @@ pub struct IRuntime {
 
 impl IRuntime {
     #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[inline]
     pub fn patch_config(&mut self, patch: &Mapping) {
         let config = if let Some(config) = self.config.as_mut() {
             config

@@ -108,7 +108,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
             );
             return Ok(outcome);
         }
-        return Err(activation_error).context("Mihomo rejected the proxy port configuration");
+        return Err(activation_error).context("failed to activate the proxy port configuration");
     }
 
     if let Err(persist_error) = persist_proxy_port_sources().await {

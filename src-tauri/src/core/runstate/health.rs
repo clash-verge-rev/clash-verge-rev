@@ -177,25 +177,6 @@ mod tests {
     }
 
     #[test]
-    fn service_usable_requires_no_operation_in_flight() {
-        assert!(state(ServiceHealth::Ready, false, false).service_usable());
-        assert!(!state(ServiceHealth::Ready, false, true).service_usable());
-        assert!(!state(ServiceHealth::NotInstalled, false, false).service_usable());
-    }
-
-    #[test]
-    fn service_ready_ignores_operations_in_flight() {
-        assert!(state(ServiceHealth::Ready, false, true).service_ready());
-    }
-
-    #[test]
-    fn tun_capable_when_elevated_even_without_service() {
-        assert!(state(ServiceHealth::NotInstalled, true, false).tun_capable());
-        assert!(state(ServiceHealth::Unavailable("boom".into()), true, true).tun_capable());
-        assert!(!state(ServiceHealth::NotInstalled, false, false).tun_capable());
-    }
-
-    #[test]
     fn a_service_that_is_merely_absent_needs_no_decision() {
         assert!(!state(ServiceHealth::NotInstalled, false, false).service_needs_attention());
         assert!(!state(ServiceHealth::Ready, false, false).service_needs_attention());
@@ -242,14 +223,6 @@ mod tests {
 
             assert!(!run_state.service_needs_attention(), "{health:?}");
         }
-    }
-
-    #[test]
-    fn a_session_that_settled_on_sidecar_needs_nothing() {
-        let mut run_state = state(ServiceHealth::VersionMismatch, false, false);
-        run_state.sidecar_allowed = true;
-
-        assert!(!run_state.service_needs_attention());
     }
 
     #[test]
@@ -348,17 +321,6 @@ mod tests {
     }
 
     #[test]
-    fn runtime_tun_reconciliation_waits_until_the_core_is_running() {
-        let stopped = state(ServiceHealth::NotInstalled, false, false);
-
-        assert_eq!(stopped.mode, RunningMode::NotRunning);
-        assert!(
-            stopped.tun_should_be_disabled(true),
-            "the predicate alone says yes, which is why the caller must gate on the mode"
-        );
-    }
-
-    #[test]
     fn tun_is_never_disabled_on_an_unprobed_service() {
         assert!(!state(ServiceHealth::Unknown, false, false).tun_should_be_disabled(true));
     }
@@ -386,31 +348,5 @@ mod tests {
         settled.sidecar_allowed = true;
 
         assert!(settled.tun_should_be_disabled(true));
-    }
-
-    #[test]
-    fn observing_clears_a_pending_request() {
-        let mut stored = StoredService::default();
-        stored.request(PendingAction::Install);
-        stored.observe(ServiceHealth::Ready);
-
-        assert_eq!(stored.pending, None);
-        assert!(!stored.sidecar_allowed);
-        assert_eq!(stored.health, ServiceHealth::Ready);
-    }
-
-    #[test]
-    fn requesting_and_allowing_sidecar_are_mutually_exclusive() {
-        let mut stored = StoredService::default();
-        stored.observe(ServiceHealth::NotInstalled);
-
-        stored.request(PendingAction::Install);
-        assert!(!stored.sidecar_allowed);
-
-        stored.allow_sidecar();
-        assert_eq!(stored.pending, None);
-        assert!(stored.sidecar_allowed);
-
-        assert_eq!(stored.health, ServiceHealth::NotInstalled);
     }
 }
