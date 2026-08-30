@@ -27,7 +27,7 @@ use std::{
 use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
-pub struct Config {
+pub(crate) struct Config {
     clash_config: Draft<IClashTemp>,
     verge_config: Draft<IVerge>,
     profiles_config: Draft<IProfiles>,
@@ -38,7 +38,7 @@ static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 impl Config {
-    pub async fn global() -> &'static Self {
+    async fn global() -> &'static Self {
         static CONFIG: OnceCell<Config> = OnceCell::const_new();
         CONFIG
             .get_or_init(|| async {
@@ -46,7 +46,7 @@ impl Config {
                     clash_config: Draft::new(IClashTemp::new().await),
                     verge_config: Draft::new(IVerge::new().await),
                     profiles_config: Draft::new(IProfiles::new().await),
-                    runtime_config: Draft::new(IRuntime::new()),
+                    runtime_config: Draft::new(IRuntime::default()),
                 }
             })
             .await
@@ -71,11 +71,6 @@ impl Config {
     /// Serializes transactions sharing configuration draft layers.
     pub(crate) async fn lock_config_write() -> MutexGuard<'static, ()> {
         CONFIG_WRITE_LOCK.lock().await
-    }
-
-    pub async fn init_config() -> Result<()> {
-        Self::init_config_before_window().await?;
-        Self::init_runtime_config().await
     }
 
     pub async fn init_config_before_window() -> Result<()> {
@@ -137,21 +132,12 @@ impl Config {
 
         Self::runtime().await.apply();
 
-        {
-            let profiles = Self::profiles().await.data_arc();
-            let _ = profiles.cleanup_orphaned_files().await;
-        }
-
         Ok(())
     }
 
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
-        Self::ensure_default_profile_items_for(&profiles).await
-    }
-
-    async fn ensure_default_profile_items_for(profiles: &Draft<IProfiles>) -> Result<()> {
-        if profiles.latest_arc().get_items().is_none() {
+        if profiles.latest_arc().items.is_none() {
             logging!(
                 warn,
                 Type::Config,
@@ -161,12 +147,12 @@ impl Config {
         }
 
         if profiles.latest_arc().get_item("Merge").is_err() {
-            let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
-            profiles_append_item_to_safe(profiles, merge_item).await?;
+            let merge_item = &mut PrfItem::from_merge(Some("Merge".into()));
+            profiles_append_item_to_safe(&profiles, merge_item).await?;
         }
         if profiles.latest_arc().get_item("Script").is_err() {
-            let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
-            profiles_append_item_to_safe(profiles, script_item).await?;
+            let script_item = &mut PrfItem::from_script(Some("Script".into()));
+            profiles_append_item_to_safe(&profiles, script_item).await?;
         }
         Ok(())
     }
@@ -381,31 +367,7 @@ fn collect_names(config: &Mapping, list_key: &str, out: &mut HashSet<String>) {
 }
 
 #[derive(Debug)]
-pub enum ConfigType {
+pub(crate) enum ConfigType {
     Run,
     Check,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn failed_profile_index_survives_startup_without_cleanup() -> Result<()> {
-        let profiles = Draft::new(IProfiles::default());
-        let profiles_dir = std::env::temp_dir().join(format!("clash-verge-profile-cleanup-{}", nanoid::nanoid!()));
-        tokio::fs::create_dir_all(&profiles_dir).await?;
-        let active_profile = profiles_dir.join("Ractive.yaml");
-        tokio::fs::write(&active_profile, "proxies: []").await?;
-
-        Config::ensure_default_profile_items_for(&profiles).await?;
-        profiles.data_arc().cleanup_orphaned_files_in(&profiles_dir).await?;
-
-        let profile_was_preserved = tokio::fs::try_exists(&active_profile).await?;
-        tokio::fs::remove_dir_all(&profiles_dir).await?;
-
-        assert!(profile_was_preserved);
-        assert!(profiles.data_arc().get_items().is_none());
-        Ok(())
-    }
 }

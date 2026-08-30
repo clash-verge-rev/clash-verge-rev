@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "license": "GPL-3.0-only",
   "scripts": {
     "prepare": "husky || true",
@@ -41,9 +41,8 @@
     "knip:report": "knip --no-exit-code"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
+    "@dnd-kit/helpers": "^0.5.0",
+    "@dnd-kit/react": "^0.5.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@juggle/resize-observer": "^3.4.0",
@@ -56,10 +55,11 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-http": "~2.5.9",
-    "@tauri-apps/plugin-shell": "2.3.5",
+    "@tauri-apps/plugin-opener": "2.5.4",
     "@tauri-apps/plugin-updater": "2.10.1",
     "ahooks": "^3.9.7",
     "cidr-block": "^2.3.0",
+    "compare-versions": "^6.1.1",
     "dayjs": "1.11.21",
     "foxact": "^0.3.4",
     "foxts": "^5.4.2",
@@ -79,8 +79,10 @@
     "react-markdown": "10.1.0",
     "react-router": "^8.0.0",
     "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
     "swr": "^2.4.2",
-    "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#refactor-use-reqwest-ipc",
+    "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#main",
     "types-pac": "^1.0.3",
     "validator": "^13.15.35"
   },
@@ -132,10 +134,10 @@
       "eslint --fix --max-warnings=0",
       "biome format --write"
     ],
-    "*.{css,scss,json}": [
+    "*.{css,json}": [
       "biome format --write"
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@12.0.0"
 }

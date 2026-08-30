@@ -1,66 +1,61 @@
-use reqwest::{Client, Url};
+use reqwest::{Client, StatusCode, Url};
+
+use crate::utils::classify_restricted_status;
 
 use super::UnlockItem;
 
+pub(crate) const SPOTIFY_NAME: &str = "Spotify";
+
 pub(super) async fn check_spotify(client: &Client) -> UnlockItem {
-    let url = "https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json";
+    let response = match client
+        .get("https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json")
+        .send()
+        .await
+    {
+        Ok(response) => response,
+        Err(_) => return UnlockItem::checked(SPOTIFY_NAME, "Failed", None),
+    };
 
-    match client.get(url).send().await {
-        Ok(response) => {
-            let final_url = response.url().clone();
-            let status_code = response.status();
-            let body = response.text().await.unwrap_or_default();
+    let status = response.status();
+    let final_url = response.url().clone();
+    let body = response.text().await.unwrap_or_default();
 
-            let region = extract_region(&final_url).or_else(|| extract_region_from_body(&body));
-            let status = determine_status(status_code.as_u16(), &body);
+    let region = extract_region(&final_url).or_else(|| extract_region_from_body(&body));
 
-            UnlockItem::checked("Spotify", status, region)
-        }
-        Err(_) => UnlockItem::checked("Spotify", "Failed", None),
-    }
+    UnlockItem::checked(SPOTIFY_NAME, determine_status(status, &body), region)
 }
 
-fn determine_status(status: u16, body: &str) -> &'static str {
-    if status == 403 || status == 451 {
-        return "No";
+fn determine_status(status: StatusCode, body: &str) -> &'static str {
+    if let Some(status) = classify_restricted_status(status) {
+        return status;
     }
 
-    if !(200..300).contains(&status) {
-        return "Failed";
+    if body.to_ascii_lowercase().contains("not available in your country") {
+        "No"
+    } else {
+        "Yes"
     }
-
-    let body_lower = body.to_lowercase();
-    if body_lower.contains("not available in your country") {
-        return "No";
-    }
-
-    "Yes"
 }
 
 fn extract_region(url: &Url) -> Option<String> {
-    let mut segments = url.path_segments()?;
-    let first_segment = segments.next()?;
+    let segment = url.path_segments()?.next()?;
 
-    if first_segment.is_empty() || first_segment == "api" {
+    if segment.is_empty() || segment == "api" {
         return None;
     }
 
-    let country_code = first_segment.split('-').next().unwrap_or(first_segment);
-    let upper = country_code.to_uppercase();
-    Some(UnlockItem::region_label(&upper))
+    let code = segment.split('-').next()?.to_ascii_uppercase();
+
+    Some(UnlockItem::region_label(&code))
 }
 
 fn extract_region_from_body(body: &str) -> Option<String> {
-    let marker = "\"countryCode\":\"";
-    if let Some(idx) = body.find(marker) {
-        let start = idx + marker.len();
-        let rest = &body[start..];
-        if let Some(end) = rest.find('"') {
-            let code = rest[..end].to_uppercase();
-            if !code.is_empty() {
-                return Some(UnlockItem::region_label(&code));
-            }
-        }
-    }
-    None
+    let code = body
+        .split_once(r#""countryCode":""#)?
+        .1
+        .split_once('"')?
+        .0
+        .to_ascii_uppercase();
+
+    (!code.is_empty()).then(|| UnlockItem::region_label(&code))
 }

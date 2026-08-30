@@ -153,7 +153,7 @@ impl Timer {
         // Redundant with first_delay == ZERO, kept as the immediate path; mark_task_running
         // no-ops whichever of the two arrives second.
         let cur_timestamp = chrono::Local::now().timestamp();
-        if let Some(items) = Config::profiles().await.data_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().items.as_ref() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
                     && option.allow_auto_update.unwrap_or(true)
@@ -204,7 +204,7 @@ impl Timer {
     }
 
     async fn gen_map(&self) -> HashMap<String, TaskSchedule> {
-        if let Some(items) = Config::profiles().await.data_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().items.as_ref() {
             return Self::gen_map_from_items(items);
         }
 
@@ -446,7 +446,7 @@ impl Timer {
         let task_interval = *self.timer_map.read().get(uid)?;
         let profiles = Config::profiles().await;
         let profiles_guard = profiles.latest_arc();
-        let items = profiles_guard.get_items()?;
+        let items = profiles_guard.items.as_ref()?;
 
         let profile = items.iter().find(|item| item.uid.as_deref() == Some(uid))?;
         let updated = profile.updated.unwrap_or(0) as i64;
@@ -472,18 +472,7 @@ impl Timer {
 
         run_timer_profile_update_transition(
             || Self::emit_update_event(uid, true),
-            || async {
-                let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
-                logging!(
-                    debug,
-                    Type::Timer,
-                    "Profile {} is current active profile: {}",
-                    uid,
-                    is_current
-                );
-
-                feat::update_profile(uid, None, is_current, false, false).await
-            },
+            || feat::update_profile(uid, None, false),
             |result| match result {
                 Ok(_) => {
                     logging!(

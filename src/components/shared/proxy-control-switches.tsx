@@ -146,7 +146,7 @@ const ProxyControlSwitches = ({
   const { indicator: systemProxyIndicator, toggleSystemProxy } =
     useSystemProxyState()
   const defaultVerge = useDefaultVergeConfig()
-  const { runState, isTunModeAvailable } = useSystemState()
+  const { runState, isTunModeAvailable, isLoading } = useSystemState()
   // Offer to uninstall only a service that is actually there and working.
   const isServiceInstallReady = runState.serviceUsable
 
@@ -154,6 +154,15 @@ const ProxyControlSwitches = ({
   const tunRef = useRef<DialogRef>(null)
 
   const { enable_tun_mode } = verge ?? {}
+
+  // Enabling needs a running core; disabling only writes OS state and must stay available.
+  const handleSystemProxyToggle = async (value: boolean) => {
+    if (value && !isLoading && runState.mode === 'NotRunning') {
+      showNotice.error('settings.feedback.errors.sysproxy.coreNotReady')
+      return false
+    }
+    await toggleSystemProxy(value)
+  }
 
   const handleTunToggle = async (value: boolean) => {
     if (value && !isTunModeAvailable) {
@@ -187,7 +196,7 @@ const ProxyControlSwitches = ({
           active={systemProxyIndicator}
           infoTitle={t('settings.sections.proxyControl.tooltips.systemProxy')}
           onInfoClick={() => sysproxyRef.current?.open()}
-          onToggle={(value) => toggleSystemProxy(value)}
+          onToggle={handleSystemProxyToggle}
           onError={onError}
           highlight={systemProxyIndicator}
           defaultActive={defaultVerge?.enable_system_proxy}

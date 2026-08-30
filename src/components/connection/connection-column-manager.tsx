@@ -1,13 +1,10 @@
+import { arrayMove } from '@dnd-kit/helpers'
 import {
-  closestCenter,
-  DndContext,
+  DragDropProvider,
   PointerSensor,
-  useSensor,
-  useSensors,
   type DragEndEvent,
-} from '@dnd-kit/core'
-import { arrayMove, SortableContext, useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+} from '@dnd-kit/react'
+import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { DragIndicatorRounded } from '@mui/icons-material'
 import {
   Button,
@@ -21,8 +18,12 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+const columnPointerSensor = PointerSensor.configure({
+  activationConstraints: () => undefined,
+})
 
 export interface ConnectionColumnOption {
   id: string
@@ -46,14 +47,8 @@ export const ConnectionColumnManager = ({
   onOrderChange,
   onReset,
 }: Props) => {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 6 },
-    }),
-  )
   const { t } = useTranslation()
 
-  const items = useMemo(() => columns.map((column) => column.id), [columns])
   const visibleCount = useMemo(
     () => columns.filter((column) => column.visible).length,
     [columns],
@@ -61,13 +56,21 @@ export const ConnectionColumnManager = ({
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { active, over } = event
-      if (!over || active.id === over.id) return
+      const { operation, canceled } = event
+      const { source, target } = operation
+      if (canceled || !target || !isSortable(source)) return
 
       const order = columns.map((column) => column.id)
-      const oldIndex = order.indexOf(active.id as string)
-      const newIndex = order.indexOf(over.id as string)
-      if (oldIndex === -1 || newIndex === -1) return
+      const { index: newIndex, initialIndex: oldIndex } = source.sortable
+      if (
+        oldIndex < 0 ||
+        newIndex < 0 ||
+        oldIndex >= order.length ||
+        newIndex >= order.length ||
+        oldIndex === newIndex
+      ) {
+        return
+      }
 
       onOrderChange(arrayMove(order, oldIndex, newIndex))
     },
@@ -80,30 +83,29 @@ export const ConnectionColumnManager = ({
         {t('connections.components.columnManager.title')}
       </DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
+        <DragDropProvider
+          sensors={[columnPointerSensor]}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={items}>
-            <List
-              dense
-              disablePadding
-              sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-            >
-              {columns.map((column) => (
-                <SortableColumnItem
-                  key={column.id}
-                  column={column}
-                  dragHandleLabel={t(
-                    'connections.components.columnManager.dragHandle',
-                  )}
-                  disableToggle={column.visible && visibleCount <= 1}
-                />
-              ))}
-            </List>
-          </SortableContext>
-        </DndContext>
+          <List
+            dense
+            disablePadding
+            sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+          >
+            {columns.map((column, index) => (
+              <SortableColumnItem
+                key={column.id}
+                id={column.id}
+                index={index}
+                column={column}
+                dragHandleLabel={t(
+                  'connections.components.columnManager.dragHandle',
+                )}
+                disableToggle={column.visible && visibleCount <= 1}
+              />
+            ))}
+          </List>
+        </DragDropProvider>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button variant="text" onClick={onReset}>
@@ -118,48 +120,44 @@ export const ConnectionColumnManager = ({
 }
 
 interface SortableColumnItemProps {
+  id: string
+  index: number
   column: ConnectionColumnOption
   dragHandleLabel: string
   disableToggle?: boolean
 }
 
 const SortableColumnItem = ({
+  id,
+  index,
   column,
   dragHandleLabel,
   disableToggle = false,
 }: SortableColumnItemProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: column.id })
-
-  const style = useMemo(
-    () => ({
-      transform: CSS.Transform.toString(transform),
-      transition,
-    }),
-    [transform, transition],
-  )
+  const [element, setElement] = useState<Element | null>(null)
+  const handleRef = useRef<HTMLButtonElement | null>(null)
+  const { isDragging } = useSortable({
+    id,
+    index,
+    element,
+    handle: handleRef,
+  })
 
   return (
     <ListItem
-      ref={setNodeRef}
+      ref={setElement}
       disableGutters
       sx={{
         px: 1,
         py: 0.5,
         borderRadius: 1,
         border: (theme) => `1px solid ${theme.palette.divider}`,
-        backgroundColor: isDragging ? 'action.hover' : 'transparent',
+        // 拖拽中的行置为不透明背景，避免透出下方内容；投影由全局 [data-dnd-dragging] 规则统一施加。
+        backgroundColor: isDragging ? 'background.paper' : 'transparent',
         display: 'flex',
         alignItems: 'center',
         gap: 1,
       }}
-      style={style}
     >
       <Checkbox
         edge="start"
@@ -175,10 +173,9 @@ const SortableColumnItem = ({
       <IconButton
         edge="end"
         size="small"
+        ref={handleRef}
         sx={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         aria-label={dragHandleLabel}
-        {...attributes}
-        {...listeners}
       >
         <DragIndicatorRounded fontSize="small" />
       </IconButton>

@@ -1,7 +1,4 @@
-import type {
-  DraggableAttributes,
-  DraggableSyntheticListeners,
-} from '@dnd-kit/core'
+import { useSortable } from '@dnd-kit/react/sortable'
 import {
   CheckBoxOutlineBlankRounded,
   CheckBoxRounded,
@@ -18,7 +15,6 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
-import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import {
@@ -47,6 +43,7 @@ import { showNotice } from '@/services/notice-service'
 import { useLoadingCache, useSetLoadingCache } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { debugLog } from '@/utils/debug'
+import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { ProfileBox } from './profile-box'
@@ -58,6 +55,8 @@ const round = keyframes`
 `
 
 export interface ProfileItemProps {
+  id: string
+  index: number
   selected: boolean
   activating: boolean
   itemData: IProfileItem
@@ -71,13 +70,12 @@ export interface ProfileItemProps {
   onSelectionChange?: () => void
   timerUpdateRevision: number
   completedUpdateRevision: number
-  dragHandleRef: (node: HTMLElement | null) => void
-  dragHandleAttributes: DraggableAttributes
-  dragHandleListeners: DraggableSyntheticListeners
 }
 
 const ProfileItemBase = (props: ProfileItemProps) => {
   const {
+    id,
+    index,
     selected,
     activating,
     itemData,
@@ -91,10 +89,16 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     onSelectionChange,
     timerUpdateRevision,
     completedUpdateRevision,
-    dragHandleRef,
-    dragHandleAttributes,
-    dragHandleListeners,
   } = props
+
+  const [element, setElement] = useState<Element | null>(null)
+  const handleRef = useRef<HTMLButtonElement | null>(null)
+  useSortable({
+    id,
+    index,
+    element,
+    handle: handleRef,
+  })
 
   const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
@@ -316,7 +320,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const onOpenHome = () => {
     setAnchorEl(null)
-    open(itemData.home ?? '')
+    if (!itemData.home) return
+    void openExternalUrl(itemData.home).catch(showNotice.error)
   }
 
   const onEditInfo = () => {
@@ -615,7 +620,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   })
 
   return (
-    <Box sx={{ position: 'relative' }}>
+    <Box ref={setElement} sx={{ position: 'relative', borderRadius: '8px' }}>
       <ProfileBox
         aria-selected={selected}
         onClick={(e) => {
@@ -677,14 +682,12 @@ const ProfileItemBase = (props: ProfileItemProps) => {
               </IconButton>
             )}
             <Box
-              ref={dragHandleRef}
+              ref={handleRef}
               sx={{
                 display: 'flex',
                 margin: 'auto 0',
                 ...(batchMode && { marginLeft: '-4px' }),
               }}
-              {...dragHandleAttributes}
-              {...dragHandleListeners}
             >
               <DragIndicatorRounded
                 sx={[

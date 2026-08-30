@@ -101,7 +101,10 @@ fn apply_status_item_attributed_title(status_item: &NSStatusItem, text: &NSStrin
         let attrs = build_attributes(button.bounds().size.height);
         let attrs: &NSDictionary<NSString, AnyObject> = &attrs;
         let attr_str = create_attributed_string(text, Some(attrs));
-        status_item.setLength(status_item_length_for_speed(&attr_str));
+        let length = status_item_length_for_speed(&attr_str);
+        if status_item.length() != length {
+            status_item.setLength(length);
+        }
         attr_str
     } else {
         create_attributed_string(text, None)

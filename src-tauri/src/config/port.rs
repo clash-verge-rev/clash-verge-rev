@@ -36,14 +36,6 @@ static STARTUP_CORE_BLOCK_REASON: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mut
 
 impl Config {
     pub(crate) async fn resolve_startup_mixed_port() -> Result<bool> {
-        Self::resolve_startup_mixed_port_inner().await
-    }
-
-    pub(crate) async fn retry_startup_mixed_port_fallback() -> Result<bool> {
-        Self::resolve_startup_mixed_port_inner().await
-    }
-
-    async fn resolve_startup_mixed_port_inner() -> Result<bool> {
         let _config_write = Self::lock_config_write().await;
         let clash = Self::clash().await.latest_arc();
         let verge = Self::verge().await.latest_arc();
@@ -287,7 +279,7 @@ fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16>
         }
     }
 
-    if let Ok(controller) = SocketAddr::from_str(IClashTemp::guard_external_controller(&clash.0).as_str()) {
+    if let Ok(controller) = SocketAddr::from_str(IClashTemp::guard_server_ctrl(&clash.0).as_str()) {
         ports.insert(controller.port());
     }
 

@@ -470,13 +470,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const initDnsConfig = useCallback(async () => {
     try {
-      const dnsConfigExists = await invoke<boolean>(
-        'check_dns_config_exists',
+      const dnsConfig = await invoke<string | null>(
+        'get_dns_config_content',
         {},
       )
 
-      if (dnsConfigExists) {
-        const dnsConfig = await invoke<string>('get_dns_config_content', {})
+      if (dnsConfig !== null) {
         const config = yaml.load(dnsConfig) as any
 
         updateValuesFromConfig(config)

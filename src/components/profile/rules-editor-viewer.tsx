@@ -1,13 +1,11 @@
 import {
-  DndContext,
-  DragEndEvent,
+  DragDropProvider,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+  type DragEndEvent,
+} from '@dnd-kit/react'
+import { isSortable, isSortableOperation } from '@dnd-kit/react/sortable'
 import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
@@ -41,6 +39,7 @@ import { useTranslation } from 'react-i18next'
 import {
   BaseSearchBox,
   MonacoEditor,
+  SortableItem,
   Switch,
   VirtualList,
 } from '@/components/base'
@@ -252,6 +251,16 @@ const PROXY_POLICY_LABEL_KEYS: Record<string, TranslationKey> =
     {} as Record<string, TranslationKey>,
   )
 
+const findRealIndex = (
+  list: string[],
+  filtered: string[],
+  filteredIndex: number,
+): number => {
+  const item = filtered[filteredIndex]
+  if (item === undefined) return -1
+  return list.indexOf(item)
+}
+
 export const RulesEditorViewer = (props: Props) => {
   const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
     props
@@ -296,20 +305,17 @@ export const RulesEditorViewer = (props: Props) => {
     const shift = filteredPrependSeq.length > 0 ? 1 : 0
     if (filteredPrependSeq.length > 0 && index === 0) {
       return (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onPrependDragEnd}
-        >
-          <SortableContext
-            items={filteredPrependSeq.map((x) => {
-              return x
-            })}
-          >
-            {filteredPrependSeq.map((item) => {
-              return (
+        <>
+          {filteredPrependSeq.map((item, itemIndex) => {
+            return (
+              <SortableItem
+                key={item}
+                id={`prepend:${item}`}
+                index={itemIndex}
+                group="prepend"
+                style={{ margin: '8px 0' }}
+              >
                 <RuleItem
-                  key={item}
                   type="prepend"
                   ruleRaw={item}
                   onDelete={() => {
@@ -322,49 +328,48 @@ export const RulesEditorViewer = (props: Props) => {
                     setPrependSeq(prependSeq.filter((v) => v !== item))
                   }}
                 />
-              )
-            })}
-          </SortableContext>
-        </DndContext>
+              </SortableItem>
+            )
+          })}
+        </>
       )
     } else if (index < filteredRuleList.length + shift) {
       const newIndex = index - shift
       return (
-        <RuleItem
-          key={filteredRuleList[newIndex]}
-          type={
-            deleteSeq.includes(filteredRuleList[newIndex])
-              ? 'delete'
-              : 'original'
-          }
-          ruleRaw={filteredRuleList[newIndex]}
-          onDelete={() => {
-            if (deleteSeq.includes(filteredRuleList[newIndex])) {
-              setDeleteSeq(
-                deleteSeq.filter((v) => v !== filteredRuleList[newIndex]),
-              )
-            } else {
-              setDeleteSeq((prev) => [...prev, filteredRuleList[newIndex]])
+        <Box sx={{ margin: '8px 0' }}>
+          <RuleItem
+            key={filteredRuleList[newIndex]}
+            type={
+              deleteSeq.includes(filteredRuleList[newIndex])
+                ? 'delete'
+                : 'original'
             }
-          }}
-        />
+            ruleRaw={filteredRuleList[newIndex]}
+            onDelete={() => {
+              if (deleteSeq.includes(filteredRuleList[newIndex])) {
+                setDeleteSeq(
+                  deleteSeq.filter((v) => v !== filteredRuleList[newIndex]),
+                )
+              } else {
+                setDeleteSeq((prev) => [...prev, filteredRuleList[newIndex]])
+              }
+            }}
+          />
+        </Box>
       )
     } else {
       return (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onAppendDragEnd}
-        >
-          <SortableContext
-            items={filteredAppendSeq.map((x) => {
-              return x
-            })}
-          >
-            {filteredAppendSeq.map((item) => {
-              return (
+        <>
+          {filteredAppendSeq.map((item, itemIndex) => {
+            return (
+              <SortableItem
+                key={item}
+                id={`append:${item}`}
+                index={itemIndex}
+                group="append"
+                style={{ margin: '8px 0' }}
+              >
                 <RuleItem
-                  key={item}
                   type="append"
                   ruleRaw={item}
                   onDelete={() => {
@@ -377,22 +382,14 @@ export const RulesEditorViewer = (props: Props) => {
                     setAppendSeq(appendSeq.filter((v) => v !== item))
                   }}
                 />
-              )
-            })}
-          </SortableContext>
-        </DndContext>
+              </SortableItem>
+            )
+          })}
+        </>
       )
     }
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
   const reorder = (list: string[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
     const [removed] = result.splice(startIndex, 1)
@@ -400,23 +397,73 @@ export const RulesEditorViewer = (props: Props) => {
     return result
   }
   const onPrependDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (over) {
-      if (active.id !== over.id) {
-        const activeIndex = prependSeq.indexOf(active.id.toString())
-        const overIndex = prependSeq.indexOf(over.id.toString())
-        setPrependSeq(reorder(prependSeq, activeIndex, overIndex))
-      }
+    const { operation, canceled } = event
+    const { source, target } = operation
+    if (canceled || !target || !isSortable(source)) return
+
+    const { index: overIndex, initialIndex: activeIndex } = source.sortable
+    const activeRealIndex = findRealIndex(
+      prependSeq,
+      filteredPrependSeq,
+      activeIndex,
+    )
+    const overRealIndex = findRealIndex(
+      prependSeq,
+      filteredPrependSeq,
+      overIndex,
+    )
+    if (
+      activeRealIndex < 0 ||
+      overRealIndex < 0 ||
+      activeRealIndex === overRealIndex
+    ) {
+      return
     }
+
+    setPrependSeq(reorder(prependSeq, activeRealIndex, overRealIndex))
   }
   const onAppendDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (over) {
-      if (active.id !== over.id) {
-        const activeIndex = appendSeq.indexOf(active.id.toString())
-        const overIndex = appendSeq.indexOf(over.id.toString())
-        setAppendSeq(reorder(appendSeq, activeIndex, overIndex))
-      }
+    const { operation, canceled } = event
+    const { source, target } = operation
+    if (canceled || !target || !isSortable(source)) return
+
+    const { index: overIndex, initialIndex: activeIndex } = source.sortable
+    const activeRealIndex = findRealIndex(
+      appendSeq,
+      filteredAppendSeq,
+      activeIndex,
+    )
+    const overRealIndex = findRealIndex(appendSeq, filteredAppendSeq, overIndex)
+    if (
+      activeRealIndex < 0 ||
+      overRealIndex < 0 ||
+      activeRealIndex === overRealIndex
+    ) {
+      return
+    }
+
+    setAppendSeq(reorder(appendSeq, activeRealIndex, overRealIndex))
+  }
+  const onDragOver = (event: DragOverEvent) => {
+    const { operation } = event
+    if (!isSortableOperation(operation)) return
+
+    const { source, target } = operation
+    if (source?.group !== target?.group) {
+      event.preventDefault()
+    }
+  }
+  const onDragEnd = async (event: DragEndEvent) => {
+    const source = event.operation.source
+    if (!isSortable(source)) return
+
+    const { initialGroup, group } = source.sortable
+    if (initialGroup !== group) return
+
+    if (group === 'prepend') {
+      await onPrependDragEnd(event)
+    } else if (group === 'append') {
+      await onAppendDragEnd(event)
     }
   }
   const fetchContent = useCallback(async () => {
@@ -806,16 +853,22 @@ export const RulesEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <VirtualList
-                count={
-                  filteredRuleList.length +
-                  (filteredPrependSeq.length > 0 ? 1 : 0) +
-                  (filteredAppendSeq.length > 0 ? 1 : 0)
-                }
-                estimateSize={56}
-                renderItem={renderItem}
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-              />
+              <DragDropProvider
+                sensors={[PointerSensor, KeyboardSensor]}
+                onDragOver={onDragOver}
+                onDragEnd={onDragEnd}
+              >
+                <VirtualList
+                  count={
+                    filteredRuleList.length +
+                    (filteredPrependSeq.length > 0 ? 1 : 0) +
+                    (filteredAppendSeq.length > 0 ? 1 : 0)
+                  }
+                  estimateSize={56}
+                  renderItem={renderItem}
+                  style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+                />
+              </DragDropProvider>
             </List>
           </>
         ) : (

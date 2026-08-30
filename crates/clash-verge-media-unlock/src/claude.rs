@@ -1,38 +1,27 @@
 use reqwest::Client;
 
+use crate::utils::get_trace_location;
+
 use super::UnlockItem;
 
-const BLOCKED_CODES: [&str; 10] = ["AF", "BY", "CN", "CU", "HK", "IR", "KP", "MO", "RU", "SY"];
+pub(crate) const CLAUDE_NAME: &str = "Claude";
+
+const BLOCKED_CODES: &[&str] = &["AF", "BY", "CN", "CU", "HK", "IR", "KP", "MO", "RU", "SY"];
 
 pub(super) async fn check_claude(client: &Client) -> UnlockItem {
-    let url = "https://claude.ai/cdn-cgi/trace";
+    let code = get_trace_location(client, "https://claude.ai/cdn-cgi/trace")
+        .await
+        .map(|code| code.trim().to_ascii_uppercase());
 
-    match client.get(url).send().await {
-        Ok(response) => match response.text().await {
-            Ok(body) => {
-                let mut country_code: Option<String> = None;
+    let Some(code) = code else {
+        return UnlockItem::checked(CLAUDE_NAME, "Failed", None);
+    };
 
-                for line in body.lines() {
-                    if let Some(rest) = line.strip_prefix("loc=") {
-                        country_code = Some(rest.trim().to_uppercase());
-                        break;
-                    }
-                }
+    let status = if BLOCKED_CODES.contains(&code.as_str()) {
+        "No"
+    } else {
+        "Yes"
+    };
 
-                if let Some(code) = country_code {
-                    let status = if BLOCKED_CODES.contains(&code.as_str()) {
-                        "No"
-                    } else {
-                        "Yes"
-                    };
-
-                    UnlockItem::checked_region("Claude", status, &code)
-                } else {
-                    UnlockItem::checked("Claude", "Failed", None)
-                }
-            }
-            Err(_) => UnlockItem::checked("Claude", "Failed", None),
-        },
-        Err(_) => UnlockItem::checked("Claude", "Failed", None),
-    }
+    UnlockItem::checked_region(CLAUDE_NAME, status, &code)
 }

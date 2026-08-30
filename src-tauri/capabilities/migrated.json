@@ -63,11 +63,10 @@
     "core:window:allow-set-maximizable",
     "core:window:allow-set-minimizable",
     "core:webview:allow-print",
-    "shell:allow-execute",
-    "shell:allow-open",
-    "shell:allow-kill",
-    "shell:allow-spawn",
-    "shell:allow-stdin-write",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "http://*" }, { "url": "https://*" }]
+    },
     "dialog:allow-open",
     "global-shortcut:allow-is-registered",
     "global-shortcut:allow-register",
@@ -77,7 +76,6 @@
     "process:allow-exit",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",
-    "shell:default",
     "dialog:default"
   ]
 }

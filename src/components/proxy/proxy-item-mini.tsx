@@ -7,7 +7,6 @@ import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
 import {
   memberDetails,
-  providerNameOf,
   type ProxyGroupView,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
@@ -27,8 +26,6 @@ export const ProxyItemMini = (props: Props) => {
   const unresolved = member.kind === 'unresolved'
   const name = member.ref.name
   const type = unresolved ? member.ref.reason : (details?.type ?? '')
-  const provider =
-    member.kind === 'node' ? providerNameOf(member.node) : undefined
   const now = member.kind === 'group' ? member.group.now : undefined
 
   const { t } = useTranslation()
@@ -125,11 +122,6 @@ export const ProxyItemMini = (props: Props) => {
               >
                 {now}
               </Typography>
-            )}
-            {!!provider && (
-              <TypeBox color="text.secondary" component="span">
-                {provider}
-              </TypeBox>
             )}
             <TypeBox color="text.secondary" component="span">
               {type}

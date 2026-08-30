@@ -3,7 +3,10 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 use tauri::Manager as _;
 
 #[cfg(not(feature = "verge-dev"))]
@@ -198,12 +201,9 @@ pub fn clash_latest_log() -> Result<PathBuf> {
     }
 }
 
-pub fn path_to_str(path: &PathBuf) -> Result<&str> {
-    let path_str = path
-        .as_os_str()
-        .to_str()
-        .ok_or_else(|| anyhow::anyhow!("failed to get path from {:?}", path))?;
-    Ok(path_str)
+pub fn path_to_str(path: &Path) -> Result<&str> {
+    path.to_str()
+        .ok_or_else(|| anyhow::anyhow!("failed to get path from {:?}", path))
 }
 
 pub fn get_encryption_key() -> Result<Vec<u8>> {

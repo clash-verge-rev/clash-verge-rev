@@ -219,6 +219,7 @@ const sortProxyOptions = (
 interface PersistentProxySelectProps {
   label: string
   groupName: string
+  fixed?: string
   value: string
   selectedName: string
   selectedDelay: number
@@ -234,6 +235,7 @@ interface PersistentProxySelectProps {
 const PersistentProxySelect = ({
   label,
   groupName,
+  fixed,
   value,
   selectedName,
   selectedDelay,
@@ -248,6 +250,7 @@ const PersistentProxySelect = ({
   const anchorRef = useRef<HTMLDivElement>(null)
   const listboxId = 'current-proxy-node-listbox'
   const labelId = 'proxy-select-label'
+  const fixedProxyInUsed = selectedName === fixed
 
   useEffect(() => {
     if (!open) return
@@ -301,6 +304,18 @@ const PersistentProxySelect = ({
                   label={delayManager.formatDelay(selectedDelay)}
                   color={convertDelayColor(selectedDelay)}
                 />
+                {fixedProxyInUsed && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      fontSize: '12px',
+                      top: '-3px',
+                      right: '25px',
+                    }}
+                  >
+                    📌
+                  </span>
+                )}
               </Box>
             )}
             SelectDisplayProps={{
@@ -334,6 +349,7 @@ const PersistentProxySelect = ({
             >
               {options.map((option) => {
                 const selected = option.value === value
+                const isFixed = option.name === fixed
                 const delay = option.disabled
                   ? -1
                   : delayManager.getDelayFix(option.member, groupName)
@@ -356,6 +372,21 @@ const PersistentProxySelect = ({
                       pr: 1,
                     }}
                   >
+                    {isFixed && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          fontSize: '12px',
+                          top: '-5px',
+                          right: '5px',
+                          ...(!fixedProxyInUsed && {
+                            filter: 'grayscale(1)',
+                          }),
+                        }}
+                      >
+                        📌
+                      </span>
+                    )}
                     <Typography noWrap sx={{ flex: 1, mr: 1 }}>
                       {option.name}
                     </Typography>
@@ -974,6 +1005,7 @@ export const CurrentProxyCard = () => {
           <PersistentProxySelect
             label={t('home.components.currentProxy.labels.proxy')}
             groupName={selectedGroupName}
+            fixed={selectedGroup?.fixed}
             value={
               currentOption
                 ? optionValue(currentOption.memberIndex, currentOption.member)

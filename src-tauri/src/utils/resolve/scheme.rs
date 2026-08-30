@@ -130,7 +130,7 @@ async fn post_import_updates(uid: &String, had_current_profile: bool) {
         false
     } else {
         let profiles = Config::profiles().await;
-        profiles.latest_arc().is_current_profile_index(uid)
+        profiles.latest_arc().current.as_ref() == Some(uid)
     };
 
     if should_update_core {

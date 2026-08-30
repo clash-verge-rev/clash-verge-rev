@@ -1133,6 +1133,10 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
+  ; A failed core upgrade leaves the displaced binary behind; it is never user data.
+  Delete "$INSTDIR\verge-mihomo.old"
+  Delete "$INSTDIR\verge-mihomo-alpha.old"
+
   ; Delete app associations
   {{#each file_associations as |association| ~}}
     {{#each association.ext as |ext| ~}}

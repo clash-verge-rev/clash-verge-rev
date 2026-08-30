@@ -16,13 +16,30 @@ pub enum FrontendEvent<'a> {
     RefreshVerge,
     RefreshProfiles,
     RefreshProxyConfig,
-    NoticeMessage { status: &'a str, message: String },
-    ProfileChanged { current_profile_id: &'a String },
-    TimerUpdated { profile_index: &'a String },
-    ProfileUpdateStarted { uid: &'a String },
-    ProfileUpdateCompleted { uid: &'a String },
-    RunStateChanged { state: serde_json::Value },
+    NoticeMessage {
+        status: &'a str,
+        message: String,
+    },
+    ProfileChanged {
+        current_profile_id: &'a String,
+    },
+    TimerUpdated {
+        profile_index: &'a String,
+    },
+    ProfileUpdateStarted {
+        uid: &'a String,
+    },
+    ProfileUpdateCompleted {
+        uid: &'a String,
+    },
+    RunStateChanged {
+        state: serde_json::Value,
+    },
     PendingFailuresChanged,
+    #[cfg(target_os = "linux")]
+    ThemeChanged {
+        theme: tauri::Theme,
+    },
 }
 
 /// Operation associated with a pending failure.
@@ -118,11 +135,6 @@ impl FailureTable {
 #[cfg(test)]
 mod failure_table_tests {
     use super::{FailedOperation, FailureTable};
-
-    #[tokio::test]
-    async fn a_write_nobody_asked_for_is_a_restore() {
-        assert_eq!(super::what_was_asked(), FailedOperation::SystemProxyRestore);
-    }
 
     #[tokio::test]
     async fn a_declared_intent_reaches_the_place_the_write_fails() {
@@ -279,6 +291,8 @@ impl NotificationSystem {
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
             FrontendEvent::RunStateChanged { state } => ("verge://run-state-changed", Ok(state)),
             FrontendEvent::PendingFailuresChanged => ("verge://pending-failures-changed", Ok(serde_json::Value::Null)),
+            #[cfg(target_os = "linux")]
+            FrontendEvent::ThemeChanged { theme } => ("tauri://theme-changed", serde_json::to_value(theme)),
         }
     }
 

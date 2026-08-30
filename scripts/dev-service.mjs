@@ -80,10 +80,7 @@ async function writeInstalledFingerprint(fingerprint) {
   )
 }
 
-export function windowsElevationInvocation(
-  installer,
-  environment = process.env,
-) {
+function windowsElevationInvocation(installer, environment = process.env) {
   const script = [
     "$ErrorActionPreference = 'Stop'",
     `$installer = [Environment]::GetEnvironmentVariable('${developmentServiceInstallerEnvironment}', 'Process')`,
