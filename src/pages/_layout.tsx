@@ -213,6 +213,25 @@ const Layout = () => {
     )
   }
 
+  // Navigation menu items
+  const menuItems = menuOrder.map((path, index) => {
+    const item = navItemMap.get(path)
+    if (!item) return null
+
+    return menuUnlocked ? (
+      <SortableNavMenuItem
+        key={item.path}
+        index={index}
+        item={item}
+        label={t(item.label)}
+      />
+    ) : (
+      <LayoutItem key={item.path} to={item.path} icon={item.icon}>
+        {t(item.label)}
+      </LayoutItem>
+    )
+  })
+
   return (
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
@@ -318,43 +337,19 @@ const Layout = () => {
               </Box>
             )}
 
-            {menuUnlocked ? (
-              <List className="the-menu" onContextMenu={handleMenuContextMenu}>
+            {/* Navigation menu */}
+            <List className="the-menu" onContextMenu={handleMenuContextMenu}>
+              {menuUnlocked ? (
                 <DragDropProvider
                   sensors={[PointerSensor, KeyboardSensor]}
                   onDragEnd={handleMenuDragEnd}
                 >
-                  {menuOrder.map((path) => {
-                    const item = navItemMap.get(path)
-                    if (!item) {
-                      return null
-                    }
-                    return (
-                      <SortableNavMenuItem
-                        key={item.path}
-                        item={item}
-                        label={t(item.label)}
-                        index={menuOrder.indexOf(path)}
-                      />
-                    )
-                  })}
+                  {menuItems}
                 </DragDropProvider>
-              </List>
-            ) : (
-              <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-                {menuOrder.map((path) => {
-                  const item = navItemMap.get(path)
-                  if (!item) {
-                    return null
-                  }
-                  return (
-                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
-                      {t(item.label)}
-                    </LayoutItem>
-                  )
-                })}
-              </List>
-            )}
+              ) : (
+                menuItems
+              )}
+            </List>
 
             <Menu
               open={Boolean(menuContextPosition)}
