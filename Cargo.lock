@@ -7421,8 +7421,8 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-mihomo"
-version = "0.5.5"
-source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo?branch=refactor-use-reqwest-ipc#a9c359edb2154c6e92bcf423e489a8082f2aa006"
+version = "0.5.6"
+source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo?branch=main#fe838d700d64421183a22e4a589f01bcd953650c"
 dependencies = [
  "arc-swap",
  "clashmap",
