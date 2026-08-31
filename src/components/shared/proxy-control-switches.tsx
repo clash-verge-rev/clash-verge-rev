@@ -196,12 +196,12 @@ const ProxyControlSwitches = ({
       {isTunMode && (
         <SwitchRow
           label={t('settings.sections.proxyControl.fields.tunMode')}
-          active={enable_tun_mode || false}
+          active={(enable_tun_mode && isTunModeAvailable) || false}
           infoTitle={t('settings.sections.proxyControl.tooltips.tunMode')}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
-          highlight={enable_tun_mode || false}
+          highlight={(enable_tun_mode && isTunModeAvailable) || false}
           extraIcons={
             <>
               {!isTunModeAvailable && (

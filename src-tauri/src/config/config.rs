@@ -19,11 +19,7 @@ use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::{
-    collections::HashSet,
-    path::PathBuf,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{collections::HashSet, path::PathBuf};
 use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
@@ -34,7 +30,6 @@ pub(crate) struct Config {
     runtime_config: Draft<IRuntime>,
 }
 
-static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 impl Config {
@@ -82,24 +77,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn tun_suppressed_for_session() -> bool {
-        TUN_SESSION_SUPPRESSED.load(Ordering::Acquire)
-    }
-
-    pub(crate) async fn suppress_tun_for_session() {
-        TUN_SESSION_SUPPRESSED.store(true, Ordering::Release);
-        Handle::refresh_verge();
-        let _ = tray::Tray::global().update_menu().await;
-    }
-
-    pub(crate) async fn restore_tun_for_session() {
-        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
-        Handle::refresh_verge();
-        let _ = tray::Tray::global().update_menu().await;
-    }
-
     pub(crate) async fn disable_tun_and_persist() -> Result<()> {
-        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
         let verge = Self::verge().await;
         verge.edit_draft(|draft| {
             draft.enable_tun_mode = Some(false);
