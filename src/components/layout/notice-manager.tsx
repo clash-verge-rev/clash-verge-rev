@@ -4,14 +4,12 @@ import {
   Alert,
   IconButton,
   Box,
-  Stack,
   type SnackbarOrigin,
 } from '@mui/material'
 import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  boundNoticeText,
   subscribeNotices,
   hideNotice,
   getSnapshotNotices,
@@ -45,31 +43,14 @@ const getAnchorOrigin = (position: NoticePosition): SnackbarOrigin => {
   return { vertical, horizontal }
 }
 
-/** Resolve notice text, bounding display output but not clipboard content. */
 const resolveNoticeMessage = (
   notice: NoticeItem,
   t: TranslationFn,
-  options?: { bounded?: boolean },
 ): React.ReactNode => {
-  const bound = (text: React.ReactNode): React.ReactNode =>
-    options?.bounded === false || typeof text !== 'string'
-      ? text
-      : boundNoticeText(text)
-
   const i18n = notice.i18n
-  if (!i18n) return bound(notice.message)
+  if (!i18n) return notice.message
 
-  const source = (i18n.params ?? {}) as Record<string, unknown>
-  // Bound both parameters and their final interpolation.
-  const params =
-    options?.bounded === false
-      ? source
-      : Object.fromEntries(
-          Object.entries(source).map(([key, value]) => [
-            key,
-            typeof value === 'string' ? boundNoticeText(value) : value,
-          ]),
-        )
+  const params = (i18n.params ?? {}) as Record<string, unknown>
   const { prefixKey, prefixParams, prefix, message, ...restParams } = params
 
   const prefixKeyParams =
@@ -97,14 +78,12 @@ const resolveNoticeMessage = (
         ? `${resolvedPrefix} ${messageStr}`
         : messageStr
 
-  return bound(
-    t(i18n.key as TranslationKey, {
-      defaultValue,
-      ...restParams,
-      ...(resolvedPrefix !== undefined ? { prefix: resolvedPrefix } : {}),
-      ...(messageStr !== undefined ? { message: messageStr } : {}),
-    }),
-  )
+  return t(i18n.key as TranslationKey, {
+    defaultValue,
+    ...restParams,
+    ...(resolvedPrefix !== undefined ? { prefix: resolvedPrefix } : {}),
+    ...(messageStr !== undefined ? { message: messageStr } : {}),
+  })
 }
 
 const extractNoticeCopyText = (input: unknown): string | undefined => {
@@ -141,9 +120,8 @@ const resolveNoticeCopyText = (
   }
 
   return (
-    extractNoticeCopyText(
-      resolveNoticeMessage(notice, t, { bounded: false }),
-    ) ?? extractNoticeCopyText(notice.message)
+    extractNoticeCopyText(resolveNoticeMessage(notice, t)) ??
+    extractNoticeCopyText(notice.message)
   )
 }
 
@@ -224,19 +202,13 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
               void handleNoticeCopy(notice)
             }}
             action={
-              <Stack
-                direction="row"
-                spacing={0.5}
-                sx={{ alignItems: 'center' }}
+              <IconButton
+                size="small"
+                color="inherit"
+                onClick={() => handleClose(notice.id)}
               >
-                <IconButton
-                  size="small"
-                  color="inherit"
-                  onClick={() => handleClose(notice.id)}
-                >
-                  <CloseRounded fontSize="inherit" />
-                </IconButton>
-              </Stack>
+                <CloseRounded fontSize="inherit" />
+              </IconButton>
             }
           >
             {resolveNoticeMessage(notice, t)}

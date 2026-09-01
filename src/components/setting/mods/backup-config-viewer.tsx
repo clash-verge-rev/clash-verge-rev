@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
 import { saveWebdavConfig, createWebdavBackup } from '@/services/cmds'
-import { errorDetail, showNotice } from '@/services/notice-service'
+import { showNotice } from '@/services/notice-service'
 import {
   buildWebdavSignature,
   getWebdavStatus,
@@ -138,7 +138,7 @@ export const BackupConfigViewer = memo(
       } catch (error) {
         showNotice.error(
           'settings.modals.backup.messages.webdavConfigSaveFailed',
-          { error: errorDetail(error) },
+          { error },
           3000,
         )
       } finally {

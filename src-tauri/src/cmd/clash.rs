@@ -1,4 +1,4 @@
-use super::{CmdResult, CommandFailure, WithErrorCode as _, proxy_aware_coded_error, proxy_aware_error};
+use super::{CmdResult, WithErrorCode as _, coded_error};
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -16,24 +16,31 @@ use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use tokio::fs;
 
+/// 复制Clash环境变量
 #[tauri::command]
 pub async fn copy_clash_env() -> CmdResult {
     feat::copy_clash_env().await;
     Ok(())
 }
 
+/// 获取Clash信息
 #[tauri::command]
 pub async fn get_clash_info() -> CmdResult<ClashInfo> {
     Ok(Config::clash().await.data_arc().get_client_info())
 }
 
+/// 修改Clash配置
 #[tauri::command]
 pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
     feat::patch_clash(&payload)
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "CLASH_CONFIG_UPDATE_FAILED"))
+        .with_error_code("CLASH_CONFIG_UPDATE_FAILED")
 }
 
+/// 修改Clash模式
+///
+/// 将 `change_clash_mode` 的失败上抛给前端，使前端 `catch` 能真正感知后端 PATCH 失败
+/// 并提示用户（此前命令始终返回 `Ok(())`，吞掉了后端错误）。
 #[tauri::command]
 pub async fn patch_clash_mode(payload: String) -> CmdResult {
     feat::change_clash_mode(payload)
@@ -41,20 +48,25 @@ pub async fn patch_clash_mode(payload: String) -> CmdResult {
         .with_error_code("CLASH_MODE_UPDATE_FAILED")
 }
 
-/// Reads the saved mode without depending on strict mihomo `/configs` deserialization.
+/// 获取当前 Clash 模式（容错读取）
+///
+/// 直接读取已保存的 clash 配置中的 `mode`，绕开 mihomo `/configs` 的严格
+/// `BaseConfig` 反序列化，作为主页 mode 显示的兜底来源。
 #[tauri::command]
 pub async fn get_clash_mode() -> CmdResult<Option<String>> {
     Ok(Config::clash().await.data_arc().get_mode().map(Into::into))
 }
 
+/// 切换Clash核心
 #[tauri::command]
-pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFailure>> {
+pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
             logging_error!(Type::Core, profiles_save_file_safe().await);
 
+            // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
                     logging!(info, Type::Core, "core changed and restarted to {clash_core}");
@@ -63,55 +75,57 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
                     Ok(None)
                 }
                 Err(err) => {
-                    let failed = err.context("core changed but failed to restart");
-                    let error_msg: String = format!("{failed:#}").into();
+                    let error_msg: String = format!("Core changed but failed to restart: {err}").into();
                     handle::Handle::notice_message("config_core::change_error", error_msg.clone());
                     logging!(error, Type::Core, "{error_msg}");
-                    Ok(Some(proxy_aware_coded_error(&failed, "CORE_CHANGE_FAILED")))
+                    Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))
                 }
             }
         }
         Err(err) => {
-            let error_msg: String = format!("{err:#}").into();
+            let error_msg: String = err;
             logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", error_msg);
-            Ok(Some(proxy_aware_coded_error(&err, "CORE_CHANGE_FAILED")))
+            handle::Handle::notice_message("config_core::change_error", error_msg.clone());
+            Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))
         }
     }
 }
 
+/// 启动核心
 #[tauri::command]
 pub async fn start_core() -> CmdResult {
     let result = CoreManager::global()
         .start_core()
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "CORE_START_FAILED"));
+        .with_error_code("CORE_START_FAILED");
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
     result
 }
 
+/// 关闭核心
 #[tauri::command]
 pub async fn stop_core() -> CmdResult {
     logging_error!(Type::Core, profiles_save_file_safe().await);
     let result = CoreManager::global()
         .stop_core()
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "CORE_STOP_FAILED"));
+        .with_error_code("CORE_STOP_FAILED");
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
     result
 }
 
+/// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {
     logging_error!(Type::Core, profiles_save_file_safe().await);
     let result = CoreManager::global()
         .restart_core()
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "CORE_RESTART_FAILED"));
+        .with_error_code("CORE_RESTART_FAILED");
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -128,6 +142,7 @@ pub async fn upgrade_clash_core(force: bool) -> CmdResult<feat::CoreUpgradeRepor
     Ok(report)
 }
 
+/// 测试URL延迟
 #[tauri::command]
 pub async fn test_delay(url: String) -> CmdResult<u32> {
     let result = match feat::test_delay(url).await {
@@ -140,13 +155,16 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
     Ok(result)
 }
 
+/// 保存DNS配置到单独文件
 #[tauri::command]
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use crate::utils::dirs;
     use tokio::fs;
 
+    // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
+    // 保存DNS配置到文件
     let yaml_str = yaml_emitter::to_mihomo_config_string(&dns_config).stringify_err()?;
     fs::write(&dns_path, yaml_str).await.stringify_err()?;
     logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
@@ -154,9 +172,11 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     Ok(())
 }
 
+/// 应用或撤销DNS配置
 #[tauri::command]
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     if apply {
+        // 读取DNS配置文件
         let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
@@ -168,32 +188,43 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             logging!(error, Type::Config, "Failed to read DNS config: {e}");
         })?;
 
+        // 解析DNS配置
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
             logging!(error, Type::Config, "Failed to parse DNS config: {e}");
         })?;
 
         logging!(info, Type::Config, "Applying DNS config from file");
 
+        // 创建包含DNS配置的patch
         let mut patch = serde_yaml_ng::Mapping::new();
         patch.insert("dns".into(), patch_config.into());
 
+        // 应用DNS配置到运行时配置
         Config::runtime().await.edit_draft(|d| {
             d.patch_config(&patch);
         });
 
-        CoreManager::global().update_config_checked().await.map_err(|error| {
-            logging!(error, Type::Config, "failed to apply the config with DNS: {error:#}");
-            proxy_aware_error(&error)
-        })?;
+        // 应用新配置
+        CoreManager::global()
+            .update_config_checked()
+            .await
+            .stringify_err_log(|err| {
+                let err = format!("Failed to apply config with DNS: {err}");
+                logging!(error, Type::Config, "{err}");
+            })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
     } else {
+        // 当关闭DNS设置时，重新生成配置（不加载DNS配置文件）
         logging!(info, Type::Config, "DNS settings disabled, regenerating config");
 
-        CoreManager::global().update_config_checked().await.map_err(|error| {
-            logging!(error, Type::Config, "failed to apply the regenerated config: {error:#}");
-            proxy_aware_error(&error)
-        })?;
+        CoreManager::global()
+            .update_config_checked()
+            .await
+            .stringify_err_log(|err| {
+                let err = format!("Failed to apply regenerated config: {err}");
+                logging!(error, Type::Config, "{err}");
+            })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
     }
@@ -202,20 +233,33 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
     Ok(())
 }
 
+/// 检查DNS配置文件是否存在
 #[tauri::command]
-pub async fn get_dns_config_content() -> CmdResult<Option<String>> {
+pub fn check_dns_config_exists() -> CmdResult<bool> {
+    use crate::utils::dirs;
+
+    let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
+
+    Ok(dns_path.exists())
+}
+
+/// 获取DNS配置文件内容
+#[tauri::command]
+pub async fn get_dns_config_content() -> CmdResult<String> {
     use crate::utils::dirs;
     use tokio::fs;
 
     let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
-    match fs::read_to_string(&dns_path).await {
-        Ok(content) => Ok(Some(content.into())),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(CommandFailure::plain(error)),
+    if !fs::try_exists(&dns_path).await.stringify_err()? {
+        return Err("DNS config file not found".into());
     }
+
+    let content = fs::read_to_string(&dns_path).await.stringify_err()?.into();
+    Ok(content)
 }
 
+/// 验证DNS配置文件
 #[tauri::command]
 pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
     let app_dir = dirs::app_home_dir().stringify_err()?;

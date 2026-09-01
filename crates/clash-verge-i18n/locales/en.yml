@@ -10,12 +10,6 @@ notifications:
     title: System Proxy
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
-  systemProxyFailed:
-    title: System Proxy
-    body: The system proxy could not be set. Open Clash Verge to see why.
-  systemProxyGuardStopped:
-    title: System Proxy Guard
-    body: The guard stopped after failing several times running. Open Clash Verge to see why.
   tunModeToggled:
     title: TUN Mode
     'on': TUN mode has been enabled.

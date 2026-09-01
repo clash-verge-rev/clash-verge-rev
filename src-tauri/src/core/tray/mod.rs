@@ -940,7 +940,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
             }
             MenuIds::SYSTEM_PROXY => {
-                let _ = feat::toggle_system_proxy().await;
+                feat::toggle_system_proxy().await;
             }
             MenuIds::TUN_MODE => {
                 feat::toggle_tun_mode(None).await;

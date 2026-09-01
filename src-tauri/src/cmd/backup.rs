@@ -20,9 +20,7 @@ pub async fn delete_local_backup(filename: String) -> CmdResult<()> {
 
 #[tauri::command]
 pub async fn restore_local_backup(filename: String) -> CmdResult<()> {
-    feat::restore_local_backup(filename)
-        .await
-        .map_err(|error| super::proxy_aware_error(&error))
+    feat::restore_local_backup(filename).await.stringify_err()
 }
 
 #[tauri::command]

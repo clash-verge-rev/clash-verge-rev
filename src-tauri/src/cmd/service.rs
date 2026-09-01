@@ -1,4 +1,4 @@
-use super::{CmdResult, proxy_aware_coded_error};
+use super::{CmdResult, WithErrorCode as _};
 use crate::core::{
     CoreManager,
     service::{SERVICE_MANAGER, ServiceStatus},
@@ -11,15 +11,12 @@ async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str)
         &status,
         ServiceStatus::ReinstallRequired | ServiceStatus::ForceReinstallRequired
     ) {
-        manager
-            .controlled_stop_core_inner()
-            .await
-            .map_err(|error| proxy_aware_coded_error(&error, error_code))?;
+        manager.controlled_stop_core_inner().await.with_error_code(error_code)?;
     }
     SERVICE_MANAGER
         .handle_service_status(status)
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, error_code))
+        .with_error_code(error_code)
 }
 
 #[tauri::command]
@@ -32,7 +29,7 @@ pub async fn uninstall_service() -> CmdResult {
     CoreManager::global()
         .uninstall_service_and_start_sidecar()
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_UNINSTALL_FAILED"))
+        .with_error_code("SERVICE_UNINSTALL_FAILED")
 }
 
 #[tauri::command]
@@ -50,5 +47,5 @@ pub async fn continue_with_sidecar() -> CmdResult {
     crate::core::CoreManager::global()
         .continue_with_sidecar()
         .await
-        .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))
+        .with_error_code("SERVICE_SIDECAR_FAILED")
 }

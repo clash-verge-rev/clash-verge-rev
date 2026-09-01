@@ -98,7 +98,7 @@ async fn restore_original(
     file_path: &std::path::Path,
     original_content: &str,
     original_existed: bool,
-) -> CmdResult<()> {
+) -> Result<(), String> {
     if original_existed {
         fs::write(file_path, original_content).await.stringify_err()
     } else {

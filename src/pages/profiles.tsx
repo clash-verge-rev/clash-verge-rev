@@ -52,7 +52,7 @@ import {
   updateProfile,
 } from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
-import { errorDetail, showNotice } from '@/services/notice-service'
+import { showNotice } from '@/services/notice-service'
 import {
   fetchCacheData,
   revalidateQueries,
@@ -190,7 +190,7 @@ const ProfilePage = () => {
       console.error('[紧急刷新] 失败:', error)
       showNotice.error(
         'profiles.page.feedback.notices.emergencyRefreshFailed',
-        { message: errorDetail(error) },
+        { message: String(error) },
         4000,
       )
     }
@@ -238,9 +238,8 @@ const ProfilePage = () => {
     } catch (initialErr) {
       console.warn('[订阅导入] 首次导入失败:', initialErr)
 
-      const initialDetail = errorDetail(initialErr)
-      if (initialDetail.toLowerCase().includes('legacy tls')) {
-        showNotice.error(initialErr)
+      if (String(initialErr).toLowerCase().includes('legacy tls')) {
+        showNotice.error(String(initialErr))
         return
       }
 
@@ -256,7 +255,7 @@ const ProfilePage = () => {
       } catch (retryErr) {
         showNotice.error(
           'profiles.page.feedback.notifications.importFail',
-          retryErr,
+          String(retryErr),
         )
       }
     } finally {

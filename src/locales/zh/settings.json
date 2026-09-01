@@ -37,17 +37,11 @@
       },
       "actions": {
         "installService": "安装服务",
-        "uninstallService": "卸载服务",
-        "switchToServiceMode": "切换到服务模式"
+        "uninstallService": "卸载服务"
       },
       "fields": {
         "systemProxy": "系统代理",
         "tunMode": "虚拟网卡模式"
-      },
-      "messages": {
-        "installedCheckProxy": "服务已安装，内核已通过服务运行。请检查系统代理开关，若刚才的改动未生效请重新操作一次。",
-        "installedCoreNotOnService": "服务已安装，但内核未通过服务运行。请检查内核状态后重试。",
-        "installedProxyRestored": "服务已安装，内核已通过服务运行，刚才的系统代理改动已重新应用。"
       }
     },
     "externalController": {
@@ -655,14 +649,6 @@
         "reinstallFailed": "重新安装服务失败",
         "repairFailed": "修复服务失败",
         "sidecarFailed": "继续使用 Sidecar 失败"
-      },
-      "sysproxy": {
-        "privilegeRequired": "无法设置系统代理：macOS 以权限不足为由拒绝了这次修改。请安装 Clash Verge 服务；管理员也可以在系统设置 → 隐私与安全性的高级选项中，关闭访问系统范围设置需要管理员密码的要求。",
-        "directFallback": "系统代理设置失败，已回退为直连。",
-        "guardStopped": "系统代理守卫连续多次失败后已停止，系统代理不再被自动维持。",
-        "sidecarWhileServiceReady": "系统代理设置失败：Clash Verge 服务已就绪，但内核仍以 Sidecar 运行。重启内核即可切换到服务模式。",
-        "coreNotReady": "无法开启系统代理：内核尚未运行。请先启动内核（或安装/修复 Clash Verge 服务）后重试。",
-        "systemCallFailed": "系统代理写入失败：Windows 系统调用未成功，通常是瞬时故障。请稍后重试。"
       }
     },
     "notifications": {

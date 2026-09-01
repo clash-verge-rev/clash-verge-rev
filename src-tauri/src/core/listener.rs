@@ -510,13 +510,6 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Vec<Socket>> {
     if claim.transport == ListenerTransport::Tcp {
         socket.listen(1)?;
     }
-    #[cfg(windows)]
-    if claim.transport == ListenerTransport::Tcp
-        && !claim.address.is_unspecified()
-        && windows_wildcard_tcp_listener_exists(claim.address, claim.port)?
-    {
-        return Err(io::ErrorKind::AddrInUse.into());
-    }
     sockets.push(socket);
     Ok(sockets)
 }
@@ -584,107 +577,6 @@ fn set_exclusive_address_use(socket: &Socket) -> io::Result<()> {
         return Err(io::Error::last_os_error());
     }
     Ok(())
-}
-
-#[cfg(windows)]
-fn windows_wildcard_tcp_listener_exists(address: IpAddr, port: u16) -> io::Result<bool> {
-    use windows_sys::Win32::{
-        NetworkManagement::IpHelper::{MIB_TCP6ROW_OWNER_PID, MIB_TCPROW_OWNER_PID},
-        Networking::WinSock::{AF_INET, AF_INET6},
-    };
-
-    let family = match address {
-        IpAddr::V4(_) => u32::from(AF_INET),
-        IpAddr::V6(_) => u32::from(AF_INET6),
-    };
-    let table = windows_tcp_listener_table(family)?;
-    match address {
-        IpAddr::V4(_) => Ok(windows_tcp_listener_rows::<MIB_TCPROW_OWNER_PID>(&table)?
-            .iter()
-            .any(|row| row.dwLocalAddr == 0 && windows_tcp_port(row.dwLocalPort) == port)),
-        IpAddr::V6(_) => Ok(windows_tcp_listener_rows::<MIB_TCP6ROW_OWNER_PID>(&table)?
-            .iter()
-            .any(|row| row.ucLocalAddr == [0; 16] && windows_tcp_port(row.dwLocalPort) == port)),
-    }
-}
-
-#[cfg(windows)]
-fn windows_tcp_listener_table(family: u32) -> io::Result<Vec<u32>> {
-    use std::{mem::size_of, ptr::null_mut};
-    use windows_sys::Win32::{
-        Foundation::ERROR_INSUFFICIENT_BUFFER,
-        NetworkManagement::IpHelper::{GetExtendedTcpTable, TCP_TABLE_OWNER_PID_LISTENER},
-    };
-
-    let mut byte_count = 0;
-    // SAFETY: a null table is the documented size-query form; `byte_count` is writable.
-    let status = unsafe {
-        GetExtendedTcpTable(
-            null_mut(),
-            &raw mut byte_count,
-            0,
-            family,
-            TCP_TABLE_OWNER_PID_LISTENER,
-            0,
-        )
-    };
-    if status != ERROR_INSUFFICIENT_BUFFER {
-        return Err(io::Error::from_raw_os_error(status.cast_signed()));
-    }
-
-    loop {
-        let word_count = (byte_count as usize).div_ceil(size_of::<u32>());
-        let mut table = vec![0u32; word_count];
-        // SAFETY: `table` has at least `byte_count` writable bytes and the API updates
-        // `byte_count` when the listener table grows between calls.
-        let status = unsafe {
-            GetExtendedTcpTable(
-                table.as_mut_ptr().cast(),
-                &raw mut byte_count,
-                0,
-                family,
-                TCP_TABLE_OWNER_PID_LISTENER,
-                0,
-            )
-        };
-        match status {
-            0 => return Ok(table),
-            ERROR_INSUFFICIENT_BUFFER => {}
-            error => return Err(io::Error::from_raw_os_error(error.cast_signed())),
-        }
-    }
-}
-
-#[cfg(windows)]
-fn windows_tcp_listener_rows<Row>(table: &[u32]) -> io::Result<&[Row]> {
-    use std::mem::{align_of, size_of, size_of_val};
-
-    let Some((&row_count, _)) = table.split_first() else {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "Windows returned an empty TCP listener table",
-        ));
-    };
-    let row_count = row_count as usize;
-    let required_bytes = row_count
-        .checked_mul(size_of::<Row>())
-        .and_then(|rows| size_of::<u32>().checked_add(rows))
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Windows TCP listener table is too large"))?;
-    if required_bytes > size_of_val(table) || align_of::<Row>() > align_of::<u32>() {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "Windows returned a malformed TCP listener table",
-        ));
-    }
-
-    // SAFETY: the size and alignment checks above cover `row_count` complete rows;
-    // the API places them immediately after its u32 entry count.
-    Ok(unsafe { std::slice::from_raw_parts(table.as_ptr().add(1).cast(), row_count) })
-}
-
-#[cfg(windows)]
-const fn windows_tcp_port(raw_port: u32) -> u16 {
-    u16::from_be(raw_port as u16)
 }
 
 const fn conflict_outcome(claim: &BindClaim) -> ListenerProbeOutcome {

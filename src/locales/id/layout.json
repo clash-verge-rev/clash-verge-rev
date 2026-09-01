@@ -36,18 +36,6 @@
         "revalidationFailed": "Gagal menyegarkan status berjalan",
         "sidecarFailed": "Gagal melanjutkan dengan Sidecar"
       }
-    },
-    "sysproxyPrivilege": {
-      "title": "Tidak dapat mengatur proxy sistem",
-      "message": "macOS menolak perubahan ini karena izin tidak cukup. Setelah layanan Clash Verge dipasang, layanan akan menerapkan pengaturan proxy sebagai administrator dan pesan ini tidak akan muncul lagi.",
-      "serviceReadyMessage": "Layanan Clash Verge sudah siap, tetapi core masih berjalan sebagai sidecar sehingga pengaturan proxy sistem ditolak. Beralih ke mode layanan mengatasinya tanpa pemasangan ulang.",
-      "alternative": "Alternatif: matikan opsi yang mewajibkan kata sandi administrator untuk mengakses pengaturan seluruh sistem di Pengaturan Sistem → Privasi & Keamanan → Lanjutan.",
-      "later": "Nanti",
-      "installing": "Memasang layanan sistem. Kata sandi administrator mungkin diminta.",
-      "restarting": "Layanan terpasang. Memulai ulang core melaluinya…",
-      "applying": "Menerapkan perubahan proxy sistem Anda…",
-      "tunTitle": "Mode TUN memerlukan layanan sistem",
-      "tunMessage": "Mode TUN memerlukan layanan sistem Clash Verge untuk mengambil alih lalu lintas jaringan. Setelah terpasang, mode TUN akan diaktifkan untuk Anda."
     }
   },
   "feedback": {

@@ -370,8 +370,8 @@ impl CoreManager {
                 Ok(())
             }
             Err(err) => {
-                logging!(error, Type::Core, "Failed to restart core: {err:#}");
-                Err(err.context("failed to apply the configuration"))
+                logging!(error, Type::Core, "Failed to restart core: {}", err);
+                Err(anyhow!("Failed to apply config: {}", err))
             }
         }
     }

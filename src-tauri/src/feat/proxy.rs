@@ -1,24 +1,18 @@
 use crate::{
     config::{Config, IVerge, MixedPort},
-    core::{
-        handle,
-        notification::{self, FailedOperation},
-        proxy_control,
-    },
-    utils::{
-        notification::{NotificationEvent, needs_system_notification, notify_event},
-        window_manager::WindowManager,
-    },
+    core::handle,
 };
 use clash_verge_logging::{Type, logging};
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
-pub async fn toggle_system_proxy() -> Option<bool> {
+/// Toggle system proxy on/off
+pub async fn toggle_system_proxy() -> bool {
     let verge = Config::verge().await;
     let current = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
 
+    // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if current
         && auto_close_connection
         && let Err(err) = handle::Handle::mihomo().close_all_connections().await
@@ -27,44 +21,29 @@ pub async fn toggle_system_proxy() -> Option<bool> {
     }
 
     let requested = !current;
-    let patch_result = notification::asking_for(
-        toggle_operation(requested),
-        Box::pin(super::patch_verge(
-            &IVerge {
-                enable_system_proxy: Some(requested),
-                ..IVerge::default()
-            },
-            false,
-        )),
+    let patch_result = super::patch_verge(
+        &IVerge {
+            enable_system_proxy: Some(requested),
+            ..IVerge::default()
+        },
+        false,
     )
     .await;
 
     match patch_result {
-        Ok(_) => Some(requested),
+        Ok(_) => {
+            handle::Handle::refresh_verge();
+            requested
+        }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err:#}");
-            report_toggle_failure(&err).await;
-            None
+            logging!(error, Type::ProxyMode, "{err}");
+            current
         }
     }
 }
 
-async fn report_toggle_failure(error: &anyhow::Error) {
-    let recorded = proxy_control::is_reportable(error);
-
-    if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
-        notify_event(NotificationEvent::SystemProxyFailed).await;
-    }
-}
-
-const fn toggle_operation(requested: bool) -> FailedOperation {
-    if requested {
-        FailedOperation::SystemProxyEnable
-    } else {
-        FailedOperation::SystemProxyDisable
-    }
-}
-
+/// Toggle TUN mode on/off
+/// Returns the updated toggle state
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     let current = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
     let enable = !current;
@@ -80,16 +59,21 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     {
         Ok(_) => {
             handle::Handle::refresh_verge();
-            // Reconciliation may immediately disable unavailable TUN; report the resulting state.
+            // Read back rather than returning what was asked for: patching TUN reconciles it
+            // afterwards, and where TUN cannot work that reconciliation turns it straight off
+            // again. This path is not gated on availability — it is the global hotkey — so
+            // reporting the request would tell the caller TUN is on moments before the notice
+            // saying it was disabled.
             Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err:#}");
+            logging!(error, Type::ProxyMode, "{err}");
             current
         }
     }
 }
 
+/// Copy proxy environment variables to clipboard
 pub async fn copy_clash_env() {
     let env_ip = env::var("CLASH_VERGE_REV_IP").ok();
     let verge_cfg = Config::verge().await.latest_arc();
@@ -98,7 +82,9 @@ pub async fn copy_clash_env() {
         .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
 
     let app_handle = handle::Handle::app_handle();
-    // Clipboard output must use the core's live port, including merge-config overrides.
+    // The user is about to paste this into a shell, so it has to be the port the Core is
+    // really on — and this path is user-triggered, so a round-trip is affordable. It also
+    // used to fall back to a hardcoded 7897, ignoring the Merge Config entirely.
     let port = MixedPort::effective().await;
     let http_proxy = format!("http://{ip}:{port}");
     let socks5_proxy = format!("socks5://{ip}:{port}");

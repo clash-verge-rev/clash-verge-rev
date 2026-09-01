@@ -41,7 +41,5 @@ pub async fn delete_webdav_backup(filename: String) -> CmdResult<()> {
 
 #[tauri::command]
 pub async fn restore_webdav_backup(filename: String) -> CmdResult<()> {
-    feat::restore_webdav_backup(filename)
-        .await
-        .map_err(|error| super::proxy_aware_error(&error))
+    feat::restore_webdav_backup(filename).await.stringify_err()
 }

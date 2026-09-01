@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, BaseLoadingOverlay } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { listWebDavBackup } from '@/services/cmds'
-import { errorDetail, showNotice } from '@/services/notice-service'
+import { showNotice } from '@/services/notice-service'
 import { buildWebdavSignature, setWebdavStatus } from '@/services/webdav-status'
 
 import { BackupConfigViewer } from './backup-config-viewer'
@@ -52,7 +52,7 @@ export const BackupWebdavDialog = ({
         setWebdavStatus(signature, 'failed')
         showNotice.error(
           'settings.modals.backup.messages.webdavRefreshFailed',
-          { error: errorDetail(error) },
+          { error },
         )
       } finally {
         handleLoading(false)

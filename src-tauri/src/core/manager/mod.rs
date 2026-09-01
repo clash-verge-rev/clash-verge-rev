@@ -280,9 +280,10 @@ impl CoreManager {
                         }
                         Err(fallback_error) => {
                             crate::config::Config::block_startup_core(&fallback_error);
-                            return Err(start_error.context(format!(
-                                "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
-                            )));
+                            return Err(anyhow::anyhow!(
+                                "core startup failed: {start_error:#}; mixed proxy port fallback failed: \
+                                 {fallback_error:#}"
+                            ));
                         }
                     }
                 }

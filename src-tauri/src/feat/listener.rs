@@ -11,7 +11,6 @@ use crate::{
             probe_listener as probe_listener_sync, probe_proxy_port_change,
         },
         manager::RunningMode,
-        proxy_control::rollback_failure,
         validate::CoreConfigValidator,
     },
     process::AsyncHandler,
@@ -85,7 +84,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         transaction.rollback();
         return match restore_files(&snapshots).await {
             Ok(()) => Err(error).context("failed to persist candidate Runtime Configuration"),
-            Err(rollback_error) => Err(rollback_failure(error, rollback_error)),
+            Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
         };
     }
 
@@ -95,8 +94,10 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         // proxy from `MixedPort::desired()`, which must already name the borrowed port.
         restore_borrowed_port(*borrowed_port);
         if let Err(rollback_error) = rollback_proxy_ports(&snapshots, was_running).await {
-            return Err(rollback_failure(activation_error, rollback_error)
-                .context("failed to activate the proxy port configuration"));
+            return Err(anyhow!(
+                "failed to activate proxy port configuration: {activation_error:#}; \
+                 configuration rollback failed: {rollback_error:#}"
+            ));
         }
 
         let post_failure_assessment = probe_proxy_ports(current, candidate, was_running).await?;
@@ -116,7 +117,9 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         restore_borrowed_port(*borrowed_port);
         return match rollback_proxy_ports(&snapshots, was_running).await {
             Ok(()) => Err(persist_error),
-            Err(rollback_error) => Err(rollback_failure(persist_error, rollback_error)),
+            Err(rollback_error) => Err(anyhow!(
+                "{persist_error:#}; configuration rollback failed: {rollback_error:#}"
+            )),
         };
     }
 
@@ -250,8 +253,9 @@ async fn rollback_proxy_ports(snapshots: &[FileSnapshot], was_running: bool) -> 
         (Ok(()), Ok(())) => Ok(()),
         (Err(file_error), Ok(())) => Err(file_error),
         (Ok(()), Err(lifecycle_error)) => Err(lifecycle_error).context("failed to restore the previous core"),
-        (Err(file_error), Err(lifecycle_error)) => Err(lifecycle_error
-            .context(format!("failed to restore configuration files: {file_error:#}"))
-            .context("failed to restore the previous core")),
+        (Err(file_error), Err(lifecycle_error)) => Err(anyhow!(
+            "failed to restore configuration files: {file_error:#}; \
+             failed to restore the previous core: {lifecycle_error:#}"
+        )),
     }
 }

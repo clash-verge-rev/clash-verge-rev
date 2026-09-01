@@ -36,18 +36,6 @@
         "revalidationFailed": "Laufstatus konnte nicht aktualisiert werden",
         "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
       }
-    },
-    "sysproxyPrivilege": {
-      "title": "Systemproxy konnte nicht gesetzt werden",
-      "message": "macOS hat die Änderung mangels Berechtigungen abgelehnt. Nach Installation des Clash-Verge-Dienstes nimmt dieser die Proxy-Änderungen als Administrator vor, und dieser Hinweis erscheint nicht mehr.",
-      "serviceReadyMessage": "Der Clash-Verge-Dienst ist bereit, der Kern läuft aber noch als Sidecar — deshalb wurde das Setzen des Systemproxys abgelehnt. Ein Wechsel in den Dienstmodus behebt das, eine Neuinstallation ist nicht nötig.",
-      "alternative": "Alternativ: Deaktivieren Sie in den Systemeinstellungen → Datenschutz & Sicherheit → Erweitert die Option, die für systemweite Einstellungen ein Administratorkennwort verlangt.",
-      "later": "Später",
-      "installing": "Der Systemdienst wird installiert. Möglicherweise wird ein Administratorkennwort verlangt.",
-      "restarting": "Dienst installiert. Der Kern wird darüber neu gestartet…",
-      "applying": "Ihre Systemproxy-Änderung wird angewendet…",
-      "tunTitle": "Der TUN-Modus benötigt den Systemdienst",
-      "tunMessage": "Der TUN-Modus benötigt den Clash-Verge-Systemdienst, um den Netzwerkverkehr zu übernehmen. Nach der Installation wird der TUN-Modus für Sie eingeschaltet."
     }
   },
   "feedback": {

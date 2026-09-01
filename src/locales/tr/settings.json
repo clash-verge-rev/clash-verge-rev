@@ -37,17 +37,11 @@
       },
       "actions": {
         "installService": "Hizmeti Kur",
-        "uninstallService": "Uninstall Service",
-        "switchToServiceMode": "Hizmet moduna geç"
+        "uninstallService": "Uninstall Service"
       },
       "fields": {
         "systemProxy": "Sistem Vekil'i",
         "tunMode": "Tun Modu"
-      },
-      "messages": {
-        "installedCheckProxy": "Hizmet kuruldu ve çekirdek onun üzerinden çalışıyor. Sistem vekil sunucusu anahtarını denetleyin; değişikliğiniz uygulanmadıysa yeniden yapın.",
-        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin.",
-        "installedProxyRestored": "Hizmet kuruldu, çekirdek onun üzerinden çalışıyor ve sistem proxy değişikliğiniz uygulandı."
       }
     },
     "externalController": {
@@ -655,14 +649,6 @@
         "reinstallFailed": "Hizmet yeniden kurulamadı",
         "repairFailed": "Hizmet onarılamadı",
         "sidecarFailed": "Sidecar ile devam edilemedi"
-      },
-      "sysproxy": {
-        "privilegeRequired": "Sistem vekil sunucusu ayarlanamıyor: macOS yetki yetersizliği nedeniyle değişikliği reddetti. Clash Verge hizmetini kurun; yöneticiyseniz Sistem Ayarları → Gizlilik ve Güvenlik bölümündeki gelişmiş seçeneklerden, sistem genelindeki ayarlar için yönetici parolası zorunluluğunu da kapatabilirsiniz.",
-        "directFallback": "Sistem vekil sunucusu ayarlanamadı; trafik doğrudan bağlantıya geri döndürüldü.",
-        "guardStopped": "Sistem vekil sunucusu koruması art arda birkaç başarısızlıktan sonra durdu. Sistem vekil sunucusu artık otomatik olarak korunmuyor.",
-        "sidecarWhileServiceReady": "Sistem vekil sunucusu ayarlanamadı: Clash Verge hizmeti hazır ancak çekirdek hâlâ Sidecar olarak çalışıyor. Hizmet moduna geçmek için çekirdeği yeniden başlatın.",
-        "coreNotReady": "Çekirdek çalışmadığı için sistem vekil sunucusu etkinleştirilemedi. Çekirdeği başlatın (veya Clash Verge hizmetini kurun/onarın) ve yeniden deneyin.",
-        "systemCallFailed": "Bir Windows sistem çağrısı başarısız olduğu için sistem vekil sunucusu yazılamadı. Bu genellikle geçicidir, yeniden deneyin."
       }
     },
     "notifications": {
