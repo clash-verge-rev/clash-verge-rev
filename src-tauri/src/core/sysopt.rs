@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, MixedPort},
-    core::proxy_control::SystemProxyStateUnknown,
+    core::proxy_control::{self, SystemProxyStateUnknown},
     singleton,
     utils::server,
 };
@@ -137,10 +137,13 @@ where
         return Ok(());
     }
 
-    // The final disable must happen after the last in-flight guard write.
+    // The final disable should follow the last in-flight guard write, but a guard that will not
+    // stop must not keep the proxy on: disable again either way.
     if !drain_again().await {
-        anyhow::bail!(
-            "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}; the OS proxy state is unknown"
+        logging!(
+            warn,
+            Type::Core,
+            "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}; disabling anyway"
         );
     }
     disable().await
@@ -171,15 +174,19 @@ where
 }
 
 /// Treats a missing network service as a completed disable: with nothing to write to, the
-/// requested "no proxy" state already holds. Turning a proxy on must still fail.
-fn tolerate_missing_network_service(_enabling: bool, outcome: sysproxy::Result<()>) -> Result<()> {
+/// requested "no proxy" state already holds.
+///
+/// Enabling still fails: the guard is opt-in and nothing else re-applies the proxy when a
+/// service appears, so a skipped enable would claim a proxy the OS never received.
+///
+/// Reports whether the write reached the OS, so recovery does not mistake a skip for evidence.
+fn skip_without_network_service(enabling: bool, outcome: sysproxy::Result<()>) -> Result<bool> {
     match outcome {
-        #[cfg(target_os = "macos")]
-        Err(sysproxy::Error::NoActiveNetworkService) if !_enabling => {
+        Err(error) if !enabling && proxy_control::is_missing_network_service(&error) => {
             logging!(warn, Type::Core, "no active network service, nothing to turn off");
-            Ok(())
+            Ok(false)
         }
-        other => other.map_err(anyhow::Error::from),
+        other => other.map(|()| true).map_err(anyhow::Error::from),
     }
 }
 
@@ -187,8 +194,8 @@ fn tolerate_missing_network_service(_enabling: bool, outcome: sysproxy::Result<(
 async fn disable_all_proxies(sys: Sysproxy, auto: Autoproxy) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         disable_both(
-            || tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
-            || tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
+            || skip_without_network_service(sys.enable, sys.set_system_proxy()).map(|_reached_os| ()),
+            || skip_without_network_service(auto.enable, auto.set_auto_proxy()).map(|_reached_os| ()),
         )
     })
     .await?
@@ -463,16 +470,10 @@ impl Sysopt {
         let guard_was_running = !self.access_guard().read().get_state().is_stopped();
         let idle = self.access_guard().read().shutdown();
         let drained = idle.wait_timeout(GUARD_DRAIN_TIMEOUT).await;
-        if !drained {
-            // A pending guard write makes OS state unknown.
-            self.access_guard().write().set_guard_type(GuardType::None);
-            anyhow::bail!(
-                "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}; the OS proxy state is unknown"
-            );
-        }
 
-        // Skip writes only when macOS exactly matches the target.
+        // A slow guard does not stop the write, but it does make the OS read untrustworthy.
         if cfg!(target_os = "macos")
+            && drained
             && current_os_proxy_state(sys.clone(), auto.clone()).await == OsProxyState::AlreadyApplied
         {
             self.access_guard().write().set_guard_type(guard_type);
@@ -489,15 +490,17 @@ impl Sysopt {
             (off_sys, off_auto)
         };
 
-        // Track whether an earlier setter already changed the OS.
+        // Only a step that actually wrote is evidence the OS changed; a skipped one is not.
         let applied = tokio::task::spawn_blocking(move || {
-            for (index, step) in apply_steps.into_iter().enumerate() {
+            let mut earlier_step_reached_os = false;
+            for step in apply_steps {
                 let written = match step {
-                    ProxyApplyStep::Autoproxy => tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
-                    ProxyApplyStep::Sysproxy => tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
+                    ProxyApplyStep::Autoproxy => skip_without_network_service(auto.enable, auto.set_auto_proxy()),
+                    ProxyApplyStep::Sysproxy => skip_without_network_service(sys.enable, sys.set_system_proxy()),
                 };
-                if let Err(error) = written {
-                    return Err((index > 0, error));
+                match written {
+                    Ok(reached_os) => earlier_step_reached_os |= reached_os,
+                    Err(error) => return Err((earlier_step_reached_os, error)),
                 }
             }
             Ok(())
@@ -571,11 +574,49 @@ mod tests {
         AuthoritativeState, BYPASS_SEPARATOR, DEFAULT_BYPASS, OsProxyState, ProxyApplyStep, SystemProxyStateUnknown,
         authoritative_state, authoritative_state_from, classify_os_proxy_state, disable_both,
         disable_until_the_last_write_is_ours, first_failure, format_bypass, proxy_apply_steps,
-        recover_from_failed_write, target_is_already_in_place,
+        recover_from_failed_write, skip_without_network_service, target_is_already_in_place,
     };
     use parking_lot::Mutex;
     use std::collections::VecDeque;
     use sysproxy::{Autoproxy, Sysproxy};
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_machine_with_no_network_service_has_nothing_to_turn_off() {
+        for missing in [
+            sysproxy::Error::NoActiveNetworkService,
+            sysproxy::Error::NetworkInterface,
+        ] {
+            assert_eq!(skip_without_network_service(false, Err(missing)).ok(), Some(false));
+        }
+        assert_eq!(skip_without_network_service(false, Ok(())).ok(), Some(true));
+        assert!(skip_without_network_service(false, Err(sysproxy::Error::RequiresAdminPrivileges)).is_err());
+    }
+
+    /// Enabling the global proxy disables PAC first; that skipped step must not look like a write.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_skipped_step_is_not_evidence_that_the_os_was_touched() {
+        let skipped = skip_without_network_service(false, Err(sysproxy::Error::NoActiveNetworkService));
+        let earlier_step_reached_os = skipped.unwrap_or(true);
+        assert!(!earlier_step_reached_os);
+
+        let failed = skip_without_network_service(true, Err(sysproxy::Error::NoActiveNetworkService))
+            .err()
+            .unwrap_or_else(|| anyhow::anyhow!("enabling without a network service must fail"));
+
+        assert_eq!(
+            authoritative_state(&failed, earlier_step_reached_os),
+            AuthoritativeState::Unchanged
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn turning_the_proxy_on_without_a_network_service_still_fails() {
+        assert!(skip_without_network_service(true, Err(sysproxy::Error::NoActiveNetworkService)).is_err());
+        assert!(skip_without_network_service(true, Err(sysproxy::Error::NetworkInterface)).is_err());
+    }
 
     #[test]
     fn empty_custom_bypass_uses_defaults() {
@@ -796,10 +837,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_guard_that_never_finishes_is_reported_rather_than_written_over() {
+    async fn a_guard_that_never_finishes_still_gets_the_proxy_disabled() {
         assert_eq!(
-            record_disable_sequence(false, false, &[true]).await,
-            (vec!["disable", "drain"], false)
+            record_disable_sequence(false, false, &[true, true]).await,
+            (vec!["disable", "drain", "disable"], true)
         );
     }
 

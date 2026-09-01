@@ -59,14 +59,16 @@ impl FailedOperation {
         matches!(self, Self::SystemProxyEnable | Self::SystemProxyDisable) && matches!(other, Self::SystemProxyRestore)
     }
 
-    /// Whether reaching `enabled` resolves this operation's failure.
-    const fn retired_by_system_proxy_success(self, enabled: bool) -> bool {
-        match self {
-            Self::SystemProxyEnable => enabled,
-            Self::SystemProxyDisable => !enabled,
-            Self::SystemProxyRestore => true,
+    /// Whether a successful apply of `asked` resolves this operation's failure.
+    const fn retired_by_success_of(self, asked: Self) -> bool {
+        match (self, asked) {
             // Only replacing or stopping the guard resolves its failure.
-            Self::SystemProxyGuard => false,
+            (Self::SystemProxyGuard, _) | (_, Self::SystemProxyGuard) => false,
+            // The user asked and got an answer, so nothing earlier is still owed to them.
+            (_, Self::SystemProxyEnable | Self::SystemProxyDisable) => true,
+            // An incidental restore says nothing about a request they may not have seen fail.
+            (Self::SystemProxyRestore, Self::SystemProxyRestore) => true,
+            (_, Self::SystemProxyRestore) => false,
         }
     }
 }
@@ -124,10 +126,10 @@ impl FailureTable {
     }
 
     /// Return whether any proxy failure was retired.
-    fn retire_system_proxy(&self, enabled: bool) -> bool {
+    fn retire_system_proxy(&self, asked: FailedOperation) -> bool {
         let mut entries = self.entries.lock();
         let before = entries.len();
-        entries.retain(|_, failure| !failure.operation.retired_by_system_proxy_success(enabled));
+        entries.retain(|_, failure| !failure.operation.retired_by_success_of(asked));
         before != entries.len()
     }
 }
@@ -167,8 +169,8 @@ mod failure_table_tests {
         assert_eq!(entries[0].operation, FailedOperation::SystemProxyEnable);
         assert_eq!(entries[0].detail, "and a restart hit it too");
 
-        assert!(!table.retire_system_proxy(false));
-        assert!(table.retire_system_proxy(true));
+        assert!(!table.retire_system_proxy(FailedOperation::SystemProxyRestore));
+        assert!(table.retire_system_proxy(FailedOperation::SystemProxyEnable));
     }
 
     #[test]
@@ -187,8 +189,7 @@ mod failure_table_tests {
 
         let entries = table.snapshot();
         assert_eq!(entries[0].operation, FailedOperation::SystemProxyDisable);
-        assert!(!table.retire_system_proxy(true));
-        assert!(table.retire_system_proxy(false));
+        assert!(table.retire_system_proxy(FailedOperation::SystemProxyDisable));
     }
 
     #[test]
@@ -251,9 +252,9 @@ pub fn retire_guard_failures() {
     }
 }
 
-/// Retire failures resolved by the resulting proxy state.
-pub fn retire_system_proxy_failures(enabled: bool) {
-    if PENDING_FAILURES.retire_system_proxy(enabled) {
+/// Retire failures resolved by a successful apply of what was asked.
+pub fn retire_system_proxy_failures(asked: FailedOperation) {
+    if PENDING_FAILURES.retire_system_proxy(asked) {
         notify_pending_failures_changed();
     }
 }
