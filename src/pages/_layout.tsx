@@ -47,35 +47,12 @@ import { navItems } from './_navigation'
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
-type NavItem = (typeof navItems)[number]
-
 type MenuContextPosition = { top: number; left: number }
-
-interface SortableNavMenuItemProps {
-  item: NavItem
-  label: string
-  index: number
-}
-
-const SortableNavMenuItem = ({
-  item,
-  label,
-  index,
-}: SortableNavMenuItemProps) => {
-  return (
-    <SortableItem id={item.path} index={index}>
-      {(sortable) => (
-        <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
-          {label}
-        </LayoutItem>
-      )}
-    </SortableItem>
-  )
-}
 
 dayjs.extend(relativeTime)
 
 const OS = getSystem()
+const SENSORS = [PointerSensor, KeyboardSensor]
 
 const Layout = () => {
   const mode = useThemeMode()
@@ -214,21 +191,23 @@ const Layout = () => {
   }
 
   // Navigation menu items
-  const menuItems = menuOrder.map((path, index) => {
+  const navMenuItems = menuOrder.map((path, index) => {
     const item = navItemMap.get(path)
     if (!item) return null
 
-    return menuUnlocked ? (
-      <SortableNavMenuItem
+    return (
+      <SortableItem
         key={item.path}
+        id={item.path}
         index={index}
-        item={item}
-        label={t(item.label)}
-      />
-    ) : (
-      <LayoutItem key={item.path} to={item.path} icon={item.icon}>
-        {t(item.label)}
-      </LayoutItem>
+        disabled={!menuUnlocked}
+      >
+        {(sortable) => (
+          <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
+            {t(item.label)}
+          </LayoutItem>
+        )}
+      </SortableItem>
     )
   })
 
@@ -339,16 +318,9 @@ const Layout = () => {
 
             {/* Navigation menu */}
             <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-              {menuUnlocked ? (
-                <DragDropProvider
-                  sensors={[PointerSensor, KeyboardSensor]}
-                  onDragEnd={handleMenuDragEnd}
-                >
-                  {menuItems}
-                </DragDropProvider>
-              ) : (
-                menuItems
-              )}
+              <DragDropProvider sensors={SENSORS} onDragEnd={handleMenuDragEnd}>
+                {navMenuItems}
+              </DragDropProvider>
             </List>
 
             <Menu
