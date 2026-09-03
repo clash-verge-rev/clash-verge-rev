@@ -68,6 +68,10 @@ pub(crate) fn resolve_setup_async() {
         }
         Config::verify_config_initialization().await;
 
+        // Live before the core starts, so a service appearing mid-start is not missed.
+        #[cfg(target_os = "macos")]
+        crate::core::network_watch::start().await;
+
         let core_init = AsyncHandler::spawn(|| async {
             init_core_manager().await;
         });

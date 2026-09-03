@@ -384,21 +384,13 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     service_proxy_config(verge, mixed_port, 0)
 }
 
-/// Wait, up to `limit`, for a network service to write the proxy on. At login the app usually
-/// comes up before the network does, and nothing re-applies a proxy the first write missed.
-pub async fn wait_for_network_service(limit: Duration) -> bool {
-    let no_service = || {
-        tokio::task::spawn_blocking(
-            || matches!(sysproxy::Sysproxy::get_system_proxy(), Err(error) if is_missing_network_service(&error)),
-        )
-    };
-    tokio::time::timeout(limit, async {
-        while no_service().await.unwrap_or(false) {
-            tokio::time::sleep(Duration::from_secs(1)).await;
-        }
-    })
+/// Whether macOS has a network service to write the proxy on right now.
+pub async fn has_network_service() -> bool {
+    tokio::task::spawn_blocking(
+        || !matches!(sysproxy::Sysproxy::get_system_proxy(), Err(error) if is_missing_network_service(&error)),
+    )
     .await
-    .is_ok()
+    .unwrap_or(true)
 }
 
 pub fn is_reportable(error: &anyhow::Error) -> bool {

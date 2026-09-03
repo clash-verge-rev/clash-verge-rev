@@ -113,6 +113,8 @@ tokio-util = { version = "0.7.19", features = ["time"] }
 libc = "0.2.189"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.9"
+system-configuration = "0.7"
 objc2 = "0.6.4"
 objc2-foundation = { version = "0.3.2", features = [
   "NSString",

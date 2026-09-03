@@ -17,9 +17,6 @@ const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admi
     tun_enabled && !service_ready && !is_admin
 }
 
-/// How long a login-time start waits for the network before writing the system proxy.
-const STARTUP_NETWORK_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StartupDecision {
     Service,
@@ -468,21 +465,28 @@ impl CoreManager {
         .ok_or_else(|| {
             anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
         })?;
-        // Startup only; a user toggling while offline should fail fast.
-        if cfg!(target_os = "macos")
+        // At login the app usually beats the network. Leave the write to the network watcher
+        // rather than fail — only if the watcher is actually live; a user toggling while
+        // offline still fails fast.
+        #[cfg(target_os = "macos")]
+        let watcher_armed = crate::core::network_watch::is_armed();
+        #[cfg(not(target_os = "macos"))]
+        let watcher_armed = false;
+        if watcher_armed
             && !crate::utils::resolve::is_resolve_done()
             && Config::verge()
                 .await
                 .latest_arc()
                 .enable_system_proxy
                 .unwrap_or_default()
-            && !proxy_control::wait_for_network_service(STARTUP_NETWORK_WAIT).await
+            && !proxy_control::has_network_service().await
         {
             logging!(
-                warn,
+                info,
                 Type::Core,
-                "no network service {STARTUP_NETWORK_WAIT:?} after startup; applying the system proxy anyway"
+                "no network service yet; the system proxy is applied once one appears"
             );
+            return Ok(());
         }
         proxy_control::apply().await?;
         if !expectation.is_valid(
