@@ -532,11 +532,6 @@ jobs:
           gh release upload "${{ github.ref_name }}" $files --clobber
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release-update:
     if: ${{ !contains(github.ref_name, '-rc') }}
     name: Release Update
