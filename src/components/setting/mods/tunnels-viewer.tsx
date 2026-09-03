@@ -27,7 +27,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
+import { useClash, useClashConfigField } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
 import { probeListener, type ListenerTransport } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -96,7 +96,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     proxy: null,
   })
   const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([])
-  const { tunnels: defaultTunnels } = useDefaultClashConfig() ?? {}
+  const tunnelsField = useClashConfigField('tunnels', [] as TunnelEntry[])
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -335,7 +335,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
             color="warning"
             startIcon={<RestartAltRounded />}
             onClick={() => {
-              setDraftTunnels(defaultTunnels ?? [])
+              setDraftTunnels(tunnelsField.defaultValue)
             }}
           >
             {t('shared.actions.resetToDefault')}

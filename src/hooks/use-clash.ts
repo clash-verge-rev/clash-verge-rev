@@ -153,11 +153,39 @@ export const useClashInfo = () => {
   }
 }
 
-export const useDefaultClashConfig = () => {
+export const useClashConfigField = <T extends keyof IConfigData>(
+  field: T,
+  fallbackValue: NonNullable<IConfigData[T]>,
+  isModified?: (
+    value: IConfigData[T] | undefined,
+    defaultValue: IConfigData[T] | undefined,
+  ) => boolean,
+): ConfigField<IConfigData[T]> => {
+  const { clash, mutateClash, patchClash } = useClash()
   const { data: defaultClashConfig } = useQuery({
     queryKey: ['getDefaultClashConfig'],
     queryFn: getDefaultClashConfig,
   })
 
-  return defaultClashConfig
+  return {
+    value: clash?.[field] ?? fallbackValue,
+    defaultValue: defaultClashConfig?.[field] ?? fallbackValue,
+    modified: isModified
+      ? isModified(clash?.[field], defaultClashConfig?.[field])
+      : clash?.[field] !== defaultClashConfig?.[field],
+    mutate: async function (newValue: IConfigData[T]): Promise<void> {
+      await mutateClash(
+        (prev) => (prev ? { ...prev, [field]: newValue } : prev),
+        false,
+      )
+    },
+    patch: async function (newValue: IConfigData[T]): Promise<void> {
+      await patchClash({ [field]: newValue })
+    },
+    reset: async function (): Promise<void> {
+      if (defaultClashConfig) {
+        await patchClash({ [field]: defaultClashConfig[field] })
+      }
+    },
+  }
 }

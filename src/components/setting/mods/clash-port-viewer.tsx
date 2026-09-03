@@ -13,7 +13,10 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
-import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
+import {
+  useCachedVergeConfigField,
+  useVergeConfigField,
+} from '@/hooks/use-verge'
 import { saveProxyPorts } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
@@ -32,30 +35,45 @@ const generateRandomPort = () =>
 
 export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
-  const { verge } = useVerge()
-  const defaultVerge = useDefaultVergeConfig()
   const displayedMixedPort = useDisplayedMixedPort()
   const [open, setOpen] = useState(false)
 
   // Mixed Port
   const [mixedPort, setMixedPort] = useState(displayedMixedPort)
+  const mixedPortField = useVergeConfigField(
+    'verge_mixed_port',
+    displayedMixedPort,
+  )
 
   // 其他端口状态
-  const [socksPort, setSocksPort] = useState(verge?.verge_socks_port ?? 7898)
-  const [socksEnabled, setSocksEnabled] = useState(
-    verge?.verge_socks_enabled ?? false,
+  const socksPortCachedField = useCachedVergeConfigField(
+    'verge_socks_port',
+    7898,
   )
-  const [httpPort, setHttpPort] = useState(verge?.verge_port ?? 7899)
-  const [httpEnabled, setHttpEnabled] = useState(
-    verge?.verge_http_enabled ?? false,
+  const socksEnabledCachedField = useCachedVergeConfigField(
+    'verge_socks_enabled',
+    false,
   )
-  const [redirPort, setRedirPort] = useState(verge?.verge_redir_port ?? 7895)
-  const [redirEnabled, setRedirEnabled] = useState(
-    verge?.verge_redir_enabled ?? false,
+  const httpPortCachedField = useCachedVergeConfigField('verge_port', 7899)
+  const httpEnabledCachedField = useCachedVergeConfigField(
+    'verge_http_enabled',
+    false,
   )
-  const [tproxyPort, setTproxyPort] = useState(verge?.verge_tproxy_port ?? 7896)
-  const [tproxyEnabled, setTproxyEnabled] = useState(
-    verge?.verge_tproxy_enabled ?? false,
+  const redirPortCachedField = useCachedVergeConfigField(
+    'verge_redir_port',
+    7895,
+  )
+  const redirEnabledCachedField = useCachedVergeConfigField(
+    'verge_redir_enabled',
+    false,
+  )
+  const tproxyPortCachedField = useCachedVergeConfigField(
+    'verge_tproxy_port',
+    7896,
+  )
+  const tproxyEnabledCachedField = useCachedVergeConfigField(
+    'verge_tproxy_enabled',
+    false,
   )
 
   // 添加保存请求，防止GUI卡死
@@ -79,14 +97,14 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       setMixedPort(displayedMixedPort)
-      setSocksPort(verge?.verge_socks_port ?? 7898)
-      setSocksEnabled(verge?.verge_socks_enabled ?? false)
-      setHttpPort(verge?.verge_port ?? 7899)
-      setHttpEnabled(verge?.verge_http_enabled ?? false)
-      setRedirPort(verge?.verge_redir_port ?? 7895)
-      setRedirEnabled(verge?.verge_redir_enabled ?? false)
-      setTproxyPort(verge?.verge_tproxy_port ?? 7896)
-      setTproxyEnabled(verge?.verge_tproxy_enabled ?? false)
+      socksPortCachedField.refetch()
+      socksEnabledCachedField.refetch()
+      httpPortCachedField.refetch()
+      httpEnabledCachedField.refetch()
+      redirPortCachedField.refetch()
+      redirEnabledCachedField.refetch()
+      tproxyPortCachedField.refetch()
+      tproxyEnabledCachedField.refetch()
       setOpen(true)
     },
     close: () => setOpen(false),
@@ -97,10 +115,10 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     // 端口冲突检测
     const portList = [
       mixedPort,
-      socksEnabled ? socksPort : -1,
-      httpEnabled ? httpPort : -1,
-      redirEnabled ? redirPort : -1,
-      tproxyEnabled ? tproxyPort : -1,
+      socksEnabledCachedField.value ? socksPortCachedField.value : -1,
+      httpEnabledCachedField.value ? httpPortCachedField.value : -1,
+      redirEnabledCachedField.value ? redirPortCachedField.value : -1,
+      tproxyEnabledCachedField.value ? tproxyPortCachedField.value : -1,
     ].filter((p) => p !== -1)
 
     if (new Set(portList).size !== portList.length) {
@@ -111,10 +129,10 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     const isValidPort = (port: number) => port >= 1 && port <= 65535
     const allPortsValid = [
       mixedPort,
-      socksEnabled ? socksPort : 0,
-      httpEnabled ? httpPort : 0,
-      redirEnabled ? redirPort : 0,
-      tproxyEnabled ? tproxyPort : 0,
+      socksEnabledCachedField.value ? socksPortCachedField.value : 0,
+      httpEnabledCachedField.value ? httpPortCachedField.value : 0,
+      redirEnabledCachedField.value ? redirPortCachedField.value : 0,
+      tproxyEnabledCachedField.value ? tproxyPortCachedField.value : 0,
     ].every((port) => port === 0 || isValidPort(port))
 
     if (!allPortsValid) {
@@ -123,10 +141,22 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
     await saveSettings({
       mixedPort,
-      socks: { enabled: socksEnabled, port: socksPort },
-      http: { enabled: httpEnabled, port: httpPort },
-      redir: { enabled: redirEnabled, port: redirPort },
-      tproxy: { enabled: tproxyEnabled, port: tproxyPort },
+      socks: {
+        enabled: socksEnabledCachedField.value,
+        port: socksPortCachedField.value,
+      },
+      http: {
+        enabled: httpEnabledCachedField.value,
+        port: httpPortCachedField.value,
+      },
+      redir: {
+        enabled: redirEnabledCachedField.value,
+        port: redirPortCachedField.value,
+      },
+      tproxy: {
+        enabled: tproxyEnabledCachedField.value,
+        port: tproxyPortCachedField.value,
+      },
     })
   })
 
@@ -156,7 +186,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.mixed')}
-            modified={mixedPort !== defaultVerge?.verge_mixed_port}
+            modified={mixedPort !== mixedPortField.defaultValue}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -171,8 +201,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() =>
-                defaultVerge?.verge_mixed_port &&
-                setMixedPort(defaultVerge.verge_mixed_port)
+                mixedPortField.defaultValue &&
+                setMixedPort(mixedPortField.defaultValue)
               }
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
@@ -201,47 +231,45 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.socks')}
             modified={
-              socksEnabled !== defaultVerge?.verge_socks_enabled ||
-              (socksEnabled && socksPort !== defaultVerge?.verge_socks_port)
+              socksEnabledCachedField.modified || socksPortCachedField.modified
             }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               size="small"
-              onClick={() => setSocksPort(generateRandomPort())}
+              onClick={() => socksPortCachedField.set(generateRandomPort())}
               title={t('settings.modals.clashPort.actions.random')}
-              disabled={!socksEnabled}
+              disabled={!socksEnabledCachedField.value}
               sx={{ mr: 0.5 }}
             >
               <Shuffle fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
-              onClick={() =>
-                defaultVerge?.verge_socks_port &&
-                setSocksPort(defaultVerge.verge_socks_port)
-              }
+              onClick={() => socksPortCachedField.reset()}
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
-              disabled={!socksEnabled}
+              disabled={!socksEnabledCachedField.value}
             >
               <RestartAltRounded fontSize="small" />
             </IconButton>
             <TextField
               size="small"
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
-              value={socksPort}
+              value={socksPortCachedField.value}
               onChange={(e) =>
-                setSocksPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                socksPortCachedField.set(
+                  +e.target.value?.replace(/\D+/, '').slice(0, 5),
+                )
               }
-              disabled={!socksEnabled}
+              disabled={!socksEnabledCachedField.value}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
             <Switch
               size="small"
-              checked={socksEnabled}
-              onChange={(_, c) => setSocksEnabled(c)}
+              checked={socksEnabledCachedField.value}
+              onChange={(_, c) => socksEnabledCachedField.set(c)}
               sx={{ ml: 0.5 }}
             />
           </div>
@@ -251,46 +279,45 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.http')}
             modified={
-              httpEnabled !== defaultVerge?.verge_http_enabled ||
-              (httpEnabled && httpPort !== defaultVerge?.verge_port)
+              httpEnabledCachedField.modified || httpPortCachedField.modified
             }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <IconButton
               size="small"
-              onClick={() => setHttpPort(generateRandomPort())}
+              onClick={() => httpPortCachedField.set(generateRandomPort())}
               title={t('settings.modals.clashPort.actions.random')}
-              disabled={!httpEnabled}
+              disabled={!httpEnabledCachedField.value}
               sx={{ mr: 0.5 }}
             >
               <Shuffle fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
-              onClick={() =>
-                defaultVerge?.verge_port && setHttpPort(defaultVerge.verge_port)
-              }
+              onClick={() => httpPortCachedField.reset()}
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
-              disabled={!httpEnabled}
+              disabled={!httpEnabledCachedField.value}
             >
               <RestartAltRounded fontSize="small" />
             </IconButton>
             <TextField
               size="small"
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
-              value={httpPort}
+              value={httpPortCachedField.value}
               onChange={(e) =>
-                setHttpPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                httpPortCachedField.set(
+                  +e.target.value?.replace(/\D+/, '').slice(0, 5),
+                )
               }
-              disabled={!httpEnabled}
+              disabled={!httpEnabledCachedField.value}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
             <Switch
               size="small"
-              checked={httpEnabled}
-              onChange={(_, c) => setHttpEnabled(c)}
+              checked={httpEnabledCachedField.value}
+              onChange={(_, c) => httpEnabledCachedField.set(c)}
               sx={{ ml: 0.5 }}
             />
           </div>
@@ -301,47 +328,46 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <SettingListItemText
               label={t('settings.modals.clashPort.fields.redir')}
               modified={
-                redirEnabled !== defaultVerge?.verge_redir_enabled ||
-                (redirEnabled && redirPort !== defaultVerge?.verge_redir_port)
+                redirEnabledCachedField.modified ||
+                redirPortCachedField.modified
               }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <IconButton
                 size="small"
-                onClick={() => setRedirPort(generateRandomPort())}
+                onClick={() => redirPortCachedField.set(generateRandomPort())}
                 title={t('settings.modals.clashPort.actions.random')}
-                disabled={!redirEnabled}
+                disabled={!redirEnabledCachedField.value}
                 sx={{ mr: 0.5 }}
               >
                 <Shuffle fontSize="small" />
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() =>
-                  defaultVerge?.verge_redir_port &&
-                  setRedirPort(defaultVerge.verge_redir_port)
-                }
+                onClick={() => redirPortCachedField.reset()}
                 title={t('shared.actions.resetToDefault')}
                 sx={{ mr: 0.5 }}
-                disabled={!redirEnabled}
+                disabled={!redirEnabledCachedField.value}
               >
                 <RestartAltRounded fontSize="small" />
               </IconButton>
               <TextField
                 size="small"
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
-                value={redirPort}
+                value={redirPortCachedField.value}
                 onChange={(e) =>
-                  setRedirPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                  redirPortCachedField.set(
+                    +e.target.value?.replace(/\D+/, '').slice(0, 5),
+                  )
                 }
-                disabled={!redirEnabled}
+                disabled={!redirEnabledCachedField.value}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
               <Switch
                 size="small"
-                checked={redirEnabled}
-                onChange={(_, c) => setRedirEnabled(c)}
+                checked={redirEnabledCachedField.value}
+                onChange={(_, c) => redirEnabledCachedField.set(c)}
                 sx={{ ml: 0.5 }}
               />
             </div>
@@ -353,48 +379,46 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <SettingListItemText
               label={t('settings.modals.clashPort.fields.tproxy')}
               modified={
-                tproxyEnabled !== defaultVerge?.verge_tproxy_enabled ||
-                (tproxyEnabled &&
-                  tproxyPort !== defaultVerge?.verge_tproxy_port)
+                tproxyEnabledCachedField.modified ||
+                tproxyPortCachedField.modified
               }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <IconButton
                 size="small"
-                onClick={() => setTproxyPort(generateRandomPort())}
+                onClick={() => tproxyPortCachedField.set(generateRandomPort())}
                 title={t('settings.modals.clashPort.actions.random')}
-                disabled={!tproxyEnabled}
+                disabled={!tproxyEnabledCachedField.value}
                 sx={{ mr: 0.5 }}
               >
                 <Shuffle fontSize="small" />
               </IconButton>
               <IconButton
                 size="small"
-                onClick={() =>
-                  defaultVerge?.verge_tproxy_port &&
-                  setTproxyPort(defaultVerge.verge_tproxy_port)
-                }
+                onClick={() => tproxyPortCachedField.reset()}
                 title={t('shared.actions.resetToDefault')}
                 sx={{ mr: 0.5 }}
-                disabled={!tproxyEnabled}
+                disabled={!tproxyEnabledCachedField.value}
               >
                 <RestartAltRounded fontSize="small" />
               </IconButton>
               <TextField
                 size="small"
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
-                value={tproxyPort}
+                value={tproxyPortCachedField.value}
                 onChange={(e) =>
-                  setTproxyPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                  tproxyPortCachedField.set(
+                    +e.target.value?.replace(/\D+/, '').slice(0, 5),
+                  )
                 }
-                disabled={!tproxyEnabled}
+                disabled={!tproxyEnabledCachedField.value}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
               <Switch
                 size="small"
-                checked={tproxyEnabled}
-                onChange={(_, c) => setTproxyEnabled(c)}
+                checked={tproxyEnabledCachedField.value}
+                onChange={(_, c) => tproxyEnabledCachedField.set(c)}
                 sx={{ ml: 0.5 }}
               />
             </div>

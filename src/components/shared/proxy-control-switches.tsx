@@ -16,7 +16,7 @@ import { TunViewer } from '@/components/setting/mods/tun-viewer'
 import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
-import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
+import { useVerge, useVergeConfigField } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 import { requestService } from '@/services/service-request'
 
@@ -145,15 +145,17 @@ const ProxyControlSwitches = ({
   const { uninstallServiceAndStartSidecar } = useServiceUninstaller()
   const { indicator: systemProxyIndicator, toggleSystemProxy } =
     useSystemProxyState()
-  const defaultVerge = useDefaultVergeConfig()
+  const enableSystemProxyField = useVergeConfigField(
+    'enable_system_proxy',
+    false,
+  )
+  const enableTunModeField = useVergeConfigField('enable_tun_mode', false)
   const { runState, isTunModeAvailable, isLoading } = useSystemState()
   // Offer to uninstall only a service that is actually there and working.
   const isServiceInstallReady = runState.serviceUsable
 
   const sysproxyRef = useRef<DialogRef>(null)
   const tunRef = useRef<DialogRef>(null)
-
-  const { enable_tun_mode } = verge ?? {}
 
   // Enabling needs a running core; disabling only writes OS state and must stay available.
   const handleSystemProxyToggle = async (value: boolean) => {
@@ -199,20 +201,20 @@ const ProxyControlSwitches = ({
           onToggle={handleSystemProxyToggle}
           onError={onError}
           highlight={systemProxyIndicator}
-          defaultActive={defaultVerge?.enable_system_proxy}
+          defaultActive={enableSystemProxyField.defaultValue}
         />
       )}
 
       {isTunMode && (
         <SwitchRow
           label={t('settings.sections.proxyControl.fields.tunMode')}
-          active={enable_tun_mode || false}
+          active={enableTunModeField.value}
           infoTitle={t('settings.sections.proxyControl.tooltips.tunMode')}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
-          highlight={enable_tun_mode || false}
-          defaultActive={defaultVerge?.enable_tun_mode}
+          highlight={enableTunModeField.value}
+          defaultActive={enableTunModeField.defaultValue}
           extraIcons={
             <>
               {!isTunModeAvailable && (

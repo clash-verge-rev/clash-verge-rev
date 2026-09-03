@@ -5,7 +5,7 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
-import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
+import { useClash, useClashConfigField } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
@@ -73,12 +73,17 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const { t } = useTranslation()
     const { clash, mutateClash, patchClash } = useClash()
     const [open, setOpen] = useState(false)
-    const { 'external-controller-cors': defaultCorsConfig } =
-      useDefaultClashConfig() ?? {}
+    const externalControllerCorsField = useClashConfigField(
+      'external-controller-cors',
+      {
+        'allow-private-network': true,
+        'allow-origins': [],
+      },
+    )
     const {
       'allow-private-network': defaultAllowPrivateNetwork,
       'allow-origins': defaultAllowOrigins,
-    } = defaultCorsConfig ?? {}
+    } = externalControllerCorsField.defaultValue
 
     const lastKeyRef = useRef(0) // 用于生成唯一的key
 
@@ -196,13 +201,13 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               startIcon={<RestartAltRounded />}
               onClick={() => {
                 setCorsConfig({
-                  allowPrivateNetwork: defaultAllowPrivateNetwork ?? true,
-                  allowOrigins: filterBaseOriginsForUI(
-                    defaultAllowOrigins ?? [],
-                  ).map((origin) => {
-                    lastKeyRef.current += 1
-                    return { key: lastKeyRef.current, value: origin }
-                  }),
+                  allowPrivateNetwork: defaultAllowPrivateNetwork,
+                  allowOrigins: filterBaseOriginsForUI(defaultAllowOrigins).map(
+                    (origin) => {
+                      lastKeyRef.current += 1
+                      return { key: lastKeyRef.current, value: origin }
+                    },
+                  ),
                 })
               }}
             >

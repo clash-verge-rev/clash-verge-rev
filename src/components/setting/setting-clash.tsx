@@ -2,15 +2,19 @@ import { LanRounded, SettingsRounded } from '@mui/icons-material'
 import { MenuItem, Select, TextField, Typography } from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
-import { useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
-import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
+import { useClash, useClashConfigField } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
-import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
+import {
+  useCachedVergeConfigField,
+  useVerge,
+  useVergeConfigField,
+} from '@/hooks/use-verge'
 import { invoke_uwp_tool } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
@@ -35,41 +39,29 @@ interface Props {
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
 
-  const { clash, version, mutateClash, patchClash } = useClash()
-  const { verge, patchVerge } = useVerge()
+  const { version, mutateClash } = useClash()
+  const { patchVerge } = useVerge()
   const displayedMixedPort = useDisplayedMixedPort()
   const [, setClashLog] = useClashLog()
-  const {
-    ipv6: defaultIpv6,
-    'allow-lan': defaultAllowLan,
-    'log-level': defaultLogLevel,
-    'unified-delay': defaultUnifiedDelay,
-  } = useDefaultClashConfig() ?? {}
-  const defaultVerge = useDefaultVergeConfig()
 
-  const {
-    ipv6,
-    'allow-lan': allowLan,
-    'log-level': logLevel,
-    'unified-delay': unifiedDelay,
-  } = clash ?? {}
+  const allowLanField = useClashConfigField('allow-lan', false)
+  const ipv6Field = useClashConfigField('ipv6', false)
+  const unifiedDelayField = useClashConfigField('unified-delay', false)
+  const logLevelField = useClashConfigField('log-level', 'info')
 
-  const {
-    verge_mixed_port,
-    verge_socks_port,
-    verge_socks_enabled,
-    verge_port: verge_http_port,
-    verge_http_enabled,
-    verge_redir_port,
-    verge_redir_enabled,
-    verge_tproxy_port,
-    verge_tproxy_enabled,
-  } = verge ?? {}
-
-  // 独立跟踪DNS设置开关状态
-  const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
-    return verge?.enable_dns_settings ?? false
-  })
+  const dnsSettingsCachedField = useCachedVergeConfigField(
+    'enable_dns_settings',
+    false,
+  )
+  const mixedPortField = useVergeConfigField('verge_mixed_port', 7897)
+  const socksPortField = useVergeConfigField('verge_socks_port', 7898)
+  const socksEnabledField = useVergeConfigField('verge_socks_enabled', false)
+  const httpPortField = useVergeConfigField('verge_port', 7899)
+  const httpEnabledField = useVergeConfigField('verge_http_enabled', false)
+  const redirPortField = useVergeConfigField('verge_redir_port', 7895)
+  const redirEnabledField = useVergeConfigField('verge_redir_enabled', false)
+  const tproxyPortField = useVergeConfigField('verge_tproxy_port', 7896)
+  const tproxyEnabledField = useVergeConfigField('verge_tproxy_enabled', false)
 
   const webRef = useRef<DialogRef>(null)
   const portRef = useRef<DialogRef>(null)
@@ -81,9 +73,6 @@ const SettingClash = ({ onError }: Props) => {
   const tunnelRef = useRef<DialogRef>(null)
 
   const onSwitchFormat = (_e: any, value: boolean) => value
-  const onChangeData = (patch: Partial<IConfigData>) => {
-    mutateClash((old) => ({ ...old!, ...patch }), false)
-  }
   const onUpdateGeo = async () => {
     try {
       await updateGeo()
@@ -96,14 +85,14 @@ const SettingClash = ({ onError }: Props) => {
   // 实现DNS设置开关处理函数
   const handleDnsToggle = useLockFn(async (enable: boolean) => {
     try {
-      setDnsSettingsEnabled(enable)
+      dnsSettingsCachedField.set(enable)
       await patchVerge({ enable_dns_settings: enable })
       await invoke('apply_dns_config', { apply: enable })
       setTimeout(() => {
         mutateClash()
       }, 500)
     } catch (err: any) {
-      setDnsSettingsEnabled(!enable)
+      dnsSettingsCachedField.set(!enable)
       showNotice.error(err)
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {})
       throw err
@@ -132,15 +121,15 @@ const SettingClash = ({ onError }: Props) => {
             }}
           />
         }
-        modified={allowLan !== defaultAllowLan}
+        modified={allowLanField.modified}
       >
         <GuardState
-          value={allowLan ?? false}
+          value={allowLanField.value}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ 'allow-lan': e })}
-          onGuard={(e) => patchClash({ 'allow-lan': e })}
+          onChange={allowLanField.mutate}
+          onGuard={allowLanField.patch}
         >
           <Switch edge="end" />
         </GuardState>
@@ -154,26 +143,26 @@ const SettingClash = ({ onError }: Props) => {
             onClick={() => dnsRef.current?.open()}
           />
         }
-        modified={dnsSettingsEnabled !== defaultVerge?.enable_dns_settings}
+        modified={dnsSettingsCachedField.modified}
       >
         <Switch
           edge="end"
-          checked={dnsSettingsEnabled}
+          checked={dnsSettingsCachedField.value}
           onChange={(_, checked) => handleDnsToggle(checked)}
         />
       </SettingItem>
 
       <SettingItem
         label={t('settings.sections.clash.form.fields.ipv6')}
-        modified={ipv6 !== defaultIpv6}
+        modified={ipv6Field.modified}
       >
         <GuardState
-          value={ipv6 ?? false}
+          value={ipv6Field.value}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ ipv6: e })}
-          onGuard={(e) => patchClash({ ipv6: e })}
+          onChange={ipv6Field.mutate}
+          onGuard={ipv6Field.patch}
         >
           <Switch edge="end" />
         </GuardState>
@@ -187,15 +176,15 @@ const SettingClash = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
-        modified={unifiedDelay !== defaultUnifiedDelay}
+        modified={unifiedDelayField.modified}
       >
         <GuardState
-          value={unifiedDelay ?? false}
+          value={unifiedDelayField.value}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ 'unified-delay': e })}
-          onGuard={(e) => patchClash({ 'unified-delay': e })}
+          onChange={unifiedDelayField.mutate}
+          onGuard={unifiedDelayField.patch}
         >
           <Switch edge="end" />
         </GuardState>
@@ -209,19 +198,21 @@ const SettingClash = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
-        modified={logLevel !== defaultLogLevel}
+        modified={logLevelField.modified}
       >
         <GuardState
-          value={logLevel === 'warn' ? 'warning' : (logLevel ?? 'info')}
+          value={
+            logLevelField.value === 'warn' ? 'warning' : logLevelField.value
+          }
           onCatch={onError}
           onFormat={(e: any) => e.target.value}
-          onChange={(e) => onChangeData({ 'log-level': e })}
+          onChange={logLevelField.mutate}
           onGuard={(e) => {
             setClashLog((pre) => ({
               ...pre!,
               logLevel: e.toUpperCase() as LogLevel,
             }))
-            return patchClash({ 'log-level': e })
+            return logLevelField.patch(e)
           }}
         >
           <Select size="small" sx={{ width: 100, '> div': { py: '7.5px' } }}>
@@ -247,19 +238,15 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t('settings.sections.clash.form.fields.portConfig')}
         modified={
-          verge_mixed_port !== defaultVerge?.verge_mixed_port ||
-          (verge_socks_enabled &&
-            verge_socks_port !== defaultVerge?.verge_socks_port) ||
-          verge_socks_enabled !== defaultVerge?.verge_socks_enabled ||
-          (verge_http_enabled &&
-            verge_http_port !== defaultVerge?.verge_port) ||
-          verge_http_enabled !== defaultVerge?.verge_http_enabled ||
-          (verge_redir_enabled &&
-            verge_redir_port !== defaultVerge?.verge_redir_port) ||
-          verge_redir_enabled !== defaultVerge?.verge_redir_enabled ||
-          (verge_tproxy_enabled &&
-            verge_tproxy_port !== defaultVerge?.verge_tproxy_port) ||
-          verge_tproxy_enabled !== defaultVerge?.verge_tproxy_enabled
+          mixedPortField.modified ||
+          (socksEnabledField.value && socksPortField.modified) ||
+          socksEnabledField.modified ||
+          (httpEnabledField.value && httpPortField.modified) ||
+          httpEnabledField.modified ||
+          (redirEnabledField.value && redirPortField.modified) ||
+          redirEnabledField.modified ||
+          (tproxyEnabledField.value && tproxyPortField.modified) ||
+          tproxyEnabledField.modified
         }
       >
         <TextField
