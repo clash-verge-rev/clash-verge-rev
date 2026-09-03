@@ -10,10 +10,7 @@ use core_foundation::{
     runloop::{CFRunLoop, kCFRunLoopCommonModes},
     string::CFString,
 };
-use std::{
-    sync::atomic::{AtomicBool, Ordering},
-    time::Duration,
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 use system_configuration::dynamic_store::{SCDynamicStore, SCDynamicStoreBuilder, SCDynamicStoreCallBackContext};
 
 /// Set once the subscription is live. Startup defers the proxy write to the watcher only then.
@@ -23,42 +20,29 @@ pub fn is_armed() -> bool {
     ARMED.load(Ordering::Acquire)
 }
 
-/// Watch the primary IPv4 service from a dedicated run loop thread. Returns once the
-/// subscription is live, so a service appearing from here on is never missed.
-pub async fn start() {
-    const ARM_TIMEOUT: Duration = Duration::from_secs(5);
-    let (ready, armed) = tokio::sync::oneshot::channel();
-    let spawned = std::thread::Builder::new().name("network-watch".into()).spawn(move || {
-        let store = SCDynamicStoreBuilder::new("clash-verge-rev")
-            .callback_context(SCDynamicStoreCallBackContext {
-                callout: on_change,
-                info: (),
-            })
-            .build();
-        let keys = CFArray::from_CFTypes(&[CFString::from_static_string("State:/Network/Global/IPv4")]);
-        let source = store
-            .filter(|store| store.set_notification_keys(&keys, &CFArray::<CFString>::from_CFTypes(&[])))
-            .and_then(|store| store.create_run_loop_source());
-        let Some(source) = source else {
-            logging!(
-                warn,
-                Type::Core,
-                "could not watch the network; the proxy is not re-applied on changes"
-            );
-            return;
-        };
-        CFRunLoop::get_current().add_source(&source, unsafe { kCFRunLoopCommonModes });
-        ARMED.store(true, Ordering::Release);
-        let _ = ready.send(());
-        CFRunLoop::run_current();
-    });
-    match spawned {
-        // A thread that gave up drops `ready`; a stuck one must not hold up startup either.
-        Ok(_) => {
-            let _ = tokio::time::timeout(ARM_TIMEOUT, armed).await;
-        }
-        Err(error) => logging!(warn, Type::Core, "could not start the network watcher: {error}"),
-    }
+/// Subscribe to the primary IPv4 service on the main run loop. Armed on return, so a service
+/// appearing from here on is never missed.
+pub fn start() {
+    let store = SCDynamicStoreBuilder::new("clash-verge-rev")
+        .callback_context(SCDynamicStoreCallBackContext {
+            callout: on_change,
+            info: (),
+        })
+        .build();
+    let keys = CFArray::from_CFTypes(&[CFString::from_static_string("State:/Network/Global/IPv4")]);
+    let Some(source) = store
+        .filter(|store| store.set_notification_keys(&keys, &CFArray::<CFString>::from_CFTypes(&[])))
+        .and_then(|store| store.create_run_loop_source())
+    else {
+        logging!(
+            warn,
+            Type::Core,
+            "could not watch the network; the proxy is not re-applied on changes"
+        );
+        return;
+    };
+    CFRunLoop::get_main().add_source(&source, unsafe { kCFRunLoopCommonModes });
+    ARMED.store(true, Ordering::Release);
 }
 
 fn on_change(_: SCDynamicStore, _: CFArray<CFString>, (): &mut ()) {
