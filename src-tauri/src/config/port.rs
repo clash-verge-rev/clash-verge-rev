@@ -331,7 +331,7 @@ mod tests {
 
     #[test]
     fn configured_ports_include_disabled_listener_assignments() {
-        let ports = configured_listener_ports(&IClashTemp::template(), &IVerge::template());
+        let ports = configured_listener_ports(&IClashTemp::default(), &IVerge::template());
         assert!(ports.contains(&7898));
         assert!(ports.contains(&7899));
         assert!(ports.contains(&9097));

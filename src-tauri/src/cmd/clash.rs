@@ -241,5 +241,5 @@ pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
 /// 获取默认Clash配置
 #[tauri::command]
 pub async fn get_default_clash_config() -> Mapping {
-    IClashTemp::template().0
+    IClashTemp::default().0
 }
