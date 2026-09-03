@@ -220,12 +220,17 @@ impl Config {
         }
 
         Self::runtime().await.edit_draft(|d| {
-            *d = IRuntime {
+            let mut next = IRuntime {
                 config: Some(config),
                 exists_keys,
                 chain_logs: logs,
-            }
-        });
+                profile_uid: profiles.current.clone(),
+                ..IRuntime::default()
+            };
+            next.inherit_proxy_chain(d)?;
+            *d = next;
+            Ok::<(), anyhow::Error>(())
+        })?;
 
         Ok(())
     }
