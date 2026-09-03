@@ -86,6 +86,7 @@ flate2 = "1.1.9"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.0" }
 base64 = "0.23.1"
+sha2 = "0.11"
 getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
