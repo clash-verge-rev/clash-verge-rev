@@ -1081,6 +1081,9 @@ mod tests {
     use super::{SystemProxyStateUnknown, is_reportable_given, rollback_failure};
 
     #[cfg(target_os = "macos")]
+    use super::service_apply_result;
+
+    #[cfg(target_os = "macos")]
     #[test]
     fn an_enable_the_os_never_received_is_never_reported_as_applied() {
         let requested = MacosProxyConfig::Global {

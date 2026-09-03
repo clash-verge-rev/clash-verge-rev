@@ -581,6 +581,9 @@ mod tests {
     use sysproxy::{Autoproxy, Sysproxy};
 
     #[cfg(target_os = "macos")]
+    use super::skip_without_network_service;
+
+    #[cfg(target_os = "macos")]
     #[test]
     fn a_machine_with_no_network_service_has_nothing_to_turn_off() {
         for missing in [
