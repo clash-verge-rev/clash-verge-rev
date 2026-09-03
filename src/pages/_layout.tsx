@@ -47,35 +47,12 @@ import { navItems } from './_navigation'
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
-type NavItem = (typeof navItems)[number]
-
 type MenuContextPosition = { top: number; left: number }
-
-interface SortableNavMenuItemProps {
-  item: NavItem
-  label: string
-  index: number
-}
-
-const SortableNavMenuItem = ({
-  item,
-  label,
-  index,
-}: SortableNavMenuItemProps) => {
-  return (
-    <SortableItem id={item.path} index={index}>
-      {(sortable) => (
-        <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
-          {label}
-        </LayoutItem>
-      )}
-    </SortableItem>
-  )
-}
 
 dayjs.extend(relativeTime)
 
 const OS = getSystem()
+const SENSORS = [PointerSensor, KeyboardSensor]
 
 const Layout = () => {
   const mode = useThemeMode()
@@ -213,6 +190,27 @@ const Layout = () => {
     )
   }
 
+  // Navigation menu items
+  const navMenuItems = menuOrder.map((path, index) => {
+    const item = navItemMap.get(path)
+    if (!item) return null
+
+    return (
+      <SortableItem
+        key={item.path}
+        id={item.path}
+        index={index}
+        disabled={!menuUnlocked}
+      >
+        {(sortable) => (
+          <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
+            {t(item.label)}
+          </LayoutItem>
+        )}
+      </SortableItem>
+    )
+  })
+
   return (
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
@@ -318,43 +316,12 @@ const Layout = () => {
               </Box>
             )}
 
-            {menuUnlocked ? (
-              <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-                <DragDropProvider
-                  sensors={[PointerSensor, KeyboardSensor]}
-                  onDragEnd={handleMenuDragEnd}
-                >
-                  {menuOrder.map((path) => {
-                    const item = navItemMap.get(path)
-                    if (!item) {
-                      return null
-                    }
-                    return (
-                      <SortableNavMenuItem
-                        key={item.path}
-                        item={item}
-                        label={t(item.label)}
-                        index={menuOrder.indexOf(path)}
-                      />
-                    )
-                  })}
-                </DragDropProvider>
-              </List>
-            ) : (
-              <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-                {menuOrder.map((path) => {
-                  const item = navItemMap.get(path)
-                  if (!item) {
-                    return null
-                  }
-                  return (
-                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
-                      {t(item.label)}
-                    </LayoutItem>
-                  )
-                })}
-              </List>
-            )}
+            {/* Navigation menu */}
+            <List className="the-menu" onContextMenu={handleMenuContextMenu}>
+              <DragDropProvider sensors={SENSORS} onDragEnd={handleMenuDragEnd}>
+                {navMenuItems}
+              </DragDropProvider>
+            </List>
 
             <Menu
               open={Boolean(menuContextPosition)}

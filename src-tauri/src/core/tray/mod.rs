@@ -63,7 +63,7 @@ pub struct Tray {
 
 impl TrayState {
     async fn get_tray_icon(verge: &IVerge) -> (bool, Cow<'_, [u8]>) {
-        let tun_mode = verge.enable_tun_mode.unwrap_or(false);
+        let tun_mode = verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable();
         let system_mode = verge.enable_system_proxy.unwrap_or(false);
         let kind = if tun_mode {
             IconKind::Tun
@@ -284,7 +284,7 @@ impl Tray {
 
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.unwrap_or(false);
-        let tun_mode = verge.enable_tun_mode.unwrap_or(false);
+        let tun_mode = verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable();
 
         let switch_str = |flag: bool| {
             if flag { "on" } else { "off" }

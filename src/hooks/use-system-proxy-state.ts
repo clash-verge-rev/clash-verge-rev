@@ -11,6 +11,7 @@ import {
 } from '@/services/cmds'
 import {
   getCacheData,
+  removeCacheData,
   revalidateQueries,
   useQuery,
 } from '@/services/query-client'
@@ -62,12 +63,10 @@ export const useSystemProxyState = () => {
     if (busyRef.current) return
     busyRef.current = true
 
-    let failed = false
     try {
       while (pendingRef.current !== null) {
         const target = pendingRef.current
         pendingRef.current = null
-        // Revalidate once below so a refetch failure cannot look like a patch failure.
         await patchVergeConfig({ enable_system_proxy: target })
         confirmed = target
         if (!target && verge?.auto_close_connection) {
@@ -75,7 +74,6 @@ export const useSystemProxyState = () => {
         }
       }
     } catch (error) {
-      failed = true
       mutateVerge(
         (prev) => (prev ? { ...prev, enable_system_proxy: confirmed } : prev),
         false,
@@ -85,23 +83,30 @@ export const useSystemProxyState = () => {
       throw error
     } finally {
       busyRef.current = false
-      const revalidated = revalidateQueries([
-        ['getVergeConfig'],
-        ['getSystemProxy'],
-        ['getAutotemProxy'],
-      ])
-      if (failed) {
-        // Preserve the classified toggle failure.
-        try {
-          await revalidated
-        } catch (error) {
-          console.warn(
-            '[system-proxy] revalidating after a failed toggle failed too:',
-            error,
-          )
-        }
-      } else {
-        await revalidated
+      // Refreshing cached state is not part of the toggle's result: a failed read must not
+      // turn a write that landed into a reported failure.
+      try {
+        await revalidateQueries([['getVergeConfig']])
+      } catch (error) {
+        console.warn(
+          '[system-proxy] rereading the config after a toggle failed:',
+          error,
+        )
+      }
+      // Kept separate so an unreadable config cannot discard OS state that did read.
+      try {
+        await revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
+      } catch (error) {
+        console.warn(
+          '[system-proxy] rereading the OS proxy after a toggle failed:',
+          error,
+        )
+        // The indicator reports observed OS state, so an unreadable one must read as inactive
+        // rather than stay live from a stale cache.
+        await Promise.all([
+          removeCacheData(['getSystemProxy']),
+          removeCacheData(['getAutotemProxy']),
+        ])
       }
     }
   }

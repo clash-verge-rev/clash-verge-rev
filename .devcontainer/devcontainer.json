@@ -3,12 +3,12 @@
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
 
   "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "24.18.1",
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "24.20.0",
       "packageManager": "pnpm"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "1.95.0",
+      "version": "1.98.0",
       "profile": "default"
     },
     "ghcr.io/devcontainers/features/git:1": {},

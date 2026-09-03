@@ -13,13 +13,10 @@ use crate::{
 /// Prevents recursive runtime disable writes.
 static DISABLING_TUN: AtomicBool = AtomicBool::new(false);
 
-/// Suppress TUN for this Windows session when startup confirms the Service is absent.
-/// The saved preference remains available for a later Service install.
+/// Turn TUN off when startup confirms the Service is absent, so the Core can start on Sidecar.
+///
+/// Runs before the runtime config is generated.
 pub async fn reconcile_startup_tun_availability() {
-    if !cfg!(target_os = "windows") {
-        return;
-    }
-
     // Read fresh state after prior config writes complete.
     let _config_write = Config::lock_config_write().await;
     let tun_enabled = Config::verge().await.data_arc().enable_tun_mode.unwrap_or(false);
@@ -30,9 +27,13 @@ pub async fn reconcile_startup_tun_availability() {
     logging!(
         info,
         Type::Setup,
-        "Windows Service is not installed; suppressing TUN mode so the Core can start on Sidecar"
+        "Service is not installed; turning TUN mode off so the Core can start on Sidecar"
     );
-    Config::suppress_tun_for_session().await;
+    // Write the preference only: a patch would reach update_config_checked, which with no Core to
+    // reload starts one ahead of the rest of startup, and rolls the write back if that fails.
+    if let Err(error) = Config::disable_tun_and_persist().await {
+        logging!(error, Type::Setup, "failed to turn TUN mode off at startup: {error:#}");
+    }
 }
 
 /// Disable TUN when the current settled Run State cannot support it.
@@ -45,12 +46,8 @@ pub async fn reconcile_tun_availability() {
     let config_write = Config::lock_config_write().await;
     let state = RUN_STATE.state();
 
-    // Startup uses the narrower session-suppression path above.
+    // Startup uses the narrower path above, before a Core is running.
     if matches!(state.mode, RunningMode::NotRunning) {
-        return;
-    }
-
-    if Config::tun_suppressed_for_session() {
         return;
     }
 

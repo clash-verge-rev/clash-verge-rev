@@ -95,7 +95,7 @@ impl RunState {
         !matches!(self.health, ServiceHealth::Unknown) && !self.op_in_flight && !self.service_needs_attention()
     }
 
-    /// Present-but-broken services remain in the repair flow rather than suppressing TUN.
+    /// Present-but-broken services remain in the repair flow rather than being disabled here.
     #[must_use]
     pub const fn startup_tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
         matches!(self.health, ServiceHealth::NotInstalled) && self.tun_should_be_disabled(tun_enabled)

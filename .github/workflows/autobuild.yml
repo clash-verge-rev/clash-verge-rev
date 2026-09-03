@@ -48,7 +48,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.20.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -151,7 +151,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.98.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -182,7 +182,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.20.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -203,7 +203,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.98.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -254,7 +254,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.98.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -279,7 +279,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.20.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -344,7 +344,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.98.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -423,7 +423,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.20.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -451,7 +451,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.98.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -496,11 +496,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
-      - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
@@ -523,7 +518,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.20.0'
 
       - uses: pnpm/action-setup@v6.0.10
         name: Install pnpm

@@ -1327,7 +1327,6 @@ impl ServiceManager {
             RUN_STATE.perform(action).await?;
             if !matches!(action, PendingAction::Uninstall) {
                 wait_for_service_ipc().await?;
-                Config::restore_tun_for_session().await;
             }
             Ok(())
         })
