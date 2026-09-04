@@ -56,7 +56,7 @@ clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 
 tauri = { version = "2.11.5" }
-tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-clipboard-manager = "2.3.3"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
@@ -68,7 +68,7 @@ tokio = { version = "1.53.1", features = [
   "sync",
 ] }
 flexi_logger = "0.31.10"
-log = "0.4.33"
+log = "0.4.34"
 regex = "1.13.1"
 reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
 rust_iso3166 = "0.2.0"
