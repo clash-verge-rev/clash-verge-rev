@@ -123,7 +123,7 @@
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.14",
     "vite-plugin-svgr": "^5.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
