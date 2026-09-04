@@ -41,6 +41,7 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import { resolveActiveChainGroup } from './resolve-chain-group'
 import {
   hasRenderableItems,
   type IRenderItem,
@@ -180,7 +181,13 @@ function ChainProxyGroups(props: {
 }) {
   const { mode, chainConfigData } = props
   const { proxyView } = useProxiesData()
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('proxy-chain-group')
+    } catch {
+      return null
+    }
+  })
 
   const availableGroups = useMemo(() => {
     const groups = proxyView?.groups
@@ -190,14 +197,10 @@ function ChainProxyGroups(props: {
     )
   }, [proxyView?.groups])
 
-  const defaultRuleGroup = useMemo(() => {
-    if (mode === 'rule' && availableGroups.length > 0) {
-      return availableGroups[0].name
-    }
-    return null
-  }, [availableGroups, mode])
-
-  const activeSelectedGroup = selectedGroup ?? defaultRuleGroup
+  const activeSelectedGroup = useMemo(
+    () => resolveActiveChainGroup(mode, selectedGroup, availableGroups),
+    [availableGroups, mode, selectedGroup],
+  )
   const {
     renderList,
     onHeadState,
