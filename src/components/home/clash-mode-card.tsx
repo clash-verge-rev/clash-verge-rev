@@ -7,10 +7,9 @@ import { Box, Paper, Stack, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { type BaseConfig, closeAllConnections } from 'tauri-plugin-mihomo-api'
+import type { BaseConfig } from 'tauri-plugin-mihomo-api'
 
 import { useClashMode, useRuntimeConfig } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
 import {
   useAppRefreshers,
   useClashConfigData,
@@ -58,7 +57,6 @@ const MODE_ICONS: Record<ClashMode, ReactNode> = {
 
 export const ClashModeCard = () => {
   const { t } = useTranslation()
-  const { verge } = useVerge()
   const { clashConfig } = useClashConfigData()
   const { isCoreDataPending } = useCoreDataStatus()
   const { refreshClashConfig } = useAppRefreshers()
@@ -89,9 +87,6 @@ export const ClashModeCard = () => {
 
   const onChangeMode = useLockFn(async (mode: ClashMode) => {
     if (mode === currentMode) return
-    if (verge?.auto_close_connection) {
-      closeAllConnections()
-    }
 
     setOptimisticMode(mode)
     try {

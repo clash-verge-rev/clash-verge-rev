@@ -68,18 +68,12 @@ pub async fn restart_app() {
 
 fn after_change_clash_mode() {
     AsyncHandler::spawn(move || async {
-        let mihomo = handle::Handle::mihomo();
-        match mihomo.get_connections().await {
-            Ok(connections) => {
-                if let Some(connections_array) = connections.connections {
-                    for connection in connections_array {
-                        let _ = mihomo.close_connection(&connection.id).await;
-                    }
-                }
-            }
-            Err(err) => {
-                logging!(error, Type::Core, "Failed to get connections: {err}");
-            }
+        if let Err(err) = handle::Handle::mihomo().close_all_connections().await {
+            logging!(
+                error,
+                Type::Core,
+                "Failed to close all connections after changing clash mode: {err}"
+            );
         }
     });
 }
