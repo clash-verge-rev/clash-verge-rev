@@ -24,7 +24,7 @@ import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance, MonacoMarker } from '@/types/monaco'
 import debounce from '@/utils/debounce'
-import getSystem from '@/utils/get-system'
+import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 
 const appWindow = getCurrentWebviewWindow()
 
@@ -247,9 +247,7 @@ export const EditorViewer = ({
                 padding: {
                   top: 33,
                 },
-                fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                  getSystem() === 'windows' ? ', twemoji mozilla' : ''
-                }`,
+                fontFamily: MONACO_FONT_FAMILY,
                 fontLigatures: false,
                 smoothScrolling: true,
               }}

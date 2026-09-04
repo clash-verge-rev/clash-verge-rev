@@ -49,6 +49,7 @@ import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
+import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 import getSystem from '@/utils/get-system'
 import { isValidIpCidr } from '@/utils/network'
 import { parseYamlSafe } from '@/utils/yaml'
@@ -894,9 +895,7 @@ export const RulesEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === 'windows' ? ', twemoji mozilla' : ''
-              }`,
+              fontFamily: MONACO_FONT_FAMILY,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
