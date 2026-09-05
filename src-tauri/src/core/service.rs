@@ -110,6 +110,7 @@ pub enum ServiceStatus {
     Checking,
     Ready,
     NotInstalled,
+    ApprovalRequired,
     NeedsReinstall,
     InstallRequired,
     UninstallRequired,
@@ -137,6 +138,7 @@ impl ServiceStatus {
             ServiceHealth::Unknown => Self::Checking,
             ServiceHealth::Ready => Self::Ready,
             ServiceHealth::NotInstalled => Self::NotInstalled,
+            ServiceHealth::ApprovalRequired => Self::ApprovalRequired,
             ServiceHealth::VersionMismatch => Self::NeedsReinstall,
             ServiceHealth::Unavailable(reason) => Self::Unavailable(reason.clone()),
         }
@@ -223,6 +225,14 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
 
 #[cfg(target_os = "macos")]
 pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    if let Some(daemon) = super::macos_service::Daemon::current()
+        && matches!(
+            daemon.status()?,
+            super::macos_service::Status::Enabled | super::macos_service::Status::RequiresApproval
+        )
+    {
+        return Ok(true);
+    }
     macos_service_install_marker_exists().context("failed to inspect launchd service registration")
 }
 
@@ -689,6 +699,17 @@ fn linux_running_as_root() -> bool {
 
 #[cfg(target_os = "macos")]
 fn uninstall_service() -> Result<()> {
+    if let Some(daemon) = super::macos_service::Daemon::current() {
+        daemon.unregister()?;
+        if !macos_service_install_marker_exists()? {
+            return Ok(());
+        }
+    }
+    uninstall_legacy_macos_service()
+}
+
+#[cfg(target_os = "macos")]
+fn uninstall_legacy_macos_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
     let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
@@ -727,6 +748,26 @@ fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 fn install_service() -> Result<()> {
+    if let Some(daemon) = super::macos_service::Daemon::current() {
+        // 用户在系统设置中关闭服务后，重新安装不能代替其批准。
+        if daemon.status()? == super::macos_service::Status::RequiresApproval {
+            return Ok(());
+        }
+        if macos_service_install_marker_exists()? {
+            uninstall_legacy_macos_service()?;
+            // 旧卸载器忽略 bootout 错误，必须确认旧任务已退出后才能共用 IPC 地址。
+            for label in [clash_verge_service_ipc::MACOS_SERVICE_ID, "io.github.clashverge.helper"] {
+                let output = StdCommand::new("/bin/launchctl")
+                    .args(["print", &format!("system/{label}")])
+                    .output()?;
+                if output.status.success() {
+                    bail!("旧 macOS 服务仍在运行，无法迁移：{label}");
+                }
+            }
+        }
+        daemon.unregister()?;
+        return daemon.register();
+    }
     logging!(info, Type::Service, "install service");
 
     let binary_path = packaged_service_tool_path("clash-verge-service", dirs::service_path)?;
@@ -1325,7 +1366,9 @@ impl ServiceManager {
         logging!(info, Type::Service, "running privileged service action {action:?}");
         run_action_restoring_sidecar(&RUN_STATE, sidecar_allowed_before, async move {
             RUN_STATE.perform(action).await?;
-            if !matches!(action, PendingAction::Uninstall) {
+            if !matches!(action, PendingAction::Uninstall)
+                && RUN_STATE.state().health != ServiceHealth::ApprovalRequired
+            {
                 wait_for_service_ipc().await?;
             }
             Ok(())
@@ -1361,6 +1404,9 @@ fn report_non_actionable_status(status: ServiceStatus) -> Result<()> {
         }
         ServiceStatus::NeedsReinstall => {
             bail!("service needs reinstall; explicit authorization is required");
+        }
+        ServiceStatus::ApprovalRequired => {
+            bail!("请在 macOS 系统设置中批准 Clash Verge 后台服务");
         }
         ServiceStatus::Unavailable(reason) => {
             logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
@@ -1413,6 +1459,7 @@ const fn requested_action(status: &ServiceStatus) -> Option<PendingAction> {
         | ServiceStatus::Ready
         | ServiceStatus::NotInstalled
         | ServiceStatus::NeedsReinstall
+        | ServiceStatus::ApprovalRequired
         | ServiceStatus::SidecarAllowed
         | ServiceStatus::Unavailable(_) => None,
     }
@@ -1429,6 +1476,7 @@ fn record_status<E: RunStateEnv>(store: &RunStateStore<E>, status: ServiceStatus
         ServiceStatus::Checking => store.observe(ServiceHealth::Unknown),
         ServiceStatus::Ready => store.observe(ServiceHealth::Ready),
         ServiceStatus::NotInstalled => store.observe(ServiceHealth::NotInstalled),
+        ServiceStatus::ApprovalRequired => store.observe(ServiceHealth::ApprovalRequired),
         ServiceStatus::NeedsReinstall => store.observe(ServiceHealth::VersionMismatch),
         ServiceStatus::Unavailable(reason) => store.observe(ServiceHealth::Unavailable(reason)),
         ServiceStatus::InstallRequired

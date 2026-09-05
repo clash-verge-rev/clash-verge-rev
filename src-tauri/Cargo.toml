@@ -116,7 +116,10 @@ libc = "0.2.189"
 core-foundation = "0.9"
 system-configuration = "0.7"
 objc2 = "0.6.4"
+block2 = "0.6.2"
 objc2-foundation = { version = "0.3.2", features = [
+  "NSBundle",
+  "NSError",
   "NSString",
   "NSDictionary",
   "NSAttributedString",

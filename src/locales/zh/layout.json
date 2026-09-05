@@ -21,6 +21,11 @@
       }
     },
     "serviceMigration": {
+      "approvalTitle": "允许后台服务运行",
+      "approvalMessage": "请在系统设置 → 通用 → 登录项中允许 Clash Verge 在后台运行。管理员身份验证由 macOS 处理，批准后返回此处继续。",
+      "openSettings": "打开系统设置",
+      "resume": "继续",
+      "resumeMessage": "服务已就绪，继续通过服务启动内核。",
       "title": "需要更新系统服务",
       "message": "检测到旧版 Clash Verge 系统服务。重新安装后可使用当前安全 IPC 协议，也可以仅在本次会话继续使用 Sidecar。",
       "checkingMessage": "正在确认系统服务状态及当前运行模式，请稍候……",

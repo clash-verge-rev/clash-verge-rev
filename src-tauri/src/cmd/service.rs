@@ -46,6 +46,28 @@ pub async fn repair_service() -> CmdResult {
 }
 
 #[tauri::command]
+pub async fn open_service_settings() -> CmdResult {
+    #[cfg(target_os = "macos")]
+    {
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+        crate::core::handle::Handle::app_handle()
+            .run_on_main_thread(move || {
+                let _ = sender.send(crate::core::macos_service::open_settings());
+            })
+            .map_err(|error| super::coded_error("SERVICE_SETTINGS_FAILED", error))?;
+        receiver
+            .await
+            .map_err(|error| super::coded_error("SERVICE_SETTINGS_FAILED", error))?
+            .map_err(|error| super::coded_error("SERVICE_SETTINGS_FAILED", error))
+    }
+    #[cfg(not(target_os = "macos"))]
+    Err(super::coded_error(
+        "SERVICE_SETTINGS_FAILED",
+        "当前系统不支持此服务批准页面",
+    ))
+}
+
+#[tauri::command]
 pub async fn continue_with_sidecar() -> CmdResult {
     crate::core::CoreManager::global()
         .continue_with_sidecar()

@@ -215,6 +215,8 @@ export interface TranslationResources {
           }
         }
         serviceMigration: {
+          approvalMessage: string
+          approvalTitle: string
           checkingMessage: string
           continueSidecar: string
           errors: {
@@ -225,8 +227,11 @@ export interface TranslationResources {
             stateRefreshFailed: string
           }
           message: string
+          openSettings: string
           reinstall: string
           repair: string
+          resume: string
+          resumeMessage: string
           success: string
           title: string
           unavailableMessage: string

@@ -45,6 +45,7 @@ const fn startup_decision(status: &ServiceStatus, service_required: bool) -> Sta
         ServiceStatus::Checking
         | ServiceStatus::NotInstalled
         | ServiceStatus::NeedsReinstall
+        | ServiceStatus::ApprovalRequired
         | ServiceStatus::InstallRequired
         | ServiceStatus::Unavailable(_) => StartupDecision::Wait,
         ServiceStatus::UninstallRequired | ServiceStatus::ReinstallRequired | ServiceStatus::ForceReinstallRequired => {
@@ -59,10 +60,14 @@ const fn can_allow_sidecar_for_session(running_mode: &RunningMode, service_statu
         (
             RunningMode::NotRunning,
             ServiceStatus::NotInstalled
+                | ServiceStatus::ApprovalRequired
                 | ServiceStatus::NeedsReinstall
                 | ServiceStatus::InstallRequired
                 | ServiceStatus::Unavailable(_)
-        ) | (RunningMode::Sidecar, ServiceStatus::InstallRequired)
+        ) | (
+            RunningMode::Sidecar,
+            ServiceStatus::InstallRequired | ServiceStatus::ApprovalRequired
+        )
     )
 }
 
@@ -1384,6 +1389,10 @@ mod tests {
         assert!(can_allow_sidecar_for_session(
             &RunningMode::Sidecar,
             &ServiceStatus::InstallRequired,
+        ));
+        assert!(can_allow_sidecar_for_session(
+            &RunningMode::Sidecar,
+            &ServiceStatus::ApprovalRequired,
         ));
     }
 

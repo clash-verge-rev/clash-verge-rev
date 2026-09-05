@@ -374,6 +374,7 @@ type ServiceHealth =
   | 'unknown'
   | 'ready'
   | 'notInstalled'
+  | 'approvalRequired'
   | 'versionMismatch'
   | 'unavailable'
 
@@ -399,6 +400,10 @@ export interface RunState {
 
 export const getRuntimeState = async () => {
   return invoke<RunState>('get_runtime_state')
+}
+
+export const openServiceSettings = async () => {
+  return invoke<void>('open_service_settings')
 }
 
 export type FailedOperation =

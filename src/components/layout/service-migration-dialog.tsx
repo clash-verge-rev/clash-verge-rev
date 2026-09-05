@@ -1,5 +1,5 @@
 import { Alert } from '@mui/material'
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
@@ -9,6 +9,7 @@ import {
   continueWithSidecar,
   getRuntimeState,
   installService,
+  openServiceSettings,
   reinstallService,
   repairService,
   restartCore,
@@ -16,10 +17,22 @@ import {
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { setCacheDataAsync, useQuery } from '@/services/query-client'
+import {
+  getServiceRequest,
+  subscribeServiceRequest,
+} from '@/services/service-request'
 
-export const ServiceMigrationDialog = () => {
+export const ServiceMigrationDialog = ({
+  proxyDialogOpen,
+}: {
+  proxyDialogOpen: boolean
+}) => {
   const { t } = useTranslation()
   const pageVisible = useVisibility()
+  const serviceRequest = useSyncExternalStore(
+    subscribeServiceRequest,
+    getServiceRequest,
+  )
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
@@ -28,6 +41,7 @@ export const ServiceMigrationDialog = () => {
     queryFn: getRuntimeState,
     enabled: true,
     retry: 1,
+    refetchOnWindowFocus: true,
     refetchInterval: pageVisible ? 30000 : false,
   })
   // Whether the service needs a decision is derived once, in Rust, and travels with the
@@ -43,7 +57,22 @@ export const ServiceMigrationDialog = () => {
         : runState?.service === 'notInstalled'
           ? 'install'
           : 'reinstall'
-  const open = loading || workflowIncomplete || needsDecision
+  const approvalRequired = runState?.service === 'approvalRequired'
+  // 即使用户从系统通知直接批准，返回后仍需完成内核启动。
+  if (
+    approvalRequired &&
+    needsDecision &&
+    !workflowIncomplete &&
+    !serviceRequest &&
+    !proxyDialogOpen
+  ) {
+    setWorkflowIncomplete(true)
+  }
+  // 原操作的对话框负责恢复 TUN/系统代理，避免同时弹出两个批准引导。
+  const open =
+    (loading || workflowIncomplete || needsDecision) &&
+    !serviceRequest &&
+    !proxyDialogOpen
   const showCheckingMessage = loading || !needsDecision
 
   // One cache entry to refresh, so there is nothing left to keep coherent by hand.
@@ -64,7 +93,16 @@ export const ServiceMigrationDialog = () => {
     setWorkflowIncomplete(true)
     let actionSucceeded = false
     try {
-      if (remedy === 'install') {
+      if (approvalRequired) {
+        const state = await refreshRunState()
+        if (!state.serviceUsable) {
+          await openServiceSettings()
+          setLoading(false)
+          return
+        }
+      } else if (runState?.serviceUsable && workflowIncomplete) {
+        // 系统批准后的继续操作只需启动内核，重复注册会再次打断服务。
+      } else if (remedy === 'install') {
         await installService()
       } else if (remedy === 'repair') {
         await repairService()
@@ -81,7 +119,11 @@ export const ServiceMigrationDialog = () => {
 
     let initialRefreshSucceeded = false
     try {
-      await refreshRunState()
+      const state = await refreshRunState()
+      if (state.service === 'approvalRequired') {
+        setLoading(false)
+        return
+      }
       initialRefreshSucceeded = true
     } catch (error) {
       showNotice.error(
@@ -156,13 +198,21 @@ export const ServiceMigrationDialog = () => {
   return (
     <BaseDialog
       open={open}
-      title={t('layout.components.serviceMigration.title')}
+      title={t(
+        approvalRequired
+          ? 'layout.components.serviceMigration.approvalTitle'
+          : 'layout.components.serviceMigration.title',
+      )}
       okBtn={t(
-        remedy === 'install'
-          ? 'settings.sections.proxyControl.actions.installService'
-          : remedy === 'repair'
-            ? 'layout.components.serviceMigration.repair'
-            : 'layout.components.serviceMigration.reinstall',
+        approvalRequired
+          ? 'layout.components.serviceMigration.openSettings'
+          : runState?.serviceUsable && workflowIncomplete
+            ? 'layout.components.serviceMigration.resume'
+            : remedy === 'install'
+              ? 'settings.sections.proxyControl.actions.installService'
+              : remedy === 'repair'
+                ? 'layout.components.serviceMigration.repair'
+                : 'layout.components.serviceMigration.reinstall',
       )}
       cancelBtn={t('layout.components.serviceMigration.continueSidecar')}
       disableOk={loading}
@@ -173,11 +223,15 @@ export const ServiceMigrationDialog = () => {
     >
       <Alert severity="warning">
         {t(
-          showCheckingMessage
-            ? 'layout.components.serviceMigration.checkingMessage'
-            : remedy === 'reinstall'
-              ? 'layout.components.serviceMigration.message'
-              : 'layout.components.serviceMigration.unavailableMessage',
+          approvalRequired
+            ? 'layout.components.serviceMigration.approvalMessage'
+            : runState?.serviceUsable && workflowIncomplete
+              ? 'layout.components.serviceMigration.resumeMessage'
+              : showCheckingMessage
+                ? 'layout.components.serviceMigration.checkingMessage'
+                : remedy === 'reinstall'
+                  ? 'layout.components.serviceMigration.message'
+                  : 'layout.components.serviceMigration.unavailableMessage',
         )}
       </Alert>
     </BaseDialog>

@@ -4,6 +4,8 @@ pub mod handle;
 pub mod hotkey;
 pub mod listener;
 pub mod logger;
+#[cfg(target_os = "macos")]
+pub(crate) mod macos_service;
 pub mod manager;
 #[cfg(target_os = "macos")]
 pub mod network_watch;

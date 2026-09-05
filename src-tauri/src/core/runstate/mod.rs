@@ -8,6 +8,9 @@ mod health;
 mod owner;
 mod probe;
 
+#[cfg(test)]
+mod approval_tests;
+
 use std::{
     sync::{
         Arc,
@@ -118,8 +121,40 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
     }
 
+    /// 沿用界面刷新时机观察系统批准，不触发安装，也不覆盖正在执行的用户操作。
+    pub async fn refresh_service_approval(&self) -> Result<()> {
+        let state = self.state();
+        if state.op_in_flight || state.pending.is_some() || state.sidecar_allowed {
+            return Ok(());
+        }
+        let reservation = self.reserve_health_observation();
+        let health =
+            match self.env.service_registration_health().await? {
+                Some(health) => health,
+                None if state.health == ServiceHealth::ApprovalRequired => {
+                    // 批准后仍给 launchd 原有的启动等待时间；持续失败才进入既有修复入口。
+                    let config = super::service::ServiceManager::config();
+                    match self.wait_for_reply(config.max_retries, config.retry_delay).await {
+                        Ok(reply) => classify_service_health(probe_outcome(&reply), true, ""),
+                        Err(error) => self.env.service_registration_health().await?.unwrap_or_else(|| {
+                            ServiceHealth::Unavailable(format!("服务已获批准，但启动失败：{error:#}"))
+                        }),
+                    }
+                }
+                None => return Ok(()),
+            };
+        if health != state.health {
+            self.commit_reserved_observation(health, reservation);
+        }
+        Ok(())
+    }
+
     /// Records readable replies; transport failures preserve the last confirmed health.
     pub async fn probe(&self) -> Result<RunState> {
+        if let Some(health) = self.env.service_registration_health().await? {
+            self.observe(health);
+            bail!("服务需要用户批准或重新注册");
+        }
         let reply = self
             .env
             .probe_service_version()
@@ -130,10 +165,18 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Retries transport failures but stops at the first readable reply, including a rejection.
     pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
+        let reply = self
+            .wait_for_reply(attempts, interval)
+            .await
+            .map_err(ReadyWaitError::Unreachable)?;
+        self.record_reply(&reply).map_err(ReadyWaitError::Rejected)
+    }
+
+    async fn wait_for_reply(&self, attempts: usize, interval: Duration) -> Result<ServiceVersionReply> {
         let mut last_error = None;
         for attempt in 0..attempts {
             match self.env.probe_service_version().await {
-                Ok(reply) => return self.record_reply(&reply).map_err(ReadyWaitError::Rejected),
+                Ok(reply) => return Ok(reply),
                 Err(error) => last_error = Some(error),
             }
             if attempt + 1 < attempts {
@@ -141,9 +184,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
             }
         }
 
-        Err(ReadyWaitError::Unreachable(last_error.unwrap_or_else(|| {
-            anyhow::anyhow!("service readiness wait was configured with no attempts")
-        })))
+        Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service readiness wait was configured with no attempts")))
     }
 
     fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {
@@ -161,6 +202,11 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Detects health from platform evidence and then live IPC; unknown evidence is not absence.
     pub async fn detect_service_health(&self) -> ServiceHealth {
+        match self.env.service_registration_health().await {
+            Ok(Some(health)) => return health,
+            Ok(None) => {}
+            Err(error) => return ServiceHealth::Unavailable(format!("服务注册状态检查失败：{error:#}")),
+        }
         let has_marker = match self.env.trusted_install_evidence().await {
             Ok(exists) => exists,
             Err(error) => {
@@ -310,7 +356,10 @@ impl<E: RunStateEnv> RunStateStore<E> {
             (Some(_), _) | (None, true) => false,
             (None, false) => matches!(
                 state.service.health,
-                ServiceHealth::NotInstalled | ServiceHealth::VersionMismatch | ServiceHealth::Unavailable(_)
+                ServiceHealth::NotInstalled
+                    | ServiceHealth::ApprovalRequired
+                    | ServiceHealth::VersionMismatch
+                    | ServiceHealth::Unavailable(_)
             ),
         };
         if !permitted {
@@ -349,7 +398,11 @@ impl<E: RunStateEnv> RunStateStore<E> {
         let outcome = self.env.run_privileged(action);
         match &outcome {
             Ok(()) if matches!(action, PendingAction::Uninstall) => self.observe(ServiceHealth::NotInstalled),
-            Ok(()) => {}
+            Ok(()) => {
+                if let Some(health) = self.env.service_registration_health().await? {
+                    self.observe(health);
+                }
+            }
             Err(error) => {
                 let health = self.observe_current_health().await;
                 logging!(
