@@ -199,6 +199,8 @@ pub async fn clean_session_ending_best_effort() -> CleanupResult {
 
     let result = run_session_ending_cleanup_transition(
         || async {
+            logging!(info, Type::System, "Clearing all WebSocket connections before stopping core");
+            let _ = handle::Handle::mihomo().clear_all_ws_connections();
             logging!(info, Type::System, "Stopping core during session-ending best-effort cleanup");
             match CoreManager::global().stop_core().await {
                 Ok(()) => {
