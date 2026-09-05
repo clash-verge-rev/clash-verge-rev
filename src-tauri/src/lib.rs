@@ -338,9 +338,34 @@ pub fn run() -> std::process::ExitCode {
             process::AsyncHandler,
         };
         use clash_verge_logging::{Type, logging};
+        #[cfg(target_os = "macos")]
+        use std::sync::atomic::{AtomicBool, Ordering};
         use tauri::AppHandle;
         #[cfg(target_os = "macos")]
         use tauri::Manager as _;
+
+        #[cfg(target_os = "macos")]
+        static MAIN_WINDOW_FOCUSED: AtomicBool = AtomicBool::new(false);
+        // Serialize async updates so stale focus work cannot overwrite the latest state.
+        #[cfg(target_os = "macos")]
+        static SYSTEM_HOTKEY_UPDATE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+        #[cfg(target_os = "macos")]
+        fn unregister_system_hotkeys() {
+            use crate::core::hotkey::SystemHotkey;
+
+            for system_hotkey in [SystemHotkey::CmdQ, SystemHotkey::CmdW] {
+                if let Err(err) = hotkey::Hotkey::global().unregister_system_hotkey(system_hotkey) {
+                    logging!(
+                        warn,
+                        Type::Hotkey,
+                        "Failed to unregister system hotkey {}: {:?}",
+                        system_hotkey,
+                        err
+                    );
+                }
+            }
+        }
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
@@ -372,7 +397,11 @@ pub fn run() -> std::process::ExitCode {
 
         pub fn handle_window_close(api: &tauri::WindowEvent) {
             #[cfg(target_os = "macos")]
-            handle::Handle::global().set_activation_policy_accessory();
+            {
+                MAIN_WINDOW_FOCUSED.store(false, Ordering::Release);
+                unregister_system_hotkeys();
+                handle::Handle::global().set_activation_policy_accessory();
+            }
 
             if core::handle::Handle::global().is_exiting() {
                 return;
@@ -387,8 +416,45 @@ pub fn run() -> std::process::ExitCode {
         }
 
         pub fn handle_window_focus(focused: bool) {
+            #[cfg(target_os = "macos")]
+            MAIN_WINDOW_FOCUSED.store(focused, Ordering::Release);
+
+            #[cfg(target_os = "macos")]
+            if !focused {
+                unregister_system_hotkeys();
+            }
+
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
+
+                #[cfg(target_os = "macos")]
+                let _update_guard = {
+                    let guard = SYSTEM_HOTKEY_UPDATE_LOCK.lock().await;
+                    if focused != MAIN_WINDOW_FOCUSED.load(Ordering::Acquire) {
+                        return;
+                    }
+                    guard
+                };
+
+                #[cfg(target_os = "macos")]
+                let cleanup_stale_update = || {
+                    if MAIN_WINDOW_FOCUSED.load(Ordering::Acquire) {
+                        return false;
+                    }
+
+                    unregister_system_hotkeys();
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().reset();
+                    }
+                    true
+                };
+
+                #[cfg(not(target_os = "macos"))]
+                let cleanup_stale_update = || false;
+
+                if cleanup_stale_update() {
+                    return;
+                }
 
                 if focused {
                     #[cfg(target_os = "macos")]
@@ -400,18 +466,18 @@ pub fn run() -> std::process::ExitCode {
                         let _ = hotkey::Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
+
+                        if cleanup_stale_update() {
+                            return;
+                        }
                     }
                     if !is_enable_global_hotkey {
                         let _ = hotkey::Hotkey::global().init(false).await;
                     }
+                    if cleanup_stale_update() {
+                        return;
+                    }
                     return;
-                }
-
-                #[cfg(target_os = "macos")]
-                {
-                    use crate::core::hotkey::SystemHotkey;
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 }
 
                 if !is_enable_global_hotkey {
@@ -422,10 +488,10 @@ pub fn run() -> std::process::ExitCode {
 
         #[cfg(target_os = "macos")]
         pub fn handle_window_destroyed() {
-            use crate::core::hotkey::SystemHotkey;
+            MAIN_WINDOW_FOCUSED.store(false, Ordering::Release);
+            unregister_system_hotkeys();
+
             AsyncHandler::spawn(move || async move {
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
                 if !is_enable_global_hotkey {
                     let _ = hotkey::Hotkey::global().reset();
