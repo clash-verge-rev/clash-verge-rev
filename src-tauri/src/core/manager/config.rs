@@ -138,6 +138,7 @@ impl CoreManager {
                 config: Some(clash_config.to_owned()),
                 exists_keys: HashSet::new(),
                 chain_logs: Default::default(),
+                ..IRuntime::default()
             }
         });
 
