@@ -135,5 +135,5 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@12.3.3"
+  "packageManager": "pnpm@12.3.4"
 }
