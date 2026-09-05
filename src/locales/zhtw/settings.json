@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS 設定",
-        "fallbackFilter": "備援篩選設定",
         "hosts": "Hosts 設定"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "域名伺服器",
           "description": "DNS 伺服器列表，用逗號分隔"
         },
-        "fallback": {
-          "label": "備援伺服器",
-          "description": "備援 DNS 伺服器列表，用逗號分隔"
-        },
         "proxy": {
           "label": "代理節點 DNS",
           "description": "代理節點網域解析伺服器，僅用於解析代理節點的網域，用逗號分隔"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "域名伺服器策略",
           "description": "特定網域的 DNS 伺服器，多個伺服器使用分號分隔，格式: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP 篩選",
-          "description": "啟用 GeoIP 備援篩選"
-        },
-        "geoipCode": "GeoIP 國家代碼",
-        "fallbackIpCidr": {
-          "label": "備援 IP CIDR",
-          "description": "不使用備援伺服器的 IP CIDR，用逗號分隔"
-        },
-        "fallbackDomain": {
-          "label": "備援網域",
-          "description": "使用備援伺服器的網域，用逗號分隔"
         },
         "hosts": {
           "label": "Hosts",

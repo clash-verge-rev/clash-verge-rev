@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS-Einstellungen",
-        "fallbackFilter": "Rückfallfilter-Einstellungen",
         "hosts": "Hosts-Einstellungen"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "Namenserver",
           "description": "Liste der DNS-Server, getrennt durch Kommas"
         },
-        "fallback": {
-          "label": "Rückfallserver",
-          "description": "Liste der Rückfall-DNS-Server, getrennt durch Kommas"
-        },
         "proxy": {
           "label": "Proxy-Server-Namenserver",
           "description": "Proxy-Knoten-Namenserver, nur für die Auflösung der Domains von Proxy-Knoten verwendet, getrennt durch Kommas"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "Namenserver-Strategie",
           "description": "Domain-spezifischer DNS-Server, mehrere Server getrennt durch Semikolons, Format: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP-Filterung",
-          "description": "GeoIP-Rückfallfilterung aktivieren"
-        },
-        "geoipCode": "GeoIP-Ländercode",
-        "fallbackIpCidr": {
-          "label": "Rückfall-IP-CIDR",
-          "description": "IP-CIDRs, die keine Rückfallserver verwenden, getrennt durch Kommas"
-        },
-        "fallbackDomain": {
-          "label": "Rückfall-Domäne",
-          "description": "Domains, die Rückfallserver verwenden, getrennt durch Kommas"
         },
         "hosts": {
           "label": "Hosts",

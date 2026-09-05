@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS 설정",
-        "fallbackFilter": "폴백 필터 설정",
         "hosts": "호스트 설정"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "Nameserver",
           "description": "DNS 서버 목록, 쉼표로 구분"
         },
-        "fallback": {
-          "label": "폴백",
-          "description": "폴백 DNS 서버 목록, 쉼표로 구분"
-        },
         "proxy": {
           "label": "프록시 서버 Nameserver",
           "description": "프록시 노드 도메인 해석용 DNS 서버"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "Nameserver 정책",
           "description": "도메인별 DNS 서버, 여러 서버는 세미콜론으로 구분, 형식: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP 필터링",
-          "description": "폴백에 GeoIP 필터링 사용"
-        },
-        "geoipCode": "GeoIP 코드",
-        "fallbackIpCidr": {
-          "label": "폴백 IP CIDR",
-          "description": "폴백 서버를 사용하지 않는 IP CIDR, 쉼표로 구분"
-        },
-        "fallbackDomain": {
-          "label": "폴백 도메인",
-          "description": "폴백 서버를 사용하는 도메인, 쉼표로 구분"
         },
         "hosts": {
           "label": "Hosts",

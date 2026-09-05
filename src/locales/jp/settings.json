@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS設定",
-        "fallbackFilter": "フォールバックフィルター設定",
         "hosts": "Hosts設定"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "名前解決サーバー",
           "description": "DNSサーバーのリスト。カンマで区切って指定します。"
         },
-        "fallback": {
-          "label": "フォールバックサーバー",
-          "description": "フォールバックDNSサーバーのリスト。カンマで区切って指定します。"
-        },
         "proxy": {
           "label": "プロキシサーバーの名前解決サーバー",
           "description": "プロキシノードの名前解決サーバー。プロキシノードのドメイン名を解決するためにのみ使用されます。カンマで区切って指定します。"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "名前解決サーバーのポリシー",
           "description": "特定のドメインのDNSサーバー。複数のサーバーはセミコロンで区切って指定します。形式: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIPフィルタリング",
-          "description": "フォールバックのGeoIPフィルタリングを有効にする"
-        },
-        "geoipCode": "GeoIP国コード",
-        "fallbackIpCidr": {
-          "label": "フォールバックIP CIDR",
-          "description": "フォールバックサーバーを使用しないIP CIDR。カンマで区切って指定します。"
-        },
-        "fallbackDomain": {
-          "label": "フォールバックドメイン",
-          "description": "フォールバックサーバーを使用するドメイン名。カンマで区切って指定します。"
         },
         "hosts": {
           "label": "Hosts",

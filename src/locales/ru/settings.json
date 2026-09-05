@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "Настройки DNS",
-        "fallbackFilter": "Настройки фильтра fallback",
         "hosts": "Настройки hosts"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "DNS-сервер",
           "description": "Список DNS-серверов, разделенных запятой"
         },
-        "fallback": {
-          "label": "Fallback",
-          "description": "Список DNS-серверов, разделенных запятой"
-        },
         "proxy": {
           "label": "DNS-сервер прокси",
           "description": "DNS-серверы для разрешения домена прокси-узлов"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "Политика DNS-серверов",
           "description": "DNS-сервер для конкретного домена; несколько серверов разделяются символом ';'"
-        },
-        "geoipFiltering": {
-          "label": "Фильтрация GeoIP",
-          "description": "Включить фильтрацию GeoIP"
-        },
-        "geoipCode": "Код GeoIP",
-        "fallbackIpCidr": {
-          "label": "Fallback IP CIDR",
-          "description": "Диапазоны IP-адресов, не использующие резервные серверы, разделённые запятой"
-        },
-        "fallbackDomain": {
-          "label": "Fallback домены",
-          "description": "Домены, использующие резервные серверы, разделённые запятой"
         },
         "hosts": {
           "label": "Hosts",

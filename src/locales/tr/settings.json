@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS Ayarları",
-        "fallbackFilter": "Yedek Filtre Ayarları",
         "hosts": "Hosts Ayarları"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "İsim Sunucusu",
           "description": "DNS sunucuları listesi, virgülle ayrılmış"
         },
-        "fallback": {
-          "label": "Yedek",
-          "description": "Yedek DNS sunucuları listesi, virgülle ayrılmış"
-        },
         "proxy": {
           "label": "Vekil Sunucusu İsim Sunucusu",
           "description": "Vekil düğümü alan adı çözümlemesi için DNS sunucuları"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "İsim Sunucusu Politikası",
           "description": "Alana özgü DNS sunucusu, birden çok sunucu noktalı virgülle ayrılır, format: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP Filtreleme",
-          "description": "Yedek için GeoIP filtrelemeyi etkinleştir"
-        },
-        "geoipCode": "GeoIP Kodu",
-        "fallbackIpCidr": {
-          "label": "Yedek IP CIDR",
-          "description": "Yedek sunucuları kullanmayan IP CIDR'ları, virgülle ayrılmış"
-        },
-        "fallbackDomain": {
-          "label": "Yedek Alan Adı",
-          "description": "Yedek sunucuları kullanan alan adları, virgülle ayrılmış"
         },
         "hosts": {
           "label": "Hosts",

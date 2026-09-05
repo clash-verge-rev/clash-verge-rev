@@ -512,7 +512,6 @@
       },
       "sections": {
         "general": "DNS 设置",
-        "fallbackFilter": "回退过滤设置",
         "hosts": "Hosts 设置"
       },
       "fields": {
@@ -554,10 +553,6 @@
           "label": "域名服务器",
           "description": "DNS 服务器列表，用逗号分隔"
         },
-        "fallback": {
-          "label": "回退服务器",
-          "description": "回退 DNS 服务器列表，用逗号分隔"
-        },
         "proxy": {
           "label": "代理节点DNS",
           "description": "代理节点域名解析服务器，仅用于解析代理节点的域名，用逗号分隔"
@@ -573,19 +568,6 @@
         "nameserverPolicy": {
           "label": "域名服务器策略",
           "description": "特定域名的 DNS 服务器，多个服务器使用分号分隔，格式: domain=server1;server2"
-        },
-        "geoipFiltering": {
-          "label": "GeoIP 过滤",
-          "description": "启用 GeoIP 回退过滤"
-        },
-        "geoipCode": "GeoIP 国家代码",
-        "fallbackIpCidr": {
-          "label": "回退 IP CIDR",
-          "description": "不使用回退服务器的 IP CIDR，用逗号分隔"
-        },
-        "fallbackDomain": {
-          "label": "回退域名",
-          "description": "使用回退服务器的域名，用逗号分隔"
         },
         "hosts": {
           "label": "Hosts",

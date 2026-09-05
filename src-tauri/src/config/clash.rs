@@ -405,16 +405,5 @@ pub struct IClashDNS {
     pub use_hosts: Option<bool>,
     pub fake_ip_filter: Option<Vec<String>>,
     pub nameserver: Option<Vec<String>>,
-    pub fallback: Option<Vec<String>>,
-    pub fallback_filter: Option<IClashFallbackFilter>,
     pub nameserver_policy: Option<Vec<String>>,
-}
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub struct IClashFallbackFilter {
-    pub geoip: Option<bool>,
-    pub geoip_code: Option<String>,
-    pub ipcidr: Option<Vec<String>>,
-    pub domain: Option<Vec<String>>,
 }
