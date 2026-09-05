@@ -40,7 +40,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -174,7 +174,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -272,7 +272,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
 
@@ -416,7 +416,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
 
@@ -520,7 +520,7 @@ jobs:
         with:
           node-version: '24.20.0'
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
