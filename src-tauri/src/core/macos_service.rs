@@ -59,9 +59,11 @@ impl Daemon {
         // SAFETY: objc2 按 NSError** 约定接收并保留错误；系统负责验证代码签名。
         let result: Result<(), Retained<NSError>> = unsafe { msg_send![&*self.0, registerAndReturnError: _] };
         if let Err(error) = result {
-            // SDK 中 kSMErrorLaunchDeniedByUser 为 11；签名等其他错误必须向用户报告。
-            if error.code() != 11 || self.status()? != Status::RequiresApproval {
-                bail!("注册 macOS 后台服务失败：{error}");
+            // 新版系统也会用 SMAppServiceErrorDomain / EPERM 表示等待批准；必须同时核实状态。
+            let approval_denied =
+                error.code() == 11 || (error.code() == 1 && error.domain().to_string() == "SMAppServiceErrorDomain");
+            if !approval_denied || self.status()? != Status::RequiresApproval {
+                bail!("注册 macOS 后台服务失败：{error:?}");
             }
         }
         std::fs::write(receipt_path()?, bundle_fingerprint()?).context("无法记录 macOS 服务注册版本")?;
@@ -69,13 +71,14 @@ impl Daemon {
     }
 
     pub(super) fn unregister(&self) -> Result<()> {
-        if self.status()? == Status::NotRegistered {
+        // 首次注册前系统也可能返回 NotFound，此时没有可注销的记录。
+        if matches!(self.status()?, Status::NotRegistered | Status::NotFound) {
             return Ok(());
         }
         let (sender, receiver) = mpsc::channel();
         let completion = RcBlock::new(move |error: *mut NSError| {
             // SAFETY: NSError 由框架在回调期间持有，只把错误文本传出回调。
-            let error = unsafe { error.as_ref() }.map(ToString::to_string);
+            let error = unsafe { error.as_ref() }.map(|error| format!("{error:?}"));
             let _ = sender.send(error);
         });
         // SAFETY: 方法会复制 block，回调在进程终止后执行；捕获的数据可跨线程传递。
@@ -140,7 +143,22 @@ pub(crate) fn open_settings() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::PLIST_NAME;
+    use super::{Daemon, PLIST_NAME, Status};
+    use objc2::{msg_send, runtime::AnyClass};
+    use objc2_foundation::NSString;
+
+    #[test]
+    fn unregistering_an_absent_native_daemon_is_a_noop() -> anyhow::Result<()> {
+        let Some(class) = AnyClass::get(c"SMAppService") else {
+            return Ok(());
+        };
+        let plist = NSString::from_str("io.github.clash-verge-rev.missing-test-daemon.plist");
+        // SAFETY: 只查询不存在的测试任务，不注册服务或改变本机批准状态。
+        let daemon = Daemon(unsafe { msg_send![class, daemonServiceWithPlistName: &*plist] });
+        assert!(matches!(daemon.status()?, Status::NotRegistered | Status::NotFound));
+
+        daemon.unregister()
+    }
 
     #[test]
     fn native_job_does_not_inherit_legacy_uninstaller_disable_override() {
