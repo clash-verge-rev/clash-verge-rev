@@ -18,7 +18,6 @@ use crate::{
     utils::{init, server, window_manager::WindowManager},
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use clash_verge_signal;
 
 pub mod dns;
 mod scheme;
@@ -181,11 +180,6 @@ async fn init_silent_updater() {
     });
 
     logging!(info, Type::Setup, "Silent updater initialized");
-}
-
-pub(crate) fn init_signal() {
-    logging!(info, Type::Setup, "Initializing signal handlers...");
-    clash_verge_signal::register(feat::quit);
 }
 
 async fn init_work_config() {

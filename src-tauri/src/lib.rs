@@ -312,7 +312,6 @@ pub fn run() -> std::process::ExitCode {
             if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 resolve::resolve_setup_async();
                 resolve::resolve_setup_sync();
-                resolve::init_signal();
                 logging!(info, Type::Setup, "初始化已启动");
             })) {
                 log_setup_panic("window-core", panic);
