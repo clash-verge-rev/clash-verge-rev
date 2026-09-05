@@ -624,6 +624,15 @@ async function resolveServiceBundle() {
       log_success(`Extracted service file: ${targetFile}`)
     }
 
+    if (platform === 'darwin') {
+      // externalBin 会参与 Tauri 的可执行文件签名；资源副本保留给旧系统安装器。
+      await fsp.mkdir(SIDECAR_DIR, { recursive: true })
+      await fsp.copyFile(
+        path.join(SERVICE_DIR, 'clash-verge-service'),
+        path.join(SIDECAR_DIR, `clash-verge-service-${SIDECAR_HOST}`),
+      )
+    }
+
     log_success(`service bundle finished: ${archiveFile}`)
   } finally {
     await fsp.rm(tempDir, { recursive: true, force: true })

@@ -1111,6 +1111,7 @@ dependencies = [
  "backon",
  "base64 0.23.1",
  "bitflags 2.13.1",
+ "block2",
  "boa_engine",
  "bytes",
  "chrono",

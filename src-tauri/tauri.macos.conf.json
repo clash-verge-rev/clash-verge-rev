@@ -4,7 +4,15 @@
   "productName": "Clash Verge",
   "bundle": {
     "targets": ["app", "dmg"],
+    "externalBin": [
+      "sidecar/verge-mihomo",
+      "sidecar/verge-mihomo-alpha",
+      "sidecar/clash-verge-service"
+    ],
     "macOS": {
+      "files": {
+        "Library/LaunchDaemons/io.github.clash-verge-rev.clash-verge-rev.daemon.plist": "packages/macos/io.github.clash-verge-rev.clash-verge-rev.daemon.plist"
+      },
       "frameworks": [],
       "minimumSystemVersion": "11.0",
       "exceptionDomain": "",

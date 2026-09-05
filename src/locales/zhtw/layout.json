@@ -21,6 +21,11 @@
       }
     },
     "serviceMigration": {
+      "approvalTitle": "Allow the background service",
+      "approvalMessage": "Allow Clash Verge in System Settings → General → Login Items. macOS manages administrator authentication. Return here after approving to continue.",
+      "openSettings": "Open System Settings",
+      "resume": "Continue",
+      "resumeMessage": "The service is ready. Continue to start the core through it.",
       "title": "需要更新系統服務",
       "message": "偵測到舊版 Clash Verge 系統服務。重新安裝後可使用目前的安全 IPC 協定，也可以僅在本次工作階段繼續使用 Sidecar。",
       "checkingMessage": "正在確認系統服務狀態及目前執行模式，請稍候……",

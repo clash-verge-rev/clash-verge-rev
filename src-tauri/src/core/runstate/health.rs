@@ -9,6 +9,7 @@ pub enum ServiceHealth {
     Unknown,
     Ready,
     NotInstalled,
+    ApprovalRequired,
     VersionMismatch,
     Unavailable(String),
 }
@@ -19,6 +20,7 @@ impl ServiceHealth {
             Self::Unknown => "unknown",
             Self::Ready => "ready",
             Self::NotInstalled => "notInstalled",
+            Self::ApprovalRequired => "approvalRequired",
             Self::VersionMismatch => "versionMismatch",
             Self::Unavailable(_) => "unavailable",
         }
@@ -82,7 +84,7 @@ impl RunState {
         }
         matches!(
             self.health,
-            ServiceHealth::VersionMismatch | ServiceHealth::Unavailable(_)
+            ServiceHealth::ApprovalRequired | ServiceHealth::VersionMismatch | ServiceHealth::Unavailable(_)
         )
     }
 

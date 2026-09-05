@@ -6,6 +6,11 @@ use crate::core::{
 /// Returns one coherent core/service snapshot instead of independently refreshed state.
 #[tauri::command]
 pub async fn get_runtime_state() -> Result<RunStateView, String> {
+    #[cfg(target_os = "macos")]
+    RUN_STATE
+        .refresh_service_approval()
+        .await
+        .map_err(|error| error.to_string())?;
     Ok(RUN_STATE.settled().await.to_view())
 }
 

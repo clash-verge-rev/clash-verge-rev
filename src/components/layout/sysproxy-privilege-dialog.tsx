@@ -3,10 +3,11 @@ import { useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { useDialogFailure } from '@/pages/_layout/hooks'
+import { useSystemState } from '@/hooks/use-system-state'
 import {
   getRuntimeState,
   installService,
+  openServiceSettings,
   patchVergeConfig,
   restartCore,
   type FailedOperation,
@@ -70,9 +71,15 @@ const STEP_MESSAGE = {
 } as const
 
 /** Guide recovery from a refused system-proxy write. */
-export const SysproxyPrivilegeDialog = () => {
+export const SysproxyPrivilegeDialog = ({
+  failure,
+  dismiss,
+}: {
+  failure: PendingFailure | null
+  dismiss: () => void
+}) => {
   const { t } = useTranslation()
-  const { failure, dismiss } = useDialogFailure()
+  const { runState, mutateSystemState } = useSystemState()
   const asked = useSyncExternalStore(subscribeServiceRequest, getServiceRequest)
   const [step, setStep] = useState<Step>('idle')
   const loading = step !== 'idle'
@@ -83,6 +90,7 @@ export const SysproxyPrivilegeDialog = () => {
   const reason = request?.reason ?? 'sysproxyRefused'
   const remedy = remedyFor(reason)
   const restoring = request?.restore
+  const approvalRequired = runState.service === 'approvalRequired'
 
   const close = () => {
     clearServiceRequest()
@@ -91,9 +99,19 @@ export const SysproxyPrivilegeDialog = () => {
 
   const handleFix = async () => {
     try {
-      if (remedy === 'installAndRestart') {
+      const before = await getRuntimeState()
+      if (before.service === 'approvalRequired' && !before.sidecarAllowed) {
+        await openServiceSettings()
+        return
+      }
+      if (
+        remedy === 'installAndRestart' &&
+        (!before.serviceUsable || before.sidecarAllowed)
+      ) {
         setStep('installing')
         await installService()
+        await mutateSystemState()
+        if ((await getRuntimeState()).service === 'approvalRequired') return
       }
       setStep('restarting')
       await restartCore()
@@ -127,11 +145,17 @@ export const SysproxyPrivilegeDialog = () => {
   return (
     <BaseDialog
       open={Boolean(request)}
-      title={t(TITLE[reason])}
+      title={t(
+        approvalRequired
+          ? 'layout.components.serviceMigration.approvalTitle'
+          : TITLE[reason],
+      )}
       okBtn={t(
-        remedy === 'installAndRestart'
-          ? 'settings.sections.proxyControl.actions.installService'
-          : 'settings.sections.proxyControl.actions.switchToServiceMode',
+        approvalRequired
+          ? 'layout.components.serviceMigration.openSettings'
+          : remedy === 'installAndRestart' && !runState.serviceUsable
+            ? 'settings.sections.proxyControl.actions.installService'
+            : 'settings.sections.proxyControl.actions.switchToServiceMode',
       )}
       cancelBtn={t('layout.components.sysproxyPrivilege.later')}
       // Keep the primary spinner visible; only cancellation is unavailable.
@@ -142,7 +166,13 @@ export const SysproxyPrivilegeDialog = () => {
       onClose={close}
     >
       <Alert severity={loading ? 'info' : 'warning'} sx={{ mb: 1.5 }}>
-        {t(step !== 'idle' ? STEP_MESSAGE[step] : EXPLANATION[reason])}
+        {t(
+          step !== 'idle'
+            ? STEP_MESSAGE[step]
+            : approvalRequired
+              ? 'layout.components.serviceMigration.approvalMessage'
+              : EXPLANATION[reason],
+        )}
       </Alert>
       {loading && <LinearProgress />}
       {!loading && reason === 'sysproxyRefused' && (
