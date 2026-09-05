@@ -409,6 +409,7 @@
         "appLogMaxCount": "Максимальное количество файлов журнала",
         "autoCloseConnections": "Автоматическое закрытие соединений",
         "autoCheckUpdate": "Автоматическая проверка обновлений",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Включить встроенные улучшения",
         "proxyLayoutColumns": "Количество столбцов в макете прокси",
         "autoLogClean": "Автоматическая очистка логов",

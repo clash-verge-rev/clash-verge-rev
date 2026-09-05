@@ -637,6 +637,7 @@ export const translationKeys = [
   'settings.modals.misc.fields.appLogMaxCount',
   'settings.modals.misc.fields.autoCloseConnections',
   'settings.modals.misc.fields.autoCheckUpdate',
+  'settings.modals.misc.fields.updateChannel',
   'settings.modals.misc.fields.enableBuiltinEnhanced',
   'settings.modals.misc.fields.proxyLayoutColumns',
   'settings.modals.misc.fields.autoLogClean',

@@ -3,12 +3,14 @@ use anyhow::Result;
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tauri_plugin_updater::{Update, UpdaterExt as _};
+use tauri::Url;
+use tauri_plugin_updater::{Update, Updater, UpdaterExt as _};
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
@@ -93,106 +95,22 @@ impl SilentUpdater {
     }
 }
 
-/// Compares numeric version components after stripping `v` and prerelease suffixes.
-fn version_lte(a: &str, b: &str) -> bool {
-    let parse = |v: &str| -> Vec<u64> {
-        v.trim_start_matches('v')
-            .split('.')
-            .filter_map(|part| {
-                let numeric = part.split('-').next().unwrap_or("0");
-                numeric.parse::<u64>().ok()
-            })
-            .collect()
-    };
-
-    let a_parts = parse(a);
-    let b_parts = parse(b);
-    let len = a_parts.len().max(b_parts.len());
-
-    for i in 0..len {
-        let av = a_parts.get(i).copied().unwrap_or(0);
-        let bv = b_parts.get(i).copied().unwrap_or(0);
-        if av < bv {
-            return true;
-        }
-        if av > bv {
-            return false;
-        }
-    }
-    true // equal
-}
-
-/// Maps UI language to one of the three NSIS translations, defaulting to English.
-#[cfg(target_os = "windows")]
-fn nsis_language_id(app_language: &str) -> &'static str {
-    match app_language {
-        "zh" | "zhtw" => "2052", // SimpChinese
-        "ru" => "1049",          // Russian
-        _ => "1033",             // English
-    }
-}
+// ─── Startup Install & Cache Management ─────────────────────────────────────
 
 impl SilentUpdater {
     /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
-        let current_version = env!("CARGO_PKG_VERSION");
-
         let meta = match Self::read_cache_meta() {
             Ok(meta) => meta,
             Err(_) => return false, // No cache, nothing to do
         };
 
-        let cached_version = &meta.version;
+        let current_version_str = env!("CARGO_PKG_VERSION");
+        let cached_version_str = &meta.version;
 
-        if version_lte(cached_version, current_version) {
-            logging!(
-                info,
-                Type::System,
-                "Update cache version ({}) <= current ({}), cleaning up",
-                cached_version,
-                current_version
-            );
-            Self::delete_cache();
-            return false;
-        }
-
-        logging!(
-            info,
-            Type::System,
-            "Update cache version ({}) > current ({}), asking user to install",
-            cached_version,
-            current_version
-        );
-
-        // Preserve the cache when skipped so the next launch asks again.
-        if !Self::ask_user_to_install(app_handle, cached_version).await {
-            logging!(info, Type::System, "User skipped update install, starting normally");
-            return false;
-        }
-
-        let bytes = match Self::read_cache_bytes() {
-            Ok(b) => b,
-            Err(e) => {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Failed to read cached update bytes: {e}, cleaning up"
-                );
-                Self::delete_cache();
-                return false;
-            }
-        };
-
-        // Refresh metadata without re-downloading. Windows receives `/LANG` to suppress the
-        // NSIS language dialog; see `packages/windows/installer.nsi`.
-        let updater_builder = app_handle.updater_builder();
-        #[cfg(target_os = "windows")]
-        let updater_builder = {
-            let verge_lang = Config::verge().await.latest_arc().language.clone();
-            let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
-            updater_builder.installer_arg(format!("/LANG={lang_id}"))
-        };
-        let update = match updater_builder.build() {
+        // Need a fresh Update object from the server to call install().
+        // This is a lightweight HTTP request (< 1s), not a re-download.
+        let update = match verge_updater(app_handle).await {
             Ok(updater) => match updater.check().await {
                 Ok(Some(u)) => u,
                 Ok(None) => {
@@ -223,23 +141,47 @@ impl SilentUpdater {
             }
         };
 
-        // A changed server version invalidates the cached bytes.
-        if update.version != *cached_version {
-            logging!(
-                info,
-                Type::System,
-                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
-                update.version,
-                cached_version
-            );
-            Self::delete_cache();
+        if !Self::need_install(current_version_str, cached_version_str, update.version.as_str()) {
             return false;
         }
 
-        let version = update.version.clone();
-        logging!(info, Type::System, "Installing cached update v{version} at startup...");
+        logging!(
+            info,
+            Type::System,
+            "Update cache version ({}) > current ({}), asking user to install",
+            cached_version_str,
+            current_version_str
+        );
 
-        Self::show_update_splash(app_handle, &version);
+        // Ask user for confirmation — they can skip and use the app normally.
+        // The cache is preserved so next launch will ask again.
+        if !Self::ask_user_to_install(app_handle, cached_version_str).await {
+            logging!(info, Type::System, "User skipped update install, starting normally");
+            return false;
+        }
+
+        // Read cached bytes
+        let bytes = match Self::read_cache_bytes() {
+            Ok(b) => b,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to read cached update bytes: {e}, cleaning up"
+                );
+                Self::delete_cache();
+                return false;
+            }
+        };
+
+        logging!(
+            info,
+            Type::System,
+            "Installing cached update v{cached_version_str} at startup..."
+        );
+
+        // Show splash window so user knows the app is updating, not frozen
+        Self::show_update_splash(app_handle, cached_version_str);
 
         // `install()` may hang (#2558); on Windows NSIS can take over without returning.
         let install_result = tokio::task::spawn_blocking({
@@ -250,7 +192,11 @@ impl SilentUpdater {
 
         let success = match tokio::time::timeout(std::time::Duration::from_secs(30), install_result).await {
             Ok(Ok(Ok(()))) => {
-                logging!(info, Type::System, "Update v{version} install triggered at startup");
+                logging!(
+                    info,
+                    Type::System,
+                    "Update v{cached_version_str} install triggered at startup"
+                );
                 Self::delete_cache();
                 true
             }
@@ -285,6 +231,60 @@ impl SilentUpdater {
         }
 
         success
+    }
+
+    fn need_install(current_version_str: &str, cached_version_str: &str, remote_version_str: &str) -> bool {
+        let current_version = match Version::parse(current_version_str) {
+            Ok(v) => v,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to parse current version ({current_version_str}): {e}"
+                );
+                return false;
+            }
+        };
+        let cached_version = match Version::parse(cached_version_str) {
+            Ok(v) => v,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to parse cached version ({cached_version_str}): {e}, cleaning up"
+                );
+                Self::delete_cache();
+                return false;
+            }
+        };
+
+        if cached_version <= current_version {
+            logging!(
+                info,
+                Type::System,
+                "Update cache version ({}) <= current ({}), cleaning up",
+                cached_version_str,
+                current_version_str
+            );
+            Self::delete_cache();
+            return false;
+        }
+
+        // Verify the server's version matches the cached version.
+        // If server now has a newer version, our cached bytes are stale.
+        if remote_version_str != cached_version_str {
+            logging!(
+                info,
+                Type::System,
+                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
+                remote_version_str,
+                cached_version_str
+            );
+            Self::delete_cache();
+            return false;
+        }
+
+        true
     }
 }
 
@@ -414,7 +414,7 @@ impl SilentUpdater {
 
         logging!(info, Type::System, "Silent updater: checking for updates...");
 
-        let updater = app_handle.updater()?;
+        let updater = verge_updater(app_handle).await?;
         let update = match updater.check().await {
             Ok(Some(update)) => update,
             Ok(None) => {
@@ -490,5 +490,92 @@ impl SilentUpdater {
 
             tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
         }
+    }
+}
+
+/// Map the app's resolved UI language code to an NSIS installer language ID.
+///
+/// The Windows installer only ships SimpChinese, English and Russian
+/// (`tauri.windows.conf.json` `nsis.languages`). Languages without a matching
+/// NSIS translation fall back to English; Traditional Chinese ("zhtw") is
+/// mapped to SimpChinese so Chinese users don't get an English installer.
+#[cfg(target_os = "windows")]
+fn nsis_language_id(app_language: &str) -> &'static str {
+    match app_language {
+        "zh" | "zhtw" => "2052", // SimpChinese
+        "ru" => "1049",          // Russian
+        _ => "1033",             // English
+    }
+}
+
+const STABLE_ENDPOINTS: [&str; 3] = [
+    "https://update.hwdns.net/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+    "https://gh-proxy.org/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+    "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json",
+];
+
+const AUTOBUILD_ENDPOINTS: [&str; 1] =
+    ["https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/latest.json"];
+
+pub async fn verge_updater(app_handle: &tauri::AppHandle) -> Result<Updater> {
+    let update_channel = Config::verge()
+        .await
+        .latest_arc()
+        .update_channel
+        .clone()
+        .unwrap_or_else(|| "stable".into());
+    let endpoint_strs = match update_channel.as_str() {
+        "autobuild" => Vec::from(AUTOBUILD_ENDPOINTS),
+        _ => Vec::from(STABLE_ENDPOINTS),
+    };
+    let mut endpoints = vec![];
+    for s in endpoint_strs {
+        endpoints.push(Url::parse(s)?);
+    }
+
+    #[cfg(target_os = "windows")]
+    let updater = {
+        let verge_lang = Config::verge().await.latest_arc().language.clone();
+        let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
+        app_handle
+            .updater_builder()
+            .installer_arg(format!("/LANG={lang_id}"))
+            .endpoints(endpoints)?
+            .build()?
+    };
+    #[cfg(not(target_os = "windows"))]
+    let updater = app_handle.updater_builder().endpoints(endpoints)?.build()?;
+    Ok(updater)
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    // ─── Cache metadata tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_cache_meta_serialize_roundtrip() {
+        let meta = UpdateCacheMeta {
+            version: "2.5.0".to_string(),
+            downloaded_at: "2026-03-31T00:00:00Z".to_string(),
+        };
+        let json = serde_json::to_string(&meta).unwrap();
+        let parsed: UpdateCacheMeta = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed.version, "2.5.0");
+        assert_eq!(parsed.downloaded_at, "2026-03-31T00:00:00Z");
+    }
+
+    #[test]
+    fn test_cache_meta_invalid_json() {
+        let result = serde_json::from_str::<UpdateCacheMeta>("not valid json");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_cache_meta_missing_required_field() {
+        let result = serde_json::from_str::<UpdateCacheMeta>(r#"{"version":"2.5.0"}"#);
+        assert!(result.is_err()); // missing downloaded_at
     }
 }

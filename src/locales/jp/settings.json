@@ -409,6 +409,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "接続を自動的に閉じる",
         "autoCheckUpdate": "自動更新チェック",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
         "proxyLayoutColumns": "プロキシページのレイアウト列数",
         "autoLogClean": "ログを自動的にクリーンアップ",

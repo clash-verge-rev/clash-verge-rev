@@ -409,6 +409,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Bağlantıları Otomatik Kapat",
         "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
         "proxyLayoutColumns": "Vekil Düzeni Sütunları",
         "autoLogClean": "Otomatik Günlük Temizleme",

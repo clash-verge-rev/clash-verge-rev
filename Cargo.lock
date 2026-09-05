@@ -1152,6 +1152,7 @@ dependencies = [
  "runas",
  "rustls",
  "scopeguard",
+ "semver 1.0.28",
  "serde",
  "serde_json",
  "serde_yaml_ng",
