@@ -1,5 +1,9 @@
-/* eslint-disable @eslint-react/set-state-in-effect */
-import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
+import {
+  Delete,
+  ExpandLess,
+  ExpandMore,
+  RestartAltRounded,
+} from '@mui/icons-material'
 import {
   Button,
   Divider,
@@ -11,10 +15,10 @@ import {
   TextField,
   Select,
   MenuItem,
+  Box,
 } from '@mui/material'
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -23,7 +27,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { useClash } from '@/hooks/use-clash'
+import { useClash, useClashConfigField } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
 import { probeListener, type ListenerTransport } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -92,6 +96,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     proxy: null,
   })
   const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([])
+  const tunnelsField = useClashConfigField('tunnels', [] as TunnelEntry[])
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -174,7 +179,14 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     options: proxyOptions,
   }
 
-  useEffect(() => {
+  const [prevSelectedGroupExists, setPrevSelectedGroupExists] =
+    useState(selectedGroupExists)
+  const [prevSelectedProxyOption, setPrevSelectedProxyOption] =
+    useState(selectedProxyOption)
+  if (
+    prevSelectedGroupExists !== selectedGroupExists ||
+    prevSelectedProxyOption !== selectedProxyOption
+  ) {
     if (selectedGroupExists && (!values.proxy || selectedProxyOption)) return
     setValues((current) => {
       if (current.group !== values.group || current.proxy !== values.proxy) {
@@ -184,7 +196,9 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         ? { ...current, proxy: null }
         : { ...current, group: '', proxy: null }
     })
-  }, [selectedGroupExists, selectedProxyOption, values.group, values.proxy])
+    setPrevSelectedGroupExists(selectedGroupExists)
+    setPrevSelectedProxyOption(selectedProxyOption)
+  }
 
   const handleSave = async () => {
     try {
@@ -306,7 +320,28 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t('settings.sections.clash.form.fields.tunnels.title')}
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {t('settings.sections.clash.form.fields.tunnels.title')}
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            startIcon={<RestartAltRounded />}
+            onClick={() => {
+              setDraftTunnels(tunnelsField.defaultValue)
+            }}
+          >
+            {t('shared.actions.resetToDefault')}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 450 }}
       okBtn={t('shared.actions.save')}
       cancelBtn={t('shared.actions.cancel')}

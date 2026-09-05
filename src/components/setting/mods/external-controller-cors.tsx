@@ -1,11 +1,11 @@
-import { Delete as DeleteIcon } from '@mui/icons-material'
+import { Delete as DeleteIcon, RestartAltRounded } from '@mui/icons-material'
 import { Box, Button, Divider, List, ListItem, TextField } from '@mui/material'
 import { useLockFn, useRequest } from 'ahooks'
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
-import { useClash } from '@/hooks/use-clash'
+import { useClash, useClashConfigField } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
@@ -73,6 +73,17 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const { t } = useTranslation()
     const { clash, mutateClash, patchClash } = useClash()
     const [open, setOpen] = useState(false)
+    const externalControllerCorsField = useClashConfigField(
+      'external-controller-cors',
+      {
+        'allow-private-network': true,
+        'allow-origins': [],
+      },
+    )
+    const {
+      'allow-private-network': defaultAllowPrivateNetwork,
+      'allow-origins': defaultAllowOrigins,
+    } = externalControllerCorsField.defaultValue
 
     const lastKeyRef = useRef(0) // 用于生成唯一的key
 
@@ -174,7 +185,36 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     return (
       <BaseDialog
         open={open}
-        title={t('settings.sections.externalCors.title')}
+        title={
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            {t('settings.sections.externalCors.title')}
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<RestartAltRounded />}
+              onClick={() => {
+                setCorsConfig({
+                  allowPrivateNetwork: defaultAllowPrivateNetwork,
+                  allowOrigins: filterBaseOriginsForUI(defaultAllowOrigins).map(
+                    (origin) => {
+                      lastKeyRef.current += 1
+                      return { key: lastKeyRef.current, value: origin }
+                    },
+                  ),
+                })
+              }}
+            >
+              {t('shared.actions.resetToDefault')}
+            </Button>
+          </Box>
+        }
         contentSx={{ width: 500 }}
         okBtn={loading ? t('shared.statuses.saving') : t('shared.actions.save')}
         cancelBtn={t('shared.actions.cancel')}

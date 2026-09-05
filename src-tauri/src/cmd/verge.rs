@@ -32,3 +32,9 @@ const fn system_proxy_operation(payload: &IVerge) -> Option<FailedOperation> {
         None => None,
     }
 }
+
+/// 获取默认Verge配置
+#[tauri::command]
+pub async fn get_default_verge_config() -> IVerge {
+    IVerge::template()
+}

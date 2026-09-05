@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
-import { useVerge } from '@/hooks/use-verge'
+import { useVergeConfigField } from '@/hooks/use-verge'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
@@ -17,9 +17,8 @@ interface Props {
 const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation()
 
-  const { verge, mutateVerge, patchVerge } = useVerge()
-
-  const { enable_auto_launch, enable_silent_start } = verge ?? {}
+  const autoLaunchField = useVergeConfigField('enable_auto_launch', false)
+  const silentStartField = useVergeConfigField('enable_silent_start', false)
 
   const sysproxyRef = useRef<DialogRef>(null)
   const tunRef = useRef<DialogRef>(null)
@@ -28,9 +27,6 @@ const SettingSystem = ({ onError }: Props) => {
     _e: React.ChangeEvent<HTMLInputElement>,
     value: boolean,
   ) => value
-  const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false)
-  }
 
   return (
     <SettingList title={t('settings.sections.system.title')}>
@@ -47,27 +43,17 @@ const SettingSystem = ({ onError }: Props) => {
         onError={onError}
       />
 
-      <SettingItem label={t('settings.sections.system.fields.autoLaunch')}>
+      <SettingItem
+        label={t('settings.sections.system.fields.autoLaunch')}
+        modified={autoLaunchField.modified}
+      >
         <GuardState
-          value={enable_auto_launch ?? false}
+          value={autoLaunchField.value}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => {
-            onChangeData({ enable_auto_launch: e })
-          }}
-          onGuard={async (e) => {
-            try {
-              // 先触发UI更新立即看到反馈
-              onChangeData({ enable_auto_launch: e })
-              await patchVerge({ enable_auto_launch: e })
-              return Promise.resolve()
-            } catch (error) {
-              // 如果出错，恢复原始状态
-              onChangeData({ enable_auto_launch: !e })
-              return Promise.reject(error)
-            }
-          }}
+          onChange={autoLaunchField.mutate}
+          onGuard={autoLaunchField.patch}
         >
           <Switch edge="end" />
         </GuardState>
@@ -81,14 +67,15 @@ const SettingSystem = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
+        modified={silentStartField.modified}
       >
         <GuardState
-          value={enable_silent_start ?? false}
+          value={silentStartField.value}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_silent_start: e })}
-          onGuard={(e) => patchVerge({ enable_silent_start: e })}
+          onChange={silentStartField.mutate}
+          onGuard={silentStartField.patch}
         >
           <Switch edge="end" />
         </GuardState>

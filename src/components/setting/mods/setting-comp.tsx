@@ -18,6 +18,7 @@ interface ItemProps {
   children?: ReactNode
   secondary?: ReactNode
   onClick?: () => void | Promise<any>
+  modified?: boolean
 }
 
 export const SettingItem: React.FC<ItemProps> = ({
@@ -26,12 +27,20 @@ export const SettingItem: React.FC<ItemProps> = ({
   children,
   secondary,
   onClick,
+  modified,
 }) => {
   const clickable = !!onClick
 
   const primary = (
     <Box sx={{ display: 'flex', alignItems: 'center', fontSize: '14px' }}>
-      <span>{label}</span>
+      <span>
+        {label}
+        <Box
+          sx={{ display: 'inline-block', minWidth: '10px', fontSize: '15px' }}
+        >
+          {modified && '*'}
+        </Box>
+      </span>
       {extra ? extra : null}
     </Box>
   )

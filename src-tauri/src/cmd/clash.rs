@@ -1,4 +1,5 @@
 use super::{CmdResult, CommandFailure, WithErrorCode as _, proxy_aware_coded_error, proxy_aware_error};
+use crate::config::IClashTemp;
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -235,4 +236,10 @@ pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
 pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
     let logs = CoreManager::global().get_clash_logs().await.unwrap_or_default();
     Ok(logs)
+}
+
+/// 获取默认Clash配置
+#[tauri::command]
+pub async fn get_default_clash_config() -> Mapping {
+    IClashTemp::default().0
 }
