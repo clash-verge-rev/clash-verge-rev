@@ -1091,6 +1091,7 @@ export interface TranslationResources {
             defaultLatencyTimeout: string
             enableBuiltinEnhanced: string
             proxyLayoutColumns: string
+            updateChannel: string
           }
           options: {
             autoLogClean: {

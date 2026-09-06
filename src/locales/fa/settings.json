@@ -409,6 +409,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "بستن خودکار اتصالات",
         "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
         "proxyLayoutColumns": "ستون چیدمان پراکسی",
         "autoLogClean": "پاکسازی خودکار لاگ",

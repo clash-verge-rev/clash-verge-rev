@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 
 import type { CommandFailure } from '@/services/notice-service'
@@ -490,4 +490,24 @@ export const probeListener = async (request: ListenerProbe) => {
 
 export const saveProxyPorts = async (settings: ProxyPortSettings) => {
   return invoke<SaveProxyPortsOutcome>('save_proxy_ports', { settings })
+}
+
+export async function checkUpdate() {
+  return invoke<UpdateInfo | null>('check_update')
+}
+
+export async function downloadAndInstallUpdate(
+  onChunk: (chunkLength: number, contentLength: number | null) => void,
+  onDownloadFinish: () => void,
+) {
+  const onChunkChannel = new Channel<[number, number | null]>(
+    ([chunkLength, contentLength]) => {
+      onChunk(chunkLength, contentLength)
+    },
+  )
+  const onDownloadFinishChannel = new Channel<void>(onDownloadFinish)
+  return invoke<void>('download_and_install_update', {
+    on_chunk: onChunkChannel,
+    on_download_finish: onDownloadFinishChannel,
+  })
 }

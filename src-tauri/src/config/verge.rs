@@ -111,6 +111,11 @@ pub struct IVerge {
 
     pub auto_check_update: Option<bool>,
 
+    /// 更新频道
+    /// "stable" | "autobuild"
+    pub update_channel: Option<String>,
+
+    /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
 
     pub default_latency_timeout: Option<i16>,
@@ -367,6 +372,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
+            update_channel: Some("stable".into()),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
@@ -462,6 +468,7 @@ impl IVerge {
 
         patch!(auto_close_connection);
         patch!(auto_check_update);
+        patch!(update_channel);
         patch!(default_latency_test);
         patch!(default_latency_timeout);
         patch!(enable_auto_delay_detection);

@@ -1,5 +1,4 @@
 import { alpha, Box, Button, LinearProgress } from '@mui/material'
-import type { DownloadEvent } from '@tauri-apps/plugin-updater'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import {
@@ -15,7 +14,7 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
-import { restartApp } from '@/services/cmds'
+import { restartApp, downloadAndInstallUpdate } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 import { openExternalUrl } from '@/utils/open-external-url'
@@ -245,32 +244,27 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     downloadedRef.current = 0
     totalRef.current = 0
 
-    const onDownloadEvent = (event: DownloadEvent) => {
-      if (event.event === 'Started') {
-        const contentLength = event.data.contentLength ?? 0
+    const onChunk = (chunkLength: number, contentLength: number | null) => {
+      if (contentLength != null) {
         totalRef.current = contentLength
         setTotal(contentLength)
-        setDownloaded(0)
-        downloadedRef.current = 0
-        return
       }
+      setDownloaded((prev) => {
+        const next = prev + chunkLength
+        downloadedRef.current = next
+        return next
+      })
+    }
 
-      if (event.event === 'Progress') {
-        setDownloaded((prev) => {
-          const next = prev + event.data.chunkLength
-          downloadedRef.current = next
-          return next
-        })
-      }
-
-      if (event.event === 'Finished' && totalRef.current === 0) {
+    const onDownloadFinish = () => {
+      if (totalRef.current === 0) {
         totalRef.current = downloadedRef.current
         setTotal(downloadedRef.current)
       }
     }
 
     try {
-      await updateInfo.downloadAndInstall(onDownloadEvent)
+      await downloadAndInstallUpdate(onChunk, onDownloadFinish)
       await restartApp()
     } catch (err: any) {
       showNotice.error(err)

@@ -409,6 +409,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "إغلاق الاتصالات تلقائيًا",
         "autoCheckUpdate": "فحص التحديث تلقائيًا",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "تفعيل التحسين المدمج",
         "proxyLayoutColumns": "أعمدة عرض الوكيل",
         "autoLogClean": "تنظيف السجلات تلقائيًا",
