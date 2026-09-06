@@ -1119,7 +1119,6 @@ dependencies = [
  "clash-verge-limiter",
  "clash-verge-logging",
  "clash-verge-media-unlock",
- "clash-verge-signal",
  "clash_verge_logger",
  "clash_verge_service_ipc",
  "compact_str",
@@ -1233,15 +1232,6 @@ dependencies = [
  "rust_iso3166",
  "serde",
  "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "clash-verge-signal"
-version = "0.1.0"
-dependencies = [
- "clash-verge-logging",
- "log",
  "tokio",
 ]
 
