@@ -56,7 +56,6 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
 
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
-                    logging!(info, Type::Core, "core changed and restarted to {clash_core}");
                     handle::Handle::notice_message("config_core::change_success", clash_core);
                     handle::Handle::refresh_clash();
                     Ok(None)
@@ -65,7 +64,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
                     let failed = err.context("core changed but failed to restart");
                     let error_msg: String = format!("{failed:#}").into();
                     handle::Handle::notice_message("config_core::change_error", error_msg.clone());
-                    logging!(error, Type::Core, "{error_msg}");
+                    logging!(error, Type::Core, "core changed but failed to restart: {error_msg}");
                     Ok(Some(proxy_aware_coded_error(&failed, "CORE_CHANGE_FAILED")))
                 }
             }
@@ -107,7 +106,7 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
     let result = match feat::test_delay(url).await {
         Ok(delay) => delay,
         Err(e) => {
-            logging!(error, Type::Cmd, "{}", e);
+            logging!(error, Type::Cmd, "get clash delay failed: {e:#}");
             10000u32
         }
     };
@@ -145,8 +144,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
             logging!(error, Type::Config, "Failed to parse DNS config: {e}");
         })?;
-
-        logging!(info, Type::Config, "Applying DNS config from file");
 
         let mut patch = serde_yaml_ng::Mapping::new();
         patch.insert("dns".into(), patch_config.into());

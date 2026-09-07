@@ -45,6 +45,7 @@ pub struct CoreUpgradeReport {
 pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let _serialized = UPGRADE_LOCK.lock().await;
     let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    tracing::Span::current().record("core", tracing::field::display(&core));
     let alpha = core.ends_with("-alpha");
     let target = managed_core_path(&core)?;
 
@@ -55,11 +56,10 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     });
 
     let (proxy, latest) = resolve_latest_version(alpha).await?;
-    logging!(
-        info,
-        Type::Core,
-        "core upgrade: {core} installed={installed:?} latest={latest:?} via {proxy:?}"
-    );
+    let span = tracing::Span::current();
+    span.record("from", tracing::field::display(&installed));
+    span.record("to", tracing::field::display(&latest));
+    logging!(debug, Type::Core, "core upgrade: latest version resolved via {proxy:?}");
 
     if !force && installed == latest {
         return Ok(CoreUpgradeReport {
@@ -111,7 +111,6 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     #[cfg(windows)]
     let _ = std::fs::remove_file(target.with_extension("old"));
 
-    logging!(info, Type::Core, "core upgrade: {core} now at {latest}");
     Ok(CoreUpgradeReport {
         upgraded: true,
         from: installed,
@@ -175,6 +174,7 @@ fn asset_base_name(alpha: bool) -> Result<&'static str> {
 }
 
 /// Returns the proxy that reached GitHub so the package download reuses it.
+#[tracing::instrument(skip_all, level = "debug", fields(alpha))]
 async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::String)> {
     let url = if alpha {
         format!("{ALPHA_BASE_URL}/version.txt")
@@ -193,13 +193,33 @@ async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::
                 // An error page answered with 200 must not become a version, nor reach the URL.
                 let version = response.text().trim().to_owned();
                 if !is_usable_version(&version) {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "core upgrade: {url} returned an unusable version: {version:?}"
+                    );
                     last_error = Some(anyhow!("{url} returned an unusable version"));
                     continue;
                 }
                 return Ok((proxy, version));
             }
-            Ok(response) => last_error = Some(anyhow!("{url} returned status {}", response.status())),
-            Err(error) => last_error = Some(error.context(format!("{proxy:?} could not reach {url}"))),
+            Ok(response) => {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "core upgrade: version probe via {proxy:?}: status {}",
+                    response.status()
+                );
+                last_error = Some(anyhow!("{url} returned status {}", response.status()));
+            }
+            Err(error) => {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "core upgrade: version probe via {proxy:?} failed: {error:#}"
+                );
+                last_error = Some(error.context(format!("{proxy:?} could not reach {url}")));
+            }
         }
     }
 

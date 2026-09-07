@@ -262,7 +262,7 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
             logging!(
                 warn,
                 Type::Service,
-                "Current user's service core is active but its mixed proxy port is unavailable: {error}; \
+                "Current user's service core is active but its mixed proxy port is unavailable: {error:#}; \
                  preserving the selected port until core replacement resolves ownership"
             );
             true

@@ -317,7 +317,6 @@ pub(super) async fn apply_verge_patch_locked(
     if !not_save_file {
         // 分离数据获取和异步调用
         let verge_data = verge.data_arc();
-        logging!(debug, Type::Setup, "Saving Verge configuration to file...");
         verge_data.save_file().await?;
     }
     Ok(())

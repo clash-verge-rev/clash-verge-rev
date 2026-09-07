@@ -329,7 +329,7 @@ impl PathBufExec for PathBuf {
     async fn remove_if_exists(&self) -> Result<()> {
         if self.exists() {
             tokio::fs::remove_file(self).await?;
-            logging!(info, Type::File, "Removed file: {:?}", self);
+            logging!(debug, Type::File, "Removed file: {:?}", self);
         }
         Ok(())
     }

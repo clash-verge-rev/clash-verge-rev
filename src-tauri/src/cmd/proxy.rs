@@ -87,10 +87,10 @@ async fn run_tray_sync_loop() {
     loop {
         match Tray::global().update_menu().await {
             Ok(_) => {
-                logging!(info, Type::Cmd, "Tray proxy selection synced successfully");
+                logging!(debug, Type::Cmd, "Tray proxy selection synced successfully");
             }
             Err(e) => {
-                logging!(error, Type::Cmd, "Failed to sync tray proxy selection: {e}");
+                logging!(error, Type::Cmd, "Failed to sync tray proxy selection: {e:#}");
             }
         }
 

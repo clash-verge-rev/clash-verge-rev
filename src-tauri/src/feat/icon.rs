@@ -157,13 +157,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
             previous_ico.remove_if_exists().await.unwrap_or_default();
         }
 
-        logging!(
-            info,
-            Type::Cmd,
-            "Copying icon file path: {:?} -> file dist: {:?}",
-            path,
-            dest_path
-        );
+        logging!(debug, Type::Cmd, "copying icon file: {path} -> {}", dest_path.display());
 
         match fs::copy(file_path, &dest_path).await {
             Ok(_) => Ok(dest_path.to_string_lossy().into()),

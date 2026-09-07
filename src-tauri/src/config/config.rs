@@ -144,16 +144,16 @@ impl Config {
                 .await?;
             return Ok(Some(("config_validate::boot_error", error_msg)));
         }
-        logging!(info, Type::Config, "生成运行时配置成功");
+        logging!(debug, Type::Config, "生成运行时配置成功");
 
         let config_result = Self::generate_file(ConfigType::Run).await;
 
         if config_result.is_ok() {
-            logging!(info, Type::Config, "开始验证配置");
+            logging!(debug, Type::Config, "开始验证配置");
 
             match CoreConfigValidator::global().validate_config_outcome().await {
                 Ok(outcome) if outcome.is_valid() => {
-                    logging!(info, Type::Config, "配置验证成功");
+                    logging!(debug, Type::Config, "配置验证成功");
                     Ok(None)
                 }
                 Ok(outcome) => {
@@ -170,7 +170,7 @@ impl Config {
                     Ok(Some(("config_validate::boot_error", error_msg)))
                 }
                 Err(err) => {
-                    logging!(warn, Type::Config, "验证过程执行失败: {}", err);
+                    logging!(warn, Type::Config, "验证过程执行失败: {err:#}");
                     CoreManager::global()
                         .use_default_config("config_validate::process_terminated", "")
                         .await?;
@@ -178,7 +178,8 @@ impl Config {
                 }
             }
         } else {
-            logging!(warn, Type::Config, "生成配置文件失败，使用默认配置");
+            let error_msg = config_result.err().map(|err| err.to_string()).unwrap_or_default();
+            logging!(warn, Type::Config, "生成配置文件失败，使用默认配置: {error_msg}");
             CoreManager::global()
                 .use_default_config("config_validate::error", "")
                 .await?;
@@ -250,13 +251,13 @@ impl Config {
         .retry(backoff)
         .await
         {
-            logging!(error, Type::Setup, "Config init verification failed: {}", e);
+            logging!(error, Type::Setup, "Config init verification failed: {e:#}");
         }
     }
 
     /// Commits drafts during exit/restart/shutdown so user changes are not lost.
     pub async fn apply_all_and_save_file() {
-        logging!(info, Type::Config, "save all draft data");
+        logging!(debug, Type::Config, "save all draft data");
         let save_clash_task = AsyncHandler::spawn(|| async {
             let clash = Self::clash().await;
             clash.apply();
