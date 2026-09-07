@@ -592,7 +592,7 @@ impl CoreManager {
     }
 
     async fn stop_core_unprepared_inner(&self) -> Result<()> {
-        CLASH_LOGGER.clear_logs().await;
+        CLASH_LOGGER.clear_logs();
         match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => {
@@ -603,6 +603,7 @@ impl CoreManager {
         }
     }
 
+    #[tracing::instrument(skip_all, level = "info")]
     pub async fn restart_core(&self) -> Result<()> {
         if !self.try_start_config_update() {
             anyhow::bail!("configuration update is already running");
@@ -633,6 +634,7 @@ impl CoreManager {
         .await
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(core = %clash_core))]
     pub async fn change_core(&self, clash_core: &String) -> Result<()> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
             anyhow::bail!("invalid clash core: {clash_core}");

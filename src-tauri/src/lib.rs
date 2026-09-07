@@ -470,6 +470,7 @@ pub fn run() -> std::process::ExitCode {
                 );
             }
             logging!(info, Type::System, "Application exited");
+            crate::core::logger::Logger::global().flush_logs();
         }),
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {

@@ -8,7 +8,7 @@ use crate::{
         CoreManager, Timer,
         handle::Handle,
         hotkey::Hotkey,
-        logger::Logger,
+        logger,
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
@@ -31,7 +31,7 @@ pub(crate) fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
         logging!(info, Type::Setup, "Initializing logger");
-        Logger::global().init().await?;
+        logger::init().await?;
         Ok(())
     })
 }

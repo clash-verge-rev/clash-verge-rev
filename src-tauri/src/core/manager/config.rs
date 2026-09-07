@@ -90,7 +90,7 @@ async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
     match crate::core::service::stage_runtime_by_service(path).await {
         Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
         Ok(StageRequest::Refused { code, message }) => {
-            let message = message.to_string().into();
+            let message = message.into();
             if StageRequest::is_about_the_bundle(code) {
                 StageAttempt::RefusedTheBundle(message)
             } else {
@@ -150,6 +150,7 @@ impl CoreManager {
         self.update_config_with_force(true).await
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(force))]
     pub async fn update_config_with_force(&self, force: bool) -> Result<ValidationOutcome> {
         if handle::Handle::global().is_exiting() {
             return Ok(ValidationOutcome::Skipped {

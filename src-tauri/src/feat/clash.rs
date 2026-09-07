@@ -111,6 +111,7 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
 /// Test delay to a URL through proxy.
 /// HTTPS: measures TLS handshake time. HTTP: measures HEAD round-trip time.
+#[tracing::instrument(skip_all, level = "info", fields(url = %url))]
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use std::sync::Arc;
     use std::time::Duration;

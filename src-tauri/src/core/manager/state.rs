@@ -10,7 +10,6 @@ use crate::{
 };
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
-use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
 use std::path::Path;
@@ -80,10 +79,10 @@ use {
 };
 
 impl CoreManager {
-    pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
+    pub async fn get_clash_logs(&self) -> Result<Vec<String>> {
         match *self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().await),
+            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs()),
             RunningMode::NotRunning => Ok(Vec::new()),
         }
     }
@@ -192,22 +191,22 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = CompactString::from(&*String::from_utf8_lossy(&line));
+                        let message = String::from_utf8_lossy(&line).into_owned();
                         Logger::global().writer_sidecar_log(Level::Error, &message);
-                        CLASH_LOGGER.append_log(message).await;
+                        CLASH_LOGGER.append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let manager = Self::global();
                         let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
-                            CompactString::from(format!("Process terminated with code: {}", code))
+                            format!("Process terminated with code: {}", code)
                         } else if let Some(signal) = term.signal {
-                            CompactString::from(format!("Process terminated by signal: {}", signal))
+                            format!("Process terminated by signal: {}", signal)
                         } else {
-                            CompactString::from("Process terminated")
+                            String::from("Process terminated")
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
-                        CLASH_LOGGER.clear_logs().await;
+                        CLASH_LOGGER.clear_logs();
                         manager.clear_terminated_sidecar(pid).await;
                         break;
                     }

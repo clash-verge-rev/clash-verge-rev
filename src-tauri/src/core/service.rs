@@ -23,7 +23,6 @@ use clash_verge_service_ipc::{
     MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, ServiceErrorCode, StageRuntimeOutcome,
     StartClashRequest, WriterConfig,
 };
-use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::{
@@ -818,7 +817,7 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
 
 /// A staging response whose refusal code tells callers whether a fresh start can help.
 pub(super) enum StageRequest {
-    Refused { code: u16, message: CompactString },
+    Refused { code: u16, message: String },
     Answered(StageRuntimeOutcome),
 }
 
@@ -841,7 +840,7 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
     if response.code > 0 {
         return Ok(StageRequest::Refused {
             code: response.code,
-            message: response.message.into(),
+            message: response.message,
         });
     }
     response
@@ -922,7 +921,7 @@ where
     (captured, operation().await)
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
+pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
     let credentials = current_owner_credentials()?;
@@ -942,7 +941,10 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
     }
 
     logging!(info, Type::Service, "成功获取服务模式下的 Clash 日志");
-    Ok(response.data.unwrap_or_default())
+    Ok(response
+        .data
+        .map(|logs| logs.into_iter().map(String::from).collect())
+        .unwrap_or_default())
 }
 
 pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {

@@ -11,7 +11,6 @@ use crate::{
     },
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use tokio::fs;
@@ -207,7 +206,7 @@ pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
 }
 
 #[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
+pub async fn get_clash_logs() -> CmdResult<Vec<std::string::String>> {
     let logs = CoreManager::global().get_clash_logs().await.unwrap_or_default();
     Ok(logs)
 }
