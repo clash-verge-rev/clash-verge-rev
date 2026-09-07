@@ -10,6 +10,12 @@ notifications:
     title: 系统代理
     'on': 系统代理已启用。
     'off': 系统代理已禁用。
+  systemProxyFailed:
+    title: 系统代理
+    body: 系统代理设置失败。打开 Clash Verge 查看原因。
+  systemProxyGuardStopped:
+    title: 系统代理守卫
+    body: 连续多次失败后已停止守卫。打开 Clash Verge 查看原因。
   tunModeToggled:
     title: TUN 模式
     'on': TUN 模式已开启。

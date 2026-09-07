@@ -202,6 +202,21 @@ class TrafficWorkerClient {
         ) => {
           const message = event.data
           if (message.type === 'snapshot') {
+            if (import.meta.env.MODE === 'perf') {
+              document.documentElement.dataset.perfWorker = String(
+                message.lastTimestamp ?? 0,
+              )
+              document.documentElement.dataset.perfPoints = String(
+                message.availableDataPoints.length,
+              )
+              const last = message.availableDataPoints.at(-1)
+              document.documentElement.dataset.perfLastUp = String(
+                last?.up ?? 0,
+              )
+              document.documentElement.dataset.perfLastDown = String(
+                last?.down ?? 0,
+              )
+            }
             this.listeners.forEach((listener) => {
               listener(message)
             })

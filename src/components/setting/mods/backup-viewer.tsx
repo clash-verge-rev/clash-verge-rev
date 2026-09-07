@@ -19,7 +19,7 @@ import {
   createWebdavBackup,
   importLocalBackup,
 } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
+import { errorDetail, showNotice } from '@/services/notice-service'
 import { buildWebdavSignature, setWebdavStatus } from '@/services/webdav-status'
 
 import { AutoBackupSettings } from './auto-backup-settings'
@@ -68,7 +68,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
         target === 'local'
           ? 'settings.modals.backup.messages.localBackupFailed'
           : 'settings.modals.backup.messages.backupFailed',
-        target === 'local' ? undefined : { error },
+        target === 'local' ? undefined : { error: errorDetail(error) },
       )
       if (target === 'webdav') {
         setWebdavStatus(webdavSignature, 'failed')
@@ -93,7 +93,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       console.error(error)
       showNotice.error(
         'settings.modals.backup.messages.localBackupImportFailed',
-        { error },
+        { error: errorDetail(error) },
       )
     } finally {
       setLocalImporting(false)

@@ -67,6 +67,15 @@ pub(crate) fn open_or_create_private_current_user_file(path: &Path) -> Result<st
     windows_owner::open_or_create_private_file(path)
 }
 
+/// Repairs an application data root Windows no longer reports as owned by the current user.
+///
+/// The Service authenticates by comparing this directory's owner SID against the caller's, so a
+/// root left behind by another account locks Service mode out for good.
+#[cfg(windows)]
+pub(crate) fn repair_app_data_root_owner(app_data_root: &Path) -> Result<()> {
+    windows_owner::repair_root_owner(app_data_root)
+}
+
 #[cfg(windows)]
 pub(crate) fn current_user_pipe_sddl() -> Result<String> {
     let sid = windows_owner::current_sid()?;
@@ -76,6 +85,7 @@ pub(crate) fn current_user_pipe_sddl() -> Result<String> {
 #[cfg(windows)]
 mod windows_owner {
     use anyhow::{Context as _, Result, bail};
+    use clash_verge_logging::{Type, logging};
     use clash_verge_service_ipc::OWNER_TOKEN_FILE_NAME;
     use std::ffi::c_void;
     use std::io::{Read as _, Write as _};
@@ -83,7 +93,8 @@ mod windows_owner {
     use std::os::windows::io::{AsRawHandle as _, FromRawHandle as _};
     use std::path::Path;
     use windows_sys::Win32::Foundation::{
-        CloseHandle, ERROR_FILE_EXISTS, GENERIC_READ, GENERIC_WRITE, GetLastError, INVALID_HANDLE_VALUE, LocalFree,
+        CloseHandle, ERROR_ACCESS_DENIED, ERROR_FILE_EXISTS, ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, GENERIC_READ,
+        GENERIC_WRITE, GetLastError, INVALID_HANDLE_VALUE, LocalFree,
     };
     use windows_sys::Win32::Security::Authorization::{
         ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo, SDDL_REVISION_1,
@@ -97,14 +108,20 @@ mod windows_owner {
     };
     use windows_sys::Win32::Storage::FileSystem::{
         BY_HANDLE_FILE_INFORMATION, CREATE_NEW, CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_DIRECTORY,
-        FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_OPEN_REPARSE_POINT,
-        FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TYPE_DISK, GetFileInformationByHandle, GetFileType,
-        OPEN_EXISTING, READ_CONTROL, WRITE_DAC,
+        FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS,
+        FILE_FLAG_OPEN_REPARSE_POINT, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TYPE_DISK,
+        GetFileInformationByHandle, GetFileType, OPEN_EXISTING, READ_CONTROL, WRITE_DAC, WRITE_OWNER,
     };
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
     const TOKEN_BYTES: usize = 32;
     const ACCESS_ALLOWED_ACE_TYPE: u8 = 0;
+    /// Reserved files that carry their own owner check and are recreated on demand.
+    const REGENERATED_FILES: [&str; 3] = [
+        OWNER_TOKEN_FILE_NAME,
+        crate::utils::server::INSTANCE_RECORD_FILE,
+        crate::utils::server::INSTANCE_LOCK_FILE,
+    ];
 
     pub(super) fn current_sid() -> Result<String> {
         let mut token = std::ptr::null_mut();
@@ -372,6 +389,227 @@ mod windows_owner {
         }
         drop(security);
         Ok(())
+    }
+
+    pub(super) fn repair_root_owner(root: &Path) -> Result<()> {
+        // The Service canonicalizes before checking, so resolve junctions to the same object.
+        let root = match std::fs::canonicalize(root) {
+            Ok(path) => path,
+            // Nothing to repair: this process creates the root and owns it by construction.
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+            Err(error) => return Err(error).context("failed to canonicalize the application data root"),
+        };
+        let root = root.as_path();
+
+        let sid = current_sid()?;
+        let descriptor = LocalSecurityDescriptor::from_sid(&sid)?;
+        let expected = descriptor.owner()?;
+
+        let directory = open_no_reparse(root, true, READ_CONTROL)?;
+        let owned = owner_matches(&directory, expected)?;
+        drop(directory);
+
+        if !owned {
+            logging!(
+                warn,
+                Type::Setup,
+                "应用数据目录 {root:?} 的所有者不是当前用户，尝试接管"
+            );
+            match take_directory_ownership(root, expected) {
+                Ok(()) => logging!(info, Type::Setup, "已接管应用数据目录所有权"),
+                // Only a refused takeover is worth moving the user's data over.
+                Err(error) if is_access_denied(&error) => {
+                    logging!(warn, Type::Setup, "接管所有权被拒绝，改为重建目录: {error:#}");
+                    rebuild_root(root, expected)?;
+                }
+                Err(error) => return Err(error),
+            }
+        }
+
+        // The Service and the singleton check compare these files' owner too.
+        drop_files_owned_by_others(root, expected)
+    }
+
+    /// Drops the reserved files an earlier account left behind, so they are recreated for this one.
+    fn drop_files_owned_by_others(root: &Path, expected: PSID) -> Result<()> {
+        for name in REGENERATED_FILES {
+            let path = root.join(name);
+            let ours = match open_no_reparse(&path, false, READ_CONTROL) {
+                Ok(file) => {
+                    let owned = owner_matches(&file, expected)?;
+                    drop(file);
+                    owned
+                }
+                Err(error)
+                    if is_os_error(&error, ERROR_FILE_NOT_FOUND) || is_os_error(&error, ERROR_PATH_NOT_FOUND) =>
+                {
+                    continue;
+                }
+                // A DACL that refuses even the owner read settles it just as well.
+                Err(_) => false,
+            };
+            if !ours {
+                std::fs::remove_file(&path).with_context(|| format!("failed to drop the stale {name}"))?;
+                logging!(info, Type::Setup, "已丢弃属于其它账户的 {name}");
+            }
+        }
+        Ok(())
+    }
+
+    fn is_access_denied(error: &anyhow::Error) -> bool {
+        is_os_error(error, ERROR_ACCESS_DENIED)
+    }
+
+    fn is_os_error(error: &anyhow::Error, code: u32) -> bool {
+        error
+            .downcast_ref::<std::io::Error>()
+            .and_then(std::io::Error::raw_os_error)
+            == Some(code as i32)
+    }
+
+    /// Rebuilds the root as a directory the current user owns, carrying the contents over.
+    ///
+    /// Nothing checks the children's owner, so they move as they are. Any failure puts the data
+    /// back: a half-moved root would read as a fresh install and be filled with defaults.
+    fn rebuild_root(root: &Path, expected: PSID) -> Result<()> {
+        let parent = root.parent().context("application data root has no parent")?;
+        let mut stale = root
+            .file_name()
+            .context("application data root has no name")?
+            .to_os_string();
+        stale.push(format!(".stale-{}", std::process::id()));
+        let stale = parent.join(stale);
+
+        std::fs::rename(root, &stale).context("failed to set the application data root aside")?;
+        if let Err(error) = std::fs::create_dir(root) {
+            // Something else took the name; it is not ours to walk into, so restore blind.
+            let _ = std::fs::rename(&stale, root);
+            return Err(error).context("failed to recreate the application data root");
+        }
+        if let Err(error) = repopulate_root(root, &stale, expected) {
+            // The root is the directory just created, so draining it follows no one else's link.
+            restore_root(root, &stale)?;
+            return Err(error);
+        }
+
+        // Only the reserved files remain behind.
+        if let Err(error) = std::fs::remove_dir_all(&stale) {
+            logging!(warn, Type::Setup, "旧数据目录 {stale:?} 未能清理: {error}");
+        }
+        logging!(info, Type::Setup, "已重建应用数据目录");
+        Ok(())
+    }
+
+    /// Fills the freshly created root from the one set aside, leaving the reserved files behind.
+    fn repopulate_root(root: &Path, stale: &Path, expected: PSID) -> Result<()> {
+        // An elevated process creates directories owned by Administrators — the state being repaired.
+        let directory = open_no_reparse(root, true, READ_CONTROL)?;
+        let owned = owner_matches(&directory, expected)?;
+        drop(directory);
+        if !owned {
+            take_directory_ownership(root, expected)?;
+        }
+
+        for entry in std::fs::read_dir(stale).context("failed to read the stale application data root")? {
+            let name = entry
+                .context("failed to read a stale application data root entry")?
+                .file_name();
+            if REGENERATED_FILES.iter().any(|regenerated| name == *regenerated) {
+                continue;
+            }
+            std::fs::rename(stale.join(&name), root.join(&name))
+                .with_context(|| format!("failed to move {name:?} into the recreated root"))?;
+        }
+        Ok(())
+    }
+
+    /// Drains a failed rebuild back into the set-aside root and restores it under the real name.
+    ///
+    /// Failure must be reported: data split across both names reads as a fresh install.
+    fn restore_root(root: &Path, stale: &Path) -> Result<()> {
+        for entry in std::fs::read_dir(root).context("failed to read the partially rebuilt root")? {
+            let name = entry
+                .context("failed to read a partially rebuilt root entry")?
+                .file_name();
+            std::fs::rename(root.join(&name), stale.join(&name))
+                .with_context(|| format!("failed to put {name:?} back"))?;
+        }
+        std::fs::remove_dir(root).context("failed to remove the partially rebuilt root")?;
+        std::fs::rename(stale, root).context("failed to restore the application data root")
+    }
+
+    fn take_directory_ownership(path: &Path, expected: PSID) -> Result<()> {
+        let directory = open_no_reparse(path, true, WRITE_OWNER)?;
+        let status = unsafe {
+            SetSecurityInfo(
+                directory.as_raw_handle(),
+                SE_FILE_OBJECT,
+                OWNER_SECURITY_INFORMATION,
+                expected,
+                std::ptr::null_mut(),
+                std::ptr::null(),
+                std::ptr::null(),
+            )
+        };
+        if status != 0 {
+            return Err(std::io::Error::from_raw_os_error(status as i32))
+                .context("failed to set the application data root owner");
+        }
+        Ok(())
+    }
+
+    fn owner_matches(directory: &std::fs::File, expected: PSID) -> Result<bool> {
+        let mut owner = std::ptr::null_mut();
+        let mut security = std::ptr::null_mut();
+        let status = unsafe {
+            GetSecurityInfo(
+                directory.as_raw_handle(),
+                SE_FILE_OBJECT,
+                OWNER_SECURITY_INFORMATION,
+                &mut owner,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut security,
+            )
+        };
+        if status != 0 || security.is_null() {
+            bail!("failed to inspect the application data root owner: Windows error {status}");
+        }
+        let security = LocalSecurityDescriptor(security);
+        let matches = !owner.is_null() && unsafe { EqualSid(owner, expected) } != 0;
+        drop(security);
+        Ok(matches)
+    }
+
+    fn open_no_reparse(path: &Path, directory: bool, access: u32) -> Result<std::fs::File> {
+        let wide = wide_path(path)?;
+        let handle = unsafe {
+            CreateFileW(
+                wide.as_ptr(),
+                access,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                std::ptr::null(),
+                OPEN_EXISTING,
+                FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+                std::ptr::null_mut(),
+            )
+        };
+        if handle == INVALID_HANDLE_VALUE {
+            return Err(std::io::Error::last_os_error()).with_context(|| format!("failed to open {path:?}"));
+        }
+        let file = unsafe { std::fs::File::from_raw_handle(handle) };
+
+        let mut information = BY_HANDLE_FILE_INFORMATION::default();
+        if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
+            return Err(std::io::Error::last_os_error()).with_context(|| format!("failed to inspect {path:?}"));
+        }
+        if information.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT != 0
+            || (information.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY != 0) != directory
+        {
+            bail!("{path:?} is not the kind of object the owner repair expects");
+        }
+        Ok(file)
     }
 
     fn sid_to_string(sid: PSID) -> Result<String> {

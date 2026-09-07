@@ -373,11 +373,3 @@ pub async fn set_auto_launch(is_enable: bool, is_admin: bool) -> Result<()> {
 
     Ok(())
 }
-
-pub fn is_auto_launch_enabled() -> Result<bool> {
-    if is_task_enabled(TaskMode::Admin)? {
-        return Ok(true);
-    }
-
-    is_task_enabled(TaskMode::User)
-}

@@ -135,6 +135,9 @@
         "uidMissing": "Die Abonnement-Kennung fehlt",
         "saveFailed": "Abonnement konnte nicht gespeichert werden"
       },
+      "warnings": {
+        "frequentUpdate": "Ein kurzes Intervall lädt den Kern entsprechend häufig neu und trennt bestehende Verbindungen. Empfohlen werden {{minutes}} Minuten (24 Stunden)."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Erstellung des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",

@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::cmd::StringifyErr as _;
-use crate::core::sysopt::Sysopt;
+use crate::core::{proxy_control, sysopt::Sysopt};
 use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
@@ -8,13 +8,16 @@ use serde_yaml_ng::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
 
-/// get the system proxy
 #[tauri::command]
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     logging!(debug, Type::Network, "异步获取系统代理配置");
 
     Sysopt::global().wait_idle().await;
-    let sys_proxy = Sysproxy::get_system_proxy().stringify_err()?;
+    // With no network service there is no proxy configured anywhere, which reads as disabled.
+    let sys_proxy = match Sysproxy::get_system_proxy() {
+        Err(error) if proxy_control::is_missing_network_service(&error) => Sysproxy::default(),
+        other => other.stringify_err()?,
+    };
     let Sysproxy {
         ref host,
         ref bypass,
@@ -38,11 +41,13 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
-/// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
     Sysopt::global().wait_idle().await;
-    let auto_proxy = Autoproxy::get_auto_proxy().stringify_err()?;
+    let auto_proxy = match Autoproxy::get_auto_proxy() {
+        Err(error) if proxy_control::is_missing_network_service(&error) => Autoproxy::default(),
+        other => other.stringify_err()?,
+    };
     let Autoproxy { ref enable, ref url } = auto_proxy;
 
     let mut map = Mapping::new();
@@ -64,28 +69,22 @@ pub fn get_embedded_server_port() -> CmdResult<u16> {
     crate::utils::server::embedded_server_port().stringify_err()
 }
 
-/// 获取系统主机名
 #[tauri::command]
 pub fn get_system_hostname() -> String {
-    // 获取系统主机名，处理可能的非UTF-8字符
     match gethostname().into_string() {
         Ok(name) => name,
         Err(os_string) => {
-            // 对于包含非UTF-8的主机名，使用调试格式化
             let fallback = format!("{os_string:?}");
-            // 去掉可能存在的引号
             fallback.trim_matches('"').to_string()
         }
     }
 }
 
-/// 获取网络接口列表
 #[tauri::command]
 pub fn get_network_interfaces() -> Vec<String> {
     tauri_plugin_clash_verge_sysinfo::list_network_interfaces()
 }
 
-/// 获取网络接口详细信息
 #[tauri::command]
 pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
     use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};

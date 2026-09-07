@@ -33,9 +33,15 @@ export const handleNoticeMessage = (
         'settings.sections.system.notifications.tunMode.autoDisableFailed',
       ),
     'app_restart::core_stop_failed': () =>
-      showNotice.error('layout.feedback.errors.restartCoreStopFailed'),
+      showNotice.error(
+        'layout.feedback.errors.restartCoreStopFailed',
+        msg || undefined,
+      ),
     'app_quit::core_stop_failed': () =>
-      showNotice.error('layout.feedback.errors.quitCoreStopFailed'),
+      showNotice.error(
+        'layout.feedback.errors.quitCoreStopFailed',
+        msg || undefined,
+      ),
     update_with_clash_proxy: () =>
       showNotice.success(
         'settings.feedback.notifications.updater.withClashProxySuccess',

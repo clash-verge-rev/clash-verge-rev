@@ -26,7 +26,6 @@ import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
-// 样式化组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
   display: 'inline-block',
   border: '1px solid #ccc',
@@ -39,7 +38,6 @@ const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
   lineHeight: 1.25,
 }))
 
-// 解析过期时间
 const parseExpire = (expire?: number) => {
   if (!expire) return '-'
   return dayjs(expire * 1000).format('YYYY-MM-DD')
@@ -54,15 +52,12 @@ export const ProviderButton = () => {
   const providers = proxyView?.providers ?? []
   const providerUnavailable = proxyView?.providerState === 'unavailable'
 
-  // 更新单个代理提供者
   const updateProvider = useLockFn(async (name: string) => {
     try {
-      // 设置更新状态
       setUpdating((prev) => ({ ...prev, [name]: true }))
 
       await updateProxyProvider(name)
 
-      // 刷新数据
       await refreshProxy()
 
       showNotice.success(
@@ -77,22 +72,18 @@ export const ProviderButton = () => {
         message: String(err),
       })
     } finally {
-      // 清除更新状态
       setUpdating((prev) => ({ ...prev, [name]: false }))
     }
   })
 
-  // 更新所有代理提供者
   const updateAllProviders = useLockFn(async () => {
     try {
-      // 获取所有provider的名称
       const allProviders = providers.map(({ name }) => name)
       if (allProviders.length === 0) {
         showNotice.info('proxies.feedback.notifications.provider.none')
         return
       }
 
-      // 设置所有provider为更新中状态
       const newUpdating = allProviders.reduce(
         (acc, key) => {
           acc[key] = true
@@ -102,19 +93,15 @@ export const ProviderButton = () => {
       )
       setUpdating(newUpdating)
 
-      // 改为串行逐个更新所有provider
       for (const name of allProviders) {
         try {
           await updateProxyProvider(name)
-          // 每个更新完成后更新状态
           setUpdating((prev) => ({ ...prev, [name]: false }))
         } catch (err) {
           console.error(`更新 ${name} 失败`, err)
-          // 继续执行下一个，不中断整体流程
         }
       }
 
-      // 刷新数据
       await refreshProxy()
 
       showNotice.success('proxies.feedback.notifications.provider.allUpdated')
@@ -123,7 +110,6 @@ export const ProviderButton = () => {
         message: String(err),
       })
     } finally {
-      // 清除所有更新状态
       setUpdating({})
     }
   })
@@ -190,7 +176,6 @@ export const ProviderButton = () => {
                 : null
               const isUpdating = updating[key]
 
-              // 订阅信息
               const sub = provider.subscriptionInfo
               const hasSubInfo = !!sub
               const upload = sub?.upload || 0
@@ -198,7 +183,6 @@ export const ProviderButton = () => {
               const total = sub?.total || 0
               const expire = sub?.expire || 0
 
-              // 流量使用进度
               const progress =
                 total > 0
                   ? Math.min(
@@ -272,7 +256,6 @@ export const ProviderButton = () => {
                     }
                     secondary={
                       <>
-                        {/* 订阅信息 */}
                         {hasSubInfo && (
                           <>
                             <Box
@@ -296,7 +279,6 @@ export const ProviderButton = () => {
                               </span>
                             </Box>
 
-                            {/* 进度条 */}
                             <LinearProgress
                               variant="determinate"
                               value={progress}

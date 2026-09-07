@@ -1,45 +1,14 @@
-use super::CmdResult;
 use crate::core::{
     handle,
-    validate::{CoreConfigValidator, ValidationErrorKind, ValidationOutcome},
+    validate::{ValidationErrorKind, ValidationOutcome},
 };
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ValidationNoticeTarget {
     Runtime,
     Merge,
     Script,
-}
-
-/// 发送脚本验证通知消息
-#[tauri::command]
-pub async fn script_validate_notice(status: String, msg: String) -> CmdResult {
-    handle::Handle::notice_message(status.as_str(), msg.as_str());
-    Ok(())
-}
-
-/// 验证指定脚本文件
-#[tauri::command]
-pub async fn validate_script_file(file_path: String) -> CmdResult<ValidationOutcome> {
-    logging!(info, Type::Config, "验证脚本文件: {}", file_path);
-
-    match CoreConfigValidator::validate_config_file_outcome(&file_path, None).await {
-        Ok(outcome) => {
-            handle_validation_notice(&outcome, ValidationNoticeTarget::Script, "脚本文件");
-            Ok(outcome)
-        }
-        Err(e) => {
-            let error_msg = e.to_string();
-            logging!(error, Type::Config, "验证脚本文件过程发生错误: {}", error_msg);
-            handle::Handle::notice_message("config_validate::process_terminated", &error_msg);
-            Ok(ValidationOutcome::invalid(
-                ValidationErrorKind::ProcessTerminated,
-                error_msg,
-            ))
-        }
-    }
 }
 
 const fn notice_key(kind: ValidationErrorKind, target: ValidationNoticeTarget) -> &'static str {

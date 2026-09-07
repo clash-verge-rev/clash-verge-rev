@@ -47,10 +47,6 @@ const computeDebugEnabled = (): boolean => {
 const isDebugLoggingEnabled = () =>
   cachedDebugEnabled ?? (cachedDebugEnabled = computeDebugEnabled())
 
-/**
- * Logs to the console only when debug logging is enabled.
- * Forwards all arguments to `console.log`; does nothing otherwise.
- */
 export const debugLog = (...args: any[]) => {
   if (!isDebugLoggingEnabled()) return
   console.log(...args)

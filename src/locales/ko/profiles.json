@@ -135,6 +135,9 @@
         "uidMissing": "프로필 식별자가 없습니다",
         "saveFailed": "프로필을 저장하지 못했습니다"
       },
+      "warnings": {
+        "frequentUpdate": "간격이 짧으면 코어가 그만큼 자주 다시 로드되어 기존 연결이 끊깁니다. {{minutes}}분(24시간)을 권장합니다."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "프로필 생성 실패, Clash 프록시로 다시 시도 중...",

@@ -16,49 +16,49 @@ use tokio::fs;
 use reqwest_dav::re_exports::url::form_urlencoded;
 use tauri::Url;
 
+pub(super) fn normalize_profile_home_url(raw: &str) -> Option<String> {
+    let url = Url::parse(raw.trim()).ok()?;
+
+    if !matches!(url.scheme(), "http" | "https") {
+        return None;
+    }
+
+    url.host_str()?;
+    Some(url.to_string().into())
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
     pub uid: Option<String>,
 
-    /// profile item type
     /// enum value: remote | local | script | merge
     #[serde(rename = "type")]
     pub itype: Option<String>,
 
-    /// profile name
     pub name: Option<String>,
 
-    /// profile file
     pub file: Option<String>,
 
-    /// profile description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub desc: Option<String>,
 
-    /// source url
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 
-    /// selected information
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<Vec<PrfSelected>>,
 
-    /// subscription user info
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra: Option<PrfExtra>,
 
-    /// updated time
     pub updated: Option<usize>,
 
-    /// some options of the item
     #[serde(skip_serializing_if = "Option::is_none")]
     pub option: Option<PrfOption>,
 
-    /// profile web page url
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
 
-    /// the file data
     #[serde(skip)]
     pub file_data: Option<String>,
 }
@@ -79,37 +79,27 @@ pub struct PrfExtra {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PrfOption {
-    /// for `remote` profile's http request
-    /// see issue #13
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_agent: Option<String>,
 
-    /// for `remote` profile
-    /// use system proxy
     #[serde(skip_serializing_if = "Option::is_none")]
     pub with_proxy: Option<bool>,
 
-    /// for `remote` profile
-    /// use self proxy
     #[serde(skip_serializing_if = "Option::is_none")]
     pub self_proxy: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub update_interval: Option<u64>,
 
-    /// for `remote` profile
     /// HTTP request timeout in seconds
     /// default is 60 seconds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout_seconds: Option<u64>,
 
-    /// for `remote` profile
-    /// disable certificate validation
     /// default is `false`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
 
-    #[serde(default = "default_allow_auto_update")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_auto_update: Option<bool>,
 
@@ -125,7 +115,7 @@ pub struct PrfOption {
 }
 
 impl PrfOption {
-    pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
+    pub(crate) fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
@@ -152,13 +142,8 @@ impl PrfOption {
 }
 
 impl PrfItem {
-    /// From partial item
-    /// must contain `itype`
-    pub async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
-        if item.itype.is_none() {
-            bail!("type should not be null");
-        }
-
+    /// Builds an item from a partial value that must include `itype`.
+    pub(super) async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
         let itype = item
             .itype
             .as_ref()
@@ -184,9 +169,7 @@ impl PrfItem {
         }
     }
 
-    /// ## Local type
-    /// create a new item from name/desc
-    pub async fn from_local(
+    async fn from_local(
         name: String,
         desc: String,
         file_data: Option<String>,
@@ -203,27 +186,27 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -251,9 +234,7 @@ impl PrfItem {
         })
     }
 
-    /// ## Remote type
-    /// create a new item from url
-    pub async fn from_url(
+    pub(crate) async fn from_url(
         url: &str,
         name: Option<&String>,
         desc: Option<&String>,
@@ -272,7 +253,6 @@ impl PrfItem {
         let mut proxies = option.and_then(|o| o.proxies.clone());
         let mut groups = option.and_then(|o| o.groups.clone());
 
-        // 选择代理类型
         let proxy_type = if self_proxy {
             ProxyType::Localhost
         } else if with_proxy {
@@ -283,9 +263,8 @@ impl PrfItem {
 
         let url = fix_dirty_url(url)?;
 
-        // 使用网络管理器发送请求
         let resp = match NetworkManager::new()
-            .get_with_interrupt(
+            .get(
                 url.as_str(),
                 proxy_type,
                 Some(timeout),
@@ -308,7 +287,6 @@ impl PrfItem {
 
         let header = resp.headers();
 
-        // parse the Subscription UserInfo
         let extra;
         'extra: {
             for (k, v) in header.iter() {
@@ -331,7 +309,6 @@ impl PrfItem {
             extra = None;
         }
 
-        // parse the Content-Disposition
         let filename = match header.get("Content-Disposition") {
             Some(value) => {
                 let filename = format!("{value:?}");
@@ -366,25 +343,20 @@ impl PrfItem {
             },
         };
 
-        let home = match header.get("profile-web-page-url") {
-            Some(value) => {
-                let str_value = value.to_str().unwrap_or("");
-                Some(str_value.into())
-            }
-            None => None,
-        };
+        let home = header
+            .get("profile-web-page-url")
+            .and_then(|value| value.to_str().ok())
+            .and_then(normalize_profile_home_url);
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text_with_charset()?;
+        let data = resp.text();
 
-        // process the charset "UTF-8 with BOM"
         let data = data.trim_start_matches('\u{feff}');
 
-        // check the data whether the valid yaml format
         let yaml = serde_yaml_ng::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
@@ -392,27 +364,27 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = &mut Self::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None);
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut Self::from_script(None)?;
+            let script_item = &mut Self::from_script(None);
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut Self::from_rules()?;
+            let rules_item = &mut Self::from_rules();
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut Self::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies();
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut Self::from_groups()?;
+            let groups_item = &mut Self::from_groups();
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
@@ -442,9 +414,7 @@ impl PrfItem {
         })
     }
 
-    /// ## Merge type (enhance)
-    /// create the enhanced item by using `merge` rule
-    pub fn from_merge(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_merge(uid: Option<String>) -> Self {
         let (id, template) = if let Some(uid) = uid {
             (uid, tmpl::ITEM_MERGE.into())
         } else {
@@ -452,82 +422,76 @@ impl PrfItem {
         };
         let file = format!("{id}.yaml").into();
 
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("merge".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(template),
             ..Default::default()
-        })
+        }
     }
 
-    /// ## Script type (enhance)
-    /// create the enhanced item by using javascript quick.js
-    pub fn from_script(uid: Option<String>) -> Result<Self> {
+    pub(super) fn from_script(uid: Option<String>) -> Self {
         let id = if let Some(uid) = uid {
             uid
         } else {
             help::get_uid("s").into()
         };
         let file = format!("{id}.js").into(); // js ext
-        Ok(Self {
+        Self {
             uid: Some(id),
             itype: Some("script".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
             ..Default::default()
-        })
+        }
     }
 
-    /// ## Rules type (enhance)
-    pub fn from_rules() -> Result<Self> {
+    fn from_rules() -> Self {
         let uid = help::get_uid("r").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("rules".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_RULES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    /// ## Proxies type (enhance)
-    pub fn from_proxies() -> Result<Self> {
+    fn from_proxies() -> Self {
         let uid = help::get_uid("p").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("proxies".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_PROXIES.into()),
             ..Default::default()
-        })
+        }
     }
 
-    /// ## Groups type (enhance)
-    pub fn from_groups() -> Result<Self> {
+    fn from_groups() -> Self {
         let uid = help::get_uid("g").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(Self {
+        Self {
             uid: Some(uid),
             itype: Some("groups".into()),
             file: Some(file),
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_GROUPS.into()),
             ..Default::default()
-        })
+        }
     }
 
-    /// get the file data
-    pub async fn read_file(&self) -> Result<String> {
+    pub(crate) async fn read_file(&self) -> Result<String> {
         let file = self
             .file
             .as_ref()
@@ -538,51 +502,28 @@ impl PrfItem {
             .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
         Ok(content.into())
     }
-
-    /// save the file data
-    pub async fn save_file(&self, data: String) -> Result<()> {
-        let file = self
-            .file
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
-        let path = dirs::app_profiles_dir()?.join(file.as_str());
-        fs::write(path, data.as_bytes())
-            .await
-            .context("failed to save the file")
-    }
 }
 
 impl PrfItem {
-    /// 获取current指向的订阅的merge
-    pub fn current_merge(&self) -> Option<&String> {
+    pub(crate) fn current_merge(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.merge.as_ref())
     }
 
-    /// 获取current指向的订阅的script
-    pub fn current_script(&self) -> Option<&String> {
+    pub(crate) fn current_script(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.script.as_ref())
     }
 
-    /// 获取current指向的订阅的rules
-    pub fn current_rules(&self) -> Option<&String> {
+    pub(crate) fn current_rules(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.rules.as_ref())
     }
 
-    /// 获取current指向的订阅的proxies
-    pub fn current_proxies(&self) -> Option<&String> {
+    pub(crate) fn current_proxies(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.proxies.as_ref())
     }
 
-    /// 获取current指向的订阅的groups
-    pub fn current_groups(&self) -> Option<&String> {
+    pub(crate) fn current_groups(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.groups.as_ref())
     }
-}
-
-// 向前兼容，默认为订阅启用自动更新
-#[allow(clippy::unnecessary_wraps)]
-const fn default_allow_auto_update() -> Option<bool> {
-    Some(true)
 }
 
 fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {
@@ -616,20 +557,4 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     }
 
     Ok(url)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{PrfOption, allow_auto_update_enabled};
-
-    #[test]
-    fn auto_update_defaults_to_enabled_and_preserves_explicit_false() {
-        assert!(allow_auto_update_enabled(None));
-
-        let disabled = PrfOption {
-            allow_auto_update: Some(false),
-            ..PrfOption::default()
-        };
-        assert!(!allow_auto_update_enabled(Some(&disabled)));
-    }
 }

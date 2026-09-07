@@ -1,20 +1,8 @@
-//! Deciding when the Service has stopped being ours.
-//!
-//! While the Core runs under the Service, the app polls the Service for owner status. Three
-//! things can go wrong — we cannot read a reply, the Service says someone else owns it, or it
-//! answers but describes a Core that is gone — and each needs a different response. This is
-//! the decision, separated from the polling and from the recovery it triggers.
-//!
-//! Recovery *actions* deliberately live with the Core lifecycle rather than here: this module
-//! decides that the Service can no longer be trusted, and `CoreManager` is what tears the Core
-//! down in response.
+//! Classifies service ownership samples; `CoreManager` performs any recovery it requests.
 
 use clash_verge_service_ipc::ServiceLifecycleState;
 
-/// How many consecutive bad samples we tolerate before acting.
-///
-/// Service restarts and slow status calls are normal; acting on the first one would tear down
-/// a working proxy for a blip.
+/// Tolerates transient service restarts and slow status calls.
 const SUSTAINED_SAMPLES: u8 = 3;
 
 /// Why the app stopped trusting the Service that was running its Core.
@@ -49,11 +37,7 @@ pub enum OwnerSample {
 pub enum OwnerStep {
     /// Nothing is wrong, or not wrong for long enough yet.
     Continue,
-    /// Unreadable for long enough that it might be real. Check whether the Core's own endpoint
-    /// still answers, then report back via [`OwnerWatch::resolve_transport`].
-    ///
-    /// A Service we cannot reach while the Core is still serving is a broken status channel,
-    /// not a lost Core — tearing down the proxy there would be the cure causing the disease.
+    /// Check the Core endpoint before treating a sustained status-channel failure as lost ownership.
     VerifyTransport,
     /// Stop trusting the Service and recover.
     Recover(OwnerRecoveryReason),
@@ -75,8 +59,7 @@ impl OwnerWatch {
         }
     }
 
-    /// Whether this sample warrants a log line: only the moment a run becomes sustained, so a
-    /// permanently broken Service does not fill the log at the poll interval.
+    /// True only when a failure first becomes sustained, to avoid repeated logs.
     #[must_use]
     pub const fn just_became_sustained(&self) -> bool {
         self.unreadable_samples == SUSTAINED_SAMPLES
@@ -120,10 +103,7 @@ impl OwnerWatch {
         }
     }
 
-    /// Report what the transport check found after [`OwnerStep::VerifyTransport`].
-    ///
-    /// If the Core's own endpoint still answers, only the status channel is broken: the run is
-    /// reset so the next stretch of silence has to earn its own verdict.
+    /// Resets the failure run when only the status channel is unavailable.
     pub const fn resolve_transport(&mut self, owner_endpoint_available: bool) -> OwnerStep {
         if owner_endpoint_available {
             self.unreadable_samples = 0;

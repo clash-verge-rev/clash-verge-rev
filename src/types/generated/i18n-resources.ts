@@ -231,6 +231,18 @@ export interface TranslationResources {
           title: string
           unavailableMessage: string
         }
+        sysproxyPrivilege: {
+          alternative: string
+          applying: string
+          installing: string
+          later: string
+          message: string
+          restarting: string
+          serviceReadyMessage: string
+          title: string
+          tunMessage: string
+          tunTitle: string
+        }
       }
       feedback: {
         errors: {
@@ -380,6 +392,9 @@ export interface TranslationResources {
           types: {
             local: string
             remote: string
+          }
+          warnings: {
+            frequentUpdate: string
           }
         }
         proxiesEditor: {
@@ -795,6 +810,14 @@ export interface TranslationResources {
             repairFailed: string
             sidecarFailed: string
             uninstallFailed: string
+          }
+          sysproxy: {
+            coreNotReady: string
+            directFallback: string
+            guardStopped: string
+            privilegeRequired: string
+            sidecarWhileServiceReady: string
+            systemCallFailed: string
           }
         }
         notifications: {
@@ -1297,11 +1320,17 @@ export interface TranslationResources {
         proxyControl: {
           actions: {
             installService: string
+            switchToServiceMode: string
             uninstallService: string
           }
           fields: {
             systemProxy: string
             tunMode: string
+          }
+          messages: {
+            installedCheckProxy: string
+            installedCoreNotOnService: string
+            installedProxyRestored: string
           }
           tooltips: {
             systemProxy: string

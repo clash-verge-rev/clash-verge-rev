@@ -1,0 +1,17 @@
+[package]
+name = "clash-verge-media-unlock"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clash-verge-logging = { workspace = true }
+chrono = { workspace = true }
+log = { workspace = true }
+reqwest = { workspace = true }
+rust_iso3166 = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+
+[lints]
+workspace = true

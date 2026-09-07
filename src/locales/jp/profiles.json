@@ -135,6 +135,9 @@
         "uidMissing": "プロファイル識別子がありません",
         "saveFailed": "プロファイルの保存に失敗しました"
       },
+      "warnings": {
+        "frequentUpdate": "間隔が短いとその頻度でコアが再読み込みされ、既存の接続が切断されます。{{minutes}} 分（24 時間）を推奨します。"
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",

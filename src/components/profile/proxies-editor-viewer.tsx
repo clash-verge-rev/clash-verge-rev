@@ -1,17 +1,12 @@
+import { arrayMove } from '@dnd-kit/helpers'
 import {
-  DndContext,
-  DragEndEvent,
+  DragDropProvider,
+  type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable'
+  type DragEndEvent,
+} from '@dnd-kit/react'
+import { isSortable, isSortableOperation } from '@dnd-kit/react/sortable'
 import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
@@ -40,14 +35,20 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseSearchBox, MonacoEditor, VirtualList } from '@/components/base'
+import {
+  BaseSearchBox,
+  MonacoEditor,
+  SortableItem,
+  VirtualList,
+} from '@/components/base'
 import { ProxyItem } from '@/components/profile/proxy-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
-import getSystem from '@/utils/get-system'
+import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 import parseUri from '@/utils/uri-parser'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   profileUid: string
@@ -56,6 +57,24 @@ interface Props {
   onClose: () => void
   onSave?: (prev?: string, curr?: string) => void
 }
+
+const findRealIndex = (
+  list: IProxyConfig[],
+  filtered: IProxyConfig[],
+  filteredIndex: number,
+): number => {
+  const item = filtered[filteredIndex]
+  if (!item) return -1
+  return list.findIndex((proxy) => proxy.name === item.name)
+}
+
+// 节点的 name 会被用作 sortable item id、React key 以及拖拽排序的
+// 依据。当 name 为空/null（例如高级模式下粘贴了缺少 name 的节点）时，
+// 无效 name 不能作为 sortable item id，否则会导致拖拽注册失败。
+// 这里统一过滤掉没有有效 name 的节点，避免可视化编辑页崩溃；原始 YAML
+// 数据仍然保留，用户可在高级(文本)模式中查看并修正这些节点。
+const hasValidName = (proxy: IProxyConfig) =>
+  typeof proxy?.name === 'string' && proxy.name.length > 0
 
 export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, property, open, onClose, onSave } = props
@@ -72,15 +91,8 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyConfig[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const hasLoadedSeqConfigRef = useRef(false)
 
-  // 节点的 name 会被用作 SortableContext 的 item id、React key 以及拖拽排序的
-  // 依据。当 name 为空/null（例如高级模式下粘贴了缺少 name 的节点）时，
-  // @dnd-kit 的 SortableContext 会对 null 执行 `'id' in item` 从而崩溃
-  // （Cannot use 'in' operator to search for 'id' in null）。
-  // 这里统一过滤掉没有有效 name 的节点，避免可视化编辑页崩溃；原始 YAML
-  // 数据仍然保留，用户可在高级(文本)模式中查看并修正这些节点。
-  const hasValidName = (proxy: IProxyConfig) =>
-    typeof proxy?.name === 'string' && proxy.name.length > 0
   const filteredPrependSeq = useMemo(
     () =>
       prependSeq.filter((proxy) => hasValidName(proxy) && match(proxy.name)),
@@ -99,20 +111,17 @@ export const ProxiesEditorViewer = (props: Props) => {
     const shift = filteredPrependSeq.length > 0 ? 1 : 0
     if (filteredPrependSeq.length > 0 && index === 0) {
       return (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onPrependDragEnd}
-        >
-          <SortableContext
-            items={filteredPrependSeq.map((x) => {
-              return x.name
-            })}
-          >
-            {filteredPrependSeq.map((item) => {
-              return (
+        <>
+          {filteredPrependSeq.map((item, itemIndex) => {
+            return (
+              <SortableItem
+                key={item.name}
+                id={`prepend:${item.name}`}
+                index={itemIndex}
+                group="prepend"
+                style={{ margin: '8px 0' }}
+              >
                 <ProxyItem
-                  key={item.name}
                   type="prepend"
                   proxy={item}
                   onDelete={() => {
@@ -121,109 +130,135 @@ export const ProxiesEditorViewer = (props: Props) => {
                     )
                   }}
                 />
-              )
-            })}
-          </SortableContext>
-        </DndContext>
+              </SortableItem>
+            )
+          })}
+        </>
       )
     } else if (index < filteredProxyList.length + shift) {
       const newIndex = index - shift
       return (
-        <ProxyItem
-          key={filteredProxyList[newIndex].name}
-          type={
-            deleteSeq.includes(filteredProxyList[newIndex].name)
-              ? 'delete'
-              : 'original'
-          }
-          proxy={filteredProxyList[newIndex]}
-          onDelete={() => {
-            if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
-              setDeleteSeq(
-                deleteSeq.filter((v) => v !== filteredProxyList[newIndex].name),
-              )
-            } else {
-              setDeleteSeq((prev) => [
-                ...prev,
-                filteredProxyList[newIndex].name,
-              ])
+        <Box sx={{ margin: '8px 0' }}>
+          <ProxyItem
+            key={filteredProxyList[newIndex].name}
+            type={
+              deleteSeq.includes(filteredProxyList[newIndex].name)
+                ? 'delete'
+                : 'original'
             }
-          }}
-        />
+            proxy={filteredProxyList[newIndex]}
+            onDelete={() => {
+              if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
+                setDeleteSeq(
+                  deleteSeq.filter(
+                    (v) => v !== filteredProxyList[newIndex].name,
+                  ),
+                )
+              } else {
+                setDeleteSeq((prev) => [
+                  ...prev,
+                  filteredProxyList[newIndex].name,
+                ])
+              }
+            }}
+          />
+        </Box>
       )
     } else {
       return (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={onAppendDragEnd}
-        >
-          <SortableContext
-            items={filteredAppendSeq.map((x) => {
-              return x.name
-            })}
-          >
-            {filteredAppendSeq.map((item) => {
-              return (
+        <>
+          {filteredAppendSeq.map((item, itemIndex) => {
+            return (
+              <SortableItem
+                key={item.name}
+                id={`append:${item.name}`}
+                index={itemIndex}
+                group="append"
+                style={{ margin: '8px 0' }}
+              >
                 <ProxyItem
-                  key={item.name}
                   type="append"
                   proxy={item}
                   onDelete={() => {
                     setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
                   }}
                 />
-              )
-            })}
-          </SortableContext>
-        </DndContext>
+              </SortableItem>
+            )
+          })}
+        </>
       )
     }
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
   const onPrependDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (over) {
-      if (active.id !== over.id) {
-        let activeIndex = 0
-        let overIndex = 0
-        prependSeq.forEach((item, index) => {
-          if (item.name === active.id) {
-            activeIndex = index
-          }
-          if (item.name === over.id) {
-            overIndex = index
-          }
-        })
+    const { operation, canceled } = event
+    const { source, target } = operation
+    if (canceled || !target || !isSortable(source)) return
 
-        setPrependSeq(arrayMove(prependSeq, activeIndex, overIndex))
-      }
+    const { index: overIndex, initialIndex: activeIndex } = source.sortable
+    const activeRealIndex = findRealIndex(
+      prependSeq,
+      filteredPrependSeq,
+      activeIndex,
+    )
+    const overRealIndex = findRealIndex(
+      prependSeq,
+      filteredPrependSeq,
+      overIndex,
+    )
+    if (
+      activeRealIndex < 0 ||
+      overRealIndex < 0 ||
+      activeRealIndex === overRealIndex
+    ) {
+      return
     }
+
+    setPrependSeq(arrayMove(prependSeq, activeRealIndex, overRealIndex))
   }
   const onAppendDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    if (over) {
-      if (active.id !== over.id) {
-        let activeIndex = 0
-        let overIndex = 0
-        appendSeq.forEach((item, index) => {
-          if (item.name === active.id) {
-            activeIndex = index
-          }
-          if (item.name === over.id) {
-            overIndex = index
-          }
-        })
-        setAppendSeq(arrayMove(appendSeq, activeIndex, overIndex))
-      }
+    const { operation, canceled } = event
+    const { source, target } = operation
+    if (canceled || !target || !isSortable(source)) return
+
+    const { index: overIndex, initialIndex: activeIndex } = source.sortable
+    const activeRealIndex = findRealIndex(
+      appendSeq,
+      filteredAppendSeq,
+      activeIndex,
+    )
+    const overRealIndex = findRealIndex(appendSeq, filteredAppendSeq, overIndex)
+    if (
+      activeRealIndex < 0 ||
+      overRealIndex < 0 ||
+      activeRealIndex === overRealIndex
+    ) {
+      return
+    }
+
+    setAppendSeq(arrayMove(appendSeq, activeRealIndex, overRealIndex))
+  }
+  const onDragOver = (event: DragOverEvent) => {
+    const { operation } = event
+    if (!isSortableOperation(operation)) return
+
+    const { source, target } = operation
+    if (source?.group !== target?.group) {
+      event.preventDefault()
+    }
+  }
+  const onDragEnd = async (event: DragEndEvent) => {
+    const source = event.operation.source
+    if (!isSortable(source)) return
+
+    const { initialGroup, group } = source.sortable
+    if (initialGroup !== group) return
+
+    if (group === 'prepend') {
+      await onPrependDragEnd(event)
+    } else if (group === 'append') {
+      await onAppendDragEnd(event)
     }
   }
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
@@ -275,7 +310,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid)
 
-    const originProxiesObj = yaml.load(data) as {
+    const originProxiesObj = parseYamlSafe(data) as {
       proxies: IProxyConfig[]
     } | null
 
@@ -283,36 +318,58 @@ export const ProxiesEditorViewer = (props: Props) => {
   }, [profileUid])
 
   const fetchContent = useCallback(async () => {
+    hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
     setDeleteSeq(obj?.delete || [])
-
-    setPrevData(data)
-    setCurrData(data)
+    hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
       setDeleteSeq(obj?.delete ?? [])
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   useEffect(() => {
-    if (!(prependSeq && appendSeq && deleteSeq)) {
+    if (
+      !hasLoadedSeqConfigRef.current ||
+      !(prependSeq && appendSeq && deleteSeq)
+    ) {
       return
     }
 
     const serialize = () => {
+      if (!hasLoadedSeqConfigRef.current) {
+        return
+      }
+
       try {
         setCurrData(
           yaml.dump(
@@ -386,9 +443,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')
@@ -467,16 +522,22 @@ export const ProxiesEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <VirtualList
-                count={
-                  filteredProxyList.length +
-                  (filteredPrependSeq.length > 0 ? 1 : 0) +
-                  (filteredAppendSeq.length > 0 ? 1 : 0)
-                }
-                estimateSize={56}
-                renderItem={renderItem}
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-              />
+              <DragDropProvider
+                sensors={[PointerSensor, KeyboardSensor]}
+                onDragOver={onDragOver}
+                onDragEnd={onDragEnd}
+              >
+                <VirtualList
+                  count={
+                    filteredProxyList.length +
+                    (filteredPrependSeq.length > 0 ? 1 : 0) +
+                    (filteredAppendSeq.length > 0 ? 1 : 0)
+                  }
+                  estimateSize={56}
+                  renderItem={renderItem}
+                  style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+                />
+              </DragDropProvider>
             </List>
           </>
         ) : (
@@ -502,9 +563,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === 'windows' ? ', twemoji mozilla' : ''
-              }`,
+              fontFamily: MONACO_FONT_FAMILY,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

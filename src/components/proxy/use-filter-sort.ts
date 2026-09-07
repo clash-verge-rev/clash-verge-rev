@@ -5,7 +5,6 @@ import { compileStringMatcher } from '@/utils/search-matcher'
 
 import type { ResolvedMemberOccurrence } from './use-render-list'
 
-// default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2
 
 export type ProxySearchState = {
@@ -27,16 +26,9 @@ export function filterSort(
   return sp
 }
 
-/**
- * 可以通过延迟数/节点类型 过滤
- */
 const regex1 = /delay([=<>])(\d+|timeout|error)/i
 const regex2 = /type=(.*)/i
 
-/**
- * filter the proxy
- * according to the regular conditions
- */
 function filterProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,
@@ -90,9 +82,6 @@ function filterProxies(
   return proxies.filter(({ member }) => compiled.matcher(member.ref.name))
 }
 
-/**
- * sort the proxy
- */
 function sortProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,
@@ -102,21 +91,22 @@ function sortProxies(
   if (!proxies) return []
   if (sortType === 0) return proxies
 
-  const list = proxies.slice()
   const effectiveTimeout =
     typeof latencyTimeout === 'number' && latencyTimeout > 0
       ? latencyTimeout
       : DEFAULT_DELAY_TIMEOUT
 
-  if (sortType === 1) {
-    list.sort((a, b) =>
-      compareByDelay(
-        delayManager.getDelayFix(a.member, groupName),
-        delayManager.getDelayFix(b.member, groupName),
-        effectiveTimeout,
-      ),
-    )
-  } else {
+  if (sortType === 1 && proxies.length > 1) {
+    return proxies
+      .map((proxy) => ({
+        proxy,
+        delay: delayManager.getDelayFix(proxy.member, groupName),
+      }))
+      .sort((a, b) => compareByDelay(a.delay, b.delay, effectiveTimeout))
+      .map(({ proxy }) => proxy)
+  }
+  const list = proxies.slice()
+  if (sortType !== 1) {
     list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
   }
 

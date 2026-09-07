@@ -1,15 +1,7 @@
-//! Run State — the single answer to "how is the Core running, and what backs it".
+//! The single answer to how the Core runs and what backs it.
 //!
-//! This module owns Service Health, Running Mode, Pending Action and the privileged-operation
-//! lock. It deliberately does **not** own starting, stopping or restarting the Core — those
-//! stay in `CoreManager`, which reports transitions in and reads snapshots back. Merging the
-//! two would leave no point at which the state is consistent, since a snapshot taken
-//! mid-restart would describe a transition rather than a state.
-//!
-//! Reads come in three flavours that differ only in *freshness* — [`RunStateStore::state`]
-//! (cached), [`RunStateStore::settled`] (waits for any in-flight operation) and
-//! [`RunStateStore::probe`] (forces live IPC). What the answer *means* is decided by methods
-//! on [`RunState`], so no caller writes its own availability formula.
+//! Core lifecycle stays in `CoreManager`; this module owns its state, service health, pending
+//! actions, and the privileged-operation lock. Reads differ only in freshness.
 
 mod env;
 mod health;
@@ -45,11 +37,7 @@ use probe::{CurrentServiceProbe, classify_service_health, probe_outcome};
 /// The process-wide Run State, observing the real machine.
 pub static RUN_STATE: Lazy<RunStateStore<RealEnv>> = Lazy::new(|| RunStateStore::new(RealEnv));
 
-/// Why a wait for Service readiness ended without a ready Service.
-///
-/// The two are not interchangeable: an unreachable Service told us nothing, so the caller
-/// decides whether silence means unavailable; a rejected one already updated health and must
-/// not have that verdict overwritten with a vaguer one.
+/// Distinguishes silence from a reply that updated Service health with a rejection.
 #[derive(Debug)]
 pub enum ReadyWaitError {
     /// No readable reply within the attempts budget.
@@ -66,11 +54,7 @@ impl std::fmt::Display for ReadyWaitError {
     }
 }
 
-/// The service-owned state together with the counters that version it.
-///
-/// They share one lock so a reader can never see a change without its version bump.
-/// `generation` tracks visible changes; `observation` also tracks assertions that invalidate
-/// older health probes without changing visible state.
+/// Service state and revisions share one lock so observations cannot overtake their version bump.
 #[derive(Debug, Default)]
 struct VersionedService {
     service: StoredService,
@@ -79,13 +63,11 @@ struct VersionedService {
 }
 
 impl VersionedService {
-    /// Record a visible change and invalidate older health probes.
     const fn bump(&mut self) {
         self.generation = self.generation.wrapping_add(1);
         self.observation = self.observation.wrapping_add(1);
     }
 
-    /// Reserve a revision that invalidates older health probes.
     const fn next_observation(&mut self) -> u64 {
         self.observation = self.observation.wrapping_add(1);
         self.observation
@@ -113,33 +95,19 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
     }
 
-    // ─────────────────────────── reads: freshness only ───────────────────────────
-
     /// The last known Run State, without waiting and without probing.
-    ///
-    /// May be stale while a privileged operation is in flight — the snapshot says so via
-    /// [`RunState::op_in_flight`], and [`RunState::service_usable`] accounts for it.
+    /// It reports when a privileged operation may make the snapshot stale.
     pub fn state(&self) -> RunState {
         let service = self.service.lock().service.clone();
         self.snapshot(service)
     }
 
-    /// The Run State once any in-flight privileged operation has finished.
-    ///
-    /// The snapshot is the decision, not a separate check before it. Reading the slot twice —
-    /// once to decide whether to wait, once to build the snapshot — leaves a window in which an
-    /// operation claims it, and the snapshot then *describes* that operation instead of waiting
-    /// for it. `prepare_startup` reads this: it would see a requested install as a reason not to
-    /// start, where waiting would have told it whether the install worked.
+    /// Returns one snapshot taken after any operation visible in that snapshot has settled.
     pub async fn settled(&self) -> RunState {
         loop {
             let notified = self.operation_done.notified();
             tokio::pin!(notified);
-            // Register as a waiter *before* reading the state. `notify_waiters` wakes only
-            // those already registered and leaves no permit behind, so without this an
-            // operation finishing between the read and the await is a wakeup lost for good
-            // — and this future would then wait for some unrelated later operation, or
-            // forever.
+            // Register before reading; `notify_waiters` leaves no permit for late waiters.
             notified.as_mut().enable();
 
             let state = self.state();
@@ -150,11 +118,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
     }
 
-    /// Probe the Service now, record what came back, and return the fresh Run State.
-    ///
-    /// A *transport* failure is not an observation: the Service may simply be restarting, so
-    /// the last confirmed health survives and the caller decides whether to retry. Only a
-    /// reply we could read and reject updates health.
+    /// Records readable replies; transport failures preserve the last confirmed health.
     pub async fn probe(&self) -> Result<RunState> {
         let reply = self
             .env
@@ -164,11 +128,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.record_reply(&reply)
     }
 
-    /// Probe until the Service answers, giving it `attempts` tries `interval` apart.
-    ///
-    /// Only an unreachable Service is worth retrying. A reply we could read is the Service's
-    /// answer — retrying an incompatible version twenty times would just delay telling the
-    /// user to reinstall — so the wait ends on the first readable reply either way.
+    /// Retries transport failures but stops at the first readable reply, including a rejection.
     pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
         let mut last_error = None;
         for attempt in 0..attempts {
@@ -186,7 +146,6 @@ impl<E: RunStateEnv> RunStateStore<E> {
         })))
     }
 
-    /// Record a readable reply as an observation, and report whether it was acceptable.
     fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {
         match classify_service_version_reply(reply) {
             ServiceVersionCheck::Ready => {
@@ -200,10 +159,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
     }
 
-    /// Work out the Service's health from scratch: platform evidence first, then a live probe.
-    ///
-    /// Platform evidence that cannot be inspected is *unavailable*, not *absent* — assuming
-    /// "not installed" there would offer the user an install that is already there.
+    /// Detects health from platform evidence and then live IPC; unknown evidence is not absence.
     pub async fn detect_service_health(&self) -> ServiceHealth {
         let has_marker = match self.env.trusted_install_evidence().await {
             Ok(exists) => exists,
@@ -234,26 +190,18 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
     }
 
-    // ─────────────────────────── writes ───────────────────────────
-
-    /// Probe and record Service health unless a newer observation arrived first.
-    ///
-    /// Reserving before I/O prevents slower probes from overwriting later observations, including
-    /// assertions that leave visible state unchanged. Returns the health that remains recorded.
+    /// Records detected health unless a newer observation arrived during I/O.
     pub async fn observe_current_health(&self) -> ServiceHealth {
         let reservation = self.reserve_health_observation();
         let health = self.detect_service_health().await;
         self.commit_reserved_observation(health, reservation)
     }
 
-    /// Reserve the revision for a health probe.
     fn reserve_health_observation(&self) -> u64 {
         self.service.lock().next_observation()
     }
 
-    /// Commit `health` only if `reservation` is still latest; otherwise return the newer health.
-    ///
-    /// The comparison and write share one lock. A successful commit reuses its reserved revision.
+    /// Commits only the latest reserved observation.
     fn commit_reserved_observation(&self, health: ServiceHealth, reservation: u64) -> ServiceHealth {
         let mut state = self.service.lock();
         if state.observation != reservation {
@@ -276,7 +224,6 @@ impl<E: RunStateEnv> RunStateStore<E> {
         health
     }
 
-    /// Record an observation about the Service, clearing any request it answers.
     pub fn observe(&self, health: ServiceHealth) {
         let mut state = self.service.lock();
         if state.service.health == health && state.service.pending.is_none() && !state.service.sidecar_allowed {
@@ -290,11 +237,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.announce();
     }
 
-    /// Record an authorised privileged operation and return whether it displaced the session's
-    /// Sidecar allowance.
-    ///
-    /// Reading and clearing the allowance in one transition lets the caller safely restore it if
-    /// the operation fails.
+    /// Records an action and returns the Sidecar allowance it displaced for possible rollback.
     pub fn request_action(&self, action: PendingAction) -> bool {
         let mut state = self.service.lock();
         let displaced = state.service.sidecar_allowed;
@@ -310,9 +253,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         displaced
     }
 
-    /// Accept Sidecar for the rest of this app session without any eligibility check.
-    ///
-    /// For builds and paths where Sidecar is the decided outcome rather than a fallback.
+    /// Accepts Sidecar when it is the predetermined outcome rather than a fallback.
     pub fn accept_sidecar(&self) {
         let mut state = self.service.lock();
         if state.service.sidecar_allowed && state.service.pending.is_none() {
@@ -326,10 +267,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.announce();
     }
 
-    /// Restore a displaced Sidecar allowance unless one already exists or the Service is ready.
-    ///
-    /// The check and update are atomic so a restored allowance cannot shadow a newly ready
-    /// Service. Returns whether the allowance was restored.
+    /// Atomically restores an allowance unless Sidecar is already allowed or the Service is ready.
     pub fn restore_sidecar_allowance(&self) -> bool {
         let mut state = self.service.lock();
         if state.service.sidecar_allowed {
@@ -348,9 +286,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         true
     }
 
-    /// Revoke an allowance after Sidecar startup fails without changing Service health.
-    ///
-    /// Returns whether the allowance was revoked.
+    /// Revokes a failed Sidecar allowance without changing Service health.
     pub fn withdraw_sidecar_allowance(&self) -> bool {
         let mut state = self.service.lock();
         if !state.service.sidecar_allowed {
@@ -363,10 +299,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         true
     }
 
-    /// Accept Sidecar for the rest of this app session.
-    ///
-    /// Rejected while an operation is in flight, or from a state where the Service is
-    /// already usable or is mid-privileged-operation other than an install.
+    /// Accepts Sidecar only while the Service is unusable and no conflicting operation is active.
     pub fn allow_sidecar_for_session(&self) -> Result<()> {
         let mut state = self.service.lock();
         if self.operation_running.load(Ordering::Acquire) {
@@ -390,10 +323,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Ok(())
     }
 
-    /// Require the Service to be installed before the Core starts, when it is simply absent.
-    ///
-    /// A no-op from any other state, mirroring the rule that an already-requested or
-    /// already-usable Service must not be downgraded to "needs installing".
+    /// Requests installation only for a confirmed absent Service.
     pub fn require_install_for_session(&self) -> Result<()> {
         let mut state = self.service.lock();
         if self.operation_running.load(Ordering::Acquire) {
@@ -414,11 +344,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Ok(())
     }
 
-    /// Carry out a privileged operation and record what it did to the Service.
-    ///
-    /// A successful uninstall records an absent Service. Other successes rely on the caller's
-    /// readiness check. Failures re-probe the Service so the request is retired and health
-    /// reflects the machine's current state.
+    /// Runs an operation, recording uninstall success or re-probing after failure.
     pub async fn perform(&self, action: PendingAction) -> Result<()> {
         let outcome = self.env.run_privileged(action);
         match &outcome {
@@ -436,56 +362,32 @@ impl<E: RunStateEnv> RunStateStore<E> {
         outcome
     }
 
-    // ─────────────────────────── running mode ───────────────────────────
-
     /// The Running Mode, shared so hot callers such as the tray do not allocate.
     pub fn mode_arc(&self) -> Arc<RunningMode> {
         Arc::clone(&self.mode.load())
     }
 
-    /// The Core is now running, and serving, in `mode`.
     pub fn core_started(&self, mode: RunningMode) {
         self.enter_mode(mode);
     }
 
-    /// The Core is no longer running.
     pub fn core_stopped(&self) {
         self.enter_mode(RunningMode::NotRunning);
     }
 
-    /// A start attempt is under way: the Core is not serving yet, whatever the mode says.
-    ///
-    /// Closes the PAC endpoint without disturbing the Running Mode, so a handover cannot
-    /// hand out a PAC script for a proxy port that is between owners.
-    ///
-    /// Every caller must pair this with [`Self::core_start_settled`]. A start attempt that
-    /// never happens — a candidate rejected before anything was stopped — otherwise leaves PAC
-    /// closed for a Core that is still serving, and nothing else would ever reopen it: PAC is
-    /// re-derived only when the Running Mode changes, and that is exactly what did not happen.
+    /// Closes PAC during a start or handover without changing the last running mode.
+    /// Every call must be paired with [`Self::core_start_settled`].
     pub fn core_starting(&self) {
         self.env.set_pac_available(false);
     }
 
-    /// The start attempt is over, however it ended: PAC goes back to following the Running Mode.
-    ///
-    /// Idempotent and safe on every path, because it re-derives rather than restores. After a
-    /// start that succeeded the mode is already running and this confirms PAC open; after one
-    /// that was abandoned the mode never moved and this reopens PAC for the Core that kept
-    /// serving; after one that failed and stopped the Core the mode says NotRunning and PAC
-    /// stays shut.
+    /// Idempotently re-derives PAC availability after a start attempt settles.
     pub fn core_start_settled(&self) {
         let running = !matches!(**self.mode.load(), RunningMode::NotRunning);
         self.env.set_pac_available(running);
     }
 
-    /// Move to `mode` and re-derive everything that follows from it.
-    ///
-    /// PAC availability and the outward mirror are derived here and nowhere else, so they
-    /// cannot drift from the Running Mode the way ten hand-paired call sites could.
-    ///
-    /// PAC closes *before* the mode changes and opens *after*, so whatever a concurrent
-    /// reader catches mid-transition is the closed state: being refused a PAC script beats
-    /// being handed one that points at a proxy port between owners.
+    /// Moves to `mode`, closing PAC before the transition and reopening it only afterward.
     fn enter_mode(&self, mode: RunningMode) {
         let running = !matches!(mode, RunningMode::NotRunning);
         if !running {
@@ -497,8 +399,6 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
         self.announce();
     }
-
-    // ─────────────────────────── privileged operations ───────────────────────────
 
     /// Claim the privileged-operation slot, releasing it when the guard drops.
     ///
@@ -514,31 +414,22 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Ok(OperationGuard { store: self })
     }
 
-    /// Whether a privileged operation is in flight right now.
-    ///
-    /// Production code reads this through [`RunState::op_in_flight`]; this accessor exists for
-    /// tests that assert on the slot without taking a snapshot.
     #[cfg(test)]
     pub fn operation_in_flight(&self) -> bool {
         self.operation_running.load(Ordering::Acquire)
     }
 
-    /// The environment this store observes, so tests can assert on the effects it recorded.
     #[cfg(test)]
     pub const fn env(&self) -> &E {
         &self.env
     }
 
-    /// Bumped on every state change; lets tests assert that a no-op really was a no-op.
     #[cfg(test)]
     pub fn generation_count(&self) -> u64 {
         self.service.lock().generation
     }
 
-    /// Tell the outside world the Run State moved.
-    ///
-    /// Called after every mutation and never while the state lock is held, so a publisher that
-    /// reads back the state cannot deadlock against the writer that triggered it.
+    /// Publishes after dropping the state lock so observers may safely read it back.
     fn announce(&self) {
         self.env.publish(&self.state());
     }

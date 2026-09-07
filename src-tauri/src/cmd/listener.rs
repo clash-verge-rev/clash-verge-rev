@@ -11,5 +11,7 @@ pub async fn probe_listener(request: ListenerProbe) -> CmdResult<ListenerProbeOu
 
 #[tauri::command]
 pub async fn save_proxy_ports(settings: ProxyPortSettings) -> CmdResult<SaveProxyPortsOutcome> {
-    feat::save_proxy_ports(settings).await.stringify_err()
+    feat::save_proxy_ports(settings)
+        .await
+        .map_err(|error| super::proxy_aware_error(&error))
 }

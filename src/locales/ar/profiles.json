@@ -135,6 +135,9 @@
         "uidMissing": "مُعرّف الملف الشخصي مفقود",
         "saveFailed": "تعذّر حفظ الملف الشخصي"
       },
+      "warnings": {
+        "frequentUpdate": "الفاصل الزمني القصير يعيد تحميل النواة بشكل متكرر ويقطع الاتصالات النشطة. يُنصح بـ {{minutes}} دقيقة (24 ساعة)."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",

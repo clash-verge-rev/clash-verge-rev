@@ -155,6 +155,8 @@ pub enum ProxyProviderVehicleType {
     Http,
     #[serde(rename = "File")]
     File,
+    #[serde(rename = "Inline")]
+    Inline,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -230,7 +232,7 @@ impl ProxyViewBuilder {
         let global = core_groups
             .remove("GLOBAL")
             .map(|proxy| build_group("GLOBAL".to_owned(), proxy, &resolver));
-        let (groups, order_source) = build_ordered_groups(core_groups, &runtime_group_order, &resolver);
+        let (groups, order_source) = build_ordered_groups(core_groups, runtime_group_order, &resolver);
         let direct = core_node_ids.get("DIRECT").cloned();
         let standalone = build_standalone(&core_node_ids);
 
@@ -307,6 +309,7 @@ fn build_provider_records(
         let vehicle_type = match vehicle_type {
             VehicleType::HTTP => ProxyProviderVehicleType::Http,
             VehicleType::File => ProxyProviderVehicleType::File,
+            VehicleType::Inline => ProxyProviderVehicleType::Inline,
             _ => continue,
         };
         let provider_index = views.len();
@@ -436,32 +439,26 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
 
 fn build_ordered_groups(
     mut core_groups: BTreeMap<String, Proxy>,
-    runtime_group_order: &[String],
+    runtime_group_order: Vec<String>,
     resolver: &MemberResolver<'_>,
 ) -> (Vec<ProxyGroupView>, ProxyViewOrderSource) {
-    let mut selected = BTreeSet::new();
-    let mut names = Vec::new();
+    let mut groups = Vec::with_capacity(core_groups.len());
     for name in runtime_group_order {
-        if core_groups.contains_key(name) && selected.insert(name.clone()) {
-            names.push(name.clone());
+        if let Some(proxy) = core_groups.remove(&name) {
+            groups.push(build_group(name, proxy, resolver));
         }
     }
 
-    let order_source = if names.is_empty() {
+    let order_source = if groups.is_empty() {
         ProxyViewOrderSource::Fallback
     } else {
         ProxyViewOrderSource::Runtime
     };
-    names.extend(core_groups.keys().filter(|name| !selected.contains(*name)).cloned());
-
-    let groups = names
-        .into_iter()
-        .filter_map(|name| {
-            core_groups
-                .remove(&name)
-                .map(|proxy| build_group(name, proxy, resolver))
-        })
-        .collect();
+    groups.extend(
+        core_groups
+            .into_iter()
+            .map(|(name, proxy)| build_group(name, proxy, resolver)),
+    );
     (groups, order_source)
 }
 
@@ -655,7 +652,7 @@ mod tests {
         );
 
         let mut input = ordered_input(false);
-        input.runtime_group_order = vec!["Zulu".into()];
+        input.runtime_group_order = vec!["Zulu".into(), "Zulu".into()];
         let view = ProxyViewBuilder::build(input);
         assert_eq!(
             view.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(),

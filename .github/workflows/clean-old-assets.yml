@@ -52,20 +52,15 @@ jobs:
           CURRENT_VERSION=$(cat package.json | jq -r '.version')
           echo "📦 Current version: $CURRENT_VERSION"
 
-          # Find the last commit that changed Tauri-related files
           echo "🔍 Finding last commit with Tauri-related changes..."
 
-          # Define patterns for Tauri-related files
           TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
 
-          # Get the last commit that changed any of these patterns (excluding build artifacts)
           LAST_TAURI_COMMIT=""
           for commit in $(git rev-list HEAD --max-count=50); do
-            # Check if this commit changed any Tauri-related files
             CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
             HAS_TAURI_CHANGES=false
             
-            # Check each pattern
             if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
               HAS_TAURI_CHANGES=true
             elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
@@ -86,7 +81,6 @@ jobs:
           echo "📝 Last Tauri-related commit: $LAST_TAURI_COMMIT"
           echo "📝 Current commit: $(git rev-parse --short HEAD)"
 
-          # Generate autobuild version for consistency
           CURRENT_BASE_VERSION=$(echo "$CURRENT_VERSION" | sed -E 's/-(alpha|beta|rc)(\.[0-9]+)?//g' | sed -E 's/\+[a-zA-Z0-9.-]+//g')
           MONTH=$(TZ=Asia/Shanghai date +%m)
           DAY=$(TZ=Asia/Shanghai date +%d)
@@ -94,7 +88,6 @@ jobs:
 
           echo "🏷️  Current autobuild version: $AUTOBUILD_VERSION"
 
-          # Set outputs for other jobs to use
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
           echo "last_tauri_commit=$LAST_TAURI_COMMIT" >> $GITHUB_OUTPUT
           echo "autobuild_version=$AUTOBUILD_VERSION" >> $GITHUB_OUTPUT
@@ -113,7 +106,6 @@ jobs:
           TAG_NAME: ${{ env.TAG_NAME }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          # Use values from check_current_version job
           CURRENT_AUTOBUILD_VERSION="${{ needs.check_current_version.outputs.autobuild_version }}"
           LAST_TAURI_COMMIT="${{ needs.check_current_version.outputs.last_tauri_commit }}"
           CURRENT_VERSION="${{ needs.check_current_version.outputs.current_version }}"
@@ -124,7 +116,6 @@ jobs:
           echo "🏷️  Target tag: $TAG_NAME"
           echo "🔍 Dry run mode: $DRY_RUN"
 
-          # Check if release exists
           RELEASE_EXISTS=$(gh release view "$TAG_NAME" --json id -q '.id' 2>/dev/null || echo "")
 
           if [ -z "$RELEASE_EXISTS" ]; then
@@ -134,7 +125,6 @@ jobs:
 
           echo "✅ Found release '$TAG_NAME'"
 
-          # Get all assets
           echo "📋 Getting list of all assets..."
           assets=$(gh release view "$TAG_NAME" --json assets -q '.assets[].name' || true)
 
@@ -146,12 +136,10 @@ jobs:
           echo "📋 Found assets:"
           echo "$assets" | sed 's/^/  - /'
 
-          # Count assets to keep and delete
           ASSETS_TO_KEEP=""
           ASSETS_TO_DELETE=""
 
           for asset in $assets; do
-            # Keep assets that match current autobuild version or are non-versioned files (like latest.json)
             if [[ "$asset" == *"$CURRENT_AUTOBUILD_VERSION"* ]] || [[ "$asset" == "latest.json" ]]; then
               ASSETS_TO_KEEP="$ASSETS_TO_KEEP$asset\n"
             else
@@ -189,7 +177,6 @@ jobs:
             FAILED_COUNT=0
             
             for asset in $assets; do
-              # Skip assets that should be kept
               if [[ "$asset" == *"$CURRENT_AUTOBUILD_VERSION"* ]] || [[ "$asset" == "latest.json" ]]; then
                 continue
               fi

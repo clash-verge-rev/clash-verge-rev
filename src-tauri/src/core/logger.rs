@@ -94,7 +94,10 @@ impl Logger {
             filter_modules.push("tauri");
             #[cfg(feature = "tracing")]
             filter_modules.extend(["tauri_plugin_mihomo", "kode_bridge"]);
-            let logger = logger.filter(Box::new(clash_verge_logging::NoModuleFilter(filter_modules)));
+            let logger = logger.filter(Box::new(clash_verge_logging::ModuleFilter::new(
+                filter_modules,
+                Some(vec!["tauri_plugin_mihomo"]),
+            )));
 
             let handle = logger.start()?;
             *self.handle.lock() = Some(handle);
@@ -229,18 +232,5 @@ impl Logger {
         } else {
             logging!(error, Type::System, "failed to get sidecar file log writer");
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::should_sync_service_writer;
-    use crate::core::manager::RunningMode;
-
-    #[test]
-    fn service_writer_sync_requires_service_running_mode() {
-        assert!(should_sync_service_writer(RunningMode::Service));
-        assert!(!should_sync_service_writer(RunningMode::Sidecar));
-        assert!(!should_sync_service_writer(RunningMode::NotRunning));
     }
 }

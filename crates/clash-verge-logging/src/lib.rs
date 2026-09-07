@@ -62,7 +62,6 @@ impl fmt::Display for Type {
 
 #[macro_export]
 macro_rules! logging {
-    // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
         log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*))
     };
@@ -70,14 +69,12 @@ macro_rules! logging {
 
 #[macro_export]
 macro_rules! logging_error {
-    // Handle Result<T, E>
     ($type:expr, $expr:expr) => {
         if let Err(err) = $expr {
             log::error!(target: "app", "[{}] {}", $type, err);
         }
     };
 
-    // Handle formatted message: always print to stdout and log as error
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
     };
@@ -97,23 +94,33 @@ pub fn write_sidecar_log(
     let _ = writer.write(now, &record);
 }
 
-pub struct NoModuleFilter<'a>(pub Vec<&'a str>);
+pub struct ModuleFilter<'a> {
+    block: Vec<&'a str>,
+    exclude: Option<Vec<&'a str>>,
+}
 
-impl<'a> NoModuleFilter<'a> {
+impl<'a> ModuleFilter<'a> {
+    pub fn new(block: Vec<&'a str>, exclude: Option<Vec<&'a str>>) -> Self {
+        Self { block, exclude }
+    }
+
     #[inline]
     pub fn filter(&self, record: &Record) -> bool {
-        if let Some(module) = record.module_path() {
-            for blocked in self.0.iter() {
-                if module.len() >= blocked.len() && module.as_bytes()[..blocked.len()] == blocked.as_bytes()[..] {
-                    return false;
-                }
-            }
+        let Some(module) = record.module_path() else {
+            return true;
+        };
+
+        if let Some(excludes) = &self.exclude
+            && excludes.iter().any(|e| module.starts_with(e))
+        {
+            return true;
         }
-        true
+
+        !self.block.iter().any(|b| module.starts_with(b))
     }
 }
 
-impl<'a> LogLineFilter for NoModuleFilter<'a> {
+impl<'a> LogLineFilter for ModuleFilter<'a> {
     #[inline]
     fn write(
         &self,

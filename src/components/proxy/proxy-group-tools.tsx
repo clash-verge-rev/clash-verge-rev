@@ -1,8 +1,8 @@
 import AccessTimeRounded from '@mui/icons-material/AccessTimeRounded'
-import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded'
-import FilterAltRounded from '@mui/icons-material/FilterAltRounded'
 import MyLocationRounded from '@mui/icons-material/MyLocationRounded'
 import NetworkCheckRounded from '@mui/icons-material/NetworkCheckRounded'
+import SearchOffRounded from '@mui/icons-material/SearchOffRounded'
+import SearchRounded from '@mui/icons-material/SearchRounded'
 import SortByAlphaRounded from '@mui/icons-material/SortByAlphaRounded'
 import SortRounded from '@mui/icons-material/SortRounded'
 import VisibilityOffRounded from '@mui/icons-material/VisibilityOffRounded'
@@ -11,7 +11,7 @@ import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
 import { useDebounceFn } from 'ahooks'
-import { memo, useEffect } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -62,6 +62,8 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
     verge?.default_latency_test?.trim() ||
     'http://cp.cloudflare.com/generate_204'
 
+  const inputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
   }, [groupName, testUrl, defaultLatencyUrl, url])
@@ -102,6 +104,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
       {textState === 'filter' && (
         <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
+            inputRef={inputRef}
             defaultValue={filterText}
             matchCase={filterMatchCase}
             matchWholeWord={filterMatchWholeWord}
@@ -117,6 +120,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
 
       {textState === 'url' && (
         <TextField
+          inputRef={inputRef}
           autoComplete="new-password"
           hiddenLabel
           autoSave="off"
@@ -204,6 +208,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           onHeadState({
             textState: textState === 'url' ? null : 'url',
           })
+          setTimeout(() => inputRef.current?.focus())
         }}
       >
         {textState === 'url' ? (
@@ -248,12 +253,13 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
             flushSync(() => onHeadState({ open: true }))
           onHeadState({ textState: textState === 'filter' ? null : 'filter' })
+          setTimeout(() => inputRef.current?.focus())
         }}
       >
         {textState === 'filter' ? (
-          <FilterAltRounded fontSize="inherit" />
+          <SearchOffRounded fontSize="inherit" />
         ) : (
-          <FilterAltOffRounded fontSize="inherit" />
+          <SearchRounded fontSize="inherit" />
         )}
       </IconButton>
     </Box>

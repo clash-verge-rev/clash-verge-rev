@@ -15,7 +15,7 @@ import {
   type RunState,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { setCacheDataAsync, useQuery } from '@/services/query-client'
+import { setCacheData, useQuery } from '@/services/query-client'
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
@@ -50,7 +50,7 @@ export const ServiceMigrationDialog = () => {
   const refreshRunState = async () => {
     try {
       const data = await getRuntimeState()
-      await setCacheDataAsync<RunState>(runStateQueryKey, data)
+      await setCacheData<RunState>(runStateQueryKey, data)
       setStateRefreshFailed(false)
       return data
     } catch (error) {

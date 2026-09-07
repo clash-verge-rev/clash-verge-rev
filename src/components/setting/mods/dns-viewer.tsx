@@ -36,7 +36,7 @@ import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
-import getSystem from '@/utils/get-system'
+import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
@@ -132,7 +132,6 @@ function parseList(str: string): string[] {
     .filter(Boolean)
 }
 
-// 默认DNS配置
 const DEFAULT_DNS_CONFIG = {
   enable: true,
   listen: ':53',
@@ -251,13 +250,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     hosts: '',
   })
 
-  // 用于YAML编辑模式, 初始化标记：阻止 updateValuesFromYaml 在配置加载前误执行
+  // Prevent YAML-to-form sync before configuration loads.
   const [yamlContent, setYamlContent] = useReducer(
     (_: string, next: string) => next,
     '{ isInitValue: true }',
   )
 
-  // 从配置对象更新表单值
   const updateValuesFromConfig = useCallback((config: any) => {
     if (!config) return
 
@@ -388,7 +386,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     setYamlContent(yaml.dump(config, { forceQuotes: true }))
   }, [generateDnsConfig, values.hosts])
 
-  // 重置为默认值
   const resetToDefaults = useCallback(() => {
     setValues({
       enable: DEFAULT_DNS_CONFIG.enable,
@@ -425,7 +422,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     updateYamlFromValues()
   }, [updateYamlFromValues])
 
-  // 从YAML更新表单值
   const updateValuesFromYaml = useCallback(() => {
     try {
       const parsedYaml = yaml.load(yamlContent) as any
@@ -471,13 +467,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const initDnsConfig = useCallback(async () => {
     try {
-      const dnsConfigExists = await invoke<boolean>(
-        'check_dns_config_exists',
+      const dnsConfig = await invoke<string | null>(
+        'get_dns_config_content',
         {},
       )
 
-      if (dnsConfigExists) {
-        const dnsConfig = await invoke<string>('get_dns_config_content', {})
+      if (dnsConfig !== null) {
         const config = yaml.load(dnsConfig) as any
 
         updateValuesFromConfig(config)
@@ -503,14 +498,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     [initDnsConfig],
   )
 
-  // 生成DNS配置对象
-  // 处理保存操作
   const onSave = useLockFn(async () => {
     try {
       let config: Record<string, any>
 
       if (visualization) {
-        // 使用表单值生成配置
         config = {}
 
         const dnsConfig = generateDnsConfig()
@@ -523,7 +515,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           config.hosts = hosts
         }
       } else {
-        // 使用YAML编辑器的值
         const parsedConfig = yaml.load(yamlContent)
         if (typeof parsedConfig !== 'object' || parsedConfig === null) {
           throw new Error(t('settings.modals.dns.errors.invalid'))
@@ -531,10 +522,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         config = parsedConfig as Record<string, any>
       }
 
-      // 保存配置
       await invoke('save_dns_config', { dnsConfig: config })
 
-      // 验证配置
       const validation = await invoke<ValidationOutcome>(
         'validate_dns_config',
         {},
@@ -547,7 +536,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             : 'Configuration validation skipped'
         let cleanErrorMsg = errorMsg
 
-        // 提取关键错误信息
         if (errorMsg.includes('level=error')) {
           const errorLines = errorMsg
             .split('\n')
@@ -575,7 +563,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      // 如果DNS开关当前是打开的，则需要应用新的DNS配置
       if (clash?.dns?.enable) {
         await invoke('apply_dns_config', { apply: true })
         mutateClash()
@@ -588,12 +575,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   })
 
-  // YAML编辑器内容变更处理
   const handleYamlChange = (value?: string) => {
     setYamlContent(value || '')
   }
 
-  // 处理表单值变化
   const handleChange = (field: string) => (event: any) => {
     const value =
       event.target.type === 'checkbox'
@@ -606,7 +591,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         [field]: value,
       }
 
-      // 当可视化编辑模式下的值变化时，自动更新YAML
       if (visualization) {
         setTimeout(() => {
           updateYamlFromValues()
@@ -667,7 +651,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
-      {/* Warning message */}
       <Typography
         variant="body2"
         color="warning.main"
@@ -1053,7 +1036,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             />
           </Item>
 
-          {/* Hosts 配置部分 */}
           <Typography
             variant="subtitle1"
             sx={{ mt: 3, mb: 0, fontWeight: 'bold' }}
@@ -1103,9 +1085,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             padding: {
               top: 33,
             },
-            fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-              getSystem() === 'windows' ? ', twemoji mozilla' : ''
-            }`,
+            fontFamily: MONACO_FONT_FAMILY,
             fontLigatures: false,
             smoothScrolling: true,
           }}

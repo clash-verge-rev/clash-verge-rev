@@ -13,21 +13,46 @@ const patchCreateWebWorker = (monaco: MonacoModule) => {
   const createWebWorker = monaco.editor.createWebWorker
 
   type CreateWebWorker = typeof createWebWorker
-  type WorkerOptions = Parameters<CreateWebWorker>[0] & { worker?: unknown }
+  type InternalWorkerOptions = Parameters<CreateWebWorker>[0]
+  type LegacyWorkerOptions = Omit<InternalWorkerOptions, 'worker'> & {
+    createData?: unknown
+    label?: string
+    moduleId?: string
+  }
 
-  monaco.editor.createWebWorker = ((options: WorkerOptions) =>
-    'worker' in options
-      ? createWebWorker(options)
-      : monaco.createWebWorker(options)) as CreateWebWorker
+  monaco.editor.createWebWorker = ((
+    options: InternalWorkerOptions | LegacyWorkerOptions,
+  ) => {
+    if ('worker' in options) return createWebWorker(options)
+
+    const getWorker = self.MonacoEnvironment?.getWorker
+    if (!getWorker) {
+      throw new Error('MonacoEnvironment.getWorker is not configured')
+    }
+
+    const worker = Promise.resolve(
+      getWorker('workerMain.js', options.label ?? 'monaco-editor-worker'),
+    ).then((instance) => {
+      instance.postMessage('ignore')
+      instance.postMessage(options.createData)
+      return instance
+    })
+
+    return createWebWorker({
+      worker,
+      host: options.host,
+      keepIdleModels: options.keepIdleModels,
+    })
+  }) as CreateWebWorker
 }
 
 export const loadMonacoEditor = () => {
   loadPromise ??= Promise.all([
     import('@monaco-editor/react'),
     import('monaco-editor'),
-    import('monaco-editor/esm/vs/editor/editor.worker?worker'),
-    import('monaco-editor/esm/vs/language/css/css.worker?worker'),
-    import('monaco-editor/esm/vs/language/typescript/ts.worker?worker'),
+    import('monaco-editor/editor/editor.worker?worker'),
+    import('monaco-editor/language/css/css.worker?worker'),
+    import('monaco-editor/language/typescript/ts.worker?worker'),
     import('monaco-yaml'),
     import('meta-json-schema/schemas/meta-json-schema.json'),
     import('types-pac/pac.d.ts?raw'),

@@ -10,6 +10,12 @@ notifications:
     title: システムプロキシ
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: システムプロキシ
+    body: システムプロキシを設定できませんでした。理由は Clash Verge を開いて確認してください。
+  systemProxyGuardStopped:
+    title: システムプロキシガード
+    body: 連続して失敗したため停止しました。理由は Clash Verge を開いて確認してください。
   tunModeToggled:
     title: TUN モード
     'on': TUN mode has been enabled.

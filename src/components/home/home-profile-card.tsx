@@ -25,8 +25,9 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { useAppRefreshers } from '@/providers/app-data-context'
-import { openWebUrl, updateProfile } from '@/services/cmds'
+import { updateProfile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { EnhancedCard } from './enhanced-card'
@@ -47,6 +48,10 @@ const parseUrl = (url?: string) => {
 const parseExpire = (expire?: number) => {
   if (!expire) return '-'
   return dayjs(expire * 1000).format('YYYY-MM-DD')
+}
+
+const openProfileHome = (url: string) => {
+  void openExternalUrl(url).catch(showNotice.error)
 }
 
 // 使用类型定义，而不是导入
@@ -115,7 +120,7 @@ const ProfileDetails = ({
               {current.home ? (
                 <Link
                   component="button"
-                  onClick={() => current.home && openWebUrl(current.home)}
+                  onClick={() => current.home && openProfileHome(current.home)}
                   sx={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -318,7 +323,7 @@ export const HomeProfileCard = ({
       <Link
         component="button"
         variant="h6"
-        onClick={() => current.home && openWebUrl(current.home)}
+        onClick={() => current.home && openProfileHome(current.home)}
         sx={{
           color: 'inherit',
           textDecoration: 'none',

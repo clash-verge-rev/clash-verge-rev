@@ -274,6 +274,7 @@ export const useCustomTheme = () => {
 
         /* 背景图处理 */
         body {
+          font-family: ${dt.font_family};
           background-color: var(--background-color);
           ${
             hasUserBackground

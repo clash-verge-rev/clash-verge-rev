@@ -34,30 +34,3 @@ pub async fn update_launch() -> Result<()> {
 
     Ok(())
 }
-
-pub fn get_launch_status() -> Result<bool> {
-    #[cfg(target_os = "windows")]
-    {
-        let enabled = schtasks::is_auto_launch_enabled();
-        if let Ok(status) = enabled {
-            logging!(info, Type::System, "Auto-launch status (scheduled task): {status}");
-        }
-        enabled
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        let app_handle = Handle::app_handle();
-        let autostart_manager = app_handle.autolaunch();
-        match autostart_manager.is_enabled() {
-            Ok(status) => {
-                logging!(info, Type::System, "Auto-launch status: {status}");
-                Ok(status)
-            }
-            Err(e) => {
-                logging!(error, Type::System, "Failed to get auto-launch status: {e}");
-                Err(anyhow::anyhow!("Failed to get auto-launch status: {}", e))
-            }
-        }
-    }
-}

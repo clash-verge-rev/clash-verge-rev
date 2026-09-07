@@ -47,6 +47,10 @@ impl Handle {
         Self::send_event(FrontendEvent::RefreshProfiles);
     }
 
+    pub fn refresh_proxy_config() {
+        Self::send_event(FrontendEvent::RefreshProxyConfig);
+    }
+
     /// Push a Run State snapshot to the frontend.
     ///
     /// Sent on every transition, so the frontend does not have to poll to notice that the Core

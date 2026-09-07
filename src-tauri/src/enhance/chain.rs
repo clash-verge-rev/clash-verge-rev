@@ -28,42 +28,6 @@ pub enum ChainSupport {
     ClashMetaAlpha,
 }
 
-// impl From<&PrfItem> for Option<ChainItem> {
-//     fn from(item: &PrfItem) -> Self {
-//         let itype = item.itype.as_ref()?.as_str();
-//         let file = item.file.clone()?;
-//         let uid = item.uid.clone().unwrap_or("".into());
-//         let path = dirs::app_profiles_dir().ok()?.join(file);
-
-//         if !path.exists() {
-//             return None;
-//         }
-
-//         match itype {
-//             "script" => Some(ChainItem {
-//                 uid,
-//                 data: ChainType::Script(fs::read_to_string(path).ok()?),
-//             }),
-//             "merge" => Some(ChainItem {
-//                 uid,
-//                 data: ChainType::Merge(help::read_mapping(&path).ok()?),
-//             }),
-//             "rules" => Some(ChainItem {
-//                 uid,
-//                 data: ChainType::Rules(help::read_seq_map(&path).ok()?),
-//             }),
-//             "proxies" => Some(ChainItem {
-//                 uid,
-//                 data: ChainType::Proxies(help::read_seq_map(&path).ok()?),
-//             }),
-//             "groups" => Some(ChainItem {
-//                 uid,
-//                 data: ChainType::Groups(help::read_seq_map(&path).ok()?),
-//             }),
-//             _ => None,
-//         }
-//     }
-// }
 // Helper trait to allow async conversion
 pub trait AsyncChainItemFrom {
     async fn from_async(item: &PrfItem) -> Option<ChainItem>;
@@ -90,21 +54,21 @@ impl AsyncChainItemFrom for Option<ChainItem> {
                 data: ChainType::Merge(help::read_mapping(&path).await.ok()?),
             }),
             "rules" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Rules(seq_map),
                 })
             }
             "proxies" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Proxies(seq_map),
                 })
             }
             "groups" => {
-                let seq_map = help::read_seq_map(&path).await.ok()?;
+                let seq_map = help::read_yaml::<SeqMap>(&path).await.ok()?;
                 Some(ChainItem {
                     uid,
                     data: ChainType::Groups(seq_map),

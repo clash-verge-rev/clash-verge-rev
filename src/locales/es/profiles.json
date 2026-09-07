@@ -135,6 +135,9 @@
         "uidMissing": "Falta el identificador de la suscripción",
         "saveFailed": "No se pudo guardar la suscripción"
       },
+      "warnings": {
+        "frequentUpdate": "Un intervalo corto recarga el núcleo con esa frecuencia y corta las conexiones existentes. Se recomiendan {{minutes}} minutos (24 horas)."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",

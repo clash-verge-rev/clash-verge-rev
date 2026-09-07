@@ -6,7 +6,7 @@ use crate::{
     utils::{dirs, window_manager::WindowManager},
 };
 use anyhow::{Context as _, Result, bail};
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
@@ -19,8 +19,8 @@ use tokio::sync::oneshot;
 use warp::Filter as _;
 
 const INSTANCE_TOKEN_HEADER: &str = "x-instance-token";
-const INSTANCE_RECORD_FILE: &str = "singleton-instance.json";
-const INSTANCE_LOCK_FILE: &str = "singleton-instance.lock";
+pub(crate) const INSTANCE_RECORD_FILE: &str = "singleton-instance.json";
+pub(crate) const INSTANCE_LOCK_FILE: &str = "singleton-instance.lock";
 
 #[derive(Deserialize, Debug)]
 struct QueryParam {
@@ -42,16 +42,23 @@ static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
 #[cfg(feature = "verge-dev")]
 static DEV_QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
-pub async fn check_singleton() -> Result<()> {
-    let record_path = instance_record_path()?;
-    let lock = open_instance_lock(&record_path.with_file_name(INSTANCE_LOCK_FILE))?;
-    if !try_lock_instance(&lock)? {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SingletonDisposition {
+    Primary,
+    Secondary,
+}
+
+pub async fn check_singleton() -> Result<SingletonDisposition> {
+    let record_path = instance_record_path().context("failed to resolve singleton instance record path")?;
+    let lock = open_instance_lock(&record_path.with_file_name(INSTANCE_LOCK_FILE))
+        .context("failed to initialize singleton lock")?;
+    if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
         while std::time::Instant::now() < deadline {
             if let Ok(record) = read_instance_record(&record_path)
                 && notify_existing_instance(&record).await
             {
-                bail!("app exists");
+                return Ok(SingletonDisposition::Secondary);
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
@@ -59,19 +66,24 @@ pub async fn check_singleton() -> Result<()> {
     }
 
     let preferred = read_instance_record(&record_path).ok().map(|record| record.port);
-    let listener = bind_primary_listener(preferred).await?;
-    let port = listener.local_addr()?.port();
+    let listener = bind_primary_listener(preferred)
+        .await
+        .context("failed to reserve embedded server port")?;
+    let port = listener
+        .local_addr()
+        .context("failed to read embedded server address")?
+        .port();
     let record = InstanceRecord {
         port,
-        token: random_token()?,
+        token: random_token().context("failed to generate singleton instance token")?,
     };
-    write_instance_record(&record_path, &record)?;
+    write_instance_record(&record_path, &record).context("failed to persist singleton instance record")?;
     INSTANCE_LOCK
         .set(lock)
         .map_err(|_| anyhow::anyhow!("singleton lock is already initialized"))?;
     let _ = EMBEDDED_PORT.set(port);
     start_embedded_server(listener, record.token);
-    Ok(())
+    Ok(SingletonDisposition::Primary)
 }
 
 async fn bind_primary_listener(preferred: Option<u16>) -> Result<tokio::net::TcpListener> {
@@ -238,7 +250,7 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
                 ));
             }
             AsyncHandler::spawn(|| async move {
-                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+                resolve::resolve_scheme(&query.param).await;
             });
             Ok::<_, warp::Rejection>(warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK))
         });
@@ -414,35 +426,7 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
         file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
     }
     drop(file);
-    replace_file_atomic(&temporary, path)?;
-    Ok(())
-}
-
-#[cfg(not(windows))]
-fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
-    std::fs::rename(source, destination)?;
-    Ok(())
-}
-
-#[cfg(windows)]
-fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt as _;
-    use windows_sys::Win32::Storage::FileSystem::{MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW};
-
-    let mut source: Vec<u16> = source.as_os_str().encode_wide().collect();
-    source.push(0);
-    let mut destination: Vec<u16> = destination.as_os_str().encode_wide().collect();
-    destination.push(0);
-    if unsafe {
-        MoveFileExW(
-            source.as_ptr(),
-            destination.as_ptr(),
-            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
-        )
-    } == 0
-    {
-        return Err(std::io::Error::last_os_error()).context("failed to replace singleton record");
-    }
+    std::fs::rename(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
 }
 

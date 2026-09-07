@@ -67,7 +67,7 @@ export type ProxyMemberRef =
 
 interface ProxyProviderView {
   name: string
-  vehicleType: 'HTTP' | 'File'
+  vehicleType: 'HTTP' | 'File' | 'Inline'
   updatedAt?: string
   subscriptionInfo?: ProxySubscriptionInfo
   proxyRecordIds: string[]

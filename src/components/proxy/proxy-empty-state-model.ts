@@ -23,14 +23,7 @@ interface ProxyListStateInput {
 const isSubscriptionProfile = (item: { type?: string }): boolean =>
   item.type === 'remote' || item.type === 'local'
 
-/**
- * What the proxy page should show.
- *
- * Deliberately does *not* answer "is there anything to render". That question is answered by
- * the list itself, in `hasRenderableItems`, because predicting it from beside the renderer is
- * how the two came to disagree. This decides only the things knowable without building a list:
- * direct mode, still-loading, and having no usable subscription to render from.
- */
+/** Decides only pre-render states; the built list owns whether it has renderable content. */
 export type ProxyListState =
   | { kind: 'direct' }
   | { kind: 'loading' }
@@ -67,12 +60,7 @@ export const resolveProxyListState = ({
   return { kind: 'render' }
 }
 
-/**
- * Why a list that turned out to be empty is empty.
- *
- * Only reachable once the renderer has built its list and found nothing, so it explains an
- * observed emptiness rather than predicting one.
- */
+/** Explains an empty list only after the renderer observes it. */
 export const resolveEmptyListReason = ({
   runningMode,
   isProxyViewError,

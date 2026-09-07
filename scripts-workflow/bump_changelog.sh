@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# bump_changelog.sh
 # - prepend ./Changelog.md to ./docs/Changelog.history.md
 # - overwrite ./Changelog.md with ./template/Changelog.md
 
@@ -38,7 +37,6 @@ if [ -f "$HISTORY" ]; then
 	echo "Backed up $HISTORY -> $BACKUP_DIR/Changelog.history.md.bak.$bak_ts"
 fi
 
-# Prepend current Changelog.md content to top of docs/Changelog.history.md
 tmpfile=$(mktemp)
 {
 	cat "$CHANGELOG"
@@ -52,7 +50,6 @@ tmpfile=$(mktemp)
 mv "$tmpfile" "$HISTORY"
 echo "Prepended $CHANGELOG -> $HISTORY"
 
-# Overwrite Changelog.md with template
 cp "$TEMPLATE" "$CHANGELOG"
 echo "Overwrote $CHANGELOG with $TEMPLATE"
 

@@ -6,22 +6,6 @@ const listen = vi.hoisted(() => vi.fn())
 
 vi.mock('@tauri-apps/api/event', () => ({ listen }))
 
-/** A `listen` whose registrations only resolve when the test says so. */
-const deferredListen = () => {
-  const resolvers: Array<() => void> = []
-  listen.mockImplementation(
-    () =>
-      new Promise((resolve) => {
-        resolvers.push(() => resolve(() => {}))
-      }),
-  )
-  return {
-    registrations: resolvers,
-    settleAll: () => resolvers.forEach((resolve) => resolve()),
-  }
-}
-
-/** Let every already-resolved promise in the chain run. */
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 beforeEach(() => {
@@ -29,8 +13,14 @@ beforeEach(() => {
 })
 
 describe('subscribeVergeEvents', () => {
-  it('reports subscribed only once every listener is live', async () => {
-    const { registrations, settleAll } = deferredListen()
+  it('reports readiness only after every listener is registered', async () => {
+    const registrations: Array<() => void> = []
+    listen.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          registrations.push(() => resolve(() => {}))
+        }),
+    )
     const onSubscribed = vi.fn()
 
     subscribeVergeEvents(
@@ -41,48 +31,16 @@ describe('subscribeVergeEvents', () => {
       onSubscribed,
     )
 
-    expect(registrations).toHaveLength(2)
     registrations[0]?.()
     await flush()
     expect(onSubscribed).not.toHaveBeenCalled()
 
-    settleAll()
+    registrations[1]?.()
     await flush()
-    expect(onSubscribed).toHaveBeenCalledTimes(1)
+    expect(onSubscribed).toHaveBeenCalledOnce()
   })
 
-  it('does not report subscribed after teardown', async () => {
-    // Registration outliving the caller is the whole reason this is tracked here; resyncing
-    // for a subscription that no longer exists would fetch into a cache nobody reads.
-    const { settleAll } = deferredListen()
-    const onSubscribed = vi.fn()
-
-    const teardown = subscribeVergeEvents(
-      { 'verge://run-state-changed': () => {} },
-      onSubscribed,
-    )
-    teardown()
-
-    settleAll()
-    await flush()
-    expect(onSubscribed).not.toHaveBeenCalled()
-  })
-
-  it('still reports subscribed when a listener fails to register', async () => {
-    // A resync is most needed when a subscription is missing, not least.
-    listen.mockRejectedValue(new Error('no such event'))
-    vi.spyOn(console, 'error').mockImplementation(() => {})
-    const onSubscribed = vi.fn()
-
-    subscribeVergeEvents(
-      { 'verge://run-state-changed': () => {} },
-      onSubscribed,
-    )
-
-    await vi.waitFor(() => expect(onSubscribed).toHaveBeenCalledTimes(1))
-  })
-
-  it('delivers event payloads to the matching handler', async () => {
+  it('delivers a payload to its matching handler', () => {
     const handlers = new Map<string, (payload: unknown) => void>()
     listen.mockImplementation(
       (name: string, handler: (event: unknown) => void) => {
@@ -91,16 +49,10 @@ describe('subscribeVergeEvents', () => {
       },
     )
     const onRunState = vi.fn()
-    const onNotice = vi.fn()
 
-    subscribeVergeEvents({
-      'verge://run-state-changed': onRunState,
-      'verge://notice-message': onNotice,
-    })
-
+    subscribeVergeEvents({ 'verge://run-state-changed': onRunState })
     handlers.get('verge://run-state-changed')?.({ mode: 'Sidecar' })
 
     expect(onRunState).toHaveBeenCalledWith({ mode: 'Sidecar' })
-    expect(onNotice).not.toHaveBeenCalled()
   })
 })

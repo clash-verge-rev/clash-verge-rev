@@ -17,3 +17,4 @@ export {
   StickyVirtualList,
   type StickyVirtualListHandle,
 } from './sticky-virtual-list'
+export { SortableItem } from './sortable-item'

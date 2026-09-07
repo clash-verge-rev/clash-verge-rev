@@ -1,0 +1,20 @@
+{
+  "identifier": "io.github.clash-verge-rev.perf-harness",
+  "build": {
+    "frontendDist": "../target/perf/dist",
+    "beforeBuildCommand": "",
+    "removeUnusedCommands": false
+  },
+  "bundle": { "active": false, "externalBin": [], "resources": [] },
+  "app": {
+    "security": {
+      "capabilities": [
+        {
+          "identifier": "perf",
+          "windows": ["perf"],
+          "permissions": ["core:default"]
+        }
+      ]
+    }
+  }
+}

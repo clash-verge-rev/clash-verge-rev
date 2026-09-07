@@ -1,8 +1,20 @@
 import { useCallback, useRef } from 'react'
 
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
-import { setCacheDataAsync, useQuery } from '@/services/query-client'
+import {
+  fetchCacheData,
+  revalidateQuery,
+  setCacheData,
+  useQuery,
+} from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
+
+const profilesQueryKey = ['getProfiles'] as const
+
+export const revalidateProfiles = () => revalidateQuery(profilesQueryKey)
+
+export const fetchProfilesIntoCache = () =>
+  fetchCacheData(profilesQueryKey, getProfiles)
 
 export const useProfiles = () => {
   const {
@@ -11,7 +23,7 @@ export const useProfiles = () => {
     error,
     isFetching: isValidating,
   } = useQuery({
-    queryKey: ['getProfiles'],
+    queryKey: profilesQueryKey,
     queryFn: async () => {
       const data = await getProfiles()
       debugLog(
@@ -40,9 +52,8 @@ export const useProfiles = () => {
         const outcome = await patchProfilesConfig(value)
 
         if (outcome.status === 'valid') {
-          await setCacheDataAsync<IProfilesConfig>(
-            ['getProfiles'],
-            (current) => (current ? { ...current, ...value } : current),
+          await setCacheData<IProfilesConfig>(profilesQueryKey, (current) =>
+            current ? { ...current, ...value } : current,
           )
         } else if (outcome.status !== 'busy') {
           await mutateProfiles()

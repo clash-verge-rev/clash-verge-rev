@@ -42,12 +42,6 @@ pub fn get_app_uptime(state: State<'_, RwLock<Platform>>) -> Result<u128, Error>
     Ok(state.inner().read().appinfo.app_startup_time.elapsed().as_millis())
 }
 
-/// 检查应用是否以管理员身份运行
-#[command]
-pub fn app_is_admin(state: State<'_, RwLock<Platform>>) -> Result<bool, Error> {
-    Ok(state.inner().read().appinfo.app_is_admin)
-}
-
 #[command]
 pub fn export_diagnostic_info<R: Runtime>(
     app_handle: AppHandle<R>,

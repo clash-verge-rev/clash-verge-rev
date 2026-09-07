@@ -1,0 +1,79 @@
+{
+  "features": ["refractivity", "specular-location"],
+  "fill": {
+    "automatic-gradient": "extended-gray:1.00000,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "fill": "automatic",
+          "glass": true,
+          "hidden": false,
+          "image-name": "ClashVergeCat.svg",
+          "name": "Cat",
+          "position": {
+            "scale": 2.9,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.25
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.25
+      }
+    },
+    {
+      "blur-material": 0.5,
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "fill": "automatic",
+          "glass-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "light",
+              "value": true
+            }
+          ],
+          "hidden": false,
+          "image-name": "ClashVergeCircle.svg",
+          "name": "Circle",
+          "position": {
+            "scale": 2.9,
+            "translation-in-points": [0, 0]
+          }
+        }
+      ],
+      "opacity": 1,
+      "position": {
+        "scale": 1,
+        "translation-in-points": [0, 0]
+      },
+      "refractivity": {
+        "depth": 0,
+        "enabled": true,
+        "strength": 0.5
+      },
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": "outside",
+      "translucency": {
+        "enabled": true,
+        "value": 0.25
+      }
+    }
+  ],
+  "supported-platforms": {
+    "squares": ["macOS"]
+  }
+}

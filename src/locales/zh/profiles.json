@@ -135,6 +135,9 @@
         "uidMissing": "缺少订阅标识",
         "saveFailed": "保存订阅失败"
       },
+      "warnings": {
+        "frequentUpdate": "间隔过短会频繁触发内核重载并中断现有连接，建议使用默认值 {{minutes}} 分钟（24 小时）"
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",

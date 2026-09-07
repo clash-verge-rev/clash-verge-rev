@@ -1,17 +1,4 @@
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit/react'
 import {
   Box,
   List,
@@ -23,7 +10,6 @@ import {
 } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router'
@@ -31,11 +17,12 @@ import { Outlet, useNavigate } from 'react-router'
 import iconDark from '@/assets/image/icon_dark.svg?react'
 import iconLight from '@/assets/image/icon_light.svg?react'
 import LogoSvg from '@/assets/image/logo.svg?react'
-import { BaseErrorBoundary } from '@/components/base'
+import { BaseErrorBoundary, SortableItem } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
 import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
+import { SysproxyPrivilegeDialog } from '@/components/layout/sysproxy-privilege-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
@@ -52,6 +39,7 @@ import {
   useLayoutEvents,
   useLoadingOverlay,
   useNavMenuOrder,
+  usePendingFailures,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
 import { navItems } from './_navigation'
@@ -59,56 +47,12 @@ import { navItems } from './_navigation'
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
-type NavItem = (typeof navItems)[number]
-
 type MenuContextPosition = { top: number; left: number }
-
-interface SortableNavMenuItemProps {
-  item: NavItem
-  label: string
-}
-
-const SortableNavMenuItem = ({ item, label }: SortableNavMenuItemProps) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: item.path,
-  })
-
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  if (isDragging) {
-    style.zIndex = 100
-  }
-
-  return (
-    <LayoutItem
-      to={item.path}
-      icon={item.icon}
-      sortable={{
-        setNodeRef,
-        attributes,
-        listeners,
-        style,
-        isDragging,
-      }}
-    >
-      {label}
-    </LayoutItem>
-  )
-}
 
 dayjs.extend(relativeTime)
 
 const OS = getSystem()
+const SENSORS = [PointerSensor, KeyboardSensor]
 
 const Layout = () => {
   const mode = useThemeMode()
@@ -128,17 +72,6 @@ const Layout = () => {
 
   const windowControlsRef = useRef<any>(null)
   const { decorated } = useWindowDecorations()
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 6,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
 
   const handleMenuOrderOptimisticUpdate = useCallback(
     (order: string[]) => {
@@ -231,6 +164,7 @@ const Layout = () => {
   )
 
   useLayoutEvents(handleNotice)
+  usePendingFailures()
 
   useEffect(() => {
     if (language) {
@@ -256,11 +190,33 @@ const Layout = () => {
     )
   }
 
+  // Navigation menu items
+  const navMenuItems = menuOrder.map((path, index) => {
+    const item = navItemMap.get(path)
+    if (!item) return null
+
+    return (
+      <SortableItem
+        key={item.path}
+        id={item.path}
+        index={index}
+        disabled={!menuUnlocked}
+      >
+        {(sortable) => (
+          <LayoutItem to={item.path} icon={item.icon} sortable={sortable}>
+            {t(item.label)}
+          </LayoutItem>
+        )}
+      </SortableItem>
+    )
+  })
+
   return (
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
       <ServiceMigrationDialog />
+      <SysproxyPrivilegeDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',
@@ -360,48 +316,12 @@ const Layout = () => {
               </Box>
             )}
 
-            {menuUnlocked ? (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleMenuDragEnd}
-              >
-                <SortableContext items={menuOrder}>
-                  <List
-                    className="the-menu"
-                    onContextMenu={handleMenuContextMenu}
-                  >
-                    {menuOrder.map((path) => {
-                      const item = navItemMap.get(path)
-                      if (!item) {
-                        return null
-                      }
-                      return (
-                        <SortableNavMenuItem
-                          key={item.path}
-                          item={item}
-                          label={t(item.label)}
-                        />
-                      )
-                    })}
-                  </List>
-                </SortableContext>
-              </DndContext>
-            ) : (
-              <List className="the-menu" onContextMenu={handleMenuContextMenu}>
-                {menuOrder.map((path) => {
-                  const item = navItemMap.get(path)
-                  if (!item) {
-                    return null
-                  }
-                  return (
-                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
-                      {t(item.label)}
-                    </LayoutItem>
-                  )
-                })}
-              </List>
-            )}
+            {/* Navigation menu */}
+            <List className="the-menu" onContextMenu={handleMenuContextMenu}>
+              <DragDropProvider sensors={SENSORS} onDragEnd={handleMenuDragEnd}>
+                {navMenuItems}
+              </DragDropProvider>
+            </List>
 
             <Menu
               open={Boolean(menuContextPosition)}

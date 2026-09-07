@@ -10,6 +10,12 @@ notifications:
     title: 시스템 프록시
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: 시스템 프록시
+    body: 시스템 프록시를 설정하지 못했습니다. 이유는 Clash Verge를 열어 확인하십시오.
+  systemProxyGuardStopped:
+    title: 시스템 프록시 가드
+    body: 연속으로 실패하여 중지되었습니다. 이유는 Clash Verge를 열어 확인하십시오.
   tunModeToggled:
     title: TUN 모드
     'on': TUN mode has been enabled.

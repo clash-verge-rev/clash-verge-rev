@@ -135,6 +135,9 @@
         "uidMissing": "The profile identifier is missing",
         "saveFailed": "Failed to save profile"
       },
+      "warnings": {
+        "frequentUpdate": "A short interval reloads the core that often and drops existing connections. {{minutes}} minutes (24 hours) is recommended."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",

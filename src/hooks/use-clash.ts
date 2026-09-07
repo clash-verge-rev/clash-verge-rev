@@ -9,7 +9,6 @@ import {
   patchClashConfig,
 } from '@/services/cmds'
 import {
-  getCacheData,
   revalidateQuery,
   setCacheData,
   useQuery,
@@ -97,11 +96,7 @@ export const useClash = () => {
     if (updater === undefined) {
       return refetch()
     }
-    const next =
-      typeof updater === 'function'
-        ? updater(getCacheData<IConfigData>(['getRuntimeConfig']))
-        : updater
-    setCacheData(['getRuntimeConfig'], next)
+    void setCacheData<IConfigData>(['getRuntimeConfig'], updater)
     if (revalidate !== false) {
       return refetch()
     }

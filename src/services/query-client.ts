@@ -1,4 +1,3 @@
-import { unstable_serialize } from 'swr'
 import useSWR, {
   type SWRConfiguration,
   type SWRResponse,
@@ -33,19 +32,6 @@ type QueryResult<T> = SWRResponse<T> & {
   refetch: () => Promise<{ data: T | undefined }>
 }
 
-const serializeQueryKey = (queryKey: QueryKey) => unstable_serialize(queryKey)
-
-const queryCache = new Map<string, unknown>()
-
-const setCachedData = <T>(queryKey: QueryKey, data: T | undefined) => {
-  const cacheKey = serializeQueryKey(queryKey)
-  if (data === undefined) {
-    queryCache.delete(cacheKey)
-  } else {
-    queryCache.set(cacheKey, data)
-  }
-}
-
 export const swrConfig: SWRConfiguration = {
   dedupingInterval: 2000,
   errorRetryCount: 3,
@@ -53,72 +39,29 @@ export const swrConfig: SWRConfiguration = {
   revalidateOnFocus: false,
 }
 
-export const getCacheData = <T>(queryKey: QueryKey): T | undefined => {
-  return queryCache.get(serializeQueryKey(queryKey)) as T | undefined
-}
-
-const updateCachedData = <T>(
-  queryKey: QueryKey,
-  updaterOrData: QueryDataUpdater<T>,
-) => {
-  const current = getCacheData<T>(queryKey)
-  const next =
-    typeof updaterOrData === 'function'
-      ? (updaterOrData as (current: T | undefined) => T | undefined)(current)
-      : updaterOrData
-  setCachedData(queryKey, next)
-  return next
-}
-
 export const setCacheData = <T>(
   queryKey: QueryKey,
   updaterOrData: QueryDataUpdater<T>,
-) => {
-  const next = updateCachedData(queryKey, updaterOrData)
-  void swrMutate(queryKey, next, {
+) =>
+  swrMutate<T>(queryKey, updaterOrData, {
     populateCache: true,
     revalidate: false,
   })
-  return next
-}
 
-export const setCacheDataAsync = async <T>(
-  queryKey: QueryKey,
-  updaterOrData: QueryDataUpdater<T>,
-) => {
-  const next = updateCachedData(queryKey, updaterOrData)
-  await swrMutate(queryKey, next, {
-    populateCache: true,
-    revalidate: false,
-  })
-  return next
-}
-
-export const revalidateQuery = async (queryKey: QueryKey) => {
-  const data = await swrMutate(queryKey)
-  if (data !== undefined) {
-    setCachedData(queryKey, data)
-  }
-  return data
-}
+export const revalidateQuery = (queryKey: QueryKey) => swrMutate(queryKey)
 
 export const revalidateQueries = (queryKeys: readonly QueryKey[]) =>
   Promise.all(queryKeys.map(revalidateQuery))
 
-export const removeCacheData = (queryKey: QueryKey) => {
-  setCachedData(queryKey, undefined)
-  return swrMutate(queryKey, undefined, {
-    populateCache: true,
-    revalidate: false,
-  })
-}
+export const removeCacheData = (queryKey: QueryKey) =>
+  setCacheData(queryKey, undefined)
 
 export const fetchCacheData = async <T>(
   queryKey: QueryKey,
   queryFn: () => Promise<T> | T,
 ) => {
   const data = await queryFn()
-  setCacheData(queryKey, data)
+  await setCacheData(queryKey, data)
   return data
 }
 
@@ -144,11 +87,6 @@ export function useQuery<T>(options: QueryOptions<T>): QueryResult<T> {
     typeof fallbackDataSource === 'function'
       ? (fallbackDataSource as () => T | undefined)()
       : fallbackDataSource
-  const serializedKey = serializeQueryKey(queryKey)
-  if (enabled && fallbackData !== undefined && !queryCache.has(serializedKey)) {
-    setCachedData(queryKey, fallbackData)
-  }
-
   const swr = useSWR<T>(enabled ? queryKey : null, queryFn, {
     dedupingInterval: staleTime,
     errorRetryCount: retry === false ? 0 : retry,
@@ -176,21 +114,12 @@ export function useQuery<T>(options: QueryOptions<T>): QueryResult<T> {
     revalidateOnReconnect: refetchOnReconnect,
     refreshInterval: refetchInterval || 0,
     refreshWhenHidden: refetchIntervalInBackground ?? false,
-    onSuccess: (data) => {
-      setCachedData(queryKey, data)
-    },
   })
 
   return {
     ...swr,
     isFetching: swr.isValidating,
     isPending: swr.isLoading,
-    refetch: async () => {
-      const data = await swr.mutate()
-      if (data !== undefined) {
-        setCachedData(queryKey, data)
-      }
-      return { data }
-    },
+    refetch: async () => ({ data: await swr.mutate() }),
   }
 }
