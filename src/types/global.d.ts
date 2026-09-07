@@ -1049,3 +1049,22 @@ interface ITrafficWorkerLogMessage {
 type TrafficWorkerResponseMessage =
   | ITrafficWorkerSnapshotMessage
   | ITrafficWorkerLogMessage
+
+interface ConfigField<T> {
+  value: NonNullable<T>
+  defaultValue: NonNullable<T>
+  modified: boolean
+  mutate: (newValue: T) => Promise<void>
+  patch: (newValue: T) => Promise<void>
+  reset: () => Promise<void>
+}
+
+interface CachedConfigField<T> {
+  value: NonNullable<T>
+  defaultValue: NonNullable<T>
+  modified: boolean
+  set: (newValue: T) => void
+  reset: () => void
+  refetch: () => void
+  save: () => Promise<void>
+}

@@ -1,3 +1,4 @@
+import { RestartAltRounded } from '@mui/icons-material'
 import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
@@ -6,23 +7,16 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { useVergeConfigField } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 import { openExternalUrl } from '@/utils/open-external-url'
 
 import { WebUIItem } from './web-ui-item'
 
-const DEFAULT_WEB_UI_LIST = [
-  'https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
-  'https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret',
-  'https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
-]
-
 export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { clashInfo } = useClashInfo()
-  const { verge, patchVerge, mutateVerge } = useVerge()
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -32,11 +26,11 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
     close: () => setOpen(false),
   }))
 
-  const webUIList = verge?.web_ui_list || DEFAULT_WEB_UI_LIST
+  const webUIListField = useVergeConfigField('web_ui_list', [] as string[])
 
   const webUIEntries = useMemo(() => {
     const counts: Record<string, number> = {}
-    return webUIList.map((item, index) => {
+    return webUIListField.value.map((item, index) => {
       const keyBase = item && item.trim().length > 0 ? item : 'entry'
       const count = counts[keyBase] ?? 0
       counts[keyBase] = count + 1
@@ -46,26 +40,26 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         key: `${keyBase}-${count}`,
       }
     })
-  }, [webUIList])
+  }, [webUIListField.value])
 
   const handleAdd = useLockFn(async (value: string) => {
-    const newList = [...webUIList, value]
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
-    await patchVerge({ web_ui_list: newList })
+    const newList = [...webUIListField.value, value]
+    webUIListField.mutate(newList)
+    await webUIListField.patch(newList)
   })
 
   const handleChange = useLockFn(async (index: number, value?: string) => {
-    const newList = [...webUIList]
+    const newList = [...webUIListField.value]
     newList[index] = value ?? ''
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
-    await patchVerge({ web_ui_list: newList })
+    webUIListField.mutate(newList)
+    await webUIListField.patch(newList)
   })
 
   const handleDelete = useLockFn(async (index: number) => {
-    const newList = [...webUIList]
+    const newList = [...webUIListField.value]
     newList.splice(index, 1)
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
-    await patchVerge({ web_ui_list: newList })
+    webUIListField.mutate(newList)
+    await webUIListField.patch(newList)
   })
 
   const handleOpenUrl = useLockFn(async (value?: string) => {
@@ -110,14 +104,28 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       title={
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.modals.webUI.title')}
-          <Button
-            variant="contained"
-            size="small"
-            disabled={editing}
-            onClick={() => setEditing(true)}
-          >
-            {t('shared.actions.new')}
-          </Button>
+          <Box>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={editing}
+              onClick={() => setEditing(true)}
+              sx={{ marginRight: '8px' }}
+            >
+              {t('shared.actions.new')}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<RestartAltRounded />}
+              onClick={() => {
+                webUIListField.reset()
+              }}
+            >
+              {t('shared.actions.resetToDefault')}
+            </Button>
+          </Box>
         </Box>
       }
       contentSx={{
@@ -132,7 +140,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
-      {!editing && webUIList.length === 0 && (
+      {!editing && webUIListField.value.length === 0 && (
         <BaseEmpty
           extra={
             <Typography sx={{ mt: 2, fontSize: '12px' }}>

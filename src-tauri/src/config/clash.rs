@@ -11,7 +11,7 @@ use std::{
     str::FromStr as _,
 };
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
@@ -25,7 +25,7 @@ impl IClashTemp {
 
         match map_result {
             Ok(mut map) => {
-                let template_map = Self::template().0;
+                let template_map = Self::default().0;
                 for (key, value) in template_map.into_iter() {
                     if !map.contains_key(&key) {
                         map.insert(key, value);
@@ -44,69 +44,9 @@ impl IClashTemp {
             }
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
-                Self::template()
+                Self::default()
             }
         }
-    }
-
-    pub fn template() -> Self {
-        let mut map = Mapping::new();
-        let mut tun_config = Mapping::new();
-        let mut cors_map = Mapping::new();
-
-        tun_config.insert("enable".into(), false.into());
-        tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
-        tun_config.insert("auto-route".into(), true.into());
-        tun_config.insert("strict-route".into(), false.into());
-        tun_config.insert("auto-detect-interface".into(), true.into());
-        tun_config.insert("dns-hijack".into(), tun_const::DNS_HIJACK.into());
-
-        #[cfg(not(target_os = "windows"))]
-        map.insert("redir-port".into(), network::ports::DEFAULT_REDIR.into());
-        #[cfg(target_os = "linux")]
-        map.insert("tproxy-port".into(), network::ports::DEFAULT_TPROXY.into());
-
-        map.insert("mixed-port".into(), network::ports::DEFAULT_MIXED.into());
-        map.insert("socks-port".into(), network::ports::DEFAULT_SOCKS.into());
-        map.insert("port".into(), network::ports::DEFAULT_HTTP.into());
-        map.insert("log-level".into(), "info".into());
-        map.insert("allow-lan".into(), false.into());
-        map.insert("ipv6".into(), true.into());
-        map.insert("mode".into(), "rule".into());
-        map.insert(
-            "external-controller".into(),
-            network::DEFAULT_EXTERNAL_CONTROLLER.into(),
-        );
-        #[cfg(unix)]
-        map.insert(
-            "external-controller-unix".into(),
-            Self::guard_external_controller_ipc().into(),
-        );
-        #[cfg(windows)]
-        map.insert(
-            "external-controller-pipe".into(),
-            Self::guard_external_controller_ipc().into(),
-        );
-        map.insert("tun".into(), tun_config.into());
-        cors_map.insert("allow-private-network".into(), true.into());
-        cors_map.insert(
-            "allow-origins".into(),
-            vec![
-                "tauri://localhost",
-                "http://tauri.localhost",
-                // Only enable this in dev mode
-                #[cfg(feature = "verge-dev")]
-                "http://localhost:3000",
-                "https://yacd.metacubex.one",
-                "https://metacubex.github.io",
-                "https://board.zash.run.place",
-            ]
-            .into(),
-        );
-        map.insert("secret".into(), "set-your-secret".into());
-        map.insert("external-controller-cors".into(), cors_map.into());
-        map.insert("unified-delay".into(), true.into());
-        Self(map)
     }
 
     fn guard(mut config: Mapping) -> Mapping {
@@ -301,6 +241,68 @@ impl IClashTemp {
                 logging!(error, Type::Config, "Failed to get IPC path");
                 crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER.into()
             })
+    }
+}
+
+impl Default for IClashTemp {
+    fn default() -> Self {
+        let mut map = Mapping::new();
+        let mut tun_config = Mapping::new();
+        let mut cors_map = Mapping::new();
+
+        tun_config.insert("enable".into(), false.into());
+        tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
+        tun_config.insert("auto-route".into(), true.into());
+        tun_config.insert("strict-route".into(), false.into());
+        tun_config.insert("auto-detect-interface".into(), true.into());
+        tun_config.insert("dns-hijack".into(), tun_const::DNS_HIJACK.into());
+
+        #[cfg(not(target_os = "windows"))]
+        map.insert("redir-port".into(), network::ports::DEFAULT_REDIR.into());
+        #[cfg(target_os = "linux")]
+        map.insert("tproxy-port".into(), network::ports::DEFAULT_TPROXY.into());
+
+        map.insert("mixed-port".into(), network::ports::DEFAULT_MIXED.into());
+        map.insert("socks-port".into(), network::ports::DEFAULT_SOCKS.into());
+        map.insert("port".into(), network::ports::DEFAULT_HTTP.into());
+        map.insert("log-level".into(), "info".into());
+        map.insert("allow-lan".into(), false.into());
+        map.insert("ipv6".into(), true.into());
+        map.insert("mode".into(), "rule".into());
+        map.insert(
+            "external-controller".into(),
+            network::DEFAULT_EXTERNAL_CONTROLLER.into(),
+        );
+        #[cfg(unix)]
+        map.insert(
+            "external-controller-unix".into(),
+            Self::guard_external_controller_ipc().into(),
+        );
+        #[cfg(windows)]
+        map.insert(
+            "external-controller-pipe".into(),
+            Self::guard_external_controller_ipc().into(),
+        );
+        map.insert("tun".into(), tun_config.into());
+        cors_map.insert("allow-private-network".into(), true.into());
+        cors_map.insert(
+            "allow-origins".into(),
+            vec![
+                "tauri://localhost",
+                "http://tauri.localhost",
+                // Only enable this in dev mode
+                #[cfg(feature = "verge-dev")]
+                "http://localhost:3000",
+                "https://yacd.metacubex.one",
+                "https://metacubex.github.io",
+                "https://board.zash.run.place",
+            ]
+            .into(),
+        );
+        map.insert("secret".into(), "set-your-secret".into());
+        map.insert("external-controller-cors".into(), cors_map.into());
+        map.insert("unified-delay".into(), true.into());
+        Self(map)
     }
 }
 

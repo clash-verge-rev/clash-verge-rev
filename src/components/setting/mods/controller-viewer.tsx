@@ -1,7 +1,8 @@
-import { ContentCopy } from '@mui/icons-material'
+import { ContentCopy, RestartAltRounded } from '@mui/icons-material'
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   IconButton,
   List,
@@ -16,9 +17,11 @@ import { useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
-import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { useClashConfigField, useClashInfo } from '@/hooks/use-clash'
+import { useCachedVergeConfigField } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+
+import SettingListItemText from './setting-list-item-text-comp'
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
@@ -27,11 +30,16 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [isSaving, setIsSaving] = useState(false)
 
   const { clashInfo, patchInfo } = useClashInfo()
-  const { verge, patchVerge } = useVerge()
   const [controller, setController] = useState(clashInfo?.server || '')
   const [secret, setSecret] = useState(clashInfo?.secret || '')
-  const [enableController, setEnableController] = useState(
-    verge?.enable_external_controller ?? false,
+  const externalControllerField = useClashConfigField(
+    'external-controller',
+    controller,
+  )
+  const secretField = useClashConfigField('secret', secret)
+  const enableControllerCachedField = useCachedVergeConfigField(
+    'enable_external_controller',
+    false,
   )
 
   // 对话框打开时初始化配置
@@ -40,7 +48,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setOpen(true)
       setController(clashInfo?.server || '')
       setSecret(clashInfo?.secret || '')
-      setEnableController(verge?.enable_external_controller ?? false)
+      enableControllerCachedField.refetch()
     },
     close: () => setOpen(false),
   }))
@@ -51,10 +59,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setIsSaving(true)
 
       // 先保存 enable_external_controller 设置
-      await patchVerge({ enable_external_controller: enableController })
+      enableControllerCachedField.save()
 
       // 如果启用了外部控制器，则保存控制器地址和密钥
-      if (enableController) {
+      if (enableControllerCachedField.value) {
         if (!controller.trim()) {
           showNotice.error(
             'settings.sections.externalController.messages.addressRequired',
@@ -107,7 +115,30 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t('settings.sections.externalController.title')}
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {t('settings.sections.externalController.title')}
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            startIcon={<RestartAltRounded />}
+            onClick={() => {
+              enableControllerCachedField.reset()
+              setController(externalControllerField.defaultValue)
+              setSecret(secretField.defaultValue)
+            }}
+          >
+            {t('shared.actions.resetToDefault')}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
@@ -132,13 +163,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             justifyContent: 'space-between',
           }}
         >
-          <ListItemText
-            primary={t('settings.sections.externalController.fields.enable')}
+          <SettingListItemText
+            label={t('settings.sections.externalController.fields.enable')}
+            modified={enableControllerCachedField.modified}
           />
           <Switch
             edge="end"
-            checked={enableController}
-            onChange={(e) => setEnableController(e.target.checked)}
+            checked={enableControllerCachedField.value}
+            onChange={(e) => enableControllerCachedField.set(e.target.checked)}
             disabled={isSaving}
           />
         </ListItem>
@@ -158,15 +190,17 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
               size="small"
               sx={{
                 width: 175,
-                opacity: enableController ? 1 : 0.5,
-                pointerEvents: enableController ? 'auto' : 'none',
+                opacity: enableControllerCachedField.value ? 1 : 0.5,
+                pointerEvents: enableControllerCachedField.value
+                  ? 'auto'
+                  : 'none',
               }}
               value={controller}
               placeholder={t(
                 'settings.sections.externalController.placeholders.address',
               )}
               onChange={(e) => setController(e.target.value)}
-              disabled={isSaving || !enableController}
+              disabled={isSaving || !enableControllerCachedField.value}
             />
             <Tooltip
               title={t('settings.sections.externalController.tooltips.copy')}
@@ -175,7 +209,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 size="small"
                 onClick={() => handleCopyToClipboard(controller, 'controller')}
                 color="primary"
-                disabled={isSaving || !enableController}
+                disabled={isSaving || !enableControllerCachedField.value}
               >
                 <ContentCopy fontSize="small" />
               </IconButton>
@@ -198,15 +232,17 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
               size="small"
               sx={{
                 width: 175,
-                opacity: enableController ? 1 : 0.5,
-                pointerEvents: enableController ? 'auto' : 'none',
+                opacity: enableControllerCachedField.value ? 1 : 0.5,
+                pointerEvents: enableControllerCachedField.value
+                  ? 'auto'
+                  : 'none',
               }}
               value={secret}
               placeholder={t(
                 'settings.sections.externalController.placeholders.secret',
               )}
               onChange={(e) => setSecret(e.target.value)}
-              disabled={isSaving || !enableController}
+              disabled={isSaving || !enableControllerCachedField.value}
             />
             <Tooltip
               title={t('settings.sections.externalController.tooltips.copy')}
@@ -215,7 +251,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 size="small"
                 onClick={() => handleCopyToClipboard(secret, 'secret')}
                 color="primary"
-                disabled={isSaving || !enableController}
+                disabled={isSaving || !enableControllerCachedField.value}
               >
                 <ContentCopy fontSize="small" />
               </IconButton>

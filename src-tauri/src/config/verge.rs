@@ -348,6 +348,12 @@ impl IVerge {
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
             proxy_host: Some("127.0.0.1".into()),
+            web_ui_list: Some(vec![
+                "https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret"
+                    .into(),
+                "https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret".into(),
+                "https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret".into(),
+            ]),
             #[cfg(not(target_os = "windows"))]
             verge_redir_port: Some(7895),
             #[cfg(not(target_os = "windows"))]
@@ -385,6 +391,11 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            app_log_level: Some("warn".into()),
+            proxy_layout_column: Some(6),
+            auto_delay_detection_interval_minutes: Some(5),
+            default_latency_test: Some("".into()),
+            default_latency_timeout: Some(10000),
             ..Self::default()
         }
     }

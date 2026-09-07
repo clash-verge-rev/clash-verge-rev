@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   FormControl,
+  IconButton,
   List,
   ListItem,
   ListItemText,
@@ -37,6 +38,8 @@ import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import { MONACO_FONT_FAMILY } from '@/utils/font-family'
+
+import SettingListItemText from './setting-list-item-text-comp'
 
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
@@ -584,7 +587,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       event.target.type === 'checkbox'
         ? event.target.checked
         : event.target.value
+    applyChange(field, value)
+  }
 
+  const applyChange = (field: string, value: any) =>
     setValues((prev) => {
       const newValues = {
         ...prev,
@@ -599,7 +605,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       return newValues
     })
-  }
 
   return (
     <BaseDialog
@@ -669,7 +674,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Typography>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.enable')} />
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.enable')}
+              modified={values.enable !== DEFAULT_DNS_CONFIG.enable}
+            />
             <Switch
               edge="end"
               checked={values.enable}
@@ -678,7 +686,20 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.listen')} />
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.listen')}
+              modified={values.listen !== DEFAULT_DNS_CONFIG.listen}
+            />
+            <IconButton
+              size="small"
+              onClick={() => {
+                applyChange('listen', DEFAULT_DNS_CONFIG.listen)
+              }}
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               autoComplete="off"
@@ -691,8 +712,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.enhancedMode')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.enhancedMode')}
+              modified={
+                values.enhancedMode !== DEFAULT_DNS_CONFIG['enhanced-mode']
+              }
             />
             <FormControl size="small" sx={{ width: 150 }}>
               <Select
@@ -706,9 +730,22 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fakeIpRange')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.fakeIpRange')}
+              modified={
+                values.fakeIpRange !== DEFAULT_DNS_CONFIG['fake-ip-range']
+              }
             />
+            <IconButton
+              size="small"
+              onClick={() =>
+                applyChange('fakeIpRange', DEFAULT_DNS_CONFIG['fake-ip-range'])
+              }
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               autoComplete="off"
@@ -721,8 +758,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fakeIpRange6')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.fakeIpRange6')}
+              modified={
+                values.fakeIpRange6 !== DEFAULT_DNS_CONFIG['fake-ip-range6']
+              }
             />
             <TextField
               size="small"
@@ -751,9 +791,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.ipv6.label')}
-              secondary={t('settings.modals.dns.fields.ipv6.description')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.ipv6.label')}
+              modified={values.ipv6 !== DEFAULT_DNS_CONFIG.ipv6}
             />
             <Switch
               edge="end"
@@ -763,9 +803,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.preferH3.label')}
-              secondary={t('settings.modals.dns.fields.preferH3.description')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.preferH3.label')}
+              modified={values.preferH3 !== DEFAULT_DNS_CONFIG['prefer-h3']}
             />
             <Switch
               edge="end"
@@ -775,11 +815,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.respectRules.label')}
-              secondary={t(
-                'settings.modals.dns.fields.respectRules.description',
-              )}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.respectRules.label')}
+              modified={
+                values.respectRules !== DEFAULT_DNS_CONFIG['respect-rules']
+              }
             />
             <Switch
               edge="end"
@@ -789,9 +829,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.useHosts.label')}
-              secondary={t('settings.modals.dns.fields.useHosts.description')}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.useHosts.label')}
+              modified={values.useHosts !== DEFAULT_DNS_CONFIG['use-hosts']}
             />
             <Switch
               edge="end"
@@ -801,11 +841,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.useSystemHosts.label')}
-              secondary={t(
-                'settings.modals.dns.fields.useSystemHosts.description',
-              )}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.useSystemHosts.label')}
+              modified={
+                values.useSystemHosts !== DEFAULT_DNS_CONFIG['use-system-hosts']
+              }
             />
             <Switch
               edge="end"
@@ -815,11 +855,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.directPolicy.label')}
-              secondary={t(
-                'settings.modals.dns.fields.directPolicy.description',
-              )}
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.directPolicy.label')}
+              modified={
+                values.directNameserverFollowPolicy !==
+                DEFAULT_DNS_CONFIG['direct-nameserver-follow-policy']
+              }
             />
             <Switch
               edge="end"
@@ -829,12 +870,36 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.defaultNameserver.label')}
-              secondary={t(
-                'settings.modals.dns.fields.defaultNameserver.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.defaultNameserver.label')}
+                modified={
+                  values.defaultNameserver !==
+                  DEFAULT_DNS_CONFIG['default-nameserver'].join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'defaultNameserver',
+                    DEFAULT_DNS_CONFIG['default-nameserver'].join(', '),
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -849,10 +914,35 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.nameserver.label')}
-              secondary={t('settings.modals.dns.fields.nameserver.description')}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.nameserver.label')}
+                modified={
+                  values.nameserver !== DEFAULT_DNS_CONFIG.nameserver.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'nameserver',
+                    DEFAULT_DNS_CONFIG.nameserver.join(', '),
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -867,10 +957,35 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fallback.label')}
-              secondary={t('settings.modals.dns.fields.fallback.description')}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.fallback.label')}
+                modified={
+                  values.fallback !== DEFAULT_DNS_CONFIG.fallback.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'fallback',
+                    DEFAULT_DNS_CONFIG.fallback.join(', '),
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -885,10 +1000,37 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.proxy.label')}
-              secondary={t('settings.modals.dns.fields.proxy.description')}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.proxy.label')}
+                modified={
+                  values.proxyServerNameserver !==
+                  DEFAULT_DNS_CONFIG['proxy-server-nameserver']?.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'proxyServerNameserver',
+                    DEFAULT_DNS_CONFIG['proxy-server-nameserver']?.join(', ') ||
+                      '',
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -903,12 +1045,36 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.directNameserver.label')}
-              secondary={t(
-                'settings.modals.dns.fields.directNameserver.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.directNameserver.label')}
+                modified={
+                  values.directNameserver !==
+                  DEFAULT_DNS_CONFIG['direct-nameserver']?.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'directNameserver',
+                    DEFAULT_DNS_CONFIG['direct-nameserver']?.join(', ') || '',
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -923,12 +1089,36 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fakeIpFilter.label')}
-              secondary={t(
-                'settings.modals.dns.fields.fakeIpFilter.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.fakeIpFilter.label')}
+                modified={
+                  values.fakeIpFilter !==
+                  DEFAULT_DNS_CONFIG['fake-ip-filter'].join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'fakeIpFilter',
+                    DEFAULT_DNS_CONFIG['fake-ip-filter'].join(', '),
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -943,12 +1133,28 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.nameserverPolicy.label')}
-              secondary={t(
-                'settings.modals.dns.fields.nameserverPolicy.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.nameserverPolicy.label')}
+                modified={values.nameserverPolicy !== ''}
+              />
+              <IconButton
+                size="small"
+                onClick={() => applyChange('nameserverPolicy', '')}
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -971,7 +1177,13 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t('settings.modals.dns.fields.geoipFiltering.label')}
+              primary={
+                t('settings.modals.dns.fields.geoipFiltering.label') +
+                (values.fallbackGeoip !==
+                DEFAULT_DNS_CONFIG['fallback-filter'].geoip
+                  ? '*'
+                  : '')
+              }
               secondary={t(
                 'settings.modals.dns.fields.geoipFiltering.description',
               )}
@@ -984,7 +1196,26 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t('settings.modals.dns.fields.geoipCode')} />
+            <SettingListItemText
+              label={t('settings.modals.dns.fields.geoipCode')}
+              modified={
+                values.fallbackGeoipCode !==
+                DEFAULT_DNS_CONFIG['fallback-filter']['geoip-code']
+              }
+            />
+            <IconButton
+              size="small"
+              onClick={() =>
+                applyChange(
+                  'fallbackGeoipCode',
+                  DEFAULT_DNS_CONFIG['fallback-filter']['geoip-code'],
+                )
+              }
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               autoComplete="off"
@@ -997,12 +1228,37 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fallbackIpCidr.label')}
-              secondary={t(
-                'settings.modals.dns.fields.fallbackIpCidr.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.fallbackIpCidr.label')}
+                modified={
+                  values.fallbackIpcidr !==
+                  DEFAULT_DNS_CONFIG['fallback-filter'].ipcidr?.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'fallbackIpcidr',
+                    DEFAULT_DNS_CONFIG['fallback-filter'].ipcidr?.join(', ') ||
+                      '',
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -1017,12 +1273,37 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.fallbackDomain.label')}
-              secondary={t(
-                'settings.modals.dns.fields.fallbackDomain.description',
-              )}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.fallbackDomain.label')}
+                modified={
+                  values.fallbackDomain !==
+                  DEFAULT_DNS_CONFIG['fallback-filter'].domain?.join(', ')
+                }
+              />
+              <IconButton
+                size="small"
+                onClick={() =>
+                  applyChange(
+                    'fallbackDomain',
+                    DEFAULT_DNS_CONFIG['fallback-filter'].domain?.join(', ') ||
+                      '',
+                  )
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline
@@ -1044,10 +1325,28 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Typography>
 
           <Item sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-            <ListItemText
-              primary={t('settings.modals.dns.fields.hosts.label')}
-              secondary={t('settings.modals.dns.fields.hosts.description')}
-            />
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <SettingListItemText
+                label={t('settings.modals.dns.fields.hosts.label')}
+                modified={values.hosts !== ''}
+              />
+              <IconButton
+                size="small"
+                onClick={() => applyChange('hosts', '')}
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
+            </Box>
             <TextField
               fullWidth
               multiline

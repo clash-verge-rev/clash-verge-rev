@@ -1,3 +1,4 @@
+import { RestartAltRounded } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -19,13 +20,14 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { DEFAULT_HOVER_DELAY } from '@/components/proxy/proxy-group-navigator'
-import { useVerge } from '@/hooks/use-verge'
+import { useVergeConfigField } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
 import { copyIconFile, getAppDir } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
 import { GuardState } from './guard-state'
+import SettingListItemText from './setting-list-item-text-comp'
 
 const OS = getSystem()
 
@@ -50,7 +52,43 @@ const getIcons = async (icon_dir: string, name: string) => {
 
 export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const { t } = useTranslation()
-  const { verge, patchVerge, mutateVerge } = useVerge()
+  const trafficGraphField = useVergeConfigField('traffic_graph', true)
+  const enableMemoryUsageField = useVergeConfigField(
+    'enable_memory_usage',
+    true,
+  )
+  const enableGroupIconField = useVergeConfigField('enable_group_icon', true)
+  const pauseRenderTrafficStatsOnBlurField = useVergeConfigField(
+    'pause_render_traffic_stats_on_blur',
+    true,
+  )
+  const noticePositionField = useVergeConfigField(
+    'notice_position',
+    'top-right',
+  )
+  const enableHoverJumpNavigatorField = useVergeConfigField(
+    'enable_hover_jump_navigator',
+    true,
+  )
+  const hoverJumpNavigatorDelayField = useVergeConfigField(
+    'hover_jump_navigator_delay',
+    DEFAULT_HOVER_DELAY,
+  )
+  const menuIconField = useVergeConfigField('menu_icon', 'monochrome')
+  const collapseNavbarField = useVergeConfigField('collapse_navbar', false)
+  const trayIconField = useVergeConfigField('tray_icon', 'monochrome')
+  const enableTraySpeedField = useVergeConfigField('enable_tray_speed', false)
+  const trayProxyGroupsDisplayModeField = useVergeConfigField(
+    'tray_proxy_groups_display_mode',
+    'default',
+  )
+  const trayInlineOutboundModesField = useVergeConfigField(
+    'tray_inline_outbound_modes',
+    false,
+  )
+  const commonTrayIconField = useVergeConfigField('common_tray_icon', false)
+  const sysproxyTrayIconField = useVergeConfigField('sysproxy_tray_icon', false)
+  const tunTrayIconField = useVergeConfigField('tun_tray_icon', false)
 
   const [open, setOpen] = useState(false)
   const [commonIcon, setCommonIcon] = useState('')
@@ -105,14 +143,47 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const onError = (err: any) => {
     showNotice.error(err)
   }
-  const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false)
-  }
 
   return (
     <BaseDialog
       open={open}
-      title={t('settings.components.verge.layout.title')}
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {t('settings.components.verge.layout.title')}
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            startIcon={<RestartAltRounded />}
+            onClick={() => {
+              trafficGraphField.reset()
+              enableMemoryUsageField.reset()
+              enableGroupIconField.reset()
+              pauseRenderTrafficStatsOnBlurField.reset()
+              noticePositionField.reset()
+              enableHoverJumpNavigatorField.reset()
+              hoverJumpNavigatorDelayField.reset()
+              menuIconField.reset()
+              collapseNavbarField.reset()
+              trayIconField.reset()
+              enableTraySpeedField.reset()
+              trayProxyGroupsDisplayModeField.reset()
+              trayInlineOutboundModesField.reset()
+              commonTrayIconField.reset()
+              sysproxyTrayIconField.reset()
+              tunTrayIconField.reset()
+            }}
+          >
+            {t('shared.actions.resetToDefault')}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 450 }}
       disableOk
       cancelBtn={t('shared.actions.close')}
@@ -140,87 +211,86 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t('settings.components.verge.layout.fields.trafficGraph')}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.trafficGraph')}
+            modified={trafficGraphField.modified}
           />
           <GuardState
-            value={verge?.traffic_graph ?? true}
+            value={trafficGraphField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ traffic_graph: e })}
-            onGuard={(e) => patchVerge({ traffic_graph: e })}
+            onChange={trafficGraphField.mutate}
+            onGuard={trafficGraphField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t('settings.components.verge.layout.fields.memoryUsage')}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.memoryUsage')}
+            modified={enableMemoryUsageField.modified}
           />
           <GuardState
-            value={verge?.enable_memory_usage ?? true}
+            value={enableMemoryUsageField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ enable_memory_usage: e })}
-            onGuard={(e) => patchVerge({ enable_memory_usage: e })}
+            onChange={enableMemoryUsageField.mutate}
+            onGuard={enableMemoryUsageField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t(
-              'settings.components.verge.layout.fields.proxyGroupIcon',
-            )}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.proxyGroupIcon')}
+            modified={enableGroupIconField.modified}
           />
           <GuardState
-            value={verge?.enable_group_icon ?? true}
+            value={enableGroupIconField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ enable_group_icon: e })}
-            onGuard={(e) => patchVerge({ enable_group_icon: e })}
+            onChange={enableGroupIconField.mutate}
+            onGuard={enableGroupIconField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t(
+          <SettingListItemText
+            label={t(
               'settings.components.verge.layout.fields.pauseRenderTrafficStatsOnBlur',
             )}
+            modified={pauseRenderTrafficStatsOnBlurField.modified}
           />
           <GuardState
-            value={verge?.pause_render_traffic_stats_on_blur ?? true}
+            value={pauseRenderTrafficStatsOnBlurField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) =>
-              onChangeData({ pause_render_traffic_stats_on_blur: e })
-            }
-            onGuard={(e) =>
-              patchVerge({ pause_render_traffic_stats_on_blur: e })
-            }
+            onChange={pauseRenderTrafficStatsOnBlurField.mutate}
+            onGuard={pauseRenderTrafficStatsOnBlurField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t('settings.components.verge.layout.fields.toastPosition')}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.toastPosition')}
+            modified={noticePositionField.modified}
           />
           <GuardState
-            value={verge?.notice_position ?? 'top-right'}
+            value={noticePositionField.value}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
-            onChange={(value) => onChangeData({ notice_position: value })}
-            onGuard={(value) => patchVerge({ notice_position: value })}
+            onChange={noticePositionField.mutate}
+            onGuard={noticePositionField.patch}
           >
             <Select size="small" sx={{ width: 180, '> div': { py: '7.5px' } }}>
               <MenuItem value="top-right">
@@ -248,64 +318,52 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <span>
-                  {t('settings.components.verge.layout.fields.hoverNavigator')}
-                </span>
-                <TooltipIcon
-                  title={t(
-                    'settings.components.verge.layout.tooltips.hoverNavigator',
-                  )}
-                  sx={{ opacity: '0.7' }}
-                />
-              </Box>
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.hoverNavigator')}
+            modified={enableHoverJumpNavigatorField.modified}
+            extra={
+              <TooltipIcon
+                title={t(
+                  'settings.components.verge.layout.tooltips.hoverNavigator',
+                )}
+                sx={{ opacity: '0.7' }}
+              />
             }
           />
           <GuardState
-            value={verge?.enable_hover_jump_navigator ?? true}
+            value={enableHoverJumpNavigatorField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ enable_hover_jump_navigator: e })}
-            onGuard={(e) => patchVerge({ enable_hover_jump_navigator: e })}
+            onChange={enableHoverJumpNavigatorField.mutate}
+            onGuard={enableHoverJumpNavigatorField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <span>
-                  {t(
-                    'settings.components.verge.layout.fields.hoverNavigatorDelay',
-                  )}
-                </span>
-                <TooltipIcon
-                  title={t(
-                    'settings.components.verge.layout.tooltips.hoverNavigatorDelay',
-                  )}
-                  sx={{ opacity: '0.7' }}
-                />
-              </Box>
+          <SettingListItemText
+            label={t(
+              'settings.components.verge.layout.fields.hoverNavigatorDelay',
+            )}
+            modified={hoverJumpNavigatorDelayField.modified}
+            extra={
+              <TooltipIcon
+                title={t(
+                  'settings.components.verge.layout.tooltips.hoverNavigatorDelay',
+                )}
+                sx={{ opacity: '0.7' }}
+              />
             }
           />
           <GuardState
-            value={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
+            value={hoverJumpNavigatorDelayField.value}
             waitTime={400}
             onCatch={onError}
             onFormat={(e: any) => clampHoverDelay(Number(e.target.value))}
-            onChange={(value) =>
-              onChangeData({
-                hover_jump_navigator_delay: clampHoverDelay(value),
-              })
-            }
-            onGuard={(value) =>
-              patchVerge({ hover_jump_navigator_delay: clampHoverDelay(value) })
-            }
+            onChange={hoverJumpNavigatorDelayField.mutate}
+            onGuard={hoverJumpNavigatorDelayField.patch}
           >
             <TextField
               type="number"
@@ -315,7 +373,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               autoCapitalize="off"
               spellCheck={false}
               sx={{ width: 120 }}
-              disabled={!(verge?.enable_hover_jump_navigator ?? true)}
+              disabled={!enableHoverJumpNavigatorField.value}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -335,15 +393,16 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t('settings.components.verge.layout.fields.navIcon')}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.navIcon')}
+            modified={menuIconField.modified}
           />
           <GuardState
-            value={verge?.menu_icon ?? 'monochrome'}
+            value={menuIconField.value}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
-            onChange={(value) => onChangeData({ menu_icon: value })}
-            onGuard={(value) => patchVerge({ menu_icon: value })}
+            onChange={menuIconField.mutate}
+            onGuard={menuIconField.patch}
           >
             <Select size="small" sx={{ width: 140, '> div': { py: '7.5px' } }}>
               <MenuItem value="monochrome">
@@ -360,18 +419,17 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t(
-              'settings.components.verge.layout.fields.collapseNavBar',
-            )}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.collapseNavBar')}
+            modified={collapseNavbarField.modified}
           />
           <GuardState
-            value={verge?.collapse_navbar ?? false}
+            value={collapseNavbarField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ collapse_navbar: e })}
-            onGuard={(e) => patchVerge({ collapse_navbar: e })}
+            onChange={collapseNavbarField.mutate}
+            onGuard={collapseNavbarField.patch}
           >
             <Switch edge="end" />
           </GuardState>
@@ -379,15 +437,16 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         {OS === 'macos' && (
           <Item>
-            <ListItemText
-              primary={t('settings.components.verge.layout.fields.trayIcon')}
+            <SettingListItemText
+              label={t('settings.components.verge.layout.fields.trayIcon')}
+              modified={trayIconField.modified}
             />
             <GuardState
-              value={verge?.tray_icon ?? 'monochrome'}
+              value={trayIconField.value}
               onCatch={onError}
               onFormat={(e: any) => e.target.value}
-              onChange={(e) => onChangeData({ tray_icon: e })}
-              onGuard={(e) => patchVerge({ tray_icon: e })}
+              onChange={trayIconField.mutate}
+              onGuard={trayIconField.patch}
             >
               <Select
                 size="small"
@@ -407,18 +466,19 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )}
         {OS === 'macos' && (
           <Item>
-            <ListItemText
-              primary={t(
+            <SettingListItemText
+              label={t(
                 'settings.components.verge.layout.fields.enableTraySpeed',
               )}
+              modified={enableTraySpeedField.modified}
             />
             <GuardState
-              value={verge?.enable_tray_speed ?? false}
+              value={enableTraySpeedField.value}
               valueProps="checked"
               onCatch={onError}
               onFormat={onSwitchFormat}
-              onChange={(e) => onChangeData({ enable_tray_speed: e })}
-              onGuard={(e) => patchVerge({ enable_tray_speed: e })}
+              onChange={enableTraySpeedField.mutate}
+              onGuard={enableTraySpeedField.patch}
             >
               <Switch edge="end" />
             </GuardState>
@@ -445,21 +505,18 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           </Item>
         )} */}
         <Item>
-          <ListItemText
-            primary={t(
+          <SettingListItemText
+            label={t(
               'settings.components.verge.layout.fields.proxyGroupsDisplayMode',
             )}
+            modified={trayProxyGroupsDisplayModeField.modified}
           />
           <GuardState
-            value={verge?.tray_proxy_groups_display_mode ?? 'default'}
+            value={trayProxyGroupsDisplayModeField.value}
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
-            onChange={(value) =>
-              onChangeData({ tray_proxy_groups_display_mode: value })
-            }
-            onGuard={(value) =>
-              patchVerge({ tray_proxy_groups_display_mode: value })
-            }
+            onChange={trayProxyGroupsDisplayModeField.mutate}
+            onGuard={trayProxyGroupsDisplayModeField.patch}
           >
             <Select size="small" sx={{ width: 140, '> div': { py: '7.5px' } }}>
               <MenuItem value="default">
@@ -481,48 +538,48 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           </GuardState>
         </Item>
         <Item>
-          <ListItemText
-            primary={t(
+          <SettingListItemText
+            label={t(
               'settings.components.verge.layout.fields.showOutboundModesInline',
             )}
+            modified={trayInlineOutboundModesField.modified}
           />
           <GuardState
-            value={verge?.tray_inline_outbound_modes ?? false}
+            value={trayInlineOutboundModesField.value}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ tray_inline_outbound_modes: e })}
-            onGuard={(e) => patchVerge({ tray_inline_outbound_modes: e })}
+            onChange={trayInlineOutboundModesField.mutate}
+            onGuard={trayInlineOutboundModesField.patch}
           >
             <Switch edge="end" />
           </GuardState>
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t(
-              'settings.components.verge.layout.fields.commonTrayIcon',
-            )}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.commonTrayIcon')}
+            modified={commonTrayIconField.modified}
           />
           <GuardState
-            value={verge?.common_tray_icon}
+            value={commonTrayIconField.value}
             onCatch={onError}
-            onChange={(e) => onChangeData({ common_tray_icon: e })}
-            onGuard={(e) => patchVerge({ common_tray_icon: e })}
+            onChange={commonTrayIconField.mutate}
+            onGuard={commonTrayIconField.patch}
           >
             <Button
               variant="outlined"
               size="small"
               startIcon={
-                verge?.common_tray_icon &&
+                commonTrayIconField.value &&
                 commonIcon && (
                   <img height="20px" src={convertFileSrc(commonIcon)} />
                 )
               }
               onClick={async () => {
-                if (verge?.common_tray_icon) {
-                  onChangeData({ common_tray_icon: false })
-                  patchVerge({ common_tray_icon: false })
+                if (commonTrayIconField.value) {
+                  commonTrayIconField.mutate(false)
+                  commonTrayIconField.patch(false)
                 } else {
                   const selected = await openDialog({
                     directory: false,
@@ -538,13 +595,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                   if (selected) {
                     await copyIconFile(`${selected}`, 'common')
                     await initIconPath()
-                    onChangeData({ common_tray_icon: true })
-                    patchVerge({ common_tray_icon: true })
+                    commonTrayIconField.mutate(true)
+                    commonTrayIconField.patch(true)
                   }
                 }
               }}
             >
-              {verge?.common_tray_icon
+              {commonTrayIconField.value
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
             </Button>
@@ -552,30 +609,31 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t(
+          <SettingListItemText
+            label={t(
               'settings.components.verge.layout.fields.systemProxyTrayIcon',
             )}
+            modified={sysproxyTrayIconField.modified}
           />
           <GuardState
-            value={verge?.sysproxy_tray_icon}
+            value={sysproxyTrayIconField.value}
             onCatch={onError}
-            onChange={(e) => onChangeData({ sysproxy_tray_icon: e })}
-            onGuard={(e) => patchVerge({ sysproxy_tray_icon: e })}
+            onChange={sysproxyTrayIconField.mutate}
+            onGuard={sysproxyTrayIconField.patch}
           >
             <Button
               variant="outlined"
               size="small"
               startIcon={
-                verge?.sysproxy_tray_icon &&
+                sysproxyTrayIconField.value &&
                 sysproxyIcon && (
                   <img height="20px" src={convertFileSrc(sysproxyIcon)} />
                 )
               }
               onClick={async () => {
-                if (verge?.sysproxy_tray_icon) {
-                  onChangeData({ sysproxy_tray_icon: false })
-                  patchVerge({ sysproxy_tray_icon: false })
+                if (sysproxyTrayIconField.value) {
+                  sysproxyTrayIconField.mutate(false)
+                  sysproxyTrayIconField.patch(false)
                 } else {
                   const selected = await openDialog({
                     directory: false,
@@ -590,13 +648,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                   if (selected) {
                     await copyIconFile(`${selected}`, 'sysproxy')
                     await initIconPath()
-                    onChangeData({ sysproxy_tray_icon: true })
-                    patchVerge({ sysproxy_tray_icon: true })
+                    sysproxyTrayIconField.mutate(true)
+                    sysproxyTrayIconField.patch(true)
                   }
                 }
               }}
             >
-              {verge?.sysproxy_tray_icon
+              {sysproxyTrayIconField.value
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
             </Button>
@@ -604,26 +662,27 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t('settings.components.verge.layout.fields.tunTrayIcon')}
+          <SettingListItemText
+            label={t('settings.components.verge.layout.fields.tunTrayIcon')}
+            modified={tunTrayIconField.modified}
           />
           <GuardState
-            value={verge?.tun_tray_icon}
+            value={tunTrayIconField.value}
             onCatch={onError}
-            onChange={(e) => onChangeData({ tun_tray_icon: e })}
-            onGuard={(e) => patchVerge({ tun_tray_icon: e })}
+            onChange={tunTrayIconField.mutate}
+            onGuard={tunTrayIconField.patch}
           >
             <Button
               variant="outlined"
               size="small"
               startIcon={
-                verge?.tun_tray_icon &&
+                tunTrayIconField.value &&
                 tunIcon && <img height="20px" src={convertFileSrc(tunIcon)} />
               }
               onClick={async () => {
-                if (verge?.tun_tray_icon) {
-                  onChangeData({ tun_tray_icon: false })
-                  patchVerge({ tun_tray_icon: false })
+                if (tunTrayIconField.value) {
+                  tunTrayIconField.mutate(false)
+                  tunTrayIconField.patch(false)
                 } else {
                   const selected = await openDialog({
                     directory: false,
@@ -638,13 +697,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                   if (selected) {
                     await copyIconFile(`${selected}`, 'tun')
                     await initIconPath()
-                    onChangeData({ tun_tray_icon: true })
-                    patchVerge({ tun_tray_icon: true })
+                    tunTrayIconField.mutate(true)
+                    tunTrayIconField.patch(true)
                   }
                 }
               }}
             >
-              {verge?.tun_tray_icon
+              {tunTrayIconField.value
                 ? t('shared.actions.clear')
                 : t('settings.components.verge.basic.actions.browse')}
             </Button>
