@@ -514,6 +514,8 @@ impl CoreManager {
                     .context(SysproxyFailure::CoreNotReady),
             );
         }
+        // tell the window when a background apply lands
+        Handle::refresh_verge();
         Ok(())
     }
 
