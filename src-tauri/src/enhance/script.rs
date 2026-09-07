@@ -3,7 +3,7 @@ use crate::process::AsyncHandler;
 use super::field::{use_lowercase, use_lowercase_owned};
 use anyhow::{Error, Result};
 use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
-use clash_verge_logging::{Type, logging_error};
+use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
@@ -131,7 +131,11 @@ fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(M
                 outputs
                     .lock()
                     .push(("exception".into(), "Script execution failed".into()));
-                logging_error!(Type::Config, "Script execution error: {}. Script name: {}", err, name);
+                logging!(
+                    error,
+                    Type::Config,
+                    "Script execution error: {err:#}. Script name: {name}"
+                );
                 Ok((config, outputs.lock().to_vec()))
             }
         }

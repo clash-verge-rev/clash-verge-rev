@@ -471,10 +471,13 @@ fn table_effect(result: &Result<()>) -> TableEffect<'_> {
     }
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
     let verge = Config::verge().await.latest_arc();
-    let result = match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
+    let route = proxy_backend_route(cfg!(target_os = "macos"), &running_mode);
+    tracing::Span::current().record("route", tracing::field::debug(&route));
+    let result = match route {
         ProxyBackendRoute::Local => match Sysopt::global().update_sysproxy().await {
             Ok(()) => Ok(()),
             Err(error) => Err(classify_local_apply_failure(error).await),
@@ -520,7 +523,7 @@ pub async fn clear() -> Result<()> {
 
 /// A failed system call is usually a transient RPC hiccup, so give it a few tries.
 async fn clear_with_retry() -> Result<()> {
-    for _ in 1..CLEAR_ATTEMPTS {
+    for attempt in 1..CLEAR_ATTEMPTS {
         match clear_inner().await {
             Err(error)
                 if matches!(
@@ -531,7 +534,7 @@ async fn clear_with_retry() -> Result<()> {
                 logging!(
                     warn,
                     Type::Core,
-                    "clearing the system proxy failed; retrying: {error:#}"
+                    "clearing the system proxy failed (attempt {attempt}/{CLEAR_ATTEMPTS}); retrying: {error:#}"
                 );
                 tokio::time::sleep(CLEAR_RETRY_DELAY).await;
             }
@@ -541,9 +544,12 @@ async fn clear_with_retry() -> Result<()> {
     clear_inner().await
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]
 async fn clear_inner() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
-    match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
+    let route = proxy_backend_route(cfg!(target_os = "macos"), &running_mode);
+    tracing::Span::current().record("route", tracing::field::debug(&route));
+    match route {
         ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
             SERVICE_PROXY_OPERATIONS
@@ -599,13 +605,16 @@ pub async fn refresh_guard() -> Result<()> {
                 .await
             {
                 Ok(true) => consecutive_failures = 0,
-                Ok(false) => break,
+                Ok(false) => {
+                    logging!(debug, Type::Core, "proxy guard superseded (generation {generation})");
+                    break;
+                }
                 Err(error) => {
                     consecutive_failures += 1;
                     logging!(
                         warn,
                         Type::Core,
-                        "failed to refresh system proxy through Service ({}/{}): {:#}",
+                        "failed to refresh system proxy through Service (generation {generation}, {}/{}): {:#}",
                         consecutive_failures,
                         GUARD_FAILURES_BEFORE_STOPPING,
                         error

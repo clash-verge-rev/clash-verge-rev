@@ -98,7 +98,7 @@ async fn import_subscription(url: &str, name: Option<&String>) {
     }
 
     if let Err(e) = profiles::profiles_save_file_safe().await {
-        logging!(error, Type::Config, "failed to save imported subscription: {}", e);
+        logging!(error, Type::Config, "failed to save imported subscription: {e:#}");
         handle::Handle::notice_message("import_sub_url::error", e.to_string());
         return;
     }
@@ -152,7 +152,7 @@ async fn refresh_core_config() {
             handle::Handle::notice_message("config_validate::error", message);
         }
         Err(err) => {
-            logging!(error, Type::Config, "Apply config error: {}", err);
+            logging!(error, Type::Config, "Apply config error: {err:#}");
             handle::Handle::notice_message("update_failed", format!("{err}"));
         }
     }

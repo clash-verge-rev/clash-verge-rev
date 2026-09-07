@@ -10,7 +10,6 @@ use crate::{
 };
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
-use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
 use std::path::Path;
@@ -49,7 +48,16 @@ where
     for attempt in 0..max_attempts {
         match probe().await {
             Ok(()) => return Ok(()),
-            Err(error) => last_error = Some(error),
+            Err(error) => {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "sidecar readiness probe {}/{} failed: {error:#}",
+                    attempt + 1,
+                    max_attempts
+                );
+                last_error = Some(error);
+            }
         }
         if attempt + 1 < max_attempts {
             tokio::time::sleep(retry_delay).await;
@@ -80,16 +88,16 @@ use {
 };
 
 impl CoreManager {
-    pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
+    pub async fn get_clash_logs(&self) -> Result<Vec<String>> {
         match *self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().await),
+            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs()),
             RunningMode::NotRunning => Ok(Vec::new()),
         }
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(pid = tracing::field::Empty))]
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
-        logging!(info, Type::Core, "Starting core in sidecar mode");
         self.core_stopped();
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
@@ -158,7 +166,7 @@ impl CoreManager {
         };
 
         let pid = child.pid();
-        logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);
+        tracing::Span::current().record("pid", pid);
 
         let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
             tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
@@ -192,22 +200,22 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = CompactString::from(&*String::from_utf8_lossy(&line));
+                        let message = String::from_utf8_lossy(&line).into_owned();
                         Logger::global().writer_sidecar_log(Level::Error, &message);
-                        CLASH_LOGGER.append_log(message).await;
+                        CLASH_LOGGER.append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let manager = Self::global();
                         let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
-                            CompactString::from(format!("Process terminated with code: {}", code))
+                            format!("Process terminated with code: {}", code)
                         } else if let Some(signal) = term.signal {
-                            CompactString::from(format!("Process terminated by signal: {}", signal))
+                            format!("Process terminated by signal: {}", signal)
                         } else {
-                            CompactString::from("Process terminated")
+                            String::from("Process terminated")
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
-                        CLASH_LOGGER.clear_logs().await;
+                        CLASH_LOGGER.clear_logs();
                         manager.clear_terminated_sidecar(pid).await;
                         break;
                     }
@@ -222,7 +230,6 @@ impl CoreManager {
     /// Terminates the sidecar after its caller has successfully cleared the
     /// system proxy.
     pub(super) fn stop_core_by_sidecar_unprepared(&self) {
-        logging!(info, Type::Core, "Stopping sidecar");
         defer! {
             self.core_stopped();
         }
@@ -234,27 +241,16 @@ impl CoreManager {
                 // Setting the job handle to None clears the stored handle and
                 // closes the previous Windows job handle in `set_job_handle`.
                 self.set_job_handle(None);
-                logging!(
-                    trace,
-                    Type::Core,
-                    "Closed job handle for sidecar process (PID: {})",
-                    pid
-                );
+                let _ = pid;
             }
 
-            let result = child.kill();
-            logging!(
-                trace,
-                Type::Core,
-                "Sidecar stopped (PID: {:?}, Result: {:?})",
-                pid,
-                result
-            );
+            if let Err(error) = child.kill() {
+                logging!(warn, Type::Core, "failed to terminate sidecar PID {pid}: {error:#}");
+            }
         }
     }
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
-        logging!(info, Type::Core, "Starting core in service mode");
         self.core_starting();
         let service_ipc = dirs::ipc_path()?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
@@ -265,6 +261,7 @@ impl CoreManager {
         self.start_core_by_service_with_config(&config_file).await
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(config_file = %config_file.display()))]
     pub(super) async fn start_core_by_service_with_config(&self, config_file: &Path) -> Result<()> {
         // 交接时等待 sidecar 释放 ext-controller 通道。
         #[cfg(target_os = "windows")]
@@ -283,10 +280,9 @@ impl CoreManager {
                         logging!(
                             warn,
                             Type::Core,
-                            "service start attempt {}/{} failed: {}",
+                            "service start attempt {}/{} failed: {e:#}",
                             attempt + 1,
-                            timing::SERVICE_START_RETRIES,
-                            e
+                            timing::SERVICE_START_RETRIES
                         );
                         last_err = Some(e);
                         tokio::time::sleep(timing::SERVICE_START_RETRY_DELAY).await;
@@ -307,7 +303,6 @@ impl CoreManager {
     }
 
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
-        logging!(info, Type::Core, "Stopping service");
         service::stop_core_by_service().await?;
         self.core_stopped();
         Ok(())

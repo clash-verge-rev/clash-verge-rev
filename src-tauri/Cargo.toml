@@ -17,12 +17,12 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color", "clash_verge_service_ipc/development-channel"]
+verge-dev = ["clash-verge-logging/color", "clash_verge_service_ipc/development-channel"]
 dev-sidecar = ["verge-dev"]
 tauri-dev = ["dep:tauri-plugin-devtools"]
-tokio-trace = ["dep:console-subscriber"]
+tokio-trace = ["clash-verge-logging/tokio-trace"]
+chrome-trace = ["clash-verge-logging/chrome-trace"]
 clippy = ["tauri/test"]
-tracing = []
 perf-harness = ["dep:tauri-plugin-wdio-webdriver"]
 
 [package.metadata.bundle]
@@ -43,6 +43,7 @@ tauri-plugin-clipboard-manager = { workspace = true }
 tauri = { workspace = true, features = [
   "protocol-asset",
   "devtools",
+  "tracing",
   "tray-icon",
   "image-ico",
   "image-png",
@@ -50,8 +51,6 @@ tauri = { workspace = true, features = [
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
-compact_str = { workspace = true }
-flexi_logger = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -95,12 +94,11 @@ tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.19"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.5.9"
-console-subscriber = { version = "0.5.0", optional = true }
+tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.1.0", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "main" }
-clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.6", version = "2.6.6", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.7", version = "2.6.7", features = [
   "client",
 ] }
 arc-swap = "1.9.2"

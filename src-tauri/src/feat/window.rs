@@ -88,11 +88,11 @@ async fn restore_dns_after_core_stop() -> bool {
     .await
     {
         Ok(_) => {
-            logging!(info, Type::Window, "DNS设置已恢复");
+            logging!(debug, Type::Window, "DNS设置已恢复");
             true
         }
         Err(_) => {
-            logging!(warn, Type::Window, "Warning: 恢复DNS设置超时");
+            logging!(warn, Type::Window, "恢复DNS设置超时");
             false
         }
     }
@@ -117,7 +117,6 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 
     Config::apply_all_and_save_file().await;
 
-    logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
 
     logging!(
@@ -143,21 +142,12 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 }
 
 pub async fn clean_async() -> CleanupResult {
-    logging!(
-        info,
-        Type::System,
-        "Starting interactive cleanup; controlled core stop will be awaited to completion"
-    );
-
     let stop_error = Mutex::new(None);
     let mut result = run_interactive_cleanup_transition(
         || async {
-            logging!(info, Type::System, "Stopping core for interactive quit or restart");
+            logging!(debug, Type::System, "Stopping core for interactive quit or restart");
             match CoreManager::global().stop_core().await {
-                Ok(()) => {
-                    logging!(info, Type::Window, "Core stopped for interactive quit or restart");
-                    true
-                }
+                Ok(()) => true,
                 Err(error) => {
                     logging!(
                         warn,
@@ -199,13 +189,10 @@ pub async fn clean_session_ending_best_effort() -> CleanupResult {
 
     let result = run_session_ending_cleanup_transition(
         || async {
-            logging!(info, Type::System, "Clearing all WebSocket connections before stopping core");
-            let _ = handle::Handle::mihomo().clear_all_ws_connections();
-            logging!(info, Type::System, "Stopping core during session-ending best-effort cleanup");
-            match CoreManager::global().stop_core().await {
+                    let _ = handle::Handle::mihomo().clear_all_ws_connections();
+                    match CoreManager::global().stop_core().await {
                 Ok(()) => {
-                    logging!(info, Type::Window, "Core stopped during session-ending best-effort cleanup");
-                    true
+                                    true
                 }
                 Err(error) => {
                     logging!(
