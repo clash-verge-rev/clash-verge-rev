@@ -941,10 +941,7 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
     }
 
     logging!(info, Type::Service, "成功获取服务模式下的 Clash 日志");
-    Ok(response
-        .data
-        .map(|logs| logs.into_iter().map(String::from).collect())
-        .unwrap_or_default())
+    Ok(response.data.unwrap_or_default())
 }
 
 pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {

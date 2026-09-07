@@ -92,11 +92,11 @@ macro_rules! logging_error {
 const LOGS_QUEUE_LEN: usize = 100;
 
 /// In-memory ring buffer of recent mihomo core log lines.
-pub struct AsyncLogger {
+pub struct LogRing {
     inner: RwLock<VecDeque<String>>,
 }
 
-impl AsyncLogger {
+impl LogRing {
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -123,7 +123,7 @@ impl AsyncLogger {
     }
 }
 
-impl Default for AsyncLogger {
+impl Default for LogRing {
     fn default() -> Self {
         Self::new()
     }
@@ -195,8 +195,7 @@ impl Logger {
     /// the pipeline is owned elsewhere (e.g. a devtools-provided subscriber).
     pub fn init_sidecar(&self, cfg: &LoggerConfig) -> Result<()> {
         self.store_config(cfg);
-        let sidecar_file_writer = self.generate_sidecar_writer()?;
-        *self.sidecar_file_writer.write() = Some(sidecar_file_writer);
+        self.ensure_sidecar_writer(self.generate_sidecar_builder())?;
 
         std::panic::set_hook(Box::new(move |info| {
             // Capture both common panic payload types instead of logging String payloads as unknown.
@@ -244,11 +243,32 @@ impl Logger {
         Ok(flwb)
     }
 
-    fn generate_sidecar_writer(&self) -> Result<FileLogWriter> {
+    /// Ensures the sidecar writer exists and points at `builder`'s config:
+    /// built once, then reset in place — flexi's flusher thread cannot be
+    /// stopped, so every dropped writer would leak a thread and an fd.
+    fn ensure_sidecar_writer(&self, builder: FileLogWriterBuilder) -> Result<()> {
+        let sidecar = self.sidecar_file_writer.write();
+        match sidecar.as_ref() {
+            Some(writer) => {
+                let _ = writer.flush();
+                writer.reset(&builder)?;
+            }
+            None => {
+                // Build outside the guard: a spawn panic inside it would
+                // deadlock the panic hook, which takes this lock to flush.
+                drop(sidecar);
+                let writer = builder.try_build()?;
+                *self.sidecar_file_writer.write() = Some(writer);
+            }
+        }
+        Ok(())
+    }
+
+    fn generate_sidecar_builder(&self) -> FileLogWriterBuilder {
         let sidecar_log_dir = self.sidecar_log_dir.get().cloned().unwrap_or_default();
         let log_max_size = self.log_max_size.load(Ordering::SeqCst);
         let log_max_count = self.log_max_count.load(Ordering::SeqCst);
-        Ok(FileLogWriter::builder(
+        FileLogWriter::builder(
             FileSpec::default()
                 .directory(sidecar_log_dir)
                 .basename("sidecar")
@@ -264,7 +284,6 @@ impl Logger {
             ROTATE_NAMING,
             Cleanup::KeepLogFiles(log_max_count),
         )
-        .try_build()?)
     }
 
     /// Drains the pipeline and the sidecar writer, whose flusher only runs every 500ms.
@@ -300,8 +319,7 @@ impl Logger {
         } else {
             bail!("failed to get tracing pipeline, make sure it init");
         };
-        let sidecar_writer = self.generate_sidecar_writer()?;
-        *self.sidecar_file_writer.write() = Some(sidecar_writer);
+        self.ensure_sidecar_writer(self.generate_sidecar_builder())?;
         Ok(())
     }
 

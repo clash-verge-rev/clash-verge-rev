@@ -1266,11 +1266,10 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.6.6"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.6.6#d1301e4bfad0b3ab3c4dadafcd2e5b4dc0e931cc"
+version = "2.6.7"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.6.7#aadc638b4947bd8de6a9f579da8a4a9d5fe76f8c"
 dependencies = [
  "anyhow",
- "compact_str",
  "kode-bridge",
  "libc",
  "log",
@@ -1394,7 +1393,6 @@ dependencies = [
  "castaway",
  "cfg-if",
  "itoa",
- "serde",
  "static_assertions",
  "zmij",
 ]
@@ -3491,7 +3489,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.61.2",
+ "windows-core 0.62.2",
 ]
 
 [[package]]
@@ -5462,7 +5460,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b570b25f7617e43d59005d0990ccb79e950a423952cea19671b7a876da390adf"
 dependencies = [
  "anyhow",
- "itertools 0.11.0",
+ "itertools 0.13.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -7008,7 +7006,7 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.7.0"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#62c952b3a60c39a360f7e6cecde2bef5448659eb"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#61118cab4878ce66b8cb12b467b682b493f20e6c"
 dependencies = [
  "iptools",
  "log",
@@ -7719,7 +7717,7 @@ dependencies = [
  "serde_with",
  "swift-rs",
  "thiserror 2.0.20",
- "toml 1.1.4+spec-1.1.0",
+ "toml 0.9.12+spec-1.1.0",
  "url",
  "urlpattern",
  "uuid",
@@ -8432,7 +8430,7 @@ dependencies = [
 [[package]]
 name = "tracing-estuary"
 version = "0.1.0"
-source = "git+https://github.com/Tunglies/tracing-estuary.git?branch=main#8dcc5d89847fc7d95080fffcd5fc654ee9c77499"
+source = "git+https://github.com/Tunglies/tracing-estuary.git?branch=main#dbfce033fa4cff8f936f3e7c2282af1277546f3c"
 dependencies = [
  "anyhow",
  "compact_str",
