@@ -100,6 +100,8 @@ impl CoreManager {
         let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
+        #[cfg(unix)]
+        discard_unwritable_core_cache(&config_dir);
 
         #[cfg(unix)]
         let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
@@ -324,6 +326,107 @@ impl CoreManager {
         self.set_job_handle(None);
         proxy_control::stop_guard().await;
         self.core_stopped();
+    }
+}
+
+/// Drops a `cache.db` the current user cannot write before handing the directory to the core.
+///
+/// mihomo keeps `profile.store-selected` in `cache.db` inside its data directory. Service builds
+/// before the runtime staging rework ran the core as root against this same directory without a
+/// umask, leaving the file as `root:staff 0644`: still readable, so the core loads stale
+/// selections, but never writable again, so it silently stops recording new ones. Nothing
+/// repairs it either, because the service-side cleanup only runs inside the service. Removing it
+/// lets the core recreate the cache under the current user; the fake-ip leases and frozen
+/// selections that go with it could not be updated anyway.
+#[cfg(unix)]
+fn discard_unwritable_core_cache(config_dir: &Path) {
+    let cache = config_dir.join("cache.db");
+    // Appending neither creates nor truncates, so this only asks whether a write would be allowed.
+    match std::fs::OpenOptions::new().append(true).open(&cache) {
+        Ok(_) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) if error.kind() == std::io::ErrorKind::PermissionDenied => {
+            // Unlinking is governed by the directory, which the current user owns.
+            match std::fs::remove_file(&cache) {
+                Ok(()) => logging!(
+                    info,
+                    Type::Core,
+                    "Discarded a core cache the current user cannot write: {}",
+                    cache.display()
+                ),
+                Err(error) => logging!(
+                    warn,
+                    Type::Core,
+                    "Failed to discard the unwritable core cache {}: {error}",
+                    cache.display()
+                ),
+            }
+        }
+        Err(error) => logging!(
+            warn,
+            Type::Core,
+            "Failed to probe the core cache {}: {error}",
+            cache.display()
+        ),
+    }
+}
+
+#[cfg(all(test, unix))]
+mod core_cache_tests {
+    use super::discard_unwritable_core_cache;
+    use std::os::unix::fs::PermissionsExt as _;
+
+    fn scratch(name: &str) -> anyhow::Result<std::path::PathBuf> {
+        let root = std::env::temp_dir().join(format!("clash-verge-core-cache-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root)?;
+        Ok(root)
+    }
+
+    #[test]
+    fn an_unwritable_cache_is_discarded() -> anyhow::Result<()> {
+        // root ignores the permission bits, so the probe cannot fail there.
+        if unsafe { tauri_plugin_clash_verge_sysinfo::libc::geteuid() } == 0 {
+            return Ok(());
+        }
+        let root = scratch("unwritable")?;
+        let cache = root.join("cache.db");
+        std::fs::write(&cache, b"stale")?;
+        std::fs::set_permissions(&cache, std::fs::Permissions::from_mode(0o444))?;
+
+        discard_unwritable_core_cache(&root);
+
+        assert!(!cache.exists(), "an unwritable cache must not be handed to the core");
+        let _ = std::fs::remove_dir_all(&root);
+        Ok(())
+    }
+
+    #[test]
+    fn a_writable_cache_is_kept() -> anyhow::Result<()> {
+        let root = scratch("writable")?;
+        let cache = root.join("cache.db");
+        std::fs::write(&cache, b"live")?;
+
+        discard_unwritable_core_cache(&root);
+
+        assert_eq!(
+            std::fs::read(&cache)?,
+            b"live",
+            "a writable cache carries the stored selections and must survive"
+        );
+        let _ = std::fs::remove_dir_all(&root);
+        Ok(())
+    }
+
+    #[test]
+    fn a_missing_cache_is_not_an_error() -> anyhow::Result<()> {
+        let root = scratch("missing")?;
+
+        discard_unwritable_core_cache(&root);
+
+        assert!(!root.join("cache.db").exists());
+        let _ = std::fs::remove_dir_all(&root);
+        Ok(())
     }
 }
 
