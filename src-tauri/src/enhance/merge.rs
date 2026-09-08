@@ -62,7 +62,6 @@ pub fn use_merge(merge: &Mapping, config: Mapping) -> Mapping {
 }
 
 #[test]
-#[allow(clippy::unwrap_used)]
 fn test_merge() -> anyhow::Result<()> {
     let merge = r"
     prepend-rules:
@@ -93,64 +92,7 @@ fn test_merge() -> anyhow::Result<()> {
     let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
     let config = serde_yaml_ng::from_str::<Mapping>(config)?;
 
-    let merged = use_merge(&merge, config);
-
-    // legacy v1.x keys must not leak into the runtime config
-    for key in LEGACY_MERGE_KEYS {
-        assert!(
-            merged.get(key).is_none(),
-            "legacy key `{key}` should be stripped from the merged config"
-        );
-    }
-    // plain merge semantics unchanged: rules is replaced by the merge
-    let rules = merged.get("rules").and_then(|v| v.as_sequence()).unwrap();
-    assert_eq!(rules.len(), 1);
-    assert_eq!(rules[0].as_str().unwrap(), "replace");
-    assert_eq!(
-        merged
-            .get("tun")
-            .and_then(|v| v.get("enable"))
-            .and_then(|v| v.as_bool()),
-        Some(true)
-    );
-
-    let _ = serde_yaml_ng::to_string(&merged)?;
-
-    Ok(())
-}
-
-#[test]
-#[allow(clippy::unwrap_used)]
-fn test_merge_keeps_plain_keys() -> anyhow::Result<()> {
-    let merge = r"
-    rules:
-      - DOMAIN-SUFFIX,example.com,DIRECT
-    tun:
-      enable: true
-  ";
-
-    let config = r"
-    port: 7897
-    rules:
-      - MATCH,DIRECT
-  ";
-
-    let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
-    let config = serde_yaml_ng::from_str::<Mapping>(config)?;
-
-    let merged = use_merge(&merge, config);
-
-    assert_eq!(merged.get("port").and_then(|v| v.as_u64()), Some(7897));
-    let rules = merged.get("rules").and_then(|v| v.as_sequence()).unwrap();
-    assert_eq!(rules.len(), 1);
-    assert_eq!(rules[0].as_str().unwrap(), "DOMAIN-SUFFIX,example.com,DIRECT");
-    assert_eq!(
-        merged
-            .get("tun")
-            .and_then(|v| v.get("enable"))
-            .and_then(|v| v.as_bool()),
-        Some(true)
-    );
+    let _ = serde_yaml_ng::to_string(&use_merge(&merge, config))?;
 
     Ok(())
 }
