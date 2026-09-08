@@ -6,6 +6,7 @@ description: |
 
 on:
   roles: all
+  skip-roles: [admin, maintainer, write]
   skip-bots: [dependabot, renovate]
   pull_request_target:
     types: [opened, reopened, synchronize]
@@ -81,7 +82,9 @@ Do not attempt to determine whether individual lines of code were written by a h
 ## Core Policy
 
 - A pull request should reference the issue it fixes when the repository workflow expects issue linkage.
+- The repository documents its contribution expectations (issue-first workflow, scope discipline, and ownership of AI-assisted changes) in [CONTRIBUTING.md](../../CONTRIBUTING.md) and [AGENTS.md](../../AGENTS.md). When judging whether issue linkage is required for a change of the given size, treat those documents as the repository's stated policy, not reviewer preference.
 - AI assistance by itself is not a problem.
+- An AI-assistance disclosure footer (for example `Assisted by: GPT-5.6 High`) is transparency, not evidence: it carries no negative weight, and it must never be treated as ownership evidence either.
 - Evaluate **ownership evidence**, not authorship provenance.
 - The strongest evidence comes from the relationship between the reported problem, repository-specific constraints, implementation scope, tests, and visible implementation iteration.
 - Domain Isolation: do not let the author's personal background, hobbies, professional titles, or unrelated external reputation influence the risk score. High-quality ownership evidence stands on its own; weak problem-to-solution reasoning cannot be excused by status.
@@ -102,6 +105,7 @@ Use GitHub tools to inspect the triggering pull request in full:
 - Pull request title and body
 - Linked issue references in the body, title, metadata, timeline, and cross-links when available
 - Whether the issue or relevant problem discussion existed before implementation or PR creation
+- Linked issue authorship and creation time relative to the pull request; whether the issue carries maintainer triage labels or third-party engagement
 - Commit history and commit authors
 - PR author association, repository role signals, and visible ownership history when available
 - Changed files and diff shape
@@ -132,10 +136,11 @@ These signals directly concern weak problem-to-solution ownership and should car
 - Scope Drift: the PR claims to fix a specific bug or implement a specific request but touches unrelated modules, configuration, documentation, UI, services, or infrastructure without explaining why those changes are necessary.
 - A broad feature touching multiple subsystems without a pre-existing issue, design discussion, or other visible problem definition.
 - Implementation-first linkage: the referenced issue was created only after the PR was opened, after an AI-slop review comment, or after maintainers requested issue linkage.
+- Linkage Laundering: the linked issue was authored by the PR author shortly before implementation, carries no maintainer triage or third-party engagement, and reads as a restatement of the diff rather than an independent problem report. Such linkage satisfies the form of issue linkage but not its substance.
 - Metadata-only remediation: the author edits the PR body, adds a retroactive issue, comments an explanation, closes/reopens the PR, or otherwise retriggers the workflow without changing the implementation or providing independently meaningful ownership evidence.
 - Large-scale mechanical edits with little behavioral justification.
 - Random renames, comment rewrites, formatting churn, or same-meaning text changes that do not support the stated fix.
-- New tests that are generic, padded, or not clearly connected to the reported issue.
+- Test or defensive-code padding: bulk-added or generated-looking test files, speculative coverage, and heavy defensive programming (redundant guards, error handling for hypothetical failure modes) whose volume is not justified by the reported issue.
 - Draft or vague "ongoing optimization" style PRs with broad churn and a weak problem statement.
 - A substantial implementation whose changed areas cannot be explained by the stated problem.
 
@@ -166,6 +171,7 @@ AI-agent branch names, bot authorship, or explicit AI-tool usage must not determ
 These signals demonstrate problem-to-solution ownership and should carry substantial weight:
 
 - Clear issue linkage with a concrete bug report or feature request that existed before the PR was opened.
+- Independent linkage origin: the issue predates the implementation and was authored by someone other than the PR author, or carries maintainer triage labels or third-party engagement.
 - Visible prior discussion predating implementation.
 - Tight file scope that directly matches the linked issue.
 - Tests that directly reproduce the reported regression or validate the requested behavior.
@@ -404,6 +410,7 @@ In particular:
 - A deliberately inserted revert or cleanup commit is not meaningful iteration unless it reflects an actual change in reasoning or implementation.
 - A long explanation is not ownership evidence unless it contains repository-specific reasoning.
 - Creating an issue immediately before or after implementation is weaker evidence than a problem report or discussion that genuinely predates the implementation.
+- An issue authored by the PR author is not automatically weaker — self-reported bugs fixed by their reporter are welcome. Weigh substance: genuine problem detail (reproduction steps, environment, logs) versus a one-line echo of the implementation.
 - Adding tests is not a strong counter-signal unless the tests directly validate the reported behavior.
 - Reviewer interaction matters primarily when it changes implementation, scope, assumptions, or reasoning.
 - PR templates, polished prose, and structured checklists should neither strongly increase nor decrease risk by themselves.
