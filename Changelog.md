@@ -18,6 +18,7 @@
 修复 i18n 清理脚本因导入方式错误而无法运行的问题
 修复 Linux 桌面环境下主题切换时应用外观不跟随的问题
 修复 Gemini 测试正确性
+修复 macOS 用户模式下旧版服务遗留的 cache.db 属主为 root 且当前用户不可写，导致无法记住上次选择节点的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
