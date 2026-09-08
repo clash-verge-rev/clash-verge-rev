@@ -112,7 +112,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
               {enable_group_icon && group.icon?.trim().startsWith('http') && (
                 <img
                   src={iconCachePath === '' ? group.icon : iconCachePath}
-                  alt="group icon"
+                  alt={group.name}
                   width="32px"
                   style={{ marginRight: '12px', borderRadius: '6px' }}
                 />
@@ -120,15 +120,15 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
               {enable_group_icon && group.icon?.trim().startsWith('data') && (
                 <img
                   src={group.icon}
-                  alt="group icon"
+                  alt={group.name}
                   width="32px"
                   style={{ marginRight: '12px', borderRadius: '6px' }}
                 />
               )}
               {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
                 <img
-                  src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
-                  alt="group icon"
+                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
+                  alt={group.name}
                   width="32px"
                 />
               )}

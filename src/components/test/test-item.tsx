@@ -67,21 +67,23 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
           event.preventDefault()
         }}
       >
-        <Box data-sortable-handle sx={{ position: 'relative', cursor: 'move' }}>
+        <Box sx={{ position: 'relative', cursor: 'move' }}>
           {icon && icon.trim() !== '' ? (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               {icon.trim().startsWith('http') && (
                 <img
+                  alt={name}
                   src={iconCachePath === '' ? icon : iconCachePath}
                   height="40px"
                 />
               )}
               {icon.trim().startsWith('data') && (
-                <img src={icon} height="40px" />
+                <img alt={name} src={icon} height="40px" />
               )}
               {icon.trim().startsWith('<svg') && (
                 <img
-                  src={`data:image/svg+xml;base64,${btoa(icon)}`}
+                  alt={name}
+                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon)}`}
                   height="40px"
                 />
               )}
