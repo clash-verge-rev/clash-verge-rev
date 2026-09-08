@@ -62,6 +62,7 @@ pub fn use_merge(merge: &Mapping, config: Mapping) -> Mapping {
 }
 
 #[test]
+#[allow(clippy::unwrap_used)]
 fn test_merge() -> anyhow::Result<()> {
     let merge = r"
     prepend-rules:
@@ -119,6 +120,7 @@ fn test_merge() -> anyhow::Result<()> {
 }
 
 #[test]
+#[allow(clippy::unwrap_used)]
 fn test_merge_keeps_plain_keys() -> anyhow::Result<()> {
     let merge = r"
     rules:
