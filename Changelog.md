@@ -18,6 +18,7 @@
 修复 i18n 清理脚本因导入方式错误而无法运行的问题
 修复 Linux 桌面环境下主题切换时应用外观不跟随的问题
 修复 Gemini 测试正确性
+修复代理组节点 `PASS-RULE` 被过滤丢失的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
