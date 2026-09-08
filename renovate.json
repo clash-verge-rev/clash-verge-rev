@@ -51,6 +51,12 @@
       "groupName": "github actions"
     },
     {
+      "description": "Recompile generated agentic workflows with gh aw compile instead of updating individual action pins",
+      "matchManagers": ["github-actions"],
+      "matchFileNames": [".github/workflows/*.lock.yml"],
+      "enabled": false
+    },
+    {
       "description": "Skip TypeScript 7.0 series",
       "matchManagers": ["npm"],
       "matchPackageNames": ["typescript"],
