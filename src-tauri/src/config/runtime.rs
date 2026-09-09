@@ -9,6 +9,7 @@ const PATCH_CONFIG_INNER: [&str; 5] = ["allow-lan", "ipv6", "log-level", "unifie
 #[derive(Default, Clone)]
 pub struct IRuntime {
     pub config: Option<Mapping>,
+    pub(crate) dns_override: Option<super::dns::DnsOverrideState>,
     // Keys seen in the profile pipeline, including merge and script output.
     pub exists_keys: HashSet<String>,
     // TODO 或许可以用 FixMap 来存储以提升效率

@@ -128,6 +128,18 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
+pub fn take_dns_override_notice() -> bool {
+    crate::config::dns::take_dns_override_notice()
+}
+
+#[tauri::command]
+pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> CmdResult<feat::DnsOverrideOutcome> {
+    feat::set_dns_override(enabled, confirmation)
+        .await
+        .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))
+}
+
+#[tauri::command]
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     if apply {
         let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
@@ -169,6 +181,7 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         logging!(info, Type::Config, "Config regenerated successfully");
     }
 
+    logging_error!(Type::Config, Config::sync_dns_override().await);
     handle::Handle::refresh_clash();
     Ok(())
 }
