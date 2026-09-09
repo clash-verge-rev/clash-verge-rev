@@ -11,7 +11,7 @@ pub mod runtime;
 pub(crate) mod snapshot;
 mod verge;
 
-pub(crate) use self::config::{Config, ConfigType};
+pub(crate) use self::config::Config;
 pub use self::{clash::*, encrypt::*, mixed_port::*, prfitem::*, profiles::*, verge::*};
 
 pub const DEFAULT_PAC: &str = r#"function FindProxyForURL(url, host) {

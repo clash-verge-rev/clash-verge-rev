@@ -1,4 +1,4 @@
-use super::{Config, ConfigType, IClashTemp, IVerge, MixedPort};
+use super::{Config, IClashTemp, IVerge, MixedPort};
 use crate::{
     constants::timing,
     core::{
@@ -129,15 +129,18 @@ impl Config {
             .await
             .context("failed to materialize runtime configuration with fallback port")?;
 
+        let yaml = Self::runtime_config_yaml()
+            .await
+            .context("failed to validate runtime configuration with fallback port")?;
         let validation = CoreConfigValidator::global()
-            .validate_config_outcome()
+            .validate_config_outcome_with(&yaml)
             .await
             .context("failed to validate runtime configuration with fallback port")?;
         if !validation.is_valid() {
             bail!("runtime configuration with fallback port is invalid: {validation}");
         }
 
-        Self::generate_file(ConfigType::Run)
+        Self::generate_file()
             .await
             .context("failed to write Runtime Configuration")?;
         Ok(())

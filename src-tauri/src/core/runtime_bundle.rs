@@ -5,7 +5,7 @@ use serde_yaml_ng::Value;
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 
-const GEO_ASSETS: &[&str] = &[
+pub(crate) const GEO_ASSETS: &[&str] = &[
     "Country.mmdb",
     "geoip.dat",
     "geosite.dat",

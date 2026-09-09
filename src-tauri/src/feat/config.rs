@@ -25,7 +25,6 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
             if patch.get("mode").is_some() {
                 tray::Tray::global().update_menu_and_icon().await;
             }
-            Config::runtime().await.edit_draft(|d| d.patch_config(patch));
             CoreManager::global().update_config_checked().await?;
         }
         handle::Handle::refresh_clash();

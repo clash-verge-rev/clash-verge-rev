@@ -104,7 +104,7 @@ impl CoreManager {
         handle::Handle::app_handle()
             .mihomo()
             .update_socket_path(dirs::path_to_str(&sidecar_ipc)?.to_owned())?;
-        let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
+        let config_file = Config::generate_file().await?;
         let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
@@ -255,7 +255,7 @@ impl CoreManager {
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         self.core_starting();
         let service_ipc = dirs::ipc_path()?;
-        let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
+        let config_file = Config::generate_file().await?;
         handle::Handle::app_handle()
             .mihomo()
             .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;

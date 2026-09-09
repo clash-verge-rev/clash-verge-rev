@@ -1,7 +1,7 @@
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::core::service::StageRequest;
 use crate::{
-    config::{Config, ConfigType, IProfiles, runtime::IRuntime},
+    config::{Config, IProfiles, runtime::IRuntime},
     constants::timing,
     core::{
         handle,
@@ -299,12 +299,16 @@ impl CoreManager {
 
     /// Validates and applies the caller's transaction, committing only on success.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
-        let outcome = CoreConfigValidator::global().validate_config_outcome().await?;
+        // One serialization feeds check and run files; the core never applies unvalidated bytes.
+        let yaml = Config::runtime_config_yaml().await?;
+        let outcome = CoreConfigValidator::global()
+            .validate_config_outcome_with(&yaml)
+            .await?;
         if !outcome.is_valid() {
             return Ok(outcome);
         }
 
-        let run_path = Config::generate_file(ConfigType::Run).await?;
+        let run_path = Config::write_runtime_file(&yaml).await?;
         self.apply_config(run_path).await?;
         transaction.commit();
         Ok(ValidationOutcome::Valid)

@@ -1,4 +1,4 @@
-use crate::config::with_encryption;
+use crate::{config::with_encryption, process::AsyncHandler};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
@@ -26,10 +26,20 @@ pub async fn read_mapping(path: &Path) -> Result<Mapping> {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = tokio::fs::read_to_string(path)
+    let bytes = tokio::fs::read(path)
         .await
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    let yaml_str =
+        String::from_utf8(bytes).with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    let label = path.to_path_buf();
 
+    // Parsing a multi-megabyte profile is pure CPU; keep it off the async worker.
+    AsyncHandler::spawn_blocking(move || parse_mapping(yaml_str, label))
+        .await
+        .map_err(|join| anyhow!("yaml parse task failed: {join}"))?
+}
+
+fn parse_mapping(yaml_str: String, path: PathBuf) -> Result<Mapping> {
     match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_str) {
         Ok(mut val) => {
             val.apply_merge()
@@ -59,6 +69,11 @@ pub async fn save_yaml<T: Serialize + Sync>(path: &Path, data: &T, prefix: Optio
         None => data_str,
     };
 
+    save_yaml_str(path, &yaml_str).await
+}
+
+/// Atomic replace with pre-serialized content; the payload must not need the encryption scope.
+pub async fn save_yaml_str(path: &Path, yaml_str: &str) -> Result<()> {
     let (temporary, file) = loop {
         let temporary = path.with_extension(format!("tmp-{}-{}", std::process::id(), nanoid!()));
         match std::fs::OpenOptions::new()

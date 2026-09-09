@@ -7,7 +7,7 @@ mod tun;
 
 use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
-    field::{use_keys, use_lowercase, use_sort},
+    field::{use_keys, use_lowercase_owned, use_sort},
     merge::use_merge,
     script::use_script,
     seq::{SeqMap, use_seq},
@@ -254,15 +254,9 @@ async fn process_global_items(
     }
 
     if let ChainType::Script(script) = global_script.data {
-        let mut logs = vec![];
-        match use_script(script, config.clone(), profile_name.clone()).await {
-            Ok((res_config, res_logs)) => {
-                extend_changed_keys(&mut exists_keys, &config, &res_config);
-                config = res_config;
-                logs.extend(res_logs);
-            }
-            Err(err) => logs.push(("exception".into(), err.to_string().into())),
-        }
+        let (res_config, changed_keys, logs) = use_script(script, config, profile_name.clone()).await;
+        exists_keys.extend(changed_keys);
+        config = res_config;
         result_map.insert(global_script.uid, logs);
     }
 
@@ -288,20 +282,6 @@ fn process_seq_items(
     }
 
     config
-}
-
-fn extend_changed_keys(exists_keys: &mut Vec<String>, config: &Mapping, res_config: &Mapping) {
-    exists_keys.extend(res_config.iter().filter_map(|(key, value)| {
-        if config.get(key) == Some(value) {
-            return None;
-        }
-
-        key.as_str().map(|key| {
-            let mut key: String = key.into();
-            key.make_ascii_lowercase();
-            key
-        })
-    }));
 }
 
 /// App 权威的顶层控制面键:核心连接、监听端口、UI/托盘开关。
@@ -450,15 +430,9 @@ async fn process_profile_items(
     }
 
     if let ChainType::Script(script) = script_item.data {
-        let mut logs = vec![];
-        match use_script(script, config.clone(), profile_name.clone()).await {
-            Ok((res_config, res_logs)) => {
-                extend_changed_keys(&mut exists_keys, &config, &res_config);
-                config = res_config;
-                logs.extend(res_logs);
-            }
-            Err(err) => logs.push(("exception".into(), err.to_string().into())),
-        }
+        let (res_config, changed_keys, logs) = use_script(script, config, profile_name.clone()).await;
+        exists_keys.extend(changed_keys);
+        config = res_config;
         result_map.insert(script_item.uid, logs);
     }
 
@@ -540,26 +514,47 @@ fn merge_default_config(
     config
 }
 
-async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         let items: Vec<_> = ChainItem::builtin()
             .into_iter()
             .filter(|(s, _)| s.is_support(clash_core.as_ref()))
             .map(|(_, c)| c)
             .collect();
-        for item in items {
-            logging!(debug, Type::Core, "run builtin script {}", item.uid);
-            if let ChainType::Script(script) = item.data {
-                match use_script(script, config.clone(), String::from("")).await {
-                    Ok((res_config, _)) => {
-                        config = res_config;
-                    }
-                    Err(err) => {
-                        logging!(error, Type::Core, "builtin script error `{err:#}`");
-                    }
-                }
+        if !items.is_empty() {
+            // The JS path saw a lowercased view; lowercase once, only when a builtin runs.
+            config = use_lowercase_owned(config);
+            for item in items {
+                logging!(debug, Type::Core, "run builtin script {}", item.uid);
+                config = match item.uid.as_str() {
+                    "verge_hy_alpn" => builtin_hy_alpn(config),
+                    "verge_meta_guard" => builtin_meta_guard(config),
+                    _ => config,
+                };
             }
         }
+    }
+
+    config
+}
+
+fn builtin_hy_alpn(mut config: Mapping) -> Mapping {
+    if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
+        for proxy in proxies.iter_mut() {
+            let Some(proxy) = proxy.as_mapping_mut() else { continue };
+            let is_hysteria = proxy.get("type").and_then(Value::as_str) == Some("hysteria");
+            if is_hysteria && let Some(Value::String(alpn)) = proxy.get("alpn").cloned() {
+                proxy.insert("alpn".into(), Value::Sequence(vec![Value::String(alpn)]));
+            }
+        }
+    }
+
+    config
+}
+
+fn builtin_meta_guard(mut config: Mapping) -> Mapping {
+    if config.get("mode").and_then(Value::as_str) == Some("script") {
+        config.insert(Value::from("mode"), Value::from("rule"));
     }
 
     config
@@ -760,7 +755,7 @@ pub async fn enhance(
         tproxy_enabled,
     );
 
-    let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    let config = apply_builtin_scripts(config, clash_core, enable_builtin);
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 

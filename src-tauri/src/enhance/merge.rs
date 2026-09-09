@@ -1,6 +1,6 @@
 use clash_verge_logging::{Type, logging};
 
-use super::use_lowercase;
+use super::field::use_lowercase;
 use serde_yaml_ng::{self, Mapping, Value};
 
 fn deep_merge(a: &mut Value, b: Value) {

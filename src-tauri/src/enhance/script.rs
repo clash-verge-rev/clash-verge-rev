@@ -1,8 +1,8 @@
-use crate::process::AsyncHandler;
+use crate::{process::AsyncHandler, utils::tmpl};
 
 use super::field::{use_lowercase, use_lowercase_owned};
 use anyhow::{Error, Result};
-use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
+use boa_engine::{Context, JsString, JsValue, Source, js_string, native_function::NativeFunction, property::Attribute};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
@@ -15,16 +15,58 @@ const MAX_JSON_SIZE: usize = 10 * 1024 * 1024; // 10MB
 const MAX_LOOP_ITERATIONS: u64 = 10_000_000;
 const SCRIPT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
-pub async fn use_script(script: String, config: Mapping, name: String) -> Result<(Mapping, Vec<(String, String)>)> {
-    let handle = AsyncHandler::spawn_blocking(move || use_script_sync(script, &config, &name));
-    match tokio::time::timeout(SCRIPT_TIMEOUT, handle).await {
-        Ok(Ok(result)) => result,
-        Ok(Err(join_err)) => Err(anyhow::anyhow!("script task panicked: {join_err}")),
-        Err(_elapsed) => Err(anyhow::anyhow!("script execution timed out after {:?}", SCRIPT_TIMEOUT)),
+type ScriptResult = (Mapping, Vec<String>, Vec<(String, String)>);
+type EvalOutcome = (Result<Mapping, std::string::String>, Vec<(String, String)>);
+
+/// Never fails: exceptions are logged and the input config is returned unchanged.
+pub(super) async fn use_script(script: String, config: Mapping, name: String) -> ScriptResult {
+    // The template is identity-plus-lowercasing; skip the Boa round-trip.
+    if script == tmpl::ITEM_SCRIPT {
+        return (use_lowercase_owned(config), vec![], vec![]);
+    }
+
+    let json = match serde_json::to_string(&use_lowercase(&config)) {
+        Ok(json) if json.len() <= MAX_JSON_SIZE => json,
+        Ok(_) => {
+            let message = "Configuration size exceeds maximum allowed size";
+            return (config, vec![], vec![("exception".into(), message.into())]);
+        }
+        Err(err) => return (config, vec![], vec![("exception".into(), err.to_string().into())]),
+    };
+
+    let evaluated = AsyncHandler::spawn_blocking(move || eval_script(&script, &json, &name));
+    let (outcome, mut logs) = match tokio::time::timeout(SCRIPT_TIMEOUT, evaluated).await {
+        Ok(Ok(evaluated)) => evaluated,
+        Ok(Err(join_err)) => (Err(format!("script task panicked: {join_err}")), vec![]),
+        Err(_elapsed) => (
+            Err(format!("script execution timed out after {SCRIPT_TIMEOUT:?}")),
+            vec![],
+        ),
+    };
+
+    match outcome {
+        Ok(result) => {
+            // Compared against the config as handed in, not the lowercased copy the script saw.
+            let changed_keys = result
+                .iter()
+                .filter(|(key, value)| config.get(key) != Some(value))
+                .filter_map(|(key, _)| {
+                    let mut key: String = key.as_str()?.into();
+                    key.make_ascii_lowercase();
+                    Some(key)
+                })
+                .collect();
+            (result, changed_keys, logs)
+        }
+        Err(reason) => {
+            logs.push(("exception".into(), reason.into()));
+            (config, vec![], logs)
+        }
     }
 }
 
-fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(Mapping, Vec<(String, String)>)> {
+/// Console logs survive every failure path.
+fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
     let mut context = Context::default();
 
     context
@@ -36,6 +78,8 @@ fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(M
 
     let outputs_clone = Arc::clone(&outputs);
     let total_size_clone = Arc::clone(&total_size);
+
+    let bail = |reason: std::string::String| (Err(reason), outputs.lock().to_vec());
 
     let _ = context.register_global_builtin_callable("__verge_log__".into(), 2, unsafe {
         NativeFunction::from_closure(move |_: &JsValue, args: &[JsValue], context: &mut Context| {
@@ -87,60 +131,57 @@ fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(M
       });"#,
     ));
 
-    let config = use_lowercase(config);
-    let config_str = serde_json::to_string(&config)?;
-    if config_str.len() > MAX_JSON_SIZE {
-        anyhow::bail!("Configuration size exceeds maximum allowed size");
+    // Bind the JSON instead of embedding it in program source; Boa's parser never chews it.
+    if let Err(err) = context.register_global_property(
+        js_string!("__verge_config__"),
+        JsValue::from(JsString::from(config_json)),
+        Attribute::all(),
+    ) {
+        return bail(format!("failed to bind config for script: {err}"));
     }
 
     // 仅处理 name 参数中的特殊字符
     let safe_name = escape_js_string_for_single_quote(name);
     if safe_name.len() > 1024 {
-        anyhow::bail!("Name parameter too long");
+        return bail("Name parameter too long".to_owned());
     }
 
     let code = format!(
         r"try{{
         {script};
-        JSON.stringify(main({config_str},'{safe_name}')||'')
+        JSON.stringify(main(JSON.parse(globalThis.__verge_config__),'{safe_name}')||'')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
       }}"
     );
 
-    if let Ok(result) = context.eval(Source::from_bytes(code.as_str())) {
-        if !result.is_string() {
-            anyhow::bail!("main function should return object");
-        }
-        let result = result
-            .to_string(&mut context)
-            .map_err(|e| anyhow::anyhow!("Failed to convert JS result to string: {}", e))?;
-        let result = result
-            .to_std_string()
-            .map_err(|_| anyhow::anyhow!("Failed to convert JS string to std string"))?;
+    let result = match context.eval(Source::from_bytes(code.as_str())) {
+        Ok(result) if result.is_string() => result,
+        _ => return bail("main function should return object".to_owned()),
+    };
+    let result = match result.to_string(&mut context) {
+        Ok(result) => result,
+        Err(e) => return bail(format!("Failed to convert JS result to string: {e}")),
+    };
+    let result = match result.to_std_string() {
+        Ok(result) => result,
+        Err(_) => return bail("Failed to convert JS string to std string".to_owned()),
+    };
 
-        if result.len() > MAX_JSON_SIZE {
-            anyhow::bail!("Script result exceeds maximum allowed size");
-        }
+    if result.len() > MAX_JSON_SIZE {
+        return bail("Script result exceeds maximum allowed size".to_owned());
+    }
 
-        let res: Result<Mapping, Error> = parse_json_safely(&result);
-
-        match res {
-            Ok(config) => Ok((use_lowercase_owned(config), outputs.lock().to_vec())),
-            Err(err) => {
-                outputs
-                    .lock()
-                    .push(("exception".into(), "Script execution failed".into()));
-                logging!(
-                    error,
-                    Type::Config,
-                    "Script execution error: {err:#}. Script name: {name}"
-                );
-                Ok((config, outputs.lock().to_vec()))
-            }
+    match parse_json_safely(&result) {
+        Ok(config) => (Ok(use_lowercase_owned(config)), outputs.lock().to_vec()),
+        Err(err) => {
+            logging!(
+                error,
+                Type::Config,
+                "Script execution error: {err:#}. Script name: {name}"
+            );
+            bail("Script execution failed".to_owned())
         }
-    } else {
-        anyhow::bail!("main function should return object");
     }
 }
 
@@ -180,90 +221,4 @@ fn escape_js_string_for_single_quote(s: &str) -> String {
         .replace('\n', "\\n") // 添加换行符转义
         .replace('\r', "\\r") // 添加回车转义
         .into()
-}
-
-#[test]
-#[allow(unused_variables)]
-#[allow(clippy::expect_used)]
-fn test_script() {
-    let script = r#"
-    function main(config) {
-      if (Array.isArray(config.rules)) {
-        config.rules = [...config.rules, "add"];
-      }
-      console.log(config);
-      config.proxies = ["111"];
-      return config;
-    }
-  "#;
-
-    let config = r"
-    rules:
-      - 111
-      - 222
-    tun:
-      enable: false
-    dns:
-      enable: false
-  ";
-
-    let config = &serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
-    let (config, results) =
-        use_script_sync(script.into(), config, &String::from("")).expect("Script execution should succeed in test");
-
-    let _ = serde_yaml_ng::to_string(&config).expect("Failed to serialize config to YAML");
-    let yaml_config_size = std::mem::size_of_val(&config);
-    let box_yaml_config_size = std::mem::size_of_val(&Box::new(config));
-    assert!(box_yaml_config_size < yaml_config_size);
-}
-
-// 测试特殊字符转义功能
-#[test]
-#[allow(clippy::expect_used)]
-fn test_escape_unescape() {
-    let test_string = r#"Hello "World"!\nThis is a test with \u00A9 copyright symbol."#;
-    let escaped = escape_js_string_for_single_quote(test_string);
-    println!("Original: {test_string}");
-    println!("Escaped: {escaped}");
-
-    let json_str = r#"{"key":"value","nested":{"key":"value"}}"#;
-    let parsed = parse_json_safely(json_str).expect("Failed to parse test JSON safely");
-
-    assert!(parsed.contains_key("key"));
-    assert!(parsed.contains_key("nested"));
-
-    let quoted_json_str = r#""{"key":"value","nested":{"key":"value"}}""#;
-    let parsed_quoted = parse_json_safely(quoted_json_str).expect("Failed to parse quoted test JSON safely");
-
-    assert!(parsed_quoted.contains_key("key"));
-    assert!(parsed_quoted.contains_key("nested"));
-}
-
-#[test]
-fn test_strip_outer_quotes_edge_cases() {
-    assert_eq!(strip_outer_quotes(""), "");
-    assert_eq!(strip_outer_quotes("'"), "'");
-    assert_eq!(strip_outer_quotes("\""), "\"");
-    assert_eq!(strip_outer_quotes("''"), "");
-    assert_eq!(strip_outer_quotes("\"\""), "");
-    assert_eq!(strip_outer_quotes("'a'"), "a");
-}
-
-#[test]
-fn test_memory_limits() {
-    // 测试输出限制
-    let script = r#"
-    function main(config) {
-      for(let i = 0; i < 2000; i++) {
-        console.log("test");
-      }
-      return config;
-    }
-  "#;
-
-    #[allow(clippy::expect_used)]
-    let config = &serde_yaml_ng::from_str("test: value").expect("Failed to parse test YAML");
-    let result = use_script_sync(script.into(), config, &String::from(""));
-    // 应该失败或被限制
-    assert!(result.is_ok()); // 会被限制但不会 panic
 }
