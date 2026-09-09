@@ -86,6 +86,7 @@ flate2 = "1.1.9"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.0" }
 base64 = "0.23.1"
+sha2 = "0.11"
 getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
@@ -98,7 +99,7 @@ tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.1.0", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "main" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.7", version = "2.6.7", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.8", version = "2.6.8", features = [
   "client",
 ] }
 arc-swap = "1.9.2"

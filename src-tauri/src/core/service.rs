@@ -800,6 +800,167 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
+/// Publishes a core into the Service's approved directory through the elevated installer.
+///
+/// The Service only executes administrator-approved copies from its own directory, never the file
+/// beside the app, so a freshly replaced core has to be handed over before a service-mode restart
+/// asks for it. The digest pins the exact bytes being attested: it rides the elevated process's
+/// command line, which no other local account can alter, so a file swapped on disk after this
+/// hash was computed is refused by the installer instead of published.
+pub fn stage_approved_core(core_path: &Path) -> Result<()> {
+    tokio::task::block_in_place(|| {
+        let digest = sha256_hex(core_path)?;
+        run_core_install(core_path, &digest)
+    })
+}
+
+fn sha256_hex(path: &Path) -> Result<String> {
+    use sha2::{Digest as _, Sha256};
+    use std::io::Read as _;
+
+    let mut file = std::fs::File::open(path).with_context(|| format!("failed to open {path:?} for hashing"))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0_u8; 64 * 1024].into_boxed_slice();
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .with_context(|| format!("failed to read {path:?}"))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
+}
+
+#[cfg(target_os = "windows")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt as _;
+    use std::process::Output;
+
+    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let token = Token::with_current_process()?;
+    let output = match token.privilege_level()? {
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path)
+                .arg("--install-core")
+                .arg(core_path)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .show(false)
+                .status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => StdCommand::new(&install_path)
+            .creation_flags(0x08000000)
+            .arg("--install-core")
+            .arg(core_path)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?,
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let core_argument = core_path.as_os_str();
+    let output = if linux_running_as_root() {
+        StdCommand::new(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?
+    } else {
+        let elevator = crate::utils::help::linux_elevator();
+        let mut elevated = StdCommand::new(&elevator);
+        // pkexec-only option; other elevators such as sudo reject unknown flags outright.
+        if elevator.contains("pkexec") {
+            elevated.arg("--disable-internal-agent");
+        }
+        let result = elevated
+            .arg(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?;
+        if !result.status.success() && elevator.contains("pkexec") {
+            logging!(
+                warn,
+                Type::Service,
+                "pkexec failed with code {}, falling back to sudo",
+                result.status.code().unwrap_or(-1)
+            );
+            StdCommand::new("sudo")
+                .arg(&install_path)
+                .arg("--install-core")
+                .arg(core_argument)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .output()?
+        } else {
+            result
+        }
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+    let install_path = macos_service_tool_path(&install_path)?;
+
+    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
+    let shell = format!(
+        "cd /; {} --install-core {} --sha256 {}",
+        shell_single_quote(&install_path.to_string_lossy()),
+        shell_single_quote(&core_path.to_string_lossy()),
+        shell_single_quote(sha256_hex),
+    );
+    let shell = escape_osascript_double_quoted_string(&shell);
+    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
+
+    let output = StdCommand::new("osascript").args(["-e", &command]).output()?;
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
 /// Dispatches a privileged platform operation on a blocking thread.
 pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()> {
     let (operation, label): (fn() -> Result<()>, &'static str) = match action {
