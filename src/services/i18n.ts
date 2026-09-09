@@ -15,6 +15,7 @@ export const supportedLanguages = [
   'es',
   'jp',
   'zhtw',
+  'az',
 ]
 
 export const FALLBACK_LANGUAGE = 'zh'
