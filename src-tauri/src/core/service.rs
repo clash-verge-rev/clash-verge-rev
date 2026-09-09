@@ -23,7 +23,6 @@ use clash_verge_service_ipc::{
     MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, ServiceErrorCode, StageRuntimeOutcome,
     StartClashRequest, WriterConfig,
 };
-use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::{
@@ -74,13 +73,19 @@ pub(crate) fn clear_active_service_session() {
 }
 
 /// Probes staging support without failing startup when the fast path is unavailable.
+#[tracing::instrument(skip_all, level = "info", fields(supported = tracing::field::Empty))]
 async fn probe_runtime_staging_support() -> bool {
     match clash_verge_service_ipc::get_version().await {
-        Ok(response) if response.code == 0 => response
-            .data
-            .as_ref()
-            .is_some_and(clash_verge_service_ipc::ProtocolInfo::supports_runtime_staging),
+        Ok(response) if response.code == 0 => {
+            let supported = response
+                .data
+                .as_ref()
+                .is_some_and(clash_verge_service_ipc::ProtocolInfo::supports_runtime_staging);
+            tracing::Span::current().record("supported", supported);
+            supported
+        }
         Ok(response) => {
+            tracing::Span::current().record("supported", false);
             logging!(
                 warn,
                 Type::Service,
@@ -91,6 +96,7 @@ async fn probe_runtime_staging_support() -> bool {
             false
         }
         Err(error) => {
+            tracing::Span::current().record("supported", false);
             logging!(
                 warn,
                 Type::Service,
@@ -794,6 +800,167 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
+/// Publishes a core into the Service's approved directory through the elevated installer.
+///
+/// The Service only executes administrator-approved copies from its own directory, never the file
+/// beside the app, so a freshly replaced core has to be handed over before a service-mode restart
+/// asks for it. The digest pins the exact bytes being attested: it rides the elevated process's
+/// command line, which no other local account can alter, so a file swapped on disk after this
+/// hash was computed is refused by the installer instead of published.
+pub fn stage_approved_core(core_path: &Path) -> Result<()> {
+    tokio::task::block_in_place(|| {
+        let digest = sha256_hex(core_path)?;
+        run_core_install(core_path, &digest)
+    })
+}
+
+fn sha256_hex(path: &Path) -> Result<String> {
+    use sha2::{Digest as _, Sha256};
+    use std::io::Read as _;
+
+    let mut file = std::fs::File::open(path).with_context(|| format!("failed to open {path:?} for hashing"))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0_u8; 64 * 1024].into_boxed_slice();
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .with_context(|| format!("failed to read {path:?}"))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
+}
+
+#[cfg(target_os = "windows")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt as _;
+    use std::process::Output;
+
+    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let token = Token::with_current_process()?;
+    let output = match token.privilege_level()? {
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path)
+                .arg("--install-core")
+                .arg(core_path)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .show(false)
+                .status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => StdCommand::new(&install_path)
+            .creation_flags(0x08000000)
+            .arg("--install-core")
+            .arg(core_path)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?,
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let core_argument = core_path.as_os_str();
+    let output = if linux_running_as_root() {
+        StdCommand::new(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?
+    } else {
+        let elevator = crate::utils::help::linux_elevator();
+        let mut elevated = StdCommand::new(&elevator);
+        // pkexec-only option; other elevators such as sudo reject unknown flags outright.
+        if elevator.contains("pkexec") {
+            elevated.arg("--disable-internal-agent");
+        }
+        let result = elevated
+            .arg(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?;
+        if !result.status.success() && elevator.contains("pkexec") {
+            logging!(
+                warn,
+                Type::Service,
+                "pkexec failed with code {}, falling back to sudo",
+                result.status.code().unwrap_or(-1)
+            );
+            StdCommand::new("sudo")
+                .arg(&install_path)
+                .arg("--install-core")
+                .arg(core_argument)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .output()?
+        } else {
+            result
+        }
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+    let install_path = macos_service_tool_path(&install_path)?;
+
+    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
+    let shell = format!(
+        "cd /; {} --install-core {} --sha256 {}",
+        shell_single_quote(&install_path.to_string_lossy()),
+        shell_single_quote(&core_path.to_string_lossy()),
+        shell_single_quote(sha256_hex),
+    );
+    let shell = escape_osascript_double_quoted_string(&shell);
+    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
+
+    let output = StdCommand::new("osascript").args(["-e", &command]).output()?;
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
 /// Dispatches a privileged platform operation on a blocking thread.
 pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()> {
     let (operation, label): (fn() -> Result<()>, &'static str) = match action {
@@ -818,7 +985,7 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
 
 /// A staging response whose refusal code tells callers whether a fresh start can help.
 pub(super) enum StageRequest {
-    Refused { code: u16, message: CompactString },
+    Refused { code: u16, message: String },
     Answered(StageRuntimeOutcome),
 }
 
@@ -841,7 +1008,7 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
     if response.code > 0 {
         return Ok(StageRequest::Refused {
             code: response.code,
-            message: response.message.into(),
+            message: response.message,
         });
     }
     response
@@ -851,8 +1018,8 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
 }
 
 /// 尝试使用服务启动core
+#[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
-    logging!(info, Type::Service, "尝试使用现有服务启动核心");
     clear_active_service_session();
 
     let credentials = current_owner_credentials()?;
@@ -867,14 +1034,23 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let response = match clash_verge_service_ipc::start_clash(&credentials, &request).await {
         Ok(response) => response,
         Err(error) => {
+            tracing::Span::current().record("outcome", "ipc-unreachable");
             start_owner_monitor();
             return Err(error).context("无法连接到Clash Verge Service");
         }
     };
 
     if response.code > 0 {
+        tracing::Span::current().record("code", response.code);
+        tracing::Span::current().record("outcome", "refused");
         let err_msg = response.message;
-        logging!(error, Type::Service, "启动核心失败: {}", err_msg);
+        logging!(
+            error,
+            Type::Service,
+            "启动核心失败 (code {}): {}",
+            response.code,
+            err_msg
+        );
         start_owner_monitor();
         bail!(
             "failed to start Service core at {}: {err_msg}",
@@ -883,7 +1059,9 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
+    tracing::Span::current().record("generation", result.session.generation);
     let supports_runtime_staging = probe_runtime_staging_support().await;
+    tracing::Span::current().record("staging", supports_runtime_staging);
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
         proof: OwnerSessionProof {
             generation: result.session.generation,
@@ -894,14 +1072,18 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
 
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
-    logging!(info, Type::Service, "服务成功启动核心");
+    tracing::Span::current().record("outcome", "started");
+    logging!(
+        info,
+        Type::Service,
+        "服务成功启动核心 (session generation {})",
+        result.session.generation
+    );
     Ok(())
 }
 
 // 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
-    logging!(info, Type::Service, "正在尝试通过服务启动核心");
-
     SERVICE_MANAGER.refresh().await?;
 
     let status = SERVICE_MANAGER.current().await;
@@ -922,9 +1104,8 @@ where
     (captured, operation().await)
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
-    logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
-
+pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
+    // Frontend-polled: no per-call logging here.
     let credentials = current_owner_credentials()?;
     let (generation, response) = capture_generation_before(&OWNER_MONITOR_GENERATION, || {
         clash_verge_service_ipc::get_clash_logs(&credentials)
@@ -937,11 +1118,9 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
             recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
         }
         let err_msg = response.message;
-        logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
         bail!(err_msg);
     }
 
-    logging!(info, Type::Service, "成功获取服务模式下的 Clash 日志");
     Ok(response.data.unwrap_or_default())
 }
 
@@ -970,8 +1149,8 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
 }
 
 /// 通过服务停止core
+#[tracing::instrument(skip_all, level = "info", fields(code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    logging!(info, Type::Service, "通过服务停止核心 (IPC)");
     cancel_owner_monitors();
 
     let credentials = match current_owner_credentials() {
@@ -1007,11 +1186,20 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
             start_owner_monitor();
         }
         let err_msg = response.message;
-        logging!(error, Type::Service, "停止核心失败: {}", err_msg);
+        tracing::Span::current().record("code", response.code);
+        tracing::Span::current().record("outcome", "refused");
+        logging!(
+            error,
+            Type::Service,
+            "停止核心失败 (code {}): {}",
+            response.code,
+            err_msg
+        );
         bail!(err_msg);
     }
 
     clear_active_service_session();
+    tracing::Span::current().record("outcome", "stopped");
     logging!(info, Type::Service, "服务成功停止核心");
     Ok(())
 }
@@ -1023,6 +1211,13 @@ pub(crate) async fn update_writer_by_service(writer: &WriterConfig) -> Result<()
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
+        logging!(
+            warn,
+            Type::Service,
+            "update writer rejected by service: code={}, {}",
+            response.code,
+            response.message
+        );
         bail!(response.message);
     }
     Ok(())
@@ -1042,6 +1237,13 @@ pub(super) async fn set_system_proxy_by_service_with_session(
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
+        logging!(
+            warn,
+            Type::Service,
+            "set system proxy rejected by service: code={}, {}",
+            response.code,
+            response.message
+        );
         bail!(response.message);
     }
     response.data.context("Clash Verge Service 未返回系统代理结果")
@@ -1074,13 +1276,24 @@ const SUSTAINED_OWNER_SAMPLES: u8 = 3;
 fn start_owner_monitor() {
     let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     AsyncHandler::spawn(move || async move {
+        logging!(debug, Type::Service, "owner monitor started (generation {generation})");
         let mut watch = OwnerWatch::new();
         loop {
             tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
             if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
+                logging!(
+                    debug,
+                    Type::Service,
+                    "owner monitor superseded (generation {generation})"
+                );
                 break;
             }
             if !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
+                logging!(
+                    debug,
+                    Type::Service,
+                    "owner monitor stopped; core no longer in service mode (generation {generation})"
+                );
                 break;
             }
 
@@ -1091,7 +1304,7 @@ fn start_owner_monitor() {
                     logging!(
                         warn,
                         Type::Service,
-                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples; \
+                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples (generation {generation}); \
                          preserving local proxy state while the core endpoint still answers"
                     );
                 }
@@ -1199,6 +1412,7 @@ fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: 
         .map(|_| recovery_generation)
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(reason = ?reason))]
 async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     logging!(
         warn,
@@ -1215,10 +1429,15 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     }
 
     let mut last_error = None;
-    for _ in 0..3 {
+    for attempt in 1..=3 {
         match proxy_control::clear().await {
             Ok(()) => return,
             Err(error) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "proxy clear attempt {attempt}/3 after owner loss failed: {error:#}"
+                );
                 last_error = Some(error);
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
@@ -1228,24 +1447,35 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
         logging!(
             error,
             Type::Service,
-            "failed to clear local proxy after owner loss: {error}"
+            "failed to clear local proxy after owner loss: {error:#}"
         );
     }
 }
 
 /// Waits for a repaired service, preserving readable rejection details but classifying sustained
 /// silence as unavailable.
+#[tracing::instrument(skip_all, level = "info", fields(attempts = tracing::field::Empty, interval_ms = tracing::field::Empty, outcome = tracing::field::Empty))]
 async fn wait_for_service_ipc() -> Result<()> {
     const CONTEXT: &str = "service IPC did not become available";
     let config = ServiceManager::config();
+    let span = tracing::Span::current();
+    span.record("attempts", config.max_retries);
+    span.record("interval_ms", config.retry_delay.as_millis() as u64);
 
     match RUN_STATE.await_ready(config.max_retries, config.retry_delay).await {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            tracing::Span::current().record("outcome", "ready");
+            Ok(())
+        }
         Err(ReadyWaitError::Unreachable(error)) => {
+            tracing::Span::current().record("outcome", "unreachable");
             RUN_STATE.observe(ServiceHealth::Unavailable(format!("{CONTEXT}: {error:#}")));
             Err(error).context(CONTEXT)
         }
-        Err(ReadyWaitError::Rejected(error)) => Err(error).context(CONTEXT),
+        Err(ReadyWaitError::Rejected(error)) => {
+            tracing::Span::current().record("outcome", "rejected");
+            Err(error).context(CONTEXT)
+        }
     }
 }
 

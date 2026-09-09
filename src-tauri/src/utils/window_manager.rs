@@ -46,7 +46,7 @@ pub struct WindowManager;
 impl WindowManager {
     #[cfg(target_os = "macos")]
     fn set_macos_activation_policy_regular() {
-        logging!(info, Type::Window, "应用 macOS 特定的激活策略");
+        logging!(debug, Type::Window, "应用 macOS 特定的激活策略");
         handle::Handle::global().set_activation_policy_regular();
     }
 
@@ -86,16 +86,16 @@ impl WindowManager {
             return WindowOperationResult::NoAction;
         }
 
-        logging!(info, Type::Window, "开始智能显示主窗口");
+        logging!(debug, Type::Window, "开始智能显示主窗口");
         logging!(debug, Type::Window, "{}", Self::get_window_status_info());
 
         let current_state = Self::get_main_window_state();
 
         match current_state {
             WindowState::NotExist => {
-                logging!(info, Type::Window, "窗口不存在，创建新窗口");
+                logging!(debug, Type::Window, "窗口不存在，创建新窗口");
                 if Self::create_window(true).await {
-                    logging!(info, Type::Window, "窗口创建成功");
+                    logging!(debug, Type::Window, "窗口创建成功");
                     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                     WindowOperationResult::Created
                 } else {
@@ -104,13 +104,13 @@ impl WindowManager {
                 }
             }
             WindowState::VisibleFocused => {
-                logging!(info, Type::Window, "窗口已经可见且有焦点，无需操作");
+                logging!(debug, Type::Window, "窗口已经可见且有焦点，无需操作");
                 WindowOperationResult::NoAction
             }
             WindowState::VisibleUnfocused | WindowState::Minimized | WindowState::Hidden => {
                 let (window, state_after_check) = Self::get_main_window_with_state();
                 if state_after_check == WindowState::VisibleFocused {
-                    logging!(info, Type::Window, "窗口在检查期间已变为可见和有焦点状态");
+                    logging!(debug, Type::Window, "窗口在检查期间已变为可见和有焦点状态");
                     return WindowOperationResult::NoAction;
                 }
                 if let Some(window) = window {
@@ -139,7 +139,7 @@ impl WindowManager {
     }
 
     async fn handle_not_exist_toggle() -> WindowOperationResult {
-        logging!(info, Type::Window, "窗口不存在，将创建新窗口");
+        logging!(debug, Type::Window, "窗口不存在，将创建新窗口");
         if Self::create_window(true).await {
             WindowOperationResult::Created
         } else {
@@ -148,7 +148,7 @@ impl WindowManager {
     }
 
     fn hide_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
-        logging!(info, Type::Window, "窗口可见，将隐藏窗口");
+        logging!(debug, Type::Window, "窗口可见，将隐藏窗口");
         if let Some(window) = window {
             match window.close() {
                 Ok(_) => {
@@ -167,7 +167,7 @@ impl WindowManager {
     }
 
     fn activate_existing_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
-        logging!(info, Type::Window, "窗口存在但被隐藏或最小化，将激活窗口");
+        logging!(debug, Type::Window, "窗口存在但被隐藏或最小化，将激活窗口");
         if let Some(window) = window {
             Self::activate_window(window)
         } else {
@@ -177,7 +177,7 @@ impl WindowManager {
     }
 
     fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
-        logging!(info, Type::Window, "开始激活窗口");
+        logging!(debug, Type::Window, "开始激活窗口");
         #[cfg(target_os = "macos")]
         Self::set_macos_activation_policy_regular();
 
@@ -196,7 +196,7 @@ impl WindowManager {
         let mut operations_successful = true;
 
         if window.is_minimized().unwrap_or(false) {
-            logging!(info, Type::Window, "窗口已最小化，正在取消最小化");
+            logging!(debug, Type::Window, "窗口已最小化，正在取消最小化");
             if let Err(e) = window.unminimize() {
                 logging!(warn, Type::Window, "取消最小化失败: {}", e);
                 operations_successful = false;
@@ -248,7 +248,7 @@ impl WindowManager {
     /// Keep new windows hidden until the frontend overlay renders, avoiding a theme flash.
     pub fn create_window(should_create: bool) -> Pin<Box<dyn Future<Output = bool> + Send>> {
         Box::pin(async move {
-            logging!(info, Type::Window, "开始创建主窗口, should_create={}", should_create);
+            logging!(debug, Type::Window, "开始创建主窗口, should_create={}", should_create);
 
             if !should_create {
                 return false;
@@ -277,7 +277,7 @@ impl WindowManager {
             logging!(info, Type::Window, "窗口已摧毁");
             #[cfg(target_os = "macos")]
             {
-                logging!(info, Type::Window, "应用 macOS 特定的激活策略");
+                logging!(debug, Type::Window, "应用 macOS 特定的激活策略");
                 handle::Handle::global().set_activation_policy_accessory();
             }
             return WindowOperationResult::Destroyed;

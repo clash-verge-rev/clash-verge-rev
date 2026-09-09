@@ -5,15 +5,18 @@ use crate::{
     utils::help::{mask_err, mask_url},
 };
 use anyhow::{Result, bail};
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {
-    logging_error!(
-        Type::Config,
-        cmd::patch_profiles_config_by_profile_index(profile_index).await
-    );
+    if let Err(err) = cmd::patch_profiles_config_by_profile_index(profile_index.clone()).await {
+        logging!(
+            error,
+            Type::Config,
+            "toggle proxy profile {profile_index} failed: {err}"
+        );
+    }
 }
 
 /// Tell the profile which node this group is on now.
@@ -25,7 +28,7 @@ async fn record_switched_node(group_name: &str, proxy_name: &str) {
     if let Err(error) = crate::config::profiles::record_selected_node(group_name, proxy_name).await {
         logging!(
             warn,
-            Type::Tray,
+            Type::Config,
             "切换代理成功但未能记录到配置: {} -> {}, 错误: {error:#}",
             group_name,
             proxy_name
@@ -39,21 +42,13 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
         .await
     {
         Ok(_) => {
-            logging!(info, Type::Tray, "切换代理成功: {} -> {}", group_name, proxy_name);
             record_switched_node(group_name, proxy_name).await;
             handle::Handle::refresh_proxy_config();
             let _ = tray::Tray::global().update_menu().await;
             return;
         }
         Err(err) => {
-            logging!(
-                error,
-                Type::Tray,
-                "切换代理失败: {} -> {}, 错误: {:?}",
-                group_name,
-                proxy_name,
-                err
-            );
+            logging!(error, Type::Tray, "切换代理失败: {err:?}");
         }
     }
 
@@ -67,14 +62,7 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
             let _ = tray::Tray::global().update_menu().await;
         }
         Err(err) => {
-            logging!(
-                error,
-                Type::Tray,
-                "代理切换最终失败: {} -> {}, 错误: {:?}",
-                group_name,
-                proxy_name,
-                err
-            );
+            logging!(error, Type::Tray, "代理切换最终失败: {err:?}");
         }
     }
 }
@@ -86,20 +74,19 @@ async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
     if !is_remote {
-        logging!(info, Type::Config, "[订阅更新] {uid} 不是远程订阅，跳过更新");
+        logging!(info, Type::Config, "[订阅更新] 不是远程订阅，跳过更新");
         Ok(None)
     } else if item.url.is_none() {
-        logging!(warn, Type::Config, "Warning: [订阅更新] {uid} 缺少URL，无法更新");
+        logging!(warn, Type::Config, "[订阅更新] 缺少URL，无法更新");
         bail!("failed to get the profile item url");
     } else if !ignore_auto_update && !item.option.as_ref().and_then(|o| o.allow_auto_update).unwrap_or(true) {
-        logging!(info, Type::Config, "[订阅更新] {} 禁止自动更新，跳过更新", uid);
+        logging!(info, Type::Config, "[订阅更新] 禁止自动更新，跳过更新");
         Ok(None)
     } else {
         logging!(
             info,
             Type::Config,
-            "[订阅更新] {} 是远程订阅，URL: {}",
-            uid,
+            "[订阅更新] 远程订阅，URL: {}",
             mask_url(
                 item.url
                     .as_ref()
@@ -113,6 +100,7 @@ async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result
     }
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(uid = %uid, strategy = tracing::field::Empty))]
 async fn perform_profile_update(
     uid: &String,
     url: &String,
@@ -120,7 +108,6 @@ async fn perform_profile_update(
     option: Option<&PrfOption>,
     is_mannual_trigger: bool,
 ) -> Result<()> {
-    logging!(info, Type::Config, "[订阅更新] 开始下载新的订阅内容");
     let mut merged_opt = PrfOption::merge(opt, option);
     let profiles = Config::profiles().await;
     let profiles_arc = profiles.latest_arc();
@@ -140,8 +127,8 @@ async fn perform_profile_update(
             logging!(
                 warn,
                 Type::Config,
-                "Warning: [订阅更新] 正常更新失败: {}，尝试使用Clash代理更新",
-                mask_err(&err.to_string())
+                "[订阅更新] 直接更新失败: {}，尝试使用Clash代理更新",
+                mask_err(&format!("{err:#}"))
             );
         }
     }
@@ -160,8 +147,8 @@ async fn perform_profile_update(
             logging!(
                 warn,
                 Type::Config,
-                "Warning: [订阅更新] Clash代理更新失败: {}，尝试使用系统代理更新",
-                mask_err(&err.to_string())
+                "[订阅更新] Clash代理更新失败: {}，尝试使用系统代理更新",
+                mask_err(&format!("{err:#}"))
             );
         }
     }
@@ -180,8 +167,8 @@ async fn perform_profile_update(
             logging!(
                 warn,
                 Type::Config,
-                "Warning: [订阅更新] 系统代理更新失败: {}，所有重试均已失败",
-                mask_err(&err.to_string())
+                "[订阅更新] 系统代理更新失败: {}，所有重试均已失败",
+                mask_err(&format!("{err:#}"))
             );
             err
         }
@@ -194,8 +181,8 @@ async fn perform_profile_update(
     bail!(last_err)
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(uid = %uid, manual = is_mannual_trigger))]
 pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual_trigger: bool) -> Result<()> {
-    logging!(info, Type::Config, "[订阅更新] 开始更新订阅 {}", uid);
     let url_opt = should_update_profile(uid, is_mannual_trigger).await?;
 
     let profile_persisted = match url_opt {
@@ -210,10 +197,9 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
     let should_refresh = is_current || (!profile_persisted && is_mannual_trigger);
 
     if should_refresh {
-        logging!(info, Type::Config, "[订阅更新] 更新内核配置");
+        logging!(debug, Type::Config, "[订阅更新] 更新内核配置");
         match CoreManager::global().update_config_with_force(is_mannual_trigger).await {
             Ok(outcome) if outcome.is_valid() => {
-                logging!(info, Type::Config, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
             }
             Ok(outcome @ (ValidationOutcome::Skipped { .. } | ValidationOutcome::Busy)) if !is_mannual_trigger => {

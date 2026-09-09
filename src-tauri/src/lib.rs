@@ -33,7 +33,7 @@ mod app_init {
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() -> Result<server::SingletonDisposition> {
         AsyncHandler::block_on(async move {
-            logging!(info, Type::Setup, "开始检查单例实例...");
+            logging!(debug, Type::Setup, "开始检查单例实例...");
             server::check_singleton().await
         })
     }
@@ -74,7 +74,7 @@ mod app_init {
     pub fn setup_deep_links(app: &tauri::App) {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
-            logging!(info, Type::Setup, "注册深层链接...");
+            logging!(debug, Type::Setup, "注册深层链接...");
             let _ = app.deep_link().register_all();
         }
 
@@ -107,7 +107,7 @@ mod app_init {
 
     /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, "初始化窗口状态管理...");
+        logging!(debug, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
             .with_filename(files::WINDOW_STATE)
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
@@ -280,10 +280,10 @@ pub fn run() -> std::process::ExitCode {
                     .expect("failed to set global app handle");
 
                 if let Err(e) = resolve::init_work_dir_and_logger() {
-                    logging!(error, Type::Setup, "Failed to init work dir/logger: {}", e);
+                    logging!(error, Type::Setup, "Failed to init work dir/logger: {e:#}");
                 }
 
-                logging!(info, Type::Setup, "开始应用初始化...");
+                logging!(debug, Type::Setup, "开始应用初始化...");
                 if let Err(e) = app_init::setup_autostart(app) {
                     logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
                 }
@@ -302,7 +302,6 @@ pub fn run() -> std::process::ExitCode {
                 resolve::resolve_setup_async();
                 resolve::resolve_setup_sync();
                 resolve::init_signal();
-                logging!(info, Type::Setup, "初始化已启动");
             })) {
                 log_setup_panic("window-core", panic);
             }
@@ -470,6 +469,7 @@ pub fn run() -> std::process::ExitCode {
                 );
             }
             logging!(info, Type::System, "Application exited");
+            crate::core::logger::Logger::global().flush_logs();
         }),
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {

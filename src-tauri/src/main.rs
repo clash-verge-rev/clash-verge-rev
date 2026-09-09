@@ -34,8 +34,5 @@ fn main() -> ExitCode {
     let tokio_handle = tokio_runtime.handle();
     tauri::async_runtime::set(tokio_handle.clone());
 
-    #[cfg(feature = "tokio-trace")]
-    console_subscriber::init();
-
     app_lib::run()
 }

@@ -90,7 +90,7 @@ async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
     match crate::core::service::stage_runtime_by_service(path).await {
         Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
         Ok(StageRequest::Refused { code, message }) => {
-            let message = message.to_string().into();
+            let message = message.into();
             if StageRequest::is_about_the_bundle(code) {
                 StageAttempt::RefusedTheBundle(message)
             } else {
@@ -103,6 +103,7 @@ async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
 
 /// Confirms one silent request because the service may commit before its reply is lost.
 /// Re-staging an already committed bundle is idempotent and bounded by `confirm_within`.
+#[tracing::instrument(skip_all, level = "debug", fields(confirm_within = ?confirm_within, asks = 1))]
 async fn stage_with_confirmation<Ask, Fut>(confirm_within: Duration, ask: Ask) -> StageAttempt
 where
     Ask: Fn() -> Fut,
@@ -117,6 +118,7 @@ where
         Type::Core,
         "Staging did not answer ({first}); asking once more before replacing the core"
     );
+    tracing::Span::current().record("asks", 2);
     match tokio::time::timeout(confirm_within, ask()).await {
         Ok(StageAttempt::Unanswered(again)) => {
             StageAttempt::Unanswered(format!("{first}; asked again: {again}").into())
@@ -150,6 +152,7 @@ impl CoreManager {
         self.update_config_with_force(true).await
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(force))]
     pub async fn update_config_with_force(&self, force: bool) -> Result<ValidationOutcome> {
         if handle::Handle::global().is_exiting() {
             return Ok(ValidationOutcome::Skipped {
@@ -158,7 +161,7 @@ impl CoreManager {
         }
 
         if !self.try_start_config_update() {
-            logging!(info, Type::Core, "Configuration update is already running");
+            logging!(debug, Type::Core, "Configuration update is already running");
             return Ok(ValidationOutcome::Busy);
         }
         defer! {
@@ -179,6 +182,7 @@ impl CoreManager {
         self.perform_config_update(None).await
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(profile = ?candidate.current, outcome = tracing::field::Empty))]
     pub(crate) async fn update_config_forced_with_profiles(
         &self,
         candidate: &IProfiles,
@@ -202,17 +206,23 @@ impl CoreManager {
         {
             Ok(outcome) => outcome,
             Err(error) => {
+                tracing::Span::current().record("outcome", "rolled_back");
                 self.restore_profile_config(rollback).await?;
                 return Err(error);
             }
         };
         if !outcome.is_valid() {
+            tracing::Span::current().record("outcome", "invalid");
             crate::config::profiles::restore_selected_nodes().await;
             return Ok(Err(outcome));
         }
         match candidate.save_file().await {
-            Ok(()) => Ok(Ok(guard)),
+            Ok(()) => {
+                tracing::Span::current().record("outcome", "committed");
+                Ok(Ok(guard))
+            }
             Err(error) => {
+                tracing::Span::current().record("outcome", "save_rolled_back");
                 self.restore_profile_config(rollback).await?;
                 Err(error)
             }
@@ -273,7 +283,7 @@ impl CoreManager {
         F: FnOnce(&mut IRuntime),
     {
         if !self.try_start_config_update() {
-            logging!(info, Type::Core, "Configuration update is already running");
+            logging!(debug, Type::Core, "Configuration update is already running");
             return Ok(ValidationOutcome::Busy);
         }
         defer! {
@@ -315,6 +325,7 @@ impl CoreManager {
 
     /// Applies through the service, replacing the core when in-place staging is unavailable.
     /// Caller must hold `lifecycle_lock`.
+    #[tracing::instrument(skip_all, level = "info", fields(path = %path.display(), outcome = tracing::field::Empty))]
     async fn apply_config_by_service(&self, path: &std::path::Path) -> Result<()> {
         match plan_config_application(&self.attempt_staging(path).await) {
             ConfigApplication::Fail(message) => {
@@ -328,7 +339,7 @@ impl CoreManager {
             }
             ConfigApplication::ReloadFrom(staged) => match self.reload_config(&staged).await {
                 Ok(()) => {
-                    logging!(info, Type::Core, "Configuration staged and applied by service");
+                    tracing::Span::current().record("outcome", "staged");
                     return Ok(());
                 }
                 Err(err) => logging!(
@@ -341,7 +352,7 @@ impl CoreManager {
         }
 
         self.replace_service_core_with_config(path).await?;
-        logging!(info, Type::Core, "Configuration materialized and applied by service");
+        tracing::Span::current().record("outcome", "replaced");
         Ok(())
     }
 
@@ -353,9 +364,10 @@ impl CoreManager {
     }
 
     /// Reload the Core from `path`, and replace the Core if it will not take it.
+    #[tracing::instrument(skip_all, level = "info", fields(outcome = tracing::field::Empty))]
     async fn reload_or_restart(&self, path: &str) -> Result<()> {
         let Err(err) = self.reload_config(path).await else {
-            logging!(info, Type::Core, "Configuration applied");
+            tracing::Span::current().record("outcome", "reloaded");
             return Ok(());
         };
 
@@ -366,7 +378,7 @@ impl CoreManager {
         );
         match self.restart_core_during_config_update().await {
             Ok(_) => {
-                logging!(info, Type::Core, "Configuration applied after restart");
+                tracing::Span::current().record("outcome", "restarted");
                 Ok(())
             }
             Err(err) => {

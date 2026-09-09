@@ -13,9 +13,7 @@ scripts/_env.sh
 .eslintcache
 .changelog_backups
 target
-CLAUDE.md
 .vfox.toml
 .vfox
 .claude
-AGENTS.md
 .zed

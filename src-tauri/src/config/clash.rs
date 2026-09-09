@@ -43,7 +43,11 @@ impl IClashTemp {
                 Self(Self::guard(map))
             }
             Err(err) => {
-                logging!(error, Type::Config, "{err}");
+                logging!(
+                    error,
+                    Type::Config,
+                    "failed to load clash config, using template: {err:#}"
+                );
                 Self::template()
             }
         }

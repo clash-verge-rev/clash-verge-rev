@@ -93,7 +93,7 @@ impl IProfiles {
         let path = match dirs::profiles_path() {
             Ok(p) => p,
             Err(err) => {
-                logging!(error, Type::Config, "{err}");
+                logging!(error, Type::Config, "failed to get profiles path: {err:#}");
                 return Self::default();
             }
         };
@@ -124,12 +124,12 @@ impl IProfiles {
                 }
 
                 if home_changed && let Err(err) = profiles.save_file().await {
-                    logging!(error, Type::Config, "无法保存已清理的 profiles.yaml: {err}");
+                    logging!(error, Type::Config, "无法保存已清理的 profiles.yaml: {err:#}");
                 }
                 profiles
             }
             Err(err) => {
-                logging!(error, Type::Config, "{err}");
+                logging!(error, Type::Config, "failed to read profiles.yaml: {err:#}");
                 Self::default()
             }
         }
@@ -599,7 +599,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
             match handle::Handle::mihomo().get_proxies().await {
                 Ok(proxies) => return proxies,
                 Err(err) => {
-                    logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err}");
+                    logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err:#}");
                     tokio::time::sleep(Duration::from_millis(500)).await;
                 }
             }
@@ -999,7 +999,7 @@ pub(crate) async fn restore_selected_nodes() {
 }
 
 fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot::Receiver<()> {
-    logging!(info, Type::Config, "starting activating selected nodes");
+    logging!(debug, Type::Config, "starting activating selected nodes");
     let mut active_task = ACTIVATE_SELECTED_TASK.lock();
     let generation = ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     let previous_task = active_task.take();
@@ -1043,7 +1043,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
                 handle::Handle::refresh_clash();
             }
             update_tray_after_activation(generation).await;
-            logging!(info, Type::Config, "activating selected nodes done!");
+            logging!(debug, Type::Config, "activating selected nodes done!");
         }
     });
     *active_task = Some(handle);
