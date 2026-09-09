@@ -510,6 +510,13 @@
         "title": "DNS 覆寫",
         "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫關閉"
       },
+      "protection": {
+        "title": "是否開啟 DNS 覆寫？",
+        "message": "目前訂閱包含自訂 DNS 設定。開啟 DNS 覆寫可能覆蓋這些設定，導致節點無法連線或部分網站無法存取。是否仍要開啟？",
+        "enableAnyway": "仍然開啟",
+        "keepDisabled": "保持關閉",
+        "autoDisabled": "偵測到目前訂閱包含自訂 DNS 設定，已自動關閉 DNS 覆寫。"
+      },
       "sections": {
         "general": "DNS 設定",
         "fallbackFilter": "備援篩選設定",

@@ -510,6 +510,13 @@
         "title": "DNS Overwrite",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
+      "protection": {
+        "title": "Enable DNS Overwrite?",
+        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
+        "enableAnyway": "Enable anyway",
+        "keepDisabled": "Keep disabled",
+        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+      },
       "sections": {
         "general": "DNS Settings",
         "fallbackFilter": "Fallback Filter Settings",

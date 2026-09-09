@@ -9,7 +9,7 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use chrono::Utc;
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{Type, logging, logging_error};
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
 use smartstring::alias::String;
@@ -85,6 +85,7 @@ async fn finalize_restored_verge_config(
             return Err(err);
         }
     }
+    logging_error!(Type::Config, Config::sync_dns_override().await);
     Ok(())
 }
 

@@ -172,6 +172,16 @@ export async function patchVergeConfig(payload: IVergeConfig) {
   return invoke<void>('patch_verge_config', { payload })
 }
 
+export async function setDnsOverride(enabled: boolean, confirmation?: string) {
+  return invoke<
+    { status: 'applied' } | { status: 'confirmation_required'; source: string }
+  >('set_dns_override', { enabled, confirmation })
+}
+
+export async function takeDnsOverrideNotice() {
+  return invoke<boolean>('take_dns_override_notice')
+}
+
 export async function getSystemProxy() {
   return invoke<{
     enable: boolean
