@@ -1,0 +1,212 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Bütün profilləri yenilə",
+      "viewRuntimeConfig": "Hazırda istifadə olunan konfiqurasiyaya bax",
+      "reactivate": "Profilləri yenidən aktivləşdir",
+      "import": "İdxal et"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Seçilmiş profilləri sil",
+        "selectAll": "Hamısını seç",
+        "deselectAll": "Bütün seçimləri ləğv et",
+        "done": "Tamamla"
+      },
+      "summary": {
+        "selected": "Seçilmiş",
+        "items": "element"
+      },
+      "title": "Toplu əməliyyatlar"
+    },
+    "importForm": {
+      "placeholder": "Profil URL ünvanı",
+      "actions": {
+        "paste": "Yapışdır"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Profil URL ünvanı etibarsızdır. http:// və ya https:// ilə başlayan URL ünvanı daxil edin",
+        "onlyYaml": "Yalnız YAML faylları dəstəklənir",
+        "createFailed": "Profil yaratmaq alınmadı",
+        "deleteFailed": "Profili silmək alınmadı",
+        "enhanceFailed": "Profilləri yenidən aktivləşdirmək alınmadı",
+        "importFailed": "Profili idxal etmək alınmadı",
+        "openFailed": "Profili açmaq alınmadı",
+        "readFailed": "Profili oxumaq alınmadı",
+        "reorderFailed": "Profillərin sırasını dəyişmək alınmadı",
+        "switchFailed": "Profili dəyişmək alınmadı",
+        "updateFailed": "Profili yeniləmək alınmadı"
+      },
+      "notifications": {
+        "importRetry": "İdxal alınmadı, Clash proksisi ilə yenidən cəhd edilir...",
+        "importFail": "Clash proksisi ilə də idxal alınmadı",
+        "importNeedsRefresh": "Profil idxal edildi, lakin əl ilə yeniləmə tələb oluna bilər",
+        "importSuccess": "Profil uğurla idxal edildi. Görünmürsə, tətbiqi yenidən başladın",
+        "profileSwitched": "Profil dəyişdirildi",
+        "profileReactivated": "Profil yenidən aktivləşdirildi",
+        "switchBusy": "Profil artıq dəyişdirilir",
+        "batchDeleted": "Seçilmiş profillər uğurla silindi"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Məcburi yeniləmə tamamlandı",
+        "emergencyRefreshFailed": "Təcili yeniləmə alınmadı: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Profil məlumatları əlçatan deyil; məcburi yeniləmək üçün klikləyin"
+      }
+    },
+    "title": "Profillər"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Abunəliyi idxal etmək üçün klikləyin"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Fayl seç"
+    },
+    "menu": {
+      "home": "Ana səhifə",
+      "select": "Seç",
+      "shareQrCode": "QR kodunu paylaş",
+      "editInfo": "Məlumatı redaktə et",
+      "editFile": "Faylı redaktə et",
+      "editRules": "Qaydaları redaktə et",
+      "editProxies": "Proksiləri redaktə et",
+      "editGroups": "Proksi qruplarını redaktə et",
+      "extendConfig": "Konfiqurasiyanı genişləndir",
+      "extendScript": "Skripti genişləndir",
+      "openFile": "Faylı aç",
+      "update": "Yenilə",
+      "updateViaProxy": "Proksi vasitəsilə yenilə"
+    },
+    "more": {
+      "global": {
+        "merge": "Qlobal konfiqurasiya genişləndirməsi",
+        "script": "Qlobal skript genişləndirməsi"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Son yeniləmə vaxtını göstərmək üçün klikləyin",
+        "showNext": "Növbəti yeniləməni göstərmək üçün klikləyin"
+      },
+      "status": {
+        "lastUpdateFailed": "Son yeniləmə alınmadı",
+        "nextUp": "Növbəti yeniləmə",
+        "noSchedule": "Cədvəl yoxdur",
+        "unknown": "Naməlum",
+        "autoUpdateDisabled": "Avtomatik yeniləmə söndürülüb"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Profilin yaradılması",
+        "edit": "Profilin redaktəsi"
+      },
+      "fields": {
+        "type": "Növ",
+        "description": "Təsvir",
+        "subscriptionUrl": "Abunəlik URL ünvanı",
+        "userAgent": "İstifadəçi agenti",
+        "httpTimeout": "HTTP sorğusunun gözləmə müddəti",
+        "updateInterval": "Yeniləmə intervalı",
+        "useSystemProxy": "Sistem proksisindən istifadə",
+        "useClashProxy": "Clash proksisindən istifadə",
+        "acceptInvalidCerts": "Etibarsız sertifikatlara icazə (təhlükəli)",
+        "allowAutoUpdate": "Avtomatik yeniləməyə icazə"
+      },
+      "types": {
+        "remote": "Uzaq",
+        "local": "Yerli"
+      },
+      "errors": {
+        "typeRequired": "Profil növünü seçin",
+        "urlRequired": "Abunəlik URL ünvanını daxil edin",
+        "uidMissing": "Profil identifikatoru yoxdur",
+        "saveFailed": "Profili yadda saxlamaq alınmadı"
+      },
+      "warnings": {
+        "frequentUpdate": "Yeniləmə intervalı qısa olduqda nüvə tez-tez yenidən yüklənir və mövcud əlaqələr kəsilir. İntervalı {{minutes}} dəqiqə (24 saat) təyin etmək tövsiyə olunur."
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Profil yaratmaq alınmadı, Clash proksisi ilə yenidən cəhd edilir...",
+          "creationSuccess": "Profil Clash proksisi ilə uğurla yaradıldı"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Proksilərin redaktəsi",
+      "placeholders": {
+        "multiUri": "Bir neçə URI ünvanını ayrı sətirlərdə yazın (Base64 kodlaşdırması dəstəklənir)"
+      },
+      "actions": {
+        "prepend": "Əvvələ proksi əlavə et",
+        "append": "Sona proksi əlavə et"
+      }
+    },
+    "groupsEditor": {
+      "title": "Proksi qruplarının redaktəsi",
+      "errors": {
+        "nameRequired": "Qrup adı tələb olunur",
+        "nameExists": "Bu adda qrup artıq mövcuddur"
+      },
+      "fields": {
+        "type": "Qrup növü",
+        "name": "Qrup adı",
+        "icon": "Proksi qrupunun nişanı",
+        "proxies": "Proksilərdən istifadə",
+        "provider": "Provayderdən istifadə",
+        "healthCheckUrl": "İşləkliyin yoxlanılması üçün URL ünvanı",
+        "expectedStatus": "Gözlənilən vəziyyət",
+        "interval": "İnterval",
+        "maxFailedTimes": "Maksimum uğursuz cəhd sayı",
+        "interfaceName": "İnterfeys adı",
+        "routingMark": "Marşrutlaşdırma nişanı",
+        "filter": "Süzgəc",
+        "excludeFilter": "İstisna süzgəci",
+        "excludeType": "İstisna edilən növ",
+        "includeAll": "Bütün proksilərin və provayderlərin daxil edilməsi",
+        "includeAllProxies": "Bütün proksilərin daxil edilməsi",
+        "includeAllProviders": "Bütün provayderlərin daxil edilməsi"
+      },
+      "toggles": {
+        "lazy": "Ehtiyac olduqda yoxlama",
+        "disableUdp": "UDP-nin söndürülməsi",
+        "hidden": "Gizli"
+      },
+      "actions": {
+        "prepend": "Əvvələ qrup əlavə et",
+        "append": "Sona qrup əlavə et"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Sənədi formatla"
+      },
+      "messages": {
+        "readOnly": "Yalnız oxuma rejimində olan redaktorda dəyişiklik etmək mümkün deyil"
+      }
+    },
+    "confirmDelete": {
+      "title": "Silinmənin təsdiqi",
+      "message": "Bu əməliyyatı geri qaytarmaq mümkün deyil"
+    },
+    "logViewer": {
+      "title": "Skript konsolu"
+    },
+    "qrViewer": {
+      "title": "Abunəlik QR kodu"
+    }
+  }
+}
