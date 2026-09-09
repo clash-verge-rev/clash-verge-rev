@@ -48,7 +48,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -182,7 +182,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -279,7 +279,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -423,7 +423,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -518,7 +518,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
 
       - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
