@@ -75,34 +75,17 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
             throw new Error(t('tests.modals.test.errors.urlRequired'))
           }
 
-          let newList
-          let uid
-
-          if (form.icon && form.icon.startsWith('<svg')) {
-            // 移除 icon 中的注释
-            if (form.icon) {
-              form.icon = form.icon.replace(/<!--[\s\S]*?-->/g, '')
-            }
-            const doc = new DOMParser().parseFromString(
-              form.icon,
-              'image/svg+xml',
-            )
-            if (doc.querySelector('parsererror')) {
-              throw new Error(t('tests.modals.test.errors.invalidSvg'))
-            }
-          }
-
           if (openType === 'new') {
-            uid = nanoid()
+            const uid = nanoid()
             const item = { ...form, uid }
-            newList = [...testList, item]
+            const newList = [...testList, item]
             await patchVerge({ test_list: newList })
             onChange(uid)
           } else {
             if (!form.uid) {
               throw new Error(t('tests.modals.test.errors.uidMissing'))
             }
-            uid = form.uid
+            const uid = form.uid
 
             await patchTestList(uid, form)
             onChange(uid, form)
