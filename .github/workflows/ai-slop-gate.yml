@@ -1,0 +1,43 @@
+name: ai-slop-gate
+
+# pull_request_target runs this file from the base branch, so a PR cannot
+# weaken its own gates. No checkout and no secrets: every check reads only
+# the event payload.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled, edited, ready_for_review]
+
+permissions: {}
+
+jobs:
+  gate:
+    name: ai-slop-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail while ai-slop:high is present
+        if: contains(join(github.event.pull_request.labels.*.name, ','), 'ai-slop:high')
+        run: |
+          echo "::error::ai-slop:high is present. Resolve the ownership concerns from the AI-slop review (issue linkage, scope, or implementation changes) so the label can be removed."
+          exit 1
+
+  linked-issue:
+    name: linked-issue-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require an issue reference in title or body
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          if [ "$DRAFT" = "true" ] || printf '%s' "$LABELS" | grep -q 'no-issue-needed'; then
+            echo "Draft or no-issue-needed; linkage check skipped."
+            exit 0
+          fi
+          if printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" | grep -Eq '#[0-9]+|issues/[0-9]+'; then
+            echo "Issue reference found."
+          else
+            echo "::error::No issue reference found in the PR title or body. Link the issue (e.g. \"Fixes #123\"), or ask a maintainer to add the no-issue-needed label if the change is trivial."
+            exit 1
+          fi
