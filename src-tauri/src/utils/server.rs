@@ -54,7 +54,16 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
         .context("failed to initialize singleton lock")?;
     if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
-        while std::time::Instant::now() < deadline {
+        loop {
+            if std::time::Instant::now() >= deadline {
+                bail!("another app instance is starting");
+            }
+            // A restarting instance releases this lock only after spawning this
+            // process, and its embedded server is already down, so waiting on
+            // the notify probe alone can never promote this instance.
+            if try_lock_instance(&lock).context("failed to acquire singleton lock")? {
+                break;
+            }
             if let Ok(record) = read_instance_record(&record_path)
                 && notify_existing_instance(&record).await
             {
@@ -62,7 +71,6 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
-        bail!("another app instance is starting");
     }
 
     let preferred = read_instance_record(&record_path).ok().map(|record| record.port);
