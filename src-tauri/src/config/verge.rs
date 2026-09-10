@@ -57,6 +57,9 @@ pub struct IVerge {
     pub menu_order: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy_group_tools_position: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notice_position: Option<String>,
 
     pub collapse_navbar: Option<bool>,
@@ -425,6 +428,7 @@ impl IVerge {
         patch!(tray_icon);
         patch!(menu_icon);
         patch!(menu_order);
+        patch!(proxy_group_tools_position);
         patch!(notice_position);
         patch!(collapse_navbar);
         patch!(common_tray_icon);

@@ -872,6 +872,7 @@ interface IVergeConfig {
   pause_render_traffic_stats_on_blur?: boolean
   menu_icon?: 'monochrome' | 'colorful' | 'disable'
   menu_order?: string[]
+  proxy_group_tools_position?: 'left' | 'right'
   notice_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   collapse_navbar?: boolean
   tray_icon?: 'monochrome' | 'colorful'

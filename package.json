@@ -41,6 +41,8 @@
     "perf:test": "node --test scripts/perf/report.test.mjs"
   },
   "dependencies": {
+    "@dnd-kit/collision": "^0.5.0",
+    "@dnd-kit/dom": "^0.5.0",
     "@dnd-kit/helpers": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@emotion/react": "^11.14.0",

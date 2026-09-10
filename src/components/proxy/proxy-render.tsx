@@ -13,7 +13,7 @@ import {
   Chip,
   Tooltip,
 } from '@mui/material'
-import { memo, useMemo } from 'react'
+import { memo, useId, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useIconCache } from '@/hooks/use-icon-cache'
@@ -21,6 +21,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useThemeMode } from '@/services/states'
 import type { ResolvedProxyMember } from '@/types/proxy-view'
 
+import { ProxyGroupHeaderBlock } from './proxy-group-header-block'
 import { ProxyGroupTools } from './proxy-group-tools'
 import { ProxyHead } from './proxy-head'
 import { ProxyItem } from './proxy-item'
@@ -57,6 +58,8 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
   const { type, group, headState, member, memberCol } = item
   const { verge } = useVerge()
   const enable_group_icon = verge?.enable_group_icon ?? true
+  const toolsOnLeft = verge?.proxy_group_tools_position === 'left'
+  const headerId = useId()
   const mode = useThemeMode()
   const isDark = mode === 'dark'
   const itembackgroundcolor = isDark ? '#282A36' : '#ffffff'
@@ -85,6 +88,127 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
   }, [type, memberCol, item.key, group, showType, onChangeProxy])
 
   if (type === 0) {
+    const nameBlock = (
+      <ProxyGroupHeaderBlock
+        key="name"
+        group={headerId}
+        block="name"
+        sx={{ flex: '0 1 auto', mr: toolsOnLeft ? 1 : 0 }}
+      >
+        {enable_group_icon && group.icon?.trim().startsWith('http') && (
+          <img
+            src={iconCachePath === '' ? group.icon : iconCachePath}
+            alt={group.name}
+            width="32px"
+            style={{ marginRight: '12px', borderRadius: '6px' }}
+          />
+        )}
+        {enable_group_icon && group.icon?.trim().startsWith('data') && (
+          <img
+            src={group.icon}
+            alt={group.name}
+            width="32px"
+            style={{ marginRight: '12px', borderRadius: '6px' }}
+          />
+        )}
+        {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
+          <img
+            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
+            alt={group.name}
+            width="32px"
+          />
+        )}
+        <ListItemText
+          sx={{ flex: '0 1 auto', minWidth: 0 }}
+          primary={<StyledPrimary>{group.name}</StyledPrimary>}
+          secondary={
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                pt: '2px',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  marginTop: '2px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                <StyledTypeBox>{group.type}</StyledTypeBox>
+                <StyledSubtitle sx={{ color: 'text.secondary' }}>
+                  {group.now}
+                </StyledSubtitle>
+              </Box>
+            </Box>
+          }
+          slotProps={{
+            secondary: {
+              component: 'div',
+              sx: {
+                display: 'flex',
+                alignItems: 'center',
+                color: '#ccc',
+              },
+            },
+          }}
+        />
+      </ProxyGroupHeaderBlock>
+    )
+
+    const proxyCount = (
+      <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
+        <div
+          style={{
+            minWidth: '50px',
+            display: 'flex',
+            justifyContent: toolsOnLeft ? 'start' : 'end',
+            alignItems: 'center',
+          }}
+        >
+          <Chip
+            size="small"
+            label={`${group.members.length}`}
+            sx={{
+              mr: toolsOnLeft ? 0 : 1,
+              backgroundColor: (theme) =>
+                alpha(theme.palette.primary.main, 0.1),
+              color: (theme) => theme.palette.primary.main,
+            }}
+          />
+        </div>
+      </Tooltip>
+    )
+
+    const toolsBlock = (
+      <ProxyGroupHeaderBlock
+        key="tools"
+        group={headerId}
+        block="tools"
+        sx={{
+          flex: '1 1 auto',
+          justifyContent: toolsOnLeft ? 'start' : 'end',
+          mr: toolsOnLeft ? 2 : 0,
+        }}
+      >
+        {toolsOnLeft && proxyCount}
+        <ProxyGroupTools
+          side={toolsOnLeft ? 'left' : 'right'}
+          url={group.testUrl}
+          groupName={group.name}
+          headState={headState!}
+          onLocation={() => onLocation(group)}
+          onCheckDelay={() => onCheckAll(group.name)}
+          onHeadState={(p) => onHeadState(group.name, p)}
+        />
+        {!toolsOnLeft && proxyCount}
+      </ProxyGroupHeaderBlock>
+    )
+
     return (
       <div style={{ padding: '4px 8px' }}>
         <ListItemButton
@@ -109,112 +233,9 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
         >
           <Box sx={{ width: '100%' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              {enable_group_icon && group.icon?.trim().startsWith('http') && (
-                <img
-                  src={iconCachePath === '' ? group.icon : iconCachePath}
-                  alt={group.name}
-                  width="32px"
-                  style={{ marginRight: '12px', borderRadius: '6px' }}
-                />
-              )}
-              {enable_group_icon && group.icon?.trim().startsWith('data') && (
-                <img
-                  src={group.icon}
-                  alt={group.name}
-                  width="32px"
-                  style={{ marginRight: '12px', borderRadius: '6px' }}
-                />
-              )}
-              {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
-                <img
-                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
-                  alt={group.name}
-                  width="32px"
-                />
-              )}
-              <ListItemText
-                sx={{ flex: '0 1 auto', minWidth: 0 }}
-                primary={<StyledPrimary>{group.name}</StyledPrimary>}
-                secondary={
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      pt: '2px',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        marginTop: '2px',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      <StyledTypeBox>{group.type}</StyledTypeBox>
-                      <StyledSubtitle sx={{ color: 'text.secondary' }}>
-                        {group.now}
-                      </StyledSubtitle>
-                    </Box>
-                  </Box>
-                }
-                slotProps={{
-                  secondary: {
-                    component: 'div',
-                    sx: {
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: '#ccc',
-                    },
-                  },
-                }}
-              />
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'end',
-                  flex: '1 1 auto',
-                  minWidth: 0,
-                }}
-              >
-                <ProxyGroupTools
-                  url={group.testUrl}
-                  groupName={group.name}
-                  headState={headState!}
-                  onLocation={() => onLocation(group)}
-                  onCheckDelay={() => onCheckAll(group.name)}
-                  onHeadState={(p) => onHeadState(group.name, p)}
-                />
-                <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
-                  <div
-                    style={{
-                      minWidth: '50px',
-                      display: 'flex',
-                      justifyContent: 'end',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Chip
-                      size="small"
-                      label={`${group.members.length}`}
-                      sx={{
-                        mr: 1,
-                        backgroundColor: (theme) =>
-                          alpha(theme.palette.primary.main, 0.1),
-                        color: (theme) => theme.palette.primary.main,
-                      }}
-                    />
-                  </div>
-                </Tooltip>
-                {headState?.open ? (
-                  <ExpandLessRounded />
-                ) : (
-                  <ExpandMoreRounded />
-                )}
-              </Box>
+              {toolsOnLeft ? toolsBlock : nameBlock}
+              {toolsOnLeft ? nameBlock : toolsBlock}
+              {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
             </Box>
           </Box>
         </ListItemButton>
