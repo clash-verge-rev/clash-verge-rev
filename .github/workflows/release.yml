@@ -92,6 +92,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
+
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: bash ./scripts/extract_update_logs.sh
@@ -623,6 +626,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs

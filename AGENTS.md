@@ -55,6 +55,9 @@ the ownership evidence the AI-slop review evaluates (see
     [pr-ai-slop-review.md](.github/workflows/pr-ai-slop-review.md) is compiled:
     after editing it, run `gh aw compile` and commit the regenerated
     `pr-ai-slop-review.lock.yml`. Never edit the lock file directly.
+11. **Changelog.** Entries follow the rules in
+    [`template/Changelog.md`](template/Changelog.md): one line per
+    user-visible change, no internals.
 
 ## Pull Request Shape
 

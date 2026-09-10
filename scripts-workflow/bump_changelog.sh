@@ -32,6 +32,8 @@ bak_ts=$(timestamp)
 cp "$CHANGELOG" "$BACKUP_DIR/Changelog.md.bak.$bak_ts"
 echo "Backed up $CHANGELOG -> $BACKUP_DIR/Changelog.md.bak.$bak_ts"
 
+bash "$(dirname "$0")/group_platforms.sh"
+
 if [ -f "$HISTORY" ]; then
 	cp "$HISTORY" "$BACKUP_DIR/Changelog.history.md.bak.$bak_ts"
 	echo "Backed up $HISTORY -> $BACKUP_DIR/Changelog.history.md.bak.$bak_ts"
