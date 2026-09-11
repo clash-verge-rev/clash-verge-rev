@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
+import { syncRuntimeProviders } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -59,6 +60,7 @@ export const ProviderButton = () => {
       await updateProxyProvider(name)
 
       await refreshProxy()
+      void syncRuntimeProviders()
 
       showNotice.success(
         'proxies.feedback.notifications.provider.updateSuccess',
@@ -103,6 +105,7 @@ export const ProviderButton = () => {
       }
 
       await refreshProxy()
+      void syncRuntimeProviders()
 
       showNotice.success('proxies.feedback.notifications.provider.allUpdated')
     } catch (err) {

@@ -345,6 +345,7 @@ impl CoreManager {
             ConfigApplication::ReloadFrom(staged) => match self.reload_config(&staged).await {
                 Ok(()) => {
                     tracing::Span::current().record("outcome", "staged");
+                    crate::core::service::request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SYNC_DELAY);
                     return Ok(());
                 }
                 Err(err) => logging!(
