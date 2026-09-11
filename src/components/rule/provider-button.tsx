@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
+import { syncRuntimeProviders } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -53,6 +54,7 @@ export const ProviderButton = () => {
 
       await refreshRules()
       await refreshRuleProviders()
+      void syncRuntimeProviders()
 
       showNotice.success(
         'rules.feedback.notifications.provider.updateSuccess',
@@ -98,6 +100,7 @@ export const ProviderButton = () => {
 
       await refreshRules()
       await refreshRuleProviders()
+      void syncRuntimeProviders()
 
       showNotice.success('rules.feedback.notifications.provider.allUpdated')
     } catch (err) {

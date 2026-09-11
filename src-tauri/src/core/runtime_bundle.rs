@@ -1,7 +1,7 @@
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
-use serde_yaml_ng::Value;
+use serde_yaml_ng::{Mapping, Value};
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
 
@@ -13,15 +13,47 @@ pub(crate) const GEO_ASSETS: &[&str] = &[
     "GeoSite.dat",
 ];
 
+/// Provider identity used by the runtime config and core API.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RemoteProviderRef {
+    pub section: &'static str,
+    pub name: String,
+    pub provider: RemoteProvider,
+}
+
+struct RuntimeParts {
+    config: Value,
+    assets: Vec<RuntimeAsset>,
+    remote_providers: Vec<RemoteProviderRef>,
+}
+
 pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path) -> Result<RuntimeBundle> {
     let yaml = tokio::fs::read_to_string(config_file)
         .await
         .with_context(|| format!("failed to read runtime config {config_file:?}"))?;
-    let mut config: Value =
+    let config: Value =
         serde_yaml_ng::from_str(&yaml).with_context(|| format!("failed to parse runtime config {config_file:?}"))?;
     let config_root = config_file
         .parent()
         .ok_or_else(|| anyhow::anyhow!("runtime config has no parent directory"))?;
+    let parts = collect_runtime_parts(config, config_root)?;
+    Ok(RuntimeBundle {
+        yaml: serde_yaml_ng::to_string(&parts.config).context("failed to serialize service runtime config")?,
+        assets: parts.assets,
+        remote_providers: parts
+            .remote_providers
+            .into_iter()
+            .map(|declared| declared.provider)
+            .collect(),
+        core_path: core_path.to_string_lossy().into_owned(),
+    })
+}
+
+pub(crate) fn remote_providers_of(config: &Mapping, config_root: &Path) -> Result<Vec<RemoteProviderRef>> {
+    Ok(collect_runtime_parts(Value::Mapping(config.clone()), config_root)?.remote_providers)
+}
+
+fn collect_runtime_parts(mut config: Value, config_root: &Path) -> Result<RuntimeParts> {
     let config_root = std::fs::canonicalize(config_root)?;
     let mut assets = Vec::new();
     let mut destinations = HashSet::new();
@@ -53,11 +85,10 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
         }
     }
 
-    Ok(RuntimeBundle {
-        yaml: serde_yaml_ng::to_string(&config).context("failed to serialize service runtime config")?,
+    Ok(RuntimeParts {
+        config,
         assets,
         remote_providers,
-        core_path: core_path.to_string_lossy().into_owned(),
     })
 }
 
@@ -65,11 +96,11 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
 /// Remote URLs let the service decide whether a core download cache remains reusable.
 fn collect_provider_assets(
     config: &mut Value,
-    section: &str,
+    section: &'static str,
     config_root: &Path,
     destinations: &mut HashSet<String>,
     assets: &mut Vec<RuntimeAsset>,
-    remote_providers: &mut Vec<RemoteProvider>,
+    remote_providers: &mut Vec<RemoteProviderRef>,
 ) -> Result<()> {
     let Some(providers) = config
         .as_mapping_mut()
@@ -95,9 +126,9 @@ fn collect_provider_assets(
                 // Reserve remote destinations too; copied and downloaded files must not collide.
                 match remote_providers
                     .iter()
-                    .find(|declared| declared.destination == destination)
+                    .find(|declared| declared.provider.destination == destination)
                 {
-                    Some(declared) if declared.url == url => {}
+                    Some(declared) if declared.provider.url == url => {}
                     Some(_) => {
                         bail!("runtime provider destination {destination:?} is declared for two different sources")
                     }
@@ -105,9 +136,13 @@ fn collect_provider_assets(
                         if !destinations.insert(destination.clone()) {
                             bail!("runtime provider destination {destination:?} is claimed more than once");
                         }
-                        remote_providers.push(RemoteProvider {
-                            destination: destination.clone(),
-                            url,
+                        remote_providers.push(RemoteProviderRef {
+                            section,
+                            name: name.as_str().unwrap_or_default().to_owned(),
+                            provider: RemoteProvider {
+                                destination: destination.clone(),
+                                url,
+                            },
                         });
                     }
                 }

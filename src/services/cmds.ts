@@ -251,6 +251,12 @@ export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
 }
 
+export async function syncRuntimeProviders() {
+  return invoke<void>('sync_runtime_providers').catch((err) => {
+    console.warn('failed to queue the provider cache sync', err)
+  })
+}
+
 export async function cmdTestDelay(url: string) {
   return invoke<number>('test_delay', { url })
 }

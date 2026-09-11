@@ -276,6 +276,7 @@ impl CoreManager {
                         self.mark_core_ready();
                         self.core_started(RunningMode::Service);
                         self.restore_selected_nodes().await;
+                        service::request_runtime_provider_sync(crate::constants::timing::RUNTIME_PROVIDER_SYNC_DELAY);
                         return Ok(());
                     }
                     Err(e) => {
@@ -300,6 +301,7 @@ impl CoreManager {
             self.mark_core_ready();
             self.core_started(RunningMode::Service);
             self.restore_selected_nodes().await;
+            service::request_runtime_provider_sync(crate::constants::timing::RUNTIME_PROVIDER_SYNC_DELAY);
             Ok(())
         }
     }
