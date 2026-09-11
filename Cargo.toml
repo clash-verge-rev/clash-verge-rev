@@ -55,10 +55,10 @@ clash-verge-i18n = { path = "crates/clash-verge-i18n" }
 clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tracing-estuary = { git = "https://github.com/Tunglies/tracing-estuary.git", branch = "main" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
-tracing = "0.1"
+tracing = "0.1.44"
 
 tauri = { version = "2.11.5" }
-tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-clipboard-manager = "2.3.3"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
@@ -70,9 +70,9 @@ tokio = { version = "1.53.1", features = [
   "sync",
 ] }
 flexi_logger = "0.31.10"
-log = "0.4.33"
+log = "0.4.34"
 regex = "1.13.1"
-reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
+reqwest = { version = "0.13.5", features = ["json", "cookies", "gzip", "rustls", "form"] }
 rust_iso3166 = "0.2.0"
 
 smartstring = { version = "1.0.1" }
@@ -80,7 +80,7 @@ smartstring = { version = "1.0.1" }
 serde = { version = "1.0.229" }
 serde_json = { version = "1.0.151" }
 serde_yaml_ng = { version = "0.10.0" }
-bitflags = { version = "2.13.1" }
+bitflags = { version = "2.13.2" }
 socket2 = "0.6.5"
 
 # *** For Windows platform only ***
