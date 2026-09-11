@@ -1,16 +1,5 @@
 import { TrafficDataSampler, isSameTrafficData } from '../utils/traffic-sampler'
 
-const DEFAULT_CONFIG: ISamplingConfig & {
-  snapshotIntervalMs: number
-  defaultRangeMinutes: number
-} = {
-  rawDataMinutes: 10,
-  compressedDataMinutes: 60,
-  compressionRatio: 5,
-  snapshotIntervalMs: 250,
-  defaultRangeMinutes: 10,
-}
-
 interface WorkerScope {
   postMessage: (message: unknown) => void
   onmessage: ((event: MessageEvent<TrafficWorkerRequestMessage>) => void) | null
@@ -22,14 +11,16 @@ interface WorkerScope {
 
 const ctx: WorkerScope = self as unknown as WorkerScope
 
-let config = { ...DEFAULT_CONFIG }
-let sampler = new TrafficDataSampler(config)
-let currentRangeMinutes = config.defaultRangeMinutes
+// 'init' is the first message posted by the client, so these are always
+// assigned before first use.
+let config!: ITrafficWorkerInitMessage['config']
+let sampler!: TrafficDataSampler
+let currentRangeMinutes!: number
 let throttleTimer: ReturnType<typeof setTimeout> | null = null
 let lastTimestamp: number | undefined
 let lastBroadcast: ITrafficDataPoint[] = []
 
-const broadcastSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
+const broadcastSnapshot = () => {
   const dataPoints = sampler.getDataForTimeRange(currentRangeMinutes)
   const samplerStats = sampler.getStats()
 
@@ -37,20 +28,18 @@ const broadcastSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
     type: 'snapshot',
     dataPoints,
     samplerStats,
-    rangeMinutes: currentRangeMinutes,
     lastTimestamp,
-    reason,
   }
 
   ctx.postMessage(message)
   lastBroadcast = dataPoints
 }
 
-const scheduleSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
+const scheduleSnapshot = () => {
   if (throttleTimer !== null) return
   throttleTimer = ctx.setTimeout(() => {
     throttleTimer = null
-    broadcastSnapshot(reason)
+    broadcastSnapshot()
   }, config.snapshotIntervalMs)
 }
 
@@ -68,10 +57,10 @@ ctx.onmessage = (event: MessageEvent<TrafficWorkerRequestMessage>) => {
         if (throttleTimer !== null) return
         const slice = sampler.getDataForTimeRange(currentRangeMinutes)
         if (!isSameTrafficData(lastBroadcast, slice)) {
-          broadcastSnapshot('interval')
+          broadcastSnapshot()
         }
       }, 1000)
-      broadcastSnapshot('init')
+      broadcastSnapshot()
       break
     }
     case 'append': {
@@ -84,24 +73,18 @@ ctx.onmessage = (event: MessageEvent<TrafficWorkerRequestMessage>) => {
 
       lastTimestamp = timestamp
       sampler.addDataPoint(dataPoint)
-      scheduleSnapshot('append-throttle')
-      break
-    }
-    case 'clear': {
-      sampler.clear()
-      lastTimestamp = undefined
-      broadcastSnapshot('clear')
+      scheduleSnapshot()
       break
     }
     case 'setRange': {
       if (currentRangeMinutes !== message.minutes) {
         currentRangeMinutes = message.minutes
-        broadcastSnapshot('range-change')
+        broadcastSnapshot()
       }
       break
     }
     case 'requestSnapshot': {
-      broadcastSnapshot('request')
+      broadcastSnapshot()
       break
     }
     default:

@@ -1005,10 +1005,6 @@ interface ITrafficWorkerAppendMessage {
   }
 }
 
-interface ITrafficWorkerClearMessage {
-  type: 'clear'
-}
-
 interface ITrafficWorkerSetRangeMessage {
   type: 'setRange'
   minutes: number
@@ -1021,7 +1017,6 @@ interface ITrafficWorkerRequestSnapshotMessage {
 type TrafficWorkerRequestMessage =
   | ITrafficWorkerInitMessage
   | ITrafficWorkerAppendMessage
-  | ITrafficWorkerClearMessage
   | ITrafficWorkerSetRangeMessage
   | ITrafficWorkerRequestSnapshotMessage
 
@@ -1029,15 +1024,7 @@ interface ITrafficWorkerSnapshotMessage {
   type: 'snapshot'
   dataPoints: ITrafficDataPoint[]
   samplerStats: ISamplerStats
-  rangeMinutes: number
   lastTimestamp?: number
-  reason:
-    | 'init'
-    | 'interval'
-    | 'range-change'
-    | 'request'
-    | 'append-throttle'
-    | 'clear'
 }
 
 interface ITrafficWorkerLogMessage {

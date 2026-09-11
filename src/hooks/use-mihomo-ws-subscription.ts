@@ -1,5 +1,5 @@
 import { useLocalStorage } from 'foxact/use-local-storage'
-import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -22,7 +22,6 @@ interface SharedSubscriptionEntry {
   ws: MihomoWebSocket | null
   reconnectTimer: ReturnType<typeof setTimeout> | null
   connecting: boolean
-  refHolders: Set<MutableRefObject<MihomoWebSocket | null>>
   owners: Set<SharedSubscriptionOwner>
   activeOwner: SharedSubscriptionOwner | null
   closed: boolean
@@ -40,12 +39,6 @@ const getSubscriptionSnapshot = <T>(key: string) =>
 const writeSubscriptionSnapshot = <T>(key: string, data: T) => {
   subscriptionSnapshots.set(key, data)
   void setCacheData<T>([key], data)
-}
-
-const syncSharedWsRefs = (entry: SharedSubscriptionEntry) => {
-  entry.refHolders.forEach((ref) => {
-    ref.current = entry.ws
-  })
 }
 
 const pickActiveOwner = (entry: SharedSubscriptionEntry) => {
@@ -67,7 +60,6 @@ const closeSharedSocket = async (entry: SharedSubscriptionEntry) => {
   if (!ws) return
 
   entry.ws = null
-  syncSharedWsRefs(entry)
   await ws.close()
 }
 
@@ -79,7 +71,6 @@ const createSharedSubscriptionEntry = (
     ws: null,
     reconnectTimer: null,
     connecting: false,
-    refHolders: new Set(),
     owners: new Set(),
     activeOwner: null,
     closed: false,
@@ -121,7 +112,6 @@ const createSharedSubscriptionEntry = (
       })
 
       entry.ws = ws
-      syncSharedWsRefs(entry)
       clearReconnectTimer()
     } catch (ignoreError) {
       if (!entry.closed && !entry.ws) {
@@ -207,8 +197,6 @@ export const useMihomoWsSubscription = <T>(
   const responseCacheKey =
     subscriptionCacheKey ?? lastSubscriptionCacheKeyRef.current
 
-  const wsRef = useRef<MihomoWebSocket | null>(null)
-
   const resolveNextData = useCallback(
     (
       data: T | ((current?: T) => T | undefined) | undefined,
@@ -246,8 +234,6 @@ export const useMihomoWsSubscription = <T>(
     }
 
     entry.refs += 1
-    entry.refHolders.add(wsRef)
-    wsRef.current = entry.ws
 
     let throttleCleanup: (() => void) | undefined
     let wrappedNext: NextFn<T>
@@ -331,8 +317,6 @@ export const useMihomoWsSubscription = <T>(
 
     return () => {
       isMounted = false
-      entry.refHolders.delete(wsRef)
-      wsRef.current = null
       entry.owners.delete(owner)
       owner.cleanup?.()
 
@@ -376,5 +360,5 @@ export const useMihomoWsSubscription = <T>(
     [responseCacheKey],
   )
 
-  return { response, refresh, setData, wsRef }
+  return { response, refresh, setData }
 }

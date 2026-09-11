@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Traffic } from 'tauri-plugin-mihomo-api'
 
 import { useVisibility } from '@/hooks/use-visibility'
@@ -8,31 +8,15 @@ import { TrafficDataSampler, isSameTrafficData } from '@/utils/traffic-sampler'
 // 引用计数管理器
 class ReferenceCounter {
   private count = 0
-  private callbacks = new Set<() => void>()
-
-  private notify() {
-    this.callbacks.forEach((cb) => {
-      cb()
-    })
-  }
 
   increment(): () => void {
     this.count++
     debugLog(`[ReferenceCounter] 引用计数增加: ${this.count}`)
 
-    this.notify()
-
     return () => {
       this.count--
       debugLog(`[ReferenceCounter] 引用计数减少: ${this.count}`)
-
-      this.notify()
     }
-  }
-
-  onCountChange(callback: () => void) {
-    this.callbacks.add(callback)
-    return () => this.callbacks.delete(callback)
   }
 
   getCount(): number {
@@ -96,10 +80,10 @@ class InlineTrafficMonitor {
           if (this.throttleTimer !== null) return
           const slice = this.sampler.getDataForTimeRange(this.currentRange)
           if (!isSameTrafficData(this.lastBroadcast, slice)) {
-            this.emitSnapshot('interval')
+            this.emitSnapshot()
           }
         }, 1000)
-        this.emitSnapshot('init')
+        this.emitSnapshot()
         break
       }
       case 'append': {
@@ -112,24 +96,18 @@ class InlineTrafficMonitor {
 
         this.lastTimestamp = timestamp
         this.sampler.addDataPoint(dataPoint)
-        this.scheduleSnapshot('append-throttle')
-        break
-      }
-      case 'clear': {
-        this.sampler.clear()
-        this.lastTimestamp = undefined
-        this.emitSnapshot('clear')
+        this.scheduleSnapshot()
         break
       }
       case 'setRange': {
         if (this.currentRange !== message.minutes) {
           this.currentRange = message.minutes
-          this.emitSnapshot('range-change')
+          this.emitSnapshot()
         }
         break
       }
       case 'requestSnapshot': {
-        this.emitSnapshot('request')
+        this.emitSnapshot()
         break
       }
       default:
@@ -137,25 +115,23 @@ class InlineTrafficMonitor {
     }
   }
 
-  private emitSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
+  private emitSnapshot() {
     const dataPoints = this.sampler.getDataForTimeRange(this.currentRange)
 
     this.emit({
       type: 'snapshot',
       dataPoints,
       samplerStats: this.sampler.getStats(),
-      rangeMinutes: this.currentRange,
       lastTimestamp: this.lastTimestamp,
-      reason,
     })
     this.lastBroadcast = dataPoints
   }
 
-  private scheduleSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
+  private scheduleSnapshot() {
     if (this.throttleTimer !== null) return
     this.throttleTimer = setTimeout(() => {
       this.throttleTimer = null
-      this.emitSnapshot(reason)
+      this.emitSnapshot()
     }, this.config.snapshotIntervalMs)
   }
 }
@@ -331,11 +307,6 @@ class TrafficWorkerClient {
     })
   }
 
-  clearData() {
-    this.ensureStarted()
-    this.post({ type: 'clear' })
-  }
-
   setRange(minutes: number) {
     this.currentRange = minutes
     this.post({ type: 'setRange', minutes })
@@ -382,7 +353,6 @@ export const useTrafficMonitorEnhanced = (options?: {
     dataPoints: [],
     samplerStats: EMPTY_STATS,
   })
-  const [, forceRefCountRender] = useReducer((value) => value + 1, 0)
 
   const clientRef = useRef<TrafficWorkerClient | null>(getWorkerClient())
   const currentRangeRef = useRef<number>(WORKER_CONFIG.defaultRangeMinutes)
@@ -396,9 +366,6 @@ export const useTrafficMonitorEnhanced = (options?: {
     const client = getWorkerClient()
     clientRef.current = client
 
-    const stopWatchRefCount = refCounter.onCountChange(() =>
-      forceRefCountRender(),
-    )
     const cleanup = refCounter.increment()
     client.start(currentRangeRef.current)
 
@@ -415,7 +382,6 @@ export const useTrafficMonitorEnhanced = (options?: {
 
     return () => {
       unsubscribe?.()
-      stopWatchRefCount()
       cleanup()
       if (refCounter.getCount() === 0) {
         client.stop()
@@ -449,21 +415,13 @@ export const useTrafficMonitorEnhanced = (options?: {
     [enabled],
   )
 
-  // 清空数据
-  const clearData = useCallback(() => {
-    if (!enabled) return
-    clientRef.current?.clearData()
-  }, [enabled])
-
   return {
     graphData: {
       dataPoints: enabled ? latestSnapshot.dataPoints : EMPTY_DATA,
       requestRange,
       appendData,
-      clearData,
     },
     samplerStats: latestSnapshot.samplerStats,
-    referenceCount: refCounter.getCount(),
   }
 }
 
@@ -471,12 +429,10 @@ export const useTrafficMonitorEnhanced = (options?: {
  * 图表数据Hook
  */
 export const useTrafficGraphDataEnhanced = () => {
-  const { graphData, samplerStats, referenceCount } =
-    useTrafficMonitorEnhanced()
+  const { graphData, samplerStats } = useTrafficMonitorEnhanced()
 
   return {
     ...graphData,
     samplerStats,
-    referenceCount,
   }
 }

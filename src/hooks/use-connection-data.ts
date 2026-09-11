@@ -258,7 +258,6 @@ const clearPendingMessage = () => {
 interface SocketSupervisor {
   start: () => void
   stopIfIdle: () => void
-  reconnect: () => Promise<void>
 }
 
 const createSocketSupervisor = (options: {
@@ -349,7 +348,6 @@ const createSocketSupervisor = (options: {
       clearReconnectTimer()
       void closeSocket()
     },
-    reconnect,
   }
 }
 
@@ -405,15 +403,6 @@ const subscribeConnectionSummary = (listener: ConnectionListener) => {
   }
 }
 
-const refreshConnectionData = () => {
-  clearPendingMessage()
-  void connectionSupervisor.reconnect()
-}
-
-const refreshConnectionSummary = () => {
-  void summarySupervisor.reconnect()
-}
-
 const clearClosedConnectionData = () => {
   if (connectionData.closedConnections.length === 0) return
   connectionData = {
@@ -436,16 +425,12 @@ export const useConnectionData = (options?: { enabled?: boolean }) => {
     getConnectionSnapshot,
   )
   const response = useMemo(() => ({ data }), [data])
-  const refreshGetClashConnection = useCallback(() => {
-    refreshConnectionData()
-  }, [])
   const clearClosedConnections = useCallback(() => {
     clearClosedConnectionData()
   }, [])
 
   return {
     response,
-    refreshGetClashConnection,
     clearClosedConnections,
   }
 }
@@ -463,12 +448,8 @@ export const useConnectionSummaryData = (options?: { enabled?: boolean }) => {
     getConnectionSummarySnapshot,
   )
   const response = useMemo(() => ({ data }), [data])
-  const refreshGetClashConnectionSummary = useCallback(() => {
-    refreshConnectionSummary()
-  }, [])
 
   return {
     response,
-    refreshGetClashConnectionSummary,
   }
 }
