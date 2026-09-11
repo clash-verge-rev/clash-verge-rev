@@ -39,17 +39,6 @@ interface StatCardProps {
   onClick?: () => void
 }
 
-// 全局变量类型定义
-declare global {
-  interface Window {
-    animationFrameId?: number
-    lastTrafficData?: {
-      up: number
-      down: number
-    }
-  }
-}
-
 // 统计卡片组件 - 使用memo优化
 const CompactStatCard = memo(
   ({ icon, title, value, unit, color, onClick }: StatCardProps) => {
