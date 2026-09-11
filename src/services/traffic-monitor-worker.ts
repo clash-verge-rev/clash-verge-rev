@@ -1,4 +1,4 @@
-import { TrafficDataSampler, formatTrafficName } from '../utils/traffic-sampler'
+import { TrafficDataSampler, isSameTrafficData } from '../utils/traffic-sampler'
 
 const DEFAULT_CONFIG: ISamplingConfig & {
   snapshotIntervalMs: number
@@ -16,6 +16,8 @@ interface WorkerScope {
   onmessage: ((event: MessageEvent<TrafficWorkerRequestMessage>) => void) | null
   setTimeout: typeof setTimeout
   clearTimeout: typeof clearTimeout
+  setInterval: typeof setInterval
+  clearInterval: typeof clearInterval
 }
 
 const ctx: WorkerScope = self as unknown as WorkerScope
@@ -25,18 +27,15 @@ let sampler = new TrafficDataSampler(config)
 let currentRangeMinutes = config.defaultRangeMinutes
 let throttleTimer: ReturnType<typeof setTimeout> | null = null
 let lastTimestamp: number | undefined
+let lastBroadcast: ITrafficDataPoint[] = []
 
 const broadcastSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
   const dataPoints = sampler.getDataForTimeRange(currentRangeMinutes)
-  const availableDataPoints = sampler.getDataForTimeRange(
-    config.compressedDataMinutes,
-  )
   const samplerStats = sampler.getStats()
 
   const message: ITrafficWorkerSnapshotMessage = {
     type: 'snapshot',
     dataPoints,
-    availableDataPoints,
     samplerStats,
     rangeMinutes: currentRangeMinutes,
     lastTimestamp,
@@ -44,6 +43,7 @@ const broadcastSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
   }
 
   ctx.postMessage(message)
+  lastBroadcast = dataPoints
 }
 
 const scheduleSnapshot = (reason: ITrafficWorkerSnapshotMessage['reason']) => {
@@ -62,6 +62,15 @@ ctx.onmessage = (event: MessageEvent<TrafficWorkerRequestMessage>) => {
       config = { ...message.config }
       sampler = new TrafficDataSampler(config)
       currentRangeMinutes = message.config.defaultRangeMinutes
+      // Re-broadcast when points age out of the range, not on every tick;
+      // no handle needed, worker teardown (terminate) drops pending timers
+      ctx.setInterval(() => {
+        if (throttleTimer !== null) return
+        const slice = sampler.getDataForTimeRange(currentRangeMinutes)
+        if (!isSameTrafficData(lastBroadcast, slice)) {
+          broadcastSnapshot('interval')
+        }
+      }, 1000)
       broadcastSnapshot('init')
       break
     }
@@ -71,7 +80,6 @@ ctx.onmessage = (event: MessageEvent<TrafficWorkerRequestMessage>) => {
         up: message.payload.up || 0,
         down: message.payload.down || 0,
         timestamp,
-        name: formatTrafficName(timestamp),
       }
 
       lastTimestamp = timestamp

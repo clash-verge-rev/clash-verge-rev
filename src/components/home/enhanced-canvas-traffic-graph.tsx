@@ -20,6 +20,7 @@ import {
   formatTrafficHourMinute,
   formatTrafficMinuteSecond,
   formatTrafficName,
+  isSameTrafficData,
 } from '@/utils/traffic-sampler'
 
 interface ITrafficItem {
@@ -82,29 +83,6 @@ const STALE_DATA_THRESHOLD = 2500 // ms without fresh data => drop FPS
 
 interface EnhancedCanvasTrafficGraphProps {
   ref?: Ref<EnhancedCanvasTrafficGraphRef>
-}
-
-const isSameTrafficData = (
-  current: ITrafficDataPoint[],
-  next: ITrafficDataPoint[],
-) => {
-  if (current === next) return true
-  if (current.length !== next.length) return false
-
-  for (let i = 0; i < current.length; i++) {
-    const currentPoint = current[i]
-    const nextPoint = next[i]
-
-    if (
-      currentPoint.timestamp !== nextPoint.timestamp ||
-      currentPoint.up !== nextPoint.up ||
-      currentPoint.down !== nextPoint.down
-    ) {
-      return false
-    }
-  }
-
-  return true
 }
 
 const displayDataReducer = (

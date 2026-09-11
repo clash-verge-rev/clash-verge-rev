@@ -1,16 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { Traffic } from 'tauri-plugin-mihomo-api'
 
 import { useVisibility } from '@/hooks/use-visibility'
 import { debugLog } from '@/utils/debug'
-import { TrafficDataSampler, formatTrafficName } from '@/utils/traffic-sampler'
+import { TrafficDataSampler, isSameTrafficData } from '@/utils/traffic-sampler'
 
 // 引用计数管理器
 class ReferenceCounter {
@@ -59,8 +52,10 @@ class InlineTrafficMonitor {
   private config = { ...WORKER_CONFIG }
   private sampler = new TrafficDataSampler(this.config)
   private throttleTimer: ReturnType<typeof setTimeout> | null = null
+  private agingTimer: ReturnType<typeof setInterval> | null = null
   private currentRange = this.config.defaultRangeMinutes
   private lastTimestamp: number | undefined
+  private lastBroadcast: ITrafficDataPoint[] = []
 
   constructor(
     private emit: (snapshot: ITrafficWorkerSnapshotMessage) => void,
@@ -82,6 +77,10 @@ class InlineTrafficMonitor {
       clearTimeout(this.throttleTimer)
       this.throttleTimer = null
     }
+    if (this.agingTimer !== null) {
+      clearInterval(this.agingTimer)
+      this.agingTimer = null
+    }
     this.sampler.clear()
     this.lastTimestamp = undefined
   }
@@ -92,6 +91,14 @@ class InlineTrafficMonitor {
         this.config = { ...message.config }
         this.sampler = new TrafficDataSampler(this.config)
         this.currentRange = message.config.defaultRangeMinutes
+        // Re-broadcast when points age out of the range, not on every tick
+        this.agingTimer = setInterval(() => {
+          if (this.throttleTimer !== null) return
+          const slice = this.sampler.getDataForTimeRange(this.currentRange)
+          if (!isSameTrafficData(this.lastBroadcast, slice)) {
+            this.emitSnapshot('interval')
+          }
+        }, 1000)
         this.emitSnapshot('init')
         break
       }
@@ -101,7 +108,6 @@ class InlineTrafficMonitor {
           up: message.payload.up || 0,
           down: message.payload.down || 0,
           timestamp,
-          name: formatTrafficName(timestamp),
         }
 
         this.lastTimestamp = timestamp
@@ -133,19 +139,16 @@ class InlineTrafficMonitor {
 
   private emitSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
     const dataPoints = this.sampler.getDataForTimeRange(this.currentRange)
-    const availableDataPoints = this.sampler.getDataForTimeRange(
-      this.config.compressedDataMinutes,
-    )
 
     this.emit({
       type: 'snapshot',
       dataPoints,
-      availableDataPoints,
       samplerStats: this.sampler.getStats(),
       rangeMinutes: this.currentRange,
       lastTimestamp: this.lastTimestamp,
       reason,
     })
+    this.lastBroadcast = dataPoints
   }
 
   private scheduleSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
@@ -207,9 +210,9 @@ class TrafficWorkerClient {
                 message.lastTimestamp ?? 0,
               )
               document.documentElement.dataset.perfPoints = String(
-                message.availableDataPoints.length,
+                message.dataPoints.length,
               )
-              const last = message.availableDataPoints.at(-1)
+              const last = message.dataPoints.at(-1)
               document.documentElement.dataset.perfLastUp = String(
                 last?.up ?? 0,
               )
@@ -360,6 +363,8 @@ const EMPTY_STATS: ISamplerStats = {
   totalMemoryPoints: 0,
 }
 
+const EMPTY_DATA: ITrafficDataPoint[] = []
+
 /**
  * 增强的流量监控Hook - Web Worker驱动的数据采样与压缩
  */
@@ -371,22 +376,18 @@ export const useTrafficMonitorEnhanced = (options?: {
   const enabled = options?.enabled ?? true
   const isVisible = useVisibility()
   const [latestSnapshot, setLatestSnapshot] = useState<{
-    availableDataPoints: ITrafficDataPoint[]
+    dataPoints: ITrafficDataPoint[]
     samplerStats: ISamplerStats
-    lastTimestamp?: number
   }>({
-    availableDataPoints: [],
+    dataPoints: [],
     samplerStats: EMPTY_STATS,
-    lastTimestamp: undefined,
   })
-  const [rangeMinutes, setRangeMinutes] = useState(
-    WORKER_CONFIG.defaultRangeMinutes,
-  )
-  const [now, setNow] = useState(() => Date.now())
   const [, forceRefCountRender] = useReducer((value) => value + 1, 0)
 
   const clientRef = useRef<TrafficWorkerClient | null>(getWorkerClient())
   const currentRangeRef = useRef<number>(WORKER_CONFIG.defaultRangeMinutes)
+  const isVisibleRef = useRef(isVisible)
+  isVisibleRef.current = isVisible
 
   // 注册引用计数与Worker生命周期
   useEffect(() => {
@@ -404,15 +405,12 @@ export const useTrafficMonitorEnhanced = (options?: {
     let unsubscribe: (() => void) | undefined
     if (subscribeToSnapshots) {
       unsubscribe = client.onSnapshot((message) => {
+        if (!isVisibleRef.current) return
         setLatestSnapshot({
-          availableDataPoints:
-            message.availableDataPoints ?? message.dataPoints,
+          dataPoints: message.dataPoints,
           samplerStats: message.samplerStats,
-          lastTimestamp: message.lastTimestamp,
         })
       })
-
-      client.requestSnapshot()
     }
 
     return () => {
@@ -425,15 +423,11 @@ export const useTrafficMonitorEnhanced = (options?: {
     }
   }, [enabled, subscribeToSnapshots])
 
-  // Periodically refresh "now" so idle streams age out of the selected window when subscribed
+  // Re-prime snapshot ingestion after every visible transition
   useEffect(() => {
-    if (!enabled || !subscribeToSnapshots || !isVisible) return
-
-    const timer = window.setInterval(() => {
-      setNow(Date.now())
-    }, 1000)
-
-    return () => window.clearInterval(timer)
+    if (enabled && subscribeToSnapshots && isVisible) {
+      clientRef.current?.requestSnapshot()
+    }
   }, [enabled, subscribeToSnapshots, isVisible])
 
   // 添加流量数据
@@ -450,7 +444,6 @@ export const useTrafficMonitorEnhanced = (options?: {
     (minutes: number) => {
       if (!enabled) return
       currentRangeRef.current = minutes
-      setRangeMinutes(minutes)
       clientRef.current?.setRange(minutes)
     },
     [enabled],
@@ -462,19 +455,9 @@ export const useTrafficMonitorEnhanced = (options?: {
     clientRef.current?.clearData()
   }, [enabled])
 
-  const filteredDataPoints = useMemo(() => {
-    if (!enabled) return []
-    const sourceData = latestSnapshot.availableDataPoints
-    if (sourceData.length === 0) return []
-
-    const cutoff = now - rangeMinutes * 60 * 1000
-    return sourceData.filter((point) => point.timestamp > cutoff)
-  }, [enabled, latestSnapshot.availableDataPoints, rangeMinutes, now])
-
   return {
     graphData: {
-      dataPoints: filteredDataPoints,
-      currentRangeMinutes: rangeMinutes,
+      dataPoints: enabled ? latestSnapshot.dataPoints : EMPTY_DATA,
       requestRange,
       appendData,
       clearData,

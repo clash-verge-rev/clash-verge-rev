@@ -24,6 +24,29 @@ export const formatTrafficName = (timestamp: number) => {
   )}`
 }
 
+export const isSameTrafficData = (
+  current: ITrafficDataPoint[],
+  next: ITrafficDataPoint[],
+) => {
+  if (current === next) return true
+  if (current.length !== next.length) return false
+
+  for (let i = 0; i < current.length; i++) {
+    const currentPoint = current[i]
+    const nextPoint = next[i]
+
+    if (
+      currentPoint.timestamp !== nextPoint.timestamp ||
+      currentPoint.up !== nextPoint.up ||
+      currentPoint.down !== nextPoint.down
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
 export class TrafficDataSampler {
   private rawBuffer: ITrafficDataPoint[] = []
   private rawHead = 0
@@ -125,7 +148,6 @@ export class TrafficDataSampler {
         up: p.up,
         down: p.down,
         timestamp: p.timestamp,
-        name: formatTrafficName(p.timestamp),
       }))
 
     return [...compressedData, ...rawData].sort(
