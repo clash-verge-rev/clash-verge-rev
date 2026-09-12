@@ -1,0 +1,59 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Ana səhifə",
+        "proxies": "Proksilər",
+        "profiles": "Profillər",
+        "connections": "Əlaqələr",
+        "rules": "Qaydalar",
+        "logs": "Jurnallar",
+        "unlock": "Sınaq",
+        "settings": "Parametrlər"
+      },
+      "menu": {
+        "reorderMode": "Menyu sırasının dəyişdirilməsi rejimi",
+        "restoreDefaultOrder": "Standart sıranı bərpa et",
+        "unlock": "Menyu sırasının kilidini aç",
+        "lock": "Menyu sırasını kilidlə",
+        "collapseNavBar": "Naviqasiya panelini yığ",
+        "expandNavBar": "Naviqasiya panelini genişləndir"
+      }
+    },
+    "serviceMigration": {
+      "title": "Xidmətin yenilənməsi tələb olunur",
+      "message": "Clash Verge xidmətinin köhnə versiyası aşkarlandı. Hazırkı təhlükəsiz IPC protokolundan istifadə etmək üçün xidməti yenidən quraşdırın və ya bu sessiyada köməkçi proseslə davam edin.",
+      "checkingMessage": "Sistem xidmətinin vəziyyəti və hazırkı iş rejimi yoxlanılır. Zəhmət olmasa, gözləyin…",
+      "unavailableMessage": "Tələb olunan Clash Verge xidməti mövcud deyil. Xidməti quraşdırın və ya təmir edin, yaxud bu sessiyada köməkçi proseslə davam edin.",
+      "reinstall": "Xidməti yenidən quraşdır",
+      "repair": "Xidməti təmir et",
+      "continueSidecar": "Köməkçi proseslə davam et",
+      "success": "Clash Verge xidməti uğurla yeniləndi",
+      "errors": {
+        "actionFailed": "Xidmət əməliyyatı uğursuz oldu",
+        "stateRefreshFailed": "Xidmətin vəziyyətini yeniləmək mümkün olmadı",
+        "restartFailed": "Nüvəni yenidən başlatmaq mümkün olmadı",
+        "revalidationFailed": "İş vəziyyətini yeniləmək mümkün olmadı",
+        "sidecarFailed": "Köməkçi proseslə davam etmək mümkün olmadı"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Sistem proksisini təyin etmək mümkün olmadı",
+      "message": "Səlahiyyətlər yetərli olmadığı üçün macOS dəyişikliyi rədd etdi. Clash Verge xidmətini quraşdırsanız, proksi parametrlərini administrator səlahiyyəti ilə dəyişmək mümkün olacaq və bu bildiriş bir daha görünməyəcək.",
+      "serviceReadyMessage": "Clash Verge xidməti hazırdır, lakin nüvə hələ də köməkçi proses kimi işləyir. Buna görə sistem proksisinin təyin edilməsi rədd edildi. Xidmət rejiminə keçid problemi həll edir. Yenidən quraşdırmağa ehtiyac yoxdur.",
+      "alternative": "Alternativ olaraq, Sistem parametrləri → Məxfilik və təhlükəsizlik → Əlavə bölməsində “sistem üzrə parametrlərə daxil olmaq üçün administrator parolu tələb et” seçimini söndürün.",
+      "later": "Təxirə sal",
+      "installing": "Sistem xidməti quraşdırılır. Administrator parolu tələb oluna bilər.",
+      "restarting": "Xidmət quraşdırıldı. Nüvə xidmət vasitəsilə yenidən başladılır…",
+      "applying": "Sistem proksisinə etdiyiniz dəyişiklik tətbiq olunur…",
+      "tunTitle": "TUN rejimi üçün sistem xidməti tələb olunur",
+      "tunMessage": "TUN rejimində şəbəkə trafikini idarə etmək üçün Clash Verge sistem xidməti lazımdır. Xidmət quraşdırıldıqdan sonra TUN rejimi avtomatik aktivləşdiriləcək."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Nüvəni təhlükəsiz şəkildə dayandırmaq mümkün olmadığı üçün yenidən başlatma ləğv edildi",
+      "quitCoreStopFailed": "Nüvəni təhlükəsiz şəkildə dayandırmaq mümkün olmadığı üçün çıxış ləğv edildi"
+    }
+  }
+}

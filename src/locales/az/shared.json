@@ -1,0 +1,144 @@
+{
+  "actions": {
+    "cancel": "Ləğv et",
+    "close": "Bağla",
+    "confirm": "Təsdiqlə",
+    "save": "Yadda saxla",
+    "delete": "Sil",
+    "edit": "Redaktə et",
+    "new": "Yenisini yarat",
+    "enable": "Aktivləşdir",
+    "upgrade": "Yenilə",
+    "restart": "Yenidən başlat",
+    "resetToDefault": "Standart parametrlərə sıfırla",
+    "refresh": "Yenilə",
+    "retry": "Yenidən cəhd et",
+    "refreshPage": "Səhifəni yenilə",
+    "showDetails": "Təfərrüatları göstər",
+    "hideDetails": "Təfərrüatları gizlət",
+    "listView": "Siyahı görünüşünə keç",
+    "tableView": "Cədvəl görünüşünə keç",
+    "pause": "Fasilə ver",
+    "resume": "Davam et",
+    "closeAll": "Hamısını bağla",
+    "clear": "Təmizlə",
+    "previous": "Əvvəlkinə keç",
+    "next": "Növbətiyə keç",
+    "check": "Yoxla"
+  },
+  "labels": {
+    "updateAt": "Yenilənmə tarixi",
+    "timeout": "Gözləmə müddəti",
+    "icon": "İkon",
+    "name": "Ad",
+    "readOnly": "Yalnız oxumaq üçün",
+    "expireTime": "Bitmə vaxtı",
+    "updateTime": "Yenilənmə vaxtı",
+    "usedTotal": "İstifadə olunan / ümumi",
+    "from": "Mənbə",
+    "password": "Şifrə",
+    "retryAttempts": "Təkrar cəhdlərin sayı",
+    "downloaded": "Endirilib",
+    "uploaded": "Yüklənib"
+  },
+  "statuses": {
+    "enabled": "Aktivdir",
+    "disabled": "Söndürülüb",
+    "saving": "Yadda saxlanılır...",
+    "empty": "Boşdur",
+    "loading": "Yüklənir..."
+  },
+  "units": {
+    "milliseconds": "ms",
+    "seconds": "saniyə",
+    "minutes": "dəqiqə",
+    "hours": "saat",
+    "kilobytes": "KB",
+    "files": "Fayllar"
+  },
+  "placeholders": {
+    "resetInput": "Daxil ediləni təmizlə",
+    "filter": "Süzgəc şərtləri",
+    "matchCase": "Böyük və kiçik hərfləri fərqləndir",
+    "matchWholeWord": "Yalnız bütöv sözləri tap",
+    "useRegex": "Müntəzəm ifadədən istifadə et"
+  },
+  "validation": {
+    "invalidRegex": "Yanlış müntəzəm ifadə"
+  },
+  "window": {
+    "maximize": "Böyüt",
+    "minimize": "Kiçilt"
+  },
+  "editorModes": {
+    "visualization": "Vizuallaşdırma",
+    "advanced": "Genişləndirilmiş"
+  },
+  "feedback": {
+    "errors": {
+      "unexpected": "Xəta baş verdi",
+      "label": "Xəta",
+      "unknown": "Naməlum xəta",
+      "details": "Xəta təfərrüatları",
+      "stack": "Xəta steki",
+      "componentStack": "Komponent steki",
+      "trafficUnavailable": "Trafik məlumatları əlçatan deyil",
+      "operationFailed": "Əməliyyat uğursuz oldu",
+      "trafficStats": "Trafik statistikası xətası",
+      "trafficStatsDescription": "Trafik statistikası komponentində xəta baş verdi. Proqramın çökməsinin qarşısını almaq üçün komponent söndürüldü."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Profil uğurla idxal edildi",
+      "importSubscriptionSuccess": "Abunəlik uğurla idxal edildi",
+      "importWithClashProxy": "Profil Clash proksisi ilə idxal edildi",
+      "updateAvailable": "Yeniləmə mövcuddur",
+      "saved": "Uğurla yadda saxlanıldı",
+      "common": {
+        "copySuccess": "Uğurla kopyalandı",
+        "saveSuccess": "Konfiqurasiya uğurla yadda saxlanıldı",
+        "saveFailed": "Konfiqurasiyanı yadda saxlamaq mümkün olmadı",
+        "refreshFailed": "Yeniləmə uğursuz oldu; son yüklənmiş dəyər göstərilir"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Abunəlik konfiqurasiyasının yoxlanması uğursuz oldu. Abunəliyin konfiqurasiya faylını yoxlayın; dəyişikliklər geri qaytarıldı.",
+        "bootFailed": "Başlanğıcda abunəlik konfiqurasiyasının yoxlanması uğursuz oldu. Standart konfiqurasiya ilə başladıldı; abunəliyin konfiqurasiya faylını yoxlayın.",
+        "coreChangeFailed": "Nüvə dəyişdirilərkən konfiqurasiyanın yoxlanması uğursuz oldu. Standart konfiqurasiya ilə başladıldı; abunəliyin konfiqurasiya faylını yoxlayın.",
+        "processTerminated": "Yoxlama prosesi dayandırıldı. Təhlükəsizlik proqramının nüvənin işləməsinə mane olub-olmadığını və ya kompüterinizin prosessorunun və icra mühitinin nüvənin icra faylını dəstəkləyib-dəstəkləmədiyini yoxlayın."
+      },
+      "script": {
+        "syntaxError": "Script sintaksis xətası, dəyişikliklər geri qaytarıldı",
+        "missingMain": "Script xətası, dəyişikliklər geri qaytarıldı",
+        "fileNotFound": "Fayl tapılmadı, dəyişikliklər geri qaytarıldı",
+        "fileError": "Script faylı xətası, dəyişikliklər geri qaytarıldı"
+      },
+      "yaml": {
+        "syntaxError": "YAML sintaksis xətası, dəyişikliklər geri qaytarıldı",
+        "readError": "YAML oxuma xətası, dəyişikliklər geri qaytarıldı",
+        "mappingError": "YAML uyğunlaşdırma xətası, dəyişikliklər geri qaytarıldı",
+        "keyError": "YAML açar xətası, dəyişikliklər geri qaytarıldı",
+        "generalError": "YAML xətası, dəyişikliklər geri qaytarıldı"
+      },
+      "merge": {
+        "syntaxError": "Merge faylının sintaksis xətası, dəyişikliklər geri qaytarıldı",
+        "mappingError": "Merge faylının uyğunlaşdırma xətası, dəyişikliklər geri qaytarıldı",
+        "keyError": "Merge faylının açar xətası, dəyişikliklər geri qaytarıldı",
+        "generalError": "Merge faylı xətası, dəyişikliklər geri qaytarıldı"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "Hamısı",
+      "debug": "Sazlama",
+      "info": "Məlumat",
+      "warn": "Xəbərdarlıq",
+      "error": "Xəta"
+    }
+  }
+}

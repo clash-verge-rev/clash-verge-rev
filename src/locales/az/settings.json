@@ -1,0 +1,704 @@
+{
+  "page": {
+    "actions": {
+      "manual": "Təlimat",
+      "telegram": "Telegram kanalı",
+      "github": "GitHub repozitoriyası"
+    },
+    "actionsGroupLabel": "Parametrlərə aid keçidlər",
+    "title": "Parametrlər"
+  },
+  "sections": {
+    "system": {
+      "title": "Sistem parametrləri",
+      "toggles": {
+        "tunMode": "TUN rejimi",
+        "systemProxy": "Sistem proksisi"
+      },
+      "tooltips": {
+        "silentStart": "Proqramı paneli göstərmədən arxa planda başladır"
+      },
+      "fields": {
+        "autoLaunch": "Avtomatik başlatma",
+        "silentStart": "Səssiz başlatma"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "Xidmət əlçatan olmadığı üçün TUN rejimi avtomatik söndürüldü",
+          "autoDisableFailed": "TUN rejimini avtomatik söndürmək mümkün olmadı"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "Əməliyyat sisteminin proksi parametrlərini dəyişmək üçün aktivləşdirin. Aktivləşdirmək mümkün olmazsa, əməliyyat sisteminin proksi parametrlərini əl ilə dəyişin",
+        "tunMode": "TUN (virtual şəbəkə kartı) rejimi: bütün sistem trafikini tutur, aktivləşdirildikdə sistem proksisini aktivləşdirməyə ehtiyac qalmır.",
+        "tunUnavailable": "TUN üçün xidmət rejimi və ya inzibatçı rejimi tələb olunur"
+      },
+      "actions": {
+        "installService": "Xidməti quraşdır",
+        "uninstallService": "Xidməti sil",
+        "switchToServiceMode": "Xidmət rejiminə keç"
+      },
+      "fields": {
+        "systemProxy": "Sistem proksisi",
+        "tunMode": "TUN rejimi"
+      },
+      "messages": {
+        "installedCheckProxy": "Xidmət quraşdırılıb və nüvə onun vasitəsilə işləyir. Sistem proksisinin açarını yoxlayın və dəyişiklik qüvvəyə minməyibsə, onu yenidən edin.",
+        "installedCoreNotOnService": "Xidmət quraşdırılıb, lakin nüvə onun vasitəsilə işləmir. Nüvəni yoxlayın və yenidən cəhd edin.",
+        "installedProxyRestored": "Xidmət quraşdırılıb, nüvə onun vasitəsilə işləyir və sistem proksisində etdiyiniz dəyişiklik tətbiq olunub."
+      }
+    },
+    "externalController": {
+      "title": "Xarici idarəetmə qurğusu",
+      "fields": {
+        "enable": "Xarici idarəetmə qurğusunun aktivləşdirilməsi",
+        "address": "Xarici idarəetmə qurğusu",
+        "secret": "Nüvənin məxfi açarı"
+      },
+      "placeholders": {
+        "address": "Tələb olunur",
+        "secret": "Tövsiyə olunur"
+      },
+      "tooltips": {
+        "copy": "Mübadilə buferinə kopyala"
+      },
+      "messages": {
+        "addressRequired": "İdarəetmə qurğusunun ünvanı boş ola bilməz",
+        "secretRequired": "Məxfi açar boş ola bilməz",
+        "copyFailed": "Kopyalamaq mümkün olmadı",
+        "controllerCopied": "İdarəetmə qurğusunun ünvanı mübadilə buferinə kopyalandı",
+        "secretCopied": "Məxfi açar mübadilə buferinə kopyalandı"
+      }
+    },
+    "externalCors": {
+      "title": "Xarici mənbələrarası resurs paylaşımı konfiqurasiyası",
+      "fields": {
+        "allowPrivateNetwork": "Özəl şəbəkəyə giriş icazəsi",
+        "allowedOrigins": "İcazə verilən mənbələr"
+      },
+      "placeholders": {
+        "origin": "Etibarlı URL daxil edin"
+      },
+      "actions": {
+        "add": "Əlavə et"
+      },
+      "messages": {
+        "alwaysIncluded": "Həmişə daxil edilən mənbələr: {{urls}}"
+      },
+      "tooltips": {
+        "open": "Xarici mənbələrarası resurs paylaşımı parametrləri"
+      }
+    },
+    "appearance": {
+      "light": "Açıq",
+      "dark": "Tünd",
+      "system": "Sistem"
+    },
+    "clash": {
+      "title": "Clash parametrləri",
+      "form": {
+        "fields": {
+          "allowLan": "Yerli şəbəkədən giriş icazəsi",
+          "dnsOverwrite": "DNS parametrlərinin əvəzlənməsi",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Vahid gecikmə",
+          "logLevel": "Jurnal səviyyəsi",
+          "portConfig": "Port konfiqurasiyası",
+          "external": "Xarici",
+          "webUI": "Veb interfeysi",
+          "clashCore": "Clash nüvəsi",
+          "openUwpTool": "Universal Windows Platforması alətini aç",
+          "updateGeoData": "Coğrafi məlumatları yenilə",
+          "tunnels": {
+            "title": "Tunel idarəetməsi",
+            "localAddr": "Yerli dinləmə ünvanı",
+            "localPort": "Yerli dinləmə portu",
+            "targetAddr": "Hədəf ünvanı",
+            "targetPort": "Hədəf portu",
+            "proxyGroup": "Proksi qrupu",
+            "proxyNode": "Proksi qovşağı",
+            "protocols": "Protokol",
+            "existing": "Mövcud tunellər",
+            "default": "Cari konfiqurasiyaya uyğun",
+            "optional": "İstəyə bağlı",
+            "messages": {
+              "incomplete": "Bütün məcburi tunel sahələrini doldurun",
+              "invalidLocalAddr": "Yerli dinləmə ünvanı etibarsızdır",
+              "invalidLocalPort": "Yerli dinləmə portu etibarsızdır",
+              "invalidTargetAddr": "Hədəf ünvanı etibarsızdır",
+              "invalidTargetPort": "Hədəf portu etibarsızdır"
+            },
+            "actions": {
+              "add": "Əlavə et",
+              "addNew": "Yeni tunel əlavə et"
+            }
+          }
+        },
+        "tooltips": {
+          "networkInterface": "Şəbəkə interfeysi",
+          "unifiedDelay": "Vahid gecikmə aktivləşdirildikdə iki gecikmə sınağı aparılır. Bu, əlaqənin qurulması və digər səbəblərdən müxtəlif növ qovşaqlar arasında yaranan gecikmə fərqlərini aradan qaldırır",
+          "logLevel": "Bu parametr yalnız jurnal qovluğunun xidmət alt qovluğundakı nüvə jurnal faylları üçün keçərlidir",
+          "openUwpTool": "Windows 8-dən etibarən Universal Windows Platforması tətbiqlərinin (məsələn, Microsoft Store) yerli kompüterin şəbəkə xidmətlərinə birbaşa girişi məhdudlaşdırılıb və bu alətlə həmin məhdudiyyəti aradan qaldırmaq olar"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Sazlama",
+            "info": "Məlumat",
+            "warning": "Xəbərdarlıq",
+            "error": "Xəta",
+            "silent": "Səssiz"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Verge əsas parametrləri",
+        "actions": {
+          "browse": "Gözdən keçir"
+        },
+        "trayOptions": {
+          "showMainWindow": "Əsas pəncərəni göstər",
+          "showTrayMenu": "Bildiriş sahəsinin menyusunu göstər",
+          "disable": "Söndür"
+        },
+        "fields": {
+          "language": "Dil",
+          "themeMode": "Tema rejimi",
+          "trayClickEvent": "Bildiriş sahəsindəki nişana klik əməliyyatı",
+          "copyEnvType": "Mühit dəyişənlərini kopyalama növü",
+          "startPage": "Başlanğıc səhifəsi",
+          "startupScript": "Başlanğıc skripti",
+          "themeSetting": "Tema parametrləri",
+          "layoutSetting": "Düzülüş parametrləri",
+          "misc": "Digər",
+          "hotkeySetting": "Qısayol parametrləri"
+        }
+      },
+      "advanced": {
+        "title": "Verge genişləndirilmiş parametrləri",
+        "tooltips": {
+          "backupInfo": "Konfiqurasiya fayllarının ehtiyat nüsxəsini cihazda və ya WebDAV serverində saxlamaq olar",
+          "openConfDir": "Proqram düzgün işləmirsə, bu qovluqdakı bütün faylların ehtiyat nüsxəsini yaradın və onları silin, sonra proqramı yenidən başladın",
+          "liteMode": "Qrafik interfeysi bağlayır, yalnız nüvə işləməyə davam edir"
+        },
+        "actions": {
+          "copyVersion": "Versiyanı kopyala"
+        },
+        "notifications": {
+          "latestVersion": "Hazırda ən son versiyadan istifadə olunur",
+          "versionCopied": "Versiya mübadilə buferinə kopyalandı"
+        },
+        "fields": {
+          "backupSetting": "Ehtiyat nüsxə parametrləri",
+          "runtimeConfig": "İstifadə olunan konfiqurasiya",
+          "openConfDir": "Konfiqurasiya qovluğunu aç",
+          "openCoreDir": "Nüvə qovluğunu aç",
+          "openLogsDir": "Jurnal qovluğunu aç",
+          "checkUpdates": "Yeniləmələri yoxla",
+          "openDevTools": "Tərtibatçı alətləri",
+          "liteModeSettings": "Yüngül rejim parametrləri",
+          "exit": "Çıx",
+          "exportDiagnostics": "Diaqnostika məlumatlarını ixrac et",
+          "vergeVersion": "Verge versiyası"
+        }
+      },
+      "theme": {
+        "title": "Tema parametrləri",
+        "fields": {
+          "primaryColor": "Əsas rəng",
+          "secondaryColor": "İkinci dərəcəli rəng",
+          "primaryText": "Əsas mətn",
+          "secondaryText": "İkinci dərəcəli mətn",
+          "infoColor": "Məlumat rəngi",
+          "warningColor": "Xəbərdarlıq rəngi",
+          "errorColor": "Xəta rəngi",
+          "successColor": "Uğur rəngi",
+          "fontFamily": "Şrift ailəsi",
+          "cssInjection": "Kaskad üslub cədvəllərinin əlavə edilməsi"
+        },
+        "actions": {
+          "editCss": "Kaskad üslub cədvəllərini redaktə et"
+        },
+        "dialogs": {
+          "editCssTitle": "Kaskad üslub cədvəllərinin redaktəsi"
+        }
+      },
+      "layout": {
+        "title": "Düzülüş parametrləri",
+        "fields": {
+          "preferSystemTitlebar": "Sistemin başlıq sətrindən istifadə",
+          "trafficGraph": "Trafik qrafiki",
+          "memoryUsage": "Nüvənin resurs istifadəsi",
+          "proxyGroupIcon": "Proksi qrupu nişanı",
+          "toastPosition": "Bildiriş mövqeyi",
+          "hoverNavigator": "Kursorla qruplar arasında keçid",
+          "hoverNavigatorDelay": "Kursorla qruplar arasında keçid gecikməsi",
+          "navIcon": "Naviqasiya nişanı",
+          "collapseNavBar": "Naviqasiya panelinin yığılması",
+          "trayIcon": "Bildiriş sahəsi nişanı",
+          "proxyGroupsDisplayMode": "Proksi qruplarının göstərilmə rejimi",
+          "showOutboundModesInline": "Çıxış rejimlərinin eyni sətirdə göstərilməsi",
+          "commonTrayIcon": "Bildiriş sahəsinin ümumi nişanı",
+          "systemProxyTrayIcon": "Sistem proksisinin bildiriş sahəsindəki nişanı",
+          "tunTrayIcon": "TUN rejiminin bildiriş sahəsindəki nişanı",
+          "enableTrayIcon": "Bildiriş sahəsi nişanının aktivləşdirilməsi",
+          "enableTraySpeed": "Bildiriş sahəsində sürət göstəricisinin aktivləşdirilməsi",
+          "pauseRenderTrafficStatsOnBlur": "Pəncərə aktiv olmadıqda trafik statistikasının göstərilməsinin dayandırılması"
+        },
+        "tooltips": {
+          "hoverNavigator": "Kursoru əlifba hərflərinin üzərinə gətirdikdə müvafiq proksi qrupuna avtomatik keçir",
+          "hoverNavigatorDelay": "Kursor hərfin üzərinə gətirildikdən sonra avtomatik keçidədək gözləmə müddəti, millisaniyə ilə"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Təkrəngli",
+            "colorful": "Rəngli",
+            "disable": "Söndür"
+          },
+          "toastPosition": {
+            "topLeft": "Yuxarı sol",
+            "topRight": "Yuxarı sağ",
+            "bottomLeft": "Aşağı sol",
+            "bottomRight": "Aşağı sağ"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Standart",
+            "inline": "Eyni sətirdə",
+            "disable": "Söndür"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "Port konfiqurasiyası",
+      "fields": {
+        "mixed": "Mixed Port",
+        "socks": "SOCKS portu",
+        "http": "HTTP(S) portu",
+        "redir": "Yönləndirmə portu",
+        "tproxy": "Şəffaf proksi portu"
+      },
+      "actions": {
+        "random": "Təsadüfi port seç"
+      },
+      "messages": {
+        "portInUse": "{{port}} portu artıq istifadə olunur",
+        "saved": "Port parametrləri yadda saxlanıldı",
+        "saveFailed": "Port parametrlərini yadda saxlamaq mümkün olmadı",
+        "automaticFallback": "{{oldPort}} portu istifadə olunduğu üçün bu sessiya {{newPort}} portunda işləyir. Parametriniz dəyişməyib və növbəti başlatmada {{oldPort}} portu yenidən sınanacaq.",
+        "automaticFallbackFailed": "Mixed Port üçün avtomatik ehtiyat porta keçid baş tutmadı: {{error}}",
+        "portTooLow": "Port ən azı 1000 olmalıdır",
+        "portTooHigh": "Port ən çoxu 65535 olmalıdır"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "Buraxılış versiyası",
+        "alpha": "Alfa versiyası"
+      }
+    },
+    "liteMode": {
+      "title": "Yüngül rejim parametrləri",
+      "actions": {
+        "enterNow": "İndi yüngül rejimə keç"
+      },
+      "toggles": {
+        "autoEnter": "Yüngül rejimə avtomatik keçid"
+      },
+      "tooltips": {
+        "autoEnter": "Bu seçim aktiv olduqda pəncərə bağlandıqdan müəyyən müddət sonra yüngül rejimə avtomatik keçilir"
+      },
+      "fields": {
+        "delay": "Yüngül rejimə avtomatik keçid gecikməsi"
+      },
+      "messages": {
+        "autoEnterHint": "Pəncərə bağlandıqdan {{n}} dəqiqə sonra yüngül rejim avtomatik aktivləşəcək"
+      }
+    },
+    "backup": {
+      "title": "Ehtiyat nüsxə parametrləri",
+      "tabs": {
+        "local": "Yerli ehtiyat nüsxə",
+        "webdav": "WebDAV ehtiyat nüsxəsi"
+      },
+      "actions": {
+        "selectTarget": "Ehtiyat nüsxə üçün hədəf seç",
+        "backup": "Ehtiyat nüsxə yarat",
+        "export": "İxrac et",
+        "exportBackup": "Ehtiyat nüsxəni ixrac et",
+        "importBackup": "Ehtiyat nüsxəni idxal et",
+        "deleteBackup": "Ehtiyat nüsxəni sil",
+        "restore": "Bərpa et",
+        "restoreBackup": "Ehtiyat nüsxəni bərpa et",
+        "viewHistory": "Tarixçəyə bax"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV serverinin URL ünvanı",
+        "username": "İstifadəçi adı",
+        "info": "Ehtiyat nüsxələr tətbiqin məlumat qovluğunda yerli olaraq saxlanılır. Ehtiyat nüsxələri bərpa etmək və ya silmək üçün aşağıdakı siyahıdan istifadə edin."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV URL ünvanı boş ola bilməz",
+        "invalidWebdavUrl": "WebDAV URL ünvanının formatı yanlışdır",
+        "usernameRequired": "İstifadəçi adı boş ola bilməz",
+        "passwordRequired": "Şifrə boş ola bilməz",
+        "webdavConfigSaved": "WebDAV konfiqurasiyası uğurla yadda saxlanıldı",
+        "webdavConfigSaveFailed": "WebDAV konfiqurasiyasını yadda saxlamaq mümkün olmadı: {{error}}",
+        "backupCreated": "Ehtiyat nüsxə uğurla yaradıldı",
+        "backupFailed": "Ehtiyat nüsxəni yaratmaq mümkün olmadı: {{error}}",
+        "localBackupCreated": "Yerli ehtiyat nüsxə uğurla yaradıldı",
+        "localBackupFailed": "Yerli ehtiyat nüsxəni yaratmaq mümkün olmadı",
+        "restoreSuccess": "Bərpa uğurla tamamlandı, tətbiq 1 saniyə sonra yenidən başladılacaq",
+        "localBackupExported": "Yerli ehtiyat nüsxə uğurla ixrac edildi",
+        "localBackupExportFailed": "Yerli ehtiyat nüsxəni ixrac etmək mümkün olmadı",
+        "localBackupImported": "Yerli ehtiyat nüsxə uğurla idxal edildi",
+        "localBackupImportFailed": "Yerli ehtiyat nüsxəni idxal etmək mümkün olmadı: {{error}}",
+        "webdavRefreshSuccess": "WebDAV uğurla yeniləndi",
+        "webdavRefreshFailed": "WebDAV yenilənmədi: {{error}}",
+        "confirmDelete": "Bu ehtiyat nüsxə faylını silmək istədiyinizə əminsiniz?",
+        "confirmRestore": "Bu ehtiyat nüsxə faylını bərpa etmək istədiyinizə əminsiniz?"
+      },
+      "auto": {
+        "title": "Avtomatik ehtiyat nüsxə",
+        "scheduleLabel": "Plan üzrə ehtiyat nüsxə yaradılması",
+        "scheduleHelper": "Təyin edilmiş aralıqlarla arxa planda yerli ehtiyat nüsxələr yaradır.",
+        "intervalLabel": "Ehtiyat nüsxə yaratma tezliyi",
+        "changeLabel": "Mühüm dəyişikliklər zamanı ehtiyat nüsxə",
+        "changeHelper": "Qlobal genişləndirmə konfiqurasiyası və ya skripti dəyişdikdə avtomatik ehtiyat nüsxə yaradır.",
+        "options": {
+          "hours": "Hər {{n}} saatdan bir",
+          "days": "Hər {{n}} gündən bir"
+        }
+      },
+      "manual": {
+        "title": "Əl ilə ehtiyat nüsxə yaratma",
+        "local": "Bu cihazda cari vəziyyətin nüsxəsini yaradır və tətbiqin məlumat qovluğunda saxlayır.",
+        "webdav": "Giriş məlumatlarını təyin etdikdən sonra cari vəziyyətin nüsxəsini WebDAV serverinizə yükləyin.",
+        "configureWebdav": "WebDAV parametrlərini qur"
+      },
+      "history": {
+        "title": "Ehtiyat nüsxə tarixçəsi",
+        "summary": "{{count}} ehtiyat nüsxə • ən son {{recent}}",
+        "empty": "Ehtiyat nüsxə yoxdur",
+        "unknownPlatform": "Naməlum",
+        "unknownTime": "Naməlum vaxt"
+      },
+      "webdav": {
+        "title": "WebDAV parametrləri"
+      },
+      "table": {
+        "filename": "Fayl adı",
+        "backupTime": "Ehtiyat nüsxə vaxtı",
+        "actions": "Əməliyyatlar",
+        "noBackups": "Ehtiyat nüsxə yoxdur",
+        "rowsPerPage": "Səhifədəki sətir sayı"
+      }
+    },
+    "misc": {
+      "title": "Digər",
+      "fields": {
+        "appLogLevel": "Tətbiq jurnalının səviyyəsi",
+        "appLogMaxSize": "Tətbiq jurnalının maksimum ölçüsü",
+        "appLogMaxCount": "Tətbiq jurnallarının maksimum sayı",
+        "autoCloseConnections": "Əlaqələrin avtomatik bağlanması",
+        "autoCheckUpdate": "Yeniləmələrin avtomatik yoxlanması",
+        "enableBuiltinEnhanced": "Daxili təkmilləşdirmənin aktivləşdirilməsi",
+        "proxyLayoutColumns": "Proksi düzülüşünün sütunları",
+        "autoLogClean": "Jurnalların avtomatik təmizlənməsi",
+        "autoDelayDetection": "Gecikmənin avtomatik aşkarlanması",
+        "autoDelayDetectionInterval": "Gecikmənin avtomatik aşkarlanma intervalı",
+        "defaultLatencyTest": "Standart gecikmə sınağı",
+        "defaultLatencyTimeout": "Standart gecikmə sınağının gözləmə müddəti"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Seçilmiş proksi qrupu və ya proksi rejimi dəyişdikdə qurulmuş əlaqələri bağlayır",
+        "enableBuiltinEnhanced": "Konfiqurasiya faylının uyğunluğunun təmin edilməsi",
+        "autoDelayDetection": "Cari qovşağın gecikməsini arxa planda müntəzəm olaraq ölçür",
+        "defaultLatencyTest": "Yalnız HTTP müştəri sorğularının sınağı üçün istifadə olunur və konfiqurasiya faylına təsir etmir"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Avtomatik sütunlar"
+        },
+        "autoLogClean": {
+          "never": "Heç vaxt təmizləmə",
+          "retainDays": "{{n}} gün saxla"
+        }
+      }
+    },
+    "update": {
+      "title": "Yeni versiya v{{version}}",
+      "actions": {
+        "goToRelease": "Buraxılış səhifəsinə keç",
+        "update": "Yenilə"
+      },
+      "messages": {
+        "breakChangeError": "Bu versiya böyük yeniləmədir və tətbiqdaxili yeniləməni dəstəkləmir. Tətbiqi silin, yeni versiyanı əl ilə endirib quraşdırın",
+        "available": "Yeni versiya mövcuddur"
+      },
+      "alerts": {
+        "note": "Qeyd",
+        "tip": "Məsləhət",
+        "important": "Vacib",
+        "warning": "Xəbərdarlıq",
+        "caution": "Diqqət"
+      }
+    },
+    "sysproxy": {
+      "title": "Sistem proksisi parametrləri",
+      "fieldsets": {
+        "currentStatus": "Cari sistem proksisi"
+      },
+      "fields": {
+        "enableStatus": "Aktivlik vəziyyəti:",
+        "serverAddr": "Server ünvanı: ",
+        "pacUrl": "PAC URL ünvanı: ",
+        "proxyHost": "Proksi qovşağı",
+        "usePacMode": "PAC rejimindən istifadə",
+        "proxyGuard": "Proksi mühafizəsi",
+        "guardDuration": "Mühafizə müddəti",
+        "alwaysUseDefaultBypass": "Həmişə standart proksi istisnalarından istifadə",
+        "enableBypassCheck": "Proksi istisnalarının formatının yoxlanması",
+        "proxyBypass": "Proksi istisnalarının parametrləri: ",
+        "bypass": "Proksi istisnaları: ",
+        "pacScriptContent": "PAC skriptinin məzmunu"
+      },
+      "tooltips": {
+        "proxyGuard": "Digər proqramların əməliyyat sisteminin proksi parametrlərini dəyişdirməsinin qarşısını almaq üçün aktivləşdirin"
+      },
+      "messages": {
+        "durationTooShort": "Proksinin arxa plan xidmətinin müddəti 1 saniyədən az ola bilməz",
+        "invalidBypass": "Proksi istisnalarının formatı yanlışdır",
+        "invalidProxyHost": "Proksi qovşağının formatı yanlışdır"
+      },
+      "actions": {
+        "editPac": "PAC skriptini redaktə et"
+      }
+    },
+    "tun": {
+      "title": "TUN rejimi",
+      "fields": {
+        "stack": "TUN protokol yığını",
+        "device": "Cihaz adı",
+        "autoRoute": "Avtomatik marşrutlaşdırma",
+        "routeExcludeAddress": "Marşrutlaşdırmadan istisna edilən ünvan",
+        "strictRoute": "Sərt marşrutlaşdırma",
+        "autoDetectInterface": "İnterfeysin avtomatik aşkarlanması",
+        "dnsHijack": "DNS sorğularının ələ keçirilməsi",
+        "mtu": "Maksimum ötürmə vahidi",
+        "autoRedirect": "Avtomatik yönləndirmə"
+      },
+      "tooltips": {
+        "dnsHijack": "Birdən çox DNS serverini ayırmaq üçün vergüldən istifadə edin",
+        "autoRedirect": "nftables/iptables TCP yönləndirmələrini avtomatik qurur"
+      },
+      "messages": {
+        "applied": "Parametrlər tətbiq edildi",
+        "invalidRouteExcludeAddress": "Etibarlı CIDR bloku daxil edin",
+        "routeExcludeAddressHint": "Yalnız IPv4/IPv6 CIDR dəstəklənir, məsələn, 192.168.0.0/16 və ya fd00::/8"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS parametrlərinin əvəzlənməsi",
+        "warning": "Bu parametrlərlə tanış deyilsinizsə, onları dəyişdirməyin və DNS parametrlərinin əvəzlənməsini söndürülmüş saxlayın"
+      },
+      "protection": {
+        "title": "DNS parametrlərinin əvəzlənməsi aktivləşdirilsin?",
+        "message": "Bu abunəlikdə fərdi DNS parametrləri var. DNS parametrlərinin əvəzlənməsi onları dəyişərək qovşaqların əlaqə qurmasına və ya bəzi saytların yüklənməsinə mane ola bilər. Yenə də aktivləşdirilsin?",
+        "enableAnyway": "Yenə də aktivləşdir",
+        "keepDisabled": "Söndürülmüş saxla",
+        "autoDisabled": "Cari abunəlikdəki fərdi DNS parametrlərini qorumaq üçün DNS parametrlərinin əvəzlənməsi söndürüldü."
+      },
+      "sections": {
+        "general": "DNS parametrləri",
+        "fallbackFilter": "Ehtiyat server süzgəcinin parametrləri",
+        "hosts": "Qovşaq parametrləri"
+      },
+      "fields": {
+        "enable": "DNS xidmətinin aktivləşdirilməsi",
+        "listen": "DNS dinləmə ünvanı",
+        "enhancedMode": "Təkmilləşdirilmiş rejim",
+        "fakeIpRange": "Saxta IP aralığı",
+        "fakeIpRange6": "Saxta IP aralığı (IPv6)",
+        "fakeIpFilterMode": "Saxta IP süzgəcinin rejimi",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "IPv6 üçün DNS həllini aktivləşdirin"
+        },
+        "preferH3": {
+          "label": "H3 üstünlüyü",
+          "description": "DNS DOH sorğularında HTTP/3 istifadə olunur"
+        },
+        "respectRules": {
+          "label": "Qaydalara riayət",
+          "description": "DNS əlaqələri marşrutlaşdırma qaydalarına riayət edir"
+        },
+        "useHosts": {
+          "label": "Qovşaq adları faylından istifadə",
+          "description": "Qovşaqların IP ünvanlarını qovşaq adları faylı vasitəsilə müəyyən etmək üçün aktivləşdirin"
+        },
+        "useSystemHosts": {
+          "label": "Sistemin qovşaq adları faylından istifadə",
+          "description": "Qovşaqların IP ünvanlarını sistemin qovşaq adları faylı vasitəsilə müəyyən etmək üçün aktivləşdirin"
+        },
+        "directPolicy": {
+          "label": "Birbaşa ad serverinin siyasətə riayəti",
+          "description": "Ad serveri siyasətinə riayət edilib-edilməməsi"
+        },
+        "defaultNameserver": {
+          "label": "Standart ad serveri",
+          "description": "DNS serverlərinin ünvanlarını həll etmək üçün istifadə olunan standart DNS serverləri"
+        },
+        "nameserver": {
+          "label": "Ad serveri",
+          "description": "Vergüllə ayrılmış DNS serverlərinin siyahısı"
+        },
+        "fallback": {
+          "label": "Ehtiyat serverlər",
+          "description": "Vergüllə ayrılmış ehtiyat DNS serverlərinin siyahısı"
+        },
+        "proxy": {
+          "label": "Proksi serveri üçün ad serveri",
+          "description": "Proksi qovşaqlarının domenlərini həll etmək üçün DNS serverləri"
+        },
+        "directNameserver": {
+          "label": "Birbaşa ad serveri",
+          "description": "Birbaşa çıxış üçün domenləri həll edən DNS serverləri, 'system' açar sözünü dəstəkləyir, vergüllə ayrılır"
+        },
+        "fakeIpFilter": {
+          "label": "Saxta IP süzgəci",
+          "description": "Saxta IP ünvanı təyin edilməyən domenlər, vergüllə ayrılır"
+        },
+        "nameserverPolicy": {
+          "label": "Ad serveri siyasəti",
+          "description": "Domenə məxsus DNS serveri, bir neçə server nöqtəli vergüllə ayrılır, format: domen=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP süzgəci",
+          "description": "Ehtiyat serverlər üçün GeoIP süzgəcini aktivləşdirin"
+        },
+        "geoipCode": "GeoIP kodu",
+        "fallbackIpCidr": {
+          "label": "Ehtiyat serverlər üçün IP CIDR",
+          "description": "Ehtiyat serverlərdən istifadə etməyən IP CIDR blokları, vergüllə ayrılır"
+        },
+        "fallbackDomain": {
+          "label": "Ehtiyat server domeni",
+          "description": "Ehtiyat serverlərdən istifadə edən domenlər, vergüllə ayrılır"
+        },
+        "hosts": {
+          "label": "Qovşaqlar",
+          "description": "Domenin IP ünvanına və ya başqa domenə fərdi uyğunlaşdırılması"
+        }
+      },
+      "messages": {
+        "saved": "DNS parametrləri yadda saxlanıldı",
+        "configError": "DNS konfiqurasiya xətası:"
+      },
+      "errors": {
+        "invalid": "Yanlış konfiqurasiya",
+        "invalidYaml": "Yanlış YAML formatı"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URL ünvanını aç"
+      },
+      "title": "Veb interfeysi",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secret dəstəklənir",
+        "placeholderInstruction": "Qovşağı, portu və məxfi açarı müvafiq olaraq %host, %port, %secret ilə əvəz edin"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Nüvənin əlaqə məlumatları əlçatan deyil",
+        "invalidServer": "Nüvə serverinin \"{{server}}\" ünvanı yanlışdır",
+        "openFailed": "Veb interfeysini açmaq mümkün olmadı"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Qlobal qısayolun aktivləşdirilməsi"
+      },
+      "title": "Qısayol parametrləri",
+      "functions": {
+        "rule": "Qayda rejimi",
+        "global": "Qlobal rejim",
+        "openOrCloseDashboard": "İdarəetmə panelini aç/bağla",
+        "toggleSystemProxy": "Sistem proksisini aktivləşdir/söndür",
+        "toggleTunMode": "TUN rejimini aktivləşdir/söndür",
+        "entryLightweightMode": "Yüngül rejimə keç",
+        "direct": "Birbaşa rejim",
+        "reactivateProfiles": "Profilləri yenidən aktivləşdir"
+      }
+    },
+    "networkInterface": {
+      "title": "Şəbəkə interfeysi",
+      "fields": {
+        "ipAddress": "IP ünvanı",
+        "macAddress": "MAC ünvanı"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Nüvə konfiqurasiyasını yeniləmək mümkün olmadı",
+        "modeUpdateFailed": "Proksi rejimini dəyişmək mümkün olmadı",
+        "restartFailed": "Nüvəni yenidən başlatmaq mümkün olmadı",
+        "startFailed": "Nüvəni başlatmaq mümkün olmadı",
+        "stopFailed": "Nüvəni dayandırmaq mümkün olmadı"
+      },
+      "clashService": {
+        "installFailed": "Xidməti quraşdırmaq mümkün olmadı",
+        "uninstallFailed": "Xidməti silmək mümkün olmadı",
+        "reinstallFailed": "Xidməti yenidən quraşdırmaq mümkün olmadı",
+        "repairFailed": "Xidməti bərpa etmək mümkün olmadı",
+        "sidecarFailed": "Köməkçi proseslə davam etmək mümkün olmadı"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Sistem proksisini təyin etmək mümkün deyil: macOS səlahiyyət çatışmazlığı səbəbindən dəyişikliyi rədd etdi. Clash Verge xidmətini quraşdırın; inzibatçı həmçinin Sistem parametrləri → Məxfilik və təhlükəsizlik bölməsinin genişləndirilmiş seçimlərində bütün sistem üzrə parametrlər üçün inzibatçı parolu tələbini söndürə bilər.",
+        "directFallback": "Sistem proksisini təyin etmək mümkün olmadı; trafik yenidən birbaşa əlaqəyə keçirildi.",
+        "guardStopped": "Sistem proksisinin mühafizəsi bir neçə uğursuz cəhddən sonra dayandı. Sistem proksisinin təyin olunmuş vəziyyəti artıq qorunmur.",
+        "sidecarWhileServiceReady": "Clash Verge xidməti hazır olsa da, nüvə hələ də köməkçi proses kimi işlədiyi üçün sistem proksisini təyin etmək mümkün olmadı. Xidmət rejiminə keçmək üçün nüvəni yenidən başladın.",
+        "coreNotReady": "Nüvə işləmədiyi üçün sistem proksisini aktivləşdirmək mümkün olmadı. Nüvəni başladın (və ya Clash Verge xidmətini quraşdırın/bərpa edin) və yenidən cəhd edin.",
+        "systemCallFailed": "Windows sistem çağırışı uğursuz olduğu üçün sistem proksisinin parametrlərini tətbiq etmək mümkün olmadı. Bu hal adətən müvəqqəti olur, yenidən cəhd edin."
+      }
+    },
+    "notifications": {
+      "clash": {
+        "restartSuccess": "Clash nüvəsi yenidən başladıldı",
+        "versionUpdated": "Nüvə versiyası yeniləndi",
+        "alreadyLatestVersion": "Artıq ən son nüvə versiyasından istifadə olunur",
+        "changeSuccess": "Nüvə uğurla dəyişdirildi",
+        "changeFailed": "Nüvəni dəyişmək mümkün olmadı",
+        "geoDataUpdated": "Coğrafi məlumatlar yeniləndi"
+      },
+      "clashService": {
+        "installSuccess": "Xidmət uğurla quraşdırıldı",
+        "uninstallSuccess": "Xidmət uğurla silindi"
+      },
+      "updater": {
+        "withClashProxySuccess": "Clash proksisi ilə yeniləmə uğurla tamamlandı",
+        "withClashProxyFailed": "Clash proksisi ilə də yeniləmək mümkün olmadı"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "Nüvə dayandırılır...",
+      "restarting": "Nüvə yenidən başladılır..."
+    },
+    "clashService": {
+      "installing": "Xidmət quraşdırılır...",
+      "uninstalling": "Xidmət silinir..."
+    }
+  }
+}
