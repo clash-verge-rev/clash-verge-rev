@@ -195,5 +195,6 @@ struct RoutingView: View {
         .environment(\.layoutDirection, rtl ? .rightToLeft : .leftToRight)
         .transaction { $0.animation = nil }
         .buttonStyle(.plain)
+        .widgetURL(URL(string: "clash-verge://show"))
     }
 }

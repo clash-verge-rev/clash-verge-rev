@@ -8,6 +8,8 @@ use crate::{
     core::{CoreManager, handle, timer::Timer},
     utils::help,
 };
+#[cfg(target_os = "macos")]
+use crate::{module::lightweight, utils::window_manager::WindowManager};
 use clash_verge_logging::{Type, logging, logging_error};
 
 pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
@@ -24,6 +26,19 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
 
     let link_parsed = Url::parse(param_str)
         .map_err(|e| anyhow::anyhow!("failed to parse deep link: {e:?}, param: {masked_deep_link}"))?;
+
+    // Dedicated "raise the window" route (clash-verge://show) for surfaces that
+    // activate a tray-only host without firing the macOS reopen event.
+    #[cfg(target_os = "macos")]
+    if link_parsed.host_str() == Some("show") {
+        if lightweight::is_in_lightweight_mode() {
+            lightweight::exit_lightweight_mode().await;
+        } else {
+            handle::Handle::global().set_activation_policy_regular();
+            WindowManager::show_main_window().await;
+        }
+        return Ok(());
+    }
 
     let Some((url, name)) = extract_subscription_info(&link_parsed) else {
         logging!(
