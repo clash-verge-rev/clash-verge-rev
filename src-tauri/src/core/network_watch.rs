@@ -5,53 +5,35 @@
 
 use crate::{config::Config, core::CoreManager, core::proxy_control, process::AsyncHandler};
 use clash_verge_logging::{Type, logging};
-use core_foundation::{
-    array::CFArray,
-    runloop::{CFRunLoop, kCFRunLoopCommonModes},
-    string::CFString,
-};
-use std::sync::atomic::{AtomicBool, Ordering};
-use system_configuration::dynamic_store::{SCDynamicStore, SCDynamicStoreBuilder, SCDynamicStoreCallBackContext};
+use parking_lot::Mutex;
+use sysproxy::NetworkServiceMonitor;
 
-/// Set once the subscription is live. Startup defers the proxy write to the watcher only then.
-static ARMED: AtomicBool = AtomicBool::new(false);
+static MONITOR: Mutex<Option<NetworkServiceMonitor>> = Mutex::new(None);
 
 pub fn is_armed() -> bool {
-    ARMED.load(Ordering::Acquire)
+    MONITOR.lock().is_some()
 }
 
 /// Subscribe to the primary IPv4 service on the main run loop. Armed on return, so a service
 /// appearing from here on is never missed.
 pub fn start() {
-    let store = SCDynamicStoreBuilder::new("clash-verge-rev")
-        .callback_context(SCDynamicStoreCallBackContext {
-            callout: on_change,
-            info: (),
-        })
-        .build();
-    let keys = CFArray::from_CFTypes(&[CFString::from_static_string("State:/Network/Global/IPv4")]);
-    let Some(source) = store
-        .filter(|store| store.set_notification_keys(&keys, &CFArray::<CFString>::from_CFTypes(&[])))
-        .and_then(|store| store.create_run_loop_source())
-    else {
-        logging!(
+    match NetworkServiceMonitor::start(|| {
+        AsyncHandler::spawn(reapply);
+    }) {
+        Ok(monitor) => {
+            *MONITOR.lock() = Some(monitor);
+            logging!(
+                debug,
+                Type::Core,
+                "network watch armed; the system proxy is re-applied on network changes"
+            );
+        }
+        Err(error) => logging!(
             warn,
             Type::Core,
-            "could not watch the network; the proxy is not re-applied on changes"
-        );
-        return;
-    };
-    CFRunLoop::get_main().add_source(&source, unsafe { kCFRunLoopCommonModes });
-    ARMED.store(true, Ordering::Release);
-    logging!(
-        debug,
-        Type::Core,
-        "network watch armed; the system proxy is re-applied on network changes"
-    );
-}
-
-fn on_change(_: SCDynamicStore, _: CFArray<CFString>, (): &mut ()) {
-    AsyncHandler::spawn(reapply);
+            "could not watch the network; the proxy is not re-applied on changes: {error}"
+        ),
+    }
 }
 
 async fn reapply() {
@@ -66,8 +48,15 @@ async fn reapply() {
         .latest_arc()
         .enable_system_proxy
         .unwrap_or_default()
-        || !proxy_control::has_network_service().await
     {
+        return;
+    }
+    if !proxy_control::has_network_service().await {
+        logging!(
+            debug,
+            Type::Core,
+            "network changed without a service to write the proxy on; waiting for the next change"
+        );
         return;
     }
     if let Err(error) = manager.apply_proxy_after_start().await {

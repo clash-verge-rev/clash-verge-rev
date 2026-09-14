@@ -1140,7 +1140,6 @@ dependencies = [
  "clash-verge-media-unlock",
  "clash-verge-signal",
  "clash_verge_service_ipc",
- "core-foundation 0.9.4",
  "criterion",
  "dark-light",
  "deelevate",
@@ -1175,7 +1174,6 @@ dependencies = [
  "smartstring",
  "socket2 0.6.5",
  "sysproxy",
- "system-configuration",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
@@ -7015,8 +7013,8 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.7.0"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#61118cab4878ce66b8cb12b467b682b493f20e6c"
+version = "0.7.1"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#44aaf00ec9c6779e5a461a55d882eddff7841c98"
 dependencies = [
  "iptools",
  "log",
