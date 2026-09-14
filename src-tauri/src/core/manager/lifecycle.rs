@@ -476,10 +476,7 @@ impl CoreManager {
         // rather than fail — only if the watcher is actually live; a user toggling while
         // offline still fails fast.
         #[cfg(target_os = "macos")]
-        let watcher_armed = crate::core::network_watch::is_armed();
-        #[cfg(not(target_os = "macos"))]
-        let watcher_armed = false;
-        if watcher_armed
+        if crate::core::network_watch::is_armed()
             && !crate::utils::resolve::is_resolve_done()
             && Config::verge()
                 .await

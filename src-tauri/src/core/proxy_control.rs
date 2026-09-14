@@ -385,12 +385,11 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
 }
 
 /// Whether macOS has a network service to write the proxy on right now.
+#[cfg(target_os = "macos")]
 pub async fn has_network_service() -> bool {
-    tokio::task::spawn_blocking(
-        || !matches!(sysproxy::Sysproxy::get_system_proxy(), Err(error) if is_missing_network_service(&error)),
-    )
-    .await
-    .unwrap_or(true)
+    tokio::task::spawn_blocking(|| sysproxy::Sysproxy::has_network_service().unwrap_or(true))
+        .await
+        .unwrap_or(true)
 }
 
 pub fn is_reportable(error: &anyhow::Error) -> bool {
