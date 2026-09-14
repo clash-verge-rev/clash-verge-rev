@@ -73,7 +73,7 @@ private struct RoutingStylePreview: View {
         case "light": Color(white: 0.92)
         case "dark": Color(white: 0.1)
         case "pattern":
-            Canvas { context, size in
+            Canvas { context, _ in
                 for row in 0..<8 {
                     for column in 0..<14 {
                         let rect = CGRect(x: CGFloat(column) * 32, y: CGFloat(row) * 32, width: 32, height: 32)
@@ -90,9 +90,15 @@ private struct RoutingStylePreview: View {
         VStack(spacing: 12) {
             ZStack {
                 background
-                RoutingView(entry: Entry(date: .now, status: sample), previewFamily: medium ? .systemMedium : .systemSmall,
-                            previewRenderingMode: renderingOverride, previewMaterial: material, previewIncreaseContrast: increaseContrast,
-                            previewReduceMotion: reduceMotion, previewReduceTransparency: reduceTransparency)
+                RoutingView(
+                    entry: Entry(date: .now, status: sample),
+                    previewFamily: medium ? .systemMedium : .systemSmall,
+                    previewRenderingMode: renderingOverride,
+                    previewMaterial: material,
+                    previewIncreaseContrast: increaseContrast,
+                    previewReduceMotion: reduceMotion,
+                    previewReduceTransparency: reduceTransparency
+                )
                     .environment(\.colorScheme, dark ? .dark : .light)
                     .allowsHitTesting(false)
             }
@@ -162,8 +168,11 @@ private struct RoutingStylePreview: View {
                     }
                     Toggle("Reduce transparency", isOn: $reduceTransparency)
                     Toggle("Reduce motion", isOn: $reduceMotion)
-                    Text("Style only. Controls change sample data; no proxy requests. Desktop WidgetKit compositing is not simulated.")
-                        .font(.caption).foregroundStyle(.secondary)
+                    Text(
+                        "Style only. Controls change sample data; no proxy requests. "
+                            + "Desktop WidgetKit compositing is not simulated."
+                    )
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(4)
             }
@@ -187,6 +196,9 @@ private struct RoutingStylePreview: View {
 }
 
 #Preview("中文 · Unknown · Offline") {
-    RoutingStylePreview(medium: true, dark: true, language: "zh", mode: "unknown", tun: "unknown", proxy: "unknown", error: "unavailable")
+    RoutingStylePreview(
+        medium: true, dark: true, language: "zh", mode: "unknown",
+        tun: "unknown", proxy: "unknown", error: "unavailable"
+    )
 }
 #endif

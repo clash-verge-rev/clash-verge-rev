@@ -6,14 +6,14 @@ struct RoutingView: View {
     let entry: Entry
     @Environment(\.widgetFamily) private var widgetFamily
     #if DEBUG
-    var previewFamily: WidgetFamily? = nil
+    var previewFamily: WidgetFamily?
     private var family: WidgetFamily { previewFamily ?? widgetFamily }
     #else
     private var family: WidgetFamily { widgetFamily }
     #endif
     @Environment(\.widgetRenderingMode) private var systemRenderingMode
     #if DEBUG
-    var previewRenderingMode: WidgetRenderingMode? = nil
+    var previewRenderingMode: WidgetRenderingMode?
     var previewMaterial = "automatic"
     var previewIncreaseContrast = false
     private var renderingMode: WidgetRenderingMode { previewRenderingMode ?? systemRenderingMode }
@@ -24,8 +24,8 @@ struct RoutingView: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityReduceTransparency) private var systemReduceTransparency
     #if DEBUG
-    var previewReduceMotion: Bool? = nil
-    var previewReduceTransparency: Bool? = nil
+    var previewReduceMotion: Bool?
+    var previewReduceTransparency: Bool?
     private var reduceMotion: Bool { previewReduceMotion ?? systemReduceMotion }
     private var reduceTransparency: Bool { previewReduceTransparency ?? systemReduceTransparency }
     #else
@@ -65,7 +65,9 @@ struct RoutingView: View {
         return colorScheme == .dark ? .black : .white
     }
     private var locale: Locale {
-        Locale(identifier: entry.status.language.map { ["jp": "ja", "zh": "zh-Hans", "zhtw": "zh-Hant"][$0] ?? $0 } ?? Locale.current.identifier)
+        let aliases = ["jp": "ja", "zh": "zh-Hans", "zhtw": "zh-Hant"]
+        let identifier = entry.status.language.map { aliases[$0] ?? $0 } ?? Locale.current.identifier
+        return Locale(identifier: identifier)
     }
     private var rtl: Bool { locale.language.characterDirection == .rightToLeft }
 
@@ -155,7 +157,10 @@ struct RoutingView: View {
                         ForEach(orderedModes, id: \.self) { mode in
                             let selected = entry.status.mode == mode
                             let label = Text(text("tray." + mode))
-                                .font(.system(size: family == .systemSmall ? 12 : 13, weight: selected ? .semibold : .regular))
+                                .font(.system(
+                                    size: family == .systemSmall ? 12 : 13,
+                                    weight: selected ? .semibold : .regular
+                                ))
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 30)
@@ -177,7 +182,10 @@ struct RoutingView: View {
             .frame(height: 30)
             HStack(spacing: 8) {
                 control(text("tray.tooltip.tun"), action: "tun", value: entry.status.tun, icon: "network")
-                control(text("tray.systemProxy"), action: "proxy", value: entry.status.proxy, icon: "shield.lefthalf.filled")
+                control(
+                    text("tray.systemProxy"), action: "proxy",
+                    value: entry.status.proxy, icon: "shield.lefthalf.filled"
+                )
             }
             if let error = entry.status.error {
                 Text(text(error)).font(.caption2).foregroundStyle(ink.opacity(0.8)).lineLimit(2)

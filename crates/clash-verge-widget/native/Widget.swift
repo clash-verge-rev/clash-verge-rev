@@ -46,7 +46,8 @@ struct Provider: TimelineProvider {
             let status = exchange()
             let now = Date()
             let unavailable = status.mode == nil || status.tun == nil || status.proxy == nil
-            completion(Timeline(entries: [Entry(date: now, status: status)], policy: .after(now.addingTimeInterval(unavailable ? 60 : 900))))
+            let refresh = now.addingTimeInterval(unavailable ? 60 : 900)
+            completion(Timeline(entries: [Entry(date: now, status: status)], policy: .after(refresh)))
         }
     }
 }
