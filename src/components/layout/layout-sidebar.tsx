@@ -1,5 +1,5 @@
 import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit/react'
-import { Box, List, Menu, MenuItem, SvgIcon } from '@mui/material'
+import { Box, List, SvgIcon } from '@mui/material'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -14,6 +14,7 @@ import { SortableItem } from '../base'
 
 import { LayoutItem } from './layout-item'
 import { LayoutTraffic } from './layout-traffic'
+import { SidebarContextMenu } from './sidebar-context-menu'
 import { UpdateButton } from './update-button'
 
 type MenuContextPosition = { top: number; left: number }
@@ -176,46 +177,16 @@ export const LayoutSidebar = (props: LayoutSidebarProps) => {
       </List>
 
       {/* Context menu */}
-      <Menu
-        open={Boolean(menuContextPosition)}
+      <SidebarContextMenu
+        position={menuContextPosition}
         onClose={handleMenuContextClose}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          menuContextPosition
-            ? {
-                top: menuContextPosition.top,
-                left: menuContextPosition.left,
-              }
-            : undefined
-        }
-        transitionDuration={200}
-        slotProps={{
-          list: {
-            sx: { py: 0.5 },
-          },
-        }}
-      >
-        <MenuItem onClick={handleToggleNavCollapsed} dense>
-          {isCollapsed
-            ? t('layout.components.navigation.menu.expandNavBar')
-            : t('layout.components.navigation.menu.collapseNavBar')}
-        </MenuItem>
-        <MenuItem
-          onClick={menuUnlocked ? handleLockMenu : handleUnlockMenu}
-          dense
-        >
-          {menuUnlocked
-            ? t('layout.components.navigation.menu.lock')
-            : t('layout.components.navigation.menu.unlock')}
-        </MenuItem>
-        <MenuItem
-          onClick={handleResetMenuOrder}
-          dense
-          disabled={isDefaultOrder}
-        >
-          {t('layout.components.navigation.menu.restoreDefaultOrder')}
-        </MenuItem>
-      </Menu>
+        isSidebarCollapsed={isCollapsed}
+        onToggleSidebar={handleToggleNavCollapsed}
+        isMenuOrderUnlocked={menuUnlocked}
+        isMenuOrderDefault={isDefaultOrder}
+        onToggleMenuLock={menuUnlocked ? handleLockMenu : handleUnlockMenu}
+        onResetMenuOrder={handleResetMenuOrder}
+      />
 
       {/* Traffic */}
       <div className="the-traffic">
