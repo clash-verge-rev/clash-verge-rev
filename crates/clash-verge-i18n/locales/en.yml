@@ -91,3 +91,14 @@ tray:
     systemProxy: System Proxy
     tun: TUN
     profile: Profile
+widget:
+  unavailable: Open Clash Verge
+  failed: Update failed; check Clash Verge
+  'on': 'On'
+  'off': 'Off'
+  unknown: Unknown
+  name: Clash Verge Routing
+  description: Routing mode, TUN and system proxy controls.
+  update: Update Clash Verge
+  setting: Setting
+  value: Value

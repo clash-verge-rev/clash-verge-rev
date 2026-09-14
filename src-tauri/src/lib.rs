@@ -341,6 +341,8 @@ pub fn run() -> std::process::ExitCode {
 
             logging!(info, Type::System, "应用就绪");
             crate::utils::server::set_commands_ready();
+            #[cfg(target_os = "macos")]
+            crate::core::widget::start();
 
             #[cfg(target_os = "macos")]
             if let Some(window) = _app_handle.get_webview_window("main") {

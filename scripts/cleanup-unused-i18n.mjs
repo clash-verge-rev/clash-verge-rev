@@ -49,7 +49,7 @@ const FRONTEND_EXTENSIONS = new Set([
   '.vue',
   '.json',
 ])
-const BACKEND_EXTENSIONS = new Set(['.rs'])
+const BACKEND_EXTENSIONS = new Set(['.rs', '.swift'])
 
 const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'])
 

@@ -91,3 +91,14 @@ tray:
     systemProxy: پروکسی سیستم
     tun: TUN
     profile: پروفایل
+widget:
+  unavailable: Clash Verge را باز کنید
+  failed: به‌روزرسانی ناموفق بود؛ Clash Verge را بررسی کنید
+  'on': روشن
+  'off': خاموش
+  unknown: نامشخص
+  name: مسیریابی Clash Verge
+  description: کنترل حالت مسیریابی، TUN و پراکسی سیستم.
+  update: به‌روزرسانی Clash Verge
+  setting: تنظیم
+  value: مقدار

@@ -91,3 +91,14 @@ tray:
     systemProxy: Системный прокси
     tun: TUN
     profile: Профиль
+widget:
+  unavailable: Откройте Clash Verge
+  failed: Ошибка обновления; проверьте Clash Verge
+  'on': Вкл.
+  'off': Выкл.
+  unknown: Неизвестно
+  name: Маршрутизация Clash Verge
+  description: Управление режимом маршрутизации, TUN и системным прокси.
+  update: Обновить Clash Verge
+  setting: Настройка
+  value: Значение

@@ -91,3 +91,14 @@ tray:
     systemProxy: 系统代理
     tun: TUN
     profile: 订阅
+widget:
+  unavailable: 请打开 Clash Verge
+  failed: 更新失败，请检查 Clash Verge
+  'on': 开启
+  'off': 关闭
+  unknown: 未知
+  name: Clash Verge 路由
+  description: 路由模式、TUN 和系统代理控制。
+  update: 更新 Clash Verge
+  setting: 设置
+  value: 值

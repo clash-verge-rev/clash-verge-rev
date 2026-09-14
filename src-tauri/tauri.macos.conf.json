@@ -2,14 +2,20 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "productName": "Clash Verge",
+  "build": {
+    "beforeBundleCommand": "node crates/clash-verge-widget/build/bundle.mjs"
+  },
   "bundle": {
     "targets": ["app", "dmg"],
     "macOS": {
-      "frameworks": [],
+      "frameworks": ["generated/widget/VergeWidgetBridge.dylib"],
+      "files": {
+        "PlugIns/VergeWidget.appex": "generated/widget/VergeWidget.appex"
+      },
       "minimumSystemVersion": "11.0",
       "exceptionDomain": "",
       "signingIdentity": null,
-      "entitlements": "packages/macos/entitlements.plist",
+      "entitlements": "generated/widget/Host.entitlements",
       "dmg": {
         "background": "images/background.png",
         "appPosition": {
@@ -29,7 +35,7 @@
           "y": 180
         }
       },
-      "infoPlist": "packages/macos/info_merge.plist"
+      "infoPlist": "generated/widget/Host.plist"
     }
   }
 }

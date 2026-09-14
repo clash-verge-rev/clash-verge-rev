@@ -43,6 +43,7 @@ export default defineConfig([
             'eslint.config.ts',
             `vite.config.mts`,
             'scripts/*.mjs',
+            'crates/clash-verge-widget/build/*.mjs',
             'tests/*.ts',
             'src/polyfills/*.js',
             'tests/*.mjs',
@@ -143,7 +144,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/*.mjs'],
+    files: ['scripts/*.mjs', 'crates/clash-verge-widget/build/*.mjs'],
 
     languageOptions: {
       globals: {

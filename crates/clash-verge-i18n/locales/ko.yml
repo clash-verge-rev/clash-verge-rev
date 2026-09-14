@@ -91,3 +91,14 @@ tray:
     systemProxy: 시스템 프록시
     tun: TUN
     profile: 프로필
+widget:
+  unavailable: Clash Verge를 여세요
+  failed: 업데이트 실패. Clash Verge를 확인하세요
+  'on': 켜짐
+  'off': 꺼짐
+  unknown: 알 수 없음
+  name: Clash Verge 라우팅
+  description: 라우팅 모드, TUN 및 시스템 프록시 제어.
+  update: Clash Verge 업데이트
+  setting: 설정
+  value: 값
