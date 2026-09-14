@@ -2,7 +2,10 @@ enablePrePostScripts: false
 allowBuilds:
   "@parcel/watcher": true
   core-js: true
+  edgedriver: false
   es5-ext: true
+  esbuild: true
+  geckodriver: false
   meta-json-schema: true
   unrs-resolver: true
 minimumReleaseAgeExclude:

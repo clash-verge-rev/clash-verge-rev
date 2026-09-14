@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger::Logger, proxy_control, tray},
+    core::{CoreManager, autostart, handle, hotkey, logger, proxy_control, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -25,7 +25,6 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
             if patch.get("mode").is_some() {
                 tray::Tray::global().update_menu_and_icon().await;
             }
-            Config::runtime().await.edit_draft(|d| d.patch_config(patch));
             CoreManager::global().update_config_checked().await?;
         }
         handle::Handle::refresh_clash();
@@ -267,12 +266,12 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         }
     }
     if update_flags.contains(UpdateFlags::LOG_LEVEL) {
-        Logger::global().update_log_level(patch.get_log_level())?;
+        logger::Logger::global().update_log_level(patch.get_log_level())?;
     }
     if update_flags.contains(UpdateFlags::LOG_FILE) {
         let log_max_size = patch.app_log_max_size.unwrap_or(128);
         let log_max_count = patch.app_log_max_count.unwrap_or(8);
-        Logger::global().update_log_config(log_max_size, log_max_count).await?;
+        logger::update_log_config(log_max_size, log_max_count).await?;
     }
     Ok(())
 }
@@ -317,7 +316,6 @@ pub(super) async fn apply_verge_patch_locked(
     if !not_save_file {
         // 分离数据获取和异步调用
         let verge_data = verge.data_arc();
-        logging!(debug, Type::Setup, "Saving Verge configuration to file...");
         verge_data.save_file().await?;
     }
     Ok(())

@@ -14,7 +14,7 @@
     "duplicates",
     "cycles"
   ],
-  "ignoreBinaries": ["rustc"],
+  "ignoreBinaries": ["rustc", "cc"],
   "ignoreDependencies": ["lint-staged"],
   "ignoreIssues": {
     "src/types/generated/**": ["exports", "types"]

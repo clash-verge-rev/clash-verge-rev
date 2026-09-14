@@ -25,6 +25,7 @@ import type { HeadState } from './use-head-state'
 
 interface Props {
   sx?: SxProps
+  side?: 'left' | 'right'
   url?: string
   groupName: string
   headState: HeadState
@@ -36,6 +37,7 @@ interface Props {
 export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   const {
     sx,
+    side = 'right',
     url,
     groupName,
     headState,
@@ -88,19 +90,8 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   }, [textState, flushFilter])
   useEffect(() => () => flushFilter(), [flushFilter])
 
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'end',
-        alignItems: 'center',
-        gap: 0.5,
-        height: 36,
-        flex: 1,
-        ml: 2,
-        ...sx,
-      }}
-    >
+  const textInput = (
+    <>
       {textState === 'filter' && (
         <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
@@ -136,6 +127,23 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
+    </>
+  )
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: side === 'left' ? 'start' : 'end',
+        alignItems: 'center',
+        gap: 0.5,
+        height: 36,
+        flex: 1,
+        ml: side === 'left' ? 0 : 2,
+        ...sx,
+      }}
+    >
+      {side === 'right' && textInput}
       <IconButton
         size="small"
         color="inherit"
@@ -262,6 +270,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           <SearchRounded fontSize="inherit" />
         )}
       </IconButton>
+      {side === 'left' && textInput}
     </Box>
   )
 })

@@ -4,8 +4,7 @@ mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
-use clash_verge_logger::AsyncLogger;
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{LogRing, Type, logging};
 use once_cell::sync::Lazy;
 use std::{
     fmt,
@@ -22,7 +21,7 @@ use crate::singleton;
 #[cfg(target_os = "windows")]
 use std::os::windows::io::OwnedHandle;
 
-pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
+pub(crate) static CLASH_LOGGER: Lazy<Arc<LogRing>> = Lazy::new(|| Arc::new(LogRing::new()));
 
 tokio::task_local! {
     static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
@@ -161,6 +160,10 @@ impl CoreManager {
     /// Run State derives PAC availability and the outward mode mirror from this; callers must
     /// not set those alongside.
     pub fn core_started(&self, mode: RunningMode) {
+        let previous = *self.get_running_mode();
+        if previous != mode {
+            logging!(info, Type::Core, "Core running mode changed: {previous} -> {mode}");
+        }
         self.run_state.core_started(mode);
     }
 
@@ -169,6 +172,10 @@ impl CoreManager {
     /// Core readiness is invalidated here rather than inside Run State because readiness
     /// belongs to the process this manager supervises.
     pub fn core_stopped(&self) {
+        let previous = *self.get_running_mode();
+        if !matches!(previous, RunningMode::NotRunning) {
+            logging!(info, Type::Core, "Core running mode changed: {previous} -> NotRunning");
+        }
         self.invalidate_core_readiness();
         self.run_state.core_stopped();
     }
@@ -244,6 +251,7 @@ impl CoreManager {
         self.config_update_in_progress.store(false, Ordering::Release);
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]
     pub async fn init(&self) -> Result<bool> {
         const MAX_PORT_FALLBACK_RETRIES: usize = 3;
 
@@ -266,10 +274,11 @@ impl CoreManager {
                     match crate::config::Config::resolve_startup_mixed_port().await {
                         Ok(true) => {
                             retries += 1;
+                            tracing::Span::current().record("retries", retries);
                             logging!(
                                 warn,
                                 Type::Core,
-                                "Retrying core startup after mixed proxy port fallback ({}/{})",
+                                "Retrying core startup after mixed proxy port fallback ({}/{}): {start_error:#}",
                                 retries,
                                 MAX_PORT_FALLBACK_RETRIES
                             );

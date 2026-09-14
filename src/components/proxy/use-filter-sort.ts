@@ -91,21 +91,22 @@ function sortProxies(
   if (!proxies) return []
   if (sortType === 0) return proxies
 
-  const list = proxies.slice()
   const effectiveTimeout =
     typeof latencyTimeout === 'number' && latencyTimeout > 0
       ? latencyTimeout
       : DEFAULT_DELAY_TIMEOUT
 
-  if (sortType === 1) {
-    list.sort((a, b) =>
-      compareByDelay(
-        delayManager.getDelayFix(a.member, groupName),
-        delayManager.getDelayFix(b.member, groupName),
-        effectiveTimeout,
-      ),
-    )
-  } else {
+  if (sortType === 1 && proxies.length > 1) {
+    return proxies
+      .map((proxy) => ({
+        proxy,
+        delay: delayManager.getDelayFix(proxy.member, groupName),
+      }))
+      .sort((a, b) => compareByDelay(a.delay, b.delay, effectiveTimeout))
+      .map(({ proxy }) => proxy)
+  }
+  const list = proxies.slice()
+  if (sortType !== 1) {
     list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
   }
 

@@ -8,7 +8,7 @@ use crate::{
         CoreManager, Timer,
         handle::Handle,
         hotkey::Hotkey,
-        logger::Logger,
+        logger,
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
@@ -31,7 +31,7 @@ pub(crate) fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
         logging!(info, Type::Setup, "Initializing logger");
-        Logger::global().init().await?;
+        logger::init().await?;
         Ok(())
     })
 }
@@ -46,50 +46,53 @@ pub(crate) fn resolve_setup_sync() {
 }
 
 pub(crate) fn resolve_setup_async() {
-    AsyncHandler::spawn(|| async {
-        logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
+    AsyncHandler::spawn(resolve_setup);
+}
 
-        // Migrate before windows or timers can change the loaded config.
-        logging_error!(Type::Setup, init::migrate_short_update_intervals().await);
+#[tracing::instrument(skip_all, level = "info")]
+async fn resolve_setup() {
+    logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
-        #[cfg(target_os = "macos")]
-        resolve_dock_show().await;
-        init_startup_script().await;
-        init_service_manager().await;
-        let config_initialized = init_verge_config_before_window().await;
-        init_window().await;
-        feat::reconcile_startup_tun_availability().await;
-        init_resources().await;
-        if let Err(e) = init::init_dns_config().await {
-            logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
-        }
-        if config_initialized {
-            init_verge_config().await;
-        }
-        Config::verify_config_initialization().await;
+    // Migrate before windows or timers can change the loaded config.
+    logging_error!(Type::Setup, init::migrate_short_update_intervals().await);
 
-        // Live before the core starts, so a service appearing mid-start is not missed.
-        #[cfg(target_os = "macos")]
-        crate::core::network_watch::start();
+    #[cfg(target_os = "macos")]
+    resolve_dock_show().await;
+    init_startup_script().await;
+    init_service_manager().await;
+    let config_initialized = init_verge_config_before_window().await;
+    init_window().await;
+    feat::reconcile_startup_tun_availability().await;
+    init_resources().await;
+    if let Err(e) = init::init_dns_config().await {
+        logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
+    }
+    if config_initialized {
+        init_verge_config().await;
+    }
+    Config::verify_config_initialization().await;
 
-        let core_init = AsyncHandler::spawn(|| async {
-            init_core_manager().await;
-        });
+    // Live before the core starts, so a service appearing mid-start is not missed.
+    #[cfg(target_os = "macos")]
+    crate::core::network_watch::start();
 
-        let _ = futures::join!(
-            core_init,
-            init_tray(),
-            init_timer(),
-            init_hotkey(),
-            init_auto_lightweight_boot(),
-            init_auto_backup(),
-            init_silent_updater(),
-        );
-
-        Handle::refresh_clash();
-        refresh_tray_menu().await;
-        resolve_done();
+    let core_init = AsyncHandler::spawn(|| async {
+        init_core_manager().await;
     });
+
+    let _ = futures::join!(
+        core_init,
+        init_tray(),
+        init_timer(),
+        init_hotkey(),
+        init_auto_lightweight_boot(),
+        init_auto_backup(),
+        init_silent_updater(),
+    );
+
+    Handle::refresh_clash();
+    refresh_tray_menu().await;
+    resolve_done();
 }
 
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
@@ -165,7 +168,7 @@ async fn init_silent_updater() {
     use crate::core::SilentUpdater;
     use crate::core::handle::Handle;
 
-    logging!(info, Type::Setup, "Initializing silent updater...");
+    logging!(debug, Type::Setup, "Initializing silent updater...");
 
     let app_handle = Handle::app_handle();
 
@@ -184,7 +187,7 @@ async fn init_silent_updater() {
 }
 
 pub(crate) fn init_signal() {
-    logging!(info, Type::Setup, "Initializing signal handlers...");
+    logging!(debug, Type::Setup, "Initializing signal handlers...");
     clash_verge_signal::register(feat::quit);
 }
 

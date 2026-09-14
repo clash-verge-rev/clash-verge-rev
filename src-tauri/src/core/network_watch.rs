@@ -43,6 +43,11 @@ pub fn start() {
     };
     CFRunLoop::get_main().add_source(&source, unsafe { kCFRunLoopCommonModes });
     ARMED.store(true, Ordering::Release);
+    logging!(
+        debug,
+        Type::Core,
+        "network watch armed; the system proxy is re-applied on network changes"
+    );
 }
 
 fn on_change(_: SCDynamicStore, _: CFArray<CFString>, (): &mut ()) {

@@ -510,6 +510,13 @@
         "title": "DNS 覆写",
         "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写关闭"
       },
+      "protection": {
+        "title": "是否开启 DNS 覆写？",
+        "message": "当前订阅包含自定义 DNS 配置。开启 DNS 覆写可能覆盖这些配置，导致节点无法连接或部分网站无法访问。是否仍要开启？",
+        "enableAnyway": "仍然开启",
+        "keepDisabled": "保持关闭",
+        "autoDisabled": "检测到当前订阅包含自定义 DNS 配置，已自动关闭 DNS 覆写。"
+      },
       "sections": {
         "general": "DNS 设置",
         "fallbackFilter": "回退过滤设置",

@@ -10,7 +10,7 @@ use crate::{
     module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     utils::dirs,
 };
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{Type, logging, logging_error};
 use smartstring::alias::String;
 use tokio::fs;
 
@@ -65,14 +65,6 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
 
     // 保存新的配置文件
     fs::write(&file_path, &file_data).await.stringify_err()?;
-
-    logging!(
-        info,
-        Type::Config,
-        "[cmd配置save] 开始验证配置文件: {}, 是否为merge文件: {}",
-        file_path_str,
-        is_merge_file
-    );
 
     let changes_applied = handle_saved_profile_file(
         &file_path_str,
@@ -144,18 +136,8 @@ async fn handle_saved_profile_file(
         (ValidationNoticeTarget::Runtime, "YAML配置文件")
     };
 
-    logging!(
-        info,
-        Type::Config,
-        "[cmd配置save] 开始{}验证: {}",
-        file_type,
-        file_path_str
-    );
-
     match CoreConfigValidator::validate_config_file_outcome(file_path_str, Some(is_merge_file)).await {
-        Ok(outcome) if outcome.is_valid() => {
-            logging!(info, Type::Config, "[cmd配置save] 文件验证通过: {}", file_path_str);
-        }
+        Ok(outcome) if outcome.is_valid() => {}
         Ok(outcome) => {
             logging!(warn, Type::Config, "[cmd配置save] 文件验证失败: {}", outcome);
             restore_original(file_path, original_content, original_existed).await?;
@@ -163,7 +145,7 @@ async fn handle_saved_profile_file(
             return Ok(outcome);
         }
         Err(e) => {
-            logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
+            logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {e:#}");
             restore_original(file_path, original_content, original_existed).await?;
             return Err(e.to_string().into());
         }
@@ -180,6 +162,7 @@ async fn handle_saved_profile_file(
     );
     match CoreManager::global().update_config_forced().await {
         Ok(outcome) if outcome.is_valid() => {
+            logging_error!(Type::Config, Config::sync_dns_override().await);
             handle::Handle::refresh_clash();
             Ok(ValidationOutcome::Valid)
         }
@@ -190,7 +173,7 @@ async fn handle_saved_profile_file(
             Ok(outcome)
         }
         Err(err) => {
-            logging!(error, Type::Config, "[cmd配置save] 运行时配置应用错误: {}", err);
+            logging!(error, Type::Config, "[cmd配置save] 运行时配置应用错误: {err:#}");
             restore_original(file_path, original_content, original_existed).await?;
             Err(err.to_string().into())
         }

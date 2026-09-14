@@ -152,4 +152,14 @@ export default defineConfig([
       },
     },
   },
+  {
+    files: ['scripts/perf/*.{mjs,mts}'],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        projectService: false,
+        project: './scripts/perf/tsconfig.node.json',
+      },
+    },
+  },
 ])

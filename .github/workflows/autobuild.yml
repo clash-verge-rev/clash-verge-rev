@@ -35,6 +35,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
+
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: bash ./scripts/extract_update_logs.sh
@@ -48,7 +51,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -182,7 +185,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -279,7 +282,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -423,7 +426,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -510,6 +513,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
+
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: bash ./scripts/extract_update_logs.sh
@@ -518,7 +524,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.20.0'
+          node-version: '24.21.0'
 
       - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm

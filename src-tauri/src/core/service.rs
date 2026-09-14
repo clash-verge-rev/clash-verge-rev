@@ -1,7 +1,7 @@
-#[cfg(any(target_os = "macos", target_os = "windows"))]
 use crate::utils::dirs;
 use crate::{
-    config::Config,
+    config::{Config, runtime::IRuntime},
+    constants,
     core::{
         CoreManager,
         handle::Handle,
@@ -12,28 +12,29 @@ use crate::{
             OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE, ReadyWaitError,
             RunState, RunStateEnv, RunStateStore, ServiceHealth,
         },
-        runtime_bundle::collect_runtime_bundle,
+        runtime_bundle::{RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
         tray::Tray,
     },
     process::AsyncHandler,
 };
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
+use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, ServiceErrorCode, StageRuntimeOutcome,
-    StartClashRequest, WriterConfig,
+    MacosProxyConfig, OwnerCredentials, OwnerSessionProof, ProtocolInfo, ProxyApplyOutcome, RuntimeBundle,
+    RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
-use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::{
     borrow::Cow,
+    collections::HashMap,
     env::current_exe,
     future::Future,
     path::{Path, PathBuf},
     process::Command as StdCommand,
-    sync::atomic::{AtomicU64, Ordering},
-    time::Duration,
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
@@ -45,6 +46,7 @@ static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy:
 struct ActiveServiceSession {
     proof: OwnerSessionProof,
     supports_runtime_staging: bool,
+    supports_runtime_file_read: bool,
 }
 
 fn generate_service_session_token() -> Result<String> {
@@ -69,18 +71,46 @@ pub(crate) fn active_service_supports_runtime_staging() -> bool {
         .is_some_and(|session| session.supports_runtime_staging)
 }
 
+pub(crate) fn active_service_supports_runtime_file_read() -> bool {
+    ACTIVE_SERVICE_SESSION
+        .lock()
+        .as_ref()
+        .is_some_and(|session| session.supports_runtime_file_read)
+}
+
 pub(crate) fn clear_active_service_session() {
     ACTIVE_SERVICE_SESSION.lock().take();
 }
 
-/// Probes staging support without failing startup when the fast path is unavailable.
-async fn probe_runtime_staging_support() -> bool {
+#[derive(Clone, Copy, Default)]
+struct ServiceCapabilities {
+    runtime_staging: bool,
+    runtime_file_read: bool,
+}
+
+impl ServiceCapabilities {
+    const fn of(info: &ProtocolInfo) -> Self {
+        Self {
+            runtime_staging: info.supports_runtime_staging(),
+            runtime_file_read: info.supports_runtime_file_read(),
+        }
+    }
+}
+
+/// Failed capability probes must not block startup.
+#[tracing::instrument(skip_all, level = "info", fields(supported = tracing::field::Empty))]
+async fn probe_service_capabilities() -> ServiceCapabilities {
     match clash_verge_service_ipc::get_version().await {
-        Ok(response) if response.code == 0 => response
-            .data
-            .as_ref()
-            .is_some_and(clash_verge_service_ipc::ProtocolInfo::supports_runtime_staging),
+        Ok(response) if response.code == 0 => {
+            let capabilities = response
+                .data
+                .as_ref()
+                .map_or_else(ServiceCapabilities::default, ServiceCapabilities::of);
+            tracing::Span::current().record("supported", capabilities.runtime_staging);
+            capabilities
+        }
         Ok(response) => {
+            tracing::Span::current().record("supported", false);
             logging!(
                 warn,
                 Type::Service,
@@ -88,15 +118,16 @@ async fn probe_runtime_staging_support() -> bool {
                 response.code,
                 response.message
             );
-            false
+            ServiceCapabilities::default()
         }
         Err(error) => {
+            tracing::Span::current().record("supported", false);
             logging!(
                 warn,
                 Type::Service,
                 "无法查询服务协议版本: {error:#}；配置变更将走重启路径"
             );
-            false
+            ServiceCapabilities::default()
         }
     }
 }
@@ -794,6 +825,167 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
+/// Publishes a core into the Service's approved directory through the elevated installer.
+///
+/// The Service only executes administrator-approved copies from its own directory, never the file
+/// beside the app, so a freshly replaced core has to be handed over before a service-mode restart
+/// asks for it. The digest pins the exact bytes being attested: it rides the elevated process's
+/// command line, which no other local account can alter, so a file swapped on disk after this
+/// hash was computed is refused by the installer instead of published.
+pub fn stage_approved_core(core_path: &Path) -> Result<()> {
+    tokio::task::block_in_place(|| {
+        let digest = sha256_hex(core_path)?;
+        run_core_install(core_path, &digest)
+    })
+}
+
+fn sha256_hex(path: &Path) -> Result<String> {
+    use sha2::{Digest as _, Sha256};
+    use std::io::Read as _;
+
+    let mut file = std::fs::File::open(path).with_context(|| format!("failed to open {path:?} for hashing"))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = vec![0_u8; 64 * 1024].into_boxed_slice();
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .with_context(|| format!("failed to read {path:?}"))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
+}
+
+#[cfg(target_os = "windows")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    use deelevate::{PrivilegeLevel, Token};
+    use runas::Command as RunasCommand;
+    use std::os::windows::process::CommandExt as _;
+    use std::process::Output;
+
+    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let token = Token::with_current_process()?;
+    let output = match token.privilege_level()? {
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path)
+                .arg("--install-core")
+                .arg(core_path)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .show(false)
+                .status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => StdCommand::new(&install_path)
+            .creation_flags(0x08000000)
+            .arg("--install-core")
+            .arg(core_path)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?,
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+
+    let core_argument = core_path.as_os_str();
+    let output = if linux_running_as_root() {
+        StdCommand::new(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?
+    } else {
+        let elevator = crate::utils::help::linux_elevator();
+        let mut elevated = StdCommand::new(&elevator);
+        // pkexec-only option; other elevators such as sudo reject unknown flags outright.
+        if elevator.contains("pkexec") {
+            elevated.arg("--disable-internal-agent");
+        }
+        let result = elevated
+            .arg(&install_path)
+            .arg("--install-core")
+            .arg(core_argument)
+            .arg("--sha256")
+            .arg(sha256_hex)
+            .output()?;
+        if !result.status.success() && elevator.contains("pkexec") {
+            logging!(
+                warn,
+                Type::Service,
+                "pkexec failed with code {}, falling back to sudo",
+                result.status.code().unwrap_or(-1)
+            );
+            StdCommand::new("sudo")
+                .arg(&install_path)
+                .arg("--install-core")
+                .arg(core_argument)
+                .arg("--sha256")
+                .arg(sha256_hex)
+                .output()?
+        } else {
+            result
+        }
+    };
+
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
+    })?;
+    if !install_path.exists() {
+        bail!(format!("installer not found: {install_path:?}"));
+    }
+    let install_path = macos_service_tool_path(&install_path)?;
+
+    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
+    let shell = format!(
+        "cd /; {} --install-core {} --sha256 {}",
+        shell_single_quote(&install_path.to_string_lossy()),
+        shell_single_quote(&core_path.to_string_lossy()),
+        shell_single_quote(sha256_hex),
+    );
+    let shell = escape_osascript_double_quoted_string(&shell);
+    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
+
+    let output = StdCommand::new("osascript").args(["-e", &command]).output()?;
+    if let Some((code, err)) = check_output_error(&output) {
+        bail!("failed to stage the core for the service, code {code}: {err}");
+    }
+    Ok(())
+}
+
 /// Dispatches a privileged platform operation on a blocking thread.
 pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()> {
     let (operation, label): (fn() -> Result<()>, &'static str) = match action {
@@ -818,7 +1010,7 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
 
 /// A staging response whose refusal code tells callers whether a fresh start can help.
 pub(super) enum StageRequest {
-    Refused { code: u16, message: CompactString },
+    Refused { code: u16, message: String },
     Answered(StageRuntimeOutcome),
 }
 
@@ -841,7 +1033,7 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
     if response.code > 0 {
         return Ok(StageRequest::Refused {
             code: response.code,
-            message: response.message.into(),
+            message: response.message,
         });
     }
     response
@@ -851,8 +1043,8 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
 }
 
 /// 尝试使用服务启动core
+#[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
-    logging!(info, Type::Service, "尝试使用现有服务启动核心");
     clear_active_service_session();
 
     let credentials = current_owner_credentials()?;
@@ -867,14 +1059,23 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let response = match clash_verge_service_ipc::start_clash(&credentials, &request).await {
         Ok(response) => response,
         Err(error) => {
+            tracing::Span::current().record("outcome", "ipc-unreachable");
             start_owner_monitor();
             return Err(error).context("无法连接到Clash Verge Service");
         }
     };
 
     if response.code > 0 {
+        tracing::Span::current().record("code", response.code);
+        tracing::Span::current().record("outcome", "refused");
         let err_msg = response.message;
-        logging!(error, Type::Service, "启动核心失败: {}", err_msg);
+        logging!(
+            error,
+            Type::Service,
+            "启动核心失败 (code {}): {}",
+            response.code,
+            err_msg
+        );
         start_owner_monitor();
         bail!(
             "failed to start Service core at {}: {err_msg}",
@@ -883,25 +1084,32 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
-    let supports_runtime_staging = probe_runtime_staging_support().await;
+    tracing::Span::current().record("generation", result.session.generation);
+    let capabilities = probe_service_capabilities().await;
+    tracing::Span::current().record("staging", capabilities.runtime_staging);
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
         proof: OwnerSessionProof {
             generation: result.session.generation,
             token: proposed_session_token,
         },
-        supports_runtime_staging,
+        supports_runtime_staging: capabilities.runtime_staging,
+        supports_runtime_file_read: capabilities.runtime_file_read,
     });
 
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
-    logging!(info, Type::Service, "服务成功启动核心");
+    tracing::Span::current().record("outcome", "started");
+    logging!(
+        info,
+        Type::Service,
+        "服务成功启动核心 (session generation {})",
+        result.session.generation
+    );
     Ok(())
 }
 
 // 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
-    logging!(info, Type::Service, "正在尝试通过服务启动核心");
-
     SERVICE_MANAGER.refresh().await?;
 
     let status = SERVICE_MANAGER.current().await;
@@ -922,9 +1130,8 @@ where
     (captured, operation().await)
 }
 
-pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
-    logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
-
+pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
+    // Frontend-polled: no per-call logging here.
     let credentials = current_owner_credentials()?;
     let (generation, response) = capture_generation_before(&OWNER_MONITOR_GENERATION, || {
         clash_verge_service_ipc::get_clash_logs(&credentials)
@@ -937,11 +1144,9 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
             recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
         }
         let err_msg = response.message;
-        logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
         bail!(err_msg);
     }
 
-    logging!(info, Type::Service, "成功获取服务模式下的 Clash 日志");
     Ok(response.data.unwrap_or_default())
 }
 
@@ -959,19 +1164,427 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
         bail!(response.message);
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
-    if encoded.len() % 2 != 0 {
-        bail!("服务返回了无效的核心日志快照");
-    }
-    let mut content = Vec::with_capacity(encoded.len() / 2);
-    for offset in (0..encoded.len()).step_by(2) {
-        content.push(u8::from_str_radix(&encoded[offset..offset + 2], 16).context("服务返回了无效的核心日志快照")?);
-    }
+    let content = decode_hex(&encoded).context("服务返回了无效的核心日志快照")?;
     Ok(String::from_utf8_lossy(&content).into_owned())
 }
 
+fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
+    if !encoded.len().is_multiple_of(2) {
+        bail!("hex payload has an odd length");
+    }
+    (0..encoded.len())
+        .step_by(2)
+        .map(|offset| u8::from_str_radix(&encoded[offset..offset + 2], 16).context("hex payload is malformed"))
+        .collect()
+}
+
+static PROVIDER_SYNC_QUEUED: AtomicBool = AtomicBool::new(false);
+static PROVIDER_SYNC_SERIAL: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
+static SYNC_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+const RUNTIME_PROVIDER_SYNC_ATTEMPTS: u32 = 4;
+const CONTENT_COMPARE_CHUNK: usize = 64 * 1024;
+
+pub(crate) fn request_runtime_provider_sync(delay: Duration) {
+    if PROVIDER_SYNC_QUEUED.swap(true, Ordering::AcqRel) {
+        return;
+    }
+    AsyncHandler::spawn(move || async move {
+        tokio::time::sleep(delay).await;
+        for attempt in 1..=RUNTIME_PROVIDER_SYNC_ATTEMPTS {
+            let outcome = {
+                let _serial = PROVIDER_SYNC_SERIAL.lock().await;
+                if attempt == 1 {
+                    PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+                }
+                sync_runtime_providers_by_service().await
+            };
+            match outcome {
+                Ok(ProviderSync { pending: 0, .. }) => return,
+                Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
+                    logging!(
+                        info,
+                        Type::Service,
+                        "{pending} provider caches are not ready yet; retrying"
+                    );
+                }
+                Ok(ProviderSync { pending, .. }) => {
+                    logging!(warn, Type::Service, "{pending} provider caches were not synced");
+                    return;
+                }
+                Err(error) => {
+                    logging!(
+                        warn,
+                        Type::Service,
+                        "failed to sync provider caches from the service: {error:#}"
+                    );
+                    return;
+                }
+            }
+            tokio::time::sleep(constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY).await;
+        }
+    });
+}
+
+#[derive(Debug, Default)]
+struct ProviderSync {
+    synced: usize,
+    pending: usize,
+}
+
+struct FetchedCache {
+    declared: RemoteProviderRef,
+    temp: PathBuf,
+    len: u64,
+    mtime_ns: Option<u64>,
+}
+
+/// Core load timestamps keyed by provider section and name.
+type ProviderLoadTimes = HashMap<(&'static str, String), Option<u64>>;
+
+#[tracing::instrument(level = "info", fields(synced = tracing::field::Empty, pending = tracing::field::Empty))]
+async fn sync_runtime_providers_by_service() -> Result<ProviderSync> {
+    if !active_service_supports_runtime_file_read() {
+        return Ok(ProviderSync::default());
+    }
+    let credentials = current_owner_credentials()?;
+    let session = active_service_session()?;
+    let app_dir = dirs::app_home_dir()?;
+    let runtime = Config::runtime().await;
+    let mut outcome = ProviderSync::default();
+
+    let loaded_before = provider_load_times().await;
+    let mut fetched = Vec::new();
+    for declared in applied_remote_providers(&runtime, &app_dir)? {
+        let (temp, file) = match create_sync_temp(&app_dir.join(&declared.provider.destination)).await {
+            Ok(created) => created,
+            Err(error) => {
+                logging!(warn, Type::Service, "{error:#}");
+                outcome.pending += 1;
+                continue;
+            }
+        };
+        match fetch_runtime_file(&credentials, &session, &declared.provider.destination, file).await {
+            Ok(Fetch::Complete { len, mtime_ns }) => fetched.push(FetchedCache {
+                declared,
+                temp,
+                len,
+                mtime_ns,
+            }),
+            Ok(Fetch::NotReady) => {
+                outcome.pending += 1;
+                remove_temp(&temp).await;
+            }
+            Ok(Fetch::SessionLost) => {
+                remove_temp(&temp).await;
+                discard_fetched(fetched).await;
+                bail!("the service session ended while provider caches were being read");
+            }
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "provider cache {} was not read: {error:#}",
+                    declared.provider.destination
+                );
+                outcome.pending += 1;
+                remove_temp(&temp).await;
+            }
+        }
+    }
+
+    let (loaded_before, loaded_after) = match (loaded_before, provider_load_times().await) {
+        (Ok(before), Ok(after)) => (before, after),
+        (Err(error), _) | (_, Err(error)) => {
+            logging!(warn, Type::Service, "provider caches were not synced: {error:#}");
+            outcome.pending += fetched.len();
+            discard_fetched(fetched).await;
+            return Ok(outcome);
+        }
+    };
+    let mut ready = Vec::new();
+    for cache in fetched {
+        let key = (cache.declared.section, cache.declared.name.clone());
+        let updated_at = loaded_after.get(&key).copied().flatten();
+        let complete = loaded_before.get(&key) == loaded_after.get(&key)
+            && finished_loading(cache.mtime_ns, updated_at)
+            && match recheck_identity(&credentials, &session, &cache).await {
+                Ok(Fetch::Complete { .. }) => true,
+                Ok(Fetch::NotReady) | Err(_) => false,
+                Ok(Fetch::SessionLost) => {
+                    remove_temp(&cache.temp).await;
+                    discard_fetched(ready).await;
+                    bail!("the service session ended while provider caches were being verified");
+                }
+            };
+        if complete {
+            ready.push(cache);
+        } else {
+            outcome.pending += 1;
+            remove_temp(&cache.temp).await;
+        }
+    }
+
+    outcome.synced = publish_fetched(&app_dir, &runtime, &session, ready).await?;
+    tracing::Span::current().record("synced", outcome.synced);
+    tracing::Span::current().record("pending", outcome.pending);
+    Ok(outcome)
+}
+
+// The on-disk YAML may describe a rejected apply; use the committed runtime.
+fn applied_remote_providers(runtime: &Draft<IRuntime>, app_dir: &Path) -> Result<Vec<RemoteProviderRef>> {
+    let applied = runtime.data_arc();
+    match applied.config.as_ref() {
+        Some(config) => remote_providers_of(config, app_dir),
+        None => Ok(Vec::new()),
+    }
+}
+
+// Hold the lifecycle lock through publication to exclude mode and config switches.
+async fn publish_fetched(
+    app_dir: &Path,
+    runtime: &Draft<IRuntime>,
+    session: &OwnerSessionProof,
+    fetched: Vec<FetchedCache>,
+) -> Result<usize> {
+    let manager = CoreManager::global();
+    let _lifecycle = manager.lifecycle_lock.lock().await;
+    let unchanged = matches!(*manager.get_running_mode(), RunningMode::Service)
+        && active_service_session().is_ok_and(|current| current == *session);
+    let declared = if unchanged {
+        match applied_remote_providers(runtime, app_dir) {
+            Ok(declared) => declared,
+            Err(error) => {
+                discard_fetched(fetched).await;
+                return Err(error);
+            }
+        }
+    } else {
+        Vec::new()
+    };
+    let mut synced = 0;
+    for cache in fetched {
+        let target = app_dir.join(&cache.declared.provider.destination);
+        if !declared.contains(&cache.declared) || same_contents(&cache.temp, &target).await {
+            remove_temp(&cache.temp).await;
+            continue;
+        }
+        match tokio::fs::rename(&cache.temp, &target).await {
+            Ok(()) => synced += 1,
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "provider cache {} was not published: {error}",
+                    cache.declared.provider.destination
+                );
+                remove_temp(&cache.temp).await;
+            }
+        }
+    }
+    Ok(synced)
+}
+
+enum Fetch {
+    Complete { len: u64, mtime_ns: Option<u64> },
+    NotReady,
+    SessionLost,
+}
+
+// mihomo rewrites caches in place; reject changing or recently modified files.
+async fn fetch_runtime_file(
+    credentials: &OwnerCredentials,
+    session: &OwnerSessionProof,
+    destination: &str,
+    mut file: tokio::fs::File,
+) -> Result<Fetch> {
+    use tokio::io::AsyncWriteExt as _;
+
+    let mut written = 0_u64;
+    let mut identity = None;
+    loop {
+        let (hex, len, mtime_ns) = match read_chunk(credentials, session, destination, written).await? {
+            Some(chunk) => chunk,
+            None => return Ok(Fetch::SessionLost),
+        };
+        let Some((hex, len, mtime_ns)) = hex.map(|hex| (hex, len, mtime_ns)) else {
+            return Ok(Fetch::NotReady);
+        };
+        if len == 0 || !has_settled(mtime_ns) || *identity.get_or_insert((len, mtime_ns)) != (len, mtime_ns) {
+            return Ok(Fetch::NotReady);
+        }
+        if written == len {
+            file.flush().await?;
+            return Ok(Fetch::Complete { len, mtime_ns });
+        }
+        let chunk = decode_hex(&hex).context("服务返回了无效的运行时文件")?;
+        if chunk.is_empty() {
+            bail!("the service returned an empty chunk before the end of the file");
+        }
+        file.write_all(&chunk).await?;
+        written += chunk.len() as u64;
+        if written > len {
+            return Ok(Fetch::NotReady);
+        }
+    }
+}
+
+async fn recheck_identity(
+    credentials: &OwnerCredentials,
+    session: &OwnerSessionProof,
+    cache: &FetchedCache,
+) -> Result<Fetch> {
+    let destination = &cache.declared.provider.destination;
+    Ok(match read_chunk(credentials, session, destination, cache.len).await? {
+        None => Fetch::SessionLost,
+        Some((Some(hex), len, mtime_ns)) if hex.is_empty() && (len, mtime_ns) == (cache.len, cache.mtime_ns) => {
+            Fetch::Complete { len, mtime_ns }
+        }
+        Some(_) => Fetch::NotReady,
+    })
+}
+
+/// Outer `None` means session loss; missing hex means an absent file.
+async fn read_chunk(
+    credentials: &OwnerCredentials,
+    session: &OwnerSessionProof,
+    destination: &str,
+    offset: u64,
+) -> Result<Option<(Option<String>, u64, Option<u64>)>> {
+    let request = RuntimeFileRequest {
+        destination: destination.to_owned(),
+        offset,
+    };
+    let response = clash_verge_service_ipc::read_runtime_file(credentials, session, &request)
+        .await
+        .context("无法连接到Clash Verge Service")?;
+    if response.code == ServiceErrorCode::NotActive as u16
+        || response.code == ServiceErrorCode::StaleOwnerSession as u16
+    {
+        return Ok(None);
+    }
+    if response.code > 0 {
+        bail!(response.message);
+    }
+    Ok(Some(match response.data.context("服务未返回运行时文件")? {
+        RuntimeFileOutcome::Absent => (None, 0, None),
+        RuntimeFileOutcome::Chunk { hex, len, mtime_ns } => (Some(hex), len, mtime_ns),
+    }))
+}
+
+// updatedAt changes after cache writes; compare it before and after readback.
+async fn provider_load_times() -> Result<ProviderLoadTimes> {
+    let mihomo = Handle::mihomo();
+    let (rules, proxies) = tokio::join!(mihomo.get_rule_providers(), mihomo.get_proxy_providers());
+    let rules = rules.map_err(|error| anyhow!("failed to query rule providers: {error}"))?;
+    let proxies = proxies.map_err(|error| anyhow!("failed to query proxy providers: {error}"))?;
+    let mut loaded = ProviderLoadTimes::new();
+    for (name, provider) in rules.providers {
+        loaded.insert(("rule-providers", name), epoch_nanos(&provider.updated_at));
+    }
+    for (name, provider) in proxies.providers {
+        loaded.insert(
+            ("proxy-providers", name),
+            provider.updated_at.as_deref().and_then(epoch_nanos),
+        );
+    }
+    Ok(loaded)
+}
+
+fn epoch_nanos(rfc3339: &str) -> Option<u64> {
+    let parsed = chrono::DateTime::parse_from_rfc3339(rfc3339).ok()?;
+    u64::try_from(parsed.timestamp_nanos_opt()?).ok()
+}
+
+// Allow timestamp granularity; missing load times fall back to settling.
+// Windows may retain the old mtime until a writer closes its handle.
+fn finished_loading(mtime_ns: Option<u64>, updated_at_ns: Option<u64>) -> bool {
+    match (mtime_ns, updated_at_ns) {
+        (Some(mtime), Some(updated_at)) => {
+            u128::from(mtime) <= u128::from(updated_at) + constants::timing::RUNTIME_PROVIDER_SETTLE.as_nanos()
+        }
+        _ => true,
+    }
+}
+
+fn has_settled(mtime_ns: Option<u64>) -> bool {
+    let Some(mtime_ns) = mtime_ns else {
+        return true;
+    };
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |since_epoch| since_epoch.as_nanos());
+    now.saturating_sub(u128::from(mtime_ns)) >= constants::timing::RUNTIME_PROVIDER_SETTLE.as_nanos()
+}
+
+// Exclusive creation protects existing files from truncation and cleanup.
+async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
+    if let Some(parent) = target.parent() {
+        tokio::fs::create_dir_all(parent).await?;
+    }
+    let name = target
+        .file_name()
+        .map(|name| name.to_string_lossy())
+        .unwrap_or_default();
+    for _ in 0..8 {
+        let sequence = SYNC_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+        let temp = target.with_file_name(format!(".{name}.sync-{}-{sequence}.tmp", std::process::id()));
+        match tokio::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)
+            .await
+        {
+            Ok(file) => return Ok((temp, file)),
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(error).with_context(|| format!("failed to create {}", temp.display())),
+        }
+    }
+    bail!("no free temporary name beside {}", target.display())
+}
+
+async fn same_contents(temp: &Path, target: &Path) -> bool {
+    use tokio::io::AsyncReadExt as _;
+
+    let (Ok(mut left), Ok(mut right)) = (tokio::fs::File::open(temp).await, tokio::fs::File::open(target).await) else {
+        return false;
+    };
+    let (Ok(left_meta), Ok(right_meta)) = (left.metadata().await, right.metadata().await) else {
+        return false;
+    };
+    if left_meta.len() != right_meta.len() {
+        return false;
+    }
+    let mut remaining = left_meta.len();
+    let mut left_buf = vec![0_u8; CONTENT_COMPARE_CHUNK];
+    let mut right_buf = vec![0_u8; CONTENT_COMPARE_CHUNK];
+    while remaining > 0 {
+        let take = usize::try_from(remaining).map_or(CONTENT_COMPARE_CHUNK, |rest| rest.min(CONTENT_COMPARE_CHUNK));
+        if left.read_exact(&mut left_buf[..take]).await.is_err()
+            || right.read_exact(&mut right_buf[..take]).await.is_err()
+        {
+            return false;
+        }
+        if left_buf[..take] != right_buf[..take] {
+            return false;
+        }
+        remaining -= take as u64;
+    }
+    true
+}
+
+async fn remove_temp(temp: &Path) {
+    let _ = tokio::fs::remove_file(temp).await;
+}
+
+async fn discard_fetched(fetched: Vec<FetchedCache>) {
+    for cache in fetched {
+        remove_temp(&cache.temp).await;
+    }
+}
+
 /// 通过服务停止core
+#[tracing::instrument(skip_all, level = "info", fields(code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn stop_core_by_service() -> Result<()> {
-    logging!(info, Type::Service, "通过服务停止核心 (IPC)");
     cancel_owner_monitors();
 
     let credentials = match current_owner_credentials() {
@@ -1007,11 +1620,20 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
             start_owner_monitor();
         }
         let err_msg = response.message;
-        logging!(error, Type::Service, "停止核心失败: {}", err_msg);
+        tracing::Span::current().record("code", response.code);
+        tracing::Span::current().record("outcome", "refused");
+        logging!(
+            error,
+            Type::Service,
+            "停止核心失败 (code {}): {}",
+            response.code,
+            err_msg
+        );
         bail!(err_msg);
     }
 
     clear_active_service_session();
+    tracing::Span::current().record("outcome", "stopped");
     logging!(info, Type::Service, "服务成功停止核心");
     Ok(())
 }
@@ -1023,6 +1645,13 @@ pub(crate) async fn update_writer_by_service(writer: &WriterConfig) -> Result<()
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
+        logging!(
+            warn,
+            Type::Service,
+            "update writer rejected by service: code={}, {}",
+            response.code,
+            response.message
+        );
         bail!(response.message);
     }
     Ok(())
@@ -1042,6 +1671,13 @@ pub(super) async fn set_system_proxy_by_service_with_session(
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
+        logging!(
+            warn,
+            Type::Service,
+            "set system proxy rejected by service: code={}, {}",
+            response.code,
+            response.message
+        );
         bail!(response.message);
     }
     response.data.context("Clash Verge Service 未返回系统代理结果")
@@ -1074,13 +1710,24 @@ const SUSTAINED_OWNER_SAMPLES: u8 = 3;
 fn start_owner_monitor() {
     let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     AsyncHandler::spawn(move || async move {
+        logging!(debug, Type::Service, "owner monitor started (generation {generation})");
         let mut watch = OwnerWatch::new();
         loop {
             tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
             if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
+                logging!(
+                    debug,
+                    Type::Service,
+                    "owner monitor superseded (generation {generation})"
+                );
                 break;
             }
             if !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
+                logging!(
+                    debug,
+                    Type::Service,
+                    "owner monitor stopped; core no longer in service mode (generation {generation})"
+                );
                 break;
             }
 
@@ -1091,7 +1738,7 @@ fn start_owner_monitor() {
                     logging!(
                         warn,
                         Type::Service,
-                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples; \
+                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples (generation {generation}); \
                          preserving local proxy state while the core endpoint still answers"
                     );
                 }
@@ -1199,6 +1846,7 @@ fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: 
         .map(|_| recovery_generation)
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(reason = ?reason))]
 async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     logging!(
         warn,
@@ -1215,10 +1863,15 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     }
 
     let mut last_error = None;
-    for _ in 0..3 {
+    for attempt in 1..=3 {
         match proxy_control::clear().await {
             Ok(()) => return,
             Err(error) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "proxy clear attempt {attempt}/3 after owner loss failed: {error:#}"
+                );
                 last_error = Some(error);
                 tokio::time::sleep(Duration::from_millis(100)).await;
             }
@@ -1228,24 +1881,35 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
         logging!(
             error,
             Type::Service,
-            "failed to clear local proxy after owner loss: {error}"
+            "failed to clear local proxy after owner loss: {error:#}"
         );
     }
 }
 
 /// Waits for a repaired service, preserving readable rejection details but classifying sustained
 /// silence as unavailable.
+#[tracing::instrument(skip_all, level = "info", fields(attempts = tracing::field::Empty, interval_ms = tracing::field::Empty, outcome = tracing::field::Empty))]
 async fn wait_for_service_ipc() -> Result<()> {
     const CONTEXT: &str = "service IPC did not become available";
     let config = ServiceManager::config();
+    let span = tracing::Span::current();
+    span.record("attempts", config.max_retries);
+    span.record("interval_ms", config.retry_delay.as_millis() as u64);
 
     match RUN_STATE.await_ready(config.max_retries, config.retry_delay).await {
-        Ok(_) => Ok(()),
+        Ok(_) => {
+            tracing::Span::current().record("outcome", "ready");
+            Ok(())
+        }
         Err(ReadyWaitError::Unreachable(error)) => {
+            tracing::Span::current().record("outcome", "unreachable");
             RUN_STATE.observe(ServiceHealth::Unavailable(format!("{CONTEXT}: {error:#}")));
             Err(error).context(CONTEXT)
         }
-        Err(ReadyWaitError::Rejected(error)) => Err(error).context(CONTEXT),
+        Err(ReadyWaitError::Rejected(error)) => {
+            tracing::Span::current().record("outcome", "rejected");
+            Err(error).context(CONTEXT)
+        }
     }
 }
 

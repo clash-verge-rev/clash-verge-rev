@@ -510,6 +510,13 @@
         "title": "DNS 덮어쓰기",
         "warning": "이 설정에 익숙하지 않다면 수정하지 말고 DNS 덮어쓰기를 비활성화 상태로 유지하세요"
       },
+      "protection": {
+        "title": "Enable DNS Overwrite?",
+        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
+        "enableAnyway": "Enable anyway",
+        "keepDisabled": "Keep disabled",
+        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+      },
       "sections": {
         "general": "DNS 설정",
         "fallbackFilter": "폴백 필터 설정",

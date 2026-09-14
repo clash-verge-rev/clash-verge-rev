@@ -127,6 +127,13 @@ Clash Verge rev was based on or inspired by these projects and so on:
 - [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): A Windows/macOS GUI based on Clash.
 - [vitejs/vite](https://github.com/vitejs/vite): Next generation frontend tooling. It's fast!
 
+## Privacy
+
+Clash Verge Rev 不收集任何用户数据，配置与日志仅保存在本地。详见[隐私政策](./PRIVACY.md)。
+
+Clash Verge Rev does not collect any user data; configuration and logs stay on
+your own device. See the [Privacy Policy](./PRIVACY.md) for details.
+
 ## License
 
 GPL-3.0 License. See [License here](./LICENSE) for details.

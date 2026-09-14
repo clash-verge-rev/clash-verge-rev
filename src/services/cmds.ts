@@ -172,6 +172,16 @@ export async function patchVergeConfig(payload: IVergeConfig) {
   return invoke<void>('patch_verge_config', { payload })
 }
 
+export async function setDnsOverride(enabled: boolean, confirmation?: string) {
+  return invoke<
+    { status: 'applied' } | { status: 'confirmation_required'; source: string }
+  >('set_dns_override', { enabled, confirmation })
+}
+
+export async function takeDnsOverrideNotice() {
+  return invoke<boolean>('take_dns_override_notice')
+}
+
 export async function getSystemProxy() {
   return invoke<{
     enable: boolean
@@ -239,6 +249,12 @@ export async function openCoreDir() {
 
 export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
+}
+
+export async function syncRuntimeProviders() {
+  return invoke<void>('sync_runtime_providers').catch((err) => {
+    console.warn('failed to queue the provider cache sync', err)
+  })
 }
 
 export async function cmdTestDelay(url: string) {

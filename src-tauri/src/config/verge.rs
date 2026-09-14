@@ -57,6 +57,9 @@ pub struct IVerge {
     pub menu_order: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy_group_tools_position: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub notice_position: Option<String>,
 
     pub collapse_navbar: Option<bool>,
@@ -79,6 +82,10 @@ pub struct IVerge {
 
     /// enable dns settings - this controls whether dns_config.yaml is applied
     pub enable_dns_settings: Option<bool>,
+
+    // Force-enable confirmation is valid only for the current app session.
+    #[serde(skip)]
+    pub dns_override_confirmation: Option<String>,
 
     pub use_default_bypass: Option<bool>,
 
@@ -262,13 +269,13 @@ impl IVerge {
         }
 
         if needs_fix {
-            logging!(info, Type::Config, "正在保存修正后的配置文件...");
+            logging!(debug, Type::Config, "正在保存修正后的配置文件...");
             help::save_yaml(&config_path, &config, Some("# Clash Verge Config")).await?;
             logging!(info, Type::Config, "配置文件修正完成，需要重新加载配置");
 
             Self::reload_config_after_fix(config).await;
         } else {
-            logging!(info, Type::Config, "clash_core配置验证通过: {:?}", config.clash_core);
+            logging!(debug, Type::Config, "clash_core配置验证通过: {:?}", config.clash_core);
         }
 
         Ok(())
@@ -305,12 +312,12 @@ impl IVerge {
                     config
                 }
                 Err(err) => {
-                    logging!(error, Type::Config, "{err}");
+                    logging!(error, Type::Config, "failed to read verge config: {err:#}");
                     Self::template()
                 }
             },
             Err(err) => {
-                logging!(error, Type::Config, "{err}");
+                logging!(error, Type::Config, "failed to get verge config path: {err:#}");
                 Self::template()
             }
         }
@@ -421,6 +428,7 @@ impl IVerge {
         patch!(tray_icon);
         patch!(menu_icon);
         patch!(menu_order);
+        patch!(proxy_group_tools_position);
         patch!(notice_position);
         patch!(collapse_navbar);
         patch!(common_tray_icon);

@@ -72,11 +72,14 @@ async function processRelease(github, options, tag, isAlpha) {
       tag: tag.name,
     })
 
+    const notes = await resolveUpdateLog(tag.name).catch(() =>
+      resolveUpdateLogDefault().catch(() => 'No changelog available'),
+    )
+    const releaseUrl = `https://github.com/${options.owner}/${options.repo}/releases/tag/${tag.name}`
+
     const updateData = {
       name: tag.name,
-      notes: await resolveUpdateLog(tag.name).catch(() =>
-        resolveUpdateLogDefault().catch(() => 'No changelog available'),
-      ),
+      notes: `${notes}\n\n**[See More](${releaseUrl})**`,
       pub_date: new Date().toISOString(),
       platforms: {
         // platform format:

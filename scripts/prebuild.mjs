@@ -630,6 +630,32 @@ async function resolveServiceBundle() {
   }
 }
 
+/// The NSIS installer publishes the bundled cores into the service's approved directory and must
+/// attest exactly the bytes it unpacked. The digests are computed here, where the sidecars land,
+/// and reach installer.nsi through the installerHooks include (see tauri.windows.conf.json).
+const CORE_HASHES_NSH = path.join(
+  cwd,
+  'src-tauri',
+  'packages',
+  'windows',
+  'core-hashes.nsh',
+)
+async function resolveCoreHashes() {
+  const lines = []
+  for (const [define, name] of [
+    ['MIHOMO_SHA256', 'verge-mihomo'],
+    ['MIHOMO_ALPHA_SHA256', 'verge-mihomo-alpha'],
+  ]) {
+    const sidecar = path.join(SIDECAR_DIR, `${name}-${SIDECAR_HOST}.exe`)
+    const digest = createHash('sha256')
+      .update(await fsp.readFile(sidecar))
+      .digest('hex')
+    lines.push(`!define ${define} "${digest}"`)
+  }
+  await fsp.writeFile(CORE_HASHES_NSH, lines.join('\n') + '\n')
+  log_success(`Generated ${CORE_HASHES_NSH}`)
+}
+
 const resolveMmdb = () =>
   resolveResource({
     file: 'Country.mmdb',
@@ -675,6 +701,8 @@ const tasks = [
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
   },
+  // After both sidecar tasks: it hashes what they downloaded.
+  { name: 'core_hashes', func: resolveCoreHashes, retry: 1, winOnly: true },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
   { name: 'service', func: resolveServiceBundle, retry: 5 },
   { name: 'mmdb', func: resolveMmdb, retry: 5 },

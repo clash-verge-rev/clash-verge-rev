@@ -18,7 +18,6 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +26,7 @@ import {
   BaseDialog,
   BaseFieldset,
   BaseSplitChipEditor,
-  DialogRef,
+  type DialogRef,
   Switch,
   TooltipIcon,
 } from '@/components/base'
@@ -35,7 +34,7 @@ import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
-import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
+import { useSystemData } from '@/providers/app-data-context'
 import {
   getAutotemProxy,
   getEmbeddedServerPort,
@@ -110,7 +109,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge, mutateVerge } = useVerge()
   const [hostOptions, setHostOptions] = useState<string[]>([])
 
-  const { clashConfig } = useClashConfigData()
   const { indicator: isProxyReallyEnabled, invalidateProxyState } =
     useSystemProxyState()
 
@@ -155,38 +153,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
     return '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
   }
-
-  const prevMixedPortRef = useRef(clashConfig?.mixedPort)
-
-  useEffect(() => {
-    const mixedPort = clashConfig?.mixedPort
-    if (!mixedPort || mixedPort === prevMixedPortRef.current) {
-      return
-    }
-
-    prevMixedPortRef.current = mixedPort
-    if (!enabled) {
-      return
-    }
-
-    const updateProxy = async () => {
-      try {
-        const currentSysProxy = await getSystemProxy()
-        const currentAutoProxy = await getAutotemProxy()
-
-        if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-          await patchVergeConfig({ enable_system_proxy: false })
-          await sleep(200)
-          await patchVergeConfig({ enable_system_proxy: true })
-          await invalidateProxyState()
-        }
-      } catch (err) {
-        showNotice.error(err)
-      }
-    }
-
-    updateProxy()
-  }, [clashConfig?.mixedPort, enabled, value.pac, invalidateProxyState])
 
   const { systemProxyAddress } = useSystemData()
   const displayedMixedPort = useDisplayedMixedPort()
@@ -256,10 +222,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
       interfaces.forEach((iface) => {
         iface.addr.forEach((address) => {
-          if (address.V4 && address.V4.ip) {
+          if (address.V4?.ip) {
             ipAddresses.push(address.V4.ip)
           }
-          if (address.V6 && address.V6.ip) {
+          if (address.V6?.ip) {
             ipAddresses.push(address.V6.ip)
           }
         })
@@ -277,7 +243,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
       if (hostname) {
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-          hostname = hostname + '.local'
+          hostname = `${hostname}.local`
           options.push(hostname)
           debugLog('主机名已添加到选项中:', hostname)
         } else {
@@ -409,7 +375,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
               if (isProxyActive) {
                 await patchVergeConfig({ enable_system_proxy: false })
-                await new Promise((resolve) => setTimeout(resolve, 50))
+                await sleep(50)
                 await patchVergeConfig({ enable_system_proxy: true })
                 await invalidateProxyState()
               }

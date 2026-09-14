@@ -33,7 +33,7 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("log") {
                 let _ = path.remove_if_exists().await;
-                logging!(info, Type::Setup, "delete snapshot log file: {}", path.display());
+                logging!(debug, Type::Setup, "delete snapshot log file: {}", path.display());
             }
         }
     }
@@ -69,7 +69,7 @@ pub async fn delete_log() -> Result<()> {
         _ => return Ok(()),
     };
 
-    logging!(info, Type::Setup, "try to delete log files, day: {}", day);
+    logging!(debug, Type::Setup, "try to delete log files, day: {}", day);
 
     let parse_time_str = |s: &str| {
         let sa: Vec<&str> = s.split('-').collect();
@@ -102,7 +102,7 @@ pub async fn delete_log() -> Result<()> {
             let duration = now.signed_duration_since(file_time);
             if duration.num_days() > day {
                 let _ = file.path().remove_if_exists().await;
-                logging!(info, Type::Setup, "delete log file: {}", file_name);
+                logging!(debug, Type::Setup, "delete log file: {}", file_name);
             }
         }
         Ok(())
@@ -284,7 +284,7 @@ async fn migrate_legacy_macos_logs() -> Result<()> {
 
     if is_logs_dir_writable(&log_dir).await {
         if let Err(e) = migrate_legacy_macos_service_logs(&log_dir).await {
-            logging!(warn, Type::Setup, "Failed to migrate legacy macOS service logs: {}", e);
+            logging!(warn, Type::Setup, "Failed to migrate legacy macOS service logs: {e:#}");
         }
         return Ok(());
     }
@@ -489,9 +489,9 @@ pub async fn init_config() -> Result<()> {
 
     AsyncHandler::spawn(|| async {
         if let Err(e) = delete_log().await {
-            logging!(warn, Type::Setup, "Failed to clean old logs: {}", e);
+            logging!(warn, Type::Setup, "Failed to clean old logs: {e:#}");
         }
-        logging!(info, Type::Setup, "后台日志清理任务完成");
+        logging!(debug, Type::Setup, "后台日志清理任务完成");
     });
 
     Ok(())

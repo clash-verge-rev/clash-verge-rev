@@ -1,6 +1,6 @@
 use crate::{
     config::{
-        Config, ConfigType, MixedPort,
+        Config, MixedPort,
         snapshot::{FileSnapshot, capture_config_files, restore_files},
     },
     core::{
@@ -71,8 +71,11 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         return Ok(outcome);
     }
 
+    let yaml = Config::runtime_config_yaml()
+        .await
+        .context("failed to serialize candidate proxy port configuration")?;
     let validation = CoreConfigValidator::global()
-        .validate_config_outcome()
+        .validate_config_outcome_with(&yaml)
         .await
         .context("failed to validate candidate proxy port configuration")?;
     if !validation.is_valid() {
@@ -81,7 +84,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
 
     let snapshots = capture_config_files().await?;
     // Once files change, failures must restore both files and drafts.
-    if let Err(error) = Config::generate_file(ConfigType::Run).await {
+    if let Err(error) = Config::write_runtime_file(&yaml).await {
         transaction.rollback();
         return match restore_files(&snapshots).await {
             Ok(()) => Err(error).context("failed to persist candidate Runtime Configuration"),
@@ -232,7 +235,7 @@ async fn rollback_proxy_ports(snapshots: &[FileSnapshot], was_running: bool) -> 
     discard_proxy_port_drafts().await;
     let file_result = restore_files(snapshots).await;
     if file_result.is_err() {
-        let _ = Config::generate_file(ConfigType::Run).await;
+        let _ = Config::generate_file().await;
     }
 
     let lifecycle_result = if was_running {

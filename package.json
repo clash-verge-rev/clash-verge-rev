@@ -34,9 +34,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "knip:check": "knip",
-    "knip:report": "knip --no-exit-code"
+    "knip:report": "knip --no-exit-code",
+    "perf:build": "node scripts/perf/build.mjs",
+    "perf:run": "node scripts/perf/run.mjs",
+    "perf:compare": "node scripts/perf/compare.mjs",
+    "perf:test": "node --test scripts/perf/report.test.mjs"
   },
   "dependencies": {
+    "@dnd-kit/collision": "^0.5.0",
+    "@dnd-kit/dom": "^0.5.0",
     "@dnd-kit/helpers": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@emotion/react": "^11.14.0",
@@ -95,6 +101,7 @@
     "@types/validator": "^13.15.10",
     "@vitejs/plugin-legacy": "^8.0.2",
     "@vitejs/plugin-react": "^6.0.2",
+    "@wdio/tauri-service": "1.3.0",
     "adm-zip": "^0.6.0",
     "axios": "^1.16.1",
     "cli-color": "^2.0.4",
@@ -123,7 +130,9 @@
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.14",
     "vite-plugin-svgr": "^5.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0",
+    "webdriverio": "9.30.0",
+    "ws": "8.21.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
@@ -135,5 +144,5 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@12.3.3"
+  "packageManager": "pnpm@12.4.1"
 }

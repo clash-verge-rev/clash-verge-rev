@@ -395,12 +395,6 @@ impl SilentUpdater {
 
 impl SilentUpdater {
     async fn check_and_download(&self, app_handle: &tauri::AppHandle) -> Result<()> {
-        let is_portable = *dirs::PORTABLE_FLAG.get().unwrap_or(&false);
-        if is_portable {
-            logging!(debug, Type::System, "Silent update skipped: portable build");
-            return Ok(());
-        }
-
         let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
         if !auto_check {
             logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");

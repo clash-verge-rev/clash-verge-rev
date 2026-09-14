@@ -1,7 +1,11 @@
 use super::{CmdResult, proxy_aware_coded_error};
-use crate::core::{
-    CoreManager,
-    service::{SERVICE_MANAGER, ServiceStatus},
+use crate::{
+    constants::timing,
+    core::{
+        CoreManager,
+        manager::RunningMode,
+        service::{SERVICE_MANAGER, ServiceStatus, request_runtime_provider_sync},
+    },
 };
 
 async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str) -> CmdResult {
@@ -51,4 +55,11 @@ pub async fn continue_with_sidecar() -> CmdResult {
         .continue_with_sidecar()
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))
+}
+
+#[tauri::command]
+pub fn sync_runtime_providers() {
+    if matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
+        request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SETTLE);
+    }
 }

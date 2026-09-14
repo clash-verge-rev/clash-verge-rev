@@ -13,11 +13,16 @@ if [[ ! -f "$CHANGELOG_FILE" ]]; then
   exit 1
 fi
 
-# 提取从第一个 '## v' 开始到下一个 '## v' 前的内容
+# 提取从第一个 '## v' 开始到 '---' 或下一个 '## v' 前的内容
+# '---' 与 scripts/updatelog.mjs 的解析一致：分隔线之后的内容
+# 只属于仓库文件，不进入任何 release body
 UPDATE_LOGS=$(awk '
   /^## v/ {
     if (found) exit;
     found=1
+  }
+  /^---/ && found {
+    exit
   }
   found
 ' "$CHANGELOG_FILE")

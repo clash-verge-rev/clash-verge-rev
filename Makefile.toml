@@ -118,6 +118,17 @@ end
 
 # frontend checks
 cm_run_task frontend-format
+
+# changelog platform grouping
+has_changelog = exec git diff --cached --quiet -- Changelog.md
+if eq ${has_changelog.code} 1
+  grouped = exec bash scripts-workflow/group_platforms.sh
+  if not eq ${grouped.code} 0
+    echo "Changelog platform grouping failed"
+    exit 1
+  end
+  exec git add Changelog.md
+end
 '''
 
 [tasks.pre-push]

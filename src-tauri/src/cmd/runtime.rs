@@ -94,7 +94,7 @@ pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<ser
             "Failed to apply runtime proxy chain config: {}",
             outcome
         ),
-        Err(err) => logging!(error, Type::Core, "Failed to apply runtime proxy chain config: {}", err),
+        Err(err) => logging!(error, Type::Core, "Failed to apply runtime proxy chain config: {err:#}"),
     }
 
     Ok(())

@@ -24,6 +24,11 @@ pub mod timing {
     // milliseconds; anything slower means the Service is still working, so ReplaceCore beats waiting.
     pub const STAGE_CONFIRM_TIMEOUT: Duration = Duration::from_secs(5);
 
+    pub const RUNTIME_PROVIDER_SYNC_DELAY: Duration = Duration::from_secs(15);
+    pub const RUNTIME_PROVIDER_SYNC_RETRY_DELAY: Duration = Duration::from_secs(15);
+    // mihomo rewrites provider caches in place.
+    pub const RUNTIME_PROVIDER_SETTLE: Duration = Duration::from_secs(2);
+
     // Windows 服务冷启动较慢,避免过早回退 sidecar。
     #[cfg(target_os = "windows")]
     pub const SERVICE_WAIT_MAX: Duration = Duration::from_millis(30000);
@@ -59,4 +64,18 @@ pub mod tun {
     pub const DEFAULT_STACK: &str = "gvisor";
 
     pub const DNS_HIJACK: &[&str] = &["any:53"];
+
+    /// Saved dialog fields; `enable` belongs to the verge switch.
+    pub const GUI_KEYS: &[&str] = &[
+        "stack",
+        "device",
+        "auto-route",
+        "route-exclude-address",
+        #[cfg(target_os = "linux")]
+        "auto-redirect",
+        "auto-detect-interface",
+        "dns-hijack",
+        "strict-route",
+        "mtu",
+    ];
 }
