@@ -21,6 +21,12 @@ struct RoutingView: View {
     private var renderingMode: WidgetRenderingMode { systemRenderingMode }
     #endif
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var systemContrast
+    #if DEBUG
+    private var contrast: ColorSchemeContrast { previewIncreaseContrast ? .increased : systemContrast }
+    #else
+    private var contrast: ColorSchemeContrast { systemContrast }
+    #endif
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.accessibilityReduceTransparency) private var systemReduceTransparency
     #if DEBUG
@@ -35,11 +41,11 @@ struct RoutingView: View {
     private func text(_ key: String) -> String { localized(key, language: entry.status.language) }
     private let modes = ["rule", "global", "direct"]
     private var ink: Color { renderingMode == .fullColor ? (colorScheme == .dark ? .white : .black) : .primary }
+    private var secondaryInk: Color { ink.opacity(contrast == .increased ? 0.8 : 0.6) }
     @ViewBuilder private var selectionBackground: some View {
         #if DEBUG
         if previewMaterial == "thin" && renderingMode == .fullColor && !reduceTransparency {
             Capsule().fill(.thinMaterial)
-                .overlay(Capsule().strokeBorder(ink.opacity(0.15), lineWidth: 1))
         } else {
             automaticSelectionBackground
         }
@@ -57,11 +63,12 @@ struct RoutingView: View {
                 .glassEffect(.regular, in: Capsule())
         } else {
             Capsule().fill(.thinMaterial)
-                .overlay(Capsule().strokeBorder(ink.opacity(0.15), lineWidth: 1))
         }
     }
     private func modeInk(selected: Bool) -> Color {
-        guard selected && reduceTransparency && renderingMode == .fullColor else { return ink }
+        guard selected && reduceTransparency && renderingMode == .fullColor else {
+            return selected ? ink : secondaryInk
+        }
         return colorScheme == .dark ? .black : .white
     }
     private var locale: Locale {
@@ -76,18 +83,17 @@ struct RoutingView: View {
         return Button(intent: SetRouting(action, value == true ? "false" : "true")) {
             let label = HStack(spacing: 4) {
                 if !compact { Image(systemName: icon).font(.caption2) }
-                Text(title).font(.system(size: compact ? 11 : 12, weight: .medium))
+                Text(title).font(.caption)
                     .lineLimit(compact ? 2 : 1)
-                    .frame(height: compact ? 28 : nil, alignment: .topLeading)
+                    .frame(height: compact ? 30 : nil, alignment: .topLeading)
             }
             let toggle = ZStack(alignment: .leading) {
-                Capsule().strokeBorder(ink.opacity(0.5), lineWidth: 1)
-                    .background(ink.opacity(value == true ? 0.22 : 0.06), in: Capsule())
+                Capsule().fill(ink.opacity(value == true ? 0.28 : 0.08))
                 Circle().fill(ink)
-                    .frame(width: 12, height: 12)
-                    .offset(x: value.map { $0 ? 18.0 : 4.0 } ?? 11)
+                    .frame(width: 13, height: 13)
+                    .offset(x: value.map { $0 ? 19.0 : 4.0 } ?? 11.5)
             }
-            .frame(width: 34, height: 20)
+            .frame(width: 36, height: 22)
             .environment(\.layoutDirection, .leftToRight)
             if compact {
                 VStack(alignment: .leading, spacing: 8) {
@@ -102,7 +108,7 @@ struct RoutingView: View {
                 }
             }
         }
-        .foregroundStyle(ink)
+        .foregroundStyle(secondaryInk)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(8)
         .disabled(value == nil)
@@ -126,12 +132,6 @@ struct RoutingView: View {
             content.padding(16)
                 .frame(width: family == .systemSmall ? 170 : 360, height: 170)
                 .background { containerMaterial }
-                .overlay {
-                    if previewIncreaseContrast {
-                        RoundedRectangle(cornerRadius: 24).strokeBorder(ink, lineWidth: 2)
-                    }
-                }
-                .contrast(previewIncreaseContrast ? 1.25 : 1)
                 .clipShape(RoundedRectangle(cornerRadius: 24))
         } else {
             content.containerBackground(for: .widget) { containerMaterial }
@@ -142,7 +142,7 @@ struct RoutingView: View {
     }
 
     private var content: some View {
-        VStack(alignment: .leading, spacing: family == .systemSmall ? 10 : 12) {
+        VStack(alignment: .leading, spacing: 8) {
             GeometryReader { geometry in
                 let width = (geometry.size.width - 4) / 3
                 let orderedModes = rtl ? Array(modes.reversed()) : modes
@@ -157,10 +157,7 @@ struct RoutingView: View {
                         ForEach(orderedModes, id: \.self) { mode in
                             let selected = entry.status.mode == mode
                             let label = Text(text("tray." + mode))
-                                .font(.system(
-                                    size: family == .systemSmall ? 12 : 13,
-                                    weight: selected ? .semibold : .regular
-                                ))
+                                .font(selected ? .footnote.weight(.semibold) : .footnote)
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 30)
@@ -175,7 +172,6 @@ struct RoutingView: View {
                     .padding(.horizontal, 2)
                     .zIndex(1)
                 }
-                .background(ink.opacity(0.04), in: Capsule())
                 .invalidatableContent()
                 .environment(\.layoutDirection, .leftToRight)
             }
@@ -188,7 +184,12 @@ struct RoutingView: View {
                 )
             }
             if let error = entry.status.error {
-                Text(text(error)).font(.caption2).foregroundStyle(ink.opacity(0.8)).lineLimit(2)
+                Label {
+                    Text(text(error)).font(.caption2).lineLimit(2)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill").font(.caption2)
+                }
+                .foregroundStyle(secondaryInk)
             }
         }
         .environment(\.locale, locale)
