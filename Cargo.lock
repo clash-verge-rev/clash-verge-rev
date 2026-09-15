@@ -8484,9 +8484,8 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.24.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "045979e3f037cd18ad1cb2a419dfda133c5c29c9f3453370079f2255d46c257e"
+version = "0.24.1"
+source = "git+https://github.com/Tunglies/tray-icon.git?branch=fix%2Fmacos-27-click-reentrancy#5750c67d02d32f2af100e120ad665959d4268cef"
 dependencies = [
  "crossbeam-channel",
  "dirs 6.0.0",

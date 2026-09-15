@@ -46,6 +46,12 @@ inherits = "fast-release"
 codegen-units = 1
 split-debuginfo = "unpacked"
 
+[patch.crates-io]
+# macOS Golden Gate fix for tray-icon click reentrancy issue
+# Remove the following patch once the fix is merged upstream(tauri) 
+# https://github.com/tauri-apps/tray-icon/pull/365
+tray-icon = { git = "https://github.com/Tunglies/tray-icon.git", branch = "fix/macos-27-click-reentrancy" }
+
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
@@ -72,7 +78,13 @@ tokio = { version = "1.53.1", features = [
 flexi_logger = "0.31.10"
 log = "0.4.33"
 regex = "1.13.1"
-reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
+reqwest = { version = "0.13.4", features = [
+  "json",
+  "cookies",
+  "gzip",
+  "rustls",
+  "form",
+] }
 rust_iso3166 = "0.2.0"
 
 smartstring = { version = "1.0.1" }
@@ -93,7 +105,7 @@ windows-sys = { version = "0.61.2", features = [
   "Win32_Security_Authorization",
   "Win32_Storage_FileSystem",
   "Win32_System_Threading",
-  "Win32_System_JobObjects"
+  "Win32_System_JobObjects",
 ] }
 # *********************************
 
