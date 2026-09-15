@@ -91,3 +91,14 @@ tray:
     systemProxy: Системалы прокси
     tun: TUN
     profile: Профиль
+widget:
+  unavailable: Clash Verge ачыгыз
+  failed: Яңарту уңышсыз; Clash Verge тикшерегез
+  'on': Кабызылган
+  'off': Сүндерелгән
+  unknown: Билгесез
+  name: Clash Verge маршрутлау
+  description: Маршрутлау режимы, TUN һәм система проксие белән идарә итү.
+  update: Clash Verge яңарту
+  setting: Көйләү
+  value: Кыйммәт

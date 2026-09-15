@@ -1139,6 +1139,7 @@ dependencies = [
  "clash-verge-logging",
  "clash-verge-media-unlock",
  "clash-verge-signal",
+ "clash-verge-widget",
  "clash_verge_service_ipc",
  "criterion",
  "dark-light",
@@ -1260,6 +1261,19 @@ version = "0.1.0"
 dependencies = [
  "clash-verge-logging",
  "log",
+ "tokio",
+]
+
+[[package]]
+name = "clash-verge-widget"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "libc",
+ "log",
+ "scopeguard",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 

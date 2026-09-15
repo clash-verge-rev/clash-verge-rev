@@ -91,3 +91,14 @@ tray:
     systemProxy: Proksi Sistem
     tun: TUN
     profile: Profil
+widget:
+  unavailable: Buka Clash Verge
+  failed: Pembaruan gagal; periksa Clash Verge
+  'on': Aktif
+  'off': Nonaktif
+  unknown: Tidak diketahui
+  name: Perutean Clash Verge
+  description: Kontrol mode perutean, TUN, dan proksi sistem.
+  update: Perbarui Clash Verge
+  setting: Pengaturan
+  value: Nilai

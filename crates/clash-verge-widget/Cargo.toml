@@ -1,0 +1,19 @@
+[package]
+name = "clash-verge-widget"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+anyhow = { workspace = true }
+libc = "0.2.189"
+log = { workspace = true }
+scopeguard = "1.2.0"
+serde_json = { workspace = true }
+tokio = { workspace = true, features = ["net", "io-util"] }
+
+[lints]
+workspace = true

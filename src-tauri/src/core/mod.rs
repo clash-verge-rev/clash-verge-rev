@@ -19,6 +19,8 @@ pub mod timer;
 pub mod tray;
 pub mod updater;
 pub mod validate;
+#[cfg(target_os = "macos")]
+pub mod widget;
 pub mod win_uwp;
 
 pub use self::{manager::CoreManager, timer::Timer, updater::SilentUpdater};

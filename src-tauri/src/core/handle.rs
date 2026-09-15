@@ -36,10 +36,14 @@ impl Handle {
     }
 
     pub fn refresh_clash() {
+        #[cfg(target_os = "macos")]
+        clash_verge_widget::reload();
         Self::send_event(FrontendEvent::RefreshClash);
     }
 
     pub fn refresh_verge() {
+        #[cfg(target_os = "macos")]
+        clash_verge_widget::reload();
         Self::send_event(FrontendEvent::RefreshVerge);
     }
 
@@ -56,6 +60,8 @@ impl Handle {
     /// Sent on every transition, so the frontend does not have to poll to notice that the Core
     /// stopped or that the Service came back.
     pub fn notify_run_state(state: &crate::core::runstate::RunStateView) {
+        #[cfg(target_os = "macos")]
+        clash_verge_widget::reload();
         let Ok(state) = serde_json::to_value(state) else {
             return;
         };

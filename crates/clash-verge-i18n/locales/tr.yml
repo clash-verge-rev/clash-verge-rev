@@ -91,3 +91,14 @@ tray:
     systemProxy: Sistem Vekil'i
     tun: TUN
     profile: Profil
+widget:
+  unavailable: Clash Verge uygulamasını açın
+  failed: Güncelleme başarısız; Clash Verge uygulamasını kontrol edin
+  'on': Açık
+  'off': Kapalı
+  unknown: Bilinmiyor
+  name: Clash Verge Yönlendirme
+  description: Yönlendirme modu, TUN ve sistem vekili denetimleri.
+  update: Clash Verge güncelle
+  setting: Ayar
+  value: Değer

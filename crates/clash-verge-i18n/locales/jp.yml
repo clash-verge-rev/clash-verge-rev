@@ -91,3 +91,14 @@ tray:
     systemProxy: システムプロキシ
     tun: TUN
     profile: プロファイル
+widget:
+  unavailable: Clash Verge を開いてください
+  failed: 更新失敗。Clash Verge を確認してください
+  'on': オン
+  'off': オフ
+  unknown: 不明
+  name: Clash Verge ルーティング
+  description: ルーティングモード、TUN、システムプロキシの操作。
+  update: Clash Verge を更新
+  setting: 設定
+  value: 値

@@ -91,3 +91,14 @@ tray:
     systemProxy: Proxy del sistema
     tun: TUN
     profile: Perfil
+widget:
+  unavailable: Abre Clash Verge
+  failed: Error al actualizar; revisa Clash Verge
+  'on': Activado
+  'off': Desactivado
+  unknown: Desconocido
+  name: Enrutamiento de Clash Verge
+  description: Controles del modo de enrutamiento, TUN y proxy del sistema.
+  update: Actualizar Clash Verge
+  setting: Ajuste
+  value: Valor

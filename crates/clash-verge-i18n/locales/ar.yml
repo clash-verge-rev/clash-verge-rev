@@ -91,3 +91,14 @@ tray:
     systemProxy: وكيل النظام
     tun: TUN
     profile: ملف تعريفي
+widget:
+  unavailable: افتح Clash Verge
+  failed: فشل التحديث؛ تحقق من Clash Verge
+  'on': مفعّل
+  'off': معطّل
+  unknown: غير معروف
+  name: توجيه Clash Verge
+  description: التحكم في وضع التوجيه وTUN ووكيل النظام.
+  update: تحديث Clash Verge
+  setting: الإعداد
+  value: القيمة

@@ -1,0 +1,3 @@
+# Xcode per-user state and local build output
+xcuserdata/
+DerivedData/
