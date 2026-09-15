@@ -1,4 +1,3 @@
-import { Feedback } from '@dnd-kit/dom'
 import { useSortable } from '@dnd-kit/react/sortable'
 import { useTheme } from '@mui/material'
 import { type CSSProperties, type ReactNode, useCallback } from 'react'
@@ -17,7 +16,6 @@ interface SortableItemProps {
   // 用于给 tanstack virtual 列表测量当前拖动元素尺寸
   measureElementRef?: (element: HTMLDivElement | null) => void
   dataIndex?: number
-  feedbackClone?: boolean
   style?: CSSProperties
   children: ReactNode | ((props: SortableItemRenderProps) => ReactNode)
 }
@@ -30,7 +28,6 @@ export const SortableItem = (props: SortableItemProps) => {
     disabled,
     measureElementRef,
     dataIndex,
-    feedbackClone,
     children,
     style,
   } = props
@@ -38,9 +35,6 @@ export const SortableItem = (props: SortableItemProps) => {
     id,
     index,
     group,
-    ...(feedbackClone && {
-      plugins: [Feedback.configure({ feedback: 'clone' })],
-    }),
     disabled,
   })
   const theme = useTheme()
