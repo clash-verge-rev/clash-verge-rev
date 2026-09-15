@@ -564,8 +564,39 @@ fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn install_service() -> Result<()> {
-    use std::process::Output;
     logging!(info, Type::Service, "install service");
+    let cores = crate::config::IVerge::VALID_CLASH_CORES
+        .iter()
+        .map(|core| service_core_path(core, ".exe"))
+        .collect::<Result<Vec<_>>>()?;
+    install_windows_service_with_cores(&cores, run_windows_service_installer)
+}
+
+#[cfg(target_os = "windows")]
+fn install_windows_service_with_cores(
+    cores: &[PathBuf],
+    mut run_installer: impl FnMut(&[std::ffi::OsString]) -> Result<()>,
+) -> Result<()> {
+    let cores: Vec<_> = cores.iter().filter(|core| core.is_file()).collect();
+    if cores.is_empty() {
+        bail!("no core executable is available; restore a bundled core before installing the service");
+    }
+    let mut arguments = vec!["--install-service".into()];
+    for core in cores {
+        let digest = sha256_hex(core)?;
+        arguments.extend([
+            "--install-core".into(),
+            core.as_os_str().to_owned(),
+            "--sha256".into(),
+            digest.into(),
+        ]);
+    }
+    run_installer(&arguments).context("failed to install the service and its cores; choose Repair to retry")
+}
+
+#[cfg(target_os = "windows")]
+fn run_windows_service_installer(arguments: &[std::ffi::OsString]) -> Result<()> {
+    use std::process::Output;
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
@@ -583,7 +614,7 @@ fn install_service() -> Result<()> {
     let level = token.privilege_level()?;
     let output = match level {
         PrivilegeLevel::NotPrivileged => {
-            let status = RunasCommand::new(&install_path).show(false).status()?;
+            let status = RunasCommand::new(&install_path).args(arguments).show(false).status()?;
             Output {
                 status,
                 stdout: Vec::new(),
@@ -592,7 +623,10 @@ fn install_service() -> Result<()> {
         }
         _ => {
             // StdCommand returns Output directly
-            StdCommand::new(&install_path).creation_flags(0x08000000).output()?
+            StdCommand::new(&install_path)
+                .args(arguments)
+                .creation_flags(0x08000000)
+                .output()?
         }
     };
 
@@ -2165,6 +2199,82 @@ mod tests {
         fn drop(&mut self) {
             let _ = std::fs::remove_dir_all(&self.0);
         }
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_service_install_combines_service_and_attested_cores() -> anyhow::Result<()> {
+        use std::ffi::OsString;
+        let root = TestDirectory::new("scoop install")?;
+        let cores: Vec<_> = crate::config::IVerge::VALID_CLASH_CORES
+            .iter()
+            .map(|name| root.path().join(format!("{name}.exe")))
+            .collect();
+        for core in &cores {
+            std::fs::write(core, b"abc")?;
+        }
+        let mut calls = Vec::new();
+        super::install_windows_service_with_cores(&cores, |arguments| {
+            calls.push(arguments.to_vec());
+            Ok(())
+        })?;
+        assert_eq!(calls.len(), 1, "service and cores must share one elevation");
+        let digest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+        let mut expected: Vec<OsString> = vec!["--install-service".into()];
+        expected.extend(cores.iter().flat_map(|core| {
+            [
+                "--install-core".into(),
+                core.as_os_str().to_owned(),
+                "--sha256".into(),
+                digest.into(),
+            ]
+        }));
+        assert_eq!(calls[0], expected);
+        Ok(())
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_service_install_skips_unavailable_cores() -> anyhow::Result<()> {
+        let root = TestDirectory::new("missing-core")?;
+        let core = root.path().join("verge-mihomo.exe");
+        let missing = root.path().join("verge-mihomo-alpha.exe");
+        std::fs::write(&core, b"abc")?;
+        let cores = [core.clone(), missing.clone(), root.path().to_path_buf()];
+        let mut calls = Vec::new();
+        super::install_windows_service_with_cores(&cores, |arguments| {
+            calls.push(arguments.to_vec());
+            Ok(())
+        })?;
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].len(), 5);
+        assert_eq!(calls[0][0], "--install-service");
+        assert_eq!(calls[0][2], core.as_os_str());
+
+        let error = super::install_windows_service_with_cores(&[missing, root.path().to_path_buf()], |_| {
+            panic!("no available core must fail before invoking the installer")
+        })
+        .expect_err("installation requires at least one available core");
+        assert!(error.to_string().contains("no core executable"));
+        Ok(())
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_service_install_propagates_installer_failure() -> anyhow::Result<()> {
+        let root = TestDirectory::new("install-failure")?;
+        let core = root.path().join("verge-mihomo.exe");
+        std::fs::write(&core, b"abc")?;
+        let mut calls = 0;
+        let result = super::install_windows_service_with_cores(std::slice::from_ref(&core), |_| {
+            calls += 1;
+            bail!("installer failed with exit code 1")
+        });
+        let error = result.expect_err("installation failure must not be reported as success");
+        assert!(format!("{error:#}").contains("exit code 1"));
+        assert!(error.to_string().contains("Repair"));
+        assert_eq!(calls, 1);
+        Ok(())
     }
 
     fn staging_directory(home: &Path) -> PathBuf {
