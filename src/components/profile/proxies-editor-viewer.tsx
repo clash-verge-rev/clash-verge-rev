@@ -1,13 +1,5 @@
 import { arrayMove } from '@dnd-kit/helpers'
 import {
-  DragDropProvider,
-  type DragOverEvent,
-  KeyboardSensor,
-  PointerSensor,
-  type DragEndEvent,
-} from '@dnd-kit/react'
-import { isSortable, isSortableOperation } from '@dnd-kit/react/sortable'
-import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
@@ -35,12 +27,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  BaseSearchBox,
-  MonacoEditor,
-  SortableItem,
-  VirtualList,
-} from '@/components/base'
+import { BaseSearchBox, MonacoEditor } from '@/components/base'
 import { ProxyItem } from '@/components/profile/proxy-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -49,6 +36,12 @@ import type { MonacoEditorInstance } from '@/types/monaco'
 import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 import parseUri from '@/utils/uri-parser'
 import { parseYamlSafe } from '@/utils/yaml'
+
+import {
+  buildGroupedItems,
+  type GroupedVirtualItem,
+  GroupedVirtualList,
+} from './grouped-virtual-list'
 
 interface Props {
   profileUid: string
@@ -107,106 +100,71 @@ export const ProxiesEditorViewer = (props: Props) => {
     [appendSeq, match],
   )
 
-  const renderItem = (index: number): React.ReactNode => {
-    const shift = filteredPrependSeq.length > 0 ? 1 : 0
-    if (filteredPrependSeq.length > 0 && index === 0) {
+  const items = useMemo(
+    () =>
+      buildGroupedItems(
+        filteredPrependSeq,
+        filteredProxyList,
+        filteredAppendSeq,
+        (proxy) => proxy.name,
+      ),
+    [filteredPrependSeq, filteredProxyList, filteredAppendSeq],
+  )
+
+  const renderItem = (entry: GroupedVirtualItem<IProxyConfig>) => {
+    const { category, item } = entry
+
+    if (category === 'original') {
+      const isDeleted = deleteSeq.includes(item.name)
       return (
-        <>
-          {filteredPrependSeq.map((item, itemIndex) => {
-            return (
-              <SortableItem
-                key={item.name}
-                id={`prepend:${item.name}`}
-                index={itemIndex}
-                group="prepend"
-                style={{ margin: '8px 0' }}
-              >
-                <ProxyItem
-                  type="prepend"
-                  proxy={item}
-                  onDelete={() => {
-                    setPrependSeq(
-                      prependSeq.filter((v) => v.name !== item.name),
-                    )
-                  }}
-                />
-              </SortableItem>
-            )
-          })}
-        </>
-      )
-    } else if (index < filteredProxyList.length + shift) {
-      const newIndex = index - shift
-      return (
-        <Box sx={{ margin: '8px 0' }}>
-          <ProxyItem
-            key={filteredProxyList[newIndex].name}
-            type={
-              deleteSeq.includes(filteredProxyList[newIndex].name)
-                ? 'delete'
-                : 'original'
+        <ProxyItem
+          type={isDeleted ? 'delete' : 'original'}
+          proxy={item}
+          onDelete={() => {
+            if (isDeleted) {
+              setDeleteSeq(deleteSeq.filter((v) => v !== item.name))
+            } else {
+              setDeleteSeq((prev) => [...prev, item.name])
             }
-            proxy={filteredProxyList[newIndex]}
-            onDelete={() => {
-              if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
-                setDeleteSeq(
-                  deleteSeq.filter(
-                    (v) => v !== filteredProxyList[newIndex].name,
-                  ),
-                )
-              } else {
-                setDeleteSeq((prev) => [
-                  ...prev,
-                  filteredProxyList[newIndex].name,
-                ])
-              }
-            }}
-          />
-        </Box>
+          }}
+        />
       )
-    } else {
+    }
+
+    if (category === 'prepend') {
       return (
-        <>
-          {filteredAppendSeq.map((item, itemIndex) => {
-            return (
-              <SortableItem
-                key={item.name}
-                id={`append:${item.name}`}
-                index={itemIndex}
-                group="append"
-                style={{ margin: '8px 0' }}
-              >
-                <ProxyItem
-                  type="append"
-                  proxy={item}
-                  onDelete={() => {
-                    setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
-                  }}
-                />
-              </SortableItem>
-            )
-          })}
-        </>
+        <ProxyItem
+          type="prepend"
+          proxy={item}
+          onDelete={() => {
+            setPrependSeq(prependSeq.filter((v) => v.name !== item.name))
+          }}
+        />
       )
     }
+
+    return (
+      <ProxyItem
+        type="append"
+        proxy={item}
+        onDelete={() => {
+          setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+        }}
+      />
+    )
   }
 
-  const onPrependDragEnd = async (event: DragEndEvent) => {
-    const { operation, canceled } = event
-    const { source, target } = operation
-    if (canceled || !target || !isSortable(source)) return
-
-    const { index: overIndex, initialIndex: activeIndex } = source.sortable
-    const activeRealIndex = findRealIndex(
-      prependSeq,
-      filteredPrependSeq,
-      activeIndex,
-    )
-    const overRealIndex = findRealIndex(
-      prependSeq,
-      filteredPrependSeq,
-      overIndex,
-    )
+  const onReorder = (
+    category: 'prepend' | 'append',
+    activeIndex: number,
+    overIndex: number,
+  ) => {
+    const list = category === 'prepend' ? prependSeq : appendSeq
+    const filtered =
+      category === 'prepend' ? filteredPrependSeq : filteredAppendSeq
+    const setList = category === 'prepend' ? setPrependSeq : setAppendSeq
+    const activeRealIndex = findRealIndex(list, filtered, activeIndex)
+    const overRealIndex = findRealIndex(list, filtered, overIndex)
     if (
       activeRealIndex < 0 ||
       overRealIndex < 0 ||
@@ -215,52 +173,9 @@ export const ProxiesEditorViewer = (props: Props) => {
       return
     }
 
-    setPrependSeq(arrayMove(prependSeq, activeRealIndex, overRealIndex))
+    setList(arrayMove(list, activeRealIndex, overRealIndex))
   }
-  const onAppendDragEnd = async (event: DragEndEvent) => {
-    const { operation, canceled } = event
-    const { source, target } = operation
-    if (canceled || !target || !isSortable(source)) return
 
-    const { index: overIndex, initialIndex: activeIndex } = source.sortable
-    const activeRealIndex = findRealIndex(
-      appendSeq,
-      filteredAppendSeq,
-      activeIndex,
-    )
-    const overRealIndex = findRealIndex(appendSeq, filteredAppendSeq, overIndex)
-    if (
-      activeRealIndex < 0 ||
-      overRealIndex < 0 ||
-      activeRealIndex === overRealIndex
-    ) {
-      return
-    }
-
-    setAppendSeq(arrayMove(appendSeq, activeRealIndex, overRealIndex))
-  }
-  const onDragOver = (event: DragOverEvent) => {
-    const { operation } = event
-    if (!isSortableOperation(operation)) return
-
-    const { source, target } = operation
-    if (source?.group !== target?.group) {
-      event.preventDefault()
-    }
-  }
-  const onDragEnd = async (event: DragEndEvent) => {
-    const source = event.operation.source
-    if (!isSortable(source)) return
-
-    const { initialGroup, group } = source.sortable
-    if (initialGroup !== group) return
-
-    if (group === 'prepend') {
-      await onPrependDragEnd(event)
-    } else if (group === 'append') {
-      await onAppendDragEnd(event)
-    }
-  }
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
   const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
     const proxies: IProxyConfig[] = []
@@ -522,22 +437,12 @@ export const ProxiesEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <DragDropProvider
-                sensors={[PointerSensor, KeyboardSensor]}
-                onDragOver={onDragOver}
-                onDragEnd={onDragEnd}
-              >
-                <VirtualList
-                  count={
-                    filteredProxyList.length +
-                    (filteredPrependSeq.length > 0 ? 1 : 0) +
-                    (filteredAppendSeq.length > 0 ? 1 : 0)
-                  }
-                  estimateSize={56}
-                  renderItem={renderItem}
-                  style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-                />
-              </DragDropProvider>
+              <GroupedVirtualList
+                items={items}
+                renderItem={renderItem}
+                onReorder={onReorder}
+                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+              />
             </List>
           </>
         ) : (

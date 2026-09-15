@@ -1,3 +1,4 @@
+import { Feedback } from '@dnd-kit/dom'
 import { useSortable } from '@dnd-kit/react/sortable'
 import { useTheme } from '@mui/material'
 import { type CSSProperties, type ReactNode, useCallback } from 'react'
@@ -13,16 +14,33 @@ interface SortableItemProps {
   index: number
   group?: string
   disabled?: boolean
+  // 用于给 tanstack virtual 列表测量当前拖动元素尺寸
+  measureElementRef?: (element: HTMLDivElement | null) => void
+  dataIndex?: number
+  feedbackClone?: boolean
   style?: CSSProperties
   children: ReactNode | ((props: SortableItemRenderProps) => ReactNode)
 }
 
 export const SortableItem = (props: SortableItemProps) => {
-  const { id, index, group, disabled, children, style } = props
+  const {
+    id,
+    index,
+    group,
+    disabled,
+    measureElementRef,
+    dataIndex,
+    feedbackClone,
+    children,
+    style,
+  } = props
   const { ref, handleRef, sortable, isDragging } = useSortable({
     id,
     index,
     group,
+    ...(feedbackClone && {
+      plugins: [Feedback.configure({ feedback: 'clone' })],
+    }),
     disabled,
   })
   const theme = useTheme()
@@ -30,8 +48,9 @@ export const SortableItem = (props: SortableItemProps) => {
     (element: HTMLDivElement | null) => {
       handleRef(element?.querySelector('[data-sortable-handle]') ?? null)
       ref(element)
+      measureElementRef?.(element)
     },
-    [handleRef, ref],
+    [handleRef, ref, measureElementRef],
   )
 
   const mergedStyle: CSSProperties = {
@@ -53,7 +72,7 @@ export const SortableItem = (props: SortableItemProps) => {
   }
 
   return (
-    <div ref={setRef} style={mergedStyle}>
+    <div ref={setRef} data-index={dataIndex} style={mergedStyle}>
       {children}
     </div>
   )
