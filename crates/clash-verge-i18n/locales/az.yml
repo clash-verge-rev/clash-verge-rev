@@ -1,0 +1,93 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: İdarə paneli
+    body: İdarə panelinin görünmə vəziyyəti dəyişdi.
+  clashModeChanged:
+    title: Rejim dəyişikliyi
+    body: '{mode} rejiminə keçildi.'
+  systemProxyToggled:
+    title: Sistem proksisi
+    'on': Sistem proksisi aktivləşdirildi.
+    'off': Sistem proksisi söndürüldü.
+  systemProxyFailed:
+    title: Sistem proksisi
+    body: Sistem proksisi qurulmadı, səbəbini öyrənmək üçün Clash Verge tətbiqini açın.
+  systemProxyGuardStopped:
+    title: Sistem proksisinin mühafizəsi
+    body: Mühafizə bir neçə uğursuz cəhddən sonra dayandı, səbəbini öyrənmək üçün Clash Verge tətbiqini açın.
+  tunModeToggled:
+    title: TUN rejimi
+    'on': TUN rejimi aktivləşdirildi.
+    'off': TUN rejimi söndürüldü.
+  lightweightModeEntered:
+    title: Yüngül rejim
+    body: Yüngül rejimə keçildi.
+  profilesReactivated:
+    title: Profillər
+    body: Profil yenidən aktivləşdirildi.
+  appQuit:
+    title: Çıxış
+    body: Clash Verge bağlanmaq üzrədir.
+  appHidden:
+    title: Tətbiqin gizlədilməsi
+    body: Clash Verge arxa planda işləyir.
+  updateReady:
+    title: Clash Verge yeniləməsi
+    body: Yeni versiya (v{version}) endirildi və quraşdırılmağa hazırdır.
+    installNow: İndi quraşdır
+    later: Sonra
+service:
+  adminInstallPrompt: Clash Verge xidmətini quraşdırmaq üçün administrator səlahiyyətləri tələb olunur.
+  adminUninstallPrompt: Clash Verge xidmətini silmək üçün administrator səlahiyyətləri tələb olunur.
+launchGuard:
+  currentExeError: 'Tətbiqin yerini müəyyən etmək mümkün olmadı: {error}'
+  homeDirError: 'Cari istifadəçinin ev qovluğunu müəyyən etmək mümkün olmadığından tətbiq bağlanacaq: {error}'
+  translocated: macOS bu tətbiqi müvəqqəti App Translocation qovluğundan işlədir, Finder vasitəsilə onu əl ilə /Applications və ya ~/Applications qovluğuna köçürün və yenidən açın.
+  rejected: |-
+    Bu tətbiq Applications qovluğundan başladılmalıdır.
+
+    {reason}
+  notInBundle: İcra olunan fayl tətbiq paketinin daxilində deyil.
+  canonicalizeBundleError: 'Tətbiq paketinin yolunu müəyyən etmək mümkün olmadı: {error}'
+  bundleNameError: Tətbiq paketinin adını müəyyən etmək mümkün olmadığından tətbiq bağlanacaq.
+  replacePrompt: '{destination} ünvanında artıq tətbiq mövcuddur, onu əvəz edib Applications qovluğundan yenidən başlatmaq istəyirsiniz?'
+  movePrompt: Arxa plan xidmətini təhlükəsiz başlatmaq üçün tətbiq {destination} ünvanına köçürülməlidir, onu indi köçürüb yenidən başlatmaq istəyirsiniz?
+  createApplicationsDirError: 'Applications qovluğunu yaratmaq mümkün olmadı: {error}'
+  moveFailed: Tətbiqi köçürmək mümkün olmadı, Finder vasitəsilə əl ilə köçürün və yenidən cəhd edin.
+  replaceFailed: 'Mövcud tətbiqi təhlükəsiz əvəz etmək mümkün olmadı: {error}'
+  relaunchFailed: Tətbiqin surəti çıxarıldı, lakin avtomatik yenidən başlatmaq mümkün olmadı, onu Applications qovluğundan əl ilə açın.
+  cancel: Ləğv et
+  move: Köçür
+  ok: Təsdiqlə
+tray:
+  dashboard: İdarə paneli
+  ruleMode: Qayda rejimi
+  globalMode: Qlobal rejim
+  directMode: Birbaşa rejim
+  outboundModes: Çıxış rejimləri
+  rule: Qayda
+  direct: Birbaşa
+  global: Qlobal
+  profiles: Profillər
+  proxies: Proksilər
+  systemProxy: Sistem proksisi
+  tunMode: TUN rejimi
+  closeAllConnections: Bütün əlaqələri bağla
+  lightweightMode: Yüngül rejim
+  copyEnv: Mühit dəyişənlərinin surətini çıxar
+  confDir: Konfiqurasiya qovluğu
+  coreDir: Nüvə qovluğu
+  logsDir: Jurnal qovluğu
+  openDir: Qovluğu aç
+  appLog: Tətbiq jurnalı
+  coreLog: Nüvə jurnalı
+  restartClash: Clash nüvəsini yenidən başlat
+  restartApp: Tətbiqi yenidən başlat
+  vergeVersion: Verge versiyası
+  more: Daha çox
+  exit: Çıxış
+  tooltip:
+    systemProxy: Sistem proksisi
+    tun: TUN
+    profile: Profil
