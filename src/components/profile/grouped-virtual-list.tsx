@@ -12,7 +12,7 @@ import { type CSSProperties, type ReactNode, useRef, useState } from 'react'
 
 import { SortableItem } from '../base'
 
-export type GroupedVirtualCategory = 'prepend' | 'original' | 'append'
+type GroupedVirtualCategory = 'prepend' | 'original' | 'append'
 
 export interface GroupedVirtualItem<T> {
   id: string
