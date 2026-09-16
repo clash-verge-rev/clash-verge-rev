@@ -323,6 +323,21 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Ok(())
     }
 
+    #[cfg(target_os = "windows")]
+    pub fn allow_sidecar_after_service_refusal(&self, reason: String) -> Result<()> {
+        let mut state = self.service.lock();
+        if self.operation_running.load(Ordering::Acquire) || state.service.pending.is_some() {
+            bail!("cannot fall back while a service operation is pending");
+        }
+        // Publish the refusal and allowance together so it never asks the UI for a repair.
+        state.service.health = ServiceHealth::Unavailable(reason);
+        state.service.allow_sidecar();
+        state.bump();
+        drop(state);
+        self.announce();
+        Ok(())
+    }
+
     /// Requests installation only for a confirmed absent Service.
     pub fn require_install_for_session(&self) -> Result<()> {
         let mut state = self.service.lock();

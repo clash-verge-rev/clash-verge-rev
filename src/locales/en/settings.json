@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "Service Installed Successfully",
+        "sidecarFallback": "The service could not start the core due to path permissions. Switched to administrator mode to continue running.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },
       "updater": {

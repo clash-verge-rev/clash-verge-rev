@@ -831,6 +831,7 @@ export interface TranslationResources {
           }
           clashService: {
             installSuccess: string
+            sidecarFallback: string
             uninstallSuccess: string
           }
           updater: {

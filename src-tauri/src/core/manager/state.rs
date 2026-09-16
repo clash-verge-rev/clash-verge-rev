@@ -18,6 +18,44 @@ use tauri_plugin_shell::ShellExt as _;
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
 
+#[cfg(target_os = "windows")]
+async fn retry_service_start<Start, StartFuture>(
+    attempts: usize,
+    retry_delay: std::time::Duration,
+    mut start: Start,
+) -> Result<()>
+where
+    Start: FnMut() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+{
+    let mut last_error = None;
+    for attempt in 0..attempts {
+        match start().await {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "service start attempt {}/{} failed: {error:#}",
+                    attempt + 1,
+                    attempts
+                );
+                if error
+                    .downcast_ref::<service::ServiceStartRefusal>()
+                    .is_some_and(|refusal| service::StageRequest::is_about_the_bundle(refusal.code))
+                {
+                    return Err(error);
+                }
+                last_error = Some(error);
+                if attempt + 1 < attempts {
+                    tokio::time::sleep(retry_delay).await;
+                }
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+}
+
 impl CoreManager {
     /// Restores profile selections before callers enable the system proxy.
     /// The bounded first pass continues in the background, and later calls supersede earlier ones.
@@ -269,30 +307,15 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         {
             use crate::constants::timing;
-            let mut last_err = None;
-            for attempt in 0..timing::SERVICE_START_RETRIES {
-                match service::run_core_by_service(config_file).await {
-                    Ok(()) => {
-                        self.mark_core_ready();
-                        self.core_started(RunningMode::Service);
-                        self.restore_selected_nodes().await;
-                        service::request_runtime_provider_sync(crate::constants::timing::RUNTIME_PROVIDER_SYNC_DELAY);
-                        return Ok(());
-                    }
-                    Err(e) => {
-                        logging!(
-                            warn,
-                            Type::Core,
-                            "service start attempt {}/{} failed: {e:#}",
-                            attempt + 1,
-                            timing::SERVICE_START_RETRIES
-                        );
-                        last_err = Some(e);
-                        tokio::time::sleep(timing::SERVICE_START_RETRY_DELAY).await;
-                    }
-                }
-            }
-            Err(last_err.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+            retry_service_start(timing::SERVICE_START_RETRIES, timing::SERVICE_START_RETRY_DELAY, || {
+                service::run_core_by_service(config_file)
+            })
+            .await?;
+            self.mark_core_ready();
+            self.core_started(RunningMode::Service);
+            self.restore_selected_nodes().await;
+            service::request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SYNC_DELAY);
+            Ok(())
         }
 
         #[cfg(not(target_os = "windows"))]

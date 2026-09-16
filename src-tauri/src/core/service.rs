@@ -39,6 +39,17 @@ use std::{
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
+static PENDING_SERVICE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
+
+#[cfg(target_os = "windows")]
+pub(crate) fn notify_service_fallback() {
+    PENDING_SERVICE_FALLBACK_NOTICE.store(true, Ordering::Relaxed);
+    Handle::notice_message("service_core::sidecar_fallback", "");
+}
+
+pub(crate) fn take_service_fallback_notice() -> bool {
+    PENDING_SERVICE_FALLBACK_NOTICE.swap(false, Ordering::Relaxed)
+}
 
 /// Capabilities of the service session that owns the running Core.
 /// They are discarded with that session rather than cached across service upgrades.
@@ -1076,6 +1087,25 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
         .context("Clash Verge Service 未返回运行时暂存结果")
 }
 
+#[derive(Debug)]
+pub(super) struct ServiceStartRefusal {
+    pub code: u16,
+    pub core_path: String,
+    pub message: String,
+}
+
+impl std::fmt::Display for ServiceStartRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "failed to start Service core at {} (code {}): {}",
+            self.core_path, self.code, self.message
+        )
+    }
+}
+
+impl std::error::Error for ServiceStartRefusal {}
+
 /// 尝试使用服务启动core
 #[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
@@ -1111,10 +1141,12 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             err_msg
         );
         start_owner_monitor();
-        bail!(
-            "failed to start Service core at {}: {err_msg}",
-            request.runtime.core_path
-        );
+        return Err(ServiceStartRefusal {
+            code: response.code,
+            core_path: request.runtime.core_path,
+            message: err_msg,
+        }
+        .into());
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
@@ -1133,6 +1165,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
     tracing::Span::current().record("outcome", "started");
+    PENDING_SERVICE_FALLBACK_NOTICE.store(false, Ordering::Relaxed);
     logging!(
         info,
         Type::Service,

@@ -13,7 +13,10 @@ vi.mock('react', () => ({ useEffect: (effect: () => void) => effect() }))
 vi.mock('@/hooks/use-profiles', () => ({ revalidateProfiles: vi.fn() }))
 vi.mock('@/hooks/use-system-state', () => ({ runStateQueryKey: ['state'] }))
 vi.mock('@/services/events', () => ({ subscribeVergeEvents: vi.fn() }))
-vi.mock('@/services/cmds', () => ({ takeDnsOverrideNotice: vi.fn() }))
+vi.mock('@/services/cmds', () => ({
+  takeDnsOverrideNotice: vi.fn(),
+  takeServiceFallbackNotice: vi.fn().mockResolvedValue(false),
+}))
 vi.mock('@/services/notice-service', () => ({
   showNotice: { info: vi.fn() },
 }))

@@ -182,6 +182,10 @@ export async function takeDnsOverrideNotice() {
   return invoke<boolean>('take_dns_override_notice')
 }
 
+export async function takeServiceFallbackNotice() {
+  return invoke<boolean>('take_service_fallback_notice')
+}
+
 export async function getSystemProxy() {
   return invoke<{
     enable: boolean

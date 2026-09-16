@@ -20,6 +20,7 @@ import {
   type ServiceRequest,
   type ServiceRequestReason,
 } from '@/services/service-request'
+import getSystem from '@/utils/get-system'
 
 type Remedy = 'installAndRestart' | 'restartOnly'
 
@@ -98,19 +99,25 @@ export const SysproxyPrivilegeDialog = () => {
       setStep('restarting')
       await restartCore()
 
-      // Verify that restart actually moved the core into the service.
       const runState = await getRuntimeState()
-      if (runState.mode === 'Service') {
-        // Retry the original request now that the service can apply it.
+      const usingAdminFallback =
+        getSystem() === 'windows' &&
+        runState.mode === 'Sidecar' &&
+        runState.isAdmin &&
+        runState.sidecarAllowed &&
+        runState.service === 'unavailable'
+      if (runState.mode === 'Service' || usingAdminFallback) {
         if (restoring !== undefined) {
           setStep('applying')
           await patchVergeConfig(restoring)
         }
-        showNotice.success(
-          restoring === undefined
-            ? 'settings.sections.proxyControl.messages.installedCheckProxy'
-            : 'settings.sections.proxyControl.messages.installedProxyRestored',
-        )
+        if (!usingAdminFallback) {
+          showNotice.success(
+            restoring === undefined
+              ? 'settings.sections.proxyControl.messages.installedCheckProxy'
+              : 'settings.sections.proxyControl.messages.installedProxyRestored',
+          )
+        }
         close()
       } else {
         showNotice.error(

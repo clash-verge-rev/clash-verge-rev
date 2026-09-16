@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "Service erfolgreich installiert",
+        "sidecarFallback": "Der Dienst konnte den Kern aufgrund der Pfadberechtigungen nicht starten. Die Anwendung läuft im Administratormodus weiter.",
         "uninstallSuccess": "Service erfolgreich deinstalliert"
       },
       "updater": {

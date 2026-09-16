@@ -163,6 +163,7 @@ mod app_init {
             cmd::apply_dns_config,
             cmd::set_dns_override,
             cmd::take_dns_override_notice,
+            cmd::take_service_fallback_notice,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,
             cmd::get_clash_logs,

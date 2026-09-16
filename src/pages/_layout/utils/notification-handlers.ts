@@ -1,4 +1,7 @@
-import { takeDnsOverrideNotice } from '@/services/cmds'
+import {
+  takeDnsOverrideNotice,
+  takeServiceFallbackNotice,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 type NavigateFunction = (path: string, options?: any) => void
@@ -25,6 +28,22 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'service_core::sidecar_fallback': () => {
+      void takeServiceFallbackNotice()
+        .then((pending) => {
+          if (pending) {
+            showNotice.warning(
+              'settings.feedback.notifications.clashService.sidecarFallback',
+            )
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to read the pending service fallback notice',
+            error,
+          )
+        })
+    },
     'dns_override::auto_disabled': () => {
       void takeDnsOverrideNotice()
         .then((pending) => {

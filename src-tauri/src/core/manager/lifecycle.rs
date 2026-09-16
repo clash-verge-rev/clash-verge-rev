@@ -185,6 +185,42 @@ where
     apply_proxy().await
 }
 
+#[cfg(target_os = "windows")]
+async fn run_service_start_with_sidecar_fallback<Start, StartFuture, Fallback, FallbackFuture>(
+    is_admin: bool,
+    start_service: Start,
+    start_sidecar: Fallback,
+) -> Result<()>
+where
+    Start: FnOnce() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+    Fallback: FnOnce(anyhow::Error) -> FallbackFuture,
+    FallbackFuture: std::future::Future<Output = Result<()>>,
+{
+    let Err(error) = start_service().await else {
+        return Ok(());
+    };
+    // A transport failure cannot establish whether the service already started the core.
+    let location_refused = error
+        .downcast_ref::<crate::core::service::ServiceStartRefusal>()
+        .is_some_and(|refusal| {
+            refusal.code == clash_verge_service_ipc::ServiceErrorCode::InvalidInstallLocation as u16
+        });
+    if !is_admin || !location_refused {
+        return Err(error);
+    }
+
+    logging!(
+        warn,
+        Type::Core,
+        "service refused the core location while app is elevated; falling back to sidecar: {error:#}"
+    );
+    let reason = format!("{error:#}");
+    start_sidecar(error)
+        .await
+        .map_err(|error| error.context(format!("sidecar fallback failed after service refusal: {reason}")))
+}
+
 async fn run_sidecar_termination_transition<Clear, ClearFuture, Terminate>(
     clear_proxy: Clear,
     terminate_sidecar: Terminate,
@@ -550,7 +586,30 @@ impl CoreManager {
         }
 
         let result = match startup {
-            StartupDecision::Service => self.start_core_by_service().await,
+            StartupDecision::Service => {
+                #[cfg(target_os = "windows")]
+                {
+                    run_service_start_with_sidecar_fallback(
+                        crate::core::runstate::RUN_STATE.state().is_admin,
+                        || self.start_core_by_service(),
+                        |error| async move {
+                            use crate::core::runstate::RUN_STATE;
+
+                            RUN_STATE.allow_sidecar_after_service_refusal(format!("{error:#}"))?;
+                            let result = self.start_core_by_sidecar().await;
+                            if result.is_err() {
+                                SERVICE_MANAGER.withdraw_sidecar_allowance();
+                            } else {
+                                crate::core::service::notify_service_fallback();
+                            }
+                            result
+                        },
+                    )
+                    .await
+                }
+                #[cfg(not(target_os = "windows"))]
+                self.start_core_by_service().await
+            }
             StartupDecision::Sidecar => self.start_core_by_sidecar().await,
             StartupDecision::Wait => Ok(()),
         };

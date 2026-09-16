@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "Layanan Berhasil Diinstal",
+        "sidecarFallback": "Layanan tidak dapat memulai inti karena izin jalur. Beralih ke mode administrator untuk melanjutkan.",
         "uninstallSuccess": "Layanan Berhasil Dicopot"
       },
       "updater": {

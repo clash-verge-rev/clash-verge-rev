@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "已成功安装服务",
+        "sidecarFallback": "服务因路径权限问题无法启动内核，已切回管理员模式继续运行。",
         "uninstallSuccess": "已成功卸载服务"
       },
       "updater": {

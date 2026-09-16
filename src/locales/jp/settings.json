@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "サービスのインストールに成功しました。",
+        "sidecarFallback": "パスの権限によりサービスがコアを起動できなかったため、管理者モードに切り替えて動作を継続しています。",
         "uninstallSuccess": "サービスのアンインストールに成功しました。"
       },
       "updater": {

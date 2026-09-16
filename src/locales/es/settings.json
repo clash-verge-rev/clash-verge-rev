@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "Servicio instalado con éxito",
+        "sidecarFallback": "El servicio no pudo iniciar el núcleo debido a los permisos de la ruta. Se ha cambiado al modo administrador para continuar.",
         "uninstallSuccess": "Servicio desinstalado con éxito"
       },
       "updater": {

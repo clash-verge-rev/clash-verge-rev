@@ -683,6 +683,7 @@
       },
       "clashService": {
         "installSuccess": "已成功安裝服務",
+        "sidecarFallback": "服務因路徑權限問題無法啟動核心，已切回管理員模式繼續執行。",
         "uninstallSuccess": "已成功解除安裝服務"
       },
       "updater": {

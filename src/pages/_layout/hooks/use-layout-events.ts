@@ -64,6 +64,7 @@ export const useLayoutEvents = (
       () => {
         revalidateKeys(['getRuntimeState', 'getVergeConfig'])
         handleNotice(['dns_override::auto_disabled', ''])
+        handleNotice(['service_core::sidecar_fallback', ''])
       },
     )
   }, [handleNotice])
