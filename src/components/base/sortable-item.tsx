@@ -14,7 +14,7 @@ interface SortableItemProps {
   group?: string
   disabled?: boolean
   // 用于给 tanstack virtual 列表测量当前拖动元素尺寸
-  measureElementRef?: (element: HTMLDivElement | null) => void
+  measureElement?: (element: HTMLDivElement | null) => void
   dataIndex?: number
   style?: CSSProperties
   children: ReactNode | ((props: SortableItemRenderProps) => ReactNode)
@@ -26,7 +26,7 @@ export const SortableItem = (props: SortableItemProps) => {
     index,
     group,
     disabled,
-    measureElementRef,
+    measureElement,
     dataIndex,
     children,
     style,
@@ -42,9 +42,9 @@ export const SortableItem = (props: SortableItemProps) => {
     (element: HTMLDivElement | null) => {
       handleRef(element?.querySelector('[data-sortable-handle]') ?? null)
       ref(element)
-      measureElementRef?.(element)
+      measureElement?.(element)
     },
-    [handleRef, ref, measureElementRef],
+    [handleRef, ref, measureElement],
   )
 
   const mergedStyle: CSSProperties = {

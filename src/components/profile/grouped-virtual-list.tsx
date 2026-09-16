@@ -164,7 +164,7 @@ export function GroupedVirtualList<T>(props: GroupedVirtualListProps<T>) {
                 id={entry.id}
                 index={vi.index}
                 disabled={entry.category === 'original'}
-                measureElementRef={virtualizer.measureElement}
+                measureElement={virtualizer.measureElement}
                 dataIndex={vi.index}
                 style={{
                   position: 'absolute',
