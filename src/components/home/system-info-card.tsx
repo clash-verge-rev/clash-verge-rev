@@ -108,7 +108,8 @@ export const SystemInfoCard = () => {
         goToSettings()
       }
     } catch (err) {
-      showNotice.error(err)
+      console.warn('update check failed:', err)
+      showNotice.warning(err)
     }
   })
 
