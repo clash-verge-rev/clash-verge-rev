@@ -54,8 +54,9 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       } else {
         updateRef.current?.open()
       }
-    } catch (err: any) {
-      showNotice.error(err)
+    } catch (err) {
+      console.warn('update check failed:', err)
+      showNotice.warning(err)
     }
   }
 

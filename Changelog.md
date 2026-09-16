@@ -27,6 +27,7 @@
 
 **🖥️ Windows**
 
+- 修复 Windows 便携版或 Scoop 安装后服务内核无法启动的问题
 - 修复 Windows 系统代理设置偶发失败的问题
 - 修复 Windows 关机被应用阻止的问题
 - 修复 Windows 服务模式下 TUN 使用 system/mixed 堆栈时无法接管流量的问题，防火墙放行规则改为自动添加
