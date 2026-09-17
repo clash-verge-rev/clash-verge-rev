@@ -330,8 +330,8 @@ impl AuthoritativeFields {
         }
     }
 
-    fn enforce(self, config: Mapping) -> Mapping {
-        let config = enforce_control_plane(config, self.control_plane);
+    fn enforce(self, config: Mapping, merge_touched: &std::collections::HashSet<String>) -> Mapping {
+        let config = enforce_control_plane(config, self.control_plane, merge_touched);
         let config = enforce_tun(config, self.tun);
         enforce_dns_ipv6(config, self.dns_ipv6)
     }
@@ -350,12 +350,26 @@ fn snapshot_control_plane(config: &Mapping) -> Mapping {
 }
 
 /// 手动覆盖后恢复控制面快照;快照缺失的控制面键从最终配置删除。
-fn enforce_control_plane(mut config: Mapping, snapshot: Mapping) -> Mapping {
+/// `ipv6` 例外:Merge/script 明确写过它时予以保留(#7933),与 `dns.ipv6`
+/// 的"页面不拥有则 override 可改"语义一致。
+fn enforce_control_plane(
+    mut config: Mapping,
+    mut snapshot: Mapping,
+    merge_touched: &std::collections::HashSet<String>,
+) -> Mapping {
+    let ipv6_overridden = merge_touched.contains("ipv6");
     for &key in CONTROL_PLANE_KEYS {
+        if key == "ipv6" && ipv6_overridden {
+            continue;
+        }
         let key = Value::from(key);
         if !snapshot.contains_key(&key) {
             config.remove(&key);
         }
+    }
+    if ipv6_overridden {
+        // Merge 的值优先:快照里的 UI 值不得覆盖它。
+        snapshot.remove(Value::from("ipv6"));
     }
     config.extend(snapshot);
     config
@@ -817,7 +831,8 @@ pub async fn enhance(
     let (config, exists_keys, result_map) =
         process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
 
-    let config = authoritative.enforce(config);
+    let merge_touched: std::collections::HashSet<String> = exists_keys.iter().cloned().collect();
+    let config = authoritative.enforce(config, &merge_touched);
     let config = ensure_lan_bind_address(config);
 
     let config = cleanup_proxy_groups(config);
@@ -1226,7 +1241,7 @@ mod authoritative_field_tests {
         let authoritative = AuthoritativeFields::capture(&derived, &[], false);
 
         let overridden = config_with(&[("mode", Value::from("global")), ("secret", Value::from("theirs"))]);
-        let result = authoritative.enforce(overridden);
+        let result = authoritative.enforce(overridden, &std::collections::HashSet::new());
 
         assert_eq!(result.get(Value::from("mode")), Some(&Value::from("rule")));
         assert_eq!(result.get(Value::from("secret")), Some(&Value::from("ours")));
@@ -1239,7 +1254,7 @@ mod authoritative_field_tests {
         let authoritative = AuthoritativeFields::capture(&derived, &[], false);
 
         let overridden = config_with(&[("external-controller", Value::from("0.0.0.0:9090"))]);
-        let result = authoritative.enforce(overridden);
+        let result = authoritative.enforce(overridden, &std::collections::HashSet::new());
 
         assert!(!result.contains_key(Value::from("external-controller")));
     }
@@ -1250,7 +1265,7 @@ mod authoritative_field_tests {
         let authoritative = AuthoritativeFields::capture(&derived, &[], false);
 
         let overridden = config_with(&[("mode", Value::from("global")), ("profile-key", Value::from(1))]);
-        let result = authoritative.enforce(overridden);
+        let result = authoritative.enforce(overridden, &std::collections::HashSet::new());
 
         assert_eq!(result.get(Value::from("profile-key")), Some(&Value::from(1)));
     }
@@ -1260,7 +1275,10 @@ mod authoritative_field_tests {
         let derived = config_with(&[("dns", dns_with_ipv6(true))]);
 
         let owned = AuthoritativeFields::capture(&derived, &[], true);
-        let restored = owned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
+        let restored = owned.enforce(
+            config_with(&[("dns", dns_with_ipv6(false))]),
+            &std::collections::HashSet::new(),
+        );
         assert_eq!(
             restored.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
             Some(&Value::from(true)),
@@ -1268,7 +1286,10 @@ mod authoritative_field_tests {
         );
 
         let unowned = AuthoritativeFields::capture(&derived, &[], false);
-        let left_alone = unowned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
+        let left_alone = unowned.enforce(
+            config_with(&[("dns", dns_with_ipv6(false))]),
+            &std::collections::HashSet::new(),
+        );
         assert_eq!(
             left_alone.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
             Some(&Value::from(false)),
@@ -1282,9 +1303,41 @@ mod authoritative_field_tests {
         let authoritative = AuthoritativeFields::capture(&derived, &[], true);
 
         // An override removed DNS entirely; reinstating just `ipv6` would be a half-config.
-        let result = authoritative.enforce(Mapping::new());
+        let result = authoritative.enforce(Mapping::new(), &std::collections::HashSet::new());
 
         assert!(!result.contains_key(Value::from("dns")));
+    }
+
+    #[test]
+    fn merge_written_ipv6_survives_the_app_value() {
+        // #7933: an explicit Merge `ipv6: false` must win over the UI toggle;
+        // untouched merges keep the old behavior.
+        let derived = config_with(&[("ipv6", Value::from(true))]);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], false);
+
+        let touched: std::collections::HashSet<String> = ["ipv6".to_string()].into_iter().collect();
+        let kept = authoritative.enforce(config_with(&[("ipv6", Value::from(false))]), &touched);
+        assert_eq!(
+            kept.get(Value::from("ipv6")),
+            Some(&Value::from(false)),
+            "merge-written ipv6 wins"
+        );
+    }
+
+    #[test]
+    fn untouched_ipv6_still_takes_the_app_value() {
+        let derived = config_with(&[("ipv6", Value::from(true))]);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], false);
+
+        let kept = authoritative.enforce(
+            config_with(&[("ipv6", Value::from(false))]),
+            &std::collections::HashSet::new(),
+        );
+        assert_eq!(
+            kept.get(Value::from("ipv6")),
+            Some(&Value::from(true)),
+            "untouched ipv6 keeps the app value"
+        );
     }
 }
 
