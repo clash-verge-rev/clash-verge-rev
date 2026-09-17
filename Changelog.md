@@ -1,8 +1,5 @@
 ## v2.5.4
 
-> [!IMPORTANT]
-> 服务模式下，配置目录中的规则集、代理集合文件只是缓存副本，手动修改不会影响正在运行的内核。需要手动维护的文件请使用 `type: file`。
-
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
