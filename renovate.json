@@ -78,7 +78,7 @@
     },
     {
       "description": "Group PNPM version updates across package.json, tool-versions, workflows, and devcontainer",
-      "matchPackageNames": ["pnpm", "ghcr.io/devcontainers/features/pnpm"],
+      "matchPackageNames": ["pnpm"],
       "groupName": "pnpm"
     },
     {
@@ -131,6 +131,16 @@
       ],
       "depNameTemplate": "rust-lang/rust",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "Update pnpm in devcontainer.json",
+      "fileMatch": ["^\\.devcontainer/devcontainer\\.json$"],
+      "matchStrings": [
+        "\"ghcr\\.io/devcontainers/features/node:[^\"]+\":\\s*\\{[^}]*\"pnpmVersion\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "pnpm",
+      "datasourceTemplate": "npm"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
