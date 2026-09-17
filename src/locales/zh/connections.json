@@ -24,11 +24,32 @@
     "actions": {
       "active": "活跃",
       "closed": "已关闭",
-      "closeConnection": "关闭连接"
+      "closeConnection": "关闭连接",
+      "addDomainRule": "添加域名规则",
+      "addDomainRuleUnavailable": "无法添加域名规则"
     },
     "columnManager": {
       "title": "列设置",
       "dragHandle": "拖拽控件"
+    }
+  },
+  "modals": {
+    "addDomainRule": {
+      "title": "添加域名规则",
+      "profile": "配置：{{name}}",
+      "type": "规则类型",
+      "domain": "域名",
+      "policy": "代理策略",
+      "selectPolicy": "请选择代理策略",
+      "preview": "规则预览",
+      "nonRuleMode": "当前不是规则模式，保存的规则将在规则模式启用时生效。",
+      "errors": {
+        "invalidDomain": "请输入有效的域名。",
+        "invalidRules": "规则文件结构无效。",
+        "noRulesFile": "当前配置没有规则扩展文件。",
+        "saveFailed": "规则文件保存失败。",
+        "profileChanged": "当前配置已切换，请关闭并重新打开此弹窗。"
+      }
     }
   }
 }

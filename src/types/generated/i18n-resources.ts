@@ -7,6 +7,8 @@ export interface TranslationResources {
       components: {
         actions: {
           active: string
+          addDomainRule: string
+          addDomainRuleUnavailable: string
           closeConnection: string
           closed: string
         }
@@ -31,6 +33,25 @@ export interface TranslationResources {
           default: string
           downloadSpeed: string
           uploadSpeed: string
+        }
+      }
+      modals: {
+        addDomainRule: {
+          domain: string
+          errors: {
+            invalidDomain: string
+            invalidRules: string
+            noRulesFile: string
+            profileChanged: string
+            saveFailed: string
+          }
+          nonRuleMode: string
+          policy: string
+          preview: string
+          profile: string
+          selectPolicy: string
+          title: string
+          type: string
         }
       }
       page: {

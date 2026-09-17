@@ -248,6 +248,7 @@ interface RowComponentProps {
   row: IConnectionsItem
   columns: DisplayColumn[]
   onShowDetail: (id: string) => void
+  onAddDomainRule: (event: ReactMouseEvent, row: IConnectionsItem) => void
   getSnapshot: (row: IConnectionsItem) => TableRowSnapshot
   borderColor: string
   virtualTop: number
@@ -258,6 +259,7 @@ const RowComponent = memo(
     row,
     columns,
     onShowDetail,
+    onAddDomainRule,
     getSnapshot,
     borderColor,
     virtualTop,
@@ -281,6 +283,10 @@ const RowComponent = memo(
           borderBottom: `1px solid ${borderColor}`,
         }}
         onClick={handleClick}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          onAddDomainRule(event, row)
+        }}
       >
         {columns.map((column) => (
           <div
@@ -312,6 +318,7 @@ const RowComponent = memo(
     prev.columns === next.columns &&
     prev.virtualTop === next.virtualTop &&
     prev.onShowDetail === next.onShowDetail &&
+    prev.onAddDomainRule === next.onAddDomainRule &&
     prev.getSnapshot === next.getSnapshot &&
     prev.borderColor === next.borderColor,
 )
@@ -319,6 +326,7 @@ const RowComponent = memo(
 interface Props {
   connections: IConnectionsItem[]
   onShowDetail: (id: string) => void
+  onAddDomainRule: (event: ReactMouseEvent, row: IConnectionsItem) => void
   columnManagerOpen: boolean
   onCloseColumnManager: () => void
 }
@@ -327,6 +335,7 @@ export const ConnectionTable = (props: Props) => {
   const {
     connections,
     onShowDetail: rawOnShowDetail,
+    onAddDomainRule: rawOnAddDomainRule,
     columnManagerOpen,
     onCloseColumnManager,
   } = props
@@ -334,6 +343,13 @@ export const ConnectionTable = (props: Props) => {
   onShowDetailRef.current = rawOnShowDetail
   const onShowDetail = useCallback(
     (id: string) => onShowDetailRef.current(id),
+    [],
+  )
+  const onAddDomainRuleRef = useRef(rawOnAddDomainRule)
+  onAddDomainRuleRef.current = rawOnAddDomainRule
+  const onAddDomainRule = useCallback(
+    (event: ReactMouseEvent, row: IConnectionsItem) =>
+      onAddDomainRuleRef.current(event, row),
     [],
   )
   const { t } = useTranslation()
@@ -874,6 +890,7 @@ export const ConnectionTable = (props: Props) => {
                       row={row}
                       columns={visibleColumns}
                       onShowDetail={onShowDetail}
+                      onAddDomainRule={onAddDomainRule}
                       getSnapshot={getRowSnapshot}
                       borderColor={borderColor}
                       virtualTop={index * ROW_HEIGHT}
