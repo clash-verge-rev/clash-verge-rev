@@ -326,7 +326,7 @@ pub(super) async fn init_dns_config() -> Result<()> {
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
         ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),
-        ("fake-ip-range6".into(), Value::String("fdfe:dcba:9876::1/64".into())),
+        ("fake-ip-range6".into(), Value::String("2001:2::0/48".into())),
         ("fake-ip-filter-mode".into(), Value::String("blacklist".into())),
         ("prefer-h3".into(), Value::Bool(false)),
         ("respect-rules".into(), Value::Bool(false)),
@@ -365,7 +365,6 @@ pub(super) async fn init_dns_config() -> Result<()> {
                 Value::String("https://dns.alidns.com/dns-query".into()),
             ]),
         ),
-        ("fallback".into(), Value::Sequence(vec![])),
         (
             "nameserver-policy".into(),
             Value::Mapping(serde_yaml_ng::Mapping::new()),
@@ -380,28 +379,6 @@ pub(super) async fn init_dns_config() -> Result<()> {
         ),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
-        (
-            "fallback-filter".into(),
-            Value::Mapping(serde_yaml_ng::Mapping::from_iter([
-                ("geoip".into(), Value::Bool(true)),
-                ("geoip-code".into(), Value::String("CN".into())),
-                (
-                    "ipcidr".into(),
-                    Value::Sequence(vec![
-                        Value::String("240.0.0.0/4".into()),
-                        Value::String("0.0.0.0/32".into()),
-                    ]),
-                ),
-                (
-                    "domain".into(),
-                    Value::Sequence(vec![
-                        Value::String("+.google.com".into()),
-                        Value::String("+.facebook.com".into()),
-                        Value::String("+.youtube.com".into()),
-                    ]),
-                ),
-            ])),
-        ),
     ]);
 
     let default_dns_config = serde_yaml_ng::Mapping::from_iter([

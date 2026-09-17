@@ -979,23 +979,6 @@ export interface TranslationResources {
             fakeIpFilterMode: string
             fakeIpRange: string
             fakeIpRange6: string
-            fallback: {
-              description: string
-              label: string
-            }
-            fallbackDomain: {
-              description: string
-              label: string
-            }
-            fallbackIpCidr: {
-              description: string
-              label: string
-            }
-            geoipCode: string
-            geoipFiltering: {
-              description: string
-              label: string
-            }
             hosts: {
               description: string
               label: string
@@ -1046,7 +1029,6 @@ export interface TranslationResources {
             title: string
           }
           sections: {
-            fallbackFilter: string
             general: string
             hosts: string
           }
