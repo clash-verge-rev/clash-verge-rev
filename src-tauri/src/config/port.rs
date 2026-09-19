@@ -3,7 +3,10 @@ use crate::{
     constants::timing,
     core::{
         handle::Handle,
-        listener::{ListenerBindScope, ListenerProbeOutcome, MIXED_PORT_KEY, proxy_listener_keys},
+        listener::{
+            ListenerBindScope, ListenerProbe, ListenerProbeOutcome, ListenerTransport, MIXED_PORT_KEY, probe_listener,
+            proxy_listener_keys,
+        },
         owner_identity::current_owner_credentials,
         service::{SERVICE_MANAGER, ServiceStatus},
         validate::CoreConfigValidator,
@@ -21,7 +24,7 @@ use std::{
     collections::HashSet,
     net::SocketAddr,
     str::FromStr as _,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicU16, Ordering},
 };
 
 #[derive(Clone, Copy)]
@@ -33,6 +36,9 @@ struct MixedPortFallback {
 static PENDING_FALLBACK_NOTICE: Lazy<Mutex<Option<MixedPortFallback>>> = Lazy::new(|| Mutex::new(None));
 static STARTUP_CORE_BLOCKED: AtomicBool = AtomicBool::new(false);
 static STARTUP_CORE_BLOCK_REASON: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+
+/// A startup fallback for external controller this session only; persistence would make the port climb across launches.
+static CONTROLLER_SESSION_FALLBACK: AtomicU16 = AtomicU16::new(0);
 
 impl Config {
     pub(crate) async fn resolve_startup_mixed_port() -> Result<bool> {
@@ -172,6 +178,122 @@ impl Config {
             );
         });
     }
+
+    pub(crate) async fn resolve_startup_controller_port() -> Result<bool> {
+        let _config_write = Self::lock_config_write().await;
+        let verge = Self::verge().await.latest_arc();
+        if !verge.enable_external_controller.unwrap_or(false) {
+            return Ok(false);
+        }
+
+        let clash = Self::clash().await.latest_arc();
+        let raw_ctrl = IClashTemp::guard_server_ctrl(&clash.0);
+        let Ok(addr) = SocketAddr::from_str(&raw_ctrl) else {
+            return Ok(false);
+        };
+
+        let configured_port = addr.port();
+        let selected_port = Self::controller_session_fallback().unwrap_or(configured_port);
+        let mut probe_addr = addr;
+        probe_addr.set_port(selected_port);
+        let probe_str = probe_addr.to_string();
+
+        let outcome = AsyncHandler::spawn_blocking(move || {
+            probe_listener(&ListenerProbe {
+                address: probe_str,
+                transports: vec![ListenerTransport::Tcp],
+            })
+        })
+        .await
+        .context("external controller port probe task failed")?;
+
+        match outcome {
+            ListenerProbeOutcome::Conflict { .. } => {}
+            ListenerProbeOutcome::Available => return Ok(false),
+            ListenerProbeOutcome::Invalid { message } | ListenerProbeOutcome::Indeterminate { message } => {
+                logging!(
+                    warn,
+                    Type::Setup,
+                    "Could not establish whether external controller port {} is free ({}); keeping it",
+                    selected_port,
+                    message
+                );
+                return Ok(false);
+            }
+        }
+
+        if owned_service_core_uses_port(selected_port).await {
+            logging!(
+                info,
+                Type::Setup,
+                "External controller port {} belongs to the current user's managed core; skipping fallback",
+                selected_port
+            );
+            return Ok(false);
+        }
+
+        let reserved = configured_controller_reserved_ports(&clash, &verge);
+        let candidate = AsyncHandler::spawn_blocking(move || {
+            find_next_available_port(selected_port, &reserved, |port| {
+                let mut test_addr = addr;
+                test_addr.set_port(port);
+                matches!(
+                    probe_listener(&ListenerProbe {
+                        address: test_addr.to_string(),
+                        transports: vec![ListenerTransport::Tcp],
+                    }),
+                    ListenerProbeOutcome::Available
+                )
+            })
+        })
+        .await
+        .context("external controller fallback scan task failed")?
+        .ok_or_else(|| anyhow!("no eligible external controller port is available"))?;
+
+        Self::apply_startup_controller_port_fallback(selected_port, candidate).await?;
+        Ok(true)
+    }
+
+    pub(crate) fn controller_session_fallback() -> Option<u16> {
+        match CONTROLLER_SESSION_FALLBACK.load(Ordering::Acquire) {
+            0 => None,
+            port => Some(port),
+        }
+    }
+
+    pub(crate) fn set_controller_session_fallback(port: u16) {
+        CONTROLLER_SESSION_FALLBACK.store(port, Ordering::Release);
+    }
+
+    pub(crate) fn clear_controller_session_fallback() {
+        CONTROLLER_SESSION_FALLBACK.store(0, Ordering::Release);
+    }
+
+    async fn apply_startup_controller_port_fallback(old_port: u16, new_port: u16) -> Result<()> {
+        let runtime = Self::runtime().await;
+        let transaction = DraftTransaction::begin(vec![&runtime])?;
+
+        let previous_port = Self::controller_session_fallback();
+        Self::set_controller_session_fallback(new_port);
+        if let Err(error) = Self::stage_fallback_runtime().await {
+            match previous_port {
+                Some(port) => Self::set_controller_session_fallback(port),
+                None => Self::clear_controller_session_fallback(),
+            }
+            return Err(error);
+        }
+
+        transaction.commit();
+        Handle::refresh_clash();
+        logging!(
+            warn,
+            Type::Config,
+            "External controller port {} is externally occupied; serving on {} for this session only",
+            old_port,
+            new_port
+        );
+        Ok(())
+    }
 }
 
 fn record_fallback(old_port: u16, new_port: u16) {
@@ -283,7 +405,8 @@ fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16>
     }
 
     if let Ok(controller) = SocketAddr::from_str(IClashTemp::guard_server_ctrl(&clash.0).as_str()) {
-        ports.insert(controller.port());
+        let port = Config::controller_session_fallback().unwrap_or_else(|| controller.port());
+        ports.insert(port);
     }
 
     ports.extend([verge.verge_socks_port, verge.verge_port].into_iter().flatten());
@@ -294,6 +417,19 @@ fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16>
     #[cfg(target_os = "linux")]
     if let Some(port) = verge.verge_tproxy_port {
         ports.insert(port);
+    }
+    ports
+}
+
+fn configured_controller_reserved_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16> {
+    let mut ports = configured_listener_ports(clash, verge);
+    let active_mixed = MixedPort::session_fallback().unwrap_or_else(|| clash.get_mixed_port());
+    ports.insert(active_mixed);
+    if let Ok(controller) = SocketAddr::from_str(IClashTemp::guard_server_ctrl(&clash.0).as_str()) {
+        ports.remove(&controller.port());
+    }
+    if let Some(fallback) = Config::controller_session_fallback() {
+        ports.remove(&fallback);
     }
     ports
 }
@@ -328,9 +464,10 @@ mod listener_key_tests {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod tests {
     use super::configured_listener_ports;
-    use crate::config::{IClashTemp, IVerge};
+    use crate::config::{Config, IClashTemp, IVerge};
 
     #[test]
     fn configured_ports_include_disabled_listener_assignments() {
@@ -342,5 +479,48 @@ mod tests {
         assert!(ports.contains(&7895));
         #[cfg(target_os = "linux")]
         assert!(ports.contains(&7896));
+    }
+
+    #[test]
+    fn configured_controller_reserved_ports_reserves_proxy_and_excludes_controller() {
+        let clash = IClashTemp::template();
+        let verge = IVerge::template();
+        let reserved = super::configured_controller_reserved_ports(&clash, &verge);
+
+        assert!(!reserved.contains(&9097));
+        assert!(reserved.contains(&7897));
+        assert!(reserved.contains(&7898));
+        assert!(reserved.contains(&7899));
+    }
+
+    #[tokio::test]
+    async fn controller_port_session_fallback_overrides_client_info_without_dirtying_config() {
+        use std::net::TcpListener;
+
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind test port");
+        let fallback_port = listener.local_addr().expect("local addr").port();
+
+        Config::set_controller_session_fallback(fallback_port);
+        assert_eq!(Config::controller_session_fallback(), Some(fallback_port));
+
+        let clash = IClashTemp::template();
+        let client_info = clash.get_client_info();
+        assert_eq!(client_info.server, format!("127.0.0.1:{fallback_port}"));
+
+        Config::clear_controller_session_fallback();
+        assert_eq!(Config::controller_session_fallback(), None);
+        assert_eq!(clash.get_client_info().server, "127.0.0.1:9097");
+    }
+
+    #[test]
+    fn controller_session_fallback_atomic_lifecycle() {
+        Config::clear_controller_session_fallback();
+        assert_eq!(Config::controller_session_fallback(), None);
+
+        Config::set_controller_session_fallback(9099);
+        assert_eq!(Config::controller_session_fallback(), Some(9099));
+
+        Config::clear_controller_session_fallback();
+        assert_eq!(Config::controller_session_fallback(), None);
     }
 }

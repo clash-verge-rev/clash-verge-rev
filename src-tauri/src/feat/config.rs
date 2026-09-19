@@ -17,6 +17,9 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
     let res = {
         // 激活订阅
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
+            if patch.get("external-controller").is_some() {
+                Config::clear_controller_session_fallback();
+            }
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
         } else if patch.get("allow-lan").is_some() {
@@ -304,6 +307,9 @@ pub(super) async fn apply_verge_patch_locked(
     // Hold the claim across side effects so concurrent transactions cannot share this draft.
     let transaction = DraftTransaction::begin(vec![&verge])?;
     verge.edit_draft(|d| d.patch_config(patch));
+    if patch.enable_external_controller.is_some() {
+        Config::clear_controller_session_fallback();
+    }
 
     let update_flags = determine_update_flags(patch);
     logging!(debug, Type::Setup, "Determined update flags: {:?}", update_flags);
