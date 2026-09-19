@@ -1,9 +1,9 @@
-import { execFileSync, execSync } from 'child_process'
-import { createHash } from 'crypto'
-import fs from 'fs'
-import fsp from 'fs/promises'
-import path from 'path'
-import zlib from 'zlib'
+import { execFileSync, execSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import fs from 'node:fs'
+import fsp from 'node:fs/promises'
+import path from 'node:path'
+import zlib from 'node:zlib'
 
 import AdmZip from 'adm-zip'
 import { glob } from 'glob'
@@ -485,7 +485,7 @@ const resolvePlugin = async () => {
     const zip = new AdmZip(tempZip)
     zip
       .getEntries()
-      .forEach((entry) => log_debug(`"SimpleSC" entry`, entry.entryName))
+      .forEach((entry) => void log_debug(`"SimpleSC" entry`, entry.entryName))
     zip.extractAllTo(tempDir, true)
     if (fs.existsSync(tempDll)) {
       await fsp.cp(tempDll, pluginPath, { recursive: true, force: true })
@@ -553,7 +553,7 @@ const SERVICE_BINARIES = [
 
 function serviceFileInfo(name) {
   const ext = platform === 'win32' ? '.exe' : ''
-  const suffix = platform === 'linux' ? '-' + SIDECAR_HOST : ''
+  const suffix = platform === 'linux' ? `-${SIDECAR_HOST}` : ''
   return {
     sourceFile: `${name}${ext}`,
     targetFile: `${name}${suffix}${ext}`,
@@ -604,8 +604,9 @@ async function resolveServiceBundle() {
       const zip = new AdmZip(tempArchive)
       zip
         .getEntries()
-        .forEach((entry) =>
-          log_debug('"clash-verge-service-ipc" entry:', entry.entryName),
+        .forEach(
+          (entry) =>
+            void log_debug('"clash-verge-service-ipc" entry:', entry.entryName),
         )
       zip.extractAllTo(tempDir, true)
     } else {
@@ -652,7 +653,7 @@ async function resolveCoreHashes() {
       .digest('hex')
     lines.push(`!define ${define} "${digest}"`)
   }
-  await fsp.writeFile(CORE_HASHES_NSH, lines.join('\n') + '\n')
+  await fsp.writeFile(CORE_HASHES_NSH, `${lines.join('\n')}\n`)
   log_success(`Generated ${CORE_HASHES_NSH}`)
 }
 
@@ -660,6 +661,11 @@ const resolveMmdb = () =>
   resolveResource({
     file: 'Country.mmdb',
     downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country.mmdb`,
+  })
+const resolveASNMmdb = () =>
+  resolveResource({
+    file: 'ASN.mmdb',
+    downloadURL: `https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb`,
   })
 const resolveGeosite = () =>
   resolveResource({
@@ -706,6 +712,7 @@ const tasks = [
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
   { name: 'service', func: resolveServiceBundle, retry: 5 },
   { name: 'mmdb', func: resolveMmdb, retry: 5 },
+  { name: 'asn_mmdb', func: resolveASNMmdb, retry: 5 },
   { name: 'geosite', func: resolveGeosite, retry: 5 },
   { name: 'geoip', func: resolveGeoIP, retry: 5 },
   {
