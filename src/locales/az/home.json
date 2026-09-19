@@ -1,0 +1,155 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "Yüngül rejim",
+      "manual": "Təlimat",
+      "settings": "Ana səhifə parametrləri"
+    },
+    "cards": {
+      "trafficStats": "Trafik statistikası",
+      "networkSettings": "Şəbəkə parametrləri",
+      "proxyMode": "Proksi rejimi"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Profil kartı",
+        "currentProxy": "Cari proksi kartı",
+        "network": "Şəbəkə parametrləri kartı",
+        "proxyMode": "Proksi rejimi kartı",
+        "traffic": "Trafik statistikası kartı",
+        "tests": "Veb-sayt sınaqları kartı",
+        "ip": "IP məlumatları kartı",
+        "clashInfo": "Clash məlumatları kartları",
+        "systemInfo": "Sistem məlumatları kartları"
+      },
+      "title": "Ana səhifə parametrləri"
+    },
+    "title": "Ana səhifə"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "Sistem proksisi aktivdir",
+        "systemProxyDisabled": "Sistem proksisi söndürülüb",
+        "tunModeServiceRequired": "TUN rejimi üçün xidmət tələb olunur",
+        "tunModeEnabled": "TUN rejimi aktivdir",
+        "tunModeDisabled": "TUN rejimi söndürülüb"
+      },
+      "tooltips": {
+        "systemProxy": "Sistem proksisi haqqında məlumat",
+        "tunMode": "TUN rejimində trafikin tutulması haqqında məlumat"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash məlumatları",
+      "fields": {
+        "coreVersion": "Nüvə versiyası",
+        "systemProxyAddress": "Sistem proksisinin ünvanı",
+        "mixedPort": "Mixed Port",
+        "uptime": "İşləmə müddəti",
+        "rulesCount": "Qayda sayı"
+      }
+    },
+    "systemInfo": {
+      "title": "Sistem məlumatları",
+      "fields": {
+        "osInfo": "Əməliyyat sistemi haqqında məlumat",
+        "autoLaunch": "Avtomatik başlatma",
+        "runningMode": "İş rejimi",
+        "lastCheckUpdate": "Son yeniləmə yoxlaması",
+        "vergeVersion": "Verge versiyası"
+      },
+      "actions": {
+        "settings": "Parametrlər"
+      },
+      "badges": {
+        "adminMode": "İnzibatçı rejimi",
+        "serviceMode": "Xidmət rejimi",
+        "sidecarMode": "İstifadəçi rejimi",
+        "adminServiceMode": "İnzibatçı + xidmət rejimi"
+      }
+    },
+    "ipInfo": {
+      "title": "IP məlumatları",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "İnternet provayderi",
+        "org": "Təşkilat",
+        "location": "Məkan",
+        "timezone": "Saat qurşağı",
+        "autoRefresh": "Avtomatik yeniləmə",
+        "unknown": "Naməlum"
+      },
+      "errors": {
+        "load": "IP məlumatlarını əldə etmək mümkün olmadı",
+        "loadWithDetails": "IP məlumatlarını əldə etmək mümkün olmadı: {{message}}",
+        "noServices": "IP ünvanını müəyyənləşdirən xidmətlər mövcud deyil"
+      }
+    },
+    "currentProxy": {
+      "title": "Cari qovşaq",
+      "actions": {
+        "refreshDelay": "Gecikməni yoxla"
+      },
+      "labels": {
+        "globalMode": "Qlobal rejim",
+        "directMode": "Birbaşa rejim",
+        "group": "Qrup",
+        "proxy": "Proksi",
+        "noActiveNode": "Aktiv proksi qovşağı yoxdur"
+      },
+      "status": {
+        "testing": "Sınaq aparılır",
+        "untested": "Sınaqdan keçirilməyib",
+        "error": "Xəta",
+        "timeout": "Gözləmə müddəti bitdi",
+        "latencyHigh": "Yüksək gecikmə",
+        "latencyMedium": "Orta gecikmə",
+        "latencyGood": "Yaxşı gecikmə",
+        "latencyExcellent": "Əla gecikmə",
+        "uninitialized": "İşə salınmayıb",
+        "noProxyNode": "Proksi qovşağı yoxdur"
+      }
+    },
+    "tests": {
+      "title": "Veb-sayt sınaqları"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Yükləmə sürəti",
+        "downloadSpeed": "Endirmə sürəti",
+        "activeConnections": "Aktiv əlaqələr",
+        "memoryUsage": "Nüvənin yaddaş istifadəsi"
+      },
+      "legends": {
+        "upload": "Yükləmə",
+        "download": "Endirmə"
+      },
+      "patterns": {
+        "minutes": "{{time}} dəqiqə"
+      },
+      "unknownTime": "Naməlum vaxt",
+      "chartStyles": {
+        "smooth": "Hamar",
+        "linear": "Xətti"
+      },
+      "diagnostics": "Nöqtələr: {{points}} | Sıxılmış: {{compressed}} | Saniyədə kadr sayı: {{fps}}"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Nüvə ilə əlaqə zamanı xəta baş verdi. Kompüterinizi yenidən başladın və bir daha cəhd edin."
+      },
+      "labels": {
+        "rule": "Qayda",
+        "global": "Qlobal",
+        "direct": "Birbaşa"
+      },
+      "descriptions": {
+        "rule": "Qayda dəstinə əsasən proksiləri avtomatik seçir.",
+        "global": "Bütün şəbəkə sorğularını seçilmiş proksi vasitəsilə yönləndirir.",
+        "direct": "Proksidən yan keçərək internetlə birbaşa əlaqə yaradır."
+      }
+    }
+  }
+}
