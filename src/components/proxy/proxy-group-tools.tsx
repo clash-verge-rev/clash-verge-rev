@@ -17,6 +17,8 @@ import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
+import { showNotice } from '@/services/notice-service'
+import { isValidUrl } from '@/utils/network'
 
 import { BaseSearchBox, type SearchState } from '../base'
 
@@ -173,6 +175,10 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== 'filter') {
             onHeadState({ textState: 'url' })
+          }
+          if (testUrl?.trim() && !isValidUrl(testUrl)) {
+            showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
+            return
           }
           onCheckDelay()
         }}

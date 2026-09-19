@@ -43,6 +43,7 @@ import { showNotice } from '@/services/notice-service'
 import { useLoadingCache, useSetLoadingCache } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { debugLog } from '@/utils/debug'
+import { isValidUrl } from '@/utils/network'
 import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -965,9 +966,7 @@ export const ProfileItem = memo(ProfileItemBase)
 
 function parseUrl(url?: string) {
   if (!url) return ''
-  const regex = /https?:\/\/(.+?)\//
-  const result = url.match(regex)
-  return result ? result[1] : 'local file'
+  return isValidUrl(url) ? new URL(url).host : 'local file'
 }
 
 function parseExpire(expire?: number) {

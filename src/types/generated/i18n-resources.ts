@@ -521,6 +521,9 @@ export interface TranslationResources {
             updateSuccess: string
           }
         }
+        warnings: {
+          invalidTestUrl: string
+        }
       }
       page: {
         actions: {
