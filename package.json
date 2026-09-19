@@ -52,13 +52,13 @@
     "@mui/icons-material": "^9.0.1",
     "@mui/material": "^9.0.1",
     "@tanstack/react-virtual": "^3.13.25",
-    "@tauri-apps/api": "2.11.1",
-    "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
-    "@tauri-apps/plugin-dialog": "^2.7.1",
-    "@tauri-apps/plugin-fs": "^2.5.1",
-    "@tauri-apps/plugin-http": "~2.6.0",
-    "@tauri-apps/plugin-opener": "2.5.5",
-    "@tauri-apps/plugin-updater": "2.11.0",
+    "@tauri-apps/api": "3.0.0-alpha.0",
+    "@tauri-apps/plugin-clipboard-manager": "^3.0.0-alpha.0",
+    "@tauri-apps/plugin-dialog": "^3.0.0-alpha.0",
+    "@tauri-apps/plugin-fs": "^3.0.0-alpha.0",
+    "@tauri-apps/plugin-http": "~3.0.0-alpha.0",
+    "@tauri-apps/plugin-opener": "3.0.0-alpha.0",
+    "@tauri-apps/plugin-updater": "3.0.0-alpha.0",
     "ahooks": "^3.9.7",
     "cidr-block": "^2.3.0",
     "compare-versions": "^6.1.1",
@@ -93,7 +93,7 @@
     "@biomejs/biome": "^2.4.15",
     "@eslint-react/eslint-plugin": "^5.8.5",
     "@eslint/js": "^10.0.1",
-    "@tauri-apps/cli": "2.11.4",
+    "@tauri-apps/cli": "3.0.0-alpha.1",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.12.4",
     "@types/react": "19.3.0",
@@ -144,5 +144,5 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@12.4.1"
+  "packageManager": "pnpm@12.4.2"
 }

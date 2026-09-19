@@ -24,7 +24,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
 use tauri::{
-    AppHandle, Wry,
+    AppHandle, DynRuntime,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
 
@@ -35,7 +35,7 @@ use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
 
-type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
+type ProxyMenuItem = (Option<Submenu<DynRuntime>>, Vec<Box<dyn IsMenuItem<DynRuntime>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 pub const TRAY_ID: &str = "clash-verge-rev-tray";
@@ -440,7 +440,7 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<&str, &str> {
 fn create_profile_menu_item(
     app_handle: &AppHandle,
     profiles_preview: Vec<IProfilePreview<'_>>,
-) -> Result<Vec<CheckMenuItem<Wry>>> {
+) -> Result<Vec<CheckMenuItem<DynRuntime>>> {
     profiles_preview
         .into_iter()
         .map(|profile| {
@@ -462,9 +462,9 @@ fn create_subcreate_proxy_menu_item(
     proxy_mode: &str,
     proxy_group_order_map: Option<HashMap<String, usize>>,
     proxy_nodes_data: Option<Proxies>,
-) -> Vec<Submenu<Wry>> {
-    let proxy_submenus: Vec<Submenu<Wry>> = {
-        let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
+) -> Vec<Submenu<DynRuntime>> {
+    let proxy_submenus: Vec<Submenu<DynRuntime>> = {
+        let mut submenus: Vec<(String, usize, Submenu<DynRuntime>)> = Vec::new();
 
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Some(proxy_nodes_data) = proxy_nodes_data {
@@ -484,7 +484,7 @@ fn create_subcreate_proxy_menu_item(
 
                 let now_proxy = group_data.now.as_deref().unwrap_or_default();
 
-                let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
+                let group_items: Vec<CheckMenuItem<DynRuntime>> = all_proxies
                     .iter()
                     .filter_map(|proxy_str| {
                         let is_selected = *proxy_str == now_proxy;
@@ -515,8 +515,10 @@ fn create_subcreate_proxy_menu_item(
 
                 let group_display_name = group_name.to_string();
 
-                let group_items_refs: Vec<&dyn IsMenuItem<Wry>> =
-                    group_items.iter().map(|item| item as &dyn IsMenuItem<Wry>).collect();
+                let group_items_refs: Vec<&dyn IsMenuItem<DynRuntime>> = group_items
+                    .iter()
+                    .map(|item| item as &dyn IsMenuItem<DynRuntime>)
+                    .collect();
 
                 if let Ok(submenu) = Submenu::with_id_and_items(
                     app_handle,
@@ -552,7 +554,7 @@ fn create_subcreate_proxy_menu_item(
 fn create_proxy_menu_item(
     app_handle: &AppHandle,
     show_proxy_groups_inline: bool,
-    proxy_submenus: Vec<Submenu<Wry>>,
+    proxy_submenus: Vec<Submenu<DynRuntime>>,
     proxies_text: &str,
 ) -> Result<ProxyMenuItem> {
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {
@@ -560,13 +562,13 @@ fn create_proxy_menu_item(
             None,
             proxy_submenus
                 .into_iter()
-                .map(|submenu| Box::new(submenu) as Box<dyn IsMenuItem<Wry>>)
+                .map(|submenu| Box::new(submenu) as Box<dyn IsMenuItem<DynRuntime>>)
                 .collect(),
         )
     } else if !proxy_submenus.is_empty() {
-        let proxy_submenu_refs: Vec<&dyn IsMenuItem<Wry>> = proxy_submenus
+        let proxy_submenu_refs: Vec<&dyn IsMenuItem<DynRuntime>> = proxy_submenus
             .iter()
-            .map(|submenu| submenu as &dyn IsMenuItem<Wry>)
+            .map(|submenu| submenu as &dyn IsMenuItem<DynRuntime>)
             .collect();
 
         (
@@ -593,7 +595,7 @@ async fn create_tray_menu(
     tun_mode_available: bool,
     profiles_preview: Vec<IProfilePreview<'_>>,
     options: TrayMenuOptions,
-) -> Result<tauri::menu::Menu<Wry>> {
+) -> Result<tauri::menu::Menu<DynRuntime>> {
     let current_proxy_mode = mode.unwrap_or("");
 
     let mut verge_settings = Config::verge().await.latest_arc();
@@ -647,12 +649,12 @@ async fn create_tray_menu(
 
     let hotkeys = create_hotkeys(&verge_settings.hotkeys);
 
-    let profile_menu_items: Vec<CheckMenuItem<Wry>> = create_profile_menu_item(app_handle, profiles_preview)?;
+    let profile_menu_items: Vec<CheckMenuItem<DynRuntime>> = create_profile_menu_item(app_handle, profiles_preview)?;
 
     let texts = MenuTexts::new();
-    let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
+    let profile_menu_items_refs: Vec<&dyn IsMenuItem<DynRuntime>> = profile_menu_items
         .iter()
-        .map(|item| item as &dyn IsMenuItem<Wry>)
+        .map(|item| item as &dyn IsMenuItem<DynRuntime>)
         .collect();
 
     let open_window = &MenuItem::with_id(
@@ -705,9 +707,9 @@ async fn create_tray_menu(
             outbound_modes_label.as_str(),
             true,
             &[
-                rule_mode as &dyn IsMenuItem<Wry>,
-                global_mode as &dyn IsMenuItem<Wry>,
-                direct_mode as &dyn IsMenuItem<Wry>,
+                rule_mode as &dyn IsMenuItem<DynRuntime>,
+                global_mode as &dyn IsMenuItem<DynRuntime>,
+                direct_mode as &dyn IsMenuItem<DynRuntime>,
             ],
         )?)
     };
@@ -812,7 +814,7 @@ async fn create_tray_menu(
         &texts.more,
         true,
         &[
-            copy_env as &dyn IsMenuItem<Wry>,
+            copy_env as &dyn IsMenuItem<DynRuntime>,
             close_all_connections,
             restart_clash,
             restart_app,
@@ -829,13 +831,13 @@ async fn create_tray_menu(
 
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
-    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![open_window, separator];
+    let mut menu_items: Vec<&dyn IsMenuItem<DynRuntime>> = vec![open_window, separator];
 
     if show_outbound_modes_inline {
         menu_items.extend_from_slice(&[
-            rule_mode as &dyn IsMenuItem<Wry>,
-            global_mode as &dyn IsMenuItem<Wry>,
-            direct_mode as &dyn IsMenuItem<Wry>,
+            rule_mode as &dyn IsMenuItem<DynRuntime>,
+            global_mode as &dyn IsMenuItem<DynRuntime>,
+            direct_mode as &dyn IsMenuItem<DynRuntime>,
         ]);
     } else if let Some(ref outbound_modes) = outbound_modes {
         menu_items.push(outbound_modes);
@@ -845,7 +847,7 @@ async fn create_tray_menu(
 
     match tray_proxy_groups_display_mode {
         "default" => {
-            menu_items.extend(proxies_menu.iter().map(|item| item as &dyn IsMenuItem<_>));
+            menu_items.extend(proxies_menu.iter().map(|item| item as &dyn IsMenuItem<DynRuntime>));
         }
         "inline" if !inline_proxy_items.is_empty() => {
             menu_items.extend(inline_proxy_items.iter().map(|item| item.as_ref()));
@@ -855,14 +857,14 @@ async fn create_tray_menu(
 
     menu_items.extend_from_slice(&[
         separator,
-        system_proxy as &dyn IsMenuItem<Wry>,
-        tun_mode as &dyn IsMenuItem<Wry>,
+        system_proxy as &dyn IsMenuItem<DynRuntime>,
+        tun_mode as &dyn IsMenuItem<DynRuntime>,
         separator,
-        lightweight_mode as &dyn IsMenuItem<Wry>,
-        open_dir as &dyn IsMenuItem<Wry>,
-        more as &dyn IsMenuItem<Wry>,
+        lightweight_mode as &dyn IsMenuItem<DynRuntime>,
+        open_dir as &dyn IsMenuItem<DynRuntime>,
+        more as &dyn IsMenuItem<DynRuntime>,
         separator,
-        quit as &dyn IsMenuItem<Wry>,
+        quit as &dyn IsMenuItem<DynRuntime>,
     ]);
 
     let menu = tauri::menu::MenuBuilder::new(app_handle).items(&menu_items).build()?;
