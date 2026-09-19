@@ -10,6 +10,7 @@ import {
   ButtonGroup,
   Fab,
   IconButton,
+  Menu,
   MenuItem,
   Tooltip,
   Zoom,
@@ -28,9 +29,14 @@ import {
   VirtualList,
 } from '@/components/base'
 import {
+  AddDomainRuleDialog,
+  type DomainRuleTarget,
+} from '@/components/connection/add-domain-rule-dialog'
+import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from '@/components/connection/connection-detail'
+import { isDomainName } from '@/components/connection/connection-domain-rule'
 import { ConnectionRowItem } from '@/components/connection/connection-row-item'
 import {
   getConnectionStartTime,
@@ -39,8 +45,13 @@ import {
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useTrafficData } from '@/hooks/use-traffic-data'
 import { useVisibility } from '@/hooks/use-visibility'
+import {
+  useClashConfigData,
+  useProxiesData,
+} from '@/providers/app-data-context'
 import parseTraffic from '@/utils/parse-traffic'
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
@@ -90,6 +101,13 @@ const ConnectionsPage = () => {
   const [connectionsType, setConnectionsType] = useState<'active' | 'closed'>(
     'active',
   )
+  const [domainRuleMenu, setDomainRuleMenu] = useState<{
+    host: string
+    mouseX: number
+    mouseY: number
+  } | null>(null)
+  const [domainRuleTarget, setDomainRuleTarget] =
+    useState<DomainRuleTarget | null>(null)
 
   const {
     response: { data: connections },
@@ -100,6 +118,9 @@ const ConnectionsPage = () => {
   } = useTrafficData({ enabled: pageVisible })
 
   const [setting, setSetting] = useConnectionSetting()
+  const { current } = useProfiles()
+  const { proxyView } = useProxiesData()
+  const { clashConfig } = useClashConfigData()
 
   const isTableLayout = setting.layout === 'table'
 
@@ -151,6 +172,34 @@ const ConnectionsPage = () => {
     },
     [connectionsType, filterConn],
   )
+
+  const openDomainRuleMenu = useCallback(
+    (event: React.MouseEvent, host: string) => {
+      event.preventDefault()
+      setDomainRuleMenu({
+        host,
+        mouseX: event.clientX + 2,
+        mouseY: event.clientY - 6,
+      })
+    },
+    [],
+  )
+
+  const closeDomainRuleMenu = useCallback(() => {
+    setDomainRuleMenu(null)
+  }, [])
+
+  const openDomainRuleDialog = useCallback(() => {
+    if (!domainRuleMenu || !current?.uid || !current.option?.rules) return
+    if (!isDomainName(domainRuleMenu.host)) return
+    setDomainRuleTarget({
+      host: domainRuleMenu.host,
+      profileUid: current.uid,
+      rulesUid: current.option.rules,
+      profileName: current.name,
+    })
+    closeDomainRuleMenu()
+  }, [closeDomainRuleMenu, current, domainRuleMenu])
 
   const onCloseAll = useLockFn(closeAllConnections)
 
@@ -290,6 +339,9 @@ const ConnectionsPage = () => {
         <ConnectionTable
           connections={filterConn}
           onShowDetail={showDetailById}
+          onAddDomainRule={(event, connection) =>
+            openDomainRuleMenu(event, connection.metadata.host)
+          }
           columnManagerOpen={isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
@@ -303,6 +355,7 @@ const ConnectionsPage = () => {
               row={displayRows[i]}
               closed={connectionsType === 'closed'}
               onShowDetail={showDetailById}
+              onAddDomainRule={openDomainRuleMenu}
             />
           )}
           style={{
@@ -314,6 +367,49 @@ const ConnectionsPage = () => {
         />
       )}
       <ConnectionDetail ref={detailRef} />
+      <Menu
+        open={!!domainRuleMenu}
+        onClose={closeDomainRuleMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          domainRuleMenu
+            ? { top: domainRuleMenu.mouseY, left: domainRuleMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          title={
+            !current?.uid || !current.option?.rules
+              ? t('connections.modals.addDomainRule.errors.noRulesFile')
+              : !domainRuleMenu || !isDomainName(domainRuleMenu.host)
+                ? t('connections.modals.addDomainRule.errors.invalidDomain')
+                : undefined
+          }
+          disabled={
+            !domainRuleMenu ||
+            !isDomainName(domainRuleMenu.host) ||
+            !current?.uid ||
+            !current.option?.rules
+          }
+          onClick={openDomainRuleDialog}
+        >
+          {t(
+            domainRuleMenu && isDomainName(domainRuleMenu.host)
+              ? 'connections.components.actions.addDomainRule'
+              : 'connections.components.actions.addDomainRuleUnavailable',
+          )}
+        </MenuItem>
+      </Menu>
+      {domainRuleTarget && (
+        <AddDomainRuleDialog
+          target={domainRuleTarget}
+          activeProfileUid={current?.uid}
+          activeRulesUid={current?.option?.rules}
+          proxyPolicies={proxyView?.groups.map((group) => group.name) ?? []}
+          clashMode={clashConfig?.mode}
+          onClose={() => setDomainRuleTarget(null)}
+        />
+      )}
       <Zoom
         in={connectionsType === 'closed' && filterConn.length > 0}
         unmountOnExit

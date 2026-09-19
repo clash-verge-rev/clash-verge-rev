@@ -1,7 +1,7 @@
 import { CloseRounded } from '@mui/icons-material'
 import { IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { memo, useCallback } from 'react'
+import { memo, useCallback, type MouseEvent as ReactMouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
@@ -12,6 +12,7 @@ interface Props {
   row: ConnectionRowView
   closed: boolean
   onShowDetail: (id: string) => void
+  onAddDomainRule: (event: ReactMouseEvent, host: string) => void
 }
 
 const tagStyle = {
@@ -70,7 +71,12 @@ const actionStyle = {
 } as const
 
 export const ConnectionRowItem = memo(
-  function ConnectionRowItem({ row, closed, onShowDetail }: Props) {
+  function ConnectionRowItem({
+    row,
+    closed,
+    onShowDetail,
+    onAddDomainRule,
+  }: Props) {
     const { t } = useTranslation()
     const onDelete = useLockFn(async () => closeConnection(row.id))
     const handleShowDetail = useCallback(
@@ -80,7 +86,13 @@ export const ConnectionRowItem = memo(
     const showTraffic = row.uploadSpeed >= 100 || row.downloadSpeed >= 100
 
     return (
-      <div style={itemStyle}>
+      <div
+        style={itemStyle}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          onAddDomainRule(event, row.searchableHost)
+        }}
+      >
         <div style={contentStyle} onClick={handleShowDetail}>
           <div style={primaryStyle}>{row.host}</div>
           <div style={tagsStyle}>
@@ -116,5 +128,6 @@ export const ConnectionRowItem = memo(
   (prev, next) =>
     prev.row === next.row &&
     prev.closed === next.closed &&
-    prev.onShowDetail === next.onShowDetail,
+    prev.onShowDetail === next.onShowDetail &&
+    prev.onAddDomainRule === next.onAddDomainRule,
 )
