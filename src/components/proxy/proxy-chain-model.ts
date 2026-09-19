@@ -14,6 +14,34 @@ export interface ProxyChainItem {
   delay?: number
 }
 
+export const isProxyChainConnected = (
+  items: readonly Pick<ProxyChainItem, 'name'>[],
+  selectedExit: string | undefined,
+  runtimeProxies: unknown,
+): boolean => {
+  if (
+    items.length < 2 ||
+    selectedExit !== items.at(-1)?.name ||
+    !Array.isArray(runtimeProxies)
+  ) {
+    return false
+  }
+
+  return items
+    .slice(1)
+    .every((item, index) =>
+      runtimeProxies.some(
+        (proxy: unknown) =>
+          typeof proxy === 'object' &&
+          proxy !== null &&
+          'name' in proxy &&
+          proxy.name === item.name &&
+          'dialer-proxy' in proxy &&
+          proxy['dialer-proxy'] === items[index].name,
+      ),
+    )
+}
+
 export const rebindProxyChainItems = (
   items: readonly ProxyChainItem[],
   candidates: readonly ProxyNodeView[],
