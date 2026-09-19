@@ -208,33 +208,10 @@ impl CoreManager {
         let pid = child.pid();
         tracing::Span::current().record("pid", pid);
 
-        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
-            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
-                handle::Handle::mihomo().get_version().await
-            })
-            .await
-            .context("Mihomo readiness probe timed out")??;
-            Ok(())
-        })
-        .await;
-        if let Err(readiness_error) = readiness {
-            proxy_control::stop_guard().await;
-            self.core_stopped();
-            return match child.kill() {
-                Ok(()) => Err(readiness_error),
-                Err(kill_error) => Err(anyhow::anyhow!(
-                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
-                )),
-            };
-        }
-
-        #[cfg(target_os = "windows")]
-        self.set_job_handle(Some(job));
-        self.set_running_child_sidecar(child);
+        // The sidecar has to be drained from the moment it starts. tauri-plugin-shell buffers a
+        // single event, so an unread channel stalls its reader threads and the core blocks on a
+        // full stdout pipe before it ever creates the API socket.
         let core_readiness_generation = self.mark_core_ready();
-        self.core_started(RunningMode::Sidecar);
-        self.restore_selected_nodes().await;
-
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 match event {
@@ -263,6 +240,32 @@ impl CoreManager {
                 }
             }
         });
+
+        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
+            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
+                handle::Handle::mihomo().get_version().await
+            })
+            .await
+            .context("Mihomo readiness probe timed out")??;
+            Ok(())
+        })
+        .await;
+        if let Err(readiness_error) = readiness {
+            proxy_control::stop_guard().await;
+            self.core_stopped();
+            return match child.kill() {
+                Ok(()) => Err(readiness_error),
+                Err(kill_error) => Err(anyhow::anyhow!(
+                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
+                )),
+            };
+        }
+
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(Some(job));
+        self.set_running_child_sidecar(child);
+        self.core_started(RunningMode::Sidecar);
+        self.restore_selected_nodes().await;
 
         Ok(())
     }
