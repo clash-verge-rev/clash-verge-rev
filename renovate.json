@@ -57,6 +57,12 @@
       "enabled": false
     },
     {
+      "description": "Ignore gh-aw dependency updates in workflow files; upgrade agentic workflows with gh aw upgrade instead",
+      "matchFileNames": [".github/workflows/**"],
+      "matchPackageNames": ["/gh-aw/"],
+      "enabled": false
+    },
+    {
       "description": "Skip TypeScript 7.0 series",
       "matchManagers": ["npm"],
       "matchPackageNames": ["typescript"],
