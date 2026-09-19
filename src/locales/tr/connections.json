@@ -17,18 +17,18 @@
       "type": "Tip"
     },
     "order": {
-      "default": "Default",
+      "default": "Varsayılan",
       "uploadSpeed": "Yükleme Hızı",
       "downloadSpeed": "İndirme Hızı"
     },
     "actions": {
-      "active": "Active",
-      "closed": "Closed",
+      "active": "Etkin",
+      "closed": "Kapatılan",
       "closeConnection": "Bağlantıyı Kapat"
     },
     "columnManager": {
       "title": "Sütunlar",
-      "dragHandle": "Drag handle"
+      "dragHandle": "Sürükleme tutamacı"
     }
   }
 }
