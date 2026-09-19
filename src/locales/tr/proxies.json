@@ -1,16 +1,16 @@
 {
   "page": {
     "modes": {
-      "rule": "Rule",
-      "global": "Global",
-      "direct": "Direct"
+      "rule": "Kural",
+      "global": "Küresel",
+      "direct": "Doğrudan"
     },
     "actions": {
       "toggleChain": "Zincir Proxy",
-      "connect": "Connect",
-      "disconnect": "Disconnect",
-      "connecting": "Connecting...",
-      "clearChainConfig": "Delete Chain Config"
+      "connect": "Bağlan",
+      "disconnect": "Bağlantıyı Kes",
+      "connecting": "Bağlanıyor...",
+      "clearChainConfig": "Zincir Yapılandırmasını Sil"
     },
     "provider": {
       "title": "Vekil Sağlayıcısı",
@@ -20,8 +20,8 @@
       }
     },
     "rules": {
-      "title": "Proxy Rules",
-      "select": "Select Rules"
+      "title": "Vekil Kuralları",
+      "select": "Kural Seç"
     },
     "labels": {
       "proxyCount": "Vekil Sayısı",
@@ -68,15 +68,15 @@
       }
     },
     "chain": {
-      "header": "Chain Proxy Config",
-      "warning": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
-      "empty": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
-      "instruction": "Click nodes in order to add to proxy chain",
-      "minimumNodes": "Chain proxy requires at least 2 nodes",
-      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-      "connectFailed": "Failed to connect to proxy chain",
-      "disconnectFailed": "Failed to disconnect from proxy chain",
-      "duplicateNode": "Proxy node already exists in chain",
+      "header": "Zincir Vekil Yapılandırması",
+      "warning": "Zincir vekil ağ hızını belirgin biçimde düşürür. Açık bir ihtiyacınız yoksa ya da bu yapılandırmayı bilmiyorsanız devre dışı bırakın.",
+      "empty": "Zincir vekil ağ hızını belirgin biçimde düşürür. Açık bir ihtiyacınız yoksa ya da bu yapılandırmayı bilmiyorsanız devre dışı bırakın.",
+      "instruction": "Vekil zincirine eklemek için düğümlere sırayla tıklayın",
+      "minimumNodes": "Zincir vekil en az 2 düğüm gerektirir",
+      "minimumNodesHint": "Zincir vekil en az 2 düğüm gerektirir. Lütfen bir düğüm daha ekleyin.",
+      "connectFailed": "Vekil zincirine bağlanılamadı",
+      "disconnectFailed": "Vekil zinciriyle bağlantı kesilemedi",
+      "duplicateNode": "Vekil düğümü zincirde zaten var",
       "entryNode": "Giriş",
       "exitNode": "Çıkış"
     },
@@ -85,20 +85,20 @@
     },
     "title": {
       "default": "Vekil Grupları",
-      "chainMode": "Proxy Chain Mode"
+      "chainMode": "Vekil Zinciri Modu"
     }
   },
   "feedback": {
     "warnings": {
-      "invalidTestUrl": "Test URL must start with http:// or https://"
+      "invalidTestUrl": "Test URL'si http:// veya https:// ile başlamalıdır"
     },
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} başarıyla güncellendi",
+        "updateFailed": "{{name}} güncellenemedi: {{message}}",
+        "genericError": "Güncelleme başarısız oldu: {{message}}",
+        "none": "Güncellenecek sağlayıcı yok",
+        "allUpdated": "Tüm sağlayıcılar başarıyla güncellendi"
       }
     }
   },

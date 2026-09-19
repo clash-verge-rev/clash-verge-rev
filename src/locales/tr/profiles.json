@@ -27,7 +27,7 @@
     },
     "feedback": {
       "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "invalidUrl": "Geçersiz profil URL'si. Lütfen http:// veya https:// ile başlayan bir URL girin",
         "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir",
         "createFailed": "Profil oluşturulamadı",
         "deleteFailed": "Profil silinemedi",
@@ -42,16 +42,16 @@
       "notifications": {
         "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
         "importFail": "Clash vekil ile bile içe aktarma başarısız oldu",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "importNeedsRefresh": "Profil içe aktarıldı ancak elle yenilemek gerekebilir",
+        "importSuccess": "Profil başarıyla içe aktarıldı, görünmüyorsa lütfen yeniden başlatın",
         "profileSwitched": "Profil Değiştirildi",
         "profileReactivated": "Profil Yeniden Etkinleştirildi",
         "switchBusy": "Profil değiştirme işlemi zaten devam ediyor",
         "batchDeleted": "Seçili profiller başarıyla silindi"
       },
       "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        "forceRefreshCompleted": "Zorunlu yenileme tamamlandı",
+        "emergencyRefreshFailed": "Acil yenileme başarısız oldu: {{message}}"
       },
       "tooltips": {
         "forceRefreshStaleData": "Profil verileri kullanılamıyor; zorla yenilemek için tıklayın"
@@ -71,7 +71,7 @@
     "menu": {
       "home": "Ana Sayfa",
       "select": "Seç",
-      "shareQrCode": "Share QR Code",
+      "shareQrCode": "QR Kodu Paylaş",
       "editInfo": "Bilgileri Düzenle",
       "editFile": "Dosyayı Düzenle",
       "editRules": "Kuralları Düzenle",
@@ -81,22 +81,22 @@
       "extendScript": "Betik Genişletme",
       "openFile": "Dosyayı Aç",
       "update": "Güncelle",
-      "updateViaProxy": "Update via proxy"
+      "updateViaProxy": "Vekil üzerinden güncelle"
     },
     "more": {
       "global": {
-        "merge": "Global Extend Config",
-        "script": "Global Extend Script"
+        "merge": "Küresel Yapılandırma Genişletme",
+        "script": "Küresel Betik Genişletme"
       },
       "chips": {
-        "merge": "Merge",
-        "script": "Script"
+        "merge": "Birleştirme",
+        "script": "Betik"
       }
     },
     "profileItem": {
       "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
+        "showLast": "Son güncelleme zamanını göstermek için tıklayın",
+        "showNext": "Sonraki güncellemeyi göstermek için tıklayın"
       },
       "status": {
         "lastUpdateFailed": "Son güncelleme başarısız oldu",
@@ -118,12 +118,12 @@
         "description": "Açıklamalar",
         "subscriptionUrl": "Abonelik URL'si",
         "userAgent": "Kullanıcı Aracısı",
-        "httpTimeout": "HTTP Request Timeout",
+        "httpTimeout": "HTTP İsteği Zaman Aşımı",
         "updateInterval": "Güncelleme Aralığı",
         "useSystemProxy": "Sistem Vekil'ini Kullan",
         "useClashProxy": "Clash Vekil'ini Kullan",
         "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Otomatik Güncellemeye İzin Ver"
       },
       "types": {
         "remote": "Uzak",
@@ -206,7 +206,7 @@
       "title": "Betik Konsolu"
     },
     "qrViewer": {
-      "title": "Subscription QR Code"
+      "title": "Abonelik QR Kodu"
     }
   }
 }

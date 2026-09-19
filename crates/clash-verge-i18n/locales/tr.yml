@@ -8,8 +8,8 @@ notifications:
     body: '{mode} moduna geçildi.'
   systemProxyToggled:
     title: Sistem Vekil'i
-    'on': System proxy has been enabled.
-    'off': System proxy has been disabled.
+    'on': Sistem vekili etkinleştirildi.
+    'off': Sistem vekili devre dışı bırakıldı.
   systemProxyFailed:
     title: Sistem Vekili
     body: Sistem vekil sunucusu ayarlanamadı. Nedenini görmek için Clash Verge'i açın.
@@ -18,8 +18,8 @@ notifications:
     body: Art arda birkaç başarısızlıktan sonra durdu. Nedenini görmek için Clash Verge'i açın.
   tunModeToggled:
     title: TUN Modu
-    'on': TUN mode has been enabled.
-    'off': TUN mode has been disabled.
+    'on': TUN modu etkinleştirildi.
+    'off': TUN modu devre dışı bırakıldı.
   lightweightModeEntered:
     title: Hafif Mod
     body: Hafif moda geçildi.
@@ -33,10 +33,10 @@ notifications:
     title: Uygulama Gizlendi
     body: Clash Verge arka planda çalışıyor.
   updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
+    title: Clash Verge Güncellemesi
+    body: Yeni bir sürüm (v{version}) indirildi ve kurulmaya hazır.
+    installNow: Şimdi Kur
+    later: Daha Sonra
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
