@@ -12,13 +12,7 @@ use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use log::Level;
 use scopeguard::defer;
-use std::{
-    path::Path,
-    sync::{
-        Arc,
-        atomic::{AtomicU64, Ordering},
-    },
-};
+use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
@@ -217,8 +211,7 @@ impl CoreManager {
         // The sidecar has to be drained from the moment it starts. tauri-plugin-shell buffers a
         // single event, so an unread channel stalls its reader threads and the core blocks on a
         // full stdout pipe before it ever creates the API socket.
-        let core_readiness_generation = Arc::new(AtomicU64::new(0));
-        let generation_slot = Arc::clone(&core_readiness_generation);
+        let core_readiness_generation = self.mark_core_ready();
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 match event {
@@ -230,12 +223,7 @@ impl CoreManager {
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let manager = Self::global();
-                        // The generation is only published once the core is actually ready, so a
-                        // termination before that must not invalidate a later core's readiness.
-                        let generation = generation_slot.load(Ordering::Acquire);
-                        if generation != 0 {
-                            let _ = manager.invalidate_core_readiness_if(generation);
-                        }
+                        let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
                             format!("Process terminated with code: {}", code)
                         } else if let Some(signal) = term.signal {
@@ -276,7 +264,6 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         self.set_job_handle(Some(job));
         self.set_running_child_sidecar(child);
-        core_readiness_generation.store(self.mark_core_ready(), Ordering::Release);
         self.core_started(RunningMode::Sidecar);
         self.restore_selected_nodes().await;
 
