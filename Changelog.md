@@ -40,6 +40,7 @@
 **🐧 Linux**
 
 - 修复 Linux 安装或卸载服务时授权失败的问题
+- 修复 Fedora 等启用 SELinux 的系统更新后服务无法启动的问题
 
 **🍎/🐧 macOS/Linux**
 
