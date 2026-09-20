@@ -284,8 +284,7 @@ fn process_seq_items(
     config
 }
 
-/// App 权威的顶层控制面键:核心连接、监听端口、UI/托盘开关。
-/// 平台键随 cfg 门控;`dns.ipv6` 单独处理。
+/// App 权威的顶层控制面键;`dns.ipv6` 单独处理。
 const CONTROL_PLANE_KEYS: &[&str] = &[
     "external-controller",
     #[cfg(unix)]
@@ -308,25 +307,20 @@ const CONTROL_PLANE_KEYS: &[&str] = &[
     "unified-delay",
 ];
 
-/// The fields the app owns, held across the stages that apply the user's manual overrides.
-///
-/// Capturing and restoring are one value rather than two calls because the order is a
-/// correctness requirement, not a style: capture must happen after the app has finished
-/// deriving these fields and before any override runs, and restore must happen after every
-/// override. As four separate calls that contract lived only in comments.
+/// App-owned fields: captured after the app derives them, enforced after every override.
 struct AuthoritativeFields {
     control_plane: Mapping,
     tun: Mapping,
-    /// Only tracked when the DNS page owns it; otherwise overrides may set `dns.ipv6` freely.
+    /// Only when the DNS page switched it on.
     dns_ipv6: Option<Value>,
 }
 
 impl AuthoritativeFields {
-    fn capture(config: &Mapping, gui_tun_keys: &[Value], enable_dns_settings: bool) -> Self {
+    fn capture(config: &Mapping, gui_tun_keys: &[Value], owns_dns_ipv6: bool) -> Self {
         Self {
             control_plane: snapshot_control_plane(config),
             tun: snapshot_tun(config, gui_tun_keys),
-            dns_ipv6: enable_dns_settings.then(|| snapshot_dns_ipv6(config)).flatten(),
+            dns_ipv6: owns_dns_ipv6.then(|| snapshot_dns_ipv6(config)).flatten(),
         }
     }
 
@@ -401,7 +395,7 @@ fn enforce_tun(mut config: Mapping, snapshot: Mapping) -> Mapping {
     config
 }
 
-/// DNS 页权威的嵌套开关;只在 `enable_dns_settings` 时快照。
+/// 只在 DNS 页开启 IPv6 时快照。
 fn snapshot_dns_ipv6(config: &Mapping) -> Option<Value> {
     config.get("dns")?.get("ipv6").cloned()
 }
@@ -481,11 +475,7 @@ async fn process_profile_items(
     (config, exists_keys, result_map)
 }
 
-/// Merge the Application Merge Config over the profile's own configuration.
-///
-/// Every switch it consults is a parameter: it used to read `enable_external_controller`
-/// out of the global config from inside its loop, which made a stage that looks pure depend
-/// on process state and left it untestable.
+/// Merges the app's clash config over the profile; switches are parameters to keep it pure.
 fn merge_default_config(
     mut config: Mapping,
     clash_config: Mapping,
@@ -683,9 +673,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     config
 }
 
-/// 当 DNS 处于 fake-ip 模式且启用 IPv6 时，补充缺失的 `fake-ip-range6`，
-/// 否则 AAAA 查询无法获得 fake-ip，导致 IPv6 解析失败（见 issue #7373）。
-/// 兼容旧版本生成的、缺少该字段的 dns_config.yaml。
+/// fake-ip + IPv6 缺少 `fake-ip-range6` 时补默认值，否则 AAAA 无法解析（#7373）。
 fn ensure_fake_ip_range6(dns: &mut Mapping) {
     use serde_yaml_ng::Value;
 
@@ -708,38 +696,77 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
     }
 }
 
-async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
+/// On, non-blank text, or non-empty list/map; anything else keeps the profile's value.
+fn is_set(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(on) => *on,
+        Value::String(text) => !text.trim().is_empty(),
+        Value::Sequence(items) => !items.is_empty(),
+        Value::Mapping(map) => !map.is_empty(),
+        Value::Number(_) | Value::Tagged(_) => true,
+    }
+}
+
+/// Overlay set fields onto base; maps merge per key, lists are leaves.
+fn merge_set_fields(mut base: Mapping, overlay: Mapping) -> Mapping {
+    for (key, value) in overlay {
+        let value = match (base.get_mut(&key), value) {
+            (Some(Value::Mapping(existing)), Value::Mapping(patch)) => {
+                *existing = merge_set_fields(std::mem::take(existing), patch);
+                continue;
+            }
+            (_, Value::Mapping(patch)) => Value::Mapping(merge_set_fields(Mapping::new(), patch)),
+            (_, value) => value,
+        };
+        if is_set(&value) {
+            base.insert(key, value);
+        }
+    }
+    base
+}
+
+fn take_mapping(config: &mut Mapping, key: &str) -> Mapping {
+    config
+        .get_mut(key)
+        .and_then(Value::as_mapping_mut)
+        .map(std::mem::take)
+        .unwrap_or_default()
+}
+
+/// Returns the merged config and whether the page set `dns.ipv6`.
+async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> (Mapping, bool) {
+    let mut owns_ipv6 = false;
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
         if dns_path.exists()
             && let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
-            && let Ok(dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+            && let Ok(mut dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
         {
-            if let Some(hosts_value) = dns_config.get("hosts")
-                && hosts_value.is_mapping()
-            {
-                config.insert("hosts".into(), hosts_value.clone());
+            if let Some(Value::Mapping(hosts)) = dns_config.remove("hosts") {
+                let hosts = merge_set_fields(take_mapping(&mut config, "hosts"), hosts);
+                config.insert("hosts".into(), hosts.into());
                 logging!(debug, Type::Core, "apply hosts configuration");
             }
 
-            if let Some(dns_value) = dns_config.get("dns") {
-                if let Some(dns_mapping) = dns_value.as_mapping() {
-                    let mut dns_mapping = dns_mapping.clone();
-                    ensure_fake_ip_range6(&mut dns_mapping);
-                    config.insert("dns".into(), dns_mapping.into());
-                    logging!(debug, Type::Core, "apply dns_config.yaml (dns section)");
-                }
-            } else {
-                let mut dns_config = dns_config;
-                ensure_fake_ip_range6(&mut dns_config);
-                config.insert("dns".into(), dns_config.into());
+            // Legacy layout: no `dns` root.
+            let dns_override = match dns_config.remove("dns") {
+                Some(Value::Mapping(dns)) => Some(dns),
+                Some(_) => None,
+                None => Some(dns_config),
+            };
+            if let Some(dns_override) = dns_override {
+                owns_ipv6 = dns_override.get("ipv6").is_some_and(is_set);
+                let mut dns = merge_set_fields(take_mapping(&mut config, "dns"), dns_override);
+                ensure_fake_ip_range6(&mut dns);
+                config.insert("dns".into(), dns.into());
                 logging!(debug, Type::Core, "apply dns_config.yaml");
             }
         }
     }
 
-    config
+    (config, owns_ipv6)
 }
 
 /// Returns the enhanced profile, its original keys, script logs, and DNS override decision.
@@ -800,9 +827,9 @@ pub async fn enhance(
 
     let config = apply_builtin_scripts(config, clash_core, enable_builtin);
     let config = use_tun(config, enable_tun);
-    let config = apply_dns_settings(config, enable_dns_settings).await;
+    let (config, owns_dns_ipv6) = apply_dns_settings(config, enable_dns_settings).await;
 
-    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, enable_dns_settings);
+    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, owns_dns_ipv6);
 
     let (config, exists_keys, result_map) = process_global_items(
         config,
@@ -864,8 +891,7 @@ mod fake_ip_tests {
 
     #[test]
     fn a_hand_edited_empty_range_counts_as_missing() {
-        // The reason this is not just a `contains_key` check: YAML edited by hand often
-        // leaves the key present with nothing after the colon.
+        // Hand-edited YAML may leave the key present but empty.
         for blank in ["", "   "] {
             let mut config = dns(&[
                 ("ipv6", Value::from(true)),
@@ -1004,8 +1030,7 @@ mod use_tun_tests {
 
     #[tokio::test]
     async fn switching_tun_off_leaves_dns_untouched() {
-        // Turning TUN off must not rewrite DNS the user or profile chose; only the system
-        // resolver is restored, which is not part of the configuration.
+        // TUN off must not rewrite the DNS the profile chose.
         let config = mapping(&[("dns", Value::Mapping(mapping(&[("enable", Value::from(false))])))]);
 
         let result = use_tun(config, false);
@@ -1038,8 +1063,7 @@ mod use_sort_tests {
 
     #[test]
     fn the_bulky_list_fields_are_written_last() {
-        // These are the fields that make a config file unreadable from the top, so they are
-        // pushed below the settings a human actually scans for.
+        // Bulky list fields go last so the top of the file stays readable.
         let mut config = Mapping::new();
         config.insert(Value::from("rules"), Value::from("rules"));
         config.insert(Value::from("mode"), Value::from("rule"));
@@ -1129,8 +1153,7 @@ mod merge_default_config_tests {
 
     #[test]
     fn a_disabled_listener_is_removed_rather_than_merged() {
-        // Removed, not just skipped: the profile may have asked for the port itself, and a
-        // listener the user switched off must not be opened by the profile's own value.
+        // Removed, not skipped: the profile's own value must not reopen a disabled listener.
         let config = mapping(&[("socks-port", Value::from(7891)), ("port", Value::from(7890))]);
         let clash_config = mapping(&[("socks-port", Value::from(1080)), ("port", Value::from(8080))]);
 
@@ -1152,8 +1175,7 @@ mod merge_default_config_tests {
 
     #[test]
     fn a_disabled_external_controller_is_blanked_rather_than_dropped() {
-        // Blanked, not removed: an absent key lets mihomo fall back to its own default and
-        // listen anyway, which is the opposite of what switching it off means.
+        // Blanked, not removed: an absent key makes mihomo listen on its default.
         let clash_config = mapping(&[("external-controller", Value::from("127.0.0.1:9090"))]);
 
         let merged = merge(Mapping::new(), clash_config, false);

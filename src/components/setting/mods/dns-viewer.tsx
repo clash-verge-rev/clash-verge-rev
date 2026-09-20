@@ -171,11 +171,7 @@ const DEFAULT_DNS_CONFIG = {
   ],
   fallback: [],
   'nameserver-policy': {},
-  'proxy-server-nameserver': [
-    'https://doh.pub/dns-query',
-    'https://dns.alidns.com/dns-query',
-    'tls://223.5.5.5',
-  ],
+  'proxy-server-nameserver': [],
   'direct-nameserver': [],
   'direct-nameserver-follow-policy': false,
   'fallback-filter': {
@@ -340,8 +336,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: values.listen,
       'enhanced-mode': values.enhancedMode,
       'fake-ip-range': values.fakeIpRange,
-      'fake-ip-range6':
-        values.fakeIpRange6 || DEFAULT_DNS_CONFIG['fake-ip-range6'],
+      'fake-ip-range6': values.fakeIpRange6,
       'fake-ip-filter-mode': values.fakeIpFilterMode,
       'prefer-h3': values.preferH3,
       'respect-rules': values.respectRules,

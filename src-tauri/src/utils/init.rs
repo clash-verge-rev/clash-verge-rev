@@ -228,27 +228,21 @@ async fn migrate_legacy_macos_service_logs(log_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Raise existing sub-floor update intervals, once per install.
-///
-/// One-off repair, not a standing rule — the UI warns about shorter intervals but still saves
-/// them, so the marker is written even when nothing needed raising.
+/// Once per install; the marker is written even when no interval needed raising.
 pub async fn migrate_short_update_intervals() -> Result<()> {
     let marker = dirs::update_interval_migrated_path()?;
     if fs::try_exists(&marker).await? {
         return Ok(());
     }
 
-    // Same order as every other writer holding it (lock, then draft permit): save_file runs
-    // inside the closure, ahead of the optimistic check, so a racing restore can't be undone.
+    // Same lock order as other writers; saving inside the closure keeps a racing restore intact.
     let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
 
     let min = constants::profile::MIN_UPDATE_INTERVAL;
     let raised = Config::profiles()
         .await
         .with_data_modify(|mut profiles: IProfiles| async move {
-            // `IProfiles::new` normalises items to Some when it read the file, and returns a
-            // bare default() when it failed. A failed load also raises zero — without this the
-            // marker would burn the one shot on profiles nobody managed to load.
+            // A failed profiles load (bare default) must not burn the one-shot marker.
             if profiles.items.is_none() {
                 anyhow::bail!("profiles.yaml was not loaded; refusing to record the migration as done");
             }
@@ -370,14 +364,7 @@ pub(super) async fn init_dns_config() -> Result<()> {
             "nameserver-policy".into(),
             Value::Mapping(serde_yaml_ng::Mapping::new()),
         ),
-        (
-            "proxy-server-nameserver".into(),
-            Value::Sequence(vec![
-                Value::String("https://doh.pub/dns-query".into()),
-                Value::String("https://dns.alidns.com/dns-query".into()),
-                Value::String("tls://223.5.5.5".into()),
-            ]),
-        ),
+        ("proxy-server-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
         (
