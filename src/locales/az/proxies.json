@@ -1,0 +1,119 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Qayda",
+      "global": "Qlobal",
+      "direct": "Birbaşa"
+    },
+    "actions": {
+      "toggleChain": "Proksi zənciri rejimini dəyiş",
+      "connect": "Əlaqə yarat",
+      "disconnect": "Əlaqəni kəs",
+      "connecting": "Əlaqə yaradılır...",
+      "clearChainConfig": "Zəncir konfiqurasiyasını sil"
+    },
+    "provider": {
+      "title": "Proksi provayderi",
+      "actions": {
+        "updateAll": "Hamısını yenilə",
+        "update": "Yenilə"
+      }
+    },
+    "rules": {
+      "title": "Proksi qaydaları",
+      "select": "Qaydaları seç"
+    },
+    "labels": {
+      "proxyCount": "Proksi sayı",
+      "delayCheckReset": "Sabitləməni ləğv etmək üçün gecikməni yoxla",
+      "nodeCount": "{{count}} qovşaq"
+    },
+    "tooltips": {
+      "locate": "Yerini tap",
+      "delayCheck": "Gecikməni yoxla",
+      "sortDefault": "Standart qaydada sırala",
+      "sortDelay": "Gecikməyə görə sırala",
+      "sortName": "Ada görə sırala",
+      "delayCheckUrl": "Gecikmə yoxlaması üçün URL",
+      "showBasic": "Proksinin əsas məlumatlarını göstər",
+      "showDetail": "Proksinin ətraflı məlumatlarını göstər",
+      "filter": "Süzgəc"
+    },
+    "placeholders": {
+      "delayCheckUrl": "Gecikmə yoxlaması üçün URL"
+    },
+    "empty": {
+      "noAvailableGroups": "Mövcud proksi qrupu yoxdur",
+      "noProxies": "Proksi yoxdur",
+      "noSubscriptions": {
+        "title": "Abunəlik idxal edilməyib",
+        "description": "Proksilər səhifəsində göstəriləcək heç nə yoxdur. Abunəliyi idxal etmək və aktivləşdirmək üçün Profillər bölməsinə keçin."
+      },
+      "inactiveSubscription": {
+        "title": "Aktiv abunəlik yoxdur",
+        "description": "Abunəliklər tapıldı, lakin hazırda heç biri aktiv deyil. Profillər bölməsinə keçin və aktivləşdirmək üçün birini seçin."
+      },
+      "coreUnavailable": {
+        "title": "Nüvə müvəqqəti olaraq əlçatan deyil",
+        "description": "Nüvədən proksi məlumatlarını əldə etmək mümkün olmadı. Nüvəni yenidən başlatmağa cəhd edin. Problem davam edərsə, jurnallar qovluğunu açın və nüvə jurnallarını yoxlayın."
+      },
+      "noProxyInfo": {
+        "title": "Proksi məlumatları yoxdur",
+        "description": "Göstəriləcək proksi qrupları və ya qovşaqları yoxdur. Aktiv abunəlikdə etibarlı proksi qrupları və qovşaqlarının olduğunu yoxlayın və ya nüvəni yenidən başladıb jurnalları nəzərdən keçirin."
+      },
+      "actions": {
+        "openProfiles": "Profillərə keç",
+        "restartCore": "Nüvəni yenidən başlat",
+        "openLogs": "Jurnallar qovluğunu aç"
+      }
+    },
+    "chain": {
+      "header": "Proksi zəncirinin konfiqurasiyası",
+      "warning": "Proksi zənciri şəbəkə sürətini xeyli azaldacaq. İşiniz üçün zəruri deyilsə və ya bu konfiqurasiyanı başa düşmürsünüzsə, proksi zəncirini aktivləşdirməyin.",
+      "empty": "Proksi zənciri şəbəkə sürətini xeyli azaldacaq. İşiniz üçün zəruri deyilsə və ya bu konfiqurasiyanı başa düşmürsünüzsə, proksi zəncirini aktivləşdirməyin.",
+      "instruction": "Proksi zəncirinə əlavə etmək üçün qovşaqlara ardıcıllıqla klikləyin",
+      "minimumNodes": "Proksi zənciri üçün ən azı 2 qovşaq tələb olunur",
+      "minimumNodesHint": "Proksi zənciri üçün ən azı 2 qovşaq tələb olunur. Daha bir qovşaq əlavə edin.",
+      "connectFailed": "Proksi zənciri ilə əlaqə yaratmaq mümkün olmadı",
+      "disconnectFailed": "Proksi zənciri ilə əlaqəni kəsmək mümkün olmadı",
+      "duplicateNode": "Proksi qovşağı artıq zəncirdə mövcuddur",
+      "entryNode": "Giriş",
+      "exitNode": "Çıxış"
+    },
+    "messages": {
+      "directMode": "Birbaşa rejim"
+    },
+    "title": {
+      "default": "Proksi qrupları",
+      "chainMode": "Proksi zənciri rejimi"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} uğurla yeniləndi",
+        "updateFailed": "{{name}} yenilənə bilmədi: {{message}}",
+        "genericError": "Yeniləmə alınmadı: {{message}}",
+        "none": "Yenilənəcək provayder yoxdur",
+        "allUpdated": "Bütün provayderlər uğurla yeniləndi"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Proksini əl ilə seçir",
+        "url-test": "URL sınağının gecikməsinə əsasən proksi seçir",
+        "fallback": "Xəta baş verdikdə başqa proksiyə keçir",
+        "load-balance": "Yükü tarazlaşdırmaq üçün trafiki proksilər arasında bölüşdürür",
+        "relay": "Müəyyən edilmiş proksi zəncirindən keçir"
+      },
+      "policies": {
+        "DIRECT": "Məlumatları birbaşa göndərir",
+        "REJECT": "Sorğuları rədd edir",
+        "REJECT-DROP": "Sorğuları cavab vermədən rədd edir",
+        "PASS": "Uyğunluq olduqda bu qaydadan yan keçir"
+      }
+    }
+  }
+}

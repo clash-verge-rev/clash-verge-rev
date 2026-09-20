@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Jurnallar"
+  },
+  "actions": {
+    "showDescending": "Ən yeniləri əvvəl göstər",
+    "showAscending": "Ən köhnələri əvvəl göstər"
+  }
+}
