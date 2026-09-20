@@ -4,7 +4,7 @@ use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use std::pin::Pin;
 use std::time::Duration;
-use tauri::{Manager as _, WebviewWindow, Wry};
+use tauri::{Manager as _, WebviewWindow};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WindowOperationResult {
@@ -50,7 +50,7 @@ impl WindowManager {
         handle::Handle::global().set_activation_policy_regular();
     }
 
-    fn get_main_window_with_state() -> (Option<WebviewWindow<Wry>>, WindowState) {
+    fn get_main_window_with_state() -> (Option<WebviewWindow>, WindowState) {
         let Some(window) = Self::get_main_window() else {
             return (None, WindowState::NotExist);
         };
@@ -76,7 +76,7 @@ impl WindowManager {
         Self::get_main_window_with_state().1
     }
 
-    pub fn get_main_window() -> Option<WebviewWindow<Wry>> {
+    pub fn get_main_window() -> Option<WebviewWindow> {
         let app_handle = handle::Handle::app_handle();
         app_handle.get_webview_window("main")
     }
@@ -147,7 +147,7 @@ impl WindowManager {
         }
     }
 
-    fn hide_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
+    fn hide_main_window(window: Option<&WebviewWindow>) -> WindowOperationResult {
         logging!(debug, Type::Window, "窗口可见，将隐藏窗口");
         if let Some(window) = window {
             match window.close() {
@@ -166,7 +166,7 @@ impl WindowManager {
         }
     }
 
-    fn activate_existing_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
+    fn activate_existing_main_window(window: Option<&WebviewWindow>) -> WindowOperationResult {
         logging!(debug, Type::Window, "窗口存在但被隐藏或最小化，将激活窗口");
         if let Some(window) = window {
             Self::activate_window(window)
@@ -176,7 +176,7 @@ impl WindowManager {
         }
     }
 
-    fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
+    fn activate_window(window: &WebviewWindow) -> WindowOperationResult {
         logging!(debug, Type::Window, "开始激活窗口");
         #[cfg(target_os = "macos")]
         Self::set_macos_activation_policy_regular();
@@ -233,15 +233,15 @@ impl WindowManager {
         }
     }
 
-    pub fn is_main_window_visible(window: Option<&WebviewWindow<Wry>>) -> bool {
+    pub fn is_main_window_visible(window: Option<&WebviewWindow>) -> bool {
         window.map(|w| w.is_visible().unwrap_or(false)).unwrap_or(false)
     }
 
-    pub fn is_main_window_focused(window: Option<&WebviewWindow<Wry>>) -> bool {
+    pub fn is_main_window_focused(window: Option<&WebviewWindow>) -> bool {
         window.map(|w| w.is_focused().unwrap_or(false)).unwrap_or(false)
     }
 
-    fn is_main_window_minimized(window: Option<&WebviewWindow<Wry>>) -> bool {
+    fn is_main_window_minimized(window: Option<&WebviewWindow>) -> bool {
         window.map(|w| w.is_minimized().unwrap_or(false)).unwrap_or(false)
     }
 
