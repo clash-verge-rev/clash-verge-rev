@@ -30,6 +30,7 @@
 - 修复 Windows 系统代理设置偶发失败的问题
 - 修复 Windows 关机被应用阻止的问题
 - 修复 Windows 服务模式下 TUN 使用 system/mixed 堆栈时无法接管流量的问题，防火墙放行规则改为自动添加
+- 修复 Windows 配置中 GEO 规则较多时，首次启动内核失败的问题
 
 **🍎 macOS**
 
