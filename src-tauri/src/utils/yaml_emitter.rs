@@ -83,18 +83,48 @@ fn quote_date_like_scalars(line: &str) -> String {
 }
 
 fn mapping_value_start(content: &str) -> Option<usize> {
-    content.char_indices().find_map(|(index, character)| {
-        if character != ':' {
-            return None;
+    let mut characters = content.char_indices().peekable();
+    let mut in_single_quotes = false;
+    let mut in_double_quotes = false;
+    let mut escaped = false;
+
+    while let Some((index, character)) = characters.next() {
+        if in_single_quotes {
+            if character == '\'' {
+                if characters.peek().is_some_and(|(_, next)| *next == '\'') {
+                    characters.next();
+                } else {
+                    in_single_quotes = false;
+                }
+            }
+            continue;
         }
 
-        let after_colon = index + character.len_utf8();
-        if content[after_colon..].chars().next().is_none_or(char::is_whitespace) {
-            Some(after_colon)
-        } else {
-            None
+        if in_double_quotes {
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == '"' {
+                in_double_quotes = false;
+            }
+            continue;
         }
-    })
+
+        match character {
+            '\'' => in_single_quotes = true,
+            '"' => in_double_quotes = true,
+            ':' => {
+                let after_colon = index + character.len_utf8();
+                if content[after_colon..].chars().next().is_none_or(char::is_whitespace) {
+                    return Some(after_colon);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    None
 }
 
 fn comment_start(value: &str) -> usize {
@@ -132,7 +162,7 @@ fn is_date_like(value: &str) -> bool {
         return false;
     }
 
-    index == bytes.len() || matches!(bytes[index], b'T' | b' ')
+    index == bytes.len() || matches!(bytes[index], b'T' | b't' | b' ')
 }
 
 fn leading_spaces(line: &str) -> usize {
@@ -214,6 +244,8 @@ proxies:
     ordinary: example
     url: https://example.com/#fragment
     hash: hash#value
+    lower_t: "2026-09-14t12:00:00"
+    "key: part": "2026-09-14"
 items:
   - "2026-09-14T12:00:00"
 "#;
@@ -226,6 +258,8 @@ items:
         assert!(output.contains("password: '2026-9-14'"));
         assert!(output.contains("alternate: '2026-09-14'"));
         assert!(output.contains("- '2026-09-14T12:00:00'"));
+        assert!(output.contains("lower_t: '2026-09-14t12:00:00'"));
+        assert!(output.contains("'key: part': '2026-09-14'"));
         assert!(output.contains("https://example.com/#fragment"));
         assert!(output.contains("hash#value"));
         assert!(output.contains("ordinary: example"));
