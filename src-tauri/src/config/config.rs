@@ -19,7 +19,7 @@ use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::{collections::HashSet, path::PathBuf};
+use std::{collections::HashSet, net::SocketAddr, path::PathBuf, str::FromStr as _};
 use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
@@ -90,13 +90,21 @@ impl Config {
     }
 
     pub async fn init_runtime_config() -> Result<()> {
-        let fallback_applied = match Self::resolve_startup_mixed_port().await {
+        let mixed_fallback = match Self::resolve_startup_mixed_port().await {
             Ok(applied) => applied,
             Err(error) => {
                 Self::block_startup_core(&error);
                 return Err(error);
             }
         };
+        let controller_fallback = match Self::resolve_startup_controller_port().await {
+            Ok(applied) => applied,
+            Err(error) => {
+                Self::block_startup_core(&error);
+                return Err(error);
+            }
+        };
+        let fallback_applied = mixed_fallback || controller_fallback;
         let validation_result = if fallback_applied {
             None
         } else {
@@ -232,6 +240,20 @@ impl Config {
         // Apply only to generated core config so the saved choice survives the next launch.
         if let Some(port) = MixedPort::session_fallback() {
             config.insert(MIXED_PORT_KEY.into(), port.into());
+        }
+        if let (Some(port), Some(val)) = (
+            Self::controller_session_fallback(),
+            config.get("external-controller").and_then(Value::as_str),
+        ) {
+            let addr_str = if val.starts_with(':') {
+                format!("127.0.0.1{val}")
+            } else {
+                val.to_string()
+            };
+            if let Ok(mut addr) = SocketAddr::from_str(&addr_str) {
+                addr.set_port(port);
+                config.insert("external-controller".into(), addr.to_string().into());
+            }
         }
 
         Self::runtime().await.edit_draft(|d| {

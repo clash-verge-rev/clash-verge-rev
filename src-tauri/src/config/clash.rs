@@ -1,3 +1,4 @@
+use super::Config;
 use crate::constants::{network, tun as tun_const};
 use crate::utils::dirs::{path_to_str, sidecar_ipc_path};
 use crate::utils::{dirs, help};
@@ -290,9 +291,15 @@ impl IClashTemp {
                 if socket.ip().is_unspecified() {
                     socket.set_ip(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
                 }
+                if let Some(port) = Config::controller_session_fallback() {
+                    socket.set_port(port);
+                }
                 socket.to_string()
             }
-            Err(_) => "127.0.0.1:9097".into(),
+            Err(_) => {
+                let port = Config::controller_session_fallback().unwrap_or(9097);
+                format!("127.0.0.1:{port}")
+            }
         }
     }
 

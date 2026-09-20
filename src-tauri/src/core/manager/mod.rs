@@ -271,28 +271,40 @@ impl CoreManager {
                         crate::config::Config::notify_startup_mixed_port_fallback();
                         return Err(start_error);
                     }
+                    let mut fallen_back = false;
                     match crate::config::Config::resolve_startup_mixed_port().await {
-                        Ok(true) => {
-                            retries += 1;
-                            tracing::Span::current().record("retries", retries);
-                            logging!(
-                                warn,
-                                Type::Core,
-                                "Retrying core startup after mixed proxy port fallback ({}/{}): {start_error:#}",
-                                retries,
-                                MAX_PORT_FALLBACK_RETRIES
-                            );
-                        }
-                        Ok(false) => {
-                            crate::config::Config::notify_startup_mixed_port_fallback();
-                            return Err(start_error);
-                        }
+                        Ok(true) => fallen_back = true,
+                        Ok(false) => {}
                         Err(fallback_error) => {
                             crate::config::Config::block_startup_core(&fallback_error);
                             return Err(start_error.context(format!(
                                 "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
                             )));
                         }
+                    }
+                    match crate::config::Config::resolve_startup_controller_port().await {
+                        Ok(true) => fallen_back = true,
+                        Ok(false) => {}
+                        Err(fallback_error) => {
+                            crate::config::Config::block_startup_core(&fallback_error);
+                            return Err(start_error.context(format!(
+                                "the controller port fallback did not rescue core startup: {fallback_error:#}"
+                            )));
+                        }
+                    }
+                    if fallen_back {
+                        retries += 1;
+                        tracing::Span::current().record("retries", retries);
+                        logging!(
+                            warn,
+                            Type::Core,
+                            "Retrying core startup after port fallback ({}/{}): {start_error:#}",
+                            retries,
+                            MAX_PORT_FALLBACK_RETRIES
+                        );
+                    } else {
+                        crate::config::Config::notify_startup_mixed_port_fallback();
+                        return Err(start_error);
                     }
                 }
                 Err(error) => {
