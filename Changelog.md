@@ -10,5 +10,6 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化系统服务版本检查：版本与当前应用要求不一致时，提示卸载后重新安装
 
 </details>

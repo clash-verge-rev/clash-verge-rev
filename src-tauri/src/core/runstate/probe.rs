@@ -4,7 +4,9 @@
 //! on [`super::env::RunStateEnv`], so these classifications are testable without IPC,
 //! systemd, SCM or launchd.
 
-use clash_verge_service_ipc::{MIN_REQUIRED_SERVICE_REVISION, ProtocolInfo, ProtocolVersion};
+use clash_verge_service_ipc::{
+    MIN_REQUIRED_SERVICE_REVISION, ProtocolInfo, ProtocolVersion, VERSION as SERVICE_VERSION,
+};
 
 use super::health::ServiceHealth;
 
@@ -32,14 +34,13 @@ pub enum CurrentServiceProbe {
     Unavailable,
 }
 
-/// Decide whether the Service we reached speaks a protocol this client can use.
+/// Require the bundled Service version as well as a usable protocol.
 pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersionCheck {
     let client = ProtocolVersion::current();
     if reply.code == 0
-        && reply
-            .protocol
-            .as_ref()
-            .is_some_and(|info| info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION))
+        && reply.protocol.as_ref().is_some_and(|info| {
+            info.build_version == SERVICE_VERSION && info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION)
+        })
     {
         return ServiceVersionCheck::Ready;
     }
@@ -47,7 +48,8 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
     let detail = if reply.code == 0 {
         match reply.protocol.as_ref() {
             Some(info) => format!(
-                "client requires epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                "client requires service version {} with epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                SERVICE_VERSION,
                 client.epoch,
                 MIN_REQUIRED_SERVICE_REVISION,
                 info.protocol.epoch,
@@ -63,7 +65,7 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
         )
     };
     ServiceVersionCheck::NeedsReinstall(format!(
-        "Service helper protocol mismatch: {detail}. Choose Reinstall or Repair to continue"
+        "Service helper version or protocol mismatch: {detail}. Choose Reinstall to uninstall the existing service and install the required version"
     ))
 }
 
