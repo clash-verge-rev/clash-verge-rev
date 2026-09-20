@@ -17,7 +17,7 @@
       "type": "Tip"
     },
     "order": {
-      "default": "Default",
+      "default": "Varsayılan",
       "uploadSpeed": "Yükleme Hızı",
       "downloadSpeed": "İndirme Hızı"
     },
@@ -31,7 +31,7 @@
     },
     "columnManager": {
       "title": "Sütunlar",
-      "dragHandle": "Drag handle"
+      "dragHandle": "Sürükleme tutamacı"
     }
   },
   "modals": {

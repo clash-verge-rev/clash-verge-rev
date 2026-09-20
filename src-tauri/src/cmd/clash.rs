@@ -210,7 +210,8 @@ pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
         return Ok(ValidationOutcome::invalid_from_message("DNS config file not found"));
     }
 
-    CoreConfigValidator::validate_config_file_outcome(dns_path_str, None)
+    // A fragment, not a runnable config; the merged result is validated on apply.
+    CoreConfigValidator::validate_config_file_outcome(dns_path_str, Some(true))
         .await
         .stringify_err()
 }

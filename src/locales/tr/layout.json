@@ -12,23 +12,23 @@
         "settings": "Ayarlar"
       },
       "menu": {
-        "reorderMode": "Menu reorder mode",
-        "restoreDefaultOrder": "Restore default order",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order",
-        "collapseNavBar": "Collapse navigation bar",
-        "expandNavBar": "Expand navigation bar"
+        "reorderMode": "Menü sıralama modu",
+        "restoreDefaultOrder": "Varsayılan sırayı geri yükle",
+        "unlock": "Menü sırasının kilidini aç",
+        "lock": "Menü sırasını kilitle",
+        "collapseNavBar": "Gezinme çubuğunu daralt",
+        "expandNavBar": "Gezinme çubuğunu genişlet"
       }
     },
     "serviceMigration": {
-      "title": "Service update required",
-      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
-      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
-      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
-      "reinstall": "Reinstall service",
-      "repair": "Repair service",
-      "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully",
+      "title": "Hizmet güncellemesi gerekli",
+      "message": "Eski bir Clash Verge hizmet kurulumu algılandı. Güncel güvenli IPC protokolünü kullanmak için hizmeti yeniden kurun ya da bu oturumda Sidecar ile devam edin.",
+      "checkingMessage": "Sistem hizmetinin durumu ve geçerli çalışma modu denetleniyor. Lütfen bekleyin…",
+      "unavailableMessage": "Gerekli Clash Verge hizmeti kullanılamıyor. Hizmeti kurun veya onarın ya da bu oturumda Sidecar ile devam edin.",
+      "reinstall": "Hizmeti yeniden kur",
+      "repair": "Hizmeti onar",
+      "continueSidecar": "Sidecar ile devam et",
+      "success": "Clash Verge hizmeti başarıyla güncellendi",
       "errors": {
         "actionFailed": "Hizmet işlemi başarısız oldu",
         "stateRefreshFailed": "Hizmet durumu yenilenemedi",
