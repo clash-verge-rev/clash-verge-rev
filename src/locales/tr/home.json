@@ -45,7 +45,7 @@
       "fields": {
         "coreVersion": "Çekirdek Sürümü",
         "systemProxyAddress": "Sistem Vekil Adresi",
-        "mixedPort": "Mixed Port",
+        "mixedPort": "Karma Port",
         "uptime": "Çalışma Süresi",
         "rulesCount": "Kural Sayısı"
       }
@@ -127,7 +127,7 @@
         "download": "İndirme"
       },
       "patterns": {
-        "minutes": "{{time}} Minutes"
+        "minutes": "{{time}} Dakika"
       },
       "unknownTime": "Bilinmeyen zaman",
       "chartStyles": {
@@ -146,9 +146,9 @@
         "direct": "Doğrudan Mod"
       },
       "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+        "rule": "Vekilleri kural kümesine göre otomatik olarak seçer.",
+        "global": "Tüm ağ isteklerini seçili vekil üzerinden iletir.",
+        "direct": "Vekili atlar ve internete doğrudan bağlanır."
       }
     }
   }

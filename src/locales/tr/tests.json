@@ -49,10 +49,10 @@
       "actions": {
         "testing": "Test Ediliyor..."
       },
-      "empty": "No unlock test items",
+      "empty": "Kilit açma testi öğesi yok",
       "messages": {
         "detectionFailedWithName": "{{name}} için tespit başarısız oldu",
-        "detectionTimeout": "Detection timeout or failed"
+        "detectionTimeout": "Algılama zaman aşımına uğradı veya başarısız oldu"
       },
       "title": "Kilit Açma Testi"
     }

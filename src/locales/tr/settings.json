@@ -3,7 +3,7 @@
     "actions": {
       "manual": "Kılavuz",
       "telegram": "Telegram Kanalı",
-      "github": "Github Repo"
+      "github": "GitHub Deposu"
     },
     "actionsGroupLabel": "Ayar bağlantıları",
     "title": "Ayarlar"
@@ -24,8 +24,8 @@
       },
       "notifications": {
         "tunMode": {
-          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          "autoDisabled": "Hizmet kullanılamadığı için TUN Modu otomatik olarak devre dışı bırakıldı",
+          "autoDisableFailed": "TUN Modu otomatik olarak devre dışı bırakılamadı"
         }
       }
     },
@@ -33,11 +33,11 @@
       "tooltips": {
         "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
         "tunMode": "Tun (Sanal Ağ Kartı) modu: Tüm sistem trafiğini yakalar, etkinleştirildiğinde sistem vekil'ini etkinleştirmeye gerek yoktur.",
-        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        "tunUnavailable": "TUN, Hizmet Modu veya Yönetici Modu gerektirir"
       },
       "actions": {
         "installService": "Hizmeti Kur",
-        "uninstallService": "Uninstall Service",
+        "uninstallService": "Hizmeti Kaldır",
         "switchToServiceMode": "Hizmet moduna geç"
       },
       "fields": {
@@ -92,9 +92,9 @@
       }
     },
     "appearance": {
-      "light": "Light",
-      "dark": "Dark",
-      "system": "System"
+      "light": "Açık",
+      "dark": "Koyu",
+      "system": "Sistem"
     },
     "clash": {
       "title": "Clash Ayarı",
@@ -144,11 +144,11 @@
         },
         "options": {
           "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
+            "debug": "Hata Ayıklama",
+            "info": "Bilgi",
+            "warning": "Uyarı",
+            "error": "Hata",
+            "silent": "Sessiz"
           }
         }
       }
@@ -187,11 +187,11 @@
           "liteMode": "GUI'yi kapatın ve yalnızca çekirdeği çalışır durumda tutun"
         },
         "actions": {
-          "copyVersion": "Copy Version"
+          "copyVersion": "Sürümü Kopyala"
         },
         "notifications": {
           "latestVersion": "Şu Anda En Son Sürümdesiniz",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Sürüm panoya kopyalandı"
         },
         "fields": {
           "backupSetting": "Yedekleme Ayarı",
@@ -222,27 +222,27 @@
           "cssInjection": "CSS Enjeksiyonu"
         },
         "actions": {
-          "editCss": "Edit CSS"
+          "editCss": "CSS'i Düzenle"
         },
         "dialogs": {
-          "editCssTitle": "Edit CSS"
+          "editCssTitle": "CSS'i Düzenle"
         }
       },
       "layout": {
         "title": "Düzen Ayarı",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "preferSystemTitlebar": "Sistem Başlık Çubuğunu Tercih Et",
           "trafficGraph": "Trafik Grafiği",
           "memoryUsage": "Çekirdek Kullanımı",
           "proxyGroupIcon": "Vekil Grup Simgesi",
           "toastPosition": "Toast konumu",
-          "hoverNavigator": "Hover Jump Navigator",
-          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "hoverNavigator": "Üzerine Gelince Atlama Gezgini",
+          "hoverNavigatorDelay": "Üzerine Gelince Atlama Gecikmesi",
           "navIcon": "Gezinme Simgesi",
           "collapseNavBar": "Gezinme çubuğunu daralt",
           "trayIcon": "Tepsi Simgesi",
-          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
-          "showOutboundModesInline": "Show Outbound Modes Inline",
+          "proxyGroupsDisplayMode": "Vekil Grupları Görüntüleme Modu",
+          "showOutboundModesInline": "Çıkış Modlarını Satır İçinde Göster",
           "commonTrayIcon": "Genel Tepsi Simgesi",
           "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
           "tunTrayIcon": "Tun Tepsi Simgesi",
@@ -251,8 +251,8 @@
           "pauseRenderTrafficStatsOnBlur": "Odak kaybolduğunda trafik istatistiklerinin işlenmesini duraklat"
         },
         "tooltips": {
-          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigator": "Alfabe harflerinin üzerine gelindiğinde ilgili vekil grubuna otomatik olarak kaydırır",
+          "hoverNavigatorDelay": "Üzerine gelindiğinde otomatik kaydırmadan önceki gecikme, milisaniye cinsinden"
         },
         "options": {
           "icon": {
@@ -267,9 +267,9 @@
             "bottomRight": "Sağ alt"
           },
           "proxyGroupsDisplayMode": {
-            "default": "Default",
-            "inline": "Inline",
-            "disable": "Disable"
+            "default": "Varsayılan",
+            "inline": "Satır İçi",
+            "disable": "Devre Dışı"
           }
         }
       }
@@ -289,9 +289,9 @@
         "random": "Rastgele Port"
       },
       "messages": {
-        "portInUse": "Port {{port}} is already in use",
-        "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings",
+        "portInUse": "{{port}} portu zaten kullanımda",
+        "saved": "Port ayarları kaydedildi",
+        "saveFailed": "Port ayarları kaydedilemedi",
         "automaticFallback": "{{oldPort}} portu kullanımda olduğu için bu oturum {{newPort}} portunu kullanıyor. Ayarınız değişmedi ve sonraki başlatmada {{oldPort}} yeniden denenecek.",
         "automaticFallbackFailed": "Karma proxy portu otomatik olarak değiştirilemedi: {{error}}",
         "portTooLow": "Bağlantı noktası 1000 veya daha yüksek olmalıdır",
@@ -325,24 +325,24 @@
     "backup": {
       "title": "Yedekleme Ayarı",
       "tabs": {
-        "local": "Local backup",
-        "webdav": "WebDAV backup"
+        "local": "Yerel yedek",
+        "webdav": "WebDAV yedeği"
       },
       "actions": {
-        "selectTarget": "Select backup target",
+        "selectTarget": "Yedekleme hedefini seçin",
         "backup": "Yedekle",
-        "export": "Export",
-        "exportBackup": "Export Backup",
-        "importBackup": "Import Backup",
+        "export": "Dışa Aktar",
+        "exportBackup": "Yedeği Dışa Aktar",
+        "importBackup": "Yedeği İçe Aktar",
         "deleteBackup": "Yedeği Sil",
         "restore": "Geri Yükle",
         "restoreBackup": "Yedeği Geri Yükle",
-        "viewHistory": "View history"
+        "viewHistory": "Geçmişi görüntüle"
       },
       "fields": {
         "webdavUrl": "WebDAV Sunucu URL'si",
         "username": "Kullanıcı Adı",
-        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+        "info": "Yedekler yerel olarak uygulama veri dizininde saklanır. Yedekleri geri yüklemek veya silmek için aşağıdaki listeyi kullanın."
       },
       "messages": {
         "webdavUrlRequired": "WebDAV URL'si boş olamaz",
@@ -353,60 +353,60 @@
         "webdavConfigSaveFailed": "WebDAV yapılandırması kaydedilemedi: {{error}}",
         "backupCreated": "Yedek başarıyla oluşturuldu",
         "backupFailed": "Yedekleme başarısız oldu: {{error}}",
-        "localBackupCreated": "Local backup created successfully",
-        "localBackupFailed": "Local backup failed",
+        "localBackupCreated": "Yerel yedek başarıyla oluşturuldu",
+        "localBackupFailed": "Yerel yedekleme başarısız oldu",
         "restoreSuccess": "Geri Yükleme Başarılı, Uygulama 1 saniye içinde yeniden başlatılacak",
-        "localBackupExported": "Local backup exported successfully",
-        "localBackupExportFailed": "Failed to export local backup",
-        "localBackupImported": "Local backup imported successfully",
-        "localBackupImportFailed": "Failed to import local backup: {{error}}",
-        "webdavRefreshSuccess": "WebDAV refresh succeeded",
-        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
+        "localBackupExported": "Yerel yedek başarıyla dışa aktarıldı",
+        "localBackupExportFailed": "Yerel yedek dışa aktarılamadı",
+        "localBackupImported": "Yerel yedek başarıyla içe aktarıldı",
+        "localBackupImportFailed": "Yerel yedek içe aktarılamadı: {{error}}",
+        "webdavRefreshSuccess": "WebDAV yenilemesi başarılı",
+        "webdavRefreshFailed": "WebDAV yenilemesi başarısız oldu: {{error}}",
         "confirmDelete": "Bu yedek dosyasını silmeyi onaylıyor musunuz?",
         "confirmRestore": "Bu yedek dosyasını geri yüklemeyi onaylıyor musunuz?"
       },
       "auto": {
-        "title": "Automatic backup",
-        "scheduleLabel": "Enable scheduled backup",
-        "scheduleHelper": "Create local backups in the background at the configured interval.",
-        "intervalLabel": "Backup frequency",
-        "changeLabel": "Backup on critical changes",
-        "changeHelper": "Automatically backup when Global Extend Config/Script changes.",
+        "title": "Otomatik yedekleme",
+        "scheduleLabel": "Zamanlanmış yedeklemeyi etkinleştir",
+        "scheduleHelper": "Yapılandırılan aralıkta arka planda yerel yedekler oluşturur.",
+        "intervalLabel": "Yedekleme sıklığı",
+        "changeLabel": "Kritik değişikliklerde yedekle",
+        "changeHelper": "Küresel Yapılandırma/Betik Genişletme değiştiğinde otomatik olarak yedekler.",
         "options": {
-          "hours": "Every {{n}} hours",
-          "days": "Every {{n}} days"
+          "hours": "{{n}} saatte bir",
+          "days": "{{n}} günde bir"
         }
       },
       "manual": {
-        "title": "Manual backup",
-        "local": "Creates a snapshot on this device, stored under the app data directory.",
-        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
-        "configureWebdav": "Configure WebDAV"
+        "title": "Elle yedekleme",
+        "local": "Bu cihazda, uygulama veri dizini altında saklanan bir anlık görüntü oluşturur.",
+        "webdav": "Kimlik bilgileri ayarlandıktan sonra WebDAV sunucunuza bir anlık görüntü yükler.",
+        "configureWebdav": "WebDAV'ı Yapılandır"
       },
       "history": {
-        "title": "Backup history",
-        "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available",
-        "unknownPlatform": "unknown",
-        "unknownTime": "Unknown time"
+        "title": "Yedekleme geçmişi",
+        "summary": "{{count}} yedek • en son {{recent}}",
+        "empty": "Kullanılabilir yedek yok",
+        "unknownPlatform": "bilinmiyor",
+        "unknownTime": "Bilinmeyen zaman"
       },
       "webdav": {
-        "title": "WebDAV settings"
+        "title": "WebDAV ayarları"
       },
       "table": {
         "filename": "Dosya Adı",
         "backupTime": "Yedekleme Zamanı",
         "actions": "İşlemler",
         "noBackups": "Kullanılabilir yedek yok",
-        "rowsPerPage": "Rows per page"
+        "rowsPerPage": "Sayfa başına satır"
       }
     },
     "misc": {
       "title": "Çeşitli",
       "fields": {
         "appLogLevel": "Uygulama Günlük Seviyesi",
-        "appLogMaxSize": "App Log Max Size",
-        "appLogMaxCount": "App Log Max Count",
+        "appLogMaxSize": "Uygulama Günlüğü En Büyük Boyutu",
+        "appLogMaxCount": "Uygulama Günlüğü En Fazla Dosya Sayısı",
         "autoCloseConnections": "Bağlantıları Otomatik Kapat",
         "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
         "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
@@ -434,7 +434,7 @@
       }
     },
     "update": {
-      "title": "New Version v{{version}}",
+      "title": "Yeni Sürüm v{{version}}",
       "actions": {
         "goToRelease": "Sürüm Sayfasına Git",
         "update": "Güncelle"
@@ -486,18 +486,18 @@
       "title": "Tun Modu",
       "fields": {
         "stack": "Tun Yığını",
-        "device": "Device Name",
+        "device": "Aygıt Adı",
         "autoRoute": "Otomatik Yönlendirme",
         "routeExcludeAddress": "Yönlendirme Hariç Adresler",
         "strictRoute": "Katı Yönlendirme",
         "autoDetectInterface": "Arayüzü Otomatik Algıla",
         "dnsHijack": "DNS Ele Geçirme",
         "mtu": "Maksimum İletim Birimi",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Otomatik Yönlendirme"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "dnsHijack": "Birden fazla DNS sunucusunu ayırmak için lütfen , kullanın",
+        "autoRedirect": "nftables/iptables TCP yönlendirmelerini otomatik olarak yapılandırır"
       },
       "messages": {
         "applied": "Ayarlar Uygulandı",
@@ -511,11 +511,11 @@
         "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
       "protection": {
-        "title": "Enable DNS Overwrite?",
-        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
-        "enableAnyway": "Enable anyway",
-        "keepDisabled": "Keep disabled",
-        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+        "title": "DNS Üzerine Yazma etkinleştirilsin mi?",
+        "message": "Bu abonelik özel DNS ayarları içeriyor. DNS Üzerine Yazma bunların yerine geçebilir; bu da düğümlerin bağlanmasını veya bazı web sitelerinin yüklenmesini engelleyebilir. Yine de etkinleştirilsin mi?",
+        "enableAnyway": "Yine de etkinleştir",
+        "keepDisabled": "Devre dışı bırak",
+        "autoDisabled": "Geçerli abonelikteki özel DNS ayarlarını korumak için DNS Üzerine Yazma devre dışı bırakıldı."
       },
       "sections": {
         "general": "DNS Ayarları",
@@ -535,7 +535,7 @@
         },
         "preferH3": {
           "label": "H3'ü Tercih Et",
-          "description": "DNS DOH uses HTTP/3"
+          "description": "DNS DOH, HTTP/3 kullanır"
         },
         "respectRules": {
           "label": "Kurallara Uy",
@@ -601,11 +601,11 @@
       },
       "messages": {
         "saved": "DNS ayarları kaydedildi",
-        "configError": "DNS configuration error:"
+        "configError": "DNS yapılandırma hatası:"
       },
       "errors": {
-        "invalid": "Invalid configuration",
-        "invalidYaml": "Invalid YAML format"
+        "invalid": "Geçersiz yapılandırma",
+        "invalidYaml": "Geçersiz YAML biçimi"
       }
     },
     "webUI": {
@@ -694,12 +694,12 @@
   },
   "statuses": {
     "clash": {
-      "stopping": "Stopping Core...",
-      "restarting": "Restarting Core..."
+      "stopping": "Çekirdek Durduruluyor...",
+      "restarting": "Çekirdek Yeniden Başlatılıyor..."
     },
     "clashService": {
       "installing": "Hizmet Kuruluyor...",
-      "uninstalling": "Uninstalling Service..."
+      "uninstalling": "Hizmet Kaldırılıyor..."
     }
   }
 }
