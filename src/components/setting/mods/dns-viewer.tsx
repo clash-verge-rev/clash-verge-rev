@@ -346,6 +346,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'fake-ip-filter': parseList(values.fakeIpFilter),
       'default-nameserver': parseList(values.defaultNameserver),
       nameserver: parseList(values.nameserver),
+      'nameserver-policy': parseNameserverPolicy(values.nameserverPolicy),
       'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
       'fallback-filter': {
         geoip: values.fallbackGeoip,
@@ -359,11 +360,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'direct-nameserver': parseList(values.directNameserver),
     }
 
-    const policy = parseNameserverPolicy(values.nameserverPolicy)
-    if (Object.keys(policy).length > 0) {
-      dnsConfig['nameserver-policy'] = policy
-    }
-
     return dnsConfig
   }, [values])
 
@@ -375,10 +371,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       config.dns = dnsConfig
     }
 
-    const hosts = parseHosts(values.hosts)
-    if (Object.keys(hosts).length > 0) {
-      config.hosts = hosts
-    }
+    config.hosts = parseHosts(values.hosts)
 
     setYamlContent(yaml.dump(config, { forceQuotes: true }))
   }, [generateDnsConfig, values.hosts])
@@ -507,10 +500,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           config.dns = dnsConfig
         }
 
-        const hosts = parseHosts(values.hosts)
-        if (Object.keys(hosts).length > 0) {
-          config.hosts = hosts
-        }
+        config.hosts = parseHosts(values.hosts)
       } else {
         const parsedConfig = yaml.load(yamlContent)
         if (typeof parsedConfig !== 'object' || parsedConfig === null) {

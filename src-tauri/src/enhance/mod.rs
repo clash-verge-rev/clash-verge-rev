@@ -708,17 +708,9 @@ fn is_set(value: &Value) -> bool {
     }
 }
 
-/// Overlay set fields onto base; maps merge per key, lists are leaves.
+/// Configured DNS fields replace the whole value, including maps and lists.
 fn merge_set_fields(mut base: Mapping, overlay: Mapping) -> Mapping {
     for (key, value) in overlay {
-        let value = match (base.get_mut(&key), value) {
-            (Some(Value::Mapping(existing)), Value::Mapping(patch)) => {
-                *existing = merge_set_fields(std::mem::take(existing), patch);
-                continue;
-            }
-            (_, Value::Mapping(patch)) => Value::Mapping(merge_set_fields(Mapping::new(), patch)),
-            (_, value) => value,
-        };
         if is_set(&value) {
             base.insert(key, value);
         }
@@ -734,39 +726,45 @@ fn take_mapping(config: &mut Mapping, key: &str) -> Mapping {
         .unwrap_or_default()
 }
 
-/// Returns the merged config and whether the page set `dns.ipv6`.
-async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> (Mapping, bool) {
+fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, bool) {
     let mut owns_ipv6 = false;
+    if let Some(Value::Mapping(hosts)) = dns_config.remove("hosts")
+        && !hosts.is_empty()
+    {
+        config.insert("hosts".into(), hosts.into());
+        logging!(debug, Type::Core, "apply hosts configuration");
+    }
+
+    // Legacy layout: no `dns` root.
+    let dns_override = match dns_config.remove("dns") {
+        Some(Value::Mapping(dns)) => Some(dns),
+        Some(_) => None,
+        None => Some(dns_config),
+    };
+    if let Some(dns_override) = dns_override {
+        owns_ipv6 = dns_override.get("ipv6").is_some_and(is_set);
+        let mut dns = merge_set_fields(take_mapping(&mut config, "dns"), dns_override);
+        ensure_fake_ip_range6(&mut dns);
+        config.insert("dns".into(), dns.into());
+        logging!(debug, Type::Core, "apply dns_config.yaml");
+    }
+    (config, owns_ipv6)
+}
+
+/// Returns the merged config and whether the page set `dns.ipv6`.
+async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapping, bool) {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
         if dns_path.exists()
             && let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
-            && let Ok(mut dns_config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+            && let Ok(dns_config) = serde_yaml_ng::from_str::<Mapping>(&dns_yaml)
         {
-            if let Some(Value::Mapping(hosts)) = dns_config.remove("hosts") {
-                let hosts = merge_set_fields(take_mapping(&mut config, "hosts"), hosts);
-                config.insert("hosts".into(), hosts.into());
-                logging!(debug, Type::Core, "apply hosts configuration");
-            }
-
-            // Legacy layout: no `dns` root.
-            let dns_override = match dns_config.remove("dns") {
-                Some(Value::Mapping(dns)) => Some(dns),
-                Some(_) => None,
-                None => Some(dns_config),
-            };
-            if let Some(dns_override) = dns_override {
-                owns_ipv6 = dns_override.get("ipv6").is_some_and(is_set);
-                let mut dns = merge_set_fields(take_mapping(&mut config, "dns"), dns_override);
-                ensure_fake_ip_range6(&mut dns);
-                config.insert("dns".into(), dns.into());
-                logging!(debug, Type::Core, "apply dns_config.yaml");
-            }
+            return merge_dns_config(config, dns_config);
         }
     }
 
-    (config, owns_ipv6)
+    (config, false)
 }
 
 /// Returns the enhanced profile, its original keys, script logs, and DNS override decision.
