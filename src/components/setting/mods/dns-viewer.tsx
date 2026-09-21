@@ -33,7 +33,6 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -184,8 +183,7 @@ const DEFAULT_DNS_CONFIG = {
 
 export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
-  const { mutateClash } = useClash()
-  const { verge } = useVerge()
+  const { clash, mutateClash } = useClash()
   const themeMode = useThemeMode()
 
   const [open, setOpen] = useState(false)
@@ -550,7 +548,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      if (verge?.enable_dns_settings) {
+      if (clash?.dns?.enable) {
         await invoke('apply_dns_config', { apply: true })
         mutateClash()
       }

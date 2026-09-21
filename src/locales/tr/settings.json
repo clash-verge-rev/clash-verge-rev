@@ -510,13 +510,6 @@
         "title": "DNS Üzerine Yazma",
         "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
-      "protection": {
-        "title": "DNS Üzerine Yazma etkinleştirilsin mi?",
-        "message": "Bu abonelik özel DNS ayarları içeriyor. DNS Üzerine Yazma bunların yerine geçebilir; bu da düğümlerin bağlanmasını veya bazı web sitelerinin yüklenmesini engelleyebilir. Yine de etkinleştirilsin mi?",
-        "enableAnyway": "Yine de etkinleştir",
-        "keepDisabled": "Devre dışı bırak",
-        "autoDisabled": "Geçerli abonelikteki özel DNS ayarlarını korumak için DNS Üzerine Yazma devre dışı bırakıldı."
-      },
       "sections": {
         "general": "DNS Ayarları",
         "fallbackFilter": "Yedek Filtre Ayarları",

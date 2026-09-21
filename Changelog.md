@@ -3,7 +3,7 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
-- 修复 DNS 覆写：空内容报错、初始值覆盖已有设置、已填写字段残留原配置、空字段在高级编辑器中缺失
+- 回退 2.5.4 引入的 DNS 覆写保护，修复重启后开关自动关闭
 
 </details>
 

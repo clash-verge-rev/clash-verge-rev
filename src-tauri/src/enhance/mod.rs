@@ -13,7 +13,6 @@ use self::{
     seq::{SeqMap, use_seq},
     tun::use_tun,
 };
-use crate::config::dns::{DnsOverrideState, dns_override_source};
 use crate::utils::dirs;
 use crate::{
     config::{Config, IProfiles, IVerge, PrfItem},
@@ -37,7 +36,6 @@ struct ConfigValues {
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
-    dns_override_confirmation: Option<String>,
     enable_external_controller: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
@@ -123,7 +121,6 @@ async fn get_config_values() -> ConfigValues {
         ..
     } = **verge_arc;
     let enable_external_controller = enable_external_controller.unwrap_or(false);
-    let dns_override_confirmation = verge_arc.dns_override_confirmation.clone();
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
@@ -151,7 +148,6 @@ async fn get_config_values() -> ConfigValues {
         socks_enabled,
         http_enabled,
         enable_dns_settings,
-        dns_override_confirmation,
         enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
@@ -767,10 +763,8 @@ async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapp
     (config, false)
 }
 
-/// Returns the enhanced profile, its original keys, script logs, and DNS override decision.
-pub async fn enhance(
-    profiles: &IProfiles,
-) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>, DnsOverrideState)> {
+/// Returns the enhanced profile, its original keys, and script logs.
+pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
     let cfg_vals = get_config_values().await;
     let ConfigValues {
         clash_config,
@@ -780,7 +774,6 @@ pub async fn enhance(
         socks_enabled,
         http_enabled,
         enable_dns_settings,
-        dns_override_confirmation,
         enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
@@ -789,12 +782,6 @@ pub async fn enhance(
     } = cfg_vals;
 
     let profile = collect_profile_items(profiles).await?;
-    let dns_override = DnsOverrideState::new(
-        dns_override_source(profiles.current.as_deref().unwrap_or_default(), &profile.config)?,
-        enable_dns_settings,
-        dns_override_confirmation,
-    );
-    let enable_dns_settings = dns_override.enabled;
     let config = profile.config;
     let merge_item = profile.merge_item;
     let script_item = profile.script_item;
@@ -851,7 +838,7 @@ pub async fn enhance(
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 
-    Ok((config, exists_keys_set, result_map, dns_override))
+    Ok((config, exists_keys_set, result_map))
 }
 
 #[cfg(test)]

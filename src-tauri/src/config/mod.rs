@@ -1,7 +1,6 @@
 mod clash;
 #[allow(clippy::module_inception)]
 mod config;
-pub(crate) mod dns;
 mod encrypt;
 mod mixed_port;
 mod port;
