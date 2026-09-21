@@ -384,24 +384,36 @@ fn discarded_note(key: String) -> (String, String) {
     )
 }
 
-static PENDING_DISCARDED_KEYS: Mutex<Option<String>> = Mutex::new(None);
-static LAST_DISCARDED_KEYS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+struct DiscardedKeysNotice {
+    pending: Option<String>,
+    last: Vec<String>,
+}
+
+static DISCARDED_KEYS_NOTICE: Mutex<DiscardedKeysNotice> = Mutex::new(DiscardedKeysNotice {
+    pending: None,
+    last: Vec::new(),
+});
 
 pub(crate) fn take_discarded_keys_notice() -> Option<String> {
-    PENDING_DISCARDED_KEYS.lock().take()
+    DISCARDED_KEYS_NOTICE.lock().pending.take()
 }
 
 /// One notice per distinct set, so regenerations with unchanged extensions stay quiet.
 fn notify_discarded_keys(keys: Vec<String>) {
-    let mut last = LAST_DISCARDED_KEYS.lock();
-    if *last == keys {
+    let mut notice = DISCARDED_KEYS_NOTICE.lock();
+    if notice.last == keys {
         return;
     }
-    if !keys.is_empty() {
-        *PENDING_DISCARDED_KEYS.lock() = Some(keys.join(", ").into());
+    let should_notify = !keys.is_empty();
+    if should_notify {
+        notice.pending = Some(keys.join(", ").into());
+    }
+    notice.last = keys;
+    drop(notice);
+
+    if should_notify {
         Handle::notice_message("enhance::discarded_keys", "");
     }
-    *last = keys;
 }
 
 /// 手动 merge/script 前保存 app 最终控制面值,只记录当前存在的键。
