@@ -7,6 +7,7 @@ use std::path::{Component, Path, PathBuf};
 
 pub(crate) const GEO_ASSETS: &[&str] = &[
     "Country.mmdb",
+    "ASN.mmdb",
     "geoip.dat",
     "geosite.dat",
     "geoip.metadb",
