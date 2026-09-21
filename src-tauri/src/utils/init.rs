@@ -509,7 +509,7 @@ pub async fn init_resources() -> Result<()> {
         std::mem::drop(fs::create_dir_all(&res_dir).await);
     }
 
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    let file_list = ["Country.mmdb", "ASN.mmdb", "geoip.dat", "geosite.dat"];
 
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
