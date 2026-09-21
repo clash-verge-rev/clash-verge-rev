@@ -1041,6 +1041,13 @@ export interface TranslationResources {
             configError: string
             saved: string
           }
+          protection: {
+            autoDisabled: string
+            enableAnyway: string
+            keepDisabled: string
+            message: string
+            title: string
+          }
           sections: {
             fallbackFilter: string
             general: string

@@ -180,6 +180,10 @@ pub async fn delete_profile(index: String) -> CmdResult {
     drop(config_update_guard);
     drop(profile_write_guard);
 
+    if should_update {
+        logging_error!(Type::Config, Config::sync_dns_override().await);
+    }
+
     if let Err(e) = Tray::global().update_tooltip().await {
         logging!(warn, Type::Cmd, "异步更新托盘提示失败: {e:#}");
     }
@@ -249,6 +253,7 @@ async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationO
         handle::Handle::notify_profile_changed(current);
     }
 
+    logging_error!(Type::Config, Config::sync_dns_override().await);
     Ok(ValidationOutcome::Valid)
 }
 

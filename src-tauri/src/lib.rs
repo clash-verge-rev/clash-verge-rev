@@ -168,6 +168,8 @@ mod app_init {
             cmd::forget_selected_node,
             cmd::save_dns_config,
             cmd::apply_dns_config,
+            cmd::set_dns_override,
+            cmd::take_dns_override_notice,
             cmd::take_service_fallback_notice,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,

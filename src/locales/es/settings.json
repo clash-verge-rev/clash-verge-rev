@@ -510,6 +510,13 @@
         "title": "Sobrescritura de DNS",
         "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga deshabilitada la sobrescritura de DNS."
       },
+      "protection": {
+        "title": "Enable DNS Overwrite?",
+        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
+        "enableAnyway": "Enable anyway",
+        "keepDisabled": "Keep disabled",
+        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+      },
       "sections": {
         "general": "Configuración de DNS",
         "fallbackFilter": "Configuración de filtrado de respaldo",

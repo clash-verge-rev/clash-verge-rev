@@ -510,6 +510,13 @@
         "title": "Переопределение настроек DNS",
         "warning": "Если вы не знакомы с этими настройками, пожалуйста, не изменяйте их и оставьте переопределение DNS отключённым"
       },
+      "protection": {
+        "title": "Enable DNS Overwrite?",
+        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
+        "enableAnyway": "Enable anyway",
+        "keepDisabled": "Keep disabled",
+        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+      },
       "sections": {
         "general": "Настройки DNS",
         "fallbackFilter": "Настройки фильтра fallback",

@@ -62,7 +62,8 @@ export const useLayoutEvents = (
       },
       // Re-read event-only state after subscribing to close the initial race window.
       () => {
-        revalidateKeys(['getRuntimeState'])
+        revalidateKeys(['getRuntimeState', 'getVergeConfig'])
+        handleNotice(['dns_override::auto_disabled', ''])
         handleNotice(['service_core::sidecar_fallback', ''])
       },
     )

@@ -510,6 +510,13 @@
         "title": "بازنویسی DNS",
         "warning": "اگر با این تنظیمات آشنا نیستید، لطفاً آنها را تغییر ندهید و DNS Overwrite را غیرفعال نگه دارید."
       },
+      "protection": {
+        "title": "Enable DNS Overwrite?",
+        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
+        "enableAnyway": "Enable anyway",
+        "keepDisabled": "Keep disabled",
+        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+      },
       "sections": {
         "general": "تنظیمات DNS",
         "fallbackFilter": "Fallback Filter Settings",

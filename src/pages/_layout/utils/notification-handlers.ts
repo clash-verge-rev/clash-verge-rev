@@ -1,4 +1,7 @@
-import { takeServiceFallbackNotice } from '@/services/cmds'
+import {
+  takeDnsOverrideNotice,
+  takeServiceFallbackNotice,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 type NavigateFunction = (path: string, options?: any) => void
@@ -39,6 +42,17 @@ export const handleNoticeMessage = (
             'Failed to read the pending service fallback notice',
             error,
           )
+        })
+    },
+    'dns_override::auto_disabled': () => {
+      void takeDnsOverrideNotice()
+        .then((pending) => {
+          if (pending) {
+            showNotice.info('settings.modals.dns.protection.autoDisabled')
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to read the pending DNS override notice', error)
         })
     },
     'tun_mode::auto_disabled': () =>
