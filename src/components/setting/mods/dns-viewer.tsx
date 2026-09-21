@@ -33,7 +33,6 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -171,11 +170,7 @@ const DEFAULT_DNS_CONFIG = {
   ],
   fallback: [],
   'nameserver-policy': {},
-  'proxy-server-nameserver': [
-    'https://doh.pub/dns-query',
-    'https://dns.alidns.com/dns-query',
-    'tls://223.5.5.5',
-  ],
+  'proxy-server-nameserver': [],
   'direct-nameserver': [],
   'direct-nameserver-follow-policy': false,
   'fallback-filter': {
@@ -188,8 +183,7 @@ const DEFAULT_DNS_CONFIG = {
 
 export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
-  const { mutateClash } = useClash()
-  const { verge } = useVerge()
+  const { clash, mutateClash } = useClash()
   const themeMode = useThemeMode()
 
   const [open, setOpen] = useState(false)
@@ -340,8 +334,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: values.listen,
       'enhanced-mode': values.enhancedMode,
       'fake-ip-range': values.fakeIpRange,
-      'fake-ip-range6':
-        values.fakeIpRange6 || DEFAULT_DNS_CONFIG['fake-ip-range6'],
+      'fake-ip-range6': values.fakeIpRange6,
       'fake-ip-filter-mode': values.fakeIpFilterMode,
       'prefer-h3': values.preferH3,
       'respect-rules': values.respectRules,
@@ -351,6 +344,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'fake-ip-filter': parseList(values.fakeIpFilter),
       'default-nameserver': parseList(values.defaultNameserver),
       nameserver: parseList(values.nameserver),
+      'nameserver-policy': parseNameserverPolicy(values.nameserverPolicy),
       'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
       'fallback-filter': {
         geoip: values.fallbackGeoip,
@@ -364,11 +358,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'direct-nameserver': parseList(values.directNameserver),
     }
 
-    const policy = parseNameserverPolicy(values.nameserverPolicy)
-    if (Object.keys(policy).length > 0) {
-      dnsConfig['nameserver-policy'] = policy
-    }
-
     return dnsConfig
   }, [values])
 
@@ -380,10 +369,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       config.dns = dnsConfig
     }
 
-    const hosts = parseHosts(values.hosts)
-    if (Object.keys(hosts).length > 0) {
-      config.hosts = hosts
-    }
+    config.hosts = parseHosts(values.hosts)
 
     setYamlContent(yaml.dump(config, { forceQuotes: true }))
   }, [generateDnsConfig, values.hosts])
@@ -512,10 +498,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           config.dns = dnsConfig
         }
 
-        const hosts = parseHosts(values.hosts)
-        if (Object.keys(hosts).length > 0) {
-          config.hosts = hosts
-        }
+        config.hosts = parseHosts(values.hosts)
       } else {
         const parsedConfig = yaml.load(yamlContent)
         if (typeof parsedConfig !== 'object' || parsedConfig === null) {
@@ -565,7 +548,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      if (verge?.enable_dns_settings) {
+      if (clash?.dns?.enable) {
         await invoke('apply_dns_config', { apply: true })
         mutateClash()
       }

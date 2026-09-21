@@ -18,7 +18,9 @@ import { useTranslation } from 'react-i18next'
 import { BaseSearchBox } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
+import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
+import { isValidUrl } from '@/utils/network'
 
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
@@ -94,6 +96,10 @@ export const ProxyHead = ({
           if (testUrl?.trim() && textState !== 'filter') {
             debugLog(`[ProxyHead] 使用自定义测试URL: ${testUrl}`)
             onHeadState({ textState: 'url' })
+          }
+          if (testUrl?.trim() && !isValidUrl(testUrl)) {
+            showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
+            return
           }
           onCheckDelay()
         }}

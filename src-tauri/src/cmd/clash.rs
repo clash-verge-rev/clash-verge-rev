@@ -128,33 +128,31 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 }
 
 #[tauri::command]
-pub fn take_dns_override_notice() -> bool {
-    crate::config::dns::take_dns_override_notice()
-}
-
-#[tauri::command]
-pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> CmdResult<feat::DnsOverrideOutcome> {
-    feat::set_dns_override(enabled, confirmation)
-        .await
-        .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))
-}
-
-#[tauri::command]
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     if apply {
         let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
-            logging!(warn, Type::Config, "DNS config file not found");
+            logging!(warn, Type::Config, "DNS config file not found: {}", dns_path.display());
             return Err("DNS config file not found".into());
         }
 
         let dns_yaml = fs::read_to_string(&dns_path).await.stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to read DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to read DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to parse DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to parse DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let mut patch = serde_yaml_ng::Mapping::new();
@@ -181,7 +179,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         logging!(info, Type::Config, "Config regenerated successfully");
     }
 
-    logging_error!(Type::Config, Config::sync_dns_override().await);
     handle::Handle::refresh_clash();
     Ok(())
 }
@@ -210,7 +207,8 @@ pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
         return Ok(ValidationOutcome::invalid_from_message("DNS config file not found"));
     }
 
-    CoreConfigValidator::validate_config_file_outcome(dns_path_str, None)
+    // A fragment, not a runnable config; the merged result is validated on apply.
+    CoreConfigValidator::validate_config_file_outcome(dns_path_str, Some(true))
         .await
         .stringify_err()
 }

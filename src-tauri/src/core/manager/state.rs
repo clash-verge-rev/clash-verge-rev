@@ -18,6 +18,44 @@ use tauri_plugin_shell::ShellExt as _;
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
 
+#[cfg(target_os = "windows")]
+async fn retry_service_start<Start, StartFuture>(
+    attempts: usize,
+    retry_delay: std::time::Duration,
+    mut start: Start,
+) -> Result<()>
+where
+    Start: FnMut() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+{
+    let mut last_error = None;
+    for attempt in 0..attempts {
+        match start().await {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "service start attempt {}/{} failed: {error:#}",
+                    attempt + 1,
+                    attempts
+                );
+                if error
+                    .downcast_ref::<service::ServiceStartRefusal>()
+                    .is_some_and(|refusal| service::StageRequest::is_about_the_bundle(refusal.code))
+                {
+                    return Err(error);
+                }
+                last_error = Some(error);
+                if attempt + 1 < attempts {
+                    tokio::time::sleep(retry_delay).await;
+                }
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+}
+
 impl CoreManager {
     /// Restores profile selections before callers enable the system proxy.
     /// The bounded first pass continues in the background, and later calls supersede earlier ones.
@@ -170,33 +208,10 @@ impl CoreManager {
         let pid = child.pid();
         tracing::Span::current().record("pid", pid);
 
-        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
-            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
-                handle::Handle::mihomo().get_version().await
-            })
-            .await
-            .context("Mihomo readiness probe timed out")??;
-            Ok(())
-        })
-        .await;
-        if let Err(readiness_error) = readiness {
-            proxy_control::stop_guard().await;
-            self.core_stopped();
-            return match child.kill() {
-                Ok(()) => Err(readiness_error),
-                Err(kill_error) => Err(anyhow::anyhow!(
-                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
-                )),
-            };
-        }
-
-        #[cfg(target_os = "windows")]
-        self.set_job_handle(Some(job));
-        self.set_running_child_sidecar(child);
+        // The sidecar has to be drained from the moment it starts. tauri-plugin-shell buffers a
+        // single event, so an unread channel stalls its reader threads and the core blocks on a
+        // full stdout pipe before it ever creates the API socket.
         let core_readiness_generation = self.mark_core_ready();
-        self.core_started(RunningMode::Sidecar);
-        self.restore_selected_nodes().await;
-
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 match event {
@@ -225,6 +240,32 @@ impl CoreManager {
                 }
             }
         });
+
+        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
+            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
+                handle::Handle::mihomo().get_version().await
+            })
+            .await
+            .context("Mihomo readiness probe timed out")??;
+            Ok(())
+        })
+        .await;
+        if let Err(readiness_error) = readiness {
+            proxy_control::stop_guard().await;
+            self.core_stopped();
+            return match child.kill() {
+                Ok(()) => Err(readiness_error),
+                Err(kill_error) => Err(anyhow::anyhow!(
+                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
+                )),
+            };
+        }
+
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(Some(job));
+        self.set_running_child_sidecar(child);
+        self.core_started(RunningMode::Sidecar);
+        self.restore_selected_nodes().await;
 
         Ok(())
     }
@@ -269,30 +310,15 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         {
             use crate::constants::timing;
-            let mut last_err = None;
-            for attempt in 0..timing::SERVICE_START_RETRIES {
-                match service::run_core_by_service(config_file).await {
-                    Ok(()) => {
-                        self.mark_core_ready();
-                        self.core_started(RunningMode::Service);
-                        self.restore_selected_nodes().await;
-                        service::request_runtime_provider_sync(crate::constants::timing::RUNTIME_PROVIDER_SYNC_DELAY);
-                        return Ok(());
-                    }
-                    Err(e) => {
-                        logging!(
-                            warn,
-                            Type::Core,
-                            "service start attempt {}/{} failed: {e:#}",
-                            attempt + 1,
-                            timing::SERVICE_START_RETRIES
-                        );
-                        last_err = Some(e);
-                        tokio::time::sleep(timing::SERVICE_START_RETRY_DELAY).await;
-                    }
-                }
-            }
-            Err(last_err.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+            retry_service_start(timing::SERVICE_START_RETRIES, timing::SERVICE_START_RETRY_DELAY, || {
+                service::run_core_by_service(config_file)
+            })
+            .await?;
+            self.mark_core_ready();
+            self.core_started(RunningMode::Service);
+            self.restore_selected_nodes().await;
+            service::request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SYNC_DELAY);
+            Ok(())
         }
 
         #[cfg(not(target_os = "windows"))]

@@ -9,7 +9,7 @@ use crate::{
         help,
     },
 };
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -28,8 +28,15 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
     ];
 
     for temp_dir in temp_dirs.iter().filter(|d| d.exists()) {
-        let mut entries = fs::read_dir(temp_dir).await?;
-        while let Some(entry) = entries.next_entry().await? {
+        let mut entries = fs::read_dir(temp_dir)
+            .await
+            .with_context(|| format!("failed to read log snapshot directory {}", temp_dir.display()))?;
+        while let Some(entry) = entries.next_entry().await.with_context(|| {
+            format!(
+                "failed to read next entry in log snapshot directory {}",
+                temp_dir.display()
+            )
+        })? {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("log") {
                 let _ = path.remove_if_exists().await;
@@ -109,15 +116,28 @@ pub async fn delete_log() -> Result<()> {
     };
 
     if log_dir.exists() {
-        let mut log_read_dir = fs::read_dir(&log_dir).await?;
-        while let Some(entry) = log_read_dir.next_entry().await? {
+        let mut log_read_dir = fs::read_dir(&log_dir)
+            .await
+            .with_context(|| format!("failed to read log directory {}", log_dir.display()))?;
+        while let Some(entry) = log_read_dir
+            .next_entry()
+            .await
+            .with_context(|| format!("failed to read next entry in log directory {}", log_dir.display()))?
+        {
             std::mem::drop(process_file(entry).await);
         }
     }
 
     if service_log_dir.exists() {
-        let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
-        while let Some(entry) = service_log_read_dir.next_entry().await? {
+        let mut service_log_read_dir = fs::read_dir(&service_log_dir)
+            .await
+            .with_context(|| format!("failed to read service log directory {}", service_log_dir.display()))?;
+        while let Some(entry) = service_log_read_dir.next_entry().await.with_context(|| {
+            format!(
+                "failed to read next entry in service log directory {}",
+                service_log_dir.display()
+            )
+        })? {
             std::mem::drop(process_file(entry).await);
         }
     }
@@ -228,27 +248,21 @@ async fn migrate_legacy_macos_service_logs(log_dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Raise existing sub-floor update intervals, once per install.
-///
-/// One-off repair, not a standing rule — the UI warns about shorter intervals but still saves
-/// them, so the marker is written even when nothing needed raising.
+/// Once per install; the marker is written even when no interval needed raising.
 pub async fn migrate_short_update_intervals() -> Result<()> {
     let marker = dirs::update_interval_migrated_path()?;
     if fs::try_exists(&marker).await? {
         return Ok(());
     }
 
-    // Same order as every other writer holding it (lock, then draft permit): save_file runs
-    // inside the closure, ahead of the optimistic check, so a racing restore can't be undone.
+    // Same lock order as other writers; saving inside the closure keeps a racing restore intact.
     let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
 
     let min = constants::profile::MIN_UPDATE_INTERVAL;
     let raised = Config::profiles()
         .await
         .with_data_modify(|mut profiles: IProfiles| async move {
-            // `IProfiles::new` normalises items to Some when it read the file, and returns a
-            // bare default() when it failed. A failed load also raises zero — without this the
-            // marker would burn the one shot on profiles nobody managed to load.
+            // A failed profiles load (bare default) must not burn the one-shot marker.
             if profiles.items.is_none() {
                 anyhow::bail!("profiles.yaml was not loaded; refusing to record the migration as done");
             }
@@ -370,14 +384,7 @@ pub(super) async fn init_dns_config() -> Result<()> {
             "nameserver-policy".into(),
             Value::Mapping(serde_yaml_ng::Mapping::new()),
         ),
-        (
-            "proxy-server-nameserver".into(),
-            Value::Sequence(vec![
-                Value::String("https://doh.pub/dns-query".into()),
-                Value::String("https://dns.alidns.com/dns-query".into()),
-                Value::String("tls://223.5.5.5".into()),
-            ]),
-        ),
+        ("proxy-server-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver-follow-policy".into(), Value::Bool(false)),
         (
@@ -637,10 +644,9 @@ async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
             logging!(
                 error,
                 Type::Setup,
-                "failed to copy resources '{}' to '{:?}', {}",
-                file,
-                dest,
-                err
+                "failed to copy resource {} to {}: {err}",
+                src.display(),
+                dest.display()
             );
         }
     };

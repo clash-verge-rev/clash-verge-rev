@@ -12,23 +12,23 @@
     "restart": "Yeniden Başlat",
     "resetToDefault": "Varsayılana Sıfırla",
     "refresh": "Yenile",
-    "retry": "Retry",
-    "refreshPage": "Refresh Page",
-    "showDetails": "Show Details",
-    "hideDetails": "Hide Details",
+    "retry": "Yeniden Dene",
+    "refreshPage": "Sayfayı Yenile",
+    "showDetails": "Ayrıntıları Göster",
+    "hideDetails": "Ayrıntıları Gizle",
     "listView": "Liste Görünümü",
     "tableView": "Tablo Görünümü",
     "pause": "Duraklat",
     "resume": "Sürdür",
     "closeAll": "Tümünü Kapat",
     "clear": "Temizle",
-    "previous": "Previous",
-    "next": "Next",
+    "previous": "Önceki",
+    "next": "Sonraki",
     "check": "Denetle"
   },
   "labels": {
     "updateAt": "Güncelleme Zamanı",
-    "timeout": "Timeout",
+    "timeout": "Zaman Aşımı",
     "icon": "Simge",
     "name": "İsim",
     "readOnly": "Salt Okunur",
@@ -37,14 +37,14 @@
     "usedTotal": "Kullanılan / Toplam",
     "from": "Kaynak",
     "password": "Şifre",
-    "retryAttempts": "Retry attempts",
+    "retryAttempts": "Yeniden deneme sayısı",
     "downloaded": "İndirilen",
     "uploaded": "Yüklenen"
   },
   "statuses": {
     "enabled": "Etkin",
     "disabled": "Devre Dışı",
-    "saving": "Saving...",
+    "saving": "Kaydediliyor...",
     "empty": "Boş",
     "loading": "Yükleniyor..."
   },
@@ -54,7 +54,7 @@
     "minutes": "dakika",
     "hours": "saat",
     "kilobytes": "KB",
-    "files": "Files"
+    "files": "Dosya"
   },
   "placeholders": {
     "resetInput": "Giriş alanını temizle",
@@ -64,7 +64,7 @@
     "useRegex": "Düzenli İfade Kullan"
   },
   "validation": {
-    "invalidRegex": "Invalid regular expression"
+    "invalidRegex": "Geçersiz düzenli ifade"
   },
   "window": {
     "maximize": "Büyüt",
@@ -84,8 +84,8 @@
       "componentStack": "Bileşen yığını",
       "trafficUnavailable": "Trafik verileri kullanılamıyor",
       "operationFailed": "İşlem başarısız oldu",
-      "trafficStats": "Traffic Statistics Error",
-      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      "trafficStats": "Trafik İstatistikleri Hatası",
+      "trafficStatsDescription": "Trafik istatistikleri bileşeni bir hatayla karşılaştı ve çökmeleri önlemek için devre dışı bırakıldı."
     },
     "notices": {
       "raw": "{{message}}",
@@ -95,12 +95,12 @@
       "importSuccess": "Profil Başarıyla İçe Aktarıldı",
       "importSubscriptionSuccess": "Abonelik içe aktarımı başarılı",
       "importWithClashProxy": "Profil Clash vekil ile içe aktarıldı",
-      "updateAvailable": "Update Available",
-      "saved": "Saved successfully",
+      "updateAvailable": "Güncelleme Mevcut",
+      "saved": "Başarıyla kaydedildi",
       "common": {
         "copySuccess": "Kopyalama Başarılı",
-        "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration",
+        "saveSuccess": "Yapılandırma başarıyla kaydedildi",
+        "saveFailed": "Yapılandırma kaydedilemedi",
         "refreshFailed": "Yenileme başarısız"
       }
     },

@@ -59,6 +59,7 @@ import {
   useThemeMode,
 } from '@/services/states'
 import { debugLog } from '@/utils/debug'
+import { isValidUrl } from '@/utils/network'
 
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
 const PROFILE_UPDATE_WORKER_LIMIT = 8
@@ -214,7 +215,7 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return
-    if (!/^https?:\/\//i.test(url)) {
+    if (!isValidUrl(url)) {
       showNotice.error('profiles.page.feedback.errors.invalidUrl')
       return
     }
