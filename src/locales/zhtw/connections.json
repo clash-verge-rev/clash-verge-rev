@@ -24,11 +24,32 @@
     "actions": {
       "active": "活躍",
       "closed": "已關閉",
-      "closeConnection": "關閉連線"
+      "closeConnection": "關閉連線",
+      "addDomainRule": "新增網域規則",
+      "addDomainRuleUnavailable": "無法新增網域規則"
     },
     "columnManager": {
       "title": "欄位設定",
       "dragHandle": "拖曳以移動"
+    }
+  },
+  "modals": {
+    "addDomainRule": {
+      "title": "新增網域規則",
+      "profile": "設定檔：{{name}}",
+      "type": "規則類型",
+      "domain": "網域",
+      "policy": "代理策略",
+      "selectPolicy": "請選擇代理策略",
+      "preview": "規則預覽",
+      "nonRuleMode": "目前不是規則模式，儲存的規則會在啟用規則模式時生效。",
+      "errors": {
+        "invalidDomain": "請輸入有效的網域。",
+        "invalidRules": "規則檔案結構無效。",
+        "noRulesFile": "目前設定檔沒有規則擴充檔案。",
+        "saveFailed": "規則檔案儲存失敗。",
+        "profileChanged": "目前設定檔已切換，請關閉並重新開啟此視窗。"
+      }
     }
   }
 }

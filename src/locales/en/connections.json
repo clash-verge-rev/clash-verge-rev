@@ -24,11 +24,32 @@
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Close Connection"
+      "closeConnection": "Close Connection",
+      "addDomainRule": "Add domain rule",
+      "addDomainRuleUnavailable": "Domain rule unavailable"
     },
     "columnManager": {
       "title": "Columns",
       "dragHandle": "Drag handle"
+    }
+  },
+  "modals": {
+    "addDomainRule": {
+      "title": "Add domain rule",
+      "profile": "Profile: {{name}}",
+      "type": "Rule type",
+      "domain": "Domain",
+      "policy": "Proxy policy",
+      "selectPolicy": "Select a proxy policy",
+      "preview": "Preview",
+      "nonRuleMode": "The current mode is not Rule. The saved rule will apply when Rule mode is active.",
+      "errors": {
+        "invalidDomain": "Enter a valid domain name.",
+        "invalidRules": "The rules file has an invalid structure.",
+        "noRulesFile": "The current profile has no rules extension.",
+        "saveFailed": "The rules file could not be saved.",
+        "profileChanged": "The current profile changed. Close and reopen this dialog."
+      }
     }
   }
 }
