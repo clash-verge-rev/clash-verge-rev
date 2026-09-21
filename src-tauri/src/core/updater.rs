@@ -1,5 +1,5 @@
 use crate::{config::Config, singleton, utils::dirs};
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
@@ -47,17 +47,20 @@ impl SilentUpdater {
 
     fn write_cache(bytes: &[u8], version: &str) -> Result<()> {
         let cache_dir = Self::cache_dir()?;
-        std::fs::create_dir_all(&cache_dir)?;
+        std::fs::create_dir_all(&cache_dir)
+            .with_context(|| format!("failed to create update cache directory {}", cache_dir.display()))?;
 
         let bin_path = cache_dir.join("pending_update.bin");
-        std::fs::write(&bin_path, bytes)?;
+        std::fs::write(&bin_path, bytes)
+            .with_context(|| format!("failed to write update cache {}", bin_path.display()))?;
 
         let meta = UpdateCacheMeta {
             version: version.to_string(),
             downloaded_at: Utc::now().to_rfc3339(),
         };
         let meta_path = cache_dir.join("pending_update.json");
-        std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)?;
+        std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
+            .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
 
         logging!(
             info,
@@ -71,7 +74,7 @@ impl SilentUpdater {
 
     fn read_cache_bytes() -> Result<Vec<u8>> {
         let bin_path = Self::cache_dir()?.join("pending_update.bin");
-        Ok(std::fs::read(bin_path)?)
+        std::fs::read(&bin_path).with_context(|| format!("failed to read update cache {}", bin_path.display()))
     }
 
     fn read_cache_meta() -> Result<UpdateCacheMeta> {
@@ -85,7 +88,12 @@ impl SilentUpdater {
             && cache_dir.exists()
         {
             if let Err(e) = std::fs::remove_dir_all(&cache_dir) {
-                logging!(warn, Type::System, "Failed to delete update cache: {e}");
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to delete update cache {}: {e}",
+                    cache_dir.display()
+                );
             } else {
                 logging!(info, Type::System, "Update cache deleted");
             }
@@ -176,7 +184,7 @@ impl SilentUpdater {
                 logging!(
                     warn,
                     Type::System,
-                    "Failed to read cached update bytes: {e}, cleaning up"
+                    "Failed to read cached update bytes: {e:#}, cleaning up"
                 );
                 Self::delete_cache();
                 return false;
@@ -456,7 +464,7 @@ impl SilentUpdater {
             .await?;
 
         if let Err(e) = Self::write_cache(&bytes, &version) {
-            logging!(warn, Type::System, "Silent updater: failed to write cache: {e}");
+            logging!(warn, Type::System, "Silent updater: failed to write cache: {e:#}");
         }
 
         *self.pending_bytes.write() = Some(bytes);

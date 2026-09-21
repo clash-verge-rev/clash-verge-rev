@@ -1351,8 +1351,9 @@ async fn sync_runtime_providers_by_service() -> Result<ProviderSync> {
                 logging!(
                     warn,
                     Type::Service,
-                    "provider cache {} was not read: {error:#}",
-                    declared.provider.destination
+                    "failed to read provider cache {} into {}: {error:#}",
+                    declared.provider.destination,
+                    temp.display()
                 );
                 outcome.pending += 1;
                 remove_temp(&temp).await;
@@ -1442,8 +1443,9 @@ async fn publish_fetched(
                 logging!(
                     warn,
                     Type::Service,
-                    "provider cache {} was not published: {error}",
-                    cache.declared.provider.destination
+                    "failed to rename provider cache {} to {}: {error}",
+                    cache.temp.display(),
+                    target.display()
                 );
                 remove_temp(&cache.temp).await;
             }
@@ -1587,7 +1589,9 @@ fn has_settled(mtime_ns: Option<u64>) -> bool {
 // Exclusive creation protects existing files from truncation and cleanup.
 async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
     if let Some(parent) = target.parent() {
-        tokio::fs::create_dir_all(parent).await?;
+        tokio::fs::create_dir_all(parent)
+            .await
+            .with_context(|| format!("failed to create provider cache directory {}", parent.display()))?;
     }
     let name = target
         .file_name()

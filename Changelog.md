@@ -4,6 +4,7 @@
 <summary><strong> 🐞 修复问题 </strong></summary>
 
 - 回退 2.5.4 引入的 DNS 覆写保护，修复重启后开关自动关闭
+- 优化文件错误日志，显示具体文件路径和失败原因
 
 </details>
 
