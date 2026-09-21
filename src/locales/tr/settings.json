@@ -683,7 +683,7 @@
       },
       "clashService": {
         "installSuccess": "Hizmet Başarıyla Kuruldu",
-        "sidecarFallback": "Hizmet, yol izinleri nedeniyle çekirdeği başlatamadı. Çalışmaya devam etmek için yönetici moduna geçildi.",
+        "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },
       "updater": {

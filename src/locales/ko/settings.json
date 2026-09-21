@@ -683,7 +683,7 @@
       },
       "clashService": {
         "installSuccess": "서비스가 설치되었습니다",
-        "sidecarFallback": "경로 권한 문제로 서비스가 코어를 시작하지 못해 관리자 모드로 전환하여 계속 실행합니다.",
+        "sidecarFallback": "서비스가 코어를 시작하지 못해 Sidecar 모드로 계속 실행합니다. 서비스는 여전히 사용할 수 없습니다.",
         "uninstallSuccess": "서비스가 제거되었습니다"
       },
       "updater": {

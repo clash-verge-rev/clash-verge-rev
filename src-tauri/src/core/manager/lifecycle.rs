@@ -186,39 +186,42 @@ where
 }
 
 #[cfg(target_os = "windows")]
-async fn run_service_start_with_sidecar_fallback<Start, StartFuture, Fallback, FallbackFuture>(
-    is_admin: bool,
+async fn run_service_start_with_sidecar_fallback<Start, StartFuture, Check, CheckFuture, Fallback, FallbackFuture>(
     start_service: Start,
+    confirm_idle: Check,
     start_sidecar: Fallback,
 ) -> Result<()>
 where
     Start: FnOnce() -> StartFuture,
     StartFuture: std::future::Future<Output = Result<()>>,
+    Check: FnOnce(bool) -> CheckFuture,
+    CheckFuture: std::future::Future<Output = Result<()>>,
     Fallback: FnOnce(anyhow::Error) -> FallbackFuture,
     FallbackFuture: std::future::Future<Output = Result<()>>,
 {
     let Err(error) = start_service().await else {
         return Ok(());
     };
-    // A transport failure cannot establish whether the service already started the core.
-    let location_refused = error
-        .downcast_ref::<crate::core::service::ServiceStartRefusal>()
-        .is_some_and(|refusal| {
-            refusal.code == clash_verge_service_ipc::ServiceErrorCode::InvalidInstallLocation as u16
-        });
-    if !is_admin || !location_refused {
+    let refusal = error.downcast_ref::<crate::core::service::ServiceStartRefusal>();
+    let location_refused = refusal.is_some_and(|refusal| {
+        refusal.code == clash_verge_service_ipc::ServiceErrorCode::InvalidInstallLocation as u16
+    });
+    if refusal.is_some() && !location_refused {
         return Err(error);
     }
-
+    // A lost response is not a refusal: require a stopped service and no leftover core.
+    if let Err(probe_error) = confirm_idle(location_refused).await {
+        return Err(error.context(format!("Sidecar fallback was not safe: {probe_error:#}")));
+    }
     logging!(
         warn,
         Type::Core,
-        "service refused the core location while app is elevated; falling back to sidecar: {error:#}"
+        "Service could not start the core; falling back to Sidecar: {error:#}"
     );
     let reason = format!("{error:#}");
     start_sidecar(error)
         .await
-        .map_err(|error| error.context(format!("sidecar fallback failed after service refusal: {reason}")))
+        .map_err(|error| error.context(format!("Sidecar fallback failed after Service failure: {reason}")))
 }
 
 async fn run_sidecar_termination_transition<Clear, ClearFuture, Terminate>(
@@ -578,6 +581,8 @@ impl CoreManager {
         tracing::Span::current().record("decision", tracing::field::debug(&startup));
         if matches!(startup, StartupDecision::Wait) {
             self.rollback_failed_start().await;
+            #[cfg(target_os = "windows")]
+            self.try_sidecar_after_service_unavailable().await?;
             return Ok(());
         }
         if Handle::global().is_exiting() {
@@ -590,20 +595,9 @@ impl CoreManager {
                 #[cfg(target_os = "windows")]
                 {
                     run_service_start_with_sidecar_fallback(
-                        crate::core::runstate::RUN_STATE.state().is_admin,
                         || self.start_core_by_service(),
-                        |error| async move {
-                            use crate::core::runstate::RUN_STATE;
-
-                            RUN_STATE.allow_sidecar_after_service_refusal(format!("{error:#}"))?;
-                            let result = self.start_core_by_sidecar().await;
-                            if result.is_err() {
-                                SERVICE_MANAGER.withdraw_sidecar_allowance();
-                            } else {
-                                crate::core::service::notify_service_fallback();
-                            }
-                            result
-                        },
+                        crate::core::service::windows_fallback::confirm_idle,
+                        |error| self.start_sidecar_after_service_failure(error),
                     )
                     .await
                 }
@@ -626,6 +620,50 @@ impl CoreManager {
         }
 
         result
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn try_sidecar_after_service_unavailable(&self) -> Result<()> {
+        use crate::core::runstate::{RUN_STATE, ServiceHealth};
+
+        let state = RUN_STATE.state();
+        if state.pending.is_some() || state.op_in_flight || Handle::global().is_exiting() {
+            return Ok(());
+        }
+        let reason = match state.health {
+            ServiceHealth::Unavailable(reason) => reason,
+            ServiceHealth::VersionMismatch => "registered service is unavailable or incompatible".to_owned(),
+            _ => return Ok(()),
+        };
+        if let Err(error) = crate::core::service::windows_fallback::confirm_idle(false).await {
+            logging!(
+                warn,
+                Type::Core,
+                "Service unavailable ({reason}); Sidecar fallback withheld: {error:#}"
+            );
+            return Ok(());
+        }
+        self.start_sidecar_after_service_failure(anyhow::anyhow!(reason)).await
+    }
+
+    #[cfg(target_os = "windows")]
+    async fn start_sidecar_after_service_failure(&self, error: anyhow::Error) -> Result<()> {
+        use crate::core::runstate::RUN_STATE;
+
+        if Handle::global().is_exiting() {
+            return Err(error.context("application exited before Sidecar fallback"));
+        }
+        let reason = format!("{error:#}");
+        RUN_STATE.allow_sidecar_after_service_refusal(reason.clone())?;
+        logging!(warn, Type::Core, "Starting Sidecar with Service unavailable: {reason}");
+        let result = self.start_core_by_sidecar().await;
+        if result.is_err() {
+            SERVICE_MANAGER.withdraw_sidecar_allowance();
+            self.rollback_failed_start().await;
+        } else {
+            crate::core::service::notify_service_fallback();
+        }
+        result.map_err(|error| error.context(format!("Service failure before Sidecar startup: {reason}")))
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode()))]
