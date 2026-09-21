@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "강제 새로고침 완료",
+        "discardedKeys": "확장 설정 또는 스크립트가 앱 설정이 관리하는 {{keys}} 필드를 작성하여 해당 값은 무시되었습니다",
         "emergencyRefreshFailed": "긴급 새로고침 실패: {{message}}"
       },
       "tooltips": {

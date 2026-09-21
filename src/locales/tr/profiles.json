@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Zorunlu yenileme tamamlandı",
+        "discardedKeys": "Uzantılar, Ayarlar tarafından yönetilen {{keys}} alanlarını yazdığı için bu değerler yok sayıldı",
         "emergencyRefreshFailed": "Acil yenileme başarısız oldu: {{message}}"
       },
       "tooltips": {

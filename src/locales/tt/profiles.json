@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Киңәйтмәләр Көйләүләр белән идарә ителә торган {{keys}} кырларын язды, шуңа күрә бу кыйммәтләр кире кагылды",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {

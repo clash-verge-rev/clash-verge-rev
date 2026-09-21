@@ -14,6 +14,7 @@ use self::{
     tun::use_tun,
 };
 use crate::config::dns::{DnsOverrideState, dns_override_source};
+use crate::core::handle::Handle;
 use crate::utils::dirs;
 use crate::{
     config::{Config, IProfiles, IVerge, PrfItem},
@@ -22,6 +23,7 @@ use crate::{
 };
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
+use parking_lot::Mutex;
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
@@ -247,16 +249,33 @@ async fn process_global_items(
     global_merge: ChainItem,
     global_script: ChainItem,
     profile_name: &String,
+    authoritative: &AuthoritativeFields,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
+        let before = authoritative.current(&config);
         config = use_merge(&merge, config);
+        let notes: ResultLog = authoritative
+            .overridden(&before, &authoritative.current(&config))
+            .into_iter()
+            .map(discarded_note)
+            .collect();
+        if !notes.is_empty() {
+            result_map.entry(global_merge.uid).or_default().extend(notes);
+        }
     }
 
     if let ChainType::Script(script) = global_script.data {
-        let (res_config, changed_keys, logs) = use_script(script, config, profile_name.clone()).await;
+        let before = authoritative.current(&config);
+        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.clone()).await;
         exists_keys.extend(changed_keys);
         config = res_config;
+        logs.extend(
+            authoritative
+                .overridden(&before, &authoritative.current(&config))
+                .into_iter()
+                .map(discarded_note),
+        );
         result_map.insert(global_script.uid, logs);
     }
 
@@ -329,6 +348,60 @@ impl AuthoritativeFields {
         let config = enforce_tun(config, self.tun);
         enforce_dns_ipv6(config, self.dns_ipv6)
     }
+
+    /// The owned values as `config` holds them now, for diffing one override.
+    fn current(&self, config: &Mapping) -> Self {
+        let tun_keys: Vec<Value> = self.tun.keys().cloned().collect();
+        Self::capture(config, &tun_keys, self.dns_ipv6.is_some())
+    }
+
+    /// Owned keys an override moved off the app value; `enforce` discards those writes.
+    fn overridden(&self, before: &Self, after: &Self) -> Vec<String> {
+        let mut keys = Vec::new();
+        for &key in CONTROL_PLANE_KEYS {
+            if before.control_plane.get(key) != after.control_plane.get(key)
+                && after.control_plane.get(key) != self.control_plane.get(key)
+            {
+                keys.push(key.into());
+            }
+        }
+        for key in self.tun.keys() {
+            if before.tun.get(key) != after.tun.get(key) && after.tun.get(key) != self.tun.get(key) {
+                keys.push(format!("tun.{}", key.as_str().unwrap_or_default()).into());
+            }
+        }
+        if self.dns_ipv6.is_some() && before.dns_ipv6 != after.dns_ipv6 && after.dns_ipv6 != self.dns_ipv6 {
+            keys.push("dns.ipv6".into());
+        }
+        keys
+    }
+}
+
+fn discarded_note(key: String) -> (String, String) {
+    (
+        "warn".into(),
+        format!("`{key}` is managed by Settings; the value written here was discarded").into(),
+    )
+}
+
+static PENDING_DISCARDED_KEYS: Mutex<Option<String>> = Mutex::new(None);
+static LAST_DISCARDED_KEYS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+
+pub(crate) fn take_discarded_keys_notice() -> Option<String> {
+    PENDING_DISCARDED_KEYS.lock().take()
+}
+
+/// One notice per distinct set, so regenerations with unchanged extensions stay quiet.
+fn notify_discarded_keys(keys: Vec<String>) {
+    let mut last = LAST_DISCARDED_KEYS.lock();
+    if *last == keys {
+        return;
+    }
+    if !keys.is_empty() {
+        *PENDING_DISCARDED_KEYS.lock() = Some(keys.join(", ").into());
+        Handle::notice_message("enhance::discarded_keys", "");
+    }
+    *last = keys;
 }
 
 /// 手动 merge/script 前保存 app 最终控制面值,只记录当前存在的键。
@@ -459,16 +532,33 @@ async fn process_profile_items(
     merge_item: ChainItem,
     script_item: ChainItem,
     profile_name: &String,
+    authoritative: &AuthoritativeFields,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
+        let before = authoritative.current(&config);
         config = use_merge(&merge, config);
+        let notes: ResultLog = authoritative
+            .overridden(&before, &authoritative.current(&config))
+            .into_iter()
+            .map(discarded_note)
+            .collect();
+        if !notes.is_empty() {
+            result_map.entry(merge_item.uid).or_default().extend(notes);
+        }
     }
 
     if let ChainType::Script(script) = script_item.data {
-        let (res_config, changed_keys, logs) = use_script(script, config, profile_name.clone()).await;
+        let before = authoritative.current(&config);
+        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.clone()).await;
         exists_keys.extend(changed_keys);
         config = res_config;
+        logs.extend(
+            authoritative
+                .overridden(&before, &authoritative.current(&config))
+                .into_iter()
+                .map(discarded_note),
+        );
         result_map.insert(script_item.uid, logs);
     }
 
@@ -836,12 +926,22 @@ pub async fn enhance(
         global_merge,
         global_script,
         &profile_name,
+        &authoritative,
     )
     .await;
 
-    let (config, exists_keys, result_map) =
-        process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
+    let (config, exists_keys, result_map) = process_profile_items(
+        config,
+        exists_keys,
+        result_map,
+        merge_item,
+        script_item,
+        &profile_name,
+        &authoritative,
+    )
+    .await;
 
+    notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 
@@ -1312,7 +1412,7 @@ mod authoritative_field_tests {
 #[cfg(test)]
 mod tests {
     use super::{
-        ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
+        AuthoritativeFields, ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
         process_profile_items, use_keys,
     };
     use std::collections::HashMap;
@@ -1365,6 +1465,7 @@ mod tests {
         );
 
         let profile_name = "test-profile".into();
+        let authoritative = AuthoritativeFields::capture(&config, &[], false);
         let (config, exists_keys, result_map) = process_global_items(
             config,
             exists_keys,
@@ -1372,6 +1473,7 @@ mod tests {
             global_merge,
             global_script,
             &profile_name,
+            &authoritative,
         )
         .await;
         let (config, exists_keys, _) = process_profile_items(
@@ -1381,6 +1483,7 @@ mod tests {
             profile_merge,
             profile_script,
             &profile_name,
+            &authoritative,
         )
         .await;
 

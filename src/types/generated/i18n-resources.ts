@@ -446,6 +446,7 @@ export interface TranslationResources {
             updateFailed: string
           }
           notices: {
+            discardedKeys: string
             emergencyRefreshFailed: string
             forceRefreshCompleted: string
           }

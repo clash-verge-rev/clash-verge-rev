@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "拡張設定またはスクリプトが、アプリ設定で管理される {{keys}} を書き込んだため、その値は破棄されました",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {

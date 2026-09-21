@@ -14,6 +14,7 @@ vi.mock('@/hooks/use-profiles', () => ({ revalidateProfiles: vi.fn() }))
 vi.mock('@/hooks/use-system-state', () => ({ runStateQueryKey: ['state'] }))
 vi.mock('@/services/events', () => ({ subscribeVergeEvents: vi.fn() }))
 vi.mock('@/services/cmds', () => ({
+  takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn(),
   takeServiceFallbackNotice: vi.fn().mockResolvedValue(false),
 }))

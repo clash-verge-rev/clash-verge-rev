@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "كتبت الإضافات الحقول {{keys}} التي تديرها الإعدادات، لذلك تم تجاهل هذه القيم",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {

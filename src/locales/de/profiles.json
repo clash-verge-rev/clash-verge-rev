@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Erweiterungen haben {{keys}} gesetzt, die von den Einstellungen verwaltet werden, daher wurden diese Werte verworfen",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {

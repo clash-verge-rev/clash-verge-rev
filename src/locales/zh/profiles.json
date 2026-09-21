@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "数据已强制刷新",
+        "discardedKeys": "扩展配置或脚本写入了由应用设置接管的字段 {{keys}}，这些值已被丢弃",
         "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
       },
       "tooltips": {

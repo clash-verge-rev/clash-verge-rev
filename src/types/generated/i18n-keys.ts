@@ -186,6 +186,7 @@ export const translationKeys = [
   'profiles.page.feedback.notifications.switchBusy',
   'profiles.page.feedback.notifications.batchDeleted',
   'profiles.page.feedback.notices.forceRefreshCompleted',
+  'profiles.page.feedback.notices.discardedKeys',
   'profiles.page.feedback.notices.emergencyRefreshFailed',
   'profiles.page.feedback.tooltips.forceRefreshStaleData',
   'profiles.page.title',

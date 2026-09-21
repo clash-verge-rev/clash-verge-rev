@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "افزونه‌ها فیلدهای {{keys}} را نوشتند که توسط تنظیمات مدیریت می‌شوند، بنابراین این مقادیر نادیده گرفته شدند",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {

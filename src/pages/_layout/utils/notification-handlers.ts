@@ -1,4 +1,5 @@
 import {
+  takeDiscardedKeysNotice,
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
 } from '@/services/cmds'
@@ -53,6 +54,22 @@ export const handleNoticeMessage = (
         })
         .catch((error) => {
           console.error('Failed to read the pending DNS override notice', error)
+        })
+    },
+    'enhance::discarded_keys': () => {
+      void takeDiscardedKeysNotice()
+        .then((keys) => {
+          if (keys) {
+            showNotice.warning('profiles.page.feedback.notices.discardedKeys', {
+              keys,
+            })
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to read the pending discarded keys notice',
+            error,
+          )
         })
     },
     'tun_mode::auto_disabled': () =>
