@@ -31,7 +31,7 @@ export const UpdateButton = (props: Props) => {
         className={className}
         onClick={() => viewerRef.current?.open()}
       >
-        {t('shared.actions.new')}
+        {t('settings.modals.update.actions.update')}
       </Button>
     </>
   )
