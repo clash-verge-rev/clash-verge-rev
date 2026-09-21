@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: Çıkış Yapılmak Üzere
     body: Clash Verge kapanmak üzere.
-  appHidden:
-    title: Uygulama Gizlendi
-    body: Clash Verge arka planda çalışıyor.
   updateReady:
     title: Clash Verge Güncellemesi
     body: Yeni bir sürüm (v{version}) indirildi ve kurulmaya hazır.

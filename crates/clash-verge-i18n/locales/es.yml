@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: A punto de salir
     body: Clash Verge está a punto de salir.
-  appHidden:
-    title: Aplicación oculta
-    body: Clash Verge se está ejecutando en segundo plano.
   updateReady:
     title: Clash Verge Update
     body: A new version (v{version}) has been downloaded and is ready to install.
