@@ -858,6 +858,7 @@ fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str
 
 fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
+    uninstall_service()?;
     install_service()
 }
 

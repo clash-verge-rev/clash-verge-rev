@@ -22,7 +22,7 @@
     },
     "serviceMigration": {
       "title": "Hizmet güncellemesi gerekli",
-      "message": "Eski bir Clash Verge hizmet kurulumu algılandı. Güncel güvenli IPC protokolünü kullanmak için hizmeti yeniden kurun ya da bu oturumda Sidecar ile devam edin.",
+      "message": "Clash Verge hizmet sürümü, bu uygulamanın gerektirdiği sürümle eşleşmiyor. Mevcut hizmeti kaldırıp gerekli sürümü yüklemek için hizmeti yeniden kurun ya da bu oturumda Sidecar ile devam edin.",
       "checkingMessage": "Sistem hizmetinin durumu ve geçerli çalışma modu denetleniyor. Lütfen bekleyin…",
       "unavailableMessage": "Gerekli Clash Verge hizmeti kullanılamıyor. Hizmeti kurun veya onarın ya da bu oturumda Sidecar ile devam edin.",
       "reinstall": "Hizmeti yeniden kur",
