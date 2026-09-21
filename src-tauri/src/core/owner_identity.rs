@@ -392,13 +392,10 @@ mod windows_owner {
     }
 
     pub(super) fn repair_root_owner(root: &Path) -> Result<()> {
+        // Elevated Windows processes can create directories owned by Administrators.
+        std::fs::create_dir_all(root).context("failed to create the application data root before owner repair")?;
         // The Service canonicalizes before checking, so resolve junctions to the same object.
-        let root = match std::fs::canonicalize(root) {
-            Ok(path) => path,
-            // Nothing to repair: this process creates the root and owns it by construction.
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-            Err(error) => return Err(error).context("failed to canonicalize the application data root"),
-        };
+        let root = std::fs::canonicalize(root).context("failed to canonicalize the application data root")?;
         let root = root.as_path();
 
         let sid = current_sid()?;

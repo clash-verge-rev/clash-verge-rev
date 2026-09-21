@@ -1963,12 +1963,13 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
 #[tracing::instrument(skip_all, level = "info", fields(attempts = tracing::field::Empty, interval_ms = tracing::field::Empty, outcome = tracing::field::Empty))]
 async fn wait_for_service_ipc() -> Result<()> {
     const CONTEXT: &str = "service IPC did not become available";
-    let config = ServiceManager::config();
+    const READY_ATTEMPTS: usize = 61;
+    const READY_INTERVAL: Duration = Duration::from_millis(500);
     let span = tracing::Span::current();
-    span.record("attempts", config.max_retries);
-    span.record("interval_ms", config.retry_delay.as_millis() as u64);
+    span.record("attempts", READY_ATTEMPTS);
+    span.record("interval_ms", READY_INTERVAL.as_millis() as u64);
 
-    match RUN_STATE.await_ready(config.max_retries, config.retry_delay).await {
+    match RUN_STATE.await_ready(READY_ATTEMPTS, READY_INTERVAL).await {
         Ok(_) => {
             tracing::Span::current().record("outcome", "ready");
             Ok(())
