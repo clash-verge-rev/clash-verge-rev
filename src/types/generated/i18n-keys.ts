@@ -59,6 +59,7 @@ export const translationKeys = [
   'home.components.systemInfo.fields.lastCheckUpdate',
   'home.components.systemInfo.fields.vergeVersion',
   'home.components.systemInfo.actions.settings',
+  'home.components.systemInfo.badges.notRunning',
   'home.components.systemInfo.badges.adminMode',
   'home.components.systemInfo.badges.serviceMode',
   'home.components.systemInfo.badges.sidecarMode',

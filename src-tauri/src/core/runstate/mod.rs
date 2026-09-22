@@ -152,6 +152,10 @@ impl<E: RunStateEnv> RunStateStore<E> {
                 self.observe(ServiceHealth::Ready);
                 Ok(self.state())
             }
+            ServiceVersionCheck::CoreUnavailable(error) => {
+                self.observe(ServiceHealth::Unavailable(error.clone()));
+                bail!(error)
+            }
             ServiceVersionCheck::NeedsReinstall(error) => {
                 self.observe(ServiceHealth::VersionMismatch);
                 bail!(error)
@@ -178,7 +182,10 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
 
         match self.env.probe_service_version().await {
-            Ok(reply) => classify_service_health(probe_outcome(&reply), has_marker, ""),
+            Ok(reply) => match classify_service_version_reply(&reply) {
+                ServiceVersionCheck::CoreUnavailable(reason) => ServiceHealth::Unavailable(reason),
+                _ => classify_service_health(probe_outcome(&reply), has_marker, ""),
+            },
             Err(error) => {
                 logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
                 classify_service_health(
@@ -487,6 +494,7 @@ mod tests {
 
     fn ready_reply() -> ServiceVersionReply {
         ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),

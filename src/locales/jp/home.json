@@ -63,6 +63,7 @@
         "settings": "設定"
       },
       "badges": {
+        "notRunning": "コア停止中",
         "adminMode": "管理者モード",
         "serviceMode": "サービスモード",
         "sidecarMode": "ユーザーモード",

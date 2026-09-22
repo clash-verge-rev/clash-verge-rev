@@ -63,6 +63,7 @@
         "settings": "Ajustes"
       },
       "badges": {
+        "notRunning": "Núcleo detenido",
         "adminMode": "Modo de administrador",
         "serviceMode": "Modo de servicio",
         "sidecarMode": "Modo de usuario",

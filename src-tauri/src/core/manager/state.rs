@@ -11,7 +11,6 @@ use crate::{
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use log::Level;
-use scopeguard::defer;
 use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
@@ -153,6 +152,8 @@ impl CoreManager {
 
     #[tracing::instrument(skip_all, level = "info", fields(pid = tracing::field::Empty))]
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
+        self.wait_for_sidecar_exit().await?;
+        let execution = clash_verge_service_ipc::execution::reserve_sidecar().await?;
         self.core_stopped();
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
@@ -205,6 +206,8 @@ impl CoreManager {
                 config_dir.display()
             )
         })?;
+        let (terminated, termination) = tokio::sync::oneshot::channel();
+        *self.sidecar_exit.lock().await = Some(execution.release_after_exit(child.pid(), termination));
         #[cfg(target_os = "windows")]
         let job = {
             match create_and_assign_sidecar_job(child.pid()) {
@@ -248,6 +251,7 @@ impl CoreManager {
                         CLASH_LOGGER.append_log(message);
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
+                        let _ = terminated.send(());
                         let manager = Self::global();
                         let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
@@ -298,10 +302,7 @@ impl CoreManager {
 
     /// Terminates the sidecar after its caller has successfully cleared the
     /// system proxy.
-    pub(super) fn stop_core_by_sidecar_unprepared(&self) {
-        defer! {
-            self.core_stopped();
-        }
+    pub(super) async fn stop_core_by_sidecar_unprepared(&self) -> Result<()> {
         if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
 
@@ -317,6 +318,22 @@ impl CoreManager {
                 logging!(warn, Type::Core, "failed to terminate sidecar PID {pid}: {error:#}");
             }
         }
+        let result = self.wait_for_sidecar_exit().await;
+        self.core_stopped();
+        result
+    }
+
+    async fn wait_for_sidecar_exit(&self) -> Result<()> {
+        let mut exit = self.sidecar_exit.lock().await;
+        if let Some(task) = exit.as_mut() {
+            tokio::time::timeout(std::time::Duration::from_secs(5), task)
+                .await
+                .context("Sidecar has not exited; core handoff is blocked")?
+                .context("Sidecar exit monitoring failed")?;
+            exit.take();
+        }
+        drop(exit);
+        Ok(())
     }
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {

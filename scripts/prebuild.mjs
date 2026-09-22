@@ -586,6 +586,41 @@ async function resolveServiceBundle() {
     path.join(cwd, 'src-tauri', 'Cargo.toml'),
     'utf8',
   )
+  const serviceDependency = cargoManifest
+    .split(/\r?\n/)
+    .find((line) => line.trimStart().startsWith('clash_verge_service_ipc ='))
+  const sourcePath = serviceDependency?.match(/\bpath\s*=\s*"([^"]+)"/)?.[1]
+  if (sourcePath) {
+    const manifest = path.resolve(cwd, 'src-tauri', sourcePath, 'Cargo.toml')
+    const targetDirectory = path.join(cwd, 'target', 'bundled-service')
+    execFileSync(
+      'cargo',
+      [
+        'build',
+        '--manifest-path',
+        manifest,
+        '--target-dir',
+        targetDirectory,
+        '--target',
+        SIDECAR_HOST,
+        '--release',
+        '--features',
+        'standalone,client',
+        '--bins',
+      ],
+      { stdio: 'inherit' },
+    )
+    await fsp.mkdir(SERVICE_DIR, { recursive: true })
+    for (const { sourceFile, targetPath } of files) {
+      await fsp.copyFile(
+        path.join(targetDirectory, SIDECAR_HOST, 'release', sourceFile),
+        targetPath,
+      )
+      if (platform !== 'win32') await fsp.chmod(targetPath, 0o755)
+      await updateHashCache(targetPath)
+    }
+    return
+  }
   const { archiveFile, downloadURL } = resolveServiceRelease(
     cargoManifest,
     SIDECAR_HOST,

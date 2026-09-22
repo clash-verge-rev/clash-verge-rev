@@ -185,16 +185,17 @@ where
     apply_proxy().await
 }
 
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "windows", test))]
 async fn run_service_start_with_sidecar_fallback<Start, StartFuture, Check, CheckFuture, Fallback, FallbackFuture>(
     start_service: Start,
     confirm_idle: Check,
     start_sidecar: Fallback,
+    record_unavailable: impl FnOnce(std::string::String),
 ) -> Result<()>
 where
     Start: FnOnce() -> StartFuture,
     StartFuture: std::future::Future<Output = Result<()>>,
-    Check: FnOnce(bool) -> CheckFuture,
+    Check: FnOnce() -> CheckFuture,
     CheckFuture: std::future::Future<Output = Result<()>>,
     Fallback: FnOnce(anyhow::Error) -> FallbackFuture,
     FallbackFuture: std::future::Future<Output = Result<()>>,
@@ -209,9 +210,11 @@ where
     if refusal.is_some() && !location_refused {
         return Err(error);
     }
-    // A lost response is not a refusal: require a stopped service and no leftover core.
-    if let Err(probe_error) = confirm_idle(location_refused).await {
-        return Err(error.context(format!("Sidecar fallback was not safe: {probe_error:#}")));
+    // A lost start response can hide a running core; the shared check must resolve occupancy.
+    if let Err(probe_error) = confirm_idle().await {
+        let error = error.context(format!("Sidecar fallback was not safe: {probe_error:#}"));
+        record_unavailable(format!("{error:#}"));
+        return Err(error);
     }
     logging!(
         warn,
@@ -224,18 +227,18 @@ where
         .map_err(|error| error.context(format!("Sidecar fallback failed after Service failure: {reason}")))
 }
 
-async fn run_sidecar_termination_transition<Clear, ClearFuture, Terminate>(
+async fn run_sidecar_termination_transition<Clear, ClearFuture, Terminate, TerminateFuture>(
     clear_proxy: Clear,
     terminate_sidecar: Terminate,
 ) -> Result<()>
 where
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
-    Terminate: FnOnce(),
+    Terminate: FnOnce() -> TerminateFuture,
+    TerminateFuture: std::future::Future<Output = Result<()>>,
 {
     clear_proxy().await?;
-    terminate_sidecar();
-    Ok(())
+    terminate_sidecar().await
 }
 
 async fn run_service_config_replacement_transition<
@@ -373,6 +376,10 @@ impl CoreManager {
         let mode = self.get_running_mode();
         if !can_allow_sidecar_for_session(&mode, &status) {
             anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
+        }
+        #[cfg(target_os = "windows")]
+        if matches!(*mode, RunningMode::NotRunning) {
+            clash_verge_service_ipc::execution::check_sidecar_available().await?;
         }
         SERVICE_MANAGER.allow_sidecar_for_session()?;
         // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
@@ -596,8 +603,12 @@ impl CoreManager {
                 {
                     run_service_start_with_sidecar_fallback(
                         || self.start_core_by_service(),
-                        crate::core::service::windows_fallback::confirm_idle,
+                        clash_verge_service_ipc::execution::check_sidecar_available,
                         |error| self.start_sidecar_after_service_failure(error),
+                        |reason| {
+                            crate::core::runstate::RUN_STATE
+                                .observe(crate::core::runstate::ServiceHealth::Unavailable(reason));
+                        },
                     )
                     .await
                 }
@@ -635,7 +646,7 @@ impl CoreManager {
             ServiceHealth::VersionMismatch => "registered service is unavailable or incompatible".to_owned(),
             _ => return Ok(()),
         };
-        if let Err(error) = crate::core::service::windows_fallback::confirm_idle(false).await {
+        if let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available().await {
             logging!(
                 warn,
                 Type::Core,
@@ -701,10 +712,7 @@ impl CoreManager {
         CLASH_LOGGER.clear_logs();
         match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
-            RunningMode::Sidecar => {
-                self.stop_core_by_sidecar_unprepared();
-                Ok(())
-            }
+            RunningMode::Sidecar => self.stop_core_by_sidecar_unprepared().await,
             RunningMode::NotRunning => Ok(()),
         }
     }
@@ -1205,9 +1213,10 @@ mod tests {
 
             let result = run_sidecar_termination_transition(
                 || transition_step(&calls, "handoff-proxy-clear", fail_at),
-                || {
+                || async {
                     sidecar_alive.store(false, Ordering::Release);
                     calls.lock().push("handoff-sidecar-stop");
+                    Ok(())
                 },
             )
             .await;
@@ -1484,6 +1493,46 @@ mod tests {
         ];
         for status in &rejected_statuses {
             assert!(!can_allow_sidecar_for_session(&RunningMode::NotRunning, status));
+        }
+    }
+
+    #[tokio::test]
+    async fn blocked_windows_fallback_records_failure_without_starting_sidecar() {
+        use crate::core::runstate::{FakeEnv, RunStateStore, ServiceHealth};
+
+        for idle in [false, true] {
+            let store = RunStateStore::new(FakeEnv::new());
+            store.observe(ServiceHealth::Ready);
+            let started = AtomicBool::new(false);
+            let result = super::run_service_start_with_sidecar_fallback(
+                || async {
+                    Err(crate::core::service::ServiceStartRefusal {
+                        code: clash_verge_service_ipc::ServiceErrorCode::InvalidInstallLocation as u16,
+                        core_path: "verge-mihomo.exe".into(),
+                        message: "no administrator-approved copy is installed".into(),
+                    }
+                    .into())
+                },
+                || async move {
+                    anyhow::ensure!(idle, "another core is running");
+                    Ok(())
+                },
+                |_| async {
+                    started.store(true, Ordering::SeqCst);
+                    Ok(())
+                },
+                |reason| store.observe(ServiceHealth::Unavailable(reason)),
+            )
+            .await;
+
+            assert_eq!(started.load(Ordering::SeqCst), idle);
+            assert_eq!(result.is_ok(), idle);
+            assert!(!store.state().sidecar_allowed);
+            if !idle {
+                assert!(store.state().service_needs_attention());
+                assert!(!store.state().service_usable());
+                assert!(result.is_err_and(|error| format!("{error:#}").contains("another core is running")));
+            }
         }
     }
 
