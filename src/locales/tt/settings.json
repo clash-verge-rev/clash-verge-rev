@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
+        "profileScope": "DNS көйләүләрен алыштыру күчергеченең хәле һәр профиль өчен аерым саклана һәм шул профильгә генә кагыла.",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "protection": {

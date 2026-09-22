@@ -1,10 +1,14 @@
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use clash_verge_draft::DraftTransaction;
 use serde::Serialize;
 use smartstring::alias::String;
 
 use crate::{
-    config::{Config, dns::dns_override_source, profiles::PROFILE_WRITE_LOCK},
+    config::{
+        Config,
+        dns::{ProfileDnsSettings, dns_override_source},
+        profiles::PROFILE_WRITE_LOCK,
+    },
     constants::files::DNS_CONFIG,
     core::{CoreManager, handle::Handle},
     utils::dirs,
@@ -17,10 +21,18 @@ pub enum DnsOverrideOutcome {
     ConfirmationRequired { source: String },
 }
 
-pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> Result<DnsOverrideOutcome> {
+pub async fn set_dns_override(
+    profile_uid: String,
+    enabled: bool,
+    confirmation: Option<String>,
+) -> Result<DnsOverrideOutcome> {
     let _profile_write = PROFILE_WRITE_LOCK.lock().await;
     let _config_write = Config::lock_config_write().await;
     let profiles = Config::profiles().await.data_arc();
+    ensure!(
+        profiles.current.as_ref() == Some(&profile_uid),
+        "The active profile changed; retry the DNS setting"
+    );
     let source = dns_override_source(
         profiles.current.as_deref().unwrap_or_default(),
         &profiles.current_mapping().await?,
@@ -37,8 +49,13 @@ pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> Re
     let verge = Config::verge().await;
     let transaction = DraftTransaction::begin(vec![&verge])?;
     verge.edit_draft(|draft| {
-        draft.enable_dns_settings = Some(enabled);
-        draft.dns_override_confirmation = if enabled { source } else { None };
+        draft.profile_dns_settings.insert(
+            profile_uid.clone(),
+            ProfileDnsSettings {
+                enabled,
+                confirmation: if enabled { source } else { None },
+            },
+        );
     });
     CoreManager::global().update_config_checked().await?;
 
@@ -47,8 +64,9 @@ pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> Re
     // A subscription update can replace the file while Mihomo is validating it.
     if enabled && let Some(state) = state.filter(|state| !state.enabled) {
         verge.edit_draft(|draft| {
-            draft.enable_dns_settings = Some(false);
-            draft.dns_override_confirmation = None;
+            draft
+                .profile_dns_settings
+                .insert(profile_uid, ProfileDnsSettings::default());
         });
         if let Some(source) = state.source {
             outcome = DnsOverrideOutcome::ConfirmationRequired { source };

@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS-Überschreibung",
+        "profileScope": "Der DNS-Überschreibungsschalter wird für jedes Profil separat gespeichert und gilt nur für dieses Profil.",
         "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung deaktiviert."
       },
       "protection": {

@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Üzerine Yazma",
+        "profileScope": "DNS geçersiz kılma anahtarının durumu her profil için ayrı kaydedilir ve yalnızca o profile uygulanır.",
         "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
       "protection": {

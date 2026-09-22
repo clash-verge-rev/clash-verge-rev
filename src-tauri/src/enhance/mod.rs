@@ -105,7 +105,7 @@ async fn chain_item_or_default(item: Option<&PrfItem>, default_item: impl FnOnce
     }
 }
 
-async fn get_config_values() -> ConfigValues {
+async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let clash = Config::clash().await;
     let clash_arc = clash.latest_arc();
     let clash_config = clash_arc.0.clone();
@@ -120,12 +120,12 @@ async fn get_config_values() -> ConfigValues {
         ref enable_builtin_enhanced,
         ref verge_socks_enabled,
         ref verge_http_enabled,
-        ref enable_dns_settings,
         ref enable_external_controller,
         ..
     } = **verge_arc;
     let enable_external_controller = enable_external_controller.unwrap_or(false);
-    let dns_override_confirmation = verge_arc.dns_override_confirmation.clone();
+    let dns_settings = verge_arc.dns_settings_for(profile_uid);
+    let dns_override_confirmation = dns_settings.confirmation;
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
@@ -133,7 +133,7 @@ async fn get_config_values() -> ConfigValues {
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
-        enable_dns_settings.unwrap_or(false),
+        dns_settings.enabled,
     );
 
     #[cfg(not(target_os = "windows"))]
@@ -873,7 +873,8 @@ async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapp
 pub async fn enhance(
     profiles: &IProfiles,
 ) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>, DnsOverrideState)> {
-    let cfg_vals = get_config_values().await;
+    let profile_uid = profiles.current.as_deref().unwrap_or_default();
+    let cfg_vals = get_config_values(profile_uid).await;
     let ConfigValues {
         clash_config,
         clash_core,
@@ -892,7 +893,8 @@ pub async fn enhance(
 
     let profile = collect_profile_items(profiles).await?;
     let dns_override = DnsOverrideState::new(
-        dns_override_source(profiles.current.as_deref().unwrap_or_default(), &profile.config)?,
+        profile_uid,
+        dns_override_source(profile_uid, &profile.config)?,
         enable_dns_settings,
         dns_override_confirmation,
     );

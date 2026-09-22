@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
+        "profileScope": "تُحفظ حالة مفتاح تجاوز DNS بشكل مستقل لكل ملف تعريف، وتُطبَّق على ذلك الملف فقط.",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "protection": {

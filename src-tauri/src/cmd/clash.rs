@@ -133,8 +133,12 @@ pub fn take_dns_override_notice() -> bool {
 }
 
 #[tauri::command]
-pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> CmdResult<feat::DnsOverrideOutcome> {
-    feat::set_dns_override(enabled, confirmation)
+pub async fn set_dns_override(
+    profile_uid: String,
+    enabled: bool,
+    confirmation: Option<String>,
+) -> CmdResult<feat::DnsOverrideOutcome> {
+    feat::set_dns_override(profile_uid, enabled, confirmation)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))
 }

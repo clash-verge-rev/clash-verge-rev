@@ -699,6 +699,7 @@ export const translationKeys = [
   'settings.modals.tun.messages.invalidRouteExcludeAddress',
   'settings.modals.tun.messages.routeExcludeAddressHint',
   'settings.modals.dns.dialog.title',
+  'settings.modals.dns.dialog.profileScope',
   'settings.modals.dns.dialog.warning',
   'settings.modals.dns.protection.title',
   'settings.modals.dns.protection.message',

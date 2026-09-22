@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS 覆寫",
+        "profileScope": "DNS 覆寫開關依訂閱分別儲存，僅對對應訂閱生效。",
         "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫關閉"
       },
       "protection": {

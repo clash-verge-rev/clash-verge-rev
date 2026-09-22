@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "Sobrescritura de DNS",
+        "profileScope": "El estado del interruptor de sobrescritura de DNS se guarda por separado para cada perfil y solo se aplica a ese perfil.",
         "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga deshabilitada la sobrescritura de DNS."
       },
       "protection": {

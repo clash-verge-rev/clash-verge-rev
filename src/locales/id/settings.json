@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
+        "profileScope": "Status sakelar penimpaan DNS disimpan secara terpisah untuk setiap profil dan hanya berlaku untuk profil tersebut.",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "protection": {

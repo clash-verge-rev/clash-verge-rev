@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
+use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
 use smartstring::alias::String;
@@ -54,6 +55,7 @@ pub(crate) fn dns_override_source(profile_uid: &str, config: &Mapping) -> Result
 
 #[derive(Debug, Clone)]
 pub(crate) struct DnsOverrideState {
+    profile_uid: String,
     pub source: Option<String>,
     pub enabled: bool,
     requested: bool,
@@ -61,9 +63,10 @@ pub(crate) struct DnsOverrideState {
 }
 
 impl DnsOverrideState {
-    pub fn new(source: Option<String>, requested: bool, confirmation: Option<String>) -> Self {
+    pub fn new(profile_uid: &str, source: Option<String>, requested: bool, confirmation: Option<String>) -> Self {
         let enabled = requested && (source.is_none() || source == confirmation);
         Self {
+            profile_uid: profile_uid.into(),
             source,
             enabled,
             requested,
@@ -72,21 +75,53 @@ impl DnsOverrideState {
     }
 
     fn apply_to(&self, verge: &mut IVerge) -> bool {
+        if self.profile_uid.is_empty() {
+            return false;
+        }
+        let settings = verge.dns_settings_for(&self.profile_uid);
         // A later settings write must not be overwritten by an earlier runtime generation.
-        if verge.enable_dns_settings.unwrap_or(false) != self.requested
-            || verge.dns_override_confirmation != self.confirmation
-        {
+        if (settings.enabled, settings.confirmation.as_ref()) != (self.requested, self.confirmation.as_ref()) {
             return false;
         }
         let clear_confirmation = self.confirmation.is_some() && self.source != self.confirmation;
-        if self.enabled == self.requested && !clear_confirmation {
+        if self.enabled == self.requested
+            && !clear_confirmation
+            && verge.profile_dns_settings.contains_key(&self.profile_uid)
+        {
             return false;
         }
-        verge.enable_dns_settings = Some(self.enabled);
-        if clear_confirmation {
-            verge.dns_override_confirmation = None;
-        }
+        verge.profile_dns_settings.insert(
+            self.profile_uid.clone(),
+            ProfileDnsSettings {
+                enabled: self.enabled,
+                confirmation: if clear_confirmation {
+                    None
+                } else {
+                    self.confirmation.clone()
+                },
+            },
+        );
         true
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct ProfileDnsSettings {
+    pub enabled: bool,
+    // Force-enable confirmation is valid only for the current app session.
+    #[serde(skip)]
+    pub confirmation: Option<String>,
+}
+
+impl IVerge {
+    pub(crate) fn dns_settings_for(&self, profile_uid: &str) -> ProfileDnsSettings {
+        self.profile_dns_settings
+            .get(profile_uid)
+            .cloned()
+            .unwrap_or(ProfileDnsSettings {
+                enabled: self.enable_dns_settings.unwrap_or(false),
+                confirmation: None,
+            })
     }
 }
 
@@ -116,7 +151,7 @@ impl Config {
 #[cfg(test)]
 #[allow(clippy::expect_used, reason = "tests assert by panicking")]
 mod tests {
-    use super::{DnsOverrideState, dns_override_source};
+    use super::{DnsOverrideState, ProfileDnsSettings, dns_override_source};
     use crate::config::IVerge;
     use anyhow::Result;
     use serde_yaml_ng::Mapping;
@@ -152,10 +187,10 @@ mod tests {
         let reordered =
             mapping("dns:\n  nameserver-policy:\n    b.example: [8.8.8.8]\n    a.example: 1.1.1.1\nport: 7890");
         assert_eq!(source, dns_override_source("one", &reordered)?);
-        assert!(DnsOverrideState::new(source.clone(), true, source.clone()).enabled);
-        assert!(!DnsOverrideState::new(dns_override_source("two", &original)?, true, source.clone()).enabled);
+        assert!(DnsOverrideState::new("one", source.clone(), true, source.clone()).enabled);
+        assert!(!DnsOverrideState::new("two", dns_override_source("two", &original)?, true, source.clone()).enabled);
         let changed = mapping("dns: {nameserver-policy: {a.example: 9.9.9.9, b.example: [8.8.8.8]}}");
-        assert!(!DnsOverrideState::new(dns_override_source("one", &changed)?, true, source).enabled);
+        assert!(!DnsOverrideState::new("one", dns_override_source("one", &changed)?, true, source).enabled);
         Ok(())
     }
 
@@ -163,24 +198,28 @@ mod tests {
     fn dns_override_confirmation_expires_on_restart() -> Result<()> {
         let source = Some("provider-dns".into());
         let confirmed = IVerge {
-            enable_dns_settings: Some(true),
-            dns_override_confirmation: source.clone(),
+            profile_dns_settings: [(
+                "one".into(),
+                ProfileDnsSettings {
+                    enabled: true,
+                    confirmation: source.clone(),
+                },
+            )]
+            .into(),
             ..IVerge::default()
         };
-        assert!(DnsOverrideState::new(source.clone(), true, confirmed.dns_override_confirmation.clone()).enabled);
+        let settings = confirmed.dns_settings_for("one");
+        assert!(DnsOverrideState::new("one", source.clone(), settings.enabled, settings.confirmation).enabled);
         for saved in [
             serde_yaml_ng::to_string(&confirmed)?,
             "enable_dns_settings: true\ndns_override_confirmation: provider-dns".to_owned(),
         ] {
             let mut restarted: IVerge = serde_yaml_ng::from_str(&saved)?;
-            let state = DnsOverrideState::new(
-                source.clone(),
-                restarted.enable_dns_settings.unwrap_or(false),
-                restarted.dns_override_confirmation.clone(),
-            );
+            let settings = restarted.dns_settings_for("one");
+            let state = DnsOverrideState::new("one", source.clone(), settings.enabled, settings.confirmation);
             assert!(!state.enabled, "a previous session must not bypass startup protection");
             assert!(state.apply_to(&mut restarted));
-            assert_eq!(restarted.enable_dns_settings, Some(false));
+            assert!(!restarted.dns_settings_for("one").enabled);
         }
         Ok(())
     }
@@ -191,21 +230,74 @@ mod tests {
             enable_dns_settings: Some(true),
             ..IVerge::default()
         };
-        let state = DnsOverrideState::new(Some("provider-dns".into()), true, None);
+        let state = DnsOverrideState::new("one", Some("provider-dns".into()), true, None);
         assert!(state.apply_to(&mut verge));
-        assert_eq!(verge.enable_dns_settings, Some(false));
+        assert!(!verge.dns_settings_for("one").enabled);
         assert!(!state.apply_to(&mut verge));
-        let disabled = DnsOverrideState::new(None, false, None);
+        let disabled = DnsOverrideState::new("one", None, false, None);
         assert!(!disabled.apply_to(&mut verge));
         assert!(!disabled.enabled);
 
-        verge.enable_dns_settings = Some(true);
-        verge.dns_override_confirmation = Some("provider-dns".into());
+        verge.profile_dns_settings.insert(
+            "one".into(),
+            ProfileDnsSettings {
+                enabled: true,
+                confirmation: Some("provider-dns".into()),
+            },
+        );
         assert!(!state.apply_to(&mut verge));
-        assert_eq!(verge.enable_dns_settings, Some(true));
-        assert_eq!(verge.dns_override_confirmation.as_deref(), Some("provider-dns"));
-        let leaving = DnsOverrideState::new(None, true, verge.dns_override_confirmation.clone());
+        let settings = verge.dns_settings_for("one");
+        assert!(settings.enabled);
+        assert_eq!(settings.confirmation.as_deref(), Some("provider-dns"));
+        let leaving = DnsOverrideState::new("one", None, true, settings.confirmation);
         assert!(leaving.apply_to(&mut verge));
-        assert!(verge.dns_override_confirmation.is_none());
+        assert!(verge.dns_settings_for("one").confirmation.is_none());
+    }
+
+    #[test]
+    fn automatic_disable_is_saved_only_for_the_affected_profile() -> Result<()> {
+        let mut verge = IVerge {
+            enable_dns_settings: Some(true),
+            ..IVerge::default()
+        };
+        let first = DnsOverrideState::new("one", None, true, None);
+        assert!(first.apply_to(&mut verge));
+        let protected = DnsOverrideState::new("two", Some("provider-dns".into()), true, None);
+        assert!(protected.apply_to(&mut verge));
+        assert!(verge.dns_settings_for("one").enabled);
+        assert!(!verge.dns_settings_for("two").enabled);
+        assert!(verge.dns_settings_for("unvisited").enabled);
+        assert_eq!(verge.enable_dns_settings, Some(true));
+        let restarted: IVerge = serde_yaml_ng::from_str(&serde_yaml_ng::to_string(&verge)?)?;
+        assert!(restarted.dns_settings_for("one").enabled);
+        assert!(!restarted.dns_settings_for("two").enabled);
+        Ok(())
+    }
+
+    #[test]
+    fn switching_profiles_preserves_each_confirmation_until_its_source_changes() {
+        let mut verge = IVerge::default();
+        for uid in ["one", "two"] {
+            verge.profile_dns_settings.insert(
+                uid.into(),
+                ProfileDnsSettings {
+                    enabled: true,
+                    confirmation: Some(uid.into()),
+                },
+            );
+        }
+        for uid in ["one", "two", "one"] {
+            let settings = verge.dns_settings_for(uid);
+            let state = DnsOverrideState::new(uid, Some(uid.into()), settings.enabled, settings.confirmation);
+            assert!(state.enabled);
+            assert!(!state.apply_to(&mut verge));
+        }
+        let settings = verge.dns_settings_for("two");
+        let updated = DnsOverrideState::new("two", Some("updated".into()), settings.enabled, settings.confirmation);
+        assert!(updated.apply_to(&mut verge));
+        assert!(!verge.dns_settings_for("two").enabled);
+        assert!(verge.dns_settings_for("two").confirmation.is_none());
+        assert!(verge.dns_settings_for("one").enabled);
+        assert_eq!(verge.dns_settings_for("one").confirmation.as_deref(), Some("one"));
     }
 }
