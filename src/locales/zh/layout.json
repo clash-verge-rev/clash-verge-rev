@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "系统服务的安装路径或目录权限未通过安全检查，无法启动内核。请重新安装服务以恢复服务文件和权限，随后重试。Windows 可能会请求管理员授权。",
       "title": "需要更新系统服务",
       "message": "Clash Verge 系统服务版本与当前应用要求不符。请选择「重新安装服务」卸载现有服务并安装所需版本，也可以仅在本次会话继续使用 Sidecar。",
       "checkingMessage": "正在确认系统服务状态及当前运行模式，请稍候……",

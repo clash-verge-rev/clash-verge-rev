@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "서비스 설치 경로나 폴더 권한이 보안 검사를 통과하지 못해 코어를 시작할 수 없습니다. 서비스를 다시 설치하여 파일과 권한을 복원한 후 다시 시도하세요. Windows에서 관리자 승인을 요청할 수 있습니다.",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

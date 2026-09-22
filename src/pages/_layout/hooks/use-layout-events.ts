@@ -66,6 +66,7 @@ export const useLayoutEvents = (
         handleNotice(['dns_override::auto_disabled', ''])
         handleNotice(['enhance::discarded_keys', ''])
         handleNotice(['service_core::sidecar_fallback', ''])
+        handleNotice(['service_core::repair_required', ''])
       },
     )
   }, [handleNotice])

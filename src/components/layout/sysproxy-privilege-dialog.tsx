@@ -8,6 +8,7 @@ import {
   getRuntimeState,
   installService,
   patchVergeConfig,
+  reinstallService,
   restartCore,
   type FailedOperation,
   type PendingFailure,
@@ -22,22 +23,29 @@ import {
 } from '@/services/service-request'
 import getSystem from '@/utils/get-system'
 
-type Remedy = 'installAndRestart' | 'restartOnly'
+type Remedy = 'installAndRestart' | 'reinstallAndRestart' | 'restartOnly'
 
 const remedyFor = (reason: ServiceRequestReason): Remedy =>
-  reason === 'sysproxySidecarReady' ? 'restartOnly' : 'installAndRestart'
+  reason === 'serviceLocationRefused'
+    ? 'reinstallAndRestart'
+    : reason === 'sysproxySidecarReady'
+      ? 'restartOnly'
+      : 'installAndRestart'
 
 const EXPLANATION = {
   sysproxyRefused: 'layout.components.sysproxyPrivilege.message',
   sysproxySidecarReady:
     'layout.components.sysproxyPrivilege.serviceReadyMessage',
   tunNeedsService: 'layout.components.sysproxyPrivilege.tunMessage',
+  serviceLocationRefused:
+    'layout.components.serviceMigration.locationRefusedMessage',
 } as const
 
 const TITLE = {
   sysproxyRefused: 'layout.components.sysproxyPrivilege.title',
   sysproxySidecarReady: 'layout.components.sysproxyPrivilege.title',
   tunNeedsService: 'layout.components.sysproxyPrivilege.tunTitle',
+  serviceLocationRefused: 'layout.components.serviceMigration.repair',
 } as const
 
 const stateToRestore = (
@@ -70,7 +78,6 @@ const STEP_MESSAGE = {
   applying: 'layout.components.sysproxyPrivilege.applying',
 } as const
 
-/** Guide recovery from a refused system-proxy write. */
 export const SysproxyPrivilegeDialog = () => {
   const { t } = useTranslation()
   const { failure, dismiss } = useDialogFailure()
@@ -92,7 +99,10 @@ export const SysproxyPrivilegeDialog = () => {
 
   const handleFix = async () => {
     try {
-      if (remedy === 'installAndRestart') {
+      if (remedy === 'reinstallAndRestart') {
+        setStep('installing')
+        await reinstallService()
+      } else if (remedy === 'installAndRestart') {
         setStep('installing')
         await installService()
       }
@@ -101,6 +111,7 @@ export const SysproxyPrivilegeDialog = () => {
 
       const runState = await getRuntimeState()
       const usingAdminFallback =
+        remedy !== 'reinstallAndRestart' &&
         getSystem() === 'windows' &&
         runState.mode === 'Sidecar' &&
         runState.isAdmin &&
@@ -113,9 +124,11 @@ export const SysproxyPrivilegeDialog = () => {
         }
         if (!usingAdminFallback) {
           showNotice.success(
-            restoring === undefined
-              ? 'settings.sections.proxyControl.messages.installedCheckProxy'
-              : 'settings.sections.proxyControl.messages.installedProxyRestored',
+            remedy === 'reinstallAndRestart'
+              ? 'layout.components.serviceMigration.success'
+              : restoring === undefined
+                ? 'settings.sections.proxyControl.messages.installedCheckProxy'
+                : 'settings.sections.proxyControl.messages.installedProxyRestored',
           )
         }
         close()
@@ -136,9 +149,11 @@ export const SysproxyPrivilegeDialog = () => {
       open={Boolean(request)}
       title={t(TITLE[reason])}
       okBtn={t(
-        remedy === 'installAndRestart'
-          ? 'settings.sections.proxyControl.actions.installService'
-          : 'settings.sections.proxyControl.actions.switchToServiceMode',
+        remedy === 'reinstallAndRestart'
+          ? 'layout.components.serviceMigration.reinstall'
+          : remedy === 'installAndRestart'
+            ? 'settings.sections.proxyControl.actions.installService'
+            : 'settings.sections.proxyControl.actions.switchToServiceMode',
       )}
       cancelBtn={t('layout.components.sysproxyPrivilege.later')}
       // Keep the primary spinner visible; only cancellation is unavailable.

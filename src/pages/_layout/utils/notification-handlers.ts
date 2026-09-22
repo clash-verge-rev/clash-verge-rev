@@ -2,8 +2,10 @@ import {
   takeDiscardedKeysNotice,
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
+  takeServiceRepairNotice,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { requestService } from '@/services/service-request'
 
 type NavigateFunction = (path: string, options?: any) => void
 type TranslateFunction = (key: string) => string
@@ -29,6 +31,20 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'service_core::repair_required': () => {
+      void takeServiceRepairNotice()
+        .then((pending) => {
+          if (pending) {
+            requestService({ reason: 'serviceLocationRefused' })
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to read the pending service repair notice',
+            error,
+          )
+        })
+    },
     'service_core::sidecar_fallback': () => {
       void takeServiceFallbackNotice()
         .then((pending) => {

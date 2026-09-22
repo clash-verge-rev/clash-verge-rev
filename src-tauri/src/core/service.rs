@@ -43,6 +43,7 @@ pub(crate) mod windows_fallback;
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
 static PENDING_SERVICE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
+static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_service_fallback() {
@@ -52,6 +53,10 @@ pub(crate) fn notify_service_fallback() {
 
 pub(crate) fn take_service_fallback_notice() -> bool {
     PENDING_SERVICE_FALLBACK_NOTICE.swap(false, Ordering::Relaxed)
+}
+
+pub(crate) fn take_service_repair_notice() -> bool {
+    PENDING_SERVICE_REPAIR_NOTICE.swap(false, Ordering::Relaxed)
 }
 
 /// Capabilities of the service session that owns the running Core.
@@ -1153,6 +1158,11 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             response.code,
             err_msg
         );
+        #[cfg(target_os = "windows")]
+        if response.code == ServiceErrorCode::InvalidInstallLocation as u16 {
+            PENDING_SERVICE_REPAIR_NOTICE.store(true, Ordering::Relaxed);
+            Handle::notice_message("service_core::repair_required", "");
+        }
         start_owner_monitor();
         return Err(ServiceStartRefusal {
             code: response.code,
@@ -1179,6 +1189,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     start_owner_monitor();
     tracing::Span::current().record("outcome", "started");
     PENDING_SERVICE_FALLBACK_NOTICE.store(false, Ordering::Relaxed);
+    PENDING_SERVICE_REPAIR_NOTICE.store(false, Ordering::Relaxed);
     logging!(
         info,
         Type::Service,
