@@ -320,6 +320,14 @@ export interface TranslationResources {
           actions: {
             format: string
           }
+          enhance: {
+            globalMerge: string
+            globalScript: string
+            order: string
+            profileMerge: string
+            profileScript: string
+            settingsPriority: string
+          }
           messages: {
             readOnly: string
           }
