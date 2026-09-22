@@ -303,7 +303,7 @@ fn process_seq_items(
     config
 }
 
-/// App 权威的顶层控制面键;`dns.ipv6` 单独处理。
+/// App-owned control-plane keys; DNS settings are captured separately.
 const CONTROL_PLANE_KEYS: &[&str] = &[
     "external-controller",
     #[cfg(unix)]
@@ -330,29 +330,48 @@ const CONTROL_PLANE_KEYS: &[&str] = &[
 struct AuthoritativeFields {
     control_plane: Mapping,
     tun: Mapping,
-    /// Only when the DNS page switched it on.
-    dns_ipv6: Option<Value>,
+    dns: Mapping,
+    hosts: Option<Value>,
 }
 
 impl AuthoritativeFields {
-    fn capture(config: &Mapping, gui_tun_keys: &[Value], owns_dns_ipv6: bool) -> Self {
+    fn capture(config: &Mapping, gui_tun_keys: &[Value], mut dns_settings: Mapping) -> Self {
         Self {
             control_plane: snapshot_control_plane(config),
             tun: snapshot_tun(config, gui_tun_keys),
-            dns_ipv6: owns_dns_ipv6.then(|| snapshot_dns_ipv6(config)).flatten(),
+            dns: take_mapping(&mut dns_settings, "dns"),
+            hosts: dns_settings.remove("hosts"),
         }
     }
 
     fn enforce(self, config: Mapping) -> Mapping {
         let config = enforce_control_plane(config, self.control_plane);
-        let config = enforce_tun(config, self.tun);
-        enforce_dns_ipv6(config, self.dns_ipv6)
+        let mut config = enforce_tun(config, self.tun);
+        if !self.dns.is_empty() {
+            let mut dns = take_mapping(&mut config, "dns");
+            dns.extend(self.dns);
+            config.insert("dns".into(), dns.into());
+        }
+        if let Some(hosts) = self.hosts {
+            config.insert("hosts".into(), hosts);
+        }
+        config
     }
 
     /// The owned values as `config` holds them now, for diffing one override.
     fn current(&self, config: &Mapping) -> Self {
         let tun_keys: Vec<Value> = self.tun.keys().cloned().collect();
-        Self::capture(config, &tun_keys, self.dns_ipv6.is_some())
+        let dns = config.get("dns").and_then(Value::as_mapping);
+        Self {
+            control_plane: snapshot_control_plane(config),
+            tun: snapshot_tun(config, &tun_keys),
+            dns: self
+                .dns
+                .keys()
+                .filter_map(|key| Some((key.clone(), dns?.get(key)?.clone())))
+                .collect(),
+            hosts: self.hosts.as_ref().and_then(|_| config.get("hosts")).cloned(),
+        }
     }
 
     /// Owned keys an override moved off the app value; `enforce` discards those writes.
@@ -370,8 +389,13 @@ impl AuthoritativeFields {
                 keys.push(format!("tun.{}", key.as_str().unwrap_or_default()).into());
             }
         }
-        if self.dns_ipv6.is_some() && before.dns_ipv6 != after.dns_ipv6 && after.dns_ipv6 != self.dns_ipv6 {
-            keys.push("dns.ipv6".into());
+        for key in self.dns.keys() {
+            if before.dns.get(key) != after.dns.get(key) && after.dns.get(key) != self.dns.get(key) {
+                keys.push(format!("dns.{}", key.as_str().unwrap_or_default()).into());
+            }
+        }
+        if self.hosts.is_some() && before.hosts != after.hosts && after.hosts != self.hosts {
+            keys.push("hosts".into());
         }
         keys
     }
@@ -477,21 +501,6 @@ fn enforce_tun(mut config: Mapping, snapshot: Mapping) -> Mapping {
         .unwrap_or_default();
     tun.extend(snapshot);
     config.insert(Value::from("tun"), Value::Mapping(tun));
-    config
-}
-
-/// 只在 DNS 页开启 IPv6 时快照。
-fn snapshot_dns_ipv6(config: &Mapping) -> Option<Value> {
-    config.get("dns")?.get("ipv6").cloned()
-}
-
-/// 恢复 `dns.ipv6`,但不创建缺失的 `dns` 块。
-fn enforce_dns_ipv6(mut config: Mapping, dns_ipv6: Option<Value>) -> Mapping {
-    if let Some(dns_ipv6) = dns_ipv6
-        && let Some(Value::Mapping(dns)) = config.get_mut("dns")
-    {
-        dns.insert(Value::from("ipv6"), dns_ipv6);
-    }
     config
 }
 
@@ -810,16 +819,6 @@ fn is_set(value: &Value) -> bool {
     }
 }
 
-/// Configured DNS fields replace the whole value, including maps and lists.
-fn merge_set_fields(mut base: Mapping, overlay: Mapping) -> Mapping {
-    for (key, value) in overlay {
-        if is_set(&value) {
-            base.insert(key, value);
-        }
-    }
-    base
-}
-
 fn take_mapping(config: &mut Mapping, key: &str) -> Mapping {
     config
         .get_mut(key)
@@ -828,11 +827,12 @@ fn take_mapping(config: &mut Mapping, key: &str) -> Mapping {
         .unwrap_or_default()
 }
 
-fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, bool) {
-    let mut owns_ipv6 = false;
+fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, Mapping) {
+    let mut applied = Mapping::new();
     if let Some(Value::Mapping(hosts)) = dns_config.remove("hosts")
         && !hosts.is_empty()
     {
+        applied.insert("hosts".into(), hosts.clone().into());
         config.insert("hosts".into(), hosts.into());
         logging!(debug, Type::Core, "apply hosts configuration");
     }
@@ -843,18 +843,22 @@ fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, b
         Some(_) => None,
         None => Some(dns_config),
     };
-    if let Some(dns_override) = dns_override {
-        owns_ipv6 = dns_override.get("ipv6").is_some_and(is_set);
-        let mut dns = merge_set_fields(take_mapping(&mut config, "dns"), dns_override);
+    if let Some(mut dns_override) = dns_override {
+        dns_override.retain(|_, value| is_set(value));
+        if !dns_override.is_empty() {
+            applied.insert("dns".into(), dns_override.clone().into());
+        }
+        let mut dns = take_mapping(&mut config, "dns");
+        dns.extend(dns_override);
         ensure_fake_ip_range6(&mut dns);
         config.insert("dns".into(), dns.into());
         logging!(debug, Type::Core, "apply dns_config.yaml");
     }
-    (config, owns_ipv6)
+    (config, applied)
 }
 
-/// Returns the merged config and whether the page set `dns.ipv6`.
-async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapping, bool) {
+/// Returns the merged config and the non-empty fields owned by the DNS page.
+async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapping, Mapping) {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
@@ -866,7 +870,7 @@ async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapp
         }
     }
 
-    (config, false)
+    (config, Mapping::new())
 }
 
 /// Returns the enhanced profile, its original keys, script logs, and DNS override decision.
@@ -929,9 +933,9 @@ pub async fn enhance(
 
     let config = apply_builtin_scripts(config, clash_core, enable_builtin);
     let config = use_tun(config, enable_tun);
-    let (config, owns_dns_ipv6) = apply_dns_settings(config, enable_dns_settings).await;
+    let (config, dns_settings) = apply_dns_settings(config, enable_dns_settings).await;
 
-    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, owns_dns_ipv6);
+    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
 
     let (config, exists_keys, result_map) = process_global_items(
         config,
@@ -1357,7 +1361,7 @@ mod authoritative_field_tests {
     #[test]
     fn an_override_cannot_change_a_field_the_app_owns() {
         let derived = config_with(&[("mode", Value::from("rule")), ("secret", Value::from("ours"))]);
-        let authoritative = AuthoritativeFields::capture(&derived, &[], false);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], Mapping::new());
 
         let overridden = config_with(&[("mode", Value::from("global")), ("secret", Value::from("theirs"))]);
         let result = authoritative.enforce(overridden);
@@ -1370,7 +1374,7 @@ mod authoritative_field_tests {
     fn an_override_cannot_introduce_a_field_the_app_left_out() {
         // The app decided not to expose the external controller; a profile must not re-add it.
         let derived = Mapping::new();
-        let authoritative = AuthoritativeFields::capture(&derived, &[], false);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], Mapping::new());
 
         let overridden = config_with(&[("external-controller", Value::from("0.0.0.0:9090"))]);
         let result = authoritative.enforce(overridden);
@@ -1381,7 +1385,7 @@ mod authoritative_field_tests {
     #[test]
     fn fields_the_app_does_not_own_survive_an_override() {
         let derived = config_with(&[("mode", Value::from("rule"))]);
-        let authoritative = AuthoritativeFields::capture(&derived, &[], false);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], Mapping::new());
 
         let overridden = config_with(&[("mode", Value::from("global")), ("profile-key", Value::from(1))]);
         let result = authoritative.enforce(overridden);
@@ -1393,7 +1397,7 @@ mod authoritative_field_tests {
     fn dns_ipv6_is_only_reclaimed_when_the_dns_page_owns_it() {
         let derived = config_with(&[("dns", dns_with_ipv6(true))]);
 
-        let owned = AuthoritativeFields::capture(&derived, &[], true);
+        let owned = AuthoritativeFields::capture(&derived, &[], derived.clone());
         let restored = owned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
         assert_eq!(
             restored.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
@@ -1401,7 +1405,7 @@ mod authoritative_field_tests {
             "with the DNS page on, the app's value wins"
         );
 
-        let unowned = AuthoritativeFields::capture(&derived, &[], false);
+        let unowned = AuthoritativeFields::capture(&derived, &[], Mapping::new());
         let left_alone = unowned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
         assert_eq!(
             left_alone.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
@@ -1411,14 +1415,13 @@ mod authoritative_field_tests {
     }
 
     #[test]
-    fn restoring_dns_ipv6_never_invents_a_dns_block() {
+    fn restoring_dns_settings_reinstates_a_removed_dns_block() {
         let derived = config_with(&[("dns", dns_with_ipv6(true))]);
-        let authoritative = AuthoritativeFields::capture(&derived, &[], true);
+        let authoritative = AuthoritativeFields::capture(&derived, &[], derived.clone());
 
-        // An override removed DNS entirely; reinstating just `ipv6` would be a half-config.
         let result = authoritative.enforce(Mapping::new());
 
-        assert!(!result.contains_key(Value::from("dns")));
+        assert_eq!(result["dns"], derived["dns"]);
     }
 }
 
@@ -1426,8 +1429,8 @@ mod authoritative_field_tests {
 #[cfg(test)]
 mod tests {
     use super::{
-        AuthoritativeFields, ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
-        process_profile_items, use_keys,
+        AuthoritativeFields, ChainItem, ChainType, Mapping, cleanup_proxy_groups, ensure_lan_bind_address,
+        process_global_items, process_profile_items, use_keys,
     };
     use std::collections::HashMap;
 
@@ -1435,35 +1438,86 @@ mod tests {
         serde_yaml_ng::from_str(yaml).expect("test config should be valid")
     }
 
-    #[test]
-    fn merge_replaces_dns_fields_with_or_without_dns_settings() {
+    #[tokio::test]
+    async fn dns_settings_override_only_filled_fields_after_merge_and_script() {
         let profile = mapping(
             "dns: {nameserver: [9.9.9.9], nameserver-policy: {profile.example: 9.9.9.9}}\n\
              hosts: {profile.example: 192.0.2.1}",
         );
         let settings = mapping(
-            "dns: {ipv6: true, nameserver: [8.8.8.8], nameserver-policy: {settings.example: 8.8.8.8}}\n\
+            "dns: {ipv6: true, nameserver: [8.8.8.8], nameserver-policy: {settings.example: 8.8.8.8},\n\
+             proxy-server-nameserver: [], fallback: null, listen: '  '}\n\
              hosts: {settings.example: 192.0.2.2}",
         );
         let merge = mapping(
             "dns: {ipv6: false, nameserver-policy: {merge.example: 1.1.1.1}}\n\
              hosts: {merge.example: 192.0.2.3}",
         );
+        let script = r#"function main(config) {
+            config.dns = {
+                ipv6: false,
+                nameserver: ["4.4.4.4"],
+                "nameserver-policy": {"script.example": "4.4.4.4"},
+                "proxy-server-nameserver": ["4.4.4.4"],
+                fallback: ["4.4.4.4"],
+                listen: "127.0.0.1:1053"
+            };
+            config.hosts = {"script.example": "192.0.2.4"};
+            return config;
+        }"#;
 
         for enabled in [false, true] {
-            let (config, owns_ipv6) = if enabled {
+            let (config, dns_settings) = if enabled {
                 super::merge_dns_config(profile.clone(), settings.clone())
             } else {
-                (profile.clone(), false)
+                (profile.clone(), Mapping::new())
             };
-            let authoritative = AuthoritativeFields::capture(&config, &[], owns_ipv6);
-            let result = authoritative.enforce(super::use_merge(&merge, config));
+            let authoritative = AuthoritativeFields::capture(&config, &[], dns_settings);
+            let merge_item = |uid: &str| ChainItem {
+                uid: uid.into(),
+                data: ChainType::Merge(merge.clone()),
+            };
+            let profile_name = "test-profile".into();
+            let (config, keys, logs) = process_global_items(
+                config,
+                vec![],
+                HashMap::new(),
+                merge_item("global-merge"),
+                ChainItem::to_script("global-script", script),
+                &profile_name,
+                &authoritative,
+            )
+            .await;
+            let (config, _, logs) = process_profile_items(
+                config,
+                keys,
+                logs,
+                merge_item("profile-merge"),
+                ChainItem::to_script("profile-script", script),
+                &profile_name,
+                &authoritative,
+            )
+            .await;
+            let manual = config.clone();
+            let result = authoritative.enforce(config);
 
-            assert_eq!(result["dns"]["nameserver-policy"], merge["dns"]["nameserver-policy"]);
-            assert_eq!(result["hosts"], merge["hosts"]);
-            let source = if enabled { &settings } else { &profile };
+            let source = if enabled { &settings } else { &manual };
+            assert_eq!(result["dns"]["nameserver-policy"], source["dns"]["nameserver-policy"]);
+            assert_eq!(result["hosts"], source["hosts"]);
             assert_eq!(result["dns"]["nameserver"], source["dns"]["nameserver"]);
             assert_eq!(result["dns"]["ipv6"], serde_yaml_ng::Value::from(enabled));
+            for key in ["proxy-server-nameserver", "fallback", "listen"] {
+                assert_eq!(result["dns"][key], manual["dns"][key]);
+            }
+            if enabled {
+                for uid in ["global-merge", "global-script", "profile-merge", "profile-script"] {
+                    assert!(
+                        logs[uid]
+                            .iter()
+                            .any(|(_, message)| message.contains("dns.nameserver-policy"))
+                    );
+                }
+            }
         }
     }
 
@@ -1511,7 +1565,7 @@ mod tests {
         );
 
         let profile_name = "test-profile".into();
-        let authoritative = AuthoritativeFields::capture(&config, &[], false);
+        let authoritative = AuthoritativeFields::capture(&config, &[], Mapping::new());
         let (config, exists_keys, result_map) = process_global_items(
             config,
             exists_keys,
@@ -1667,19 +1721,21 @@ mod tests {
     }
 
     #[test]
-    fn dns_ipv6_follows_ui_but_other_dns_stays_overridable() {
+    fn empty_dns_settings_leave_inherited_fields_overridable() {
         let app_config = mapping(r#"{dns: {ipv6: false, proxy-server-nameserver: ["1.1.1.1"]}}"#);
-        let dns_ipv6 = super::snapshot_dns_ipv6(&app_config);
+        let (config, dns_settings) =
+            super::merge_dns_config(app_config, mapping("dns: {ipv6: false, proxy-server-nameserver: []}"));
+        let authoritative = AuthoritativeFields::capture(&config, &[], dns_settings);
 
         let hijacked = mapping(r#"{dns: {ipv6: true, proxy-server-nameserver: ["8.8.8.8"]}}"#);
-        let result = super::enforce_dns_ipv6(hijacked, dns_ipv6);
+        let result = authoritative.enforce(hijacked);
 
         assert_eq!(
             result
                 .get("dns")
                 .and_then(|value| value.get("ipv6"))
                 .and_then(serde_yaml_ng::Value::as_bool),
-            Some(false)
+            Some(true)
         );
         assert_eq!(
             result

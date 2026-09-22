@@ -33,6 +33,7 @@ type EditorLanguage = 'yaml' | 'javascript' | 'css'
 export interface EditorViewerProps {
   open: boolean
   title?: string | ReactNode
+  description?: ReactNode
   value: string
   language: EditorLanguage
   path: string
@@ -50,6 +51,7 @@ export interface EditorViewerProps {
 export const EditorViewer = ({
   open,
   title,
+  description,
   value,
   language,
   path,
@@ -207,6 +209,7 @@ export const EditorViewer = ({
           overflow: 'hidden',
         }}
       >
+        {description}
         <div style={{ position: 'relative', flex: '1 1 auto', minHeight: 0 }}>
           <BaseLoadingOverlay isLoading={loading} />
           {!loading && (

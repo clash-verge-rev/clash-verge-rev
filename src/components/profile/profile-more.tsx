@@ -17,6 +17,7 @@ import { useEditorDocument } from '@/hooks/use-editor-document'
 import { viewProfile, readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
+import { EnhanceHint } from './enhance-hint'
 import { LogViewer } from './log-viewer'
 import { ProfileBox } from './profile-box'
 
@@ -213,6 +214,11 @@ export const ProfileMore = (props: Props) => {
         <EditorViewer
           open={true}
           title={t(globalTitles[id])}
+          description={
+            <EnhanceHint
+              stage={id === 'Merge' ? 'globalMerge' : 'globalScript'}
+            />
+          }
           value={document.value}
           language={id === 'Merge' ? 'yaml' : 'javascript'}
           path={`profile-more:${id}.${id === 'Merge' ? 'yaml' : 'js'}`}

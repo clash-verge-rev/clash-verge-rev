@@ -47,6 +47,7 @@ import { isValidUrl } from '@/utils/network'
 import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
+import { EnhanceHint } from './enhance-hint'
 import { ProfileBox } from './profile-box'
 import { ProxiesEditorViewer } from './proxies-editor-viewer'
 import { QrViewer } from './qr-viewer'
@@ -910,6 +911,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       {mergeOpen && (
         <EditorViewer
           open={true}
+          title={t('profiles.components.menu.extendConfig')}
+          description={<EnhanceHint stage="profileMerge" />}
           value={mergeDocument.value}
           language="yaml"
           path={`merge:${option?.merge ?? ''}.yaml`}
@@ -923,6 +926,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       {scriptOpen && (
         <EditorViewer
           open={true}
+          title={t('profiles.components.menu.extendScript')}
+          description={<EnhanceHint stage="profileScript" />}
           value={scriptDocument.value}
           language="javascript"
           path={`script:${option?.script ?? ''}.js`}
