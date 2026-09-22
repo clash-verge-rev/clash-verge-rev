@@ -1433,6 +1433,38 @@ mod tests {
         serde_yaml_ng::from_str(yaml).expect("test config should be valid")
     }
 
+    #[test]
+    fn merge_replaces_dns_fields_with_or_without_dns_settings() {
+        let profile = mapping(
+            "dns: {nameserver: [9.9.9.9], nameserver-policy: {profile.example: 9.9.9.9}}\n\
+             hosts: {profile.example: 192.0.2.1}",
+        );
+        let settings = mapping(
+            "dns: {ipv6: true, nameserver: [8.8.8.8], nameserver-policy: {settings.example: 8.8.8.8}}\n\
+             hosts: {settings.example: 192.0.2.2}",
+        );
+        let merge = mapping(
+            "dns: {ipv6: false, nameserver-policy: {merge.example: 1.1.1.1}}\n\
+             hosts: {merge.example: 192.0.2.3}",
+        );
+
+        for enabled in [false, true] {
+            let (config, owns_ipv6) = if enabled {
+                super::merge_dns_config(profile.clone(), settings.clone())
+            } else {
+                (profile.clone(), false)
+            };
+            let authoritative = AuthoritativeFields::capture(&config, &[], owns_ipv6);
+            let result = authoritative.enforce(super::use_merge(&merge, config));
+
+            assert_eq!(result["dns"]["nameserver-policy"], merge["dns"]["nameserver-policy"]);
+            assert_eq!(result["hosts"], merge["hosts"]);
+            let source = if enabled { &settings } else { &profile };
+            assert_eq!(result["dns"]["nameserver"], source["dns"]["nameserver"]);
+            assert_eq!(result["dns"]["ipv6"], serde_yaml_ng::Value::from(enabled));
+        }
+    }
+
     #[tokio::test]
     async fn manual_overrides_follow_expected_priority() {
         let mut config = mapping(
