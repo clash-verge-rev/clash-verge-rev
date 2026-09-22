@@ -19,15 +19,6 @@ export const developmentServiceWatchPaths = [
   'Cargo.lock',
 ].map((name) => join(serviceRepository, name))
 
-function executable(name, platform) {
-  return join(
-    serviceRepository,
-    'target',
-    'debug',
-    platform === 'win32' ? `${name}.exe` : name,
-  )
-}
-
 function run(command, args, options = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(command, args, {
@@ -35,10 +26,15 @@ function run(command, args, options = {}) {
       stdio: options.stdio ?? 'inherit',
       windowsHide: true,
     })
+    let stdout = ''
+    child.stdout?.setEncoding('utf8')
+    child.stdout?.on('data', (chunk) => {
+      stdout += chunk
+    })
     child.once('error', reject)
-    child.once('exit', (code, signal) => {
+    child.once('close', (code, signal) => {
       if (code === 0) {
-        resolvePromise()
+        resolvePromise(stdout)
         return
       }
       const error = new Error(
@@ -50,28 +46,64 @@ function run(command, args, options = {}) {
   })
 }
 
-export async function prepareDevelopmentService({
-  platform = process.platform,
-} = {}) {
+export async function prepareDevelopmentService() {
   await access(serviceManifest)
-  await run('cargo', [
-    'build',
-    '--manifest-path',
-    serviceManifest,
-    '--features',
-    'standalone,client,development-channel',
-    '--bins',
-  ])
+  const output = await run(
+    'cargo',
+    [
+      'build',
+      '--manifest-path',
+      serviceManifest,
+      '--target-dir',
+      process.env.CARGO_TARGET_DIR ||
+        join(serviceRepository, 'target', 'development'),
+      '--features',
+      'standalone,client,development-channel',
+      '--bins',
+      '--message-format=json-render-diagnostics',
+    ],
+    { stdio: ['inherit', 'pipe', 'inherit'] },
+  )
 
-  const service = executable('clash-verge-service', platform)
-  await access(service)
-  return dirname(service)
+  const artifacts = new Map()
+  for (const line of output.split(/\r?\n/).filter(Boolean)) {
+    const artifact = JSON.parse(line)
+    if (
+      artifact.reason === 'compiler-artifact' &&
+      resolve(artifact.manifest_path) === serviceManifest &&
+      artifact.target.kind.includes('bin') &&
+      artifact.executable
+    ) {
+      artifacts.set(artifact.target.name, resolve(artifact.executable))
+    }
+  }
+  const executables = [
+    'clash-verge-service',
+    'clash-verge-service-install',
+    'clash-verge-service-uninstall',
+    'service-integration-driver',
+  ].map((name) => {
+    const executable = artifacts.get(name)
+    if (!executable)
+      throw new Error(`Cargo did not report the ${name} executable`)
+    return executable
+  })
+  const serviceDirectory = dirname(executables[0])
+  for (const executable of executables) {
+    if (dirname(executable) !== serviceDirectory) {
+      throw new Error(
+        'Development service tools were built in different directories',
+      )
+    }
+    await access(executable)
+  }
+  return serviceDirectory
 }
 
 export async function ensureDevelopmentService({
   platform = process.platform,
 } = {}) {
-  const serviceDirectory = await prepareDevelopmentService({ platform })
+  const serviceDirectory = await prepareDevelopmentService()
   const extension = platform === 'win32' ? '.exe' : ''
   const installer = join(
     serviceDirectory,
