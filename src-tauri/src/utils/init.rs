@@ -330,6 +330,19 @@ async fn migrate_legacy_macos_logs() -> Result<()> {
     Ok(())
 }
 
+fn default_dns_nameserver_policy() -> serde_yaml_ng::Mapping {
+    serde_yaml_ng::Mapping::from_iter([
+        ("+.local".into(), serde_yaml_ng::Value::String("system".into())),
+        ("+.lan".into(), serde_yaml_ng::Value::String("system".into())),
+    ])
+}
+
+fn apply_default_dns_nameserver_policy(policy: &mut serde_yaml_ng::Mapping) {
+    for (key, value) in default_dns_nameserver_policy() {
+        policy.entry(key).or_insert(value);
+    }
+}
+
 pub(super) async fn init_dns_config() -> Result<()> {
     use serde_yaml_ng::Value;
 
@@ -382,7 +395,7 @@ pub(super) async fn init_dns_config() -> Result<()> {
         ("fallback".into(), Value::Sequence(vec![])),
         (
             "nameserver-policy".into(),
-            Value::Mapping(serde_yaml_ng::Mapping::new()),
+            Value::Mapping(default_dns_nameserver_policy()),
         ),
         ("proxy-server-nameserver".into(), Value::Sequence(vec![])),
         ("direct-nameserver".into(), Value::Sequence(vec![])),
@@ -422,6 +435,50 @@ pub(super) async fn init_dns_config() -> Result<()> {
     if !dns_path.exists() {
         logging!(info, Type::Setup, "Creating default DNS config file");
         help::save_yaml(&dns_path, &default_dns_config, Some("# Clash Verge DNS Config")).await?;
+        return Ok(());
+    }
+
+    if let Ok(dns_yaml) = fs::read_to_string(&dns_path).await
+        && let Ok(mut config) = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
+    {
+        let Some(Value::Mapping(dns)) = config.get_mut("dns") else {
+            logging!(
+                info,
+                Type::Setup,
+                "DNS file missing dns root, restoring default settings"
+            );
+            help::save_yaml(&dns_path, &default_dns_config, Some("# Clash Verge DNS Config")).await?;
+            return Ok(());
+        };
+
+        let before = dns
+            .get("nameserver-policy")
+            .and_then(Value::as_mapping)
+            .map_or(0, serde_yaml_ng::Mapping::len);
+        match dns.get_mut("nameserver-policy") {
+            Some(Value::Mapping(policy)) => {
+                apply_default_dns_nameserver_policy(policy);
+            }
+            _ => {
+                dns.insert(
+                    "nameserver-policy".into(),
+                    Value::Mapping(default_dns_nameserver_policy()),
+                );
+            }
+        }
+
+        let after = dns
+            .get("nameserver-policy")
+            .and_then(Value::as_mapping)
+            .map_or(0, serde_yaml_ng::Mapping::len);
+        if after > before {
+            logging!(
+                info,
+                Type::Setup,
+                "Added default local-domain DNS policy to existing config"
+            );
+            help::save_yaml(&dns_path, &config, Some("# Clash Verge DNS Config")).await?;
+        }
     }
 
     Ok(())
@@ -650,4 +707,43 @@ async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
             );
         }
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_dns_config_routes_local_names_to_system() {
+        let policy = default_dns_nameserver_policy();
+        assert_eq!(
+            policy.get("+.local").and_then(serde_yaml_ng::Value::as_str),
+            Some("system")
+        );
+        assert_eq!(
+            policy.get("+.lan").and_then(serde_yaml_ng::Value::as_str),
+            Some("system")
+        );
+    }
+
+    #[test]
+    fn apply_default_dns_nameserver_policy_preserves_custom_entries() {
+        let mut policy = serde_yaml_ng::Mapping::from_iter([(
+            "+.example.com".into(),
+            serde_yaml_ng::Value::String("8.8.8.8".into()),
+        )]);
+        apply_default_dns_nameserver_policy(&mut policy);
+        assert_eq!(
+            policy.get("+.example.com").and_then(serde_yaml_ng::Value::as_str),
+            Some("8.8.8.8")
+        );
+        assert_eq!(
+            policy.get("+.local").and_then(serde_yaml_ng::Value::as_str),
+            Some("system")
+        );
+        assert_eq!(
+            policy.get("+.lan").and_then(serde_yaml_ng::Value::as_str),
+            Some("system")
+        );
+    }
 }
