@@ -124,7 +124,11 @@
         "useSystemProxy": "استخدام وكيل النظام",
         "useClashProxy": "استخدام وكيل Clash",
         "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "السماح بتجاوز DNS"
+      },
+      "helpers": {
+        "allowDnsOverride": "السماح لإعدادات DNS في التطبيق بتجاوز إعدادات DNS لملف التعريف هذا. يظل الإذن ساريًا بعد إعادة تشغيل التطبيق وتحديث الاشتراك. تفعيل هذا الخيار وحفظه يُفعّل أيضًا تجاوز DNS لهذا الملف."
       },
       "types": {
         "remote": "بعيد",

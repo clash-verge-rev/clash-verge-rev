@@ -247,6 +247,7 @@ interface IProfileOption {
   timeout_seconds?: number
   danger_accept_invalid_certs?: boolean
   allow_auto_update?: boolean
+  allow_dns_override?: boolean
   merge?: string
   script?: string
   rules?: string

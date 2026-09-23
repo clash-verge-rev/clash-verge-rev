@@ -89,6 +89,15 @@ macro_rules! patch {
     };
 }
 
+fn merge_remote_options(current: Option<&PrfOption>, downloaded: Option<&PrfOption>) -> Option<PrfOption> {
+    let mut merged = PrfOption::merge(current, downloaded);
+    if let Some(option) = merged.as_mut() {
+        // A download may finish after the user changes this local permission.
+        option.allow_dns_override = current.and_then(|option| option.allow_dns_override);
+    }
+    merged
+}
+
 impl IProfiles {
     fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<&str>) -> Option<String> {
         let index = items.iter().position(|item| item.uid.as_deref() == target_uid)?;
@@ -230,7 +239,7 @@ impl IProfiles {
         self.save_file().await
     }
 
-    async fn patch_item(&mut self, uid: &str, item: &PrfItem) -> Result<()> {
+    pub(crate) fn patch_item(&mut self, uid: &str, item: &PrfItem) -> Result<()> {
         if let Some(file) = &item.file {
             Self::validate_profile_file(file)?;
         }
@@ -250,7 +259,7 @@ impl IProfiles {
                 patch!(each, item, option);
 
                 self.items = Some(items);
-                return self.save_file().await;
+                return Ok(());
             }
         }
 
@@ -288,7 +297,7 @@ impl IProfiles {
                     each.extra = item.extra;
                     each.updated = item.updated;
                     each.home = item.home.to_owned();
-                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
+                    each.option = merge_remote_options(each.option.as_ref(), item.option.as_ref());
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
@@ -424,16 +433,6 @@ pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, it
     profiles
         .with_data_modify(|mut profiles| async move {
             profiles.append_item(item).await?;
-            Ok((profiles, ()))
-        })
-        .await
-}
-
-pub(crate) async fn profiles_patch_item_safe(index: &str, item: &PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            profiles.patch_item(index, item).await?;
             Ok((profiles, ()))
         })
         .await
@@ -1084,6 +1083,27 @@ mod tests {
                 ..PrfOption::default()
             }),
             ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn remote_update_keeps_dns_permission_changes_made_during_download() {
+        for permission in [Some(true), Some(false), None] {
+            let current = PrfOption {
+                allow_dns_override: permission,
+                with_proxy: Some(true),
+                update_interval: Some(60),
+                ..PrfOption::default()
+            };
+            let downloaded = PrfOption {
+                allow_dns_override: Some(!permission.unwrap_or(false)),
+                update_interval: Some(120),
+                ..PrfOption::default()
+            };
+            let merged = merge_remote_options(Some(&current), Some(&downloaded));
+            assert_eq!(merged.as_ref().and_then(|option| option.allow_dns_override), permission);
+            assert_eq!(merged.as_ref().and_then(|option| option.update_interval), Some(120));
+            assert_eq!(merged.as_ref().and_then(|option| option.with_proxy), Some(true));
         }
     }
 

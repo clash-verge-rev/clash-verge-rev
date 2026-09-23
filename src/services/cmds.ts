@@ -76,7 +76,7 @@ export async function patchProfile(
   index: string,
   profile: Partial<IProfileItem>,
 ) {
-  return invoke<void>('patch_profile', { index, profile })
+  return invoke<boolean>('patch_profile', { index, profile })
 }
 
 export async function getClashInfo() {

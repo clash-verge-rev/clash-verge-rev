@@ -124,7 +124,11 @@
         "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
         "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "DNS-Überschreibung erlauben"
+      },
+      "helpers": {
+        "allowDnsOverride": "Erlaubt, die DNS-Einstellungen dieses Profils durch die DNS-Einstellungen der App zu überschreiben, auch nach App-Neustarts und Abonnement-Updates. Wenn Sie diese Option einschalten und speichern, wird auch die DNS-Überschreibung für dieses Profil aktiviert."
       },
       "types": {
         "remote": "Remote",

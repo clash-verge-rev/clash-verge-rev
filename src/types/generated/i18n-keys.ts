@@ -230,6 +230,8 @@ export const translationKeys = [
   'profiles.modals.profileForm.fields.useClashProxy',
   'profiles.modals.profileForm.fields.acceptInvalidCerts',
   'profiles.modals.profileForm.fields.allowAutoUpdate',
+  'profiles.modals.profileForm.fields.allowDnsOverride',
+  'profiles.modals.profileForm.helpers.allowDnsOverride',
   'profiles.modals.profileForm.types.remote',
   'profiles.modals.profileForm.types.local',
   'profiles.modals.profileForm.errors.typeRequired',

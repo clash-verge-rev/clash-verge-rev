@@ -124,7 +124,11 @@
         "useSystemProxy": "システムプロキシを使用して更新",
         "useClashProxy": "クラッシュプロキシを使用して更新",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "DNS上書きを許可"
+      },
+      "helpers": {
+        "allowDnsOverride": "アプリのDNS設定でこのプロファイルのDNS設定を上書きすることを許可します。許可はアプリの再起動やサブスクリプションの更新後も保持されます。このオプションをオンにして保存すると、このプロファイルのDNS上書きも有効になります。"
       },
       "types": {
         "remote": "リモート",

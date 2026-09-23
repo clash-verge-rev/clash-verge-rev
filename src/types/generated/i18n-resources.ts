@@ -386,6 +386,7 @@ export interface TranslationResources {
           fields: {
             acceptInvalidCerts: string
             allowAutoUpdate: string
+            allowDnsOverride: string
             description: string
             httpTimeout: string
             subscriptionUrl: string
@@ -394,6 +395,9 @@ export interface TranslationResources {
             useClashProxy: string
             userAgent: string
             useSystemProxy: string
+          }
+          helpers: {
+            allowDnsOverride: string
           }
           title: {
             create: string

@@ -105,7 +105,7 @@ async fn chain_item_or_default(item: Option<&PrfItem>, default_item: impl FnOnce
     }
 }
 
-async fn get_config_values(profile_uid: &str) -> ConfigValues {
+async fn get_config_values(profile_uid: &str, allow_dns_override: bool) -> ConfigValues {
     let clash = Config::clash().await;
     let clash_arc = clash.latest_arc();
     let clash_config = clash_arc.0.clone();
@@ -124,7 +124,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
         ..
     } = **verge_arc;
     let enable_external_controller = enable_external_controller.unwrap_or(false);
-    let dns_settings = verge_arc.dns_settings_for(profile_uid);
+    let dns_settings = verge_arc.dns_settings_for(profile_uid, allow_dns_override);
     let dns_override_confirmation = dns_settings.confirmation;
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
@@ -878,7 +878,8 @@ pub async fn enhance(
     profiles: &IProfiles,
 ) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>, DnsOverrideState)> {
     let profile_uid = profiles.current.as_deref().unwrap_or_default();
-    let cfg_vals = get_config_values(profile_uid).await;
+    let allow_dns_override = profiles.get_item(profile_uid).is_ok_and(PrfItem::allows_dns_override);
+    let cfg_vals = get_config_values(profile_uid, allow_dns_override).await;
     let ConfigValues {
         clash_config,
         clash_core,
@@ -901,6 +902,7 @@ pub async fn enhance(
         dns_override_source(profile_uid, &profile.config)?,
         enable_dns_settings,
         dns_override_confirmation,
+        allow_dns_override,
     );
     let enable_dns_settings = dns_override.enabled;
     let config = profile.config;

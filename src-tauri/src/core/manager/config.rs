@@ -183,11 +183,13 @@ impl CoreManager {
         self.perform_config_update(None).await
     }
 
+    /// Restore other staged settings before regenerating the previous profile on failure.
     #[tracing::instrument(skip_all, level = "info", fields(profile = ?candidate.current, outcome = tracing::field::Empty))]
     pub(crate) async fn update_config_forced_with_profiles(
         &self,
         candidate: &IProfiles,
         rollback: &IProfiles,
+        before_rollback: impl Fn() + Send,
     ) -> Result<std::result::Result<ConfigUpdateGuard<'_>, ValidationOutcome>> {
         if handle::Handle::global().is_exiting() {
             return Ok(Err(ValidationOutcome::Skipped {
@@ -208,6 +210,7 @@ impl CoreManager {
             Ok(outcome) => outcome,
             Err(error) => {
                 tracing::Span::current().record("outcome", "rolled_back");
+                before_rollback();
                 self.restore_profile_config(rollback).await?;
                 return Err(error);
             }
@@ -224,6 +227,7 @@ impl CoreManager {
             }
             Err(error) => {
                 tracing::Span::current().record("outcome", "save_rolled_back");
+                before_rollback();
                 self.restore_profile_config(rollback).await?;
                 Err(error)
             }
