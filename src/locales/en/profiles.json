@@ -203,7 +203,7 @@
         "globalScript": "Applies to all profiles, using the result of the global config merge. The profile config and profile script can still change the result.",
         "profileMerge": "Applies only to this profile, after the global config and global script. The profile script can still change the result.",
         "profileScript": "Applies only to this profile, using the result of the profile config merge. This is the last extension step before app settings are reapplied.",
-        "order": "Order: Original profile → App settings → Global extend config → Global extend script → Profile extend config → Profile extend script → App settings reapplied",
+        "order": "Order: Original profile → App settings → <globalMerge>Global extend config</globalMerge> → <globalScript>Global extend script</globalScript> → <profileMerge>Profile extend config</profileMerge> → <profileScript>Profile extend script</profileScript> → App settings reapplied",
         "settingsPriority": "Note: Fields managed by app settings always use those settings in the final config. Changing these fields in extensions has no effect."
       }
     },

@@ -203,7 +203,7 @@
         "globalScript": "對所有訂閱生效，接收全域擴充設定合併後的結果；後續的訂閱擴充設定和訂閱腳本仍可修改結果。",
         "profileMerge": "僅對目前訂閱生效，在全域擴充設定和全域腳本之後合併；後續的訂閱腳本仍可修改結果。",
         "profileScript": "僅對目前訂閱生效，接收訂閱擴充設定合併後的結果，是應用程式設定回寫前的最後一個擴充步驟。",
-        "order": "執行順序：訂閱原文 → 應用程式設定 → 全域擴充設定 → 全域擴充腳本 → 訂閱擴充設定 → 訂閱擴充腳本 → 應用程式設定回寫",
+        "order": "執行順序：訂閱原文 → 應用程式設定 → <globalMerge>全域擴充設定</globalMerge> → <globalScript>全域擴充腳本</globalScript> → <profileMerge>訂閱擴充設定</profileMerge> → <profileScript>訂閱擴充腳本</profileScript> → 應用程式設定回寫",
         "settingsPriority": "注意：由應用程式設定接管的欄位最終以應用程式設定為準，在擴充設定或腳本中修改這些欄位不會生效。"
       }
     },
