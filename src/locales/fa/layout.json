@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "سرویس نمی‌تواند هسته را اجرا کند، زیرا مسیر نصب یا مجوزهای پوشه در بررسی امنیتی تأیید نشده‌اند. برای بازیابی فایل‌ها و مجوزها، سرویس را دوباره نصب و سپس مجدداً تلاش کنید. ممکن است ویندوز تأیید مدیر را درخواست کند.",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

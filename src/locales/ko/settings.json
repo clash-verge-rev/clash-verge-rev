@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS 덮어쓰기",
+        "profileScope": "DNS 덮어쓰기 스위치 상태는 프로필별로 저장되며 해당 프로필에만 적용됩니다.",
         "warning": "이 설정에 익숙하지 않다면 수정하지 말고 DNS 덮어쓰기를 비활성화 상태로 유지하세요"
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "서비스가 설치되었습니다",
-        "sidecarFallback": "경로 권한 문제로 서비스가 코어를 시작하지 못해 관리자 모드로 전환하여 계속 실행합니다.",
+        "sidecarFallback": "서비스가 코어를 시작하지 못해 Sidecar 모드로 계속 실행합니다. 서비스는 여전히 사용할 수 없습니다.",
         "uninstallSuccess": "서비스가 제거되었습니다"
       },
       "updater": {

@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Üzerine Yazma",
+        "profileScope": "DNS geçersiz kılma anahtarının durumu her profil için ayrı kaydedilir ve yalnızca o profile uygulanır.",
         "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Hizmet Başarıyla Kuruldu",
-        "sidecarFallback": "Hizmet, yol izinleri nedeniyle çekirdeği başlatamadı. Çalışmaya devam etmek için yönetici moduna geçildi.",
+        "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },
       "updater": {

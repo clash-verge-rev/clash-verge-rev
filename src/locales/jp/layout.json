@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "サービスのインストール先またはフォルダーのアクセス許可がセキュリティチェックに合格しなかったため、コアを起動できません。サービスを再インストールしてファイルとアクセス許可を復元し、再試行してください。Windows が管理者の承認を求める場合があります。",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Erweiterungen haben {{keys}} gesetzt, die von den Einstellungen verwaltet werden, daher wurden diese Werte verworfen",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "Bearbeitung im schreibgeschützten Modus nicht möglich"
+      },
+      "enhance": {
+        "globalMerge": "Gilt für alle Profile, nach den App-Einstellungen. Das globale Skript, die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "globalScript": "Gilt für alle Profile und verwendet das Ergebnis der globalen Konfiguration. Die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "profileMerge": "Gilt nur für dieses Profil, nach der globalen Konfiguration und dem globalen Skript. Das Profilskript kann das Ergebnis noch ändern.",
+        "profileScript": "Gilt nur für dieses Profil und verwendet das Ergebnis der Profilkonfiguration. Dies ist der letzte Erweiterungsschritt vor dem erneuten Anwenden der App-Einstellungen.",
+        "order": "Reihenfolge: Originalprofil → App-Einstellungen → <globalMerge>Globale Erweiterungskonfiguration</globalMerge> → <globalScript>Globales Erweiterungsskript</globalScript> → <profileMerge>Profilerweiterungskonfiguration</profileMerge> → <profileScript>Profilerweiterungsskript</profileScript> → App-Einstellungen erneut anwenden",
+        "settingsPriority": "Hinweis: Von den App-Einstellungen verwaltete Felder übernehmen in der endgültigen Konfiguration immer deren Werte. Änderungen dieser Felder in Erweiterungen haben keine Wirkung."
       }
     },
     "confirmDelete": {

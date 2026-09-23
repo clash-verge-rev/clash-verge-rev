@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "The service cannot start the core because its installation path or directory permissions failed a security check. Reinstall the service to restore its files and permissions, then try again. Windows may ask for administrator approval.",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

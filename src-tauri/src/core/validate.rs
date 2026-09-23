@@ -226,7 +226,7 @@ impl CoreConfigValidator {
             Ok(content) => content,
             Err(err) => {
                 let error_msg: String = format!("Failed to read file: {err}").into();
-                logging!(error, Type::Validate, "无法读取文件: {}", error_msg);
+                logging!(error, Type::Validate, "Failed to read file {config_path}: {err}");
                 return Ok(ValidationOutcome::invalid_from_message(error_msg));
             }
         };
@@ -238,7 +238,7 @@ impl CoreConfigValidator {
             }
             Err(err) => {
                 let error_msg: String = format!("YAML syntax error: {err}").into();
-                logging!(error, Type::Validate, "YAML语法错误: {}", error_msg);
+                logging!(error, Type::Validate, "YAML syntax error in {config_path}: {err}");
                 Ok(ValidationOutcome::invalid_from_message(error_msg))
             }
         }
@@ -249,7 +249,7 @@ impl CoreConfigValidator {
             Ok(content) => content,
             Err(err) => {
                 let error_msg: String = format!("Failed to read script file: {err}").into();
-                logging!(warn, Type::Validate, "脚本语法错误: {}", err);
+                logging!(warn, Type::Validate, "Failed to read script file {path}: {err}");
                 return Ok(ValidationOutcome::invalid_from_message(error_msg));
             }
         };
@@ -291,7 +291,7 @@ impl CoreConfigValidator {
             }
             Err(err) => {
                 let error_msg: String = format!("Script syntax error: {err}").into();
-                logging!(warn, Type::Validate, "脚本语法错误: {}", err);
+                logging!(warn, Type::Validate, "Script syntax error in {path}: {err}");
                 Ok(ValidationOutcome::invalid_from_message(error_msg))
             }
         }

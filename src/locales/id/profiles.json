@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Ekstensi menulis {{keys}} yang dikelola oleh Pengaturan, sehingga nilai tersebut diabaikan",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "Tidak dapat mengedit di editor hanya baca"
+      },
+      "enhance": {
+        "globalMerge": "Berlaku untuk semua profil, setelah pengaturan aplikasi. Skrip global, konfigurasi profil, dan skrip profil masih dapat mengubah hasilnya.",
+        "globalScript": "Berlaku untuk semua profil, menggunakan hasil penggabungan konfigurasi global. Konfigurasi profil dan skrip profil masih dapat mengubah hasilnya.",
+        "profileMerge": "Berlaku hanya untuk profil ini, setelah konfigurasi global dan skrip global. Skrip profil masih dapat mengubah hasilnya.",
+        "profileScript": "Berlaku hanya untuk profil ini, menggunakan hasil penggabungan konfigurasi profil. Ini adalah langkah ekstensi terakhir sebelum pengaturan aplikasi diterapkan kembali.",
+        "order": "Urutan: Profil asli → Pengaturan aplikasi → <globalMerge>Konfigurasi ekstensi global</globalMerge> → <globalScript>Skrip ekstensi global</globalScript> → <profileMerge>Konfigurasi ekstensi profil</profileMerge> → <profileScript>Skrip ekstensi profil</profileScript> → Penerapan ulang pengaturan aplikasi",
+        "settingsPriority": "Catatan: Bidang yang dikelola oleh pengaturan aplikasi selalu menggunakan nilai pengaturan tersebut dalam konfigurasi akhir. Mengubah bidang ini melalui ekstensi tidak berpengaruh."
       }
     },
     "confirmDelete": {

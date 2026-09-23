@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "Sobrescritura de DNS",
+        "profileScope": "El estado del interruptor de sobrescritura de DNS se guarda por separado para cada perfil y solo se aplica a ese perfil.",
         "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga deshabilitada la sobrescritura de DNS."
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Servicio instalado con éxito",
-        "sidecarFallback": "El servicio no pudo iniciar el núcleo debido a los permisos de la ruta. Se ha cambiado al modo administrador para continuar.",
+        "sidecarFallback": "El servicio no pudo iniciar el núcleo. Se ha cambiado al modo Sidecar; el servicio sigue sin estar disponible.",
         "uninstallSuccess": "Servicio desinstalado con éxito"
       },
       "updater": {

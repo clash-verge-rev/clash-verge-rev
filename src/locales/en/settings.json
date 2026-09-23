@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
+        "profileScope": "The DNS override switch is saved separately for each profile and applies only to that profile.",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Service Installed Successfully",
-        "sidecarFallback": "The service could not start the core due to path permissions. Switched to administrator mode to continue running.",
+        "sidecarFallback": "The service could not start the core. Switched to Sidecar mode; the service remains unavailable.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },
       "updater": {

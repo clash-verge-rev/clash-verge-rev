@@ -63,6 +63,7 @@
         "settings": "Ayarlar"
       },
       "badges": {
+        "notRunning": "Çekirdek çalışmıyor",
         "adminMode": "Yönetici Modu",
         "serviceMode": "Hizmet Modu",
         "sidecarMode": "Kullanıcı Modu",

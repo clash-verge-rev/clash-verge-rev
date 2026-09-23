@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "Layanan tidak dapat memulai inti karena jalur instalasi atau izin direktori tidak lolos pemeriksaan keamanan. Pasang ulang layanan untuk memulihkan berkas dan izinnya, lalu coba lagi. Windows mungkin meminta persetujuan administrator.",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: Akan Keluar
     body: Clash Verge akan keluar.
-  appHidden:
-    title: Aplikasi Disembunyikan
-    body: Clash Verge berjalan di latar belakang.
   updateReady:
     title: Clash Verge Update
     body: A new version (v{version}) has been downloaded and is ready to install.

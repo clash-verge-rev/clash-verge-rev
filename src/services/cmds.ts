@@ -172,10 +172,14 @@ export async function patchVergeConfig(payload: IVergeConfig) {
   return invoke<void>('patch_verge_config', { payload })
 }
 
-export async function setDnsOverride(enabled: boolean, confirmation?: string) {
+export async function setDnsOverride(
+  profileUid: string,
+  enabled: boolean,
+  confirmation?: string,
+) {
   return invoke<
     { status: 'applied' } | { status: 'confirmation_required'; source: string }
-  >('set_dns_override', { enabled, confirmation })
+  >('set_dns_override', { profileUid, enabled, confirmation })
 }
 
 export async function takeDnsOverrideNotice() {
@@ -184,6 +188,14 @@ export async function takeDnsOverrideNotice() {
 
 export async function takeServiceFallbackNotice() {
   return invoke<boolean>('take_service_fallback_notice')
+}
+
+export async function takeServiceRepairNotice() {
+  return invoke<boolean>('take_service_repair_notice')
+}
+
+export async function takeDiscardedKeysNotice() {
+  return invoke<string | null>('take_discarded_keys_notice')
 }
 
 export async function getSystemProxy() {

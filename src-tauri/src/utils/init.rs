@@ -9,7 +9,7 @@ use crate::{
         help,
     },
 };
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -28,8 +28,15 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
     ];
 
     for temp_dir in temp_dirs.iter().filter(|d| d.exists()) {
-        let mut entries = fs::read_dir(temp_dir).await?;
-        while let Some(entry) = entries.next_entry().await? {
+        let mut entries = fs::read_dir(temp_dir)
+            .await
+            .with_context(|| format!("failed to read log snapshot directory {}", temp_dir.display()))?;
+        while let Some(entry) = entries.next_entry().await.with_context(|| {
+            format!(
+                "failed to read next entry in log snapshot directory {}",
+                temp_dir.display()
+            )
+        })? {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("log") {
                 let _ = path.remove_if_exists().await;
@@ -109,15 +116,28 @@ pub async fn delete_log() -> Result<()> {
     };
 
     if log_dir.exists() {
-        let mut log_read_dir = fs::read_dir(&log_dir).await?;
-        while let Some(entry) = log_read_dir.next_entry().await? {
+        let mut log_read_dir = fs::read_dir(&log_dir)
+            .await
+            .with_context(|| format!("failed to read log directory {}", log_dir.display()))?;
+        while let Some(entry) = log_read_dir
+            .next_entry()
+            .await
+            .with_context(|| format!("failed to read next entry in log directory {}", log_dir.display()))?
+        {
             std::mem::drop(process_file(entry).await);
         }
     }
 
     if service_log_dir.exists() {
-        let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
-        while let Some(entry) = service_log_read_dir.next_entry().await? {
+        let mut service_log_read_dir = fs::read_dir(&service_log_dir)
+            .await
+            .with_context(|| format!("failed to read service log directory {}", service_log_dir.display()))?;
+        while let Some(entry) = service_log_read_dir.next_entry().await.with_context(|| {
+            format!(
+                "failed to read next entry in service log directory {}",
+                service_log_dir.display()
+            )
+        })? {
             std::mem::drop(process_file(entry).await);
         }
     }
@@ -496,7 +516,7 @@ pub async fn init_resources() -> Result<()> {
         std::mem::drop(fs::create_dir_all(&res_dir).await);
     }
 
-    let file_list = ["Country.mmdb", "geoip.dat", "geosite.dat"];
+    let file_list = ["Country.mmdb", "ASN.mmdb", "geoip.dat", "geosite.dat"];
 
     for file in file_list.iter() {
         let src_path = res_dir.join(file);
@@ -624,10 +644,9 @@ async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
             logging!(
                 error,
                 Type::Setup,
-                "failed to copy resources '{}' to '{:?}', {}",
-                file,
-                dest,
-                err
+                "failed to copy resource {} to {}: {err}",
+                src.display(),
+                dest.display()
             );
         }
     };

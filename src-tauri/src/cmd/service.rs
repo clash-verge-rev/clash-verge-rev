@@ -63,6 +63,11 @@ pub fn take_service_fallback_notice() -> bool {
 }
 
 #[tauri::command]
+pub fn take_service_repair_notice() -> bool {
+    crate::core::service::take_service_repair_notice()
+}
+
+#[tauri::command]
 pub fn sync_runtime_providers() {
     if matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
         request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SETTLE);

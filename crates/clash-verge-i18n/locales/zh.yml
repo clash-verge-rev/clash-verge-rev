@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: 即将退出
     body: Clash Verge 即将退出。
-  appHidden:
-    title: 应用已隐藏
-    body: Clash Verge 正在后台运行。
   updateReady:
     title: Clash Verge 更新
     body: 新版本 (v{version}) 已下载完成，是否立即安装？

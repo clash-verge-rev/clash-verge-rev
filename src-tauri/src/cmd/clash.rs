@@ -133,8 +133,12 @@ pub fn take_dns_override_notice() -> bool {
 }
 
 #[tauri::command]
-pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> CmdResult<feat::DnsOverrideOutcome> {
-    feat::set_dns_override(enabled, confirmation)
+pub async fn set_dns_override(
+    profile_uid: String,
+    enabled: bool,
+    confirmation: Option<String>,
+) -> CmdResult<feat::DnsOverrideOutcome> {
+    feat::set_dns_override(profile_uid, enabled, confirmation)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))
 }
@@ -145,16 +149,26 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
-            logging!(warn, Type::Config, "DNS config file not found");
+            logging!(warn, Type::Config, "DNS config file not found: {}", dns_path.display());
             return Err("DNS config file not found".into());
         }
 
         let dns_yaml = fs::read_to_string(&dns_path).await.stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to read DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to read DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to parse DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to parse DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let mut patch = serde_yaml_ng::Mapping::new();

@@ -68,8 +68,14 @@ impl ProfileDeletePlan {
             return;
         };
         for file in self.files {
-            if let Err(error) = dir.join(file.as_str()).remove_if_exists().await {
-                logging!(warn, Type::Config, "清理已删除订阅文件失败: {file} - {error}");
+            let path = dir.join(file.as_str());
+            if let Err(error) = path.remove_if_exists().await {
+                logging!(
+                    warn,
+                    Type::Config,
+                    "Failed to remove deleted profile file {}: {error:#}",
+                    path.display()
+                );
             }
         }
     }

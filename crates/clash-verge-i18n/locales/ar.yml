@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: على وشك الخروج
     body: Clash Verge على وشك الخروج.
-  appHidden:
-    title: تم إخفاء التطبيق
-    body: Clash Verge يعمل في الخلفية.
   updateReady:
     title: Clash Verge Update
     body: A new version (v{version}) has been downloaded and is ready to install.

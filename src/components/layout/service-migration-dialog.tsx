@@ -44,7 +44,24 @@ export const ServiceMigrationDialog = () => {
           ? 'install'
           : 'reinstall'
   const open = loading || workflowIncomplete || needsDecision
-  const showCheckingMessage = loading || !needsDecision
+  const checking =
+    loading ||
+    !runState ||
+    runState.opInFlight ||
+    runState.service === 'unknown'
+  const showCheckingMessage = checking || !needsDecision
+  const canContinue = Boolean(
+    runState &&
+      !stateRefreshFailed &&
+      (runState.pendingAction === 'install'
+        ? runState.mode === 'NotRunning' || runState.mode === 'Sidecar'
+        : !runState.pendingAction &&
+          !runState.sidecarAllowed &&
+          runState.mode === 'NotRunning' &&
+          (runState.service === 'notInstalled' ||
+            runState.service === 'versionMismatch' ||
+            runState.service === 'unavailable')),
+  )
 
   // One cache entry to refresh, so there is nothing left to keep coherent by hand.
   const refreshRunState = async () => {
@@ -165,8 +182,8 @@ export const ServiceMigrationDialog = () => {
             : 'layout.components.serviceMigration.reinstall',
       )}
       cancelBtn={t('layout.components.serviceMigration.continueSidecar')}
-      disableOk={loading}
-      disableCancel={loading}
+      disableOk={checking}
+      disableCancel={checking || !canContinue}
       loading={loading}
       onOk={() => void handleServiceAction()}
       onCancel={() => void handleContinue()}

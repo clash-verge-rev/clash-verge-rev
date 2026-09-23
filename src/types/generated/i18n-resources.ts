@@ -127,6 +127,7 @@ export interface TranslationResources {
           badges: {
             adminMode: string
             adminServiceMode: string
+            notRunning: string
             serviceMode: string
             sidecarMode: string
           }
@@ -224,6 +225,7 @@ export interface TranslationResources {
             sidecarFailed: string
             stateRefreshFailed: string
           }
+          locationRefusedMessage: string
           message: string
           reinstall: string
           repair: string
@@ -317,6 +319,14 @@ export interface TranslationResources {
         editor: {
           actions: {
             format: string
+          }
+          enhance: {
+            globalMerge: string
+            globalScript: string
+            order: string
+            profileMerge: string
+            profileScript: string
+            settingsPriority: string
           }
           messages: {
             readOnly: string
@@ -446,6 +456,7 @@ export interface TranslationResources {
             updateFailed: string
           }
           notices: {
+            discardedKeys: string
             emergencyRefreshFailed: string
             forceRefreshCompleted: string
           }
@@ -953,6 +964,7 @@ export interface TranslationResources {
         }
         dns: {
           dialog: {
+            profileScope: string
             title: string
             warning: string
           }

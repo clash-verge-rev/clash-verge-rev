@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Zorunlu yenileme tamamlandı",
+        "discardedKeys": "Uzantılar, Ayarlar tarafından yönetilen {{keys}} alanlarını yazdığı için bu değerler yok sayıldı",
         "emergencyRefreshFailed": "Acil yenileme başarısız oldu: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "Salt okunur düzenleyicide düzenlenemez"
+      },
+      "enhance": {
+        "globalMerge": "Uygulama ayarlarından sonra tüm profillere uygulanır. Genel betik, profil yapılandırması ve profil betiği sonucu hâlâ değiştirebilir.",
+        "globalScript": "Genel yapılandırmanın birleştirilmiş sonucunu kullanarak tüm profillere uygulanır. Profil yapılandırması ve profil betiği sonucu hâlâ değiştirebilir.",
+        "profileMerge": "Genel yapılandırma ve genel betikten sonra yalnızca bu profile uygulanır. Profil betiği sonucu hâlâ değiştirebilir.",
+        "profileScript": "Profil yapılandırmasının birleştirilmiş sonucunu kullanarak yalnızca bu profile uygulanır. Uygulama ayarları yeniden uygulanmadan önceki son genişletme adımıdır.",
+        "order": "Sıra: Özgün profil → Uygulama ayarları → <globalMerge>Genel genişletme yapılandırması</globalMerge> → <globalScript>Genel genişletme betiği</globalScript> → <profileMerge>Profil genişletme yapılandırması</profileMerge> → <profileScript>Profil genişletme betiği</profileScript> → Uygulama ayarlarının yeniden uygulanması",
+        "settingsPriority": "Not: Uygulama ayarları tarafından yönetilen alanlar, son yapılandırmada her zaman bu ayarların değerlerini kullanır. Bu alanları genişletmelerde değiştirmenin etkisi yoktur."
       }
     },
     "confirmDelete": {

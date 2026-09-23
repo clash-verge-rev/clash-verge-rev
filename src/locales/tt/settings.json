@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
+        "profileScope": "DNS көйләүләрен алыштыру күчергеченең хәле һәр профиль өчен аерым саклана һәм шул профильгә генә кагыла.",
         "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Сервис уңышлы урнаштырылды",
-        "sidecarFallback": "Хезмәт юлга керү хокуклары аркасында төшне эшләтеп җибәрә алмады. Эшне дәвам итү өчен администратор режимына күчелде.",
+        "sidecarFallback": "Хезмәт төшне эшләтеп җибәрә алмады. Эш Sidecar режимында дәвам итә; хезмәт һаман да эшләми.",
         "uninstallSuccess": "Сервис уңышлы салдырылды"
       },
       "updater": {

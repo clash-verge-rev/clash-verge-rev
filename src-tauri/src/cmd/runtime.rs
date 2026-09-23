@@ -33,6 +33,11 @@ pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String
 }
 
 #[tauri::command]
+pub fn take_discarded_keys_notice() -> Option<String> {
+    crate::enhance::take_discarded_keys_notice()
+}
+
+#[tauri::command]
 pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();

@@ -87,6 +87,7 @@ pub struct CoreManager {
     job_handle: ArcSwapOption<OwnedHandle>,
     config_update_in_progress: AtomicBool,
     core_readiness_state: AtomicU64,
+    sidecar_exit: tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
     pub(crate) lifecycle_lock: tokio::sync::Mutex<()>,
@@ -114,6 +115,7 @@ impl Default for CoreManager {
             job_handle: ArcSwapOption::new(None),
             config_update_in_progress: AtomicBool::new(false),
             core_readiness_state: AtomicU64::new(0),
+            sidecar_exit: tokio::sync::Mutex::new(None),
             lifecycle_lock: tokio::sync::Mutex::new(()),
             #[cfg(target_os = "windows")]
             handoff_watcher_running: AtomicBool::new(false),

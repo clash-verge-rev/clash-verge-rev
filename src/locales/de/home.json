@@ -63,6 +63,7 @@
         "settings": "Einstellungen"
       },
       "badges": {
+        "notRunning": "Kern läuft nicht",
         "adminMode": "Administrator-Modus",
         "serviceMode": "Service-Modus",
         "sidecarMode": "Benutzermodus",

@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: 곧 종료
     body: Clash Verge가 곧 종료됩니다.
-  appHidden:
-    title: 앱이 숨겨짐
-    body: Clash Verge가 백그라운드에서 실행 중입니다.
   updateReady:
     title: Clash Verge Update
     body: A new version (v{version}) has been downloaded and is ready to install.

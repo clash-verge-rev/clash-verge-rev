@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "Hizmetin kurulum yolu veya dizin izinleri güvenlik denetiminden geçemediği için çekirdek başlatılamıyor. Dosyaları ve izinleri geri yüklemek için hizmeti yeniden kurup tekrar deneyin. Windows yönetici onayı isteyebilir.",
       "title": "Hizmet güncellemesi gerekli",
       "message": "Clash Verge hizmet sürümü, bu uygulamanın gerektirdiği sürümle eşleşmiyor. Mevcut hizmeti kaldırıp gerekli sürümü yüklemek için hizmeti yeniden kurun ya da bu oturumda Sidecar ile devam edin.",
       "checkingMessage": "Sistem hizmetinin durumu ve geçerli çalışma modu denetleniyor. Lütfen bekleyin…",

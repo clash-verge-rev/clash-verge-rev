@@ -508,6 +508,7 @@
     "dns": {
       "dialog": {
         "title": "DNS-Überschreibung",
+        "profileScope": "Der DNS-Überschreibungsschalter wird für jedes Profil separat gespeichert und gilt nur für dieses Profil.",
         "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung deaktiviert."
       },
       "protection": {
@@ -683,7 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Service erfolgreich installiert",
-        "sidecarFallback": "Der Dienst konnte den Kern aufgrund der Pfadberechtigungen nicht starten. Die Anwendung läuft im Administratormodus weiter.",
+        "sidecarFallback": "Der Dienst konnte den Kern nicht starten. Die Anwendung läuft im Sidecar-Modus weiter; der Dienst bleibt nicht verfügbar.",
         "uninstallSuccess": "Service erfolgreich deinstalliert"
       },
       "updater": {

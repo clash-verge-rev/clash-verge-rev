@@ -21,6 +21,7 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "Der Dienst kann den Kern nicht starten, da sein Installationspfad oder die Verzeichnisberechtigungen die Sicherheitsprüfung nicht bestanden haben. Installieren Sie den Dienst erneut, um Dateien und Berechtigungen wiederherzustellen, und versuchen Sie es erneut. Windows kann eine Administratorbestätigung anfordern.",
       "title": "Service update required",
       "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",

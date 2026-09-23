@@ -3,6 +3,7 @@ export type ServiceRequestReason =
   | 'sysproxyRefused'
   | 'sysproxySidecarReady'
   | 'tunNeedsService'
+  | 'serviceLocationRefused'
 
 export interface ServiceRequest {
   readonly reason: ServiceRequestReason

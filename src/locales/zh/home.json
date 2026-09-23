@@ -63,6 +63,7 @@
         "settings": "设置"
       },
       "badges": {
+        "notRunning": "内核未运行",
         "adminMode": "管理员模式",
         "serviceMode": "服务模式",
         "sidecarMode": "用户模式",

@@ -10,6 +10,7 @@ import {
 } from './dev-control.mjs'
 import {
   developmentServiceDirectoryEnvironment,
+  developmentServiceWatchPaths,
   ensureDevelopmentService,
   prepareDevelopmentService,
 } from './dev-service.mjs'
@@ -30,6 +31,9 @@ export function buildTauriInvocation(
   if (mode === 'trace') {
     env.RUSTFLAGS = '--cfg tokio_unstable'
     args.push('tokio-trace')
+  }
+  for (const path of developmentServiceWatchPaths) {
+    args.push('--additional-watch-folders', path)
   }
   return {
     command: 'pnpm',
