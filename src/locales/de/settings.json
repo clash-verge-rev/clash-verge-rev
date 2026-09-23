@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Service erfolgreich installiert",
+        "permissionFallback": "Die Kerndateien oder Verzeichnisse des Dienstes haben die Sicherheitsprüfung nicht bestanden. Die Anwendung läuft im Sidecar-Modus weiter; TUN benötigt Administratorrechte. Grund: {{reason}}",
         "sidecarFallback": "Der Dienst konnte den Kern nicht starten. Die Anwendung läuft im Sidecar-Modus weiter; der Dienst bleibt nicht verfügbar.",
         "uninstallSuccess": "Service erfolgreich deinstalliert"
       },

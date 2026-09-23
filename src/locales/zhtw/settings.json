@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "已成功安裝服務",
+        "permissionFallback": "服務核心的檔案或目錄未通過安全檢查，已切換至一般模式（Sidecar）；一般權限下無法使用 TUN 模式。原因：{{reason}}",
         "sidecarFallback": "服務無法啟動核心，已降級為 Sidecar 模式執行，服務仍無法使用。",
         "uninstallSuccess": "已成功解除安裝服務"
       },

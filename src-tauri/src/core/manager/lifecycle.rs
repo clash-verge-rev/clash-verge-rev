@@ -62,7 +62,11 @@ const fn can_allow_sidecar_for_session(running_mode: &RunningMode, service_statu
                 | ServiceStatus::NeedsReinstall
                 | ServiceStatus::InstallRequired
                 | ServiceStatus::Unavailable(_)
-        ) | (RunningMode::Sidecar, ServiceStatus::InstallRequired)
+                | ServiceStatus::SidecarAllowed
+        ) | (
+            RunningMode::Sidecar,
+            ServiceStatus::InstallRequired | ServiceStatus::Unavailable(_) | ServiceStatus::SidecarAllowed
+        )
     )
 }
 
@@ -381,7 +385,9 @@ impl CoreManager {
         if matches!(*mode, RunningMode::NotRunning) {
             clash_verge_service_ipc::execution::check_sidecar_available().await?;
         }
-        SERVICE_MANAGER.allow_sidecar_for_session()?;
+        if !matches!(status, ServiceStatus::SidecarAllowed) {
+            SERVICE_MANAGER.allow_sidecar_for_session()?;
+        }
         // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
         // Elevation alone carries TUN on Sidecar; a Sidecar that cannot must write it off.
         let prepared = async {
@@ -1474,12 +1480,18 @@ mod tests {
             ServiceStatus::NeedsReinstall,
             ServiceStatus::InstallRequired,
             ServiceStatus::Unavailable("offline".into()),
+            ServiceStatus::SidecarAllowed,
         ];
         for status in &allowed_statuses {
             assert!(can_allow_sidecar_for_session(&RunningMode::NotRunning, status));
             assert!(!can_allow_sidecar_for_session(&RunningMode::Service, status));
-            if !matches!(status, ServiceStatus::InstallRequired) {
+            if !matches!(
+                status,
+                ServiceStatus::InstallRequired | ServiceStatus::Unavailable(_) | ServiceStatus::SidecarAllowed
+            ) {
                 assert!(!can_allow_sidecar_for_session(&RunningMode::Sidecar, status));
+            } else {
+                assert!(can_allow_sidecar_for_session(&RunningMode::Sidecar, status));
             }
         }
 
@@ -1489,7 +1501,6 @@ mod tests {
             ServiceStatus::UninstallRequired,
             ServiceStatus::ReinstallRequired,
             ServiceStatus::ForceReinstallRequired,
-            ServiceStatus::SidecarAllowed,
         ];
         for status in &rejected_statuses {
             assert!(!can_allow_sidecar_for_session(&RunningMode::NotRunning, status));

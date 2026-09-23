@@ -454,8 +454,12 @@ export const getAppUptime = async () => {
   return invoke<number>('get_app_uptime')
 }
 
+export type ServiceInstallOutcome =
+  | { status: 'installed' }
+  | { status: 'sidecar'; reason: string }
+
 export const installService = async () => {
-  return invoke<void>('install_service')
+  return invoke<ServiceInstallOutcome>('install_service')
 }
 
 export const uninstallService = async () => {
@@ -463,11 +467,11 @@ export const uninstallService = async () => {
 }
 
 export const reinstallService = async () => {
-  return invoke<void>('reinstall_service')
+  return invoke<ServiceInstallOutcome>('reinstall_service')
 }
 
 export const repairService = async () => {
-  return invoke<void>('repair_service')
+  return invoke<ServiceInstallOutcome>('repair_service')
 }
 
 export const continueWithSidecar = async () => {

@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "サービスのインストールに成功しました。",
+        "permissionFallback": "サービスのコアファイルまたはディレクトリがセキュリティチェックに失敗したため、Sidecar モードに切り替えました。TUN には管理者権限が必要です。理由：{{reason}}",
         "sidecarFallback": "サービスでコアを起動できなかったため、Sidecar モードで動作を継続しています。サービスは引き続き利用できません。",
         "uninstallSuccess": "サービスのアンインストールに成功しました。"
       },

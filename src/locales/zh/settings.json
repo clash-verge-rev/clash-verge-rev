@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "已成功安装服务",
+        "permissionFallback": "服务内核的文件或目录未通过安全检查，已切换到普通模式（Sidecar）；普通权限下 TUN 模式不可用。原因：{{reason}}",
         "sidecarFallback": "服务无法启动内核，已降级为 Sidecar 模式运行，服务仍不可用。",
         "uninstallSuccess": "已成功卸载服务"
       },

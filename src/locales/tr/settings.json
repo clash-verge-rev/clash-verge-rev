@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Hizmet Başarıyla Kuruldu",
+        "permissionFallback": "Hizmetin çekirdek dosyaları veya dizinleri güvenlik denetimini geçemedi. Sidecar moduna geçildi; TUN için yönetici yetkileri gerekir. Neden: {{reason}}",
         "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },

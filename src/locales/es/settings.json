@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Servicio instalado con éxito",
+        "permissionFallback": "Los archivos o directorios del núcleo del servicio no superaron la comprobación de seguridad. Se ha cambiado al modo Sidecar; TUN requiere permisos de administrador. Motivo: {{reason}}",
         "sidecarFallback": "El servicio no pudo iniciar el núcleo. Se ha cambiado al modo Sidecar; el servicio sigue sin estar disponible.",
         "uninstallSuccess": "Servicio desinstalado con éxito"
       },

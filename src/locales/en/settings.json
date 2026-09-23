@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Service Installed Successfully",
+        "permissionFallback": "The service's core files or directories failed a security check. Switched to Sidecar mode; TUN requires administrator privileges. Reason: {{reason}}",
         "sidecarFallback": "The service could not start the core. Switched to Sidecar mode; the service remains unavailable.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },

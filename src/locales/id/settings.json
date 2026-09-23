@@ -684,6 +684,7 @@
       },
       "clashService": {
         "installSuccess": "Layanan Berhasil Diinstal",
+        "permissionFallback": "Berkas atau direktori inti layanan tidak lolos pemeriksaan keamanan. Beralih ke mode Sidecar; TUN memerlukan hak administrator. Alasan: {{reason}}",
         "sidecarFallback": "Layanan tidak dapat memulai inti. Beralih ke mode Sidecar; layanan masih tidak tersedia.",
         "uninstallSuccess": "Layanan Berhasil Dicopot"
       },
