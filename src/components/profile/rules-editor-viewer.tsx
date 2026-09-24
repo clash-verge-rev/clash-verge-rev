@@ -679,11 +679,15 @@ export const RulesEditorViewer = (props: Props) => {
                   ruleType.name !== 'SUB-RULE' && (
                     <TextField
                       autoComplete="new-password"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
                       size="small"
                       sx={{ minWidth: '240px' }}
+                      slotProps={{
+                        htmlInput: {
+                          autoCorrect: 'off',
+                          autoCapitalize: 'off',
+                          spellCheck: false,
+                        },
+                      }}
                       value={ruleContent}
                       required={ruleType.required ?? true}
                       error={(ruleType.required ?? true) && !ruleContent}
