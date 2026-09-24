@@ -31,6 +31,7 @@ export const useServiceInstaller = () => {
       showNotice.warning(
         'settings.feedback.notifications.clashService.permissionFallback',
         { reason: outcome.reason },
+        0,
       )
       return
     }

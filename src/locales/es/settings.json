@@ -684,7 +684,10 @@
       },
       "clashService": {
         "installSuccess": "Servicio instalado con éxito",
-        "permissionFallback": "Los archivos o directorios del núcleo del servicio no superaron la comprobación de seguridad. Se ha cambiado al modo Sidecar; TUN requiere permisos de administrador. Motivo: {{reason}}",
+        "permissionFallback": "{{reason}} Se ha cambiado al modo Sidecar; TUN requiere permisos de administrador. Siga la guía para reparar y reinstalar el servicio, o ejecute la aplicación como administrador sin instalar el servicio.",
+        "permissionWritableReason": "Las cuentas normales pueden modificar los archivos del núcleo o una carpeta superior, por lo que el servicio rechazó ejecutarlo con privilegios elevados.",
+        "permissionRejectedReason": "El servicio no pudo confirmar que los archivos y carpetas del núcleo sean seguros para ejecutarlos con privilegios elevados.",
+        "permissionRepairGuide": "Ver instrucciones de reparación",
         "sidecarFallback": "El servicio no pudo iniciar el núcleo. Se ha cambiado al modo Sidecar; el servicio sigue sin estar disponible.",
         "uninstallSuccess": "Servicio desinstalado con éxito"
       },

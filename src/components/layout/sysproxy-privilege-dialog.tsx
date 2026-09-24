@@ -112,6 +112,7 @@ export const SysproxyPrivilegeDialog = () => {
         showNotice.warning(
           'settings.feedback.notifications.clashService.permissionFallback',
           { reason: outcome.reason },
+          0,
         )
         close()
         return

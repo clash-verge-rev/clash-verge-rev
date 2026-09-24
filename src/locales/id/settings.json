@@ -684,7 +684,10 @@
       },
       "clashService": {
         "installSuccess": "Layanan Berhasil Diinstal",
-        "permissionFallback": "Berkas atau direktori inti layanan tidak lolos pemeriksaan keamanan. Beralih ke mode Sidecar; TUN memerlukan hak administrator. Alasan: {{reason}}",
+        "permissionFallback": "{{reason}} Beralih ke mode Sidecar; TUN memerlukan hak administrator. Ikuti panduan untuk memperbaiki dan menginstal ulang layanan, atau jalankan aplikasi sebagai administrator tanpa menginstal layanan.",
+        "permissionWritableReason": "Akun biasa dapat mengubah berkas inti atau folder induknya, sehingga layanan menolak menjalankan inti dengan hak istimewa.",
+        "permissionRejectedReason": "Layanan tidak dapat memastikan bahwa berkas dan folder inti aman dijalankan dengan hak istimewa.",
+        "permissionRepairGuide": "Lihat panduan perbaikan",
         "sidecarFallback": "Layanan tidak dapat memulai inti. Beralih ke mode Sidecar; layanan masih tidak tersedia.",
         "uninstallSuccess": "Layanan Berhasil Dicopot"
       },

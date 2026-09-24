@@ -684,7 +684,10 @@
       },
       "clashService": {
         "installSuccess": "Hizmet Başarıyla Kuruldu",
-        "permissionFallback": "Hizmetin çekirdek dosyaları veya dizinleri güvenlik denetimini geçemedi. Sidecar moduna geçildi; TUN için yönetici yetkileri gerekir. Neden: {{reason}}",
+        "permissionFallback": "{{reason}} Sidecar moduna geçildi; TUN yönetici yetkisi gerektirir. Kılavuza göre sorunu düzeltip hizmeti yeniden yükleyin veya hizmeti yüklemeden uygulamayı yönetici olarak çalıştırın.",
+        "permissionWritableReason": "Normal hesaplar çekirdek dosyalarını veya üst klasörü değiştirebildiği için hizmet, çekirdeği yükseltilmiş yetkilerle çalıştırmayı reddetti.",
+        "permissionRejectedReason": "Hizmet, çekirdek dosya ve klasörlerinin yükseltilmiş yetkilerle güvenle çalıştırılabileceğini doğrulayamadı.",
+        "permissionRepairGuide": "Düzeltme adımlarını görüntüle",
         "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },

@@ -78,6 +78,7 @@ it('reports the permission refusal and finishes after installation falls back to
     expect(showNotice.warning).toHaveBeenCalledWith(
       'settings.feedback.notifications.clashService.permissionFallback',
       { reason },
+      0,
     )
   })
 

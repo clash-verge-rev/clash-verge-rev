@@ -684,7 +684,10 @@
       },
       "clashService": {
         "installSuccess": "Service Installed Successfully",
-        "permissionFallback": "The service's core files or directories failed a security check. Switched to Sidecar mode; TUN requires administrator privileges. Reason: {{reason}}",
+        "permissionFallback": "{{reason}} Switched to normal mode (Sidecar); TUN requires administrator privileges. Follow the guide to fix and reinstall the service. If you prefer not to fix it or do not know how, run the app as administrator without installing the service.",
+        "permissionWritableReason": "Ordinary accounts can modify the core files or a parent folder, so the service refused to run the core with elevated privileges.",
+        "permissionRejectedReason": "The service could not confirm that the core files and folders are safe to run with elevated privileges.",
+        "permissionRepairGuide": "View repair instructions",
         "sidecarFallback": "The service could not start the core. Switched to Sidecar mode; the service remains unavailable.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },
