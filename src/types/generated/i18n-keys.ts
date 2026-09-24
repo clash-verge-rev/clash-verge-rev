@@ -803,6 +803,7 @@ export const translationKeys = [
   'settings.feedback.notifications.clash.changeSuccess',
   'settings.feedback.notifications.clash.changeFailed',
   'settings.feedback.notifications.clash.geoDataUpdated',
+  'settings.feedback.notifications.clashService.appDataNotOwned',
   'settings.feedback.notifications.clashService.installSuccess',
   'settings.feedback.notifications.clashService.permissionFallback',
   'settings.feedback.notifications.clashService.permissionWritableReason',

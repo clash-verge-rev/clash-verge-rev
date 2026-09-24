@@ -5,15 +5,17 @@ import {
   takeDiscardedKeysNotice,
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
+  takeServiceOwnerNotice,
   takeServiceRepairNotice,
 } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
+import { hideNotice, showNotice } from '@/services/notice-service'
 import { requestService } from '@/services/service-request'
 
 type NavigateFunction = (path: string, options?: any) => void
 type TranslateFunction = (key: string) => string
 
 let shownStartupError: string | null = null
+let shownOwnerNotice: number | null = null
 
 export const handleNoticeMessage = (
   status: string,
@@ -70,6 +72,25 @@ export const handleNoticeMessage = (
         .catch((error) => {
           console.error(
             'Failed to read the pending service repair notice',
+            error,
+          )
+        })
+    },
+    'service_core::app_data_not_owned': () => {
+      void takeServiceOwnerNotice()
+        .then((command) => {
+          if (command) {
+            if (shownOwnerNotice !== null) hideNotice(shownOwnerNotice)
+            shownOwnerNotice = showNotice.warning(
+              'settings.feedback.notifications.clashService.appDataNotOwned',
+              { command },
+              0,
+            )
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to read the pending service owner notice',
             error,
           )
         })

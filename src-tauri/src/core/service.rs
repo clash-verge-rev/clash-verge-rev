@@ -21,8 +21,9 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerCredentials, OwnerSessionProof, ProtocolInfo, ProxyApplyOutcome, RuntimeBundle,
-    RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, StageRuntimeOutcome, StartClashRequest, WriterConfig,
+    MacosProxyConfig, OwnerCredentials, OwnerIdentity, OwnerSessionProof, ProtocolInfo, ProxyApplyOutcome,
+    RuntimeBundle, RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, StageRuntimeOutcome, StartClashRequest,
+    WriterConfig,
 };
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -40,6 +41,7 @@ static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
 static PENDING_SERVICE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
+static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_service_fallback() {
@@ -53,6 +55,19 @@ pub(crate) fn take_service_fallback_notice() -> bool {
 
 pub(crate) fn take_service_repair_notice() -> bool {
     PENDING_SERVICE_REPAIR_NOTICE.swap(false, Ordering::Relaxed)
+}
+
+/// Returns the command that gives the app data root back to this account.
+pub(crate) fn take_service_owner_notice() -> Option<String> {
+    PENDING_SERVICE_OWNER_NOTICE.lock().take()
+}
+
+fn app_data_owner_command(credentials: &OwnerCredentials) -> Option<String> {
+    let OwnerIdentity::Unix { uid, gid } = credentials.identity else {
+        return None;
+    };
+    let path = credentials.app_data_dir.replace('\'', r"'\''");
+    Some(format!("sudo chown -R {uid}:{gid} '{path}'"))
 }
 
 /// Capabilities of the service session that owns the running Core.
@@ -851,6 +866,10 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             PENDING_SERVICE_REPAIR_NOTICE.store(true, Ordering::Relaxed);
             Handle::notice_message("service_core::repair_required", "");
         }
+        if response.code == ServiceErrorCode::AppDataRootNotOwned as u16 {
+            *PENDING_SERVICE_OWNER_NOTICE.lock() = app_data_owner_command(&credentials);
+            Handle::notice_message("service_core::app_data_not_owned", "");
+        }
         start_owner_monitor();
         return Err(record_service_start_refusal(
             &RUN_STATE,
@@ -880,6 +899,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     tracing::Span::current().record("outcome", "started");
     PENDING_SERVICE_FALLBACK_NOTICE.store(false, Ordering::Relaxed);
     PENDING_SERVICE_REPAIR_NOTICE.store(false, Ordering::Relaxed);
+    PENDING_SERVICE_OWNER_NOTICE.lock().take();
     logging!(
         info,
         Type::Service,

@@ -68,6 +68,7 @@ export const useLayoutEvents = (
         handleNotice(['enhance::discarded_keys', ''])
         handleNotice(['service_core::sidecar_fallback', ''])
         handleNotice(['service_core::repair_required', ''])
+        handleNotice(['service_core::app_data_not_owned', ''])
         handleNotice(['core_start::error', ''])
       },
     )

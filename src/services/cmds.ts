@@ -198,6 +198,10 @@ export async function takeServiceRepairNotice() {
   return invoke<boolean>('take_service_repair_notice')
 }
 
+export async function takeServiceOwnerNotice() {
+  return invoke<string | null>('take_service_owner_notice')
+}
+
 export async function takeDiscardedKeysNotice() {
   return invoke<string | null>('take_discarded_keys_notice')
 }

@@ -32,6 +32,7 @@ vi.mock('@/services/cmds', () => ({
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
   takeServiceFallbackNotice: vi.fn().mockResolvedValue(false),
   takeServiceRepairNotice: vi.fn().mockResolvedValue(false),
+  takeServiceOwnerNotice: vi.fn().mockResolvedValue(null),
 }))
 vi.mock('@/services/service-request', () => ({ requestService: vi.fn() }))
 vi.mock('@/services/notice-service', () => ({
