@@ -805,6 +805,13 @@ fn record_service_start_refusal<E: RunStateEnv>(
     refusal.into()
 }
 
+/// Sidecar stays blocked until a reinstall replaces the residual helper, so ask for repair.
+pub(super) fn record_residual_service(error: &anyhow::Error) {
+    if let Some(residual) = error.downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>() {
+        RUN_STATE.observe(ServiceHealth::Unavailable(residual.to_string()));
+    }
+}
+
 /// 尝试使用服务启动core
 #[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
