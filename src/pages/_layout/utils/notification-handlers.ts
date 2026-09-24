@@ -1,4 +1,7 @@
+import { getCurrentWindow } from '@tauri-apps/api/window'
+
 import {
+  getCoreStartupError,
   takeDiscardedKeysNotice,
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
@@ -9,6 +12,8 @@ import { requestService } from '@/services/service-request'
 
 type NavigateFunction = (path: string, options?: any) => void
 type TranslateFunction = (key: string) => string
+
+let shownStartupError: string | null = null
 
 export const handleNoticeMessage = (
   status: string,
@@ -31,6 +36,30 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'core_start::error': () => {
+      void getCoreStartupError()
+        .then(async (error) => {
+          if (!error) {
+            shownStartupError = null
+            return
+          }
+          const window = getCurrentWindow()
+          const [visible, minimized] = await Promise.all([
+            window.isVisible(),
+            window.isMinimized(),
+          ])
+          if (visible && !minimized && shownStartupError !== error) {
+            shownStartupError = error
+            showNotice.error(
+              'settings.feedback.errors.clash.startFailed',
+              error,
+            )
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to read the pending core startup error', error)
+        })
+    },
     'service_core::repair_required': () => {
       void takeServiceRepairNotice()
         .then((pending) => {

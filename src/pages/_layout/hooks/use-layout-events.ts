@@ -1,3 +1,4 @@
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect } from 'react'
 
 import { revalidateProfiles } from '@/hooks/use-profiles'
@@ -31,7 +32,7 @@ export const useLayoutEvents = (
       void revalidateProfiles()
     }
 
-    return subscribeVergeEvents(
+    const unsubscribe = subscribeVergeEvents(
       {
         'profile-changed': handleProfileChanged,
         'verge://refresh-profiles': () => void revalidateProfiles(),
@@ -67,7 +68,15 @@ export const useLayoutEvents = (
         handleNotice(['enhance::discarded_keys', ''])
         handleNotice(['service_core::sidecar_fallback', ''])
         handleNotice(['service_core::repair_required', ''])
+        handleNotice(['core_start::error', ''])
       },
     )
+    const unlistenFocus = getCurrentWindow().onFocusChanged(({ payload }) => {
+      if (payload) handleNotice(['core_start::error', ''])
+    })
+    return () => {
+      unsubscribe()
+      void unlistenFocus.then((unlisten) => unlisten())
+    }
   }, [handleNotice])
 }

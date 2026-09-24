@@ -87,6 +87,7 @@ pub struct CoreManager {
     job_handle: ArcSwapOption<OwnedHandle>,
     config_update_in_progress: AtomicBool,
     core_readiness_state: AtomicU64,
+    startup_error: parking_lot::Mutex<Option<String>>,
     sidecar_exit: tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
@@ -115,6 +116,7 @@ impl Default for CoreManager {
             job_handle: ArcSwapOption::new(None),
             config_update_in_progress: AtomicBool::new(false),
             core_readiness_state: AtomicU64::new(0),
+            startup_error: parking_lot::Mutex::new(None),
             sidecar_exit: tokio::sync::Mutex::new(None),
             lifecycle_lock: tokio::sync::Mutex::new(()),
             #[cfg(target_os = "windows")]
@@ -139,6 +141,17 @@ impl CoreManager {
 
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
         self.run_state.mode_arc()
+    }
+
+    pub(crate) fn record_startup_error(&self, error: String) {
+        let mut startup_error = self.startup_error.lock();
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            *startup_error = Some(error);
+        }
+    }
+
+    pub(crate) fn get_startup_error(&self) -> Option<String> {
+        self.startup_error.lock().clone()
     }
 
     pub fn take_child_sidecar(&self) -> Option<CommandChild> {
@@ -166,7 +179,9 @@ impl CoreManager {
         if previous != mode {
             logging!(info, Type::Core, "Core running mode changed: {previous} -> {mode}");
         }
+        let mut startup_error = self.startup_error.lock();
         self.run_state.core_started(mode);
+        *startup_error = None;
     }
 
     /// The Core is no longer running, for any reason.
@@ -307,3 +322,28 @@ impl CoreManager {
 }
 
 singleton!(CoreManager, CORE_MANAGER);
+
+#[cfg(test)]
+mod startup_error_tests {
+    use super::{CoreManager, RunningMode};
+
+    #[test]
+    fn recovery_invalidates_an_unread_startup_error_even_after_a_later_exit() {
+        for mode in [RunningMode::Sidecar, RunningMode::Service] {
+            let manager = CoreManager::isolated();
+            manager.record_startup_error("startup failed".into());
+            manager.core_started(mode);
+            manager.core_stopped();
+            assert_eq!(manager.get_startup_error(), None);
+        }
+    }
+
+    #[test]
+    fn unresolved_startup_error_survives_repeated_reads() {
+        let manager = CoreManager::isolated();
+        manager.record_startup_error("startup failed".into());
+        for _ in 0..2 {
+            assert_eq!(manager.get_startup_error().as_deref(), Some("startup failed"));
+        }
+    }
+}

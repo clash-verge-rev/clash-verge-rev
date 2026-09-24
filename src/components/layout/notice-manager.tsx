@@ -67,14 +67,11 @@ const resolveNoticeMessage = (
   if (!i18n) return bound(notice.message)
 
   if (i18n.key === SERVICE_PERMISSION_NOTICE) {
-    const reason = i18n.params?.reason
     return (
       <>
         {t(SERVICE_PERMISSION_NOTICE, {
           reason: t(
-            typeof reason === 'string' && reason.includes('is writable by')
-              ? 'settings.feedback.notifications.clashService.permissionWritableReason'
-              : 'settings.feedback.notifications.clashService.permissionRejectedReason',
+            'settings.feedback.notifications.clashService.permissionRejectedReason',
           ),
         })}
         <Box sx={{ mt: 1 }}>

@@ -190,6 +190,10 @@ export async function takeServiceFallbackNotice() {
   return invoke<boolean>('take_service_fallback_notice')
 }
 
+export async function getCoreStartupError() {
+  return invoke<string | null>('get_core_startup_error')
+}
+
 export async function takeServiceRepairNotice() {
   return invoke<boolean>('take_service_repair_notice')
 }
