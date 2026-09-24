@@ -7,6 +7,8 @@ import type { RunState } from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
 import { revalidateQueries, setCacheData } from '@/services/query-client'
 
+import { forgetShownStartupError } from '../utils/notification-handlers'
+
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
 ) => {
@@ -58,6 +60,7 @@ export const useLayoutEvents = (
         // Transitions carry the full run-state snapshot, so write it directly to cache.
         'verge://run-state-changed': (payload) => {
           void setCacheData<RunState>(runStateQueryKey, payload)
+          if (payload.mode !== 'NotRunning') forgetShownStartupError()
         },
         'verge://notice-message': handleNotice,
       },

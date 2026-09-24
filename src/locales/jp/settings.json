@@ -655,6 +655,7 @@
         "modeUpdateFailed": "プロキシモードの変更に失敗しました",
         "restartFailed": "コアの再起動に失敗しました",
         "startFailed": "コアの起動に失敗しました",
+        "serviceCoreStopped": "サービスで実行中のコアが予期せず停止しました",
         "stopFailed": "コアの停止に失敗しました"
       },
       "clashService": {

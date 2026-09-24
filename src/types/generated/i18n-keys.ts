@@ -785,6 +785,7 @@ export const translationKeys = [
   'settings.feedback.errors.clash.modeUpdateFailed',
   'settings.feedback.errors.clash.restartFailed',
   'settings.feedback.errors.clash.startFailed',
+  'settings.feedback.errors.clash.serviceCoreStopped',
   'settings.feedback.errors.clash.stopFailed',
   'settings.feedback.errors.clashService.installFailed',
   'settings.feedback.errors.clashService.uninstallFailed',

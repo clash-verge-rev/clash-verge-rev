@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 
 import {
+  type RunState,
   getCoreStartupError,
   takeDnsOverrideNotice,
   takeServiceRepairNotice,
@@ -53,7 +54,10 @@ beforeEach(async () => {
 })
 
 it('does not replay a recovered startup error after WebView recreation', async () => {
-  vi.mocked(getCoreStartupError).mockResolvedValue('startup failed')
+  vi.mocked(getCoreStartupError).mockResolvedValue({
+    kind: 'startFailed',
+    detail: 'startup failed',
+  })
   handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(showNotice.error).toHaveBeenCalledOnce()
@@ -75,7 +79,10 @@ it.each([
     const detail = 'startup failed'
     nativeWindow.isVisible.mockResolvedValue(visible)
     nativeWindow.isMinimized.mockResolvedValue(minimized)
-    vi.mocked(getCoreStartupError).mockResolvedValue(detail)
+    vi.mocked(getCoreStartupError).mockResolvedValue({
+      kind: 'startFailed',
+      detail,
+    })
     useLayoutEvents(([status, message]) => {
       handleNoticeMessage(status, message, (key) => key, vi.fn())
     })
@@ -99,7 +106,10 @@ it.each([
 
 it('delivers an early core startup failure once after listeners mount', async () => {
   const detail = 'could not open core execution mutex: access denied'
-  vi.mocked(getCoreStartupError).mockResolvedValue(detail)
+  vi.mocked(getCoreStartupError).mockResolvedValue({
+    kind: 'startFailed',
+    detail,
+  })
   useLayoutEvents(([status, message]) => {
     handleNoticeMessage(status, message, (key) => key, vi.fn())
   })
@@ -111,6 +121,24 @@ it('delivers an early core startup failure once after listeners mount', async ()
     'settings.feedback.errors.clash.startFailed',
     detail,
   )
+})
+
+it('shows the same core failure again after the core has started in between', async () => {
+  const { useLayoutEvents } = await import('./use-layout-events')
+  const failure = { kind: 'serviceCoreStopped', detail: 'stopped' } as const
+  vi.mocked(getCoreStartupError).mockResolvedValue(failure)
+  useLayoutEvents(([status, message]) => {
+    handleNoticeMessage(status, message, (key) => key, vi.fn())
+  })
+  const [handlers] = vi.mocked(subscribeVergeEvents).mock.calls[0]
+  handlers['verge://notice-message']?.(['core_start::error', ''])
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  // The core started and stopped again before the window handled either event.
+  handlers['verge://run-state-changed']?.({ mode: 'Service' } as RunState)
+  handlers['verge://notice-message']?.(['core_start::error', ''])
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(showNotice.error).toHaveBeenCalledTimes(2)
 })
 
 it('drains a DNS notice after listeners mount without duplicating its live event', async () => {

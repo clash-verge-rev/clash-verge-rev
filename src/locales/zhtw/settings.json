@@ -655,6 +655,7 @@
         "modeUpdateFailed": "切換代理模式失敗",
         "restartFailed": "重啟內核失敗",
         "startFailed": "啟動內核失敗",
+        "serviceCoreStopped": "服務執行的內核意外停止",
         "stopFailed": "停止內核失敗"
       },
       "clashService": {

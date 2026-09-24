@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Failed to change proxy mode",
         "restartFailed": "Failed to restart the core",
         "startFailed": "Failed to start the core",
+        "serviceCoreStopped": "The service's core stopped unexpectedly",
         "stopFailed": "Failed to stop the core"
       },
       "clashService": {

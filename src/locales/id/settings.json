@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Gagal mengubah mode proxy",
         "restartFailed": "Gagal memulai ulang core",
         "startFailed": "Gagal memulai core",
+        "serviceCoreStopped": "Core yang dijalankan layanan berhenti secara tak terduga",
         "stopFailed": "Gagal menghentikan core"
       },
       "clashService": {

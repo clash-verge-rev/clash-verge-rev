@@ -655,6 +655,7 @@
         "modeUpdateFailed": "No se pudo cambiar el modo de proxy",
         "restartFailed": "No se pudo reiniciar el núcleo",
         "startFailed": "No se pudo iniciar el núcleo",
+        "serviceCoreStopped": "El núcleo ejecutado por el servicio se detuvo inesperadamente",
         "stopFailed": "No se pudo detener el núcleo"
       },
       "clashService": {

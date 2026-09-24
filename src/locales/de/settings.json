@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Proxy-Modus konnte nicht geändert werden",
         "restartFailed": "Kern konnte nicht neu gestartet werden",
         "startFailed": "Kern konnte nicht gestartet werden",
+        "serviceCoreStopped": "Der vom Dienst ausgeführte Kern wurde unerwartet beendet",
         "stopFailed": "Kern konnte nicht gestoppt werden"
       },
       "clashService": {

@@ -655,6 +655,7 @@
         "modeUpdateFailed": "프록시 모드를 변경하지 못했습니다",
         "restartFailed": "코어를 재시작하지 못했습니다",
         "startFailed": "코어를 시작하지 못했습니다",
+        "serviceCoreStopped": "서비스에서 실행 중인 코어가 예기치 않게 중지되었습니다",
         "stopFailed": "코어를 중지하지 못했습니다"
       },
       "clashService": {

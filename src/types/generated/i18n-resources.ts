@@ -815,6 +815,7 @@ export interface TranslationResources {
             configUpdateFailed: string
             modeUpdateFailed: string
             restartFailed: string
+            serviceCoreStopped: string
             startFailed: string
             stopFailed: string
           }

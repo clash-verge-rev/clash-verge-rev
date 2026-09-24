@@ -655,6 +655,7 @@
         "modeUpdateFailed": "تعذّر تغيير وضع الوكيل",
         "restartFailed": "تعذّر إعادة تشغيل النواة",
         "startFailed": "تعذّر تشغيل النواة",
+        "serviceCoreStopped": "توقفت النواة التي تشغّلها الخدمة بشكل غير متوقع",
         "stopFailed": "تعذّر إيقاف النواة"
       },
       "clashService": {

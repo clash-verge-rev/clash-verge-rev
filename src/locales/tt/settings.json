@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Прокси режимын үзгәртеп булмады",
         "restartFailed": "Ядрону яңадан башлап булмады",
         "startFailed": "Ядрону башлап булмады",
+        "serviceCoreStopped": "Хезмәт эшләткән ядро көтмәгәндә туктады",
         "stopFailed": "Ядрону туктатып булмады"
       },
       "clashService": {
