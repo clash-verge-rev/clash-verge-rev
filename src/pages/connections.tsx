@@ -15,6 +15,7 @@ import {
   Zoom,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
+import { useLocalStorage } from 'foxact/use-local-storage'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
@@ -86,7 +87,22 @@ const ConnectionsPage = () => {
     () => () => true,
   )
   const [hasSearch, setHasSearch] = useState(false)
-  const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>('default')
+  const [curOrderOpt, setCurOrderOpt] = useLocalStorage<OrderKey>(
+    'connections-order-key',
+    'default',
+    {
+      serializer: JSON.stringify,
+      deserializer: (value) => {
+        try {
+          const parsed = JSON.parse(value)
+          if (typeof parsed === 'string') return parsed as OrderKey
+        } catch (err) {
+          console.warn('Failed to parse connections-order-key', err)
+        }
+        return 'default'
+      },
+    },
+  )
   const [connectionsType, setConnectionsType] = useState<'active' | 'closed'>(
     'active',
   )
