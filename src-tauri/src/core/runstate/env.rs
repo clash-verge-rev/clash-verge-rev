@@ -115,6 +115,7 @@ mod fake {
         evidence: Result<bool, String>,
         elevated: bool,
         probe_count: Mutex<usize>,
+        probe_delay: Option<std::time::Duration>,
         pac_available: Mutex<Option<bool>>,
         published: Mutex<Vec<RunState>>,
         privileged_outcome: Mutex<Result<(), String>>,
@@ -128,6 +129,7 @@ mod fake {
                 evidence: Ok(false),
                 elevated: false,
                 probe_count: Mutex::new(0),
+                probe_delay: None,
                 pac_available: Mutex::new(None),
                 published: Mutex::new(Vec::new()),
                 privileged_outcome: Mutex::new(Ok(())),
@@ -203,6 +205,13 @@ mod fake {
             *self.probe_count.lock()
         }
 
+        #[cfg(windows)]
+        #[must_use]
+        pub const fn with_probe_delay(mut self, delay: std::time::Duration) -> Self {
+            self.probe_delay = Some(delay);
+            self
+        }
+
         #[must_use]
         pub fn pac_available(&self) -> Option<bool> {
             *self.pac_available.lock()
@@ -233,6 +242,9 @@ mod fake {
     impl RunStateEnv for FakeEnv {
         async fn probe_service_version(&self) -> Result<ServiceVersionReply> {
             *self.probe_count.lock() += 1;
+            if let Some(delay) = self.probe_delay {
+                tokio::time::sleep(delay).await;
+            }
             let mut replies = self.version_replies.lock();
             let reply = if replies.len() > 1 {
                 replies.remove(0)

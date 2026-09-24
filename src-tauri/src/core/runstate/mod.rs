@@ -181,7 +181,16 @@ impl<E: RunStateEnv> RunStateStore<E> {
             return classify_service_health(CurrentServiceProbe::Missing, false, "");
         }
 
-        match self.env.probe_service_version().await {
+        let probe = self.env.probe_service_version();
+        // Per-request timeouts do not bound IPC retry backoff before Sidecar can be considered.
+        #[cfg(windows)]
+        let probe = async {
+            tokio::time::timeout(Duration::from_secs(3), probe)
+                .await
+                .context("service startup probe timed out after 3s")?
+        };
+
+        match probe.await {
             Ok(reply) => match classify_service_version_reply(&reply) {
                 ServiceVersionCheck::CoreUnavailable(reason) => ServiceHealth::Unavailable(reason),
                 _ => classify_service_health(probe_outcome(&reply), has_marker, ""),
@@ -978,6 +987,34 @@ mod tests {
         let store = with_env(FakeEnv::new().service_ready());
 
         assert_eq!(store.detect_service_health().await, ServiceHealth::Ready);
+    }
+
+    #[cfg(windows)]
+    #[tokio::test(start_paused = true)]
+    async fn detection_bounds_a_registered_services_retry_backoff() {
+        let store = with_env(
+            FakeEnv::new()
+                .service_unreachable()
+                .with_probe_delay(Duration::from_secs(120)),
+        );
+        let started = tokio::time::Instant::now();
+
+        let health = store.detect_service_health().await;
+
+        assert!(matches!(health, ServiceHealth::Unavailable(reason) if reason.contains("timed out after 3s")));
+        assert_eq!(started.elapsed(), Duration::from_secs(3));
+        assert_eq!(store.env.probe_count(), 1);
+        assert!(store.env.privileged_actions().is_empty());
+    }
+
+    #[cfg(windows)]
+    #[tokio::test(start_paused = true)]
+    async fn detection_accepts_a_service_ready_within_the_startup_budget() {
+        let store = with_env(FakeEnv::new().service_ready().with_probe_delay(Duration::from_secs(2)));
+        let started = tokio::time::Instant::now();
+
+        assert_eq!(store.detect_service_health().await, ServiceHealth::Ready);
+        assert_eq!(started.elapsed(), Duration::from_secs(2));
     }
 
     #[test]
