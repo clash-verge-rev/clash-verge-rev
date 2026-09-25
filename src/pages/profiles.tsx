@@ -908,7 +908,9 @@ const ProfilePage = () => {
               mb: 1.5,
               display: 'grid',
               overflow: 'hidden',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              // Cap at 4 columns; 24px is the 3 gaps from `gap: 1`.
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(max(260px, calc((100% - 24px) / 4)), 1fr))',
               gap: 1,
               px: 0.5,
             }}
