@@ -1,0 +1,60 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Hamısını sına"
+    },
+    "title": "Sınaq"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Sına"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Sınağın yaradılması",
+        "edit": "Sınağın redaktəsi"
+      },
+      "fields": {
+        "url": "Sınağın URL ünvanı"
+      },
+      "errors": {
+        "nameRequired": "Ad daxil edin",
+        "urlRequired": "Sınağın URL ünvanını daxil edin",
+        "invalidSvg": "İkon etibarlı SVG formatında deyil",
+        "uidMissing": "Sınaq elementinin identifikatoru yoxdur",
+        "saveFailed": "Sınaq elementini yadda saxlamaq mümkün olmadı"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Gözləyir",
+      "yes": "Bəli",
+      "no": "Xeyr",
+      "failed": "Uğursuz oldu",
+      "completed": "Tamamlandı",
+      "disallowedIsp": "İcazə verilməyən internet provayderi",
+      "originalsOnly": "Yalnız orijinal məzmun",
+      "noDisney": "Xeyr (IP ünvanı Disney+ tərəfindən bloklanıb)",
+      "unsupportedRegion": "Dəstəklənməyən ölkə/region",
+      "failedNetwork": "Uğursuz oldu (şəbəkə əlaqəsi)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Sınaq aparılır..."
+      },
+      "empty": "Giriş məhdudiyyətini yoxlamaq üçün sınaq yoxdur",
+      "messages": {
+        "detectionFailedWithName": "{{name}} üçün yoxlama uğursuz oldu",
+        "detectionTimeout": "Yoxlamanın gözləmə müddəti bitdi və ya yoxlama uğursuz oldu"
+      },
+      "title": "Giriş məhdudiyyəti sınağı"
+    }
+  }
+}
