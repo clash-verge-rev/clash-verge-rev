@@ -6,8 +6,6 @@ use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use tokio::time::Duration;
-#[cfg(target_os = "macos")]
-use tokio::time::timeout;
 
 #[derive(Debug, Clone, Default)]
 pub struct CleanupResult {
@@ -81,18 +79,13 @@ where
 
 async fn restore_dns_after_core_stop() -> bool {
     #[cfg(target_os = "macos")]
-    match timeout(
-        Duration::from_millis(1000),
-        crate::utils::resolve::dns::restore_public_dns(),
-    )
-    .await
-    {
-        Ok(_) => {
+    match crate::utils::resolve::dns::restore_public_dns().await {
+        Ok(()) => {
             logging!(debug, Type::Window, "DNS设置已恢复");
             true
         }
-        Err(_) => {
-            logging!(warn, Type::Window, "恢复DNS设置超时");
+        Err(error) => {
+            logging!(warn, Type::Window, "恢复DNS设置失败: {error:#}");
             false
         }
     }
