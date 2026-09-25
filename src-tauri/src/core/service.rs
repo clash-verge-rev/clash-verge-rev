@@ -242,7 +242,7 @@ fn macos_service_install_marker_exists() -> std::io::Result<bool> {
 }
 
 #[cfg(windows)]
-pub(crate) fn trusted_service_evidence() -> Result<bool> {
+fn open_registered_service() -> Result<Option<windows_service::service::Service>> {
     use windows_service::{
         Error as WindowsServiceError,
         service::ServiceAccess,
@@ -255,15 +255,34 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
         clash_verge_service_ipc::WINDOWS_SERVICE_NAME,
         ServiceAccess::QUERY_STATUS,
     ) {
-        Ok(service) => {
-            drop(service);
-            Ok(true)
-        }
+        Ok(service) => Ok(Some(service)),
         Err(WindowsServiceError::Winapi(error)) if error.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) => {
-            Ok(false)
+            Ok(None)
         }
         Err(error) => Err(error).context("failed to inspect Windows service registration"),
     }
+}
+
+#[cfg(windows)]
+pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    Ok(open_registered_service()?.is_some())
+}
+
+/// Whether IPC cannot succeed until the service is started again. A service that is starting, or
+/// that the SCM has not started yet this boot, is left to the IPC retries, which wait for it.
+#[cfg(windows)]
+pub(crate) fn service_stopped() -> Result<bool> {
+    use windows_service::service::{ServiceExitCode, ServiceState};
+
+    const ERROR_SERVICE_NEVER_STARTED: u32 = 1077;
+    let Some(service) = open_registered_service()? else {
+        return Ok(true);
+    };
+    let status = service
+        .query_status()
+        .context("failed to query Windows service status")?;
+    Ok(status.current_state == ServiceState::Stopped
+        && status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED))
 }
 
 #[cfg(target_os = "linux")]
