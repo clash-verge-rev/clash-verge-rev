@@ -12,7 +12,10 @@ use crate::{
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ServiceInstallOutcome {
     Installed,
-    Sidecar { reason: String },
+    #[cfg(any(windows, test))]
+    Sidecar {
+        reason: String,
+    },
 }
 
 async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str) -> CmdResult<ServiceInstallOutcome> {
