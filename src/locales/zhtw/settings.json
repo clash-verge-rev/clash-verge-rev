@@ -655,6 +655,7 @@
         "modeUpdateFailed": "切換代理模式失敗",
         "restartFailed": "重啟內核失敗",
         "startFailed": "啟動內核失敗",
+        "serviceCoreStopped": "服務執行的內核意外停止",
         "stopFailed": "停止內核失敗"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "已更新 GeoData"
       },
       "clashService": {
+        "appDataNotOwned": "服務拒絕啟動核心：磁碟上應用程式資料目錄的擁有者不是目前帳戶（常見於使用者目錄位於外接磁碟）。修復服務無法解決此問題，請在終端機執行以下命令，然後重新啟動軟體：",
         "installSuccess": "已成功安裝服務",
+        "permissionFallback": "{{reason}} 已切換至一般模式（Sidecar），一般權限下無法使用 TUN。可依文件修復後重新安裝服務；不想或不會修復時，可直接以系統管理員身分執行軟體，無需安裝服務。",
+        "permissionWritableReason": "核心檔案或上層資料夾允許一般帳戶修改，服務為防止核心被替換而拒絕以高權限執行。",
+        "permissionRejectedReason": "服務無法確認核心檔案及所在目錄是否安全，已拒絕以高權限執行。",
+        "permissionRepairGuide": "查看修復方法",
         "sidecarFallback": "服務無法啟動核心，已降級為 Sidecar 模式執行，服務仍無法使用。",
         "uninstallSuccess": "已成功解除安裝服務"
       },

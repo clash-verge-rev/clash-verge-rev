@@ -62,9 +62,17 @@ impl RunStateEnv for RealEnv {
     }
 
     async fn trusted_install_evidence(&self) -> Result<bool> {
-        tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
+        let registered = tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
             .await
-            .context("service registration probe did not finish")?
+            .context("service registration probe did not finish")??;
+        // A helper that outlived its registration is a broken Service, not an absent one.
+        #[cfg(unix)]
+        if !registered && let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available().await {
+            return Ok(error
+                .downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>()
+                .is_some());
+        }
+        Ok(registered)
     }
 
     fn is_elevated(&self) -> bool {

@@ -13,6 +13,7 @@ import {
   repairService,
   restartCore,
   type RunState,
+  type ServiceInstallOutcome,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { setCacheData, useQuery } from '@/services/query-client'
@@ -79,16 +80,15 @@ export const ServiceMigrationDialog = () => {
   const handleServiceAction = async () => {
     setLoading(true)
     setWorkflowIncomplete(true)
-    let actionSucceeded = false
+    let outcome: ServiceInstallOutcome | undefined
     try {
       if (remedy === 'install') {
-        await installService()
+        outcome = await installService()
       } else if (remedy === 'repair') {
-        await repairService()
+        outcome = await repairService()
       } else {
-        await reinstallService()
+        outcome = await reinstallService()
       }
-      actionSucceeded = true
     } catch (error) {
       showNotice.error(
         'layout.components.serviceMigration.errors.actionFailed',
@@ -106,8 +106,18 @@ export const ServiceMigrationDialog = () => {
         error,
       )
     }
-    if (!actionSucceeded || !initialRefreshSucceeded) {
+    if (!outcome || !initialRefreshSucceeded) {
       setLoading(false)
+      return
+    }
+    if (outcome.status === 'sidecar') {
+      setWorkflowIncomplete(false)
+      setLoading(false)
+      showNotice.warning(
+        'settings.feedback.notifications.clashService.permissionFallback',
+        { reason: outcome.reason },
+        0,
+      )
       return
     }
 

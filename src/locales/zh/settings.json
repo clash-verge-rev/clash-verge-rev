@@ -655,6 +655,7 @@
         "modeUpdateFailed": "切换代理模式失败",
         "restartFailed": "重启内核失败",
         "startFailed": "启动内核失败",
+        "serviceCoreStopped": "服务运行的内核意外停止",
         "stopFailed": "停止内核失败"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "已更新 GeoData"
       },
       "clashService": {
+        "appDataNotOwned": "服务拒绝启动内核：磁盘上应用数据目录的所有者不是当前账户（常见于用户目录位于外置磁盘）。修复服务无法解决此问题，请在终端运行以下命令，然后重启软件：",
         "installSuccess": "已成功安装服务",
+        "permissionFallback": "{{reason}} 已切换到普通模式（Sidecar），普通权限下无法使用 TUN。可按文档修复后重装服务；不想或不会修复时，可直接以管理员身份运行软件，无需安装服务。",
+        "permissionWritableReason": "内核文件或上级文件夹允许普通账户修改，服务为防止内核被替换而拒绝高权限运行。",
+        "permissionRejectedReason": "服务无法确认内核文件及所在目录是否安全，已拒绝高权限运行。",
+        "permissionRepairGuide": "查看修复方法",
         "sidecarFallback": "服务无法启动内核，已降级为 Sidecar 模式运行，服务仍不可用。",
         "uninstallSuccess": "已成功卸载服务"
       },

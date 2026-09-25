@@ -47,9 +47,7 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
         return match &reply.core {
             Some(clash_verge_service_ipc::CoreAvailability::Ready) => ServiceVersionCheck::Ready,
             Some(clash_verge_service_ipc::CoreAvailability::Rejected { reason }) => {
-                ServiceVersionCheck::CoreUnavailable(format!(
-                    "approved core was rejected: {reason}; reinstall the service to repair it"
-                ))
+                ServiceVersionCheck::CoreUnavailable(format!("approved core was rejected: {reason}"))
             }
             _ => ServiceVersionCheck::CoreUnavailable(
                 "the selected approved core is missing or does not match; reinstall the service to repair it".into(),

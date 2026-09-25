@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Proxy-Modus konnte nicht geändert werden",
         "restartFailed": "Kern konnte nicht neu gestartet werden",
         "startFailed": "Kern konnte nicht gestartet werden",
+        "serviceCoreStopped": "Der vom Dienst ausgeführte Kern wurde unerwartet beendet",
         "stopFailed": "Kern konnte nicht gestoppt werden"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "Geo-Daten wurden aktualisiert"
       },
       "clashService": {
+        "appDataNotOwned": "Der Dienst hat den Start des Kerns abgelehnt, weil der App-Datenordner auf dem Datenträger nicht Ihrem Konto gehört (häufig, wenn der Benutzerordner auf einem externen Laufwerk liegt). Eine Reparatur des Dienstes behebt das nicht. Führen Sie diesen Befehl im Terminal aus und starten Sie die App danach neu:",
         "installSuccess": "Service erfolgreich installiert",
+        "permissionFallback": "{{reason}} Zum Sidecar-Modus gewechselt; TUN benötigt Administratorrechte. Reparieren Sie den Dienst gemäß Anleitung und installieren Sie ihn neu, oder starten Sie die App als Administrator ohne Dienstinstallation.",
+        "permissionWritableReason": "Normale Konten können Kerndateien oder übergeordnete Ordner ändern. Daher verweigert der Dienst die Ausführung mit erhöhten Rechten.",
+        "permissionRejectedReason": "Der Dienst konnte nicht bestätigen, dass die Kerndateien und Ordner für die Ausführung mit erhöhten Rechten sicher sind.",
+        "permissionRepairGuide": "Reparaturanleitung öffnen",
         "sidecarFallback": "Der Dienst konnte den Kern nicht starten. Die Anwendung läuft im Sidecar-Modus weiter; der Dienst bleibt nicht verfügbar.",
         "uninstallSuccess": "Service erfolgreich deinstalliert"
       },

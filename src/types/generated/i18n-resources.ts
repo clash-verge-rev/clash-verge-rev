@@ -815,6 +815,7 @@ export interface TranslationResources {
             configUpdateFailed: string
             modeUpdateFailed: string
             restartFailed: string
+            serviceCoreStopped: string
             startFailed: string
             stopFailed: string
           }
@@ -844,7 +845,12 @@ export interface TranslationResources {
             versionUpdated: string
           }
           clashService: {
+            appDataNotOwned: string
             installSuccess: string
+            permissionFallback: string
+            permissionRejectedReason: string
+            permissionRepairGuide: string
+            permissionWritableReason: string
             sidecarFallback: string
             uninstallSuccess: string
           }

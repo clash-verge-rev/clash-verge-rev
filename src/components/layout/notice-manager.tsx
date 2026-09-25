@@ -3,6 +3,7 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  Link,
   Box,
   Stack,
   type SnackbarOrigin,
@@ -18,6 +19,14 @@ import {
   showNotice,
 } from '@/services/notice-service'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
+import { openExternalUrl } from '@/utils/open-external-url'
+
+const SERVICE_PERMISSION_NOTICE =
+  'settings.feedback.notifications.clashService.permissionFallback'
+const SERVICE_PERMISSION_GUIDE =
+  'https://clash-verge-rev.github.io/faq/windows.html#service-core-permissions'
+const SERVICE_OWNER_NOTICE =
+  'settings.feedback.notifications.clashService.appDataNotOwned'
 
 type NoticePosition = NonNullable<IVergeConfig['notice_position']>
 type NoticeItem = ReturnType<typeof getSnapshotNotices>[number]
@@ -58,6 +67,55 @@ const resolveNoticeMessage = (
 
   const i18n = notice.i18n
   if (!i18n) return bound(notice.message)
+
+  if (i18n.key === SERVICE_PERMISSION_NOTICE) {
+    return (
+      <>
+        {t(SERVICE_PERMISSION_NOTICE, {
+          reason: t(
+            'settings.feedback.notifications.clashService.permissionRejectedReason',
+          ),
+        })}
+        <Box sx={{ mt: 1 }}>
+          <Link
+            href={SERVICE_PERMISSION_GUIDE}
+            color="inherit"
+            underline="always"
+            onClick={(event) => {
+              event.preventDefault()
+              void openExternalUrl(SERVICE_PERMISSION_GUIDE).catch(
+                showNotice.error,
+              )
+            }}
+          >
+            {t(
+              'settings.feedback.notifications.clashService.permissionRepairGuide',
+            )}
+          </Link>
+        </Box>
+      </>
+    )
+  }
+
+  if (i18n.key === SERVICE_OWNER_NOTICE) {
+    return (
+      <>
+        {t(SERVICE_OWNER_NOTICE)}
+        <Box
+          component="code"
+          sx={{
+            display: 'block',
+            mt: 1,
+            userSelect: 'text',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+          }}
+        >
+          {String(i18n.params?.command ?? '')}
+        </Box>
+      </>
+    )
+  }
 
   const source = (i18n.params ?? {}) as Record<string, unknown>
   // Bound both parameters and their final interpolation.
@@ -132,6 +190,12 @@ const resolveNoticeCopyText = (
   notice: NoticeItem,
   t: TranslationFn,
 ): string | undefined => {
+  if (notice.i18n?.key === SERVICE_PERMISSION_NOTICE) {
+    return extractNoticeCopyText(notice.i18n.params?.reason)
+  }
+  if (notice.i18n?.key === SERVICE_OWNER_NOTICE) {
+    return extractNoticeCopyText(notice.i18n.params?.command)
+  }
   if (
     notice.i18n?.key === 'shared.feedback.notices.prefixedRaw' ||
     notice.i18n?.key === 'shared.feedback.notices.raw'

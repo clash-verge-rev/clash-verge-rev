@@ -655,6 +655,7 @@
         "modeUpdateFailed": "프록시 모드를 변경하지 못했습니다",
         "restartFailed": "코어를 재시작하지 못했습니다",
         "startFailed": "코어를 시작하지 못했습니다",
+        "serviceCoreStopped": "서비스에서 실행 중인 코어가 예기치 않게 중지되었습니다",
         "stopFailed": "코어를 중지하지 못했습니다"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "GeoData가 업데이트되었습니다"
       },
       "clashService": {
+        "appDataNotOwned": "서비스가 코어 시작을 거부했습니다. 디스크상의 앱 데이터 폴더 소유자가 현재 계정이 아닙니다(홈 폴더가 외장 드라이브에 있을 때 흔히 발생). 서비스를 복구해도 해결되지 않습니다. 터미널에서 다음 명령을 실행한 후 앱을 다시 시작하세요:",
         "installSuccess": "서비스가 설치되었습니다",
+        "permissionFallback": "{{reason}} 일반 모드(Sidecar)로 전환했습니다. TUN에는 관리자 권한이 필요합니다. 안내에 따라 수정 후 서비스를 다시 설치하거나, 서비스 설치 없이 앱을 관리자 권한으로 실행하세요.",
+        "permissionWritableReason": "일반 계정이 코어 파일이나 상위 폴더를 수정할 수 있어 서비스가 높은 권한으로 실행하는 것을 거부했습니다.",
+        "permissionRejectedReason": "서비스가 코어 파일과 폴더를 높은 권한으로 안전하게 실행할 수 있는지 확인하지 못했습니다.",
+        "permissionRepairGuide": "해결 방법 보기",
         "sidecarFallback": "서비스가 코어를 시작하지 못해 Sidecar 모드로 계속 실행합니다. 서비스는 여전히 사용할 수 없습니다.",
         "uninstallSuccess": "서비스가 제거되었습니다"
       },

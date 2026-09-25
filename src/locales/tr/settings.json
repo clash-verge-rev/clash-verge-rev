@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Proxy modu değiştirilemedi",
         "restartFailed": "Çekirdek yeniden başlatılamadı",
         "startFailed": "Çekirdek başlatılamadı",
+        "serviceCoreStopped": "Hizmetin çalıştırdığı çekirdek beklenmedik şekilde durdu",
         "stopFailed": "Çekirdek durdurulamadı"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "GeoData Güncellendi"
       },
       "clashService": {
+        "appDataNotOwned": "Hizmet çekirdeği başlatmayı reddetti; çünkü diskte uygulama veri klasörünün sahibi hesabınız değil (ana klasör harici bir sürücüdeyse sık görülür). Hizmeti onarmak bunu düzeltmez. Bu komutu bir terminalde çalıştırın, ardından uygulamayı yeniden başlatın:",
         "installSuccess": "Hizmet Başarıyla Kuruldu",
+        "permissionFallback": "{{reason}} Sidecar moduna geçildi; TUN yönetici yetkisi gerektirir. Kılavuza göre sorunu düzeltip hizmeti yeniden yükleyin veya hizmeti yüklemeden uygulamayı yönetici olarak çalıştırın.",
+        "permissionWritableReason": "Normal hesaplar çekirdek dosyalarını veya üst klasörü değiştirebildiği için hizmet, çekirdeği yükseltilmiş yetkilerle çalıştırmayı reddetti.",
+        "permissionRejectedReason": "Hizmet, çekirdek dosya ve klasörlerinin yükseltilmiş yetkilerle güvenle çalıştırılabileceğini doğrulayamadı.",
+        "permissionRepairGuide": "Düzeltme adımlarını görüntüle",
         "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },

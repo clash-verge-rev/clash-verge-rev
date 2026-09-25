@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Failed to change proxy mode",
         "restartFailed": "Failed to restart the core",
         "startFailed": "Failed to start the core",
+        "serviceCoreStopped": "The service's core stopped unexpectedly",
         "stopFailed": "Failed to stop the core"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "GeoData Updated"
       },
       "clashService": {
+        "appDataNotOwned": "The service refused to start the core because, on disk, the app data folder is not owned by your account (common when the home folder is on an external drive). Repairing the service will not fix this. Run this command in a terminal, then restart the app:",
         "installSuccess": "Service Installed Successfully",
+        "permissionFallback": "{{reason}} Switched to normal mode (Sidecar); TUN requires administrator privileges. Follow the guide to fix and reinstall the service. If you prefer not to fix it or do not know how, run the app as administrator without installing the service.",
+        "permissionWritableReason": "Ordinary accounts can modify the core files or a parent folder, so the service refused to run the core with elevated privileges.",
+        "permissionRejectedReason": "The service could not confirm that the core files and folders are safe to run with elevated privileges.",
+        "permissionRepairGuide": "View repair instructions",
         "sidecarFallback": "The service could not start the core. Switched to Sidecar mode; the service remains unavailable.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },

@@ -12,6 +12,7 @@ import {
   restartCore,
   type FailedOperation,
   type PendingFailure,
+  type ServiceInstallOutcome,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
@@ -99,12 +100,22 @@ export const SysproxyPrivilegeDialog = () => {
 
   const handleFix = async () => {
     try {
+      let outcome: ServiceInstallOutcome | undefined
       if (remedy === 'reinstallAndRestart') {
         setStep('installing')
-        await reinstallService()
+        outcome = await reinstallService()
       } else if (remedy === 'installAndRestart') {
         setStep('installing')
-        await installService()
+        outcome = await installService()
+      }
+      if (outcome?.status === 'sidecar') {
+        showNotice.warning(
+          'settings.feedback.notifications.clashService.permissionFallback',
+          { reason: outcome.reason },
+          0,
+        )
+        close()
+        return
       }
       setStep('restarting')
       await restartCore()

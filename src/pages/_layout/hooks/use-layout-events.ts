@@ -1,3 +1,4 @@
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect } from 'react'
 
 import { revalidateProfiles } from '@/hooks/use-profiles'
@@ -5,6 +6,8 @@ import { runStateQueryKey } from '@/hooks/use-system-state'
 import type { RunState } from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
 import { revalidateQueries, setCacheData } from '@/services/query-client'
+
+import { forgetShownStartupError } from '../utils/notification-handlers'
 
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
@@ -31,7 +34,7 @@ export const useLayoutEvents = (
       void revalidateProfiles()
     }
 
-    return subscribeVergeEvents(
+    const unsubscribe = subscribeVergeEvents(
       {
         'profile-changed': handleProfileChanged,
         'verge://refresh-profiles': () => void revalidateProfiles(),
@@ -57,6 +60,7 @@ export const useLayoutEvents = (
         // Transitions carry the full run-state snapshot, so write it directly to cache.
         'verge://run-state-changed': (payload) => {
           void setCacheData<RunState>(runStateQueryKey, payload)
+          if (payload.mode !== 'NotRunning') forgetShownStartupError()
         },
         'verge://notice-message': handleNotice,
       },
@@ -67,7 +71,16 @@ export const useLayoutEvents = (
         handleNotice(['enhance::discarded_keys', ''])
         handleNotice(['service_core::sidecar_fallback', ''])
         handleNotice(['service_core::repair_required', ''])
+        handleNotice(['service_core::app_data_not_owned', ''])
+        handleNotice(['core_start::error', ''])
       },
     )
+    const unlistenFocus = getCurrentWindow().onFocusChanged(({ payload }) => {
+      if (payload) handleNotice(['core_start::error', ''])
+    })
+    return () => {
+      unsubscribe()
+      void unlistenFocus.then((unlisten) => unlisten())
+    }
   }, [handleNotice])
 }

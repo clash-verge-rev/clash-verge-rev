@@ -655,6 +655,7 @@
         "modeUpdateFailed": "Gagal mengubah mode proxy",
         "restartFailed": "Gagal memulai ulang core",
         "startFailed": "Gagal memulai core",
+        "serviceCoreStopped": "Core yang dijalankan layanan berhenti secara tak terduga",
         "stopFailed": "Gagal menghentikan core"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "GeoData Diperbarui"
       },
       "clashService": {
+        "appDataNotOwned": "Layanan menolak memulai inti karena, di disk, folder data aplikasi tidak dimiliki oleh akun Anda (sering terjadi jika folder beranda berada di drive eksternal). Memperbaiki layanan tidak akan mengatasinya. Jalankan perintah ini di terminal, lalu mulai ulang aplikasi:",
         "installSuccess": "Layanan Berhasil Diinstal",
+        "permissionFallback": "{{reason}} Beralih ke mode Sidecar; TUN memerlukan hak administrator. Ikuti panduan untuk memperbaiki dan menginstal ulang layanan, atau jalankan aplikasi sebagai administrator tanpa menginstal layanan.",
+        "permissionWritableReason": "Akun biasa dapat mengubah berkas inti atau folder induknya, sehingga layanan menolak menjalankan inti dengan hak istimewa.",
+        "permissionRejectedReason": "Layanan tidak dapat memastikan bahwa berkas dan folder inti aman dijalankan dengan hak istimewa.",
+        "permissionRepairGuide": "Lihat panduan perbaikan",
         "sidecarFallback": "Layanan tidak dapat memulai inti. Beralih ke mode Sidecar; layanan masih tidak tersedia.",
         "uninstallSuccess": "Layanan Berhasil Dicopot"
       },

@@ -655,6 +655,7 @@
         "modeUpdateFailed": "No se pudo cambiar el modo de proxy",
         "restartFailed": "No se pudo reiniciar el núcleo",
         "startFailed": "No se pudo iniciar el núcleo",
+        "serviceCoreStopped": "El núcleo ejecutado por el servicio se detuvo inesperadamente",
         "stopFailed": "No se pudo detener el núcleo"
       },
       "clashService": {
@@ -683,7 +684,12 @@
         "geoDataUpdated": "GeoData actualizado"
       },
       "clashService": {
+        "appDataNotOwned": "El servicio se negó a iniciar el núcleo porque, en el disco, la carpeta de datos de la aplicación no pertenece a su cuenta (es habitual cuando la carpeta de inicio está en una unidad externa). Reparar el servicio no lo soluciona. Ejecute este comando en una terminal y luego reinicie la aplicación:",
         "installSuccess": "Servicio instalado con éxito",
+        "permissionFallback": "{{reason}} Se ha cambiado al modo Sidecar; TUN requiere permisos de administrador. Siga la guía para reparar y reinstalar el servicio, o ejecute la aplicación como administrador sin instalar el servicio.",
+        "permissionWritableReason": "Las cuentas normales pueden modificar los archivos del núcleo o una carpeta superior, por lo que el servicio rechazó ejecutarlo con privilegios elevados.",
+        "permissionRejectedReason": "El servicio no pudo confirmar que los archivos y carpetas del núcleo sean seguros para ejecutarlos con privilegios elevados.",
+        "permissionRepairGuide": "Ver instrucciones de reparación",
         "sidecarFallback": "El servicio no pudo iniciar el núcleo. Se ha cambiado al modo Sidecar; el servicio sigue sin estar disponible.",
         "uninstallSuccess": "Servicio desinstalado con éxito"
       },
