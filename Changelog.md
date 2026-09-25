@@ -3,6 +3,7 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复「代理集合」「规则集合」订阅响应较慢时更新误报失败、且不显示真实失败原因的问题
 
 **🖥️ Windows**
 
