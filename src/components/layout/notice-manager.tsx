@@ -25,6 +25,8 @@ const SERVICE_PERMISSION_NOTICE =
   'settings.feedback.notifications.clashService.permissionFallback'
 const SERVICE_PERMISSION_GUIDE =
   'https://clash-verge-rev.github.io/faq/windows.html#service-core-permissions'
+const SERVICE_OWNER_NOTICE =
+  'settings.feedback.notifications.clashService.appDataNotOwned'
 
 type NoticePosition = NonNullable<IVergeConfig['notice_position']>
 type NoticeItem = ReturnType<typeof getSnapshotNotices>[number]
@@ -90,6 +92,26 @@ const resolveNoticeMessage = (
               'settings.feedback.notifications.clashService.permissionRepairGuide',
             )}
           </Link>
+        </Box>
+      </>
+    )
+  }
+
+  if (i18n.key === SERVICE_OWNER_NOTICE) {
+    return (
+      <>
+        {t(SERVICE_OWNER_NOTICE)}
+        <Box
+          component="code"
+          sx={{
+            display: 'block',
+            mt: 1,
+            userSelect: 'text',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+          }}
+        >
+          {String(i18n.params?.command ?? '')}
         </Box>
       </>
     )
@@ -170,6 +192,9 @@ const resolveNoticeCopyText = (
 ): string | undefined => {
   if (notice.i18n?.key === SERVICE_PERMISSION_NOTICE) {
     return extractNoticeCopyText(notice.i18n.params?.reason)
+  }
+  if (notice.i18n?.key === SERVICE_OWNER_NOTICE) {
+    return extractNoticeCopyText(notice.i18n.params?.command)
   }
   if (
     notice.i18n?.key === 'shared.feedback.notices.prefixedRaw' ||
