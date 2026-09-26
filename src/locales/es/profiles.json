@@ -124,7 +124,11 @@
         "useSystemProxy": "Usar proxy del sistema para actualizar",
         "useClashProxy": "Usar proxy del núcleo para actualizar",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "Permitir sobrescritura de DNS"
+      },
+      "helpers": {
+        "allowDnsOverride": "Permite sobrescribir la configuración de DNS de este perfil con la de la aplicación, incluso después de reiniciar la aplicación o actualizar la suscripción. Al activar esta opción y guardar, también se activa la sobrescritura de DNS para este perfil."
       },
       "types": {
         "remote": "Remoto",

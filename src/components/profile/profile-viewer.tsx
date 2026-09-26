@@ -1,6 +1,7 @@
 import {
   Box,
   FormControl,
+  FormHelperText,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -56,6 +57,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           with_proxy: false,
           self_proxy: false,
           allow_auto_update: true,
+          allow_dns_override: false,
         },
       },
     })
@@ -119,37 +121,19 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         const isUpdate = openType === 'edit'
 
         const isActivating = isUpdate && form.uid === (profiles?.current ?? '')
+        let runtimeApplied = false
 
-        // Preserve proxy settings when the remote retry succeeds through another route.
-        const originalOptions = {
-          with_proxy: form.option?.with_proxy,
-          self_proxy: form.option?.self_proxy,
-        }
-
-        if (!isRemote) {
-          if (openType === 'new') {
-            await createProfile(item, fileDataRef.current)
-          } else {
-            if (!form.uid) {
-              throw new Error(
-                t('profiles.modals.profileForm.errors.uidMissing'),
-              )
-            }
-            await patchProfile(form.uid, item)
+        if (isUpdate) {
+          if (!form.uid) {
+            throw new Error(t('profiles.modals.profileForm.errors.uidMissing'))
           }
+          runtimeApplied = await patchProfile(form.uid, item)
         } else {
           try {
-            if (openType === 'new') {
-              await createProfile(item, fileDataRef.current)
-            } else {
-              if (!form.uid) {
-                throw new Error(
-                  t('profiles.modals.profileForm.errors.uidMissing'),
-                )
-              }
-              await patchProfile(form.uid, item)
-            }
-          } catch {
+            await createProfile(item, fileDataRef.current)
+          } catch (err) {
+            if (!isRemote) throw err
+
             showNotice.info(
               'profiles.modals.profileForm.feedback.notifications.creationRetry',
             )
@@ -163,18 +147,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               },
             }
 
-            if (openType === 'new') {
-              await createProfile(retryItem, fileDataRef.current)
-            } else {
-              if (!form.uid) {
-                throw new Error(
-                  t('profiles.modals.profileForm.errors.uidMissing'),
-                )
-              }
-              await patchProfile(form.uid, retryItem)
-
-              await patchProfile(form.uid, { option: originalOptions })
-            }
+            await createProfile(retryItem, fileDataRef.current)
 
             showNotice.success(
               'profiles.modals.profileForm.feedback.notifications.creationSuccess',
@@ -187,7 +160,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         fileDataRef.current = null
 
         setTimeout(() => {
-          onChange(isActivating)
+          onChange(isActivating && !runtimeApplied)
         }, 0)
       } catch (err) {
         showNotice.error('profiles.modals.profileForm.errors.saveFailed', err)
@@ -430,6 +403,32 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                   color="primary"
                 />
               </StyledBox>
+            )}
+          />
+
+          <Controller
+            name="option.allow_dns_override"
+            control={control}
+            render={({ field }) => (
+              <Box>
+                <StyledBox>
+                  <InputLabel htmlFor="allow-dns-override">
+                    {t('profiles.modals.profileForm.fields.allowDnsOverride')}
+                  </InputLabel>
+                  <Switch
+                    {...field}
+                    id="allow-dns-override"
+                    checked={field.value ?? false}
+                    color="primary"
+                    slotProps={{
+                      input: { 'aria-describedby': 'allow-dns-override-help' },
+                    }}
+                  />
+                </StyledBox>
+                <FormHelperText id="allow-dns-override-help" sx={{ mx: 1 }}>
+                  {t('profiles.modals.profileForm.helpers.allowDnsOverride')}
+                </FormHelperText>
+              </Box>
             )}
           />
         </>

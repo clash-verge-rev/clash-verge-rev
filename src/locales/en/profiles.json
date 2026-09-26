@@ -124,7 +124,11 @@
         "useSystemProxy": "Use System Proxy",
         "useClashProxy": "Use Clash Proxy",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "Allow DNS Override"
+      },
+      "helpers": {
+        "allowDnsOverride": "Allow the app’s DNS settings to override this profile’s DNS, including after restarts and updates. Turning this on and saving also enables DNS override for this profile."
       },
       "types": {
         "remote": "Remote",

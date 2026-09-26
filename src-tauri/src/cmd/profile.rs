@@ -6,8 +6,7 @@ use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
         profiles::{
-            PROFILE_WRITE_LOCK, profiles_append_item_with_filedata_safe, profiles_patch_item_safe,
-            profiles_reorder_safe, profiles_save_file_safe,
+            PROFILE_WRITE_LOCK, profiles_append_item_with_filedata_safe, profiles_reorder_safe, profiles_save_file_safe,
         },
         profiles_append_item_safe,
     },
@@ -151,7 +150,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
             let (should_update, plan) = candidate.plan_delete_item(&index)?;
             let guard = if should_update {
                 match CoreManager::global()
-                    .update_config_forced_with_profiles(&candidate, &original)
+                    .update_config_forced_with_profiles(&candidate, &original, || {})
                     .await?
                 {
                     Ok(guard) => Some(guard),
@@ -344,7 +343,7 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 }
 
 #[tauri::command]
-pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
+pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult<bool> {
     let profiles = Config::profiles().await;
     let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
         && let Some(new_option) = profile.option.as_ref()
@@ -361,11 +360,11 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // Prevent an in-flight restore from overwriting a newer UI or chain selection.
     let records_a_selection = profile.selected.is_some();
 
-    profiles_patch_item_safe(&index, &profile)
+    let runtime_applied = feat::patch_profile_with_dns(&index, &profile)
         .await
         .with_error_code("PROFILE_UPDATE_FAILED")?;
 
-    if records_a_selection {
+    if records_a_selection && !runtime_applied {
         profiles::supersede_selected_activation();
     }
 
@@ -380,7 +379,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         });
     }
 
-    Ok(())
+    Ok(runtime_applied)
 }
 
 #[tauri::command]

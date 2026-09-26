@@ -103,6 +103,9 @@ pub struct PrfOption {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_auto_update: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_dns_override: Option<bool>,
+
     pub merge: Option<String>,
 
     pub script: Option<String>,
@@ -125,6 +128,7 @@ impl PrfOption {
                 result.danger_accept_invalid_certs =
                     b_ref.danger_accept_invalid_certs.or(result.danger_accept_invalid_certs);
                 result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
+                result.allow_dns_override = b_ref.allow_dns_override.or(result.allow_dns_override);
                 result.update_interval = b_ref.update_interval.or(result.update_interval);
                 result.merge = b_ref.merge.clone().or(result.merge);
                 result.script = b_ref.script.clone().or(result.script);
@@ -179,6 +183,7 @@ impl PrfItem {
         let file = format!("{uid}.yaml").into();
         let opt_ref = option.as_ref();
         let update_interval = opt_ref.and_then(|o| o.update_interval);
+        let allow_dns_override = opt_ref.and_then(|o| o.allow_dns_override);
         let mut merge = opt_ref.and_then(|o| o.merge.clone());
         let mut script = opt_ref.and_then(|o| o.script.clone());
         let mut rules = opt_ref.and_then(|o| o.rules.clone());
@@ -221,6 +226,7 @@ impl PrfItem {
             extra: None,
             option: Some(PrfOption {
                 update_interval,
+                allow_dns_override,
                 merge,
                 script,
                 rules,
@@ -244,6 +250,7 @@ impl PrfItem {
         let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs = option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let allow_auto_update = Some(allow_auto_update_enabled(option));
+        let allow_dns_override = option.and_then(|o| o.allow_dns_override);
         let user_agent = option.and_then(|o| o.user_agent.clone());
         let update_interval = option.and_then(|o| o.update_interval);
         let timeout = option.and_then(|o| o.timeout_seconds).unwrap_or(20);
@@ -406,6 +413,7 @@ impl PrfItem {
                 proxies,
                 groups,
                 allow_auto_update,
+                allow_dns_override,
                 ..PrfOption::default()
             }),
             home,
@@ -505,6 +513,13 @@ impl PrfItem {
 }
 
 impl PrfItem {
+    pub(crate) fn allows_dns_override(&self) -> bool {
+        self.option
+            .as_ref()
+            .and_then(|option| option.allow_dns_override)
+            .unwrap_or(false)
+    }
+
     pub(crate) fn current_merge(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.merge.as_ref())
     }

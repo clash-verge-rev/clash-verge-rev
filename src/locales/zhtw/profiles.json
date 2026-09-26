@@ -124,7 +124,11 @@
         "useSystemProxy": "使用系統代理更新",
         "useClashProxy": "使用內核代理更新",
         "acceptInvalidCerts": "允許無效憑證（危險）",
-        "allowAutoUpdate": "允許自動更新"
+        "allowAutoUpdate": "允許自動更新",
+        "allowDnsOverride": "允許 DNS 覆寫"
+      },
+      "helpers": {
+        "allowDnsOverride": "允許使用應用程式中的 DNS 設定覆寫此訂閱的 DNS 設定，重新啟動和更新後仍然有效。開啟並儲存時，也會開啟此訂閱的 DNS 覆寫。"
       },
       "types": {
         "remote": "遠端",

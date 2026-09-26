@@ -124,7 +124,11 @@
         "useSystemProxy": "استفاده از پراکسی سیستم",
         "useClashProxy": "استفاده از پراکسی Clash",
         "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "اجازهٔ بازنویسی DNS"
+      },
+      "helpers": {
+        "allowDnsOverride": "به تنظیمات DNS برنامه اجازه می‌دهد DNS این پروفایل را بازنویسی کنند. این اجازه پس از راه‌اندازی مجدد برنامه و به‌روزرسانی اشتراک حفظ می‌شود. با روشن کردن این گزینه و ذخیره، بازنویسی DNS این پروفایل نیز فعال می‌شود."
       },
       "types": {
         "remote": "از راه دور",

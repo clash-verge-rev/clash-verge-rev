@@ -124,7 +124,11 @@
         "useSystemProxy": "Sistem Vekil'ini Kullan",
         "useClashProxy": "Clash Vekil'ini Kullan",
         "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
-        "allowAutoUpdate": "Otomatik Güncellemeye İzin Ver"
+        "allowAutoUpdate": "Otomatik Güncellemeye İzin Ver",
+        "allowDnsOverride": "DNS Üzerine Yazmaya İzin Ver"
+      },
+      "helpers": {
+        "allowDnsOverride": "Bu profilin DNS ayarlarını uygulamanın DNS ayarlarıyla değiştirmeye izin verir; bu izin, uygulama yeniden başlatıldığında ve abonelik güncellendiğinde de korunur. Bu seçeneği açıp kaydetmek, bu profil için DNS Üzerine Yazma'yı da etkinleştirir."
       },
       "types": {
         "remote": "Uzak",

@@ -124,7 +124,11 @@
         "useSystemProxy": "Gunakan Proksi Sistem",
         "useClashProxy": "Gunakan Proksi Clash",
         "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "allowDnsOverride": "Izinkan Penimpaan DNS"
+      },
+      "helpers": {
+        "allowDnsOverride": "Izinkan pengaturan DNS aplikasi menimpa DNS profil ini. Izin tetap berlaku setelah aplikasi dimulai ulang dan langganan diperbarui. Mengaktifkan lalu menyimpan opsi ini juga mengaktifkan penimpaan DNS untuk profil ini."
       },
       "types": {
         "remote": "Jarak jauh",

@@ -124,7 +124,11 @@
         "useSystemProxy": "시스템 프록시 사용",
         "useClashProxy": "Clash 프록시 사용",
         "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
-        "allowAutoUpdate": "자동 업데이트 허용"
+        "allowAutoUpdate": "자동 업데이트 허용",
+        "allowDnsOverride": "DNS 덮어쓰기 허용"
+      },
+      "helpers": {
+        "allowDnsOverride": "앱의 DNS 설정으로 이 프로필의 DNS 설정을 덮어쓰도록 허용하며, 앱 재시작 및 구독 업데이트 후에도 허용 상태가 유지됩니다. 이 옵션을 켜고 저장하면 이 프로필의 DNS 덮어쓰기도 활성화됩니다."
       },
       "types": {
         "remote": "원격",
