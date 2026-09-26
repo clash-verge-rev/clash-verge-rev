@@ -273,25 +273,29 @@ impl Config {
     }
 
     /// Commits drafts during exit/restart/shutdown so user changes are not lost.
+    /// A config with nothing staged keeps its file, so its timestamps stay put.
     pub async fn apply_all_and_save_file() {
         logging!(debug, Type::Config, "save all draft data");
         let save_clash_task = AsyncHandler::spawn(|| async {
             let clash = Self::clash().await;
-            clash.apply();
-            logging_error!(Type::Config, clash.data_arc().save_config().await);
+            if clash.apply() {
+                logging_error!(Type::Config, clash.data_arc().save_config().await);
+            }
         });
 
         let save_verge_task = AsyncHandler::spawn(|| async {
             let verge = Self::verge().await;
-            verge.apply();
-            logging_error!(Type::Config, verge.data_arc().save_file().await);
+            if verge.apply() {
+                logging_error!(Type::Config, verge.data_arc().save_file().await);
+            }
         });
 
         let save_profiles_task = AsyncHandler::spawn(|| async {
             let _profile_write = super::profiles::PROFILE_WRITE_LOCK.lock().await;
             let profiles = Self::profiles().await;
-            profiles.apply();
-            logging_error!(Type::Config, profiles.data_arc().save_file().await);
+            if profiles.apply() {
+                logging_error!(Type::Config, profiles.data_arc().save_file().await);
+            }
         });
 
         let _ = tokio::join!(save_clash_task, save_verge_task, save_profiles_task);
