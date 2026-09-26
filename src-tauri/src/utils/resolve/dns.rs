@@ -1,144 +1,102 @@
-use anyhow::Context as _;
+use anyhow::{Context as _, bail};
 use clash_verge_logging::{Type, logging};
 #[cfg(target_os = "macos")]
-use std::path::Path;
-use std::path::PathBuf;
+use serde_yaml_ng::{Mapping, Value};
+#[cfg(target_os = "macos")]
+use tokio::sync::Mutex;
 
 #[cfg(target_os = "macos")]
-const DNS_STATE_FILE: &str = ".original_dns.txt";
+static DNS_LOCK: Mutex<()> = Mutex::const_new(());
 
-fn dns_state_dir() -> anyhow::Result<PathBuf> {
-    // The DNS scripts persist .original_dns.txt relative to their working directory.
-    let dir = crate::utils::dirs::app_home_dir()?;
-    std::fs::create_dir_all(&dir).with_context(|| format!("failed to create DNS state directory {}", dir.display()))?;
-    Ok(dir)
+async fn run_script(name: &str, args: &[&str]) -> anyhow::Result<()> {
+    use crate::{core::handle::Handle, utils::dirs};
+    use tauri_plugin_shell::ShellExt as _;
+
+    let resources = dirs::app_resources_dir()?;
+    let state = dirs::app_home_dir()?;
+    std::fs::create_dir_all(&state).context("create DNS state directory")?;
+    // Legacy backups lack service identity and cannot safely be restored after a network change.
+    if resources.join(".original_dns.txt").exists() || state.join(".original_dns.txt").exists() {
+        bail!("legacy DNS backup has no network service identity; preserve it for manual recovery");
+    }
+    let output = Handle::app_handle()
+        .shell()
+        .command("bash")
+        .arg(resources.join(name).to_string_lossy().into_owned())
+        .args(args.iter().copied())
+        .current_dir(state)
+        .output()
+        .await?;
+    if !output.status.success() {
+        bail!("DNS operation failed: {}", String::from_utf8_lossy(&output.stderr));
+    }
+    Ok(())
 }
 
 #[cfg(target_os = "macos")]
-fn restore_dns_state_dir(resource_dir: &Path, state_dir: PathBuf) -> PathBuf {
-    if resource_dir.join(DNS_STATE_FILE).exists() {
-        resource_dir.to_path_buf()
+fn needs_public_dns(config: &Mapping) -> bool {
+    let section = |name: &str| config.get(Value::from(name)).and_then(Value::as_mapping);
+    let enabled =
+        |map: Option<&Mapping>| map.and_then(|m| m.get(Value::from("enable"))).and_then(Value::as_bool) == Some(true);
+    enabled(section("tun"))
+        && enabled(section("dns"))
+        && section("dns")
+            .and_then(|m| m.get(Value::from("enhanced-mode")))
+            .and_then(Value::as_str)
+            == Some("fake-ip")
+}
+
+// Called while the core's configuration/lifecycle serialization is held, after application succeeds.
+#[cfg(target_os = "macos")]
+pub async fn apply_runtime_dns() {
+    let _guard = DNS_LOCK.lock().await;
+    if crate::core::handle::Handle::global().is_exiting() {
+        return;
+    }
+    let runtime = crate::config::Config::runtime().await;
+    let enabled = !matches!(
+        *crate::core::CoreManager::global().get_running_mode(),
+        crate::core::manager::RunningMode::NotRunning
+    ) && runtime.latest_arc().config.as_ref().is_some_and(needs_public_dns);
+    let result = if enabled {
+        run_script("set_dns.sh", &["114.114.114.114"]).await
     } else {
-        state_dir
-    }
-}
-
-pub async fn set_public_dns(dns_server: String) {
-    use crate::{core::handle, utils::dirs};
-    use tauri_plugin_shell::ShellExt as _;
-    let app_handle = handle::Handle::app_handle();
-
-    logging!(debug, Type::Config, "try to set system dns");
-    let resource_dir = match dirs::app_resources_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            logging!(error, Type::Config, "Failed to get resource directory: {}", e);
-            return;
-        }
+        run_script("unset_dns.sh", &[]).await
     };
-    let script = resource_dir.join("set_dns.sh");
-    if !script.exists() {
-        logging!(error, Type::Config, "DNS script not found: {}", script.display());
-        return;
-    }
-    let script = script.to_string_lossy().into_owned();
-    let state_dir = match dns_state_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            logging!(error, Type::Config, "Failed to get DNS state directory: {e:#}");
-            return;
-        }
-    };
-    match app_handle
-        .shell()
-        .command("bash")
-        .args([script, dns_server])
-        .current_dir(state_dir)
-        .status()
-        .await
-    {
-        Ok(status) => {
-            if status.success() {
-                logging!(info, Type::Config, "set system dns successfully");
-            } else {
-                let code = status.code().unwrap_or(-1);
-                logging!(error, Type::Config, "set system dns failed: {code}");
-            }
-        }
-        Err(err) => {
-            logging!(error, Type::Config, "set system dns failed: {err}");
-        }
+    if let Err(error) = result {
+        logging!(error, Type::Config, "Failed to apply system DNS: {error:#}");
     }
 }
 
 #[cfg(target_os = "macos")]
-pub async fn restore_public_dns() {
-    use crate::{core::handle, utils::dirs};
-    use tauri_plugin_shell::ShellExt as _;
-    let app_handle = handle::Handle::app_handle();
-    logging!(debug, Type::Config, "try to unset system dns");
-    let resource_dir = match dirs::app_resources_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            logging!(error, Type::Config, "Failed to get resource directory: {}", e);
-            return;
-        }
-    };
-    let script = resource_dir.join("unset_dns.sh");
-    if !script.exists() {
-        logging!(error, Type::Config, "DNS script not found: {}", script.display());
-        return;
-    }
-    let script = script.to_string_lossy().into_owned();
-    let state_dir = match dns_state_dir() {
-        Ok(dir) => dir,
-        Err(e) => {
-            logging!(error, Type::Config, "Failed to get DNS state directory: {e:#}");
-            return;
-        }
-    };
-    let state_dir = restore_dns_state_dir(&resource_dir, state_dir);
-    match app_handle
-        .shell()
-        .command("bash")
-        .args([script])
-        .current_dir(state_dir)
-        .status()
-        .await
-    {
-        Ok(status) => {
-            if status.success() {
-                logging!(info, Type::Config, "unset system dns successfully");
-            } else {
-                let code = status.code().unwrap_or(-1);
-                logging!(error, Type::Config, "unset system dns failed: {code}");
-            }
-        }
-        Err(err) => {
-            logging!(error, Type::Config, "unset system dns failed: {err}");
-        }
-    }
+pub async fn restore_public_dns() -> anyhow::Result<()> {
+    let _guard = DNS_LOCK.lock().await;
+    run_script("unset_dns.sh", &[]).await
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
+    use super::needs_public_dns;
 
     #[test]
-    #[allow(clippy::expect_used)]
-    #[cfg(target_os = "macos")]
-    fn restore_dns_state_dir_defaults_to_app_data_but_honors_legacy_file() {
-        use super::restore_dns_state_dir;
-
-        let root = std::env::temp_dir().join(format!("clash-verge-dns-{}", nanoid::nanoid!()));
-        let resource_dir = root.join("resources");
-        let state_dir = root.join("app-data");
-        std::fs::create_dir_all(&resource_dir).expect("create test resource directory");
-
-        assert_eq!(restore_dns_state_dir(&resource_dir, state_dir.clone()), state_dir);
-
-        std::fs::write(resource_dir.join(".original_dns.txt"), "empty").expect("create legacy DNS state");
-        assert_eq!(restore_dns_state_dir(&resource_dir, state_dir), resource_dir);
-
-        std::fs::remove_dir_all(root).expect("remove test directory");
+    fn follows_final_runtime_dns_and_tun_settings() {
+        for (yaml, expected) in [
+            ("tun: {enable: true}\ndns: {enable: true, enhanced-mode: fake-ip}", true),
+            (
+                "tun: {enable: false}\ndns: {enable: true, enhanced-mode: fake-ip}",
+                false,
+            ),
+            (
+                "tun: {enable: true}\ndns: {enable: false, enhanced-mode: fake-ip}",
+                false,
+            ),
+            (
+                "tun: {enable: true}\ndns: {enable: true, enhanced-mode: redir-host}",
+                false,
+            ),
+        ] {
+            let config = serde_yaml_ng::from_str(yaml).expect("valid fixture");
+            assert_eq!(needs_public_dns(&config), expected);
+        }
     }
 }
