@@ -162,6 +162,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  mdast-util-gfm-autolink-literal: 2.0.0
+
 importers:
 
   .:
@@ -4077,8 +4080,8 @@ packages:
   mdast-util-from-markdown@2.0.3:
     resolution: {integrity: sha512-W4mAWTvSlKvf8L6J+VN9yLSqQ9AOAAvHuoDAmPkz4dHf553m5gVj2ejadHJhoJmcmxEnOv6Pa8XJhpxE93kb8Q==}
 
-  mdast-util-gfm-autolink-literal@2.0.1:
-    resolution: {integrity: sha512-5HVP2MKaP6L+G6YaxPNjuL0BPrq9orG3TsrZ9YXbA3vDw/ACI4MEsnoDpn6ZNm7GnZgtAcONJyPhOP8tNJQavQ==}
+  mdast-util-gfm-autolink-literal@2.0.0:
+    resolution: {integrity: sha512-FyzMsduZZHSc3i0Px3PQcBT4WJY/X/RCtEJKuybiC6sjPqLv7h1yqAkmILZtuxMSsUyaLUWNp71+vQH2zqp5cg==}
 
   mdast-util-gfm-footnote@2.1.0:
     resolution: {integrity: sha512-sqpDWlsHn7Ac9GNZQMeUzPQSMzR6Wv0WKRNvQRg0KqHh02fpTz69Qc1QSseNX29bhz1ROIyNyxExfawVKTm1GQ==}
@@ -9138,7 +9141,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mdast-util-gfm-autolink-literal@2.0.1:
+  mdast-util-gfm-autolink-literal@2.0.0:
     dependencies:
       '@types/mdast': 4.0.4
       ccount: 2.0.1
@@ -9186,7 +9189,7 @@ snapshots:
   mdast-util-gfm@3.1.0(supports-color@7.2.0):
     dependencies:
       mdast-util-from-markdown: 2.0.3(supports-color@7.2.0)
-      mdast-util-gfm-autolink-literal: 2.0.1
+      mdast-util-gfm-autolink-literal: 2.0.0
       mdast-util-gfm-footnote: 2.1.0(supports-color@7.2.0)
       mdast-util-gfm-strikethrough: 2.0.0(supports-color@7.2.0)
       mdast-util-gfm-table: 2.0.0(supports-color@7.2.0)
