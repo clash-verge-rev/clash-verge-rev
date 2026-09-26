@@ -13,6 +13,10 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
+  {
+    // 忽略构建产物目录(Monaco/前端构建输出,gitignored,不需要 lint)
+    ignores: ['src/dist/**', 'src/monacoeditorwork/**'],
+  },
   pluginESx.configs['flat/restrict-to-es2022'],
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
