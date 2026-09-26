@@ -27,6 +27,14 @@ pub struct RealEnv;
 
 impl RunStateEnv for RealEnv {
     async fn probe_service_version(&self) -> Result<ServiceVersionReply> {
+        // The IPC client would otherwise back off for about two minutes before failing.
+        #[cfg(windows)]
+        if tokio::task::spawn_blocking(crate::core::service::service_stopped)
+            .await
+            .context("service status probe did not finish")??
+        {
+            anyhow::bail!("the Windows service is not running");
+        }
         let response = clash_verge_service_ipc::get_version().await?;
         let core = if response.code == 0
             && response.data.as_ref().is_some_and(|info| {
@@ -62,9 +70,17 @@ impl RunStateEnv for RealEnv {
     }
 
     async fn trusted_install_evidence(&self) -> Result<bool> {
-        tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
+        let registered = tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
             .await
-            .context("service registration probe did not finish")?
+            .context("service registration probe did not finish")??;
+        // A helper that outlived its registration is a broken Service, not an absent one.
+        #[cfg(unix)]
+        if !registered && let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available().await {
+            return Ok(error
+                .downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>()
+                .is_some());
+        }
+        Ok(registered)
     }
 
     fn is_elevated(&self) -> bool {

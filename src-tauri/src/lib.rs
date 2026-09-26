@@ -173,6 +173,7 @@ mod app_init {
             cmd::take_service_fallback_notice,
             cmd::get_core_startup_error,
             cmd::take_service_repair_notice,
+            cmd::take_service_owner_notice,
             cmd::take_discarded_keys_notice,
             cmd::get_dns_config_content,
             cmd::validate_dns_config,

@@ -1223,7 +1223,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.7.3"
+version = "2.7.4"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.7.4#b4f66bd5a365875562a622065d189e3514654b7f"
 dependencies = [
  "anyhow",
  "kode-bridge",
@@ -7374,7 +7375,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-mihomo"
 version = "0.6.0"
-source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo?branch=main#17c7757389ca73d29882753ecf7a160de29aabbe"
+source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo?branch=main#ba8434c08c869916b8041d707ad66599bb5230b2"
 dependencies = [
  "arc-swap",
  "clashmap",
