@@ -284,6 +284,8 @@ impl CoreManager {
             anyhow::bail!("core startup blocked after mixed proxy port fallback failure: {reason}");
         }
 
+        crate::feat::recover_core_on_startup().await?;
+
         let mut retries = 0;
         loop {
             match self.start_core().await {
