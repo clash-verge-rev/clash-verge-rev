@@ -1,4 +1,8 @@
-use crate::{config::Config, singleton, utils::dirs};
+use crate::{
+    config::{Config, IVerge},
+    singleton,
+    utils::dirs,
+};
 use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
@@ -179,10 +183,24 @@ impl SilentUpdater {
             current_version
         );
 
-        // Preserve the cache when skipped so the next launch asks again.
-        if !Self::ask_user_to_install(app_handle, cached_version).await {
-            logging!(info, Type::System, "User skipped update install, starting normally");
-            return false;
+        match Self::ask_user_to_install(app_handle, cached_version).await {
+            StartupUpdateChoice::Install => {}
+            StartupUpdateChoice::Later => {
+                logging!(info, Type::System, "User skipped update install, starting normally");
+                return false;
+            }
+            StartupUpdateChoice::Never => {
+                let patch = IVerge {
+                    auto_check_update: Some(false),
+                    ..Default::default()
+                };
+                if let Err(e) = crate::feat::patch_verge(&patch, false).await {
+                    logging!(warn, Type::System, "Failed to disable automatic update checks: {e:#}");
+                }
+                Self::delete_cache();
+                logging!(info, Type::System, "User disabled automatic update checks");
+                return false;
+            }
         }
 
         let bytes = match Self::read_cache_bytes() {
@@ -304,13 +322,14 @@ impl SilentUpdater {
 }
 
 impl SilentUpdater {
-    async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> bool {
-        use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
+    async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> StartupUpdateChoice {
+        use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind, MessageDialogResult};
 
         let title = clash_verge_i18n::t!("notifications.updateReady.title");
         let body = clash_verge_i18n::t!("notifications.updateReady.body").replace("{version}", version);
         let install_now = clash_verge_i18n::t!("notifications.updateReady.installNow").into_owned();
         let later = clash_verge_i18n::t!("notifications.updateReady.later").into_owned();
+        let never = clash_verge_i18n::t!("notifications.updateReady.never").into_owned();
 
         let (tx, rx) = tokio::sync::oneshot::channel();
 
@@ -318,14 +337,29 @@ impl SilentUpdater {
             .dialog()
             .message(body)
             .title(title)
-            .buttons(MessageDialogButtons::OkCancelCustom(install_now, later))
+            .buttons(MessageDialogButtons::YesNoCancelCustom(
+                install_now.clone(),
+                later.clone(),
+                never.clone(),
+            ))
             .kind(MessageDialogKind::Info)
-            .show(move |confirmed| {
-                let _ = tx.send(confirmed);
+            .show_with_result(move |result| {
+                let _ = tx.send(result);
             });
 
-        rx.await.unwrap_or(false)
+        match rx.await.unwrap_or(MessageDialogResult::Cancel) {
+            MessageDialogResult::Custom(label) if label == install_now => StartupUpdateChoice::Install,
+            MessageDialogResult::Custom(label) if label == later => StartupUpdateChoice::Later,
+            MessageDialogResult::Custom(label) if label == never => StartupUpdateChoice::Never,
+            _ => StartupUpdateChoice::Later,
+        }
     }
+}
+
+enum StartupUpdateChoice {
+    Install,
+    Later,
+    Never,
 }
 
 impl SilentUpdater {

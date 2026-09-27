@@ -34,6 +34,7 @@ notifications:
     body: 新版本（v{version}）已下載完成，是否立即安裝？
     installNow: 立即安裝
     later: 稍後
+    never: 永不
 service:
   adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
   adminUninstallPrompt: 解除安裝 Clash Verge 服務需要管理員權限

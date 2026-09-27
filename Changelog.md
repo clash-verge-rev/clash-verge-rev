@@ -1,3 +1,12 @@
+## v2.5.7
+
+<details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+
+- 新增「永不」选项，可关闭自动检查更新并清除已下载的更新包
+
+</details>
+
 ## v2.5.6
 
 <details>

@@ -34,6 +34,7 @@ notifications:
     body: Yeni bir sürüm (v{version}) indirildi ve kurulmaya hazır.
     installNow: Şimdi Kur
     later: Daha Sonra
+    never: Asla
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
