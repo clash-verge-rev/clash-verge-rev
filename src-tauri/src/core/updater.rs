@@ -156,14 +156,12 @@ impl SilentUpdater {
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
         let current_version = env!("CARGO_PKG_VERSION");
 
-        let meta = match Self::read_cache_meta() {
-            Ok(meta) => meta,
-            Err(_) => return false, // No cache, nothing to do
+        let Ok(meta) = Self::read_cache_meta() else {
+            return false;
         };
+        let cached_version = meta.version;
 
-        let cached_version = &meta.version;
-
-        if !is_build_to_stable(current_version, cached_version) && version_lte(cached_version, current_version) {
+        if !is_build_to_stable(current_version, &cached_version) && version_lte(&cached_version, current_version) {
             logging!(
                 info,
                 Type::System,
@@ -183,26 +181,20 @@ impl SilentUpdater {
             current_version
         );
 
-        match Self::ask_user_to_install(app_handle, cached_version).await {
-            StartupUpdateChoice::Install => {}
+        match Self::ask_user_to_install(app_handle, &cached_version).await {
+            StartupUpdateChoice::Install => self.install_cached_update(app_handle, &cached_version).await,
             StartupUpdateChoice::Later => {
                 logging!(info, Type::System, "User skipped update install, starting normally");
-                return false;
+                false
             }
             StartupUpdateChoice::Never => {
-                let patch = IVerge {
-                    auto_check_update: Some(false),
-                    ..Default::default()
-                };
-                if let Err(e) = crate::feat::patch_verge(&patch, false).await {
-                    logging!(warn, Type::System, "Failed to disable automatic update checks: {e:#}");
-                }
-                Self::delete_cache();
-                logging!(info, Type::System, "User disabled automatic update checks");
-                return false;
+                self.disable_auto_update_checks().await;
+                false
             }
         }
+    }
 
+    async fn install_cached_update(&self, app_handle: &tauri::AppHandle, cached_version: &str) -> bool {
         let bytes = match Self::read_cache_bytes() {
             Ok(b) => b,
             Err(e) => {
@@ -216,6 +208,24 @@ impl SilentUpdater {
             }
         };
 
+        let Some(update) = Self::check_cached_update(app_handle, cached_version).await else {
+            return false;
+        };
+
+        let version = update.version.clone();
+        logging!(info, Type::System, "Installing cached update v{version} at startup...");
+
+        Self::show_update_splash(app_handle, &version);
+
+        let success = Self::install_update(update, bytes, &version).await;
+        if !success {
+            Self::close_update_splash(app_handle);
+        }
+
+        success
+    }
+
+    async fn check_cached_update(app_handle: &tauri::AppHandle, cached_version: &str) -> Option<Update> {
         // Refresh metadata without re-downloading. Windows receives `/LANG` to suppress the
         // NSIS language dialog; see `packages/windows/installer.nsi`.
         let updater_builder = app_handle.updater_builder();
@@ -227,7 +237,7 @@ impl SilentUpdater {
         };
         let update = match updater_builder.build() {
             Ok(updater) => match updater.check().await {
-                Ok(Some(u)) => u,
+                Ok(Some(update)) => update,
                 Ok(None) => {
                     logging!(
                         info,
@@ -235,7 +245,7 @@ impl SilentUpdater {
                         "No update available from server, cache may be stale, cleaning up"
                     );
                     Self::delete_cache();
-                    return false;
+                    return None;
                 }
                 Err(e) => {
                     logging!(
@@ -243,7 +253,7 @@ impl SilentUpdater {
                         Type::System,
                         "Failed to check for update at startup: {e}, will retry next launch"
                     );
-                    return false; // Keep cache for next attempt
+                    return None; // Keep cache for next attempt
                 }
             },
             Err(e) => {
@@ -252,7 +262,7 @@ impl SilentUpdater {
                     Type::System,
                     "Failed to create updater: {e}, will retry next launch"
                 );
-                return false;
+                return None;
             }
         };
 
@@ -266,22 +276,17 @@ impl SilentUpdater {
                 cached_version
             );
             Self::delete_cache();
-            return false;
+            return None;
         }
 
-        let version = update.version.clone();
-        logging!(info, Type::System, "Installing cached update v{version} at startup...");
+        Some(update)
+    }
 
-        Self::show_update_splash(app_handle, &version);
-
+    async fn install_update(update: Update, bytes: Vec<u8>, version: &str) -> bool {
         // `install()` may hang (#2558); on Windows NSIS can take over without returning.
-        let install_result = tokio::task::spawn_blocking({
-            let bytes = bytes.clone();
-            let update = update.clone();
-            move || update.install(&bytes)
-        });
+        let install_result = tokio::task::spawn_blocking(move || update.install(&bytes));
 
-        let success = match tokio::time::timeout(std::time::Duration::from_secs(30), install_result).await {
+        match tokio::time::timeout(std::time::Duration::from_secs(30), install_result).await {
             Ok(Ok(Ok(()))) => {
                 logging!(info, Type::System, "Update v{version} install triggered at startup");
                 Self::delete_cache();
@@ -311,13 +316,19 @@ impl SilentUpdater {
                 );
                 false
             }
-        };
-
-        if !success {
-            Self::close_update_splash(app_handle);
         }
+    }
 
-        success
+    async fn disable_auto_update_checks(&self) {
+        let patch = IVerge {
+            auto_check_update: Some(false),
+            ..Default::default()
+        };
+        if let Err(e) = crate::feat::patch_verge(&patch, false).await {
+            logging!(warn, Type::System, "Failed to disable automatic update checks: {e:#}");
+        }
+        Self::delete_cache();
+        logging!(info, Type::System, "User disabled automatic update checks");
     }
 }
 
