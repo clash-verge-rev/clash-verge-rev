@@ -108,8 +108,7 @@ impl DnsOverrideState {
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ProfileDnsSettings {
     pub enabled: bool,
-    // Force-enable confirmation is valid only for the current app session.
-    #[serde(skip)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub confirmation: Option<String>,
 }
 
@@ -195,7 +194,7 @@ mod tests {
     }
 
     #[test]
-    fn dns_override_confirmation_expires_on_restart() -> Result<()> {
+    fn dns_override_confirmation_survives_restart_only_for_the_same_source() -> Result<()> {
         let source = Some("provider-dns".into());
         let confirmed = IVerge {
             profile_dns_settings: [(
@@ -208,15 +207,22 @@ mod tests {
             .into(),
             ..IVerge::default()
         };
-        let settings = confirmed.dns_settings_for("one");
-        assert!(DnsOverrideState::new("one", source.clone(), settings.enabled, settings.confirmation).enabled);
-        for saved in [
-            serde_yaml_ng::to_string(&confirmed)?,
-            "enable_dns_settings: true\ndns_override_confirmation: provider-dns".to_owned(),
+        let saved = serde_yaml_ng::to_string(&confirmed)?;
+        let mut restarted: IVerge = serde_yaml_ng::from_str(&saved)?;
+        let settings = restarted.dns_settings_for("one");
+        let state = DnsOverrideState::new("one", source.clone(), settings.enabled, settings.confirmation);
+        assert!(state.enabled);
+        assert!(!state.apply_to(&mut restarted));
+        for (saved, source) in [
+            (saved, Some("updated".into())),
+            (
+                "enable_dns_settings: true\ndns_override_confirmation: provider-dns".to_owned(),
+                source,
+            ),
         ] {
             let mut restarted: IVerge = serde_yaml_ng::from_str(&saved)?;
             let settings = restarted.dns_settings_for("one");
-            let state = DnsOverrideState::new("one", source.clone(), settings.enabled, settings.confirmation);
+            let state = DnsOverrideState::new("one", source, settings.enabled, settings.confirmation);
             assert!(!state.enabled, "a previous session must not bypass startup protection");
             assert!(state.apply_to(&mut restarted));
             assert!(!restarted.dns_settings_for("one").enabled);
