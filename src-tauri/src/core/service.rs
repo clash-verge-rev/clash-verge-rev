@@ -833,7 +833,10 @@ fn record_service_start_refusal<E: RunStateEnv>(
     store: &RunStateStore<E>,
     refusal: ServiceStartRefusal,
 ) -> anyhow::Error {
-    if store.state().mode == crate::core::manager::RunningMode::NotRunning {
+    // A proxy clear failure is about the system network settings; repairing the service cannot fix it.
+    if store.state().mode == crate::core::manager::RunningMode::NotRunning
+        && refusal.code != ServiceErrorCode::ProxyClearFailed as u16
+    {
         store.observe(ServiceHealth::Unavailable(refusal.to_string()));
     }
     refusal.into()
@@ -2310,6 +2313,23 @@ mod tests {
             assert!(store.state().tun_should_be_disabled(true));
         }
         Ok(())
+    }
+
+    #[test]
+    fn proxy_clear_refusal_does_not_ask_for_service_repair() {
+        let store = fake_store();
+        store.observe(ServiceHealth::Ready);
+        let _ = super::record_service_start_refusal(
+            &store,
+            super::ServiceStartRefusal {
+                code: clash_verge_service_ipc::ServiceErrorCode::ProxyClearFailed as u16,
+                core_path: "/development/service-core/verge-mihomo".into(),
+                message: "SystemConfiguration operation failed: lock preferences (status 3002)".into(),
+            },
+        );
+
+        assert!(store.state().service_usable());
+        assert!(!store.state().service_needs_attention());
     }
 
     #[test]
