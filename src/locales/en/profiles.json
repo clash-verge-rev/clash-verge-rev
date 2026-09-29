@@ -3,6 +3,7 @@
     "actions": {
       "updateAll": "Update All Profiles",
       "viewRuntimeConfig": "View Runtime Config",
+      "subscriptionRouting": "Subscription Routing",
       "reactivate": "Reactivate Profiles",
       "import": "Import"
     },
@@ -109,6 +110,50 @@
     }
   },
   "modals": {
+    "routing": {
+      "title": "Subscription Routing",
+      "mainProfile": "Main profile: {{name}}. Traffic without a matching binding uses it.",
+      "noMainProfile": "none selected",
+      "bindings": "Bindings",
+      "binding": "Binding",
+      "addBinding": "Add",
+      "empty": "No bindings yet.",
+      "emptyDetail": "Add a profile to route websites or a dedicated local proxy port through it.",
+      "defaultTraffic": "Default traffic stays on the main profile",
+      "sourceProfile": "Source profile",
+      "source": {
+        "remote": "Subscription",
+        "local": "Local",
+        "missing": "Unavailable"
+      },
+      "status": { "enabled": "On", "disabled": "Off" },
+      "enabled": "Enable binding",
+      "domains": "Website domains (one per line)",
+      "domainsHelp": "Matches the domain and its subdomains. Domain names or HTTP(S) URLs are accepted. Website routing requires Rule mode.",
+      "exactDomains": "Exact domains (one per line)",
+      "exactDomainsHelp": "Matches only the named host, without subdomains.",
+      "port": "Local proxy port (optional)",
+      "portHelp": "Loopback HTTP/SOCKS port, 1–65535. Apps can connect to this port directly.",
+      "policy": "Node selection",
+      "policies": {
+        "manual": "Manual",
+        "fixed": "Fixed node",
+        "auto": "Automatic",
+        "fallback": "Fallback"
+      },
+      "node": "Node name",
+      "nodeHelp": "Enter the exact node name from this profile, including provider nodes.",
+      "regions": "Preferred regions (one per line)",
+      "regionsHelp": "Each line is a literal node-name keyword. A node matches if it contains any keyword; leave blank to include all nodes.",
+      "saveApply": "Save & Apply",
+      "saved": "Subscription routing saved and applied",
+      "errors": {
+        "port": "Enter a port from 1 to 65535, or leave it empty.",
+        "targetRequired": "An enabled binding needs a website, exact domain, or local proxy port.",
+        "nodeRequired": "Enter a node name for the fixed node policy.",
+        "busy": "Routing could not be applied because another profile change is in progress. Try again."
+      }
+    },
     "profileForm": {
       "title": {
         "create": "Create Profile",

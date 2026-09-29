@@ -26,6 +26,13 @@
 </details>
 
 <details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+
+- 新增「订阅分流」，支持同时使用多个订阅，按网站或本地代理端口选择节点来源
+
+</details>
+
+<details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 优化内核启动失败和服务模式内核意外停止的提示：显示具体原因，并在窗口恢复后提示尚未解决的错误
