@@ -2,6 +2,7 @@ use super::{
     PrfOption,
     prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
 };
+use crate::core::notify::{Refresh, announce};
 use crate::{
     core::{handle, tray::Tray},
     utils::{
@@ -691,51 +692,58 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
+async fn persist_selected_update<F, Fut>(supersede: bool, edit: F) -> Result<()>
+where
+    F: FnOnce(IProfiles) -> Fut + Send,
+    Fut: std::future::Future<Output = Result<(IProfiles, bool)>> + Send,
+{
+    let changed = Config::profiles().await.with_data_modify(edit).await?;
+    if changed {
+        if supersede {
+            supersede_selected_activation();
+        }
+        announce(Refresh::Profiles);
+    }
+    Ok(())
+}
+
 /// Records a backend-made selection so the next core start restores it.
 pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     let group_name = String::from(group_name);
     let node = String::from(node);
-    let recorded = Config::profiles()
-        .await
-        .with_data_modify(move |mut profiles| async move {
-            let Some(current) = profiles.current.clone() else {
-                return Ok((profiles, false));
-            };
-            let Some(item) = profiles
-                .items
-                .as_mut()
-                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
-            else {
-                return Ok((profiles, false));
-            };
+    persist_selected_update(true, move |mut profiles| async move {
+        let Some(current) = profiles.current.clone() else {
+            return Ok((profiles, false));
+        };
+        let Some(item) = profiles
+            .items
+            .as_mut()
+            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+        else {
+            return Ok((profiles, false));
+        };
 
-            let mut selected = item.selected.clone().unwrap_or_default();
-            match selected
-                .iter_mut()
-                .find(|entry| entry.name.as_ref() == Some(&group_name))
-            {
-                Some(entry) => {
-                    if entry.now.as_ref() == Some(&node) {
-                        return Ok((profiles, false));
-                    }
-                    entry.now = Some(node);
+        let mut selected = item.selected.clone().unwrap_or_default();
+        match selected
+            .iter_mut()
+            .find(|entry| entry.name.as_ref() == Some(&group_name))
+        {
+            Some(entry) => {
+                if entry.now.as_ref() == Some(&node) {
+                    return Ok((profiles, false));
                 }
-                None => selected.push(PrfSelected {
-                    name: Some(group_name),
-                    now: Some(node),
-                }),
+                entry.now = Some(node);
             }
-            item.selected = Some(selected);
-            profiles.save_file().await?;
-            Ok((profiles, true))
-        })
-        .await?;
-
-    if recorded {
-        supersede_selected_activation();
-        handle::Handle::refresh_profiles();
-    }
-    Ok(())
+            None => selected.push(PrfSelected {
+                name: Some(group_name),
+                now: Some(node),
+            }),
+        }
+        item.selected = Some(selected);
+        profiles.save_file().await?;
+        Ok((profiles, true))
+    })
+    .await
 }
 
 fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bool {
@@ -745,36 +753,28 @@ fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bo
 }
 
 pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
-    let cleared = Config::profiles()
-        .await
-        .with_data_modify(move |mut profiles| async move {
-            let Some(current) = profiles.current.clone() else {
-                return Ok((profiles, false));
-            };
-            let Some(item) = profiles
-                .items
-                .as_mut()
-                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
-            else {
-                return Ok((profiles, false));
-            };
+    persist_selected_update(true, move |mut profiles| async move {
+        let Some(current) = profiles.current.clone() else {
+            return Ok((profiles, false));
+        };
+        let Some(item) = profiles
+            .items
+            .as_mut()
+            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+        else {
+            return Ok((profiles, false));
+        };
 
-            let mut selected = item.selected.clone().unwrap_or_default();
-            if !remove_selected_node(&mut selected, group_name) {
-                return Ok((profiles, false));
-            }
+        let mut selected = item.selected.clone().unwrap_or_default();
+        if !remove_selected_node(&mut selected, group_name) {
+            return Ok((profiles, false));
+        }
 
-            item.selected = (!selected.is_empty()).then_some(selected);
-            profiles.save_file().await?;
-            Ok((profiles, true))
-        })
-        .await?;
-
-    if cleared {
-        supersede_selected_activation();
-        handle::Handle::refresh_profiles();
-    }
-    Ok(())
+        item.selected = (!selected.is_empty()).then_some(selected);
+        profiles.save_file().await?;
+        Ok((profiles, true))
+    })
+    .await
 }
 
 async fn persist_reconciled_selected(
@@ -787,34 +787,27 @@ async fn persist_reconciled_selected(
         return Ok(());
     }
 
-    let profiles = Config::profiles().await;
     let profile_uid = profile_uid.clone();
     let original_selected = original_selected.to_vec();
-    let updated = profiles
-        .with_data_modify(move |mut profiles| async move {
-            if !is_activation_current(generation) || profiles.current.as_ref() != Some(&profile_uid) {
-                return Ok((profiles, false));
-            }
+    persist_selected_update(false, move |mut profiles| async move {
+        if !is_activation_current(generation) || profiles.current.as_ref() != Some(&profile_uid) {
+            return Ok((profiles, false));
+        }
 
-            let profile = profiles
-                .items
-                .as_mut()
-                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&profile_uid)))
-                .with_context(|| format!("failed to find the profile item \"uid:{profile_uid}\""))?;
-            if profile.selected.as_deref().unwrap_or(&[]) != original_selected.as_slice() {
-                return Ok((profiles, false));
-            }
+        let profile = profiles
+            .items
+            .as_mut()
+            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&profile_uid)))
+            .with_context(|| format!("failed to find the profile item \"uid:{profile_uid}\""))?;
+        if profile.selected.as_deref().unwrap_or(&[]) != original_selected.as_slice() {
+            return Ok((profiles, false));
+        }
 
-            profile.selected = (!selected.is_empty()).then_some(selected);
-            profiles.save_file().await?;
-            Ok((profiles, true))
-        })
-        .await?;
-
-    if updated {
-        handle::Handle::refresh_profiles();
-    }
-    Ok(())
+        profile.selected = (!selected.is_empty()).then_some(selected);
+        profiles.save_file().await?;
+        Ok((profiles, true))
+    })
+    .await
 }
 
 /// Returns recorded selections whose groups have not reached the requested node.
@@ -875,7 +868,7 @@ async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut Has
             return;
         }
         if is_activation_current(generation) {
-            handle::Handle::refresh_clash();
+            announce(Refresh::Clash);
         }
     }
 }
@@ -920,7 +913,7 @@ async fn activate_selected_nodes_worker(
     }
 
     if is_activation_current(generation) {
-        handle::Handle::refresh_clash();
+        announce(Refresh::Clash);
     }
 
     let plan = if needs_confirmation {
@@ -944,7 +937,7 @@ async fn activate_selected_nodes_worker(
             return Ok(());
         };
         if confirmed_activated_count > 0 && is_activation_current(generation) {
-            handle::Handle::refresh_clash();
+            announce(Refresh::Clash);
         }
         confirmed_plan
     } else {
@@ -1034,7 +1027,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
 
             if selected.is_empty() {
                 if is_activation_current(generation) {
-                    handle::Handle::refresh_clash();
+                    announce(Refresh::Clash);
                 }
                 return Ok(());
             }
@@ -1046,7 +1039,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
             if let Err(err) = result {
                 logging!(error, Type::Config, "failed to activate selected nodes: {err:#}");
                 // The profile itself is already active even if node restoration failed.
-                handle::Handle::refresh_clash();
+                announce(Refresh::Clash);
             }
             update_tray_after_activation(generation).await;
             logging!(debug, Type::Config, "activating selected nodes done!");

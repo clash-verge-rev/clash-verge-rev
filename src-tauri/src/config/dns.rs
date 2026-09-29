@@ -139,12 +139,13 @@ impl Config {
         }
         // The runtime is already committed; a disk failure cannot undo its effective settings.
         transaction.commit();
-        Handle::refresh_verge();
         if state.requested && !state.enabled {
             PENDING_DNS_OVERRIDE_NOTICE.store(true, Ordering::Relaxed);
             Handle::notice(NoticeStatus::DnsOverrideAutoDisabled, "");
         }
-        verge.data_arc().save_file().await
+        verge.data_arc().save_file().await?;
+        Handle::refresh_verge();
+        Ok(())
     }
 }
 

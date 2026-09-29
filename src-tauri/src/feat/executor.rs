@@ -1,10 +1,11 @@
 use super::effects::{Effect, Effects};
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{
         Config, IVerge,
         snapshot::{capture_config_files, restore_files},
     },
-    core::{CoreManager, autostart, handle::Handle, hotkey, logger, manager::ConfigUpdateGuard, proxy_control, tray},
+    core::{CoreManager, autostart, hotkey, logger, manager::ConfigUpdateGuard, proxy_control, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -58,7 +59,7 @@ ensure!(ensure_restart, ctx, {
 });
 ensure!(ensure_clash, ctx, {
     ctx.manager.update_config_in_patch(ctx.update).await?;
-    Handle::refresh_clash();
+    announce(Refresh::Clash);
     Ok(())
 });
 ensure!(ensure_verge, _ctx, { Ok(()) });
@@ -128,7 +129,7 @@ ensure!(ensure_log_file, ctx, {
     .await
 });
 
-pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
+async fn apply_inner(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
     let manager = CoreManager::global();
     let update = manager.claim_config_update(config_write)?;
     let clash = Config::clash().await;
@@ -177,11 +178,15 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
     match patch {
         Patch::Verge { .. } => {
             logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
-            Handle::refresh_verge();
+            announce(Refresh::Verge);
         }
-        Patch::Clash(_) => Handle::refresh_clash(),
+        Patch::Clash(_) => announce(Refresh::Clash),
     }
     Ok(())
+}
+
+pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
+    crate::core::notify::after_commit(apply_inner(config_write, patch, effects)).await
 }
 
 #[cfg(test)]

@@ -1,4 +1,5 @@
 use crate::core::notify::NoticeStatus;
+use crate::core::notify::{Refresh, announce};
 use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_update_item_safe},
@@ -44,7 +45,7 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
     {
         Ok(_) => {
             record_switched_node(group_name, proxy_name).await;
-            handle::Handle::refresh_proxy_config();
+            announce(Refresh::Proxies);
             let _ = tray::Tray::global().update_menu().await;
             return;
         }
@@ -218,7 +219,7 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
         match CoreManager::global().update_config_with_force(is_mannual_trigger).await {
             Ok(outcome) if outcome.is_valid() => {
                 logging_error!(Type::Config, Config::sync_dns_override().await);
-                handle::Handle::refresh_clash();
+                announce(Refresh::Clash);
             }
             Ok(outcome @ (ValidationOutcome::Skipped { .. } | ValidationOutcome::Busy)) if !is_mannual_trigger => {
                 logging!(info, Type::Config, "[订阅更新] 本次配置刷新已跳过: {}", outcome);

@@ -1,3 +1,4 @@
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{
         Config, MixedPort,
@@ -5,7 +6,6 @@ use crate::{
     },
     core::{
         CoreManager,
-        handle::Handle,
         listener::{
             ListenerProbe, ListenerProbeOutcome, ProxyPortSettings, SaveProxyPortsOutcome,
             probe_listener as probe_listener_sync, probe_proxy_port_change,
@@ -27,8 +27,12 @@ pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutco
         .context("listener probe task failed")
 }
 
-#[allow(clippy::cognitive_complexity)]
 pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
+    crate::core::notify::after_commit(Box::pin(save_proxy_ports_inner(settings))).await
+}
+
+#[allow(clippy::cognitive_complexity)]
+async fn save_proxy_ports_inner(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
     settings.validate()?;
     let _config_write = Config::lock_config_write().await;
     let manager = CoreManager::global();
@@ -126,8 +130,8 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     transaction.commit();
     // The save landed, so the port the app had borrowed is now irrelevant.
     let _ = ScopeGuard::into_inner(borrowed_port);
-    Handle::refresh_clash();
-    Handle::refresh_verge();
+    announce(Refresh::Clash);
+    announce(Refresh::Verge);
     logging!(info, Type::Config, "Proxy port configuration applied and persisted");
     Ok(SaveProxyPortsOutcome::Saved)
 }

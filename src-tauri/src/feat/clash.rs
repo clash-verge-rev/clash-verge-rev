@@ -1,4 +1,5 @@
 use crate::core::notify::NoticeStatus;
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, MixedPort},
     core::{CoreManager, handle, tray},
@@ -27,7 +28,7 @@ static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
 pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
         Ok(_) => {
-            handle::Handle::refresh_clash();
+            announce(Refresh::Clash);
             handle::Handle::notice(NoticeStatus::SetConfigOk, "ok");
         }
         Err(err) => {
@@ -96,7 +97,7 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
     let clash_data = clash.data_arc();
     if clash_data.save_config().await.is_ok() {
-        handle::Handle::refresh_clash();
+        announce(Refresh::Clash);
         tray::Tray::global().update_menu_and_icon().await;
     }
 
