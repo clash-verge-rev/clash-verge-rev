@@ -840,29 +840,34 @@ impl CoreManager {
         AsyncHandler::spawn(|| async move {
             let manager = Self::global();
             let started = Instant::now();
-            loop {
+            use crate::utils::retry::{RetryError, RetryPolicy, retry};
+            let attempts = std::num::NonZeroUsize::MIN.saturating_add(
+                (timing::SERVICE_HANDOFF_WINDOW.as_millis() / timing::SERVICE_HANDOFF_INTERVAL.as_millis()) as usize,
+            );
+            let _ = retry(RetryPolicy::fixed(attempts, std::time::Duration::ZERO), |_| async {
                 if started.elapsed() >= timing::SERVICE_HANDOFF_WINDOW {
                     logging!(
                         info,
                         Type::Core,
                         "service handoff window elapsed; staying in sidecar mode"
                     );
-                    break;
+                    return Ok(());
                 }
+                // The window is checked before waiting, including the final handoff attempt.
                 tokio::time::sleep(timing::SERVICE_HANDOFF_INTERVAL).await;
-
                 if !matches!(*manager.get_running_mode(), RunningMode::Sidecar) {
-                    break;
+                    return Ok(());
                 }
                 match manager.try_handoff_sidecar_to_service().await {
-                    HandoffOutcome::Done => break,
+                    HandoffOutcome::Done => Ok(()),
                     HandoffOutcome::Failed => {
                         logging!(warn, Type::Core, "handoff attempt failed; staying in sidecar mode");
-                        break;
+                        Ok(())
                     }
-                    HandoffOutcome::NotReady => {}
+                    HandoffOutcome::NotReady => Err(RetryError::Retry(())),
                 }
-            }
+            })
+            .await;
             manager.handoff_watcher_running.store(false, Ordering::Release);
         });
     }

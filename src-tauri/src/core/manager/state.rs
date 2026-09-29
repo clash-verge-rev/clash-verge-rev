@@ -48,7 +48,8 @@ where
 {
     let attempts = NonZeroUsize::new(attempts).ok_or_else(|| anyhow::anyhow!("service start failed"))?;
     retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
-        let future = start();
+        // The Windows Service IPC future would otherwise inflate every enclosing lifecycle future.
+        let future = Box::pin(start());
         async move {
             future.await.map_err(|error| {
                 logging!(
