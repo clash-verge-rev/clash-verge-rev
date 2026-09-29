@@ -1,4 +1,5 @@
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use crate::core::notify::NoticeStatus;
 use crate::core::service::StageRequest;
 use crate::{
     config::{Config, IProfiles, runtime::IRuntime},
@@ -129,7 +130,7 @@ where
 }
 
 impl CoreManager {
-    pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
+    pub async fn use_default_config(&self, status: NoticeStatus, message: &str) -> Result<()> {
         use crate::constants::files::RUNTIME_CONFIG;
 
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
@@ -145,7 +146,7 @@ impl CoreManager {
         });
 
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
-        handle::Handle::notice_message(error_key, error_msg);
+        handle::Handle::notice(status, message);
         Ok(())
     }
 

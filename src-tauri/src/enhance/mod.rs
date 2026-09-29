@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 mod chain;
 pub mod field;
 mod merge;
@@ -436,7 +437,7 @@ fn notify_discarded_keys(keys: Vec<String>) {
     drop(notice);
 
     if should_notify {
-        Handle::notice_message("enhance::discarded_keys", "");
+        Handle::notice(NoticeStatus::EnhanceDiscardedKeys, "");
     }
 }
 

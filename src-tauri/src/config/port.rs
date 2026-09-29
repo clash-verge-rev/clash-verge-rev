@@ -1,4 +1,5 @@
 use super::{Config, IClashTemp, IVerge, MixedPort};
+use crate::core::notify::NoticeStatus;
 use crate::{
     constants::timing,
     core::{
@@ -166,8 +167,8 @@ impl Config {
         };
         AsyncHandler::spawn(move || async move {
             tokio::time::sleep(timing::STARTUP_ERROR_DELAY).await;
-            Handle::notice_message(
-                "mixed_port::fallback",
+            Handle::notice(
+                NoticeStatus::MixedPortFallback,
                 format!("{},{}", change.original, change.current),
             );
         });
@@ -196,7 +197,7 @@ fn report_fallback_error(message: String) {
     );
     AsyncHandler::spawn(move || async move {
         tokio::time::sleep(timing::STARTUP_ERROR_DELAY).await;
-        Handle::notice_message("mixed_port::fallback_error", message);
+        Handle::notice(NoticeStatus::MixedPortFallbackError, message);
     });
 }
 

@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
 use serde::{Deserialize, Serialize};
@@ -141,7 +142,7 @@ impl Config {
         Handle::refresh_verge();
         if state.requested && !state.enabled {
             PENDING_DNS_OVERRIDE_NOTICE.store(true, Ordering::Relaxed);
-            Handle::notice_message("dns_override::auto_disabled", "");
+            Handle::notice(NoticeStatus::DnsOverrideAutoDisabled, "");
         }
         verge.data_arc().save_file().await
     }

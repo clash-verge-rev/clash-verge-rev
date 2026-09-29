@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::core::notify::NoticeStatus;
 use crate::core::{CoreManager, handle};
 use crate::module::lightweight;
 use crate::utils;
@@ -128,8 +129,8 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 
     if should_abort_exit_after_cleanup(cleanup_result.core_stopped) {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "app_quit::core_stop_failed",
+        handle::Handle::notice(
+            NoticeStatus::AppQuitCoreStopFailed,
             cleanup_result.stop_error.unwrap_or_default(),
         );
         return clash_verge_signal::ShutdownOutcome::Canceled;

@@ -1,4 +1,5 @@
 use super::{IClashTemp, IProfiles, IVerge, MixedPort};
+use crate::core::notify::NoticeStatus;
 use crate::{
     config::{PrfItem, profiles_append_item_to_safe, runtime::IRuntime},
     constants::{files, timing},
@@ -106,7 +107,7 @@ impl Config {
 
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(timing::STARTUP_ERROR_DELAY).await;
-            handle::Handle::notice_message(msg_type, msg_content);
+            handle::Handle::notice(msg_type, msg_content.as_str());
         }
 
         Self::runtime().await.apply();
@@ -137,14 +138,14 @@ impl Config {
         Ok(())
     }
 
-    async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
+    async fn generate_and_validate() -> Result<Option<(NoticeStatus, String)>> {
         if let Err(err) = Self::generate().await {
             let error_msg: String = err.to_string().into();
             logging!(error, Type::Config, "生成运行时配置失败: {}", error_msg);
             CoreManager::global()
-                .use_default_config("config_validate::boot_error", &error_msg)
+                .use_default_config(NoticeStatus::ConfigValidateBootError, &error_msg)
                 .await?;
-            return Ok(Some(("config_validate::boot_error", error_msg)));
+            return Ok(Some((NoticeStatus::ConfigValidateBootError, error_msg)));
         }
         logging!(debug, Type::Config, "生成运行时配置成功");
 
@@ -171,25 +172,25 @@ impl Config {
                         error_msg
                     );
                     CoreManager::global()
-                        .use_default_config("config_validate::boot_error", &error_msg)
+                        .use_default_config(NoticeStatus::ConfigValidateBootError, &error_msg)
                         .await?;
-                    Ok(Some(("config_validate::boot_error", error_msg)))
+                    Ok(Some((NoticeStatus::ConfigValidateBootError, error_msg)))
                 }
                 Err(err) => {
                     logging!(warn, Type::Config, "验证过程执行失败: {err:#}");
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")
+                        .use_default_config(NoticeStatus::ConfigValidateProcessTerminated, "")
                         .await?;
-                    Ok(Some(("config_validate::process_terminated", String::new())))
+                    Ok(Some((NoticeStatus::ConfigValidateProcessTerminated, String::new())))
                 }
             }
         } else {
             let error_msg = config_result.err().map(|err| err.to_string()).unwrap_or_default();
             logging!(warn, Type::Config, "生成配置文件失败，使用默认配置: {error_msg}");
             CoreManager::global()
-                .use_default_config("config_validate::error", "")
+                .use_default_config(NoticeStatus::ConfigValidateError, "")
                 .await?;
-            Ok(Some(("config_validate::error", String::new())))
+            Ok(Some((NoticeStatus::ConfigValidateError, String::new())))
         }
     }
 

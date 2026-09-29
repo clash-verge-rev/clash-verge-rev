@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::utils::dirs;
 use crate::{
     config::{Config, runtime::IRuntime},
@@ -46,7 +47,7 @@ static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_service_fallback() {
     PENDING_SERVICE_FALLBACK_NOTICE.store(true, Ordering::Relaxed);
-    Handle::notice_message("service_core::sidecar_fallback", "");
+    Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
 }
 
 pub(crate) fn take_service_fallback_notice() -> bool {
@@ -886,11 +887,11 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         #[cfg(target_os = "windows")]
         if response.code == ServiceErrorCode::InvalidInstallLocation as u16 {
             PENDING_SERVICE_REPAIR_NOTICE.store(true, Ordering::Relaxed);
-            Handle::notice_message("service_core::repair_required", "");
+            Handle::notice(NoticeStatus::ServiceCoreRepairRequired, "");
         }
         if response.code == ServiceErrorCode::AppDataRootNotOwned as u16 {
             *PENDING_SERVICE_OWNER_NOTICE.lock() = app_data_owner_command(&credentials);
-            Handle::notice_message("service_core::app_data_not_owned", "");
+            Handle::notice(NoticeStatus::ServiceCoreAppDataNotOwned, "");
         }
         start_owner_monitor();
         return Err(record_service_start_refusal(
@@ -1610,7 +1611,7 @@ fn report_service_core_stopped(status: &ServiceStatusSnapshot) {
     );
     logging!(error, Type::Service, "service core stopped: {detail}");
     CoreManager::global().record_startup_error(CoreFailure::ServiceCoreStopped(detail));
-    Handle::notice_message("core_start::error", "");
+    Handle::notice(NoticeStatus::CoreStartError, "");
 }
 
 /// Samples ownership, treating every unusable reply as unreadable.

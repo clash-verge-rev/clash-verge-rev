@@ -1,6 +1,10 @@
+use super::NoticeStatus;
 use crate::{APP_HANDLE, singleton};
 use smartstring::alias::String;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use tauri::AppHandle;
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 
@@ -80,13 +84,10 @@ impl Handle {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
     }
 
-    pub fn notice_message<S: AsRef<str>, M: Into<String>>(status: S, msg: M) {
-        let status_str = status.as_ref();
-        let msg_str = msg.into();
-
+    pub fn notice(status: NoticeStatus, message: impl Into<Arc<str>>) {
         Self::send_event(FrontendEvent::NoticeMessage {
-            status: status_str,
-            message: msg_str,
+            status,
+            message: message.into(),
         });
     }
 

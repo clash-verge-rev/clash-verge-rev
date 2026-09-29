@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
@@ -177,7 +178,7 @@ impl Hotkey {
                             "Hotkey profile reactivation failed validation: {}",
                             message.as_str()
                         );
-                        handle::Handle::notice_message("reactivate_profiles::error", message);
+                        handle::Handle::notice(NoticeStatus::ReactivateProfilesError, message);
                     }
                     Err(err) => {
                         logging!(
@@ -186,7 +187,7 @@ impl Hotkey {
                             "Failed to reactivate subscriptions via hotkey: {}",
                             err
                         );
-                        handle::Handle::notice_message("reactivate_profiles::error", err.to_string());
+                        handle::Handle::notice(NoticeStatus::ReactivateProfilesError, err.to_string());
                     }
                 });
             }

@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
 use smartstring::alias::String;
@@ -93,18 +94,18 @@ async fn import_subscription(url: &str, name: Option<&String>) {
     if let Err(e) = profiles::profiles_append_item_safe(&mut item).await {
         logging!(error, Type::Config, "failed to import subscription url: {:?}", e);
         Config::profiles().await.discard();
-        handle::Handle::notice_message("import_sub_url::error", e.to_string());
+        handle::Handle::notice(NoticeStatus::ImportSubUrlError, e.to_string());
         return;
     }
 
     if let Err(e) = profiles::profiles_save_file_safe().await {
         logging!(error, Type::Config, "failed to save imported subscription: {e:#}");
-        handle::Handle::notice_message("import_sub_url::error", e.to_string());
+        handle::Handle::notice(NoticeStatus::ImportSubUrlError, e.to_string());
         return;
     }
     logging_error!(Type::Timer, Timer::global().refresh().await);
-    handle::Handle::notice_message(
-        "import_sub_url::ok",
+    handle::Handle::notice(
+        NoticeStatus::ImportSubUrlOk,
         "", // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。
     );
 
@@ -116,7 +117,7 @@ async fn fetch_profile_item(url: &str, name: Option<&String>) -> Option<PrfItem>
         Ok(item) => Some(item),
         Err(e) => {
             logging!(error, Type::Config, "failed to parse profile from url: {:?}", e);
-            handle::Handle::notice_message("import_sub_url::error", e.to_string());
+            handle::Handle::notice(NoticeStatus::ImportSubUrlError, e.to_string());
             None
         }
     }
@@ -149,11 +150,11 @@ async fn refresh_core_config() {
         Ok(outcome) => {
             let message = outcome.to_string();
             logging!(warn, Type::Config, "Apply config failed: {}", message);
-            handle::Handle::notice_message("config_validate::error", message);
+            handle::Handle::notice(NoticeStatus::ConfigValidateError, message);
         }
         Err(err) => {
             logging!(error, Type::Config, "Apply config error: {err:#}");
-            handle::Handle::notice_message("update_failed", format!("{err}"));
+            handle::Handle::notice(NoticeStatus::UpdateFailed, format!("{err}"));
         }
     }
 }

@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
@@ -223,7 +224,7 @@ async fn init_core_manager() -> bool {
         Err(error) => {
             logging!(error, Type::Setup, "core manager initialization failed: {error:#}");
             CoreManager::global().record_startup_error(CoreFailure::StartFailed(format!("{error:#}")));
-            Handle::notice_message("core_start::error", "");
+            Handle::notice(NoticeStatus::CoreStartError, "");
             false
         }
     }

@@ -1,6 +1,7 @@
 use super::{CmdResult, StringifyErr as _, WithErrorCode as _, coded_error};
 use crate::cmd::validate::{ValidationNoticeTarget, handle_validation_notice};
 use crate::config::profiles;
+use crate::core::notify::NoticeStatus;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::{
@@ -282,7 +283,7 @@ async fn handle_update_error<E: std::fmt::Display>(
     logging!(warn, Type::Cmd, "更新过程发生错误: {}", e,);
     discard_and_restore(current_profile).await?;
     let message: String = e.to_string().into();
-    handle::Handle::notice_message("config_validate::boot_error", message.clone());
+    handle::Handle::notice(NoticeStatus::ConfigValidateBootError, message.as_str());
     Ok(ValidationOutcome::invalid_from_message(message))
 }
 

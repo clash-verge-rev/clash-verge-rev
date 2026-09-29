@@ -1,8 +1,10 @@
+use super::NoticeStatus;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
+use std::sync::Arc;
 use std::{
     collections::HashMap,
     future::Future,
@@ -17,8 +19,8 @@ pub enum FrontendEvent<'a> {
     RefreshProfiles,
     RefreshProxyConfig,
     NoticeMessage {
-        status: &'a str,
-        message: String,
+        status: NoticeStatus,
+        message: Arc<str>,
     },
     ProfileChanged {
         current_profile_id: &'a String,
@@ -283,9 +285,10 @@ impl NotificationSystem {
             FrontendEvent::RefreshVerge => ("verge://refresh-verge-config", Ok(json!("yes"))),
             FrontendEvent::RefreshProfiles => ("verge://refresh-profiles", Ok(json!("yes"))),
             FrontendEvent::RefreshProxyConfig => ("verge://refresh-proxy-config", Ok(serde_json::Value::Null)),
-            FrontendEvent::NoticeMessage { status, message } => {
-                ("verge://notice-message", serde_json::to_value((status, message)))
-            }
+            FrontendEvent::NoticeMessage { status, message } => (
+                "verge://notice-message",
+                serde_json::to_value((status, message.as_ref())),
+            ),
             FrontendEvent::ProfileChanged { current_profile_id } => ("profile-changed", Ok(json!(current_profile_id))),
             FrontendEvent::TimerUpdated { profile_index } => ("verge://timer-updated", Ok(json!(profile_index))),
             FrontendEvent::ProfileUpdateStarted { uid } => ("profile-update-started", Ok(json!({ "uid": uid }))),
@@ -310,6 +313,81 @@ impl NotificationSystem {
             }
         }) {
             logging!(warn, Type::Frontend, "Failed to dispatch event on main thread: {err}");
+        }
+    }
+}
+
+#[cfg(test)]
+mod wire_tests {
+    use super::*;
+
+    #[test]
+    fn frontend_event_wire_contract() {
+        let uid = String::from("profile");
+        let events = [
+            (
+                FrontendEvent::RefreshClash,
+                "verge://refresh-clash-config",
+                json!("yes"),
+            ),
+            (
+                FrontendEvent::RefreshVerge,
+                "verge://refresh-verge-config",
+                json!("yes"),
+            ),
+            (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!("yes")),
+            (
+                FrontendEvent::RefreshProxyConfig,
+                "verge://refresh-proxy-config",
+                json!(null),
+            ),
+            (
+                FrontendEvent::NoticeMessage {
+                    status: NoticeStatus::SetConfigOk,
+                    message: Arc::from("ok"),
+                },
+                "verge://notice-message",
+                json!(["set_config::ok", "ok"]),
+            ),
+            (
+                FrontendEvent::TimerUpdated { profile_index: &uid },
+                "verge://timer-updated",
+                json!("profile"),
+            ),
+            (
+                FrontendEvent::RunStateChanged {
+                    state: json!({"running": true}),
+                },
+                "verge://run-state-changed",
+                json!({"running": true}),
+            ),
+            (
+                FrontendEvent::PendingFailuresChanged,
+                "verge://pending-failures-changed",
+                json!(null),
+            ),
+            (
+                FrontendEvent::ProfileChanged {
+                    current_profile_id: &uid,
+                },
+                "profile-changed",
+                json!("profile"),
+            ),
+            (
+                FrontendEvent::ProfileUpdateStarted { uid: &uid },
+                "profile-update-started",
+                json!({"uid": "profile"}),
+            ),
+            (
+                FrontendEvent::ProfileUpdateCompleted { uid: &uid },
+                "profile-update-completed",
+                json!({"uid": "profile"}),
+            ),
+        ];
+        for (event, name, payload) in events {
+            let (actual_name, actual_payload) = NotificationSystem::serialize_event(event);
+            assert_eq!(actual_name, name);
+            assert_eq!(actual_payload.unwrap(), payload);
         }
     }
 }

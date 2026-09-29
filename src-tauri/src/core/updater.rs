@@ -447,8 +447,8 @@ impl SilentUpdater {
                 Type::System,
                 "Silent updater: breaking change detected in v{version}, notifying frontend"
             );
-            super::handle::Handle::notice_message(
-                "info",
+            super::handle::Handle::notice(
+                super::notify::NoticeStatus::Info,
                 format!("New version v{version} contains breaking changes. Please update manually."),
             );
             return Ok(());

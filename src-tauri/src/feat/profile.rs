@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_update_item_safe},
@@ -140,7 +141,7 @@ async fn perform_profile_update(
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 Clash代理 更新订阅配置成功");
             profiles_update_item_safe(uid, &mut item).await?;
-            handle::Handle::notice_message("update_with_clash_proxy", profile_name);
+            handle::Handle::notice(NoticeStatus::UpdateWithClashProxy, profile_name.as_str());
             return Ok(());
         }
         Err(err) => {
@@ -160,7 +161,7 @@ async fn perform_profile_update(
         Ok(mut item) => {
             logging!(info, Type::Config, "[订阅更新] 使用 系统代理 更新订阅配置成功");
             profiles_update_item_safe(uid, &mut item).await?;
-            handle::Handle::notice_message("update_with_clash_proxy", profile_name);
+            handle::Handle::notice(NoticeStatus::UpdateWithClashProxy, profile_name.as_str());
             return Ok(());
         }
         Err(err) => {
@@ -176,7 +177,10 @@ async fn perform_profile_update(
 
     let last_err = mask_err(&last_err.to_string());
     if is_mannual_trigger {
-        handle::Handle::notice_message("update_failed_even_with_clash", format!("{profile_name} - {last_err}"));
+        handle::Handle::notice(
+            NoticeStatus::UpdateFailedEvenWithClash,
+            format!("{profile_name} - {last_err}"),
+        );
     }
     bail!(last_err)
 }
@@ -218,7 +222,7 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
                     message
                 };
                 logging!(error, Type::Config, "[订阅更新] 更新失败: {}", message);
-                handle::Handle::notice_message("update_failed", &message);
+                handle::Handle::notice(NoticeStatus::UpdateFailed, message.as_str());
                 bail!(message);
             }
         }
