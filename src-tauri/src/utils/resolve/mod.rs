@@ -14,8 +14,8 @@ use crate::{
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
+    core::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     feat,
-    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     process::AsyncHandler,
     utils::{init, server, window_manager::WindowManager},
 };

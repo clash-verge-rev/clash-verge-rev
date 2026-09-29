@@ -1,7 +1,7 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, MixedPort},
-    module::lightweight,
+    core::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
 };

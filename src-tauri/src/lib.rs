@@ -7,7 +7,6 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
-mod module;
 mod process;
 pub mod utils;
 
@@ -333,7 +332,7 @@ pub fn run() -> std::process::ExitCode {
 
     mod event_handlers {
         #[cfg(target_os = "macos")]
-        use crate::module::lightweight;
+        use crate::core::lightweight;
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
@@ -488,7 +487,7 @@ pub fn run() -> std::process::ExitCode {
         }),
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
+            if core::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
                 api.prevent_exit();
             } else if code.is_none() {
                 api.prevent_exit();

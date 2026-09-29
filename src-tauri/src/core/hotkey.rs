@@ -3,7 +3,7 @@ use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
 use crate::utils::window_manager::WindowManager;
-use crate::{config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode};
+use crate::{config::Config, core::handle, core::lightweight::entry_lightweight_mode, feat};
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};

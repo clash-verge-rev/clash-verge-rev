@@ -1,6 +1,9 @@
+pub(crate) mod app_effects;
+pub mod auto_backup;
 pub mod autostart;
 pub mod backup;
 pub mod hotkey;
+pub mod lightweight;
 pub mod listener;
 pub mod logger;
 pub mod manager;

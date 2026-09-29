@@ -1,7 +1,7 @@
 use crate::config::Config;
+use crate::core::lightweight;
 use crate::core::notify::NoticeStatus;
 use crate::core::{CoreManager, handle};
-use crate::module::lightweight;
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
@@ -231,7 +231,7 @@ pub async fn clean_session_ending_best_effort() -> CleanupResult {
 
 #[cfg(target_os = "macos")]
 pub async fn hide() {
-    use crate::module::lightweight::add_light_weight_timer;
+    use crate::core::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
         .await

@@ -1,14 +1,14 @@
 use crate::config::{IProfilePreview, IVerge};
+use crate::core::lightweight;
 use crate::core::tray::menu_def::TrayAction;
-use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd,
     config::Config,
+    core::lightweight::is_in_lightweight_mode,
     feat, logging,
-    module::lightweight::is_in_lightweight_mode,
     utils::{dirs::find_target_icons, help},
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};

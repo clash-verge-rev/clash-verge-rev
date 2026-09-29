@@ -5,8 +5,8 @@ use crate::{
         Config, IVerge,
         snapshot::{capture_config_files, restore_files},
     },
-    core::{CoreManager, autostart, hotkey, logger, manager::ConfigUpdateGuard, proxy_control, tray},
-    module::{auto_backup::AutoBackupManager, lightweight},
+    core::auto_backup::AutoBackupManager,
+    core::{CoreManager, logger, manager::ConfigUpdateGuard, proxy_control},
 };
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
@@ -63,7 +63,9 @@ ensure!(ensure_clash, ctx, {
     Ok(())
 });
 ensure!(ensure_verge, _ctx, { Ok(()) });
-ensure!(ensure_autostart, _ctx, { autostart::update_launch().await });
+ensure!(ensure_autostart, ctx, {
+    crate::core::app_effects::ensure_autostart(ctx.patch).await
+});
 ensure!(ensure_language, ctx, {
     if let Some(language) = &ctx.patch.language {
         clash_verge_i18n::set_locale(language.as_str());
@@ -86,37 +88,22 @@ ensure!(ensure_system_proxy, ctx, {
     }
 });
 ensure!(ensure_hotkey, ctx, {
-    if let Some(hotkeys) = &ctx.patch.hotkeys {
-        hotkey::Hotkey::global().update(hotkeys.to_owned()).await?;
-    }
-    Ok(())
+    crate::core::app_effects::ensure_hotkey(ctx.patch).await
 });
-ensure!(ensure_tray_menu, _ctx, { tray::Tray::global().update_menu().await });
+ensure!(ensure_tray_menu, ctx, {
+    crate::core::app_effects::ensure_tray_menu(ctx.patch).await
+});
 ensure!(ensure_tray_icon, ctx, {
-    tray::Tray::global()
-        .update_icon(&Config::verge().await.latest_arc())
-        .await?;
-    #[cfg(target_os = "macos")]
-    if let Some(enabled) = ctx.patch.enable_tray_speed {
-        tray::Tray::global().update_speed_task(enabled);
-    }
-    #[cfg(not(target_os = "macos"))]
-    let _ = ctx;
-    Ok(())
+    crate::core::app_effects::ensure_tray_icon(ctx.patch).await
 });
-ensure!(ensure_tray_tooltip, _ctx, {
-    tray::Tray::global().update_tooltip().await
+ensure!(ensure_tray_tooltip, ctx, {
+    crate::core::app_effects::ensure_tray_tooltip(ctx.patch).await
 });
-ensure!(ensure_tray_click, _ctx, {
-    tray::Tray::global().update_click_behavior().await
+ensure!(ensure_tray_click, ctx, {
+    crate::core::app_effects::ensure_tray_click(ctx.patch).await
 });
 ensure!(ensure_lightweight, ctx, {
-    if ctx.patch.enable_auto_light_weight_mode.unwrap_or(false) {
-        lightweight::enable_auto_light_weight_mode().await;
-    } else {
-        lightweight::disable_auto_light_weight_mode();
-    }
-    Ok(())
+    crate::core::app_effects::ensure_lightweight(ctx.patch).await
 });
 ensure!(ensure_log_level, ctx, {
     logger::Logger::global().update_log_level(ctx.patch.get_log_level())
