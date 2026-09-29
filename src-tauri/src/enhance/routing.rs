@@ -206,48 +206,76 @@ fn rename_inline_dialer_refs(
 fn rename_group_filter(group: &mut Mapping, field: &str, prefix: &str) -> Result<()> {
     if let Some(value) = group.get_mut(field) {
         let pattern = value.as_str().with_context(|| format!("{field} must be text"))?;
-        let mut flags_end = 0;
-        while pattern[flags_end..].starts_with("(?") {
-            let Some(end) = pattern[flags_end..].find(')') else {
-                break;
-            };
-            let flags = &pattern[flags_end + 2..flags_end + end];
-            if flags.is_empty() || !flags.bytes().all(|c| matches!(c, b'i' | b'm' | b's' | b'U' | b'-')) {
-                break;
+        let leading_flags_end = |pattern: &str| {
+            let mut offset = 0;
+            while pattern[offset..].starts_with("(?") {
+                let Some(end) = pattern[offset..].find(')') else {
+                    break;
+                };
+                let flags = &pattern[offset + 2..offset + end];
+                if flags.is_empty() || !flags.bytes().all(|c| matches!(c, b'i' | b'm' | b's' | b'U' | b'-')) {
+                    break;
+                }
+                offset += end + 1;
             }
-            flags_end += end + 1;
-        }
-        let (flags, body) = pattern.split_at(flags_end);
+            offset
+        };
+        let (flags, body) = pattern.split_at(leading_flags_end(pattern));
+        let bytes = body.as_bytes();
         let mut escaped = false;
-        let mut character_class = false;
+        let mut character_class = None;
+        let mut posix_class = false;
         let mut depth = 0usize;
-        let mut other_anchor = false;
-        let mut top_alternative = false;
+        let mut branch_start = 0;
+        let mut anchor_position = 0;
+        let mut alternatives = Vec::new();
         for (index, byte) in body.bytes().enumerate() {
             if escaped {
                 escaped = false;
                 continue;
             }
+            if let Some(first) = character_class {
+                match byte {
+                    b'\\' => escaped = true,
+                    b'[' if bytes.get(index + 1) == Some(&b':') => posix_class = true,
+                    b']' if posix_class => posix_class = false,
+                    b']' if index != first => character_class = None,
+                    _ => {}
+                }
+                continue;
+            }
             match byte {
                 b'\\' => escaped = true,
-                b'[' => character_class = true,
-                b']' => character_class = false,
-                b'(' if !character_class => depth += 1,
-                b')' if !character_class => depth = depth.saturating_sub(1),
-                b'|' if !character_class && depth == 0 => top_alternative = true,
-                b'^' if !character_class && index != 0 => other_anchor = true,
+                b'[' => character_class = Some(index + 1 + usize::from(bytes.get(index + 1) == Some(&b'^'))),
+                b'(' => depth += 1,
+                b')' => depth = depth.saturating_sub(1),
+                b'|' if depth == 0 => {
+                    alternatives.push(&body[branch_start..index]);
+                    branch_start = index + 1;
+                    anchor_position = branch_start + leading_flags_end(&body[branch_start..]);
+                }
+                b'^' if index != anchor_position => {
+                    bail!("source group {field} has unsupported start anchors");
+                }
                 _ => {}
             }
         }
-        if other_anchor || (body.starts_with('^') && top_alternative) {
-            bail!("source group {field} has unsupported start anchors");
-        }
+        alternatives.push(&body[branch_start..]);
+        // Keep one scope so unscoped inline flags still affect later alternatives.
+        let body = alternatives
+            .into_iter()
+            .map(|branch| {
+                let (flags, body) = branch.split_at(leading_flags_end(branch));
+                if let Some(body) = body.strip_prefix('^') {
+                    format!("{flags}{body}")
+                } else {
+                    format!("{flags}.*{body}")
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("|");
         let escaped_prefix = regex::escape(prefix);
-        let rewritten = if let Some(body) = body.strip_prefix('^') {
-            format!("{flags}^{escaped_prefix}(?:{body})")
-        } else {
-            format!("{flags}^{escaped_prefix}.*(?:{body})")
-        };
+        let rewritten = format!("{flags}^{escaped_prefix}(?:{body})");
         *value = key(&rewritten);
     }
     Ok(())
@@ -756,20 +784,81 @@ mod tests {
     }
 
     #[test]
-    fn source_group_filter_keeps_inline_flags_and_rejects_ambiguous_anchors() {
-        let source = yaml(
-            "proxies:\n  - {name: Hong Kong, type: direct}\nproxy-groups:\n  - {name: Region, type: select, include-all: true, filter: '(?i)^hong'}\n",
-        );
-        let result =
-            apply_routes(yaml("mode: rule\n"), &[(route("a"), source)]).expect("anchored source filter composes");
-        assert_eq!(
-            result["proxy-groups"][0]["filter"],
-            Value::from("(?i)^CVR:61:member:(?:hong)")
-        );
-        let ambiguous = yaml(
-            "proxies:\n  - {name: A, type: direct}\nproxy-groups:\n  - {name: Region, type: select, filter: '^A|^B'}\n",
-        );
-        assert!(apply_routes(yaml("mode: rule\n"), &[(route("a"), ambiguous)]).is_err());
+    fn source_group_filter_alternatives_preserve_original_name_matches() {
+        let names = [
+            "",
+            "A",
+            "B",
+            "C",
+            "a",
+            "b",
+            "c",
+            "Alpha",
+            "Bravo",
+            "xA",
+            "xB",
+            "xC",
+            "Hong Kong",
+            "hong kong",
+            "Japan",
+            "^A",
+            "|B",
+            "A|B",
+            "]",
+            "|",
+            ".",
+            "CVR",
+            "61",
+            "member",
+        ];
+        for pattern in [
+            "(?i)^hong",
+            "^A|^B",
+            "^A|B",
+            "A|^B",
+            "(?i)^A|^B",
+            "^A|(?i)^B|^C",
+            "^A|(?i)B|C",
+            "A(?i)|B|C",
+            "^(A|B)",
+            "^[A|B]|^C",
+            "^[^AB]|^A",
+            "^A|[[:alpha:]|]",
+            "^A|[]|]",
+            "^A|[^]|]",
+            r"\^A|^B",
+            r"^A\|B|^C",
+            "^A|member|61",
+            "^A||^B",
+        ] {
+            let source = yaml(&format!(
+                "proxies:\n  - {{name: Hong Kong, type: direct}}\nproxy-groups:\n  - {{name: Region, type: select, proxies: [Hong Kong], filter: '{pattern}', exclude-filter: '{pattern}'}}\n",
+            ));
+            let result = apply_routes(yaml("mode: rule\n"), &[(route("a"), source)])
+                .expect("source filter alternatives compose");
+            let original = regex::Regex::new(pattern).expect("original filter");
+            for field in ["filter", "exclude-filter"] {
+                let rewritten = regex::Regex::new(result["proxy-groups"][0][field].as_str().expect("filter"))
+                    .expect("rewritten filter");
+                for name in names {
+                    assert_eq!(
+                        rewritten.is_match(&format!("CVR:61:member:{name}")),
+                        original.is_match(name),
+                        "{field} {pattern:?} on {name:?}",
+                    );
+                    assert!(
+                        !rewritten.is_match(&format!("CVR:62:member:{name}")),
+                        "{field} {pattern:?} must stay within its source",
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn source_group_filter_still_rejects_nested_start_anchors() {
+        let mut group = yaml("filter: '(^A|^B)'\n");
+        assert!(rename_group_filter(&mut group, "filter", "CVR:61:member:").is_err());
     }
 
     #[test]
@@ -892,7 +981,7 @@ mod tests {
             return;
         };
         let source = yaml(
-            "proxies:\n  - {name: Node A, type: socks5, server: 127.0.0.1, port: 1080}\n  - {name: Node B, type: socks5, server: 127.0.0.1, port: 1081}\nproxy-providers:\n  Inline:\n    type: inline\n    payload: [{name: Node C, type: socks5, server: 127.0.0.1, port: 1082}]\n",
+            "proxies:\n  - {name: Node A, type: socks5, server: 127.0.0.1, port: 1080}\n  - {name: Node B, type: socks5, server: 127.0.0.1, port: 1081}\nproxy-providers:\n  Inline:\n    type: inline\n    payload: [{name: Node C, type: socks5, server: 127.0.0.1, port: 1082}]\nproxy-groups:\n  - {name: Filtered, type: select, use: [Inline], filter: '^Node A|^Node C', exclude-filter: '^Node B|^Node D'}\n",
         );
         let mut manual = route("a");
         manual.port = Some(19080);
