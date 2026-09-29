@@ -825,6 +825,7 @@ export const translationKeys = [
   'shared.actions.delete',
   'shared.actions.edit',
   'shared.actions.new',
+  'shared.actions.updateBadge',
   'shared.actions.enable',
   'shared.actions.upgrade',
   'shared.actions.restart',

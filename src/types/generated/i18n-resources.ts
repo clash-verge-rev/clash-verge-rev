@@ -1425,6 +1425,7 @@ export interface TranslationResources {
         save: string
         showDetails: string
         tableView: string
+        updateBadge: string
         upgrade: string
       }
       editorModes: {

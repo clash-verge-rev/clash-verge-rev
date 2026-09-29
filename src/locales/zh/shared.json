@@ -7,6 +7,7 @@
     "delete": "删除",
     "edit": "编辑",
     "new": "新建",
+    "updateBadge": "更新",
     "enable": "启用",
     "upgrade": "升级内核",
     "restart": "重启内核",
