@@ -41,7 +41,7 @@ pre-agent-steps:
         '          }',
       ].join('\n');
       const nonBlockingQuotaBranch = [
-        '          if (isQuotaExceeded) {',
+        '          if (isQuotaExceeded || /\\b429\\b|Too Many Requests/i.test(result.output)) {',
         '            log(`attempt ${attempt + 1}: Copilot quota exceeded — not retrying`);',
         '            if (/\\b429\\b|Too Many Requests/i.test(result.output)) {',
         '              log(`attempt ${attempt + 1}: Copilot quota unavailable — exiting 0`);',
