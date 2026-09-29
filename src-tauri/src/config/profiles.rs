@@ -3,6 +3,7 @@ use super::{
     prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
 };
 use crate::core::notify::{Refresh, announce};
+use crate::utils::retry::{RetryError, RetryPolicy, retry, retry_with_state};
 use crate::{
     core::{handle, tray::Tray},
     utils::{
@@ -17,6 +18,7 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use std::num::NonZeroUsize;
 use std::{
     collections::{HashMap, HashSet},
     path::{Component, Path},
@@ -601,19 +603,21 @@ fn is_activation_current(generation: u64) -> bool {
 }
 
 async fn fetch_proxies_with_timeout() -> Result<Proxies> {
-    tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
-        loop {
-            match handle::Handle::mihomo().get_proxies().await {
-                Ok(proxies) => return proxies,
-                Err(err) => {
-                    logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err:#}");
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
-            }
-        }
-    })
+    let interval = Duration::from_millis(500);
+    let attempts =
+        NonZeroUsize::MIN.saturating_add((MIHOMO_OPERATION_TIMEOUT.as_millis() / interval.as_millis()) as usize + 1);
+    tokio::time::timeout(
+        MIHOMO_OPERATION_TIMEOUT,
+        retry(RetryPolicy::fixed(attempts, interval), |_| async {
+            handle::Handle::mihomo().get_proxies().await.map_err(|error| {
+                logging!(debug, Type::Config, "mihomo proxies are not ready yet: {error:#}");
+                RetryError::Retry(error)
+            })
+        }),
+    )
     .await
-    .context("timed out while waiting for mihomo proxies")
+    .context("timed out while waiting for mihomo proxies")?
+    .map_err(Into::into)
 }
 
 async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
@@ -829,48 +833,58 @@ fn unsettled_selections(selected: &[PrfSelected], proxies: &Proxies) -> Vec<Stri
 /// Retries selections while provider-backed groups finish loading.
 async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut HashMap<String, String>, generation: u64) {
     let deadline = Instant::now() + SELECTED_NODES_SETTLE_DEADLINE;
-    loop {
-        tokio::time::sleep(SELECTED_NODES_SETTLE_INTERVAL).await;
-        if !is_activation_current(generation) {
-            return;
-        }
-        let Ok(snapshot) = fetch_proxies_with_timeout().await else {
-            // Unreachable core: the deadline still applies, so this cannot spin forever.
-            if Instant::now() >= deadline {
-                return;
-            }
-            continue;
-        };
-        if !is_activation_current(generation) {
-            return;
-        }
-
-        let pending = unsettled_selections(selected, &snapshot);
-        if pending.is_empty() {
-            return;
-        }
-        if Instant::now() >= deadline {
-            logging!(
-                warn,
-                Type::Config,
-                "gave up putting back {} selected node(s) the core never loaded: {}",
-                pending.len(),
-                pending.iter().map(String::as_str).collect::<Vec<_>>().join(", ")
-            );
-            return;
-        }
-
-        let plan = reconcile_selected_nodes(selected, None, &snapshot);
-        if apply_activations(&plan.activations, completed, generation)
-            .await
-            .is_none()
-        {
-            return;
-        }
-        if is_activation_current(generation) {
-            announce(Refresh::Clash);
-        }
-    }
+    let attempts = NonZeroUsize::MIN.saturating_add(
+        (SELECTED_NODES_SETTLE_DEADLINE.as_millis() / SELECTED_NODES_SETTLE_INTERVAL.as_millis()) as usize,
+    );
+    tokio::time::sleep(SELECTED_NODES_SETTLE_INTERVAL).await;
+    let _ = retry_with_state(
+        RetryPolicy::fixed(attempts, SELECTED_NODES_SETTLE_INTERVAL),
+        (selected, completed, generation, deadline),
+        |state, _| {
+            Box::pin(async move {
+                let (selected, completed, generation, deadline) = state;
+                if !is_activation_current(*generation) {
+                    return Ok(());
+                }
+                let Ok(snapshot) = fetch_proxies_with_timeout().await else {
+                    return if Instant::now() >= *deadline {
+                        Ok(())
+                    } else {
+                        Err(RetryError::Retry(()))
+                    };
+                };
+                if !is_activation_current(*generation) {
+                    return Ok(());
+                }
+                let pending = unsettled_selections(selected, &snapshot);
+                if pending.is_empty() {
+                    return Ok(());
+                }
+                if Instant::now() >= *deadline {
+                    logging!(
+                        warn,
+                        Type::Config,
+                        "gave up putting back {} selected node(s) the core never loaded: {}",
+                        pending.len(),
+                        pending.iter().map(String::as_str).collect::<Vec<_>>().join(", ")
+                    );
+                    return Ok(());
+                }
+                let plan = reconcile_selected_nodes(selected, None, &snapshot);
+                if apply_activations(&plan.activations, completed, *generation)
+                    .await
+                    .is_none()
+                {
+                    return Ok(());
+                }
+                if is_activation_current(*generation) {
+                    announce(Refresh::Clash);
+                }
+                Err(RetryError::Retry(()))
+            })
+        },
+    )
+    .await;
 }
 
 /// Releases the first-pass waiter even when restoration exits early.

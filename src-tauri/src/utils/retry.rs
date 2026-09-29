@@ -19,6 +19,14 @@ pub struct RetryPolicy {
 }
 
 impl RetryPolicy {
+    pub const fn fixed(attempts: NonZeroUsize, delay: Duration) -> Self {
+        Self {
+            attempts,
+            backoff: Backoff::Fixed(delay),
+            jitter: false,
+        }
+    }
+
     fn delays(self) -> ExponentialBackoff {
         let (base, cap, factor) = match self.backoff {
             Backoff::Fixed(delay) => (delay, delay, 1.0),
@@ -38,7 +46,6 @@ impl RetryPolicy {
 
 pub enum RetryError<E> {
     Retry(E),
-    #[allow(dead_code)]
     Stop(E),
 }
 
@@ -87,6 +94,49 @@ pub async fn try_strategies<
         },
     )
     .await
+}
+
+pub async fn retry_with_state<S: Send, T: Send, E: Send>(
+    policy: RetryPolicy,
+    mut state: S,
+    mut operation: impl for<'a> FnMut(&'a mut S, usize) -> futures::future::BoxFuture<'a, Result<T, RetryError<E>>> + Send,
+) -> Result<T, E> {
+    let mut result = operation(&mut state, 0).await;
+    for (index, delay) in policy.delays().enumerate() {
+        match result {
+            Ok(_) | Err(RetryError::Stop(_)) => break,
+            Err(RetryError::Retry(_)) => {
+                if !delay.is_zero() {
+                    tokio::time::sleep(delay).await;
+                }
+            }
+        }
+        result = operation(&mut state, index + 1).await;
+    }
+    result.map_err(|error| match error {
+        RetryError::Retry(error) | RetryError::Stop(error) => error,
+    })
+}
+
+pub fn retry_sync<T, E>(
+    policy: RetryPolicy,
+    mut operation: impl FnMut(usize) -> Result<T, RetryError<E>>,
+) -> Result<T, E> {
+    let mut result = operation(0);
+    for (index, delay) in policy.delays().enumerate() {
+        match result {
+            Ok(_) | Err(RetryError::Stop(_)) => break,
+            Err(RetryError::Retry(_)) => {
+                if !delay.is_zero() {
+                    std::thread::sleep(delay);
+                }
+            }
+        }
+        result = operation(index + 1);
+    }
+    result.map_err(|error| match error {
+        RetryError::Retry(error) | RetryError::Stop(error) => error,
+    })
 }
 
 #[cfg(test)]
@@ -139,6 +189,34 @@ mod tests {
         .await;
         assert_eq!(result, Err("system"));
         assert_eq!(visited, ["direct", "clash", "system"]);
+    }
+
+    #[tokio::test]
+    async fn stateful_and_sync_retries_preserve_progress_and_stop() {
+        let policy = RetryPolicy::fixed(NonZeroUsize::MIN.saturating_add(2), Duration::ZERO);
+        let result = retry_with_state(policy, Vec::new(), |visited, attempt| {
+            Box::pin(async move {
+                visited.push(attempt);
+                if visited.len() == 3 {
+                    Ok(visited.clone())
+                } else {
+                    Err(RetryError::Retry(()))
+                }
+            })
+        })
+        .await;
+        assert_eq!(result, Ok(vec![0, 1, 2]));
+        let mut visited = Vec::new();
+        let result = retry_sync(policy, |attempt| {
+            visited.push(attempt);
+            if attempt == 1 {
+                Err::<(), _>(RetryError::Stop("terminal"))
+            } else {
+                Err(RetryError::Retry("retry"))
+            }
+        });
+        assert_eq!(result, Err("terminal"));
+        assert_eq!(visited, [0, 1]);
     }
 
     #[test]

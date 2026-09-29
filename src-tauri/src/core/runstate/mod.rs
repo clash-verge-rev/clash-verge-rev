@@ -130,20 +130,21 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Retries transport failures but stops at the first readable reply, including a rejection.
     pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
-        let mut last_error = None;
-        for attempt in 0..attempts {
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let attempts = std::num::NonZeroUsize::new(attempts).ok_or_else(|| {
+            ReadyWaitError::Unreachable(anyhow::anyhow!(
+                "service readiness wait was configured with no attempts"
+            ))
+        })?;
+        retry(RetryPolicy::fixed(attempts, interval), |_| async {
             match self.env.probe_service_version().await {
-                Ok(reply) => return self.record_reply(&reply).map_err(ReadyWaitError::Rejected),
-                Err(error) => last_error = Some(error),
+                Ok(reply) => self
+                    .record_reply(&reply)
+                    .map_err(|error| RetryError::Stop(ReadyWaitError::Rejected(error))),
+                Err(error) => Err(RetryError::Retry(ReadyWaitError::Unreachable(error))),
             }
-            if attempt + 1 < attempts {
-                tokio::time::sleep(interval).await;
-            }
-        }
-
-        Err(ReadyWaitError::Unreachable(last_error.unwrap_or_else(|| {
-            anyhow::anyhow!("service readiness wait was configured with no attempts")
-        })))
+        })
+        .await
     }
 
     fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {

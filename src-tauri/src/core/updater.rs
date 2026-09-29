@@ -388,12 +388,14 @@ impl SilentUpdater {
 
         // The new webview may not accept evaluation immediately.
         std::thread::spawn(move || {
-            for i in 0..10 {
-                std::thread::sleep(std::time::Duration::from_millis(100 * (i + 1)));
-                if window.eval(&js).is_ok() {
-                    return;
-                }
-            }
+            use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+            let _ = retry_sync(
+                RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(9), std::time::Duration::ZERO),
+                |index| {
+                    std::thread::sleep(std::time::Duration::from_millis(100 * (index as u64 + 1)));
+                    window.eval(&js).map_err(RetryError::Retry)
+                },
+            );
         });
 
         logging!(info, Type::System, "Update splash window shown");

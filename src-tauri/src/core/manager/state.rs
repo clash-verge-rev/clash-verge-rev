@@ -1,6 +1,7 @@
 #[cfg(test)]
 use super::claim_core_readiness_generation;
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use crate::utils::retry::{RetryError, RetryPolicy, retry};
 use crate::{
     AsyncHandler,
     config::Config,
@@ -11,6 +12,7 @@ use crate::{
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use log::Level;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
@@ -41,14 +43,14 @@ async fn retry_service_start<Start, StartFuture>(
     mut start: Start,
 ) -> Result<()>
 where
-    Start: FnMut() -> StartFuture,
-    StartFuture: std::future::Future<Output = Result<()>>,
+    Start: FnMut() -> StartFuture + Send,
+    StartFuture: std::future::Future<Output = Result<()>> + Send,
 {
-    let mut last_error = None;
-    for attempt in 0..attempts {
-        match start().await {
-            Ok(()) => return Ok(()),
-            Err(error) => {
+    let attempts = NonZeroUsize::new(attempts).ok_or_else(|| anyhow::anyhow!("service start failed"))?;
+    retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
+        let future = start();
+        async move {
+            future.await.map_err(|error| {
                 logging!(
                     warn,
                     Type::Core,
@@ -60,16 +62,14 @@ where
                     .downcast_ref::<service::ServiceStartRefusal>()
                     .is_some_and(|refusal| service::StageRequest::is_about_the_bundle(refusal.code))
                 {
-                    return Err(error);
+                    RetryError::Stop(error)
+                } else {
+                    RetryError::Retry(error)
                 }
-                last_error = Some(error);
-                if attempt + 1 < attempts {
-                    tokio::time::sleep(retry_delay).await;
-                }
-            }
+            })
         }
-    }
-    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+    })
+    .await
 }
 
 impl CoreManager {
@@ -95,14 +95,16 @@ async fn poll_sidecar_readiness<F, Fut>(
     mut probe: F,
 ) -> Result<()>
 where
-    F: FnMut() -> Fut,
-    Fut: std::future::Future<Output = Result<()>>,
+    F: FnMut() -> Fut + Send,
+    Fut: std::future::Future<Output = Result<()>> + Send,
 {
-    let mut last_error = None;
-    for attempt in 0..max_attempts {
-        match probe().await {
-            Ok(()) => return Ok(()),
-            Err(error) => {
+    let attempts = NonZeroUsize::new(max_attempts)
+        .context("sidecar readiness was configured with no attempts")
+        .context("Mihomo API did not become ready")?;
+    retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
+        let future = probe();
+        async move {
+            future.await.map_err(|error| {
                 logging!(
                     debug,
                     Type::Core,
@@ -110,16 +112,12 @@ where
                     attempt + 1,
                     max_attempts
                 );
-                last_error = Some(error);
-            }
+                RetryError::Retry(error)
+            })
         }
-        if attempt + 1 < max_attempts {
-            tokio::time::sleep(retry_delay).await;
-        }
-    }
-    Err(last_error
-        .unwrap_or_else(|| anyhow::anyhow!("sidecar readiness was configured with no attempts"))
-        .context("Mihomo API did not become ready"))
+    })
+    .await
+    .context("Mihomo API did not become ready")
 }
 
 fn should_clear_terminated_sidecar(running_mode: &RunningMode, current_pid: Option<u32>, terminated_pid: u32) -> bool {
