@@ -70,6 +70,12 @@ impl Config {
         CONFIG_WRITE_LOCK.lock().await
     }
 
+    pub(crate) fn try_lock_config_write() -> Result<MutexGuard<'static, ()>> {
+        CONFIG_WRITE_LOCK
+            .try_lock()
+            .map_err(|_| anyhow!("configuration update is already running"))
+    }
+
     pub async fn init_config_before_window() -> Result<()> {
         Self::ensure_default_profile_items().await?;
 

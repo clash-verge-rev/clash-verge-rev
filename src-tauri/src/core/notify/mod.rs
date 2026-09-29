@@ -109,7 +109,7 @@ mod tests {
     use super::NoticeStatus;
 
     #[test]
-    fn notice_status_wire_contract() {
+    fn notice_status_wire_contract() -> Result<(), serde_json::Error> {
         let statuses = [
             NoticeStatus::Info,
             NoticeStatus::ImportSubUrlOk,
@@ -199,8 +199,8 @@ mod tests {
         let actual: Vec<_> = statuses
             .into_iter()
             .map(serde_json::to_value)
-            .collect::<Result<_, _>>()
-            .unwrap();
+            .collect::<Result<_, _>>()?;
         assert_eq!(actual, expected.map(serde_json::Value::from));
+        Ok(())
     }
 }

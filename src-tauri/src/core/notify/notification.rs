@@ -322,7 +322,7 @@ mod wire_tests {
     use super::*;
 
     #[test]
-    fn frontend_event_wire_contract() {
+    fn frontend_event_wire_contract() -> Result<(), serde_json::Error> {
         let uid = String::from("profile");
         let events = [
             (
@@ -387,7 +387,8 @@ mod wire_tests {
         for (event, name, payload) in events {
             let (actual_name, actual_payload) = NotificationSystem::serialize_event(event);
             assert_eq!(actual_name, name);
-            assert_eq!(actual_payload.unwrap(), payload);
+            assert_eq!(actual_payload?, payload);
         }
+        Ok(())
     }
 }

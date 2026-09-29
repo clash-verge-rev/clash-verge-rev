@@ -42,9 +42,9 @@ pub enum RetryError<E> {
     Stop(E),
 }
 
-pub async fn retry<T, E, Fut: Future<Output = Result<T, RetryError<E>>>>(
+pub async fn retry<T: Send, E: Send, Fut: Future<Output = Result<T, RetryError<E>>> + Send>(
     policy: RetryPolicy,
-    mut operation: impl FnMut(usize) -> Fut,
+    mut operation: impl FnMut(usize) -> Fut + Send,
 ) -> Result<T, E> {
     let mut result = operation(0).await;
     for (index, delay) in policy.delays().enumerate() {
@@ -63,10 +63,16 @@ pub async fn retry<T, E, Fut: Future<Output = Result<T, RetryError<E>>>>(
     })
 }
 
-pub async fn try_strategies<S: Copy, T, E, Fut: Future<Output = Result<T, E>>, const N: usize>(
+pub async fn try_strategies<
+    S: Copy + Send,
+    T: Send,
+    E: Send,
+    Fut: Future<Output = Result<T, E>> + Send,
+    const N: usize,
+>(
     first: S,
     rest: [S; N],
-    mut operation: impl FnMut(S) -> Fut,
+    mut operation: impl FnMut(S) -> Fut + Send,
 ) -> Result<(S, T), E> {
     retry(
         RetryPolicy {
@@ -74,7 +80,7 @@ pub async fn try_strategies<S: Copy, T, E, Fut: Future<Output = Result<T, E>>, c
             backoff: Backoff::Fixed(Duration::ZERO),
             jitter: false,
         },
-        |attempt| {
+        move |attempt| {
             let strategy = if attempt == 0 { first } else { rest[attempt - 1] };
             let future = operation(strategy);
             async move { future.await.map(|value| (strategy, value)).map_err(RetryError::Retry) }
@@ -90,7 +96,7 @@ mod tests {
     #[tokio::test]
     async fn retries_stop_at_success_terminal_error_or_attempt_limit() {
         let policy = RetryPolicy {
-            attempts: NonZeroUsize::new(3).unwrap(),
+            attempts: NonZeroUsize::MIN.saturating_add(2),
             backoff: Backoff::Fixed(Duration::ZERO),
             jitter: false,
         };
@@ -138,7 +144,7 @@ mod tests {
     #[test]
     fn backoff_keeps_the_attempt_budget_and_exponential_cap() {
         let policy = RetryPolicy {
-            attempts: NonZeroUsize::new(5).unwrap(),
+            attempts: NonZeroUsize::MIN.saturating_add(4),
             backoff: Backoff::Exponential {
                 base: Duration::from_millis(10),
                 cap: Duration::from_millis(25),

@@ -130,6 +130,30 @@ where
 }
 
 impl CoreManager {
+    pub(crate) fn claim_config_update(
+        &self,
+        _config_write: &tokio::sync::MutexGuard<'_, ()>,
+    ) -> Result<ConfigUpdateGuard<'_>> {
+        if !self.try_start_config_update() {
+            anyhow::bail!("configuration update is already running");
+        }
+        Ok(ConfigUpdateGuard(self))
+    }
+
+    pub(crate) async fn update_config_in_patch(&self, _update: &ConfigUpdateGuard<'_>) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            anyhow::bail!("application is exiting");
+        }
+        self.set_last_update(Instant::now());
+        Config::generate().await?;
+        let outcome = self.validate_and_apply_draft().await?;
+        if outcome.is_valid() {
+            Ok(())
+        } else {
+            Err(anyhow!("{outcome}"))
+        }
+    }
+
     pub async fn use_default_config(&self, status: NoticeStatus, message: &str) -> Result<()> {
         use crate::constants::files::RUNTIME_CONFIG;
 
@@ -300,6 +324,14 @@ impl CoreManager {
 
     /// Validates and applies the caller's transaction, committing only on success.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
+        let outcome = self.validate_and_apply_draft().await?;
+        if outcome.is_valid() {
+            transaction.commit();
+        }
+        Ok(outcome)
+    }
+
+    async fn validate_and_apply_draft(&self) -> Result<ValidationOutcome> {
         // One serialization feeds check and run files; the core never applies unvalidated bytes.
         let yaml = Config::runtime_config_yaml().await?;
         let outcome = CoreConfigValidator::global()
@@ -311,7 +343,6 @@ impl CoreManager {
 
         let run_path = Config::write_runtime_file(&yaml).await?;
         self.apply_config(run_path).await?;
-        transaction.commit();
         Ok(ValidationOutcome::Valid)
     }
 

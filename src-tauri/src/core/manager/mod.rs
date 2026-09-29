@@ -1,4 +1,5 @@
 mod config;
+pub(crate) use config::ConfigUpdateGuard;
 mod lifecycle;
 mod state;
 
