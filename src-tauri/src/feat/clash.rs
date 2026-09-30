@@ -9,13 +9,13 @@ use crate::{
 };
 use bytes::BytesMut;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::sync::Arc;
+use std::sync::LazyLock;
 
 #[allow(clippy::expect_used)]
-static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
+static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> = LazyLock::new(|| {
     let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
         .with_safe_default_protocol_versions()

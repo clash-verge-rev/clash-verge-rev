@@ -4,9 +4,9 @@ use anyhow::Error;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
 use reqwest_dav::list_cmd::{ListEntity, ListFile, ListMultiStatus};
 use smartstring::alias::String;
+use std::sync::OnceLock;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
@@ -58,7 +58,7 @@ pub struct WebDavClient {
 
 impl WebDavClient {
     pub fn global() -> &'static Self {
-        static WEBDAV_CLIENT: OnceCell<WebDavClient> = OnceCell::new();
+        static WEBDAV_CLIENT: OnceLock<WebDavClient> = OnceLock::new();
         WEBDAV_CLIENT.get_or_init(|| Self {
             config: ArcSwapOption::new(None),
             clients: ArcSwap::new(Arc::new(HashMap::new())),

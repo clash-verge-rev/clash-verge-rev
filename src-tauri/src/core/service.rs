@@ -26,8 +26,8 @@ use clash_verge_service_ipc::{
     RuntimeBundle, RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, ServiceStatusSnapshot,
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use std::sync::LazyLock;
 use std::{
     collections::HashMap,
     env::current_exe,
@@ -39,7 +39,7 @@ use std::{
 };
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
-static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
+static ACTIVE_SERVICE_SESSION: LazyLock<Mutex<Option<ActiveServiceSession>>> = LazyLock::new(|| Mutex::new(None));
 static PENDING_SERVICE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);

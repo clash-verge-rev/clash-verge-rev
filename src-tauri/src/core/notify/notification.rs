@@ -1,10 +1,10 @@
 use super::NoticeStatus;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
 use std::sync::Arc;
+use std::sync::LazyLock;
 use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
@@ -238,7 +238,7 @@ pub fn what_was_asked() -> FailedOperation {
         .unwrap_or(FailedOperation::SystemProxyRestore)
 }
 
-static PENDING_FAILURES: Lazy<FailureTable> = Lazy::new(FailureTable::default);
+static PENDING_FAILURES: LazyLock<FailureTable> = LazyLock::new(FailureTable::default);
 
 pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<String>) {
     PENDING_FAILURES.record(operation, code, detail.into());
