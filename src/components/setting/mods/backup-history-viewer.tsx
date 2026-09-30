@@ -35,6 +35,7 @@ import {
   restoreLocalBackup,
   restoreWebDavBackup,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import {
   buildWebdavSignature,
@@ -228,17 +229,29 @@ export const BackupHistoryViewer = ({
     try {
       if (action === 'delete') {
         if (actionIsLocal) {
-          await deleteLocalBackup(filename)
+          await mutate(() => deleteLocalBackup(filename), {
+            id: 'delete-local-backup',
+            errorNotice: false,
+          })
         } else {
-          await deleteWebdavBackup(filename)
+          await mutate(() => deleteWebdavBackup(filename), {
+            id: 'delete-webdav-backup',
+            errorNotice: false,
+          })
         }
         setPendingConfirmation(null)
         await fetchRows()
       } else {
         if (actionIsLocal) {
-          await restoreLocalBackup(filename)
+          await mutate(() => restoreLocalBackup(filename), {
+            id: 'restore-local-backup',
+            errorNotice: false,
+          })
         } else {
-          await restoreWebDavBackup(filename)
+          await mutate(() => restoreWebDavBackup(filename), {
+            id: 'restore-webdav-backup',
+            errorNotice: false,
+          })
         }
         setPendingConfirmation(null)
         showNotice.success('settings.modals.backup.messages.restoreSuccess')
@@ -265,8 +278,11 @@ export const BackupHistoryViewer = ({
     const savePath = await save({ defaultPath: filename })
     if (!savePath || Array.isArray(savePath)) return
     try {
-      await exportLocalBackup(filename, savePath)
-      showNotice.success('settings.modals.backup.messages.localBackupExported')
+      await mutate(() => exportLocalBackup(filename, savePath), {
+        id: 'export-local-backup',
+        errorNotice: false,
+        successNotice: 'settings.modals.backup.messages.localBackupExported',
+      })
     } catch (ignoreError: unknown) {
       showNotice.error(
         'settings.modals.backup.messages.localBackupExportFailed',

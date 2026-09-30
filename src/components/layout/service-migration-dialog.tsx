@@ -12,6 +12,7 @@ import {
   restartCore,
   type ServiceInstallOutcome,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useAppDispatch, useRunState } from '@/store/app-store-context'
 
@@ -74,11 +75,23 @@ export const ServiceMigrationDialog = () => {
     let outcome: ServiceInstallOutcome | undefined
     try {
       if (remedy === 'install') {
-        outcome = await installService()
+        const result = await mutate(() => installService(), {
+          id: 'install-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       } else if (remedy === 'repair') {
-        outcome = await repairService()
+        const result = await mutate(() => repairService(), {
+          id: 'repair-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       } else {
-        outcome = await reinstallService()
+        const result = await mutate(() => reinstallService(), {
+          id: 'reinstall-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       }
     } catch (error) {
       showNotice.error(
@@ -114,8 +127,11 @@ export const ServiceMigrationDialog = () => {
 
     let restartSucceeded = false
     try {
-      await restartCore()
-      restartSucceeded = true
+      const result = await mutate(() => restartCore(), {
+        id: 'restart-core',
+        errorNotice: false,
+      })
+      restartSucceeded = result.ok
     } catch (error) {
       showNotice.error(
         'layout.components.serviceMigration.errors.restartFailed',
@@ -145,7 +161,10 @@ export const ServiceMigrationDialog = () => {
     setWorkflowIncomplete(true)
     let startupError: unknown
     try {
-      await continueWithSidecar()
+      await mutate(() => continueWithSidecar(), {
+        id: 'continue-with-sidecar',
+        errorNotice: false,
+      })
     } catch (error) {
       startupError = error
     }

@@ -12,6 +12,7 @@ import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { invoke_uwp_tool, setDnsOverride } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -74,7 +75,10 @@ const SettingClash = ({ onError }: Props) => {
   }
   const onUpdateGeo = async () => {
     try {
-      await updateGeo()
+      await mutate(() => updateGeo(), {
+        id: 'update-geo',
+        errorNotice: false,
+      })
       showNotice.success('settings.feedback.notifications.clash.geoDataUpdated')
     } catch (err: any) {
       showNotice.error(err)
@@ -90,7 +94,15 @@ const SettingClash = ({ onError }: Props) => {
       if (!profileUid) return
       setDnsUpdating(true)
       try {
-        const outcome = await setDnsOverride(profileUid, enable, confirmation)
+        const result = await mutate(
+          () => setDnsOverride(profileUid, enable, confirmation),
+          {
+            id: 'set-dns-override',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
+        const outcome = result.value
         if (outcome.status === 'confirmation_required') {
           setDnsConfirmation({ profileUid, source: outcome.source })
         } else {

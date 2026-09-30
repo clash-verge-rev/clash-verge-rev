@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { openLogsDir, restartCore } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
+import { mutate } from '@/services/mutate'
 
 import type { ProxyEmptyStateReason } from './proxy-empty-state-model'
 
@@ -25,10 +25,10 @@ export const ProxyEmptyState = ({ reason }: Props) => {
   const handleRestart = useLockFn(async () => {
     setIsRestarting(true)
     try {
-      await restartCore()
+      await mutate(() => restartCore(), { id: 'restart-core' })
       await Promise.all([refreshProxy(), mutateSystemState()])
-    } catch (error) {
-      showNotice.error(error)
+    } catch {
+      // the funnel already notified
     } finally {
       setIsRestarting(false)
     }
