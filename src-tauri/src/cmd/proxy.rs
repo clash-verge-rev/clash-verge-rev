@@ -84,6 +84,7 @@ pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
 }
 
 async fn run_tray_sync_loop() {
+    // Permanent watcher: keeps syncing until a pass finds no pending sync request.
     loop {
         match Tray::global().update_menu().await {
             Ok(_) => {
