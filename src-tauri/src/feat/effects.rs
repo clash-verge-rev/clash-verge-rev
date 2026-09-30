@@ -177,4 +177,120 @@ mod tests {
         assert_eq!(unique.len(), VERGE_FIELDS.len());
         Ok(())
     }
+
+    fn verge_patch(mutate: impl FnOnce(&mut IVerge)) -> IVerge {
+        let mut patch = IVerge::default();
+        mutate(&mut patch);
+        patch
+    }
+
+    #[test]
+    fn representative_verge_patches_map_to_frozen_effects() {
+        assert_eq!(verge_effects(&IVerge::default()), Effects::new());
+
+        let cases: [(IVerge, &[Effect]); 7] = [
+            (
+                verge_patch(|p| p.verge_mixed_port = Some(27899)),
+                &[Effect::RestartCore],
+            ),
+            (
+                verge_patch(|p| p.language = Some("zh".into())),
+                &[Effect::TrayMenu, Effect::TrayTooltip, Effect::Language],
+            ),
+            (
+                verge_patch(|p| p.hotkeys = Some(vec!["CmdOrCtrl+K".into()])),
+                &[Effect::Hotkey, Effect::TrayMenu],
+            ),
+            (
+                verge_patch(|p| p.enable_system_proxy = Some(true)),
+                &[
+                    Effect::SystemProxy,
+                    Effect::TrayIcon,
+                    Effect::TrayMenu,
+                    Effect::TrayTooltip,
+                ],
+            ),
+            (
+                verge_patch(|p| p.system_proxy_bypass = Some("localhost".into())),
+                &[Effect::SystemProxy],
+            ),
+            (
+                verge_patch(|p| p.tray_event = Some("show_main_window".into())),
+                &[Effect::TrayClick],
+            ),
+            (verge_patch(|p| p.theme_mode = Some("dark".into())), &[]),
+        ];
+        for (patch, expected) in cases {
+            assert_eq!(
+                verge_effects(&patch),
+                expected.iter().copied().collect::<Effects>(),
+                "patch mapping drifted for {expected:?}"
+            );
+        }
+
+        let tun = verge_patch(|p| p.enable_tun_mode = Some(true));
+        #[cfg(target_os = "linux")]
+        assert_eq!(
+            verge_effects(&tun),
+            [
+                Effect::RestartCore,
+                Effect::ClashConfig,
+                Effect::TrayIcon,
+                Effect::TrayMenu,
+                Effect::TrayTooltip,
+            ]
+            .into_iter()
+            .collect::<Effects>()
+        );
+        #[cfg(not(target_os = "linux"))]
+        assert_eq!(
+            verge_effects(&tun),
+            [
+                Effect::ClashConfig,
+                Effect::TrayIcon,
+                Effect::TrayMenu,
+                Effect::TrayTooltip,
+            ]
+            .into_iter()
+            .collect::<Effects>()
+        );
+    }
+
+    fn clash_mapping(pairs: &[(&str, &str)]) -> serde_yaml_ng::Mapping {
+        let mut mapping = serde_yaml_ng::Mapping::new();
+        for (key, value) in pairs {
+            mapping.insert((*key).into(), (*value).into());
+        }
+        mapping
+    }
+
+    #[test]
+    fn clash_keys_map_to_frozen_effects() {
+        let cases: [(serde_yaml_ng::Mapping, &[Effect]); 7] = [
+            (clash_mapping(&[]), &[Effect::ClashConfig]),
+            (clash_mapping(&[("secret", "s")]), &[Effect::RestartCore]),
+            (
+                clash_mapping(&[("mode", "rule")]),
+                &[Effect::ClashConfig, Effect::TrayIcon, Effect::TrayMenu],
+            ),
+            (clash_mapping(&[("allow-lan", "true")]), &[Effect::ClashConfig]),
+            (clash_mapping(&[("not-a-known-key", "1")]), &[Effect::ClashConfig]),
+            // Restart supersedes reload; allow-lan precedes mode.
+            (
+                clash_mapping(&[("secret", "s"), ("mode", "rule")]),
+                &[Effect::RestartCore],
+            ),
+            (
+                clash_mapping(&[("allow-lan", "true"), ("mode", "rule")]),
+                &[Effect::ClashConfig],
+            ),
+        ];
+        for (patch, expected) in cases {
+            assert_eq!(
+                clash_effects(&patch),
+                expected.iter().copied().collect::<Effects>(),
+                "clash mapping drifted for {expected:?}"
+            );
+        }
+    }
 }
