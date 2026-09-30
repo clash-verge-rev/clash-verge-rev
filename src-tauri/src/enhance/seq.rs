@@ -1,12 +1,14 @@
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Sequence, Value};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SeqMap {
     pub prepend: Sequence,
     pub append: Sequence,
     pub delete: Vec<String>,
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    pub groups: HashMap<String, Vec<String>>,
 }
 
 fn collect_proxy_names(seq: &Sequence) -> Vec<String> {
@@ -35,6 +37,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         prepend,
         append,
         delete,
+        groups,
     } = seq;
 
     let added_proxy_names = if field == "proxies" {
@@ -90,7 +93,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     };
 
     let mut updated_groups = Sequence::new();
-    let mut appended_to_selector = false;
+    let mut found_selector = false;
     for group in proxy_groups {
         if let Value::Mapping(mut group_map) = group {
             let mut group_proxies = match group_map.remove("proxies") {
@@ -113,11 +116,22 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 None => None,
             };
 
-            if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
+            let first_selector = !found_selector && is_selector_group(&group_map);
+            found_selector |= first_selector;
+            let group_name = group_map.get("name").and_then(Value::as_str);
+            let assigned_names: Vec<&String> = added_proxy_names
+                .iter()
+                .filter(|name| match groups.get(*name) {
+                    Some(targets) => group_name.is_some_and(|group| targets.iter().any(|target| target == group)),
+                    None => first_selector,
+                })
+                .collect();
+
+            if !assigned_names.is_empty() {
                 let base_group_proxies = group_proxies.unwrap_or_else(Sequence::new);
                 let mut merged_proxies = Sequence::new();
                 let mut seen_proxy_names = HashSet::new();
-                for name in &added_proxy_names {
+                for name in assigned_names {
                     if seen_proxy_names.insert(name.clone()) {
                         merged_proxies.push(Value::String(name.clone()));
                     }
@@ -132,7 +146,6 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                     merged_proxies.push(value);
                 }
                 group_proxies = Some(merged_proxies);
-                appended_to_selector = true;
             }
 
             if let Some(group_proxies) = group_proxies {
@@ -153,6 +166,62 @@ mod tests {
     use super::*;
     #[allow(unused_imports)]
     use serde_yaml_ng::Value;
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn test_custom_proxy_group_choices_survive_subscription_update() {
+        let config: Mapping = serde_yaml_ng::from_str(
+            r"
+proxies:
+- {name: original, type: http, server: 127.0.0.1, port: 8080}
+proxy-groups:
+- {name: A, type: select, proxies: [original]}
+- {name: B, type: select, proxies: [original], url: https://example.com}
+",
+        )
+        .expect("valid profile");
+        let override_yaml = r"
+prepend:
+- {name: custom, type: http, server: 127.0.0.1, port: 8081}
+append:
+- {name: shared, type: http, server: 127.0.0.1, port: 8082}
+- {name: ungrouped, type: http, server: 127.0.0.1, port: 8083}
+delete: []
+groups:
+  custom: [B]
+  shared: [A, B]
+  ungrouped: []
+";
+        for profile in [
+            config.clone(),
+            serde_yaml_ng::from_str(
+                &serde_yaml_ng::to_string(&config)
+                    .expect("serialize profile")
+                    .replace("original", "updated"),
+            )
+            .expect("updated subscription"),
+        ] {
+            let original = profile["proxy-groups"][1]["proxies"][0].clone();
+            let seq: SeqMap = serde_yaml_ng::from_str(override_yaml).expect("saved proxy override");
+            let seq = serde_yaml_ng::from_str(&serde_yaml_ng::to_string(&seq).expect("save override"))
+                .expect("reload override");
+            let result = use_seq(seq, profile, "proxies");
+            assert_eq!(
+                result["proxy-groups"][0]["proxies"],
+                Value::Sequence(vec![Value::String("shared".into()), original.clone()])
+            );
+            assert_eq!(
+                result["proxy-groups"][1]["proxies"],
+                Value::Sequence(vec![
+                    Value::String("custom".into()),
+                    Value::String("shared".into()),
+                    original
+                ])
+            );
+            assert_eq!(result["proxy-groups"][1]["url"], "https://example.com");
+            assert_eq!(result["proxies"].as_sequence().expect("nodes").len(), 4);
+        }
+    }
 
     #[test]
     #[allow(clippy::unwrap_used)]
@@ -181,6 +250,7 @@ proxy-groups:
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
+            ..SeqMap::default()
         };
 
         config = use_seq(seq, config, "proxies");
@@ -272,6 +342,7 @@ proxy-groups:
             prepend,
             append,
             delete: vec![],
+            ..SeqMap::default()
         };
 
         config = use_seq(seq, config, "proxies");
@@ -318,6 +389,7 @@ proxy-groups: "invalid"
             prepend: Sequence::new(),
             append: Sequence::new(),
             delete: vec!["proxy1".to_string()],
+            ..SeqMap::default()
         };
 
         config = use_seq(seq, config, "proxies");

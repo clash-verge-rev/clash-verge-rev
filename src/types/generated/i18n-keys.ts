@@ -239,6 +239,7 @@ export const translationKeys = [
   'profiles.modals.profileForm.warnings.frequentUpdate',
   'profiles.modals.profileForm.feedback.notifications.creationRetry',
   'profiles.modals.profileForm.feedback.notifications.creationSuccess',
+  'profiles.modals.proxiesEditor.fields.targetGroups',
   'profiles.modals.proxiesEditor.title',
   'profiles.modals.proxiesEditor.placeholders.multiUri',
   'profiles.modals.proxiesEditor.actions.prepend',

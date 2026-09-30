@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "Ubah Proksi",
       "placeholders": {
         "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"

@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "ویرایش پروکسی‌ها",
       "placeholders": {
         "multiUri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)"

@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "ノードを編集",
       "placeholders": {
         "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"

@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "Edit Proxies",
       "placeholders": {
         "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
