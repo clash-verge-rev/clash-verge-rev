@@ -17,7 +17,7 @@ import {
   TextSnippetOutlined,
 } from '@mui/icons-material'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
-import { TauriEvent } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
@@ -39,7 +39,6 @@ import {
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
-import { useListen } from '@/hooks/use-listen'
 import { fetchProfilesIntoCache, useProfiles } from '@/hooks/use-profiles'
 import {
   createProfile,
@@ -50,14 +49,14 @@ import {
   reorderProfile,
   updateProfile,
 } from '@/services/cmds'
-import { subscribeVergeEvents } from '@/services/events'
 import { errorDetail, showNotice } from '@/services/notice-service'
 import { revalidateQuery, useQuery } from '@/services/query-client'
+import { useThemeMode } from '@/services/states'
 import {
-  useLoadingCache,
-  useSetLoadingCache,
-  useThemeMode,
-} from '@/services/states'
+  useProfileLoadingCache,
+  useProfileUpdates,
+  useSetProfileLoading,
+} from '@/store/app-store-context'
 import { debugLog } from '@/utils/debug'
 import { isValidUrl } from '@/utils/network'
 
@@ -82,7 +81,6 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
 const ProfilePage = () => {
   const { t } = useTranslation()
   const location = useLocation()
-  const { addListener } = useListen()
   const [url, setUrl] = useState('')
   const [disabled, setDisabled] = useState(false)
   const [profileDndRevision, setProfileDndRevision] = useState(0)
@@ -92,12 +90,6 @@ const ProfilePage = () => {
     string | null
   >(null)
   const [loading, setLoading] = useState(false)
-  const [timerUpdateRevisions, setTimerUpdateRevisions] = useState<
-    Map<string, number>
-  >(() => new Map())
-  const [completedUpdateRevisions, setCompletedUpdateRevisions] = useState<
-    Map<string, number>
-  >(() => new Map())
 
   const [batchMode, setBatchMode] = useState(false)
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
@@ -128,44 +120,36 @@ const ProfilePage = () => {
   }, [profiles])
 
   useEffect(() => {
-    const handleFileDrop = async () => {
-      const unlisten = await addListener(
-        TauriEvent.DRAG_DROP,
-        async (event: any) => {
-          const paths = event.payload.paths
+    const unlisten = getCurrentWindow().onDragDropEvent(async (event) => {
+      if (event.payload.type !== 'drop') return
+      const paths = event.payload.paths
 
-          for (const file of paths) {
-            if (!file.endsWith('.yaml') && !file.endsWith('.yml')) {
-              showNotice.error('profiles.page.feedback.errors.onlyYaml')
-              continue
-            }
-            const item = {
-              type: 'local',
-              name: file.split(/\/|\\/).pop() ?? 'New Profile',
-              desc: '',
-              url: '',
-              option: {
-                with_proxy: false,
-                self_proxy: false,
-              },
-            } as IProfileItem
-            const data = await readTextFile(file)
-            await createProfile(item, data)
-            await mutateProfiles()
-          }
-          await enhanceProfiles()
-        },
-      )
-
-      return unlisten
-    }
-
-    const unsubscribe = handleFileDrop()
+      for (const file of paths) {
+        if (!file.endsWith('.yaml') && !file.endsWith('.yml')) {
+          showNotice.error('profiles.page.feedback.errors.onlyYaml')
+          continue
+        }
+        const item = {
+          type: 'local',
+          name: file.split(/\/|\\/).pop() ?? 'New Profile',
+          desc: '',
+          url: '',
+          option: {
+            with_proxy: false,
+            self_proxy: false,
+          },
+        } as IProfileItem
+        const data = await readTextFile(file)
+        await createProfile(item, data)
+        await mutateProfiles()
+      }
+      await enhanceProfiles()
+    })
 
     return () => {
-      unsubscribe.then((cleanup) => cleanup())
+      void unlisten.then((cleanup) => cleanup())
     }
-  }, [addListener, mutateProfiles])
+  }, [mutateProfiles])
 
   const onEmergencyRefresh = useLockFn(async () => {
     debugLog('[紧急刷新] 开始强制刷新所有数据')
@@ -513,50 +497,15 @@ const ProfilePage = () => {
     }
   })
 
-  const loadingCache = useLoadingCache()
-  const setLoadingCache = useSetLoadingCache()
+  const loadingCache = useProfileLoadingCache()
+  const { updateRevisions: completedUpdateRevisions, timerRevisions } =
+    useProfileUpdates()
+  const setStoreLoadingProfiles = useSetProfileLoading()
   const setLoadingProfiles = useCallback(
     (uids: string[], loading: boolean) => {
-      setLoadingCache((cache) => {
-        const next = new Set(cache)
-        for (const uid of uids) {
-          if (loading) {
-            next.add(uid)
-          } else {
-            next.delete(uid)
-          }
-        }
-        return next
-      })
+      setStoreLoadingProfiles(uids, loading)
     },
-    [setLoadingCache],
-  )
-
-  useEffect(
-    () =>
-      subscribeVergeEvents({
-        'profile-update-started': ({ uid }) => {
-          if (uid) setLoadingProfiles([uid], true)
-        },
-        'profile-update-completed': ({ uid }) => {
-          if (!uid) return
-          setLoadingProfiles([uid], false)
-          setCompletedUpdateRevisions((current) => {
-            const next = new Map(current)
-            next.set(uid, (next.get(uid) ?? 0) + 1)
-            return next
-          })
-          void mutateProfiles()
-        },
-        'verge://timer-updated': (uid) => {
-          setTimerUpdateRevisions((current) => {
-            const next = new Map(current)
-            next.set(uid, (next.get(uid) ?? 0) + 1)
-            return next
-          })
-        },
-      }),
-    [mutateProfiles, setLoadingProfiles],
+    [setStoreLoadingProfiles],
   )
 
   const runProfileUpdates = useCallback(
@@ -924,7 +873,7 @@ const ProfilePage = () => {
                   visibleSwitchingProfile === item.uid
                 }
                 itemData={item}
-                timerUpdateRevision={timerUpdateRevisions.get(item.uid) ?? 0}
+                timerUpdateRevision={timerRevisions.get(item.uid) ?? 0}
                 completedUpdateRevision={
                   completedUpdateRevisions.get(item.uid) ?? 0
                 }

@@ -40,7 +40,10 @@ import {
   viewProfile,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { useLoadingCache, useSetLoadingCache } from '@/services/states'
+import {
+  useProfileLoadingCache,
+  useSetProfileLoading,
+} from '@/store/app-store-context'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { debugLog } from '@/utils/debug'
 import { isValidUrl } from '@/utils/network'
@@ -105,8 +108,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [position, setPosition] = useState({ left: 0, top: 0 })
-  const loadingCache = useLoadingCache()
-  const setLoadingCache = useSetLoadingCache()
+  const loadingCache = useProfileLoadingCache()
+  const setProfileLoading = useSetProfileLoading()
 
   const [showNextUpdate, setShowNextUpdate] = useState(false)
   const showNextUpdateRef = useRef(false)
@@ -116,17 +119,9 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   )
   const setLoading = useCallback(
     (loading: boolean) => {
-      setLoadingCache((cache) => {
-        const next = new Set(cache)
-        if (loading) {
-          next.add(itemData.uid)
-        } else {
-          next.delete(itemData.uid)
-        }
-        return next
-      })
+      setProfileLoading([itemData.uid], loading)
     },
-    [itemData.uid, setLoadingCache],
+    [itemData.uid, setProfileLoading],
   )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData

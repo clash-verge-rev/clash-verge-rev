@@ -86,6 +86,10 @@ jobs:
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm knip:check
 
+      - name: Architecture gates (listen/emit only in the event bus)
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: node scripts/check-architecture.mjs listen emit
+
   contract-parity:
     runs-on: ubuntu-22.04
     steps:

@@ -3,8 +3,6 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { runStateQueryKey } from '@/hooks/use-system-state'
-import { useVisibility } from '@/hooks/use-visibility'
 import {
   continueWithSidecar,
   getRuntimeState,
@@ -12,25 +10,18 @@ import {
   reinstallService,
   repairService,
   restartCore,
-  type RunState,
   type ServiceInstallOutcome,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { setCacheData, useQuery } from '@/services/query-client'
+import { useAppDispatch, useRunState } from '@/store/app-store-context'
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
-  const pageVisible = useVisibility()
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
-  const { data: runState } = useQuery({
-    queryKey: runStateQueryKey,
-    queryFn: getRuntimeState,
-    enabled: true,
-    retry: 1,
-    refetchInterval: pageVisible ? 30000 : false,
-  })
+  const dispatch = useAppDispatch()
+  const runState = useRunState()
   // Whether the service needs a decision is derived once, in Rust, and travels with the
   // snapshot; a failed refresh is treated as needing one, since we cannot tell otherwise.
   const needsDecision =
@@ -64,11 +55,11 @@ export const ServiceMigrationDialog = () => {
             runState.service === 'unavailable')),
   )
 
-  // One cache entry to refresh, so there is nothing left to keep coherent by hand.
+  // One store entry to refresh, so there is nothing left to keep coherent by hand.
   const refreshRunState = async () => {
     try {
       const data = await getRuntimeState()
-      await setCacheData<RunState>(runStateQueryKey, data)
+      dispatch({ type: 'runState/loaded', runState: data })
       setStateRefreshFailed(false)
       return data
     } catch (error) {

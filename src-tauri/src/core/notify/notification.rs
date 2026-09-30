@@ -347,11 +347,7 @@ fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str,
             "verge://refresh-verge-config",
             json!("yes"),
         ),
-        (
-            FrontendEvent::RefreshProfiles,
-            "verge://refresh-profiles",
-            json!("yes"),
-        ),
+        (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!("yes")),
         (
             FrontendEvent::RefreshProxyConfig,
             "verge://refresh-proxy-config",

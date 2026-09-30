@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
-import { runStateQueryKey } from '@/hooks/use-system-state'
+import { useSystemState } from '@/hooks/use-system-state'
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { openLogsDir, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { revalidateQuery } from '@/services/query-client'
 
 import type { ProxyEmptyStateReason } from './proxy-empty-state-model'
 
@@ -20,13 +19,14 @@ export const ProxyEmptyState = ({ reason }: Props) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { refreshProxy } = useAppRefreshers()
+  const { mutateSystemState } = useSystemState()
   const [isRestarting, setIsRestarting] = useState(false)
 
   const handleRestart = useLockFn(async () => {
     setIsRestarting(true)
     try {
       await restartCore()
-      await Promise.all([refreshProxy(), revalidateQuery(runStateQueryKey)])
+      await Promise.all([refreshProxy(), mutateSystemState()])
     } catch (error) {
       showNotice.error(error)
     } finally {
