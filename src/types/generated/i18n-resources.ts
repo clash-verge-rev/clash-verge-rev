@@ -1464,13 +1464,10 @@ export interface TranslationResources {
         validation: {
           config: {
             bootFailed: string
-            coreChangeFailed: string
             failed: string
             processTerminated: string
           }
           merge: {
-            generalError: string
-            keyError: string
             mappingError: string
             syntaxError: string
           }
@@ -1481,8 +1478,6 @@ export interface TranslationResources {
             syntaxError: string
           }
           yaml: {
-            generalError: string
-            keyError: string
             mappingError: string
             readError: string
             syntaxError: string

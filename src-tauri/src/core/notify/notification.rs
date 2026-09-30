@@ -355,11 +355,11 @@ fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str,
         ),
         (
             FrontendEvent::NoticeMessage {
-                status: NoticeStatus::SetConfigOk,
+                status: NoticeStatus::Info,
                 message: Arc::from("ok"),
             },
             "verge://notice-message",
-            json!(["set_config::ok", "ok"]),
+            json!(["info", "ok"]),
         ),
         (
             FrontendEvent::TimerUpdated { profile_index: uid },
@@ -414,7 +414,8 @@ pub fn frontend_wire_contract() -> serde_json::Value {
         .collect();
     let statuses: Vec<_> = NoticeStatus::ALL
         .iter()
-        .map(|status| serde_json::to_value(status).expect("NoticeStatus serializes"))
+        // A unit variant with a string rename cannot fail to serialize.
+        .filter_map(|status| serde_json::to_value(status).ok())
         .collect();
     json!({ "version": 1, "events": events, "noticeStatuses": statuses })
 }

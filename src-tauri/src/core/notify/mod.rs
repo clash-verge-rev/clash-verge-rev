@@ -7,7 +7,6 @@ pub use notification::frontend_wire_contract;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum NoticeStatus {
-    // dead send: no frontend handler
     #[serde(rename = "info")]
     Info,
     #[serde(rename = "import_sub_url::ok")]
@@ -78,40 +77,13 @@ pub enum NoticeStatus {
     MixedPortFallback,
     #[serde(rename = "mixed_port::fallback_error")]
     MixedPortFallbackError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::core_change")]
-    ConfigValidateCoreChange,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::stdout_error")]
-    ConfigValidateStdoutError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::yaml_key_error")]
-    ConfigValidateYamlKeyError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::yaml_error")]
-    ConfigValidateYamlError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::merge_key_error")]
-    ConfigValidateMergeKeyError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::merge_error")]
-    ConfigValidateMergeError,
-    // dead send: no frontend handler
-    #[serde(rename = "set_config::ok")]
-    SetConfigOk,
 }
 
 impl NoticeStatus {
     /// Every variant in golden order. The wire-contract export and the golden
     /// test both derive their variant list from here; expected strings stay
     /// hand-written in the test so renames cannot slip through.
-    pub const ALL: [Self; 41] = [
+    pub const ALL: [Self; 34] = [
         Self::Info,
         Self::ImportSubUrlOk,
         Self::ImportSubUrlError,
@@ -146,13 +118,6 @@ impl NoticeStatus {
         Self::ConfigCoreChangeError,
         Self::MixedPortFallback,
         Self::MixedPortFallbackError,
-        Self::ConfigValidateCoreChange,
-        Self::ConfigValidateStdoutError,
-        Self::ConfigValidateYamlKeyError,
-        Self::ConfigValidateYamlError,
-        Self::ConfigValidateMergeKeyError,
-        Self::ConfigValidateMergeError,
-        Self::SetConfigOk,
     ];
 }
 
@@ -198,13 +163,6 @@ mod tests {
             "config_core::change_error",
             "mixed_port::fallback",
             "mixed_port::fallback_error",
-            "config_validate::core_change",
-            "config_validate::stdout_error",
-            "config_validate::yaml_key_error",
-            "config_validate::yaml_error",
-            "config_validate::merge_key_error",
-            "config_validate::merge_error",
-            "set_config::ok",
         ];
         let actual: Vec<_> = statuses
             .into_iter()

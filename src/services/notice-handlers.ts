@@ -8,6 +8,7 @@ import {
   takeServiceOwnerNotice,
   takeServiceRepairNotice,
 } from '@/services/cmds'
+import type { NoticeStatus } from '@/services/contract'
 import { hideNotice, showNotice } from '@/services/notice-service'
 import { requestService } from '@/services/service-request'
 
@@ -26,13 +27,21 @@ export const forgetShownStartupError = () => {
   settledStartupErrorRead = ++startupErrorReads
 }
 
+/**
+ * Exhaustive notice table: one entry per contract `NoticeStatus`. The Record
+ * type makes a backend status without a frontend entry a compile error (and
+ * contract regeneration keeps the union in sync).
+ */
 export const handleNoticeMessage = (
   status: string,
   msg: string,
   t: TranslateFunction,
   navigate: NavigateFunction,
 ) => {
-  const handlers: Record<string, () => void> = {
+  const handlers: Record<NoticeStatus, () => void> = {
+    info: () => {
+      if (msg) showNotice.info(msg)
+    },
     'import_sub_url::ok': () => {
       // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。
       // 未来细分事件通知时，可以考虑传入订阅 ID 或其他标识符
@@ -190,17 +199,10 @@ export const handleNoticeMessage = (
     update_failed: () => showNotice.error(msg),
     'config_validate::boot_error': () =>
       showNotice.error('shared.feedback.validation.config.bootFailed', msg),
-    'config_validate::core_change': () =>
-      showNotice.error(
-        'shared.feedback.validation.config.coreChangeFailed',
-        msg,
-      ),
     'config_validate::error': () =>
       showNotice.error('shared.feedback.validation.config.failed', msg),
     'config_validate::process_terminated': () =>
       showNotice.error('shared.feedback.validation.config.processTerminated'),
-    'config_validate::stdout_error': () =>
-      showNotice.error('shared.feedback.validation.config.failed', msg),
     'config_validate::script_error': () =>
       showNotice.error('shared.feedback.validation.script.fileError', msg),
     'config_validate::script_syntax_error': () =>
@@ -215,18 +217,10 @@ export const handleNoticeMessage = (
       showNotice.error('shared.feedback.validation.yaml.readError', msg),
     'config_validate::yaml_mapping_error': () =>
       showNotice.error('shared.feedback.validation.yaml.mappingError', msg),
-    'config_validate::yaml_key_error': () =>
-      showNotice.error('shared.feedback.validation.yaml.keyError', msg),
-    'config_validate::yaml_error': () =>
-      showNotice.error('shared.feedback.validation.yaml.generalError', msg),
     'config_validate::merge_syntax_error': () =>
       showNotice.error('shared.feedback.validation.merge.syntaxError', msg),
     'config_validate::merge_mapping_error': () =>
       showNotice.error('shared.feedback.validation.merge.mappingError', msg),
-    'config_validate::merge_key_error': () =>
-      showNotice.error('shared.feedback.validation.merge.keyError', msg),
-    'config_validate::merge_error': () =>
-      showNotice.error('shared.feedback.validation.merge.generalError', msg),
     'config_core::change_success': () =>
       showNotice.success(
         'settings.feedback.notifications.clash.changeSuccess',
@@ -251,7 +245,7 @@ export const handleNoticeMessage = (
       ),
   }
 
-  const handler = handlers[status]
+  const handler = handlers[status as NoticeStatus]
   if (handler) {
     handler()
   } else {

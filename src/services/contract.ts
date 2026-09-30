@@ -39,13 +39,6 @@ export type NoticeStatus =
   | 'config_core::change_error'
   | 'mixed_port::fallback'
   | 'mixed_port::fallback_error'
-  | 'config_validate::core_change'
-  | 'config_validate::stdout_error'
-  | 'config_validate::yaml_key_error'
-  | 'config_validate::yaml_error'
-  | 'config_validate::merge_key_error'
-  | 'config_validate::merge_error'
-  | 'set_config::ok'
 
 /** Event name → payload type for every backend-emitted event. */
 export interface VergeEventPayloads {
