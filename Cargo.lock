@@ -1079,7 +1079,7 @@ checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "clash-verge"
-version = "2.5.6"
+version = "2.5.7"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1223,8 +1223,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.7.4"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.7.4#b4f66bd5a365875562a622065d189e3514654b7f"
+version = "2.7.5"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.7.5#89acd8d8cd9da5134e886abc4b04c33c6946691a"
 dependencies = [
  "anyhow",
  "kode-bridge",
@@ -6922,7 +6922,7 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.7.1"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#44aaf00ec9c6779e5a461a55d882eddff7841c98"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#89ad876a0942c049ae72e1472f9fc3ed62023c5e"
 dependencies = [
  "iptools",
  "log",
