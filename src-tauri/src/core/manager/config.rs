@@ -311,6 +311,11 @@ impl CoreManager {
         let run_path = Config::write_runtime_file(&yaml).await?;
         self.apply_config(run_path).await?;
         transaction.commit();
+        #[cfg(target_os = "macos")]
+        {
+            let _lifecycle = self.lifecycle_lock.lock().await;
+            crate::utils::resolve::dns::apply_runtime_dns().await;
+        }
         Ok(ValidationOutcome::Valid)
     }
 

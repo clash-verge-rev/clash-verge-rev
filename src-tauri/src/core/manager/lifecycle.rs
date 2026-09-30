@@ -524,6 +524,8 @@ impl CoreManager {
         .ok_or_else(|| {
             anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
         })?;
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::dns::apply_runtime_dns().await;
         // At login the app usually beats the network. Leave the write to the network watcher
         // rather than fail — only if the watcher is actually live; a user toggling while
         // offline still fails fast.
@@ -686,7 +688,12 @@ impl CoreManager {
     #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode()))]
     pub async fn stop_core(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
-        self.controlled_stop_core_inner().await
+        self.controlled_stop_core_inner().await?;
+        #[cfg(target_os = "macos")]
+        if let Err(error) = crate::utils::resolve::dns::restore_public_dns().await {
+            logging!(error, Type::Config, "Failed to restore system DNS: {error:#}");
+        }
+        Ok(())
     }
 
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {

@@ -102,7 +102,7 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     #[cfg(target_os = "macos")]
     {
         use dns::restore_public_dns;
-        restore_public_dns().await;
+        restore_public_dns().await?;
     }
 
     Ok(())
