@@ -28,6 +28,7 @@ vi.mock('@/store/app-store-context', () => ({
 }))
 vi.mock('@/services/cmds', () => ({
   getPendingFailures: vi.fn().mockResolvedValue([]),
+  getRuntimeState: vi.fn().mockResolvedValue({ mode: 'NotRunning' }),
 }))
 vi.mock('@/services/query-client', () => ({ revalidateQueries: vi.fn() }))
 

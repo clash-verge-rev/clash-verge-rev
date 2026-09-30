@@ -2,7 +2,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect } from 'react'
 
-import { getPendingFailures } from '@/services/cmds'
+import { getPendingFailures, getRuntimeState } from '@/services/cmds'
 import { revalidateQueries } from '@/services/query-client'
 import { useAppDispatch } from '@/store/app-store-context'
 
@@ -31,6 +31,11 @@ export const useEventBus = (
           console.warn('[bus] pending failures could not be read:', error)
         })
     }
+    const readRunState = () => {
+      getRuntimeState()
+        .then((runState) => dispatch({ type: 'runState/loaded', runState }))
+        .catch(() => {})
+    }
 
     const bus = createEventBus({
       dispatch,
@@ -41,6 +46,7 @@ export const useEventBus = (
       },
       refreshProxyView: () => revalidateKeys(['getProxyView']),
       readPendingFailures,
+      readRunState,
     })
 
     let disposed = false

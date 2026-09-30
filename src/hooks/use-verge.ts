@@ -39,10 +39,13 @@ export const useVerge = () => {
     )
   }
 
+  // Callers own the error toast (GuardState onCatch / page onError), so the
+  // funnel must not add a second one.
   const patchVerge = useCallback(async (value: Partial<IVergeConfig>) => {
     await mutate(() => patchVergeConfig(value), {
       id: 'patch-verge-config',
       revalidate: [['getVergeConfig']],
+      errorNotice: false,
     })
   }, [])
 

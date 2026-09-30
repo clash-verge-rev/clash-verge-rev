@@ -108,6 +108,7 @@ export const useClash = () => {
     await mutate(() => patchClashConfig(patch), {
       id: 'patch-clash-config',
       revalidate: [['getRuntimeConfig']],
+      errorNotice: false,
     })
   })
 
@@ -138,6 +139,7 @@ export const useClashInfo = () => {
     await mutate(() => patchClashConfig(patch), {
       id: 'patch-clash-info',
       revalidate: [['getClashInfo'], ['getClashConfig']],
+      errorNotice: false,
     })
   })
 

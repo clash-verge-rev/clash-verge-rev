@@ -56,6 +56,7 @@ const mountBus = async () => {
     revalidateProfiles: () => {},
     refreshProxyView: () => {},
     readPendingFailures: () => {},
+    readRunState: () => {},
   })
 }
 
@@ -190,6 +191,7 @@ it('routes every event exactly once through one handler', async () => {
     revalidateProfiles: vi.fn(),
     refreshProxyView: vi.fn(),
     readPendingFailures: vi.fn(),
+    readRunState: vi.fn(),
   })
 
   bus.handlers['verge://run-state-changed']({ mode: 'Service' } as RunState)

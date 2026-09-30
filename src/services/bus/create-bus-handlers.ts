@@ -24,6 +24,8 @@ export interface BusHandlerDeps {
   refreshProxyView: () => void
   /** Re-read the backend pending-failure snapshot into the store. */
   readPendingFailures: () => void
+  /** Re-read the run-state snapshot into the store. */
+  readRunState: () => void
 }
 
 export interface EventBus {
@@ -107,6 +109,9 @@ export const createEventBus = (deps: BusHandlerDeps): EventBus => {
   } as BusHandlers
 
   const onSubscribed = () => {
+    // Run state is read after subscribing so an event racing the store's
+    // initial read cannot leave a stale snapshot behind.
+    deps.readRunState()
     deps.revalidateKeys(['getVergeConfig'])
     deps.readPendingFailures()
     deps.handleNotice(['dns_override::auto_disabled', ''])
