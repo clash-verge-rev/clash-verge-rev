@@ -2,6 +2,7 @@ import { useEffect, useReducer } from 'react'
 import type { ReactNode } from 'react'
 
 import { getPendingFailures, getRuntimeState } from '@/services/cmds'
+import { bindStoreDispatch } from '@/services/mutate'
 
 import { appStoreReducer, initialAppStoreState } from './app-state'
 import { AppDispatchContext, AppStateContext } from './app-store-context'
@@ -14,6 +15,11 @@ import { AppDispatchContext, AppStateContext } from './app-store-context'
  */
 export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
   const [state, dispatch] = useReducer(appStoreReducer, initialAppStoreState)
+
+  useEffect(() => {
+    bindStoreDispatch(dispatch)
+    return () => bindStoreDispatch(null)
+  }, [])
 
   useEffect(() => {
     const readRunState = () => {

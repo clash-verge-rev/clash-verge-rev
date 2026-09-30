@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react'
 
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
@@ -42,16 +43,25 @@ export const useProfiles = () => {
   const patchProfiles = useCallback(
     async (value: Partial<IProfilesConfig>) => {
       try {
-        const outcome = await patchProfilesConfig(value)
+        const result = await mutate(() => patchProfilesConfig(value), {
+          id: 'patch-profiles-config',
+          onFulfilled: (outcome) => {
+            if (outcome.status === 'valid') {
+              void setCacheData<IProfilesConfig>(profilesQueryKey, (current) =>
+                current ? { ...current, ...value } : current,
+              )
+            }
+          },
+        })
 
-        if (outcome.status === 'valid') {
-          await setCacheData<IProfilesConfig>(profilesQueryKey, (current) =>
-            current ? { ...current, ...value } : current,
-          )
-        } else if (outcome.status !== 'busy') {
+        if (!result.ok) {
+          // Backend Busy keeps local state untouched, as before.
+          return result.value ?? { status: 'busy' }
+        }
+        const outcome = result.value
+        if (outcome.status !== 'valid' && outcome.status !== 'busy') {
           await mutateProfiles()
         }
-
         return outcome
       } catch (error) {
         await mutateProfiles()

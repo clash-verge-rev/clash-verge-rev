@@ -15,6 +15,8 @@ export interface AppStoreState {
   readonly profileUpdates: ProfileUpdatesState
   /** Bumped once per test-all request; test items run their delay test per bump. */
   readonly testAllCounter: number
+  /** Mutate-funnel bookkeeping: in-flight intent ids. */
+  readonly busy: ReadonlySet<string>
 }
 
 export const initialAppStoreState: AppStoreState = {
@@ -26,6 +28,7 @@ export const initialAppStoreState: AppStoreState = {
     timerRevisions: new Map(),
   },
   testAllCounter: 0,
+  busy: new Set(),
 }
 
 export type AppStoreAction =
@@ -36,6 +39,8 @@ export type AppStoreAction =
   | { type: 'profileUpdate/timerTick'; uid: string }
   | { type: 'profileLoading/set'; uids: readonly string[]; loading: boolean }
   | { type: 'testAll/requested' }
+  | { type: 'busy/started'; id: string }
+  | { type: 'busy/settled'; id: string }
 
 const bumpRevision = (
   map: ReadonlyMap<string, number>,
@@ -105,5 +110,17 @@ export function appStoreReducer(
       return withLoading(state, action.uids, action.loading)
     case 'testAll/requested':
       return { ...state, testAllCounter: state.testAllCounter + 1 }
+    case 'busy/started': {
+      if (state.busy.has(action.id)) return state
+      const busy = new Set(state.busy)
+      busy.add(action.id)
+      return { ...state, busy }
+    }
+    case 'busy/settled': {
+      if (!state.busy.has(action.id)) return state
+      const busy = new Set(state.busy)
+      busy.delete(action.id)
+      return { ...state, busy }
+    }
   }
 }

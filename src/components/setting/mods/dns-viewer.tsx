@@ -13,7 +13,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import * as yaml from 'js-yaml'
 import type { Ref } from 'react'
@@ -36,6 +35,12 @@ import {
 import { useClash } from '@/hooks/use-clash'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
+import {
+  applyDnsConfig,
+  getDnsConfigContent,
+  saveDnsConfig,
+  validateDnsConfig,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -465,10 +470,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const initDnsConfig = useCallback(async () => {
     try {
-      const dnsConfig = await invoke<string | null>(
-        'get_dns_config_content',
-        {},
-      )
+      const dnsConfig = await getDnsConfigContent()
 
       if (dnsConfig !== null) {
         const config = yaml.load(dnsConfig) as any
@@ -517,12 +519,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         config = parsedConfig as Record<string, any>
       }
 
-      await invoke('save_dns_config', { dnsConfig: config })
+      await saveDnsConfig(config)
 
-      const validation = await invoke<ValidationOutcome>(
-        'validate_dns_config',
-        {},
-      )
+      const validation = await validateDnsConfig()
 
       if (validation.status !== 'valid') {
         const errorMsg =
@@ -559,7 +558,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       if (dnsEnabled) {
-        await invoke('apply_dns_config', { apply: true })
+        await applyDnsConfig(true)
         mutateClash()
       }
 
