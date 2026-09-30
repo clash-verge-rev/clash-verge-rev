@@ -464,7 +464,7 @@
         "usePacMode": "PAC-Modus verwenden",
         "proxyGuard": "Systemproxy-Schutz",
         "guardDuration": "Proxy-Schutz-Intervall",
-        "alwaysUseDefaultBypass": "Immer die Standard-Umgehung verwenden",
+        "alwaysUseDefaultBypass": "Standard-Umgehungsliste einbeziehen",
         "enableBypassCheck": "Proxy-Bypass-Format prüfen",
         "proxyBypass": "Proxy-Umgehungseinstellungen: ",
         "bypass": "Aktuelle Umgehung: ",

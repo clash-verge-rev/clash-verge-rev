@@ -464,7 +464,7 @@
         "usePacMode": "استخدام وضع PAC",
         "proxyGuard": "حماية الوكيل",
         "guardDuration": "مدة الحماية",
-        "alwaysUseDefaultBypass": "استخدام التخطي الافتراضي دائمًا",
+        "alwaysUseDefaultBypass": "تضمين قائمة التخطي الافتراضية",
         "enableBypassCheck": "التحقق من تنسيق تجاوز الوكيل",
         "proxyBypass": "إعدادات تخطي الوكيل:",
         "bypass": "تخطي:",

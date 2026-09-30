@@ -464,7 +464,7 @@
         "usePacMode": "Gunakan Mode PAC",
         "proxyGuard": "Penjaga Proksi",
         "guardDuration": "Durasi Penjagaan",
-        "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
+        "alwaysUseDefaultBypass": "Sertakan daftar bypass default",
         "enableBypassCheck": "Validasi format bypass proksi",
         "proxyBypass": "Pengaturan Bypass Proksi: ",
         "bypass": "Bypass: ",

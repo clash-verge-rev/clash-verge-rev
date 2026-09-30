@@ -464,7 +464,7 @@
         "usePacMode": "Use PAC Mode",
         "proxyGuard": "Proxy Guard",
         "guardDuration": "Guard Duration",
-        "alwaysUseDefaultBypass": "Always use Default Bypass",
+        "alwaysUseDefaultBypass": "Include default bypass list",
         "enableBypassCheck": "Validate Proxy Bypass Format",
         "proxyBypass": "Proxy Bypass Settings: ",
         "bypass": "Bypass: ",
