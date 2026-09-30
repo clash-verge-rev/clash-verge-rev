@@ -2,19 +2,15 @@ use crate::{config::Config, singleton, utils::dirs};
 use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
-use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tauri_plugin_updater::{Update, UpdaterExt as _};
+use tauri_plugin_updater::UpdaterExt as _;
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
-    pending_bytes: RwLock<Option<Vec<u8>>>,
-    pending_update: RwLock<Option<Update>>,
-    pending_version: RwLock<Option<String>>,
 }
 
 singleton!(SilentUpdater, SILENT_UPDATER);
@@ -23,9 +19,6 @@ impl SilentUpdater {
     const fn new() -> Self {
         Self {
             update_ready: AtomicBool::new(false),
-            pending_bytes: RwLock::new(None),
-            pending_update: RwLock::new(None),
-            pending_version: RwLock::new(None),
         }
     }
 
@@ -476,9 +469,6 @@ impl SilentUpdater {
             logging!(warn, Type::System, "Silent updater: failed to write cache: {e:#}");
         }
 
-        *self.pending_bytes.write() = Some(bytes);
-        *self.pending_update.write() = Some(update);
-        *self.pending_version.write() = Some(version.clone());
         self.update_ready.store(true, Ordering::Release);
 
         logging!(
