@@ -5,11 +5,7 @@ use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
 use std::sync::Arc;
-use std::{
-    collections::HashMap,
-    future::Future,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
 #[derive(Debug, Clone)]
@@ -91,16 +87,23 @@ pub struct PendingFailure {
 /// Non-destructive pending state, indexed by stable code.
 #[derive(Debug, Default)]
 struct FailureTable {
-    entries: Mutex<HashMap<String, PendingFailure>>,
-    sequence: AtomicU64,
+    entries: Mutex<FailureEntries>,
+}
+
+#[derive(Debug, Default)]
+struct FailureEntries {
+    map: HashMap<String, PendingFailure>,
+    sequence: u64,
 }
 
 impl FailureTable {
     fn record(&self, operation: FailedOperation, code: &str, detail: String) {
         // Sequence assignment and replacement must share one ordering lock.
         let mut entries = self.entries.lock();
+        entries.sequence = entries.sequence.wrapping_add(1);
         // Preserve an unanswered request over a later restore.
         let operation = entries
+            .map
             .get(code)
             .filter(|existing| existing.operation.outranks(operation))
             .map_or(operation, |existing| existing.operation);
@@ -108,13 +111,13 @@ impl FailureTable {
             code: code.into(),
             detail,
             operation,
-            sequence: self.sequence.fetch_add(1, Ordering::AcqRel).wrapping_add(1),
+            sequence: entries.sequence,
         };
-        entries.insert(code.into(), failure);
+        entries.map.insert(code.into(), failure);
     }
 
     fn snapshot(&self) -> Vec<PendingFailure> {
-        let mut failures: Vec<PendingFailure> = self.entries.lock().values().cloned().collect();
+        let mut failures: Vec<PendingFailure> = self.entries.lock().map.values().cloned().collect();
         failures.sort_by_key(|failure| failure.sequence);
         failures
     }
@@ -122,17 +125,21 @@ impl FailureTable {
     /// Return whether a guard failure was retired.
     fn retire_guard(&self) -> bool {
         let mut entries = self.entries.lock();
-        let before = entries.len();
-        entries.retain(|_, failure| failure.operation != FailedOperation::SystemProxyGuard);
-        before != entries.len()
+        let before = entries.map.len();
+        entries
+            .map
+            .retain(|_, failure| failure.operation != FailedOperation::SystemProxyGuard);
+        before != entries.map.len()
     }
 
     /// Return whether any proxy failure was retired.
     fn retire_system_proxy(&self, asked: FailedOperation) -> bool {
         let mut entries = self.entries.lock();
-        let before = entries.len();
-        entries.retain(|_, failure| !failure.operation.retired_by_success_of(asked));
-        before != entries.len()
+        let before = entries.map.len();
+        entries
+            .map
+            .retain(|_, failure| !failure.operation.retired_by_success_of(asked));
+        before != entries.map.len()
     }
 }
 
@@ -239,7 +246,7 @@ pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<
 }
 
 pub fn has_pending_failure(code: &str) -> bool {
-    PENDING_FAILURES.entries.lock().contains_key(code)
+    PENDING_FAILURES.entries.lock().map.contains_key(code)
 }
 
 /// Return unresolved failures oldest first without clearing them.
