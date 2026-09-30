@@ -49,6 +49,7 @@ import {
   reorderProfile,
   updateProfile,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { errorDetail, showNotice } from '@/services/notice-service'
 import { revalidateQuery, useQuery } from '@/services/query-client'
 import { useThemeMode } from '@/services/states'
@@ -140,16 +141,22 @@ const ProfilePage = () => {
           },
         } as IProfileItem
         const data = await readTextFile(file)
-        await createProfile(item, data)
-        await mutateProfiles()
+        await mutate(() => createProfile(item, data), {
+          id: 'create-profile',
+          errorNotice: false,
+          revalidate: [['getProfiles']],
+        })
       }
-      await enhanceProfiles()
+      await mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      })
     })
 
     return () => {
       void unlisten.then((cleanup) => cleanup())
     }
-  }, [mutateProfiles])
+  }, [])
 
   const onEmergencyRefresh = useLockFn(async () => {
     debugLog('[紧急刷新] 开始强制刷新所有数据')
@@ -211,7 +218,10 @@ const ProfilePage = () => {
       await performRobustRefresh()
     }
     try {
-      await importProfile(url)
+      await mutate(() => importProfile(url), {
+        id: 'import-profile',
+        errorNotice: false,
+      })
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
       console.warn('[订阅导入] 首次导入失败:', initialErr)
@@ -224,10 +234,17 @@ const ProfilePage = () => {
 
       showNotice.info('profiles.page.feedback.notifications.importRetry')
       try {
-        await importProfile(url, {
-          with_proxy: false,
-          self_proxy: true,
-        })
+        await mutate(
+          () =>
+            importProfile(url, {
+              with_proxy: false,
+              self_proxy: true,
+            }),
+          {
+            id: 'import-profile',
+            errorNotice: false,
+          },
+        )
         await handleImportSuccess(
           'shared.feedback.notifications.importWithClashProxy',
         )
@@ -308,7 +325,10 @@ const ProfilePage = () => {
     if (activeId == null || overId == null || activeId === overId) return
 
     try {
-      await reorderProfile(activeId, overId)
+      await mutate(() => reorderProfile(activeId, overId), {
+        id: 'reorder-profile',
+        errorNotice: false,
+      })
       mutateProfiles()
     } catch (error) {
       setProfileDndRevision((revision) => revision + 1)
@@ -339,7 +359,10 @@ const ProfilePage = () => {
         if (outcome.status === 'valid') {
           currentProfileRef.current = profile
           void mutateLogs().catch(() => {})
-          void closeAllConnections().catch(() => {})
+          void mutate(() => closeAllConnections(), {
+            id: 'close-all-connections',
+            errorNotice: false,
+          }).catch(() => {})
 
           if (
             notifySuccess &&
@@ -465,7 +488,11 @@ const ProfilePage = () => {
     setActivatings((prev) => [...new Set([...prev, ...currentProfiles])])
 
     try {
-      if (!(await enhanceProfiles())) return
+      const result = await mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      })
+      if (!(result.ok && result.value === true)) return
       mutateLogs()
       if (notifySuccess) {
         showNotice.success(
@@ -484,7 +511,10 @@ const ProfilePage = () => {
     const current = profiles.current === uid
     try {
       setActivatings([...(current ? currentActivatings() : []), uid])
-      await deleteProfile(uid)
+      await mutate(() => deleteProfile(uid), {
+        id: 'delete-profile',
+        errorNotice: false,
+      })
       mutateProfiles()
       mutateLogs()
       if (current) {
@@ -519,7 +549,11 @@ const ProfilePage = () => {
 
       const updateOne = async (uid: string) => {
         try {
-          await updateProfile(uid)
+          // Per-uid id: the worker pool must not dedupe distinct subscriptions.
+          await mutate(() => updateProfile(uid), {
+            id: `update-profile:${uid}`,
+            errorNotice: false,
+          })
           throttleMutate()
         } catch (err: any) {
           console.error(`更新订阅 ${uid} 失败:`, err)
@@ -613,7 +647,10 @@ const ProfilePage = () => {
       setActivatings((prev) => [...new Set([...prev, ...currentActivating])])
 
       for (const uid of selectedProfiles) {
-        await deleteProfile(uid)
+        await mutate(() => deleteProfile(uid), {
+          id: 'delete-profile',
+          errorNotice: false,
+        })
       }
 
       await mutateProfiles()

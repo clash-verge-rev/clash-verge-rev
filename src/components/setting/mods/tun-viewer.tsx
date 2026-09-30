@@ -21,6 +21,7 @@ import {
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { enhanceProfiles } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 import { areValidIpCidrs } from '@/utils/network'
@@ -129,7 +130,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       )
       setOpen(false)
       showNotice.success('settings.modals.tun.messages.applied')
-      void enhanceProfiles().catch((err: any) => {
+      void mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      }).catch((err: any) => {
         showNotice.error(err)
       })
     } catch (err: any) {
