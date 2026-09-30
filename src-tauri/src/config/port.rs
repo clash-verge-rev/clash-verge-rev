@@ -18,12 +18,7 @@ use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_yaml_ng::Value;
-use std::{
-    collections::HashSet,
-    net::SocketAddr,
-    str::FromStr as _,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{collections::HashSet, net::SocketAddr, str::FromStr as _};
 
 #[derive(Clone, Copy)]
 struct MixedPortFallback {
@@ -32,7 +27,6 @@ struct MixedPortFallback {
 }
 
 static PENDING_FALLBACK_NOTICE: Lazy<Mutex<Option<MixedPortFallback>>> = Lazy::new(|| Mutex::new(None));
-static STARTUP_CORE_BLOCKED: AtomicBool = AtomicBool::new(false);
 static STARTUP_CORE_BLOCK_REASON: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
 
 impl Config {
@@ -148,17 +142,12 @@ impl Config {
     }
 
     pub(crate) fn block_startup_core(error: &anyhow::Error) {
-        STARTUP_CORE_BLOCKED.store(true, Ordering::Release);
         *STARTUP_CORE_BLOCK_REASON.lock() = Some(error.to_string());
         report_fallback_error(error.to_string());
     }
 
     pub(crate) fn startup_core_block_reason() -> Option<String> {
-        if STARTUP_CORE_BLOCKED.load(Ordering::Acquire) {
-            STARTUP_CORE_BLOCK_REASON.lock().clone()
-        } else {
-            None
-        }
+        STARTUP_CORE_BLOCK_REASON.lock().clone()
     }
 
     pub(crate) fn notify_startup_mixed_port_fallback() {
