@@ -10,3 +10,7 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - dayjs@1.11.21
+
+overrides:
+  # 2.0.1 uses a regex lookbehind, which WebKit before Safari 16.4 cannot parse (#8079).
+  mdast-util-gfm-autolink-literal: 2.0.0
