@@ -285,6 +285,7 @@ interface INetworkInterface {
 }
 
 interface ISeqProfileConfig {
+  groups?: Record<string, string[]>
   prepend: []
   append: []
   delete: []

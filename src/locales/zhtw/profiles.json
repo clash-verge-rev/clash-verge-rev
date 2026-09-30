@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "目標代理群組"
+      },
       "title": "編輯節點",
       "placeholders": {
         "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"

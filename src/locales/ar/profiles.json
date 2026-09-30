@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "تعديل الوكلاء",
       "placeholders": {
         "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"

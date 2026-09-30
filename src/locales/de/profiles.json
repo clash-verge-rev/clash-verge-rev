@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "Knoten bearbeiten",
       "placeholders": {
         "multiUri": "Für mehrere URI verwenden Sie Zeilenumbrüche (Base64-Codierung wird unterstützt)"

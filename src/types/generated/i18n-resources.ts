@@ -412,6 +412,9 @@ export interface TranslationResources {
             append: string
             prepend: string
           }
+          fields: {
+            targetGroups: string
+          }
           placeholders: {
             multiUri: string
           }

@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "프록시 편집",
       "placeholders": {
         "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"

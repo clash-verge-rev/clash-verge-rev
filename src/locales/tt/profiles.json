@@ -147,6 +147,9 @@
       }
     },
     "proxiesEditor": {
+      "fields": {
+        "targetGroups": "Destination Groups"
+      },
       "title": "Проксины үзгәртү",
       "placeholders": {
         "multiUri": "Берничә URI өчен яңа юл символын кулланыгыз (Base64 кодлавы ярдәм ителә)"
