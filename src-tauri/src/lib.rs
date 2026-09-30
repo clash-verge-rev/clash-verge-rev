@@ -25,6 +25,10 @@ use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
+
+// Re-exported for src/bin/frontend-contract.rs; the wire contract stays owned
+// by core::notify.
+pub use crate::core::notify::frontend_wire_contract;
 /// Application initialization helper functions
 mod app_init {
     use super::*;

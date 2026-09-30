@@ -1,21 +1,9 @@
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
-import type { RunState } from './cmds'
+import type { VergeEventPayloads } from './contract'
 
-/** Centralizes frontend event names and payload types for the unchecked Rust IPC seam. */
-interface VergeEvents {
-  'verge://refresh-clash-config': string
-  'verge://refresh-verge-config': string
-  'verge://refresh-profiles': string
-  'verge://refresh-proxy-config': null
-  /** A backend message for the user: `[status, message]`. */
-  'verge://notice-message': [string, string]
-  'verge://timer-updated': string
-  'verge://run-state-changed': RunState
-  'verge://pending-failures-changed': null
-  'profile-changed': string
-  'profile-update-started': { uid?: string }
-  'profile-update-completed': { uid?: string }
+/** Generated wire contract plus the frontend-internal test-all event. */
+interface VergeEvents extends VergeEventPayloads {
   'verge://test-all': null
 }
 

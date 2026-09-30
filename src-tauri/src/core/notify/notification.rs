@@ -12,7 +12,7 @@ use std::{
 };
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FrontendEvent<'a> {
     RefreshClash,
     RefreshVerge,
@@ -324,71 +324,101 @@ mod wire_tests {
     #[test]
     fn frontend_event_wire_contract() -> Result<(), serde_json::Error> {
         let uid = String::from("profile");
-        let events = [
-            (
-                FrontendEvent::RefreshClash,
-                "verge://refresh-clash-config",
-                json!("yes"),
-            ),
-            (
-                FrontendEvent::RefreshVerge,
-                "verge://refresh-verge-config",
-                json!("yes"),
-            ),
-            (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!("yes")),
-            (
-                FrontendEvent::RefreshProxyConfig,
-                "verge://refresh-proxy-config",
-                json!(null),
-            ),
-            (
-                FrontendEvent::NoticeMessage {
-                    status: NoticeStatus::SetConfigOk,
-                    message: Arc::from("ok"),
-                },
-                "verge://notice-message",
-                json!(["set_config::ok", "ok"]),
-            ),
-            (
-                FrontendEvent::TimerUpdated { profile_index: &uid },
-                "verge://timer-updated",
-                json!("profile"),
-            ),
-            (
-                FrontendEvent::RunStateChanged {
-                    state: json!({"running": true}),
-                },
-                "verge://run-state-changed",
-                json!({"running": true}),
-            ),
-            (
-                FrontendEvent::PendingFailuresChanged,
-                "verge://pending-failures-changed",
-                json!(null),
-            ),
-            (
-                FrontendEvent::ProfileChanged {
-                    current_profile_id: &uid,
-                },
-                "profile-changed",
-                json!("profile"),
-            ),
-            (
-                FrontendEvent::ProfileUpdateStarted { uid: &uid },
-                "profile-update-started",
-                json!({"uid": "profile"}),
-            ),
-            (
-                FrontendEvent::ProfileUpdateCompleted { uid: &uid },
-                "profile-update-completed",
-                json!({"uid": "profile"}),
-            ),
-        ];
-        for (event, name, payload) in events {
+        for (event, name, payload) in super::sample_frontend_events(&uid) {
             let (actual_name, actual_payload) = NotificationSystem::serialize_event(event);
             assert_eq!(actual_name, name);
             assert_eq!(actual_payload?, payload);
         }
         Ok(())
     }
+}
+
+/// One sample per `FrontendEvent` variant, paired with its wire name and payload.
+/// Shared by the wire golden test and the contract export so the two cannot drift.
+fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str, serde_json::Value)> {
+    vec![
+        (
+            FrontendEvent::RefreshClash,
+            "verge://refresh-clash-config",
+            json!("yes"),
+        ),
+        (
+            FrontendEvent::RefreshVerge,
+            "verge://refresh-verge-config",
+            json!("yes"),
+        ),
+        (
+            FrontendEvent::RefreshProfiles,
+            "verge://refresh-profiles",
+            json!("yes"),
+        ),
+        (
+            FrontendEvent::RefreshProxyConfig,
+            "verge://refresh-proxy-config",
+            json!(null),
+        ),
+        (
+            FrontendEvent::NoticeMessage {
+                status: NoticeStatus::SetConfigOk,
+                message: Arc::from("ok"),
+            },
+            "verge://notice-message",
+            json!(["set_config::ok", "ok"]),
+        ),
+        (
+            FrontendEvent::TimerUpdated { profile_index: uid },
+            "verge://timer-updated",
+            json!("profile"),
+        ),
+        (
+            FrontendEvent::RunStateChanged {
+                state: json!({"running": true}),
+            },
+            "verge://run-state-changed",
+            json!({"running": true}),
+        ),
+        (
+            FrontendEvent::PendingFailuresChanged,
+            "verge://pending-failures-changed",
+            json!(null),
+        ),
+        (
+            FrontendEvent::ProfileChanged {
+                current_profile_id: uid,
+            },
+            "profile-changed",
+            json!("profile"),
+        ),
+        (
+            FrontendEvent::ProfileUpdateStarted { uid },
+            "profile-update-started",
+            json!({"uid": "profile"}),
+        ),
+        (
+            FrontendEvent::ProfileUpdateCompleted { uid },
+            "profile-update-completed",
+            json!({"uid": "profile"}),
+        ),
+    ]
+}
+
+/// Machine-readable form of the frontend wire contract: every event name with a
+/// serialized sample payload, plus every notice status string. The sample
+/// payload's JSON shape (string / null / array / object) is what the frontend
+/// generator maps to TypeScript types. `ThemeChanged` is a Tauri built-in
+/// linux-only window event, not part of this contract.
+pub fn frontend_wire_contract() -> serde_json::Value {
+    let uid = String::from("sample");
+    let events: Vec<_> = sample_frontend_events(&uid)
+        .into_iter()
+        .map(|(event, _, _)| {
+            let (name, payload) = NotificationSystem::serialize_event(event);
+            json!({ "name": name, "sample": payload.unwrap_or(serde_json::Value::Null) })
+        })
+        .collect();
+    let statuses: Vec<_> = NoticeStatus::ALL
+        .iter()
+        .map(|status| serde_json::to_value(status).expect("NoticeStatus serializes"))
+        .collect();
+    json!({ "version": 1, "events": events, "noticeStatuses": statuses })
 }
