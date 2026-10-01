@@ -242,19 +242,17 @@ fn macos_service_install_marker_exists() -> std::io::Result<bool> {
 }
 
 #[cfg(windows)]
-fn open_registered_service() -> Result<Option<windows_service::service::Service>> {
+fn open_registered_service(
+    access: windows_service::service::ServiceAccess,
+) -> Result<Option<windows_service::service::Service>> {
     use windows_service::{
         Error as WindowsServiceError,
-        service::ServiceAccess,
         service_manager::{ServiceManager as WindowsServiceManager, ServiceManagerAccess},
     };
 
     const ERROR_SERVICE_DOES_NOT_EXIST: i32 = 1060;
     let manager = WindowsServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
-    match manager.open_service(
-        clash_verge_service_ipc::WINDOWS_SERVICE_NAME,
-        ServiceAccess::QUERY_STATUS,
-    ) {
+    match manager.open_service(clash_verge_service_ipc::WINDOWS_SERVICE_NAME, access) {
         Ok(service) => Ok(Some(service)),
         Err(WindowsServiceError::Winapi(error)) if error.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) => {
             Ok(None)
@@ -265,24 +263,29 @@ fn open_registered_service() -> Result<Option<windows_service::service::Service>
 
 #[cfg(windows)]
 pub(crate) fn trusted_service_evidence() -> Result<bool> {
-    Ok(open_registered_service()?.is_some())
+    Ok(open_registered_service(windows_service::service::ServiceAccess::QUERY_STATUS)?.is_some())
 }
 
 /// Whether IPC cannot succeed until the service is started again. A service that is starting, or
-/// that the SCM has not started yet this boot, is left to the IPC retries, which wait for it.
+/// an automatic service that the SCM has not started yet this boot, is left to the IPC retries.
 #[cfg(windows)]
 pub(crate) fn service_stopped() -> Result<bool> {
-    use windows_service::service::{ServiceExitCode, ServiceState};
+    use windows_service::service::{ServiceAccess, ServiceExitCode, ServiceStartType, ServiceState};
 
     const ERROR_SERVICE_NEVER_STARTED: u32 = 1077;
-    let Some(service) = open_registered_service()? else {
+    let Some(service) = open_registered_service(ServiceAccess::QUERY_STATUS | ServiceAccess::QUERY_CONFIG)? else {
         return Ok(true);
     };
     let status = service
         .query_status()
         .context("failed to query Windows service status")?;
     Ok(status.current_state == ServiceState::Stopped
-        && status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED))
+        && (status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED)
+            || service
+                .query_config()
+                .context("failed to query Windows service startup type")?
+                .start_type
+                != ServiceStartType::AutoStart))
 }
 
 #[cfg(target_os = "linux")]
