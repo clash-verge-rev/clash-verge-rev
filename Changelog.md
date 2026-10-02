@@ -22,4 +22,8 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 
+**🖥️ Windows**
+
+- 优化 Windows 服务安全检查未通过时的启动提示：显示具体原因，并提供修复文档链接
+
 </details>
