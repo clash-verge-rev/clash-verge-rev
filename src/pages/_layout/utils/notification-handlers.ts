@@ -117,8 +117,14 @@ export const handleNoticeMessage = (
     },
     'service_core::sidecar_fallback': () => {
       void takeServiceFallbackNotice()
-        .then((pending) => {
-          if (pending) {
+        .then((notice) => {
+          if (notice?.kind === 'coreRejected') {
+            showNotice.warning(
+              'settings.feedback.notifications.clashService.permissionFallback',
+              { reason: notice.reason },
+              0,
+            )
+          } else if (notice) {
             showNotice.warning(
               'settings.feedback.notifications.clashService.sidecarFallback',
             )

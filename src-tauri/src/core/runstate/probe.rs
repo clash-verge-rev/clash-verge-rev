@@ -27,6 +27,9 @@ pub enum ServiceVersionCheck {
     CoreUnavailable(String),
 }
 
+/// Leads the Unavailable reason when the Service refused the approved core itself.
+pub const CORE_REJECTED_PREFIX: &str = "approved core was rejected: ";
+
 /// What a live probe of the currently-installed Service told us.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CurrentServiceProbe {
@@ -47,7 +50,7 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
         return match &reply.core {
             Some(clash_verge_service_ipc::CoreAvailability::Ready) => ServiceVersionCheck::Ready,
             Some(clash_verge_service_ipc::CoreAvailability::Rejected { reason }) => {
-                ServiceVersionCheck::CoreUnavailable(format!("approved core was rejected: {reason}"))
+                ServiceVersionCheck::CoreUnavailable(format!("{CORE_REJECTED_PREFIX}{reason}"))
             }
             _ => ServiceVersionCheck::CoreUnavailable(
                 "the selected approved core is missing or does not match; reinstall the service to repair it".into(),

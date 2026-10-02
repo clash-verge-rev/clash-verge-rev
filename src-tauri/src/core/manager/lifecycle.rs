@@ -678,7 +678,7 @@ impl CoreManager {
             SERVICE_MANAGER.withdraw_sidecar_allowance();
             self.rollback_failed_start().await;
         } else {
-            crate::core::service::notify_service_fallback();
+            crate::core::service::notify_service_fallback(&reason);
         }
         result.map_err(|error| error.context(format!("Service failure before Sidecar startup: {reason}")))
     }

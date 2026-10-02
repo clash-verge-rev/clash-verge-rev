@@ -9,8 +9,8 @@ use crate::{
         owner_identity::current_owner_credentials,
         proxy_control,
         runstate::{
-            OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE, ReadyWaitError,
-            RunState, RunStateEnv, RunStateStore, ServiceHealth,
+            CORE_REJECTED_PREFIX, OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE,
+            ReadyWaitError, RunState, RunStateEnv, RunStateStore, ServiceHealth,
         },
         runtime_bundle::{RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
         tray::Tray,
@@ -39,18 +39,31 @@ use std::{
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
-static PENDING_SERVICE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
+static PENDING_SERVICE_FALLBACK_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 
+/// Why the Service was unavailable when the core fell back to Sidecar.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[serde(tag = "kind", content = "reason", rename_all = "camelCase")]
+pub enum ServiceFallbackNotice {
+    Unavailable,
+    CoreRejected(String),
+}
+
 #[cfg(target_os = "windows")]
-pub(crate) fn notify_service_fallback() {
-    PENDING_SERVICE_FALLBACK_NOTICE.store(true, Ordering::Relaxed);
+pub(crate) fn notify_service_fallback(reason: &str) {
+    *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(reason.to_owned());
     Handle::notice_message("service_core::sidecar_fallback", "");
 }
 
-pub(crate) fn take_service_fallback_notice() -> bool {
-    PENDING_SERVICE_FALLBACK_NOTICE.swap(false, Ordering::Relaxed)
+pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
+    let reason = PENDING_SERVICE_FALLBACK_NOTICE.lock().take()?;
+    Some(if reason.starts_with(CORE_REJECTED_PREFIX) {
+        ServiceFallbackNotice::CoreRejected(reason)
+    } else {
+        ServiceFallbackNotice::Unavailable
+    })
 }
 
 pub(crate) fn take_service_repair_notice() -> bool {
@@ -919,7 +932,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
     tracing::Span::current().record("outcome", "started");
-    PENDING_SERVICE_FALLBACK_NOTICE.store(false, Ordering::Relaxed);
+    PENDING_SERVICE_FALLBACK_NOTICE.lock().take();
     PENDING_SERVICE_REPAIR_NOTICE.store(false, Ordering::Relaxed);
     PENDING_SERVICE_OWNER_NOTICE.lock().take();
     logging!(
