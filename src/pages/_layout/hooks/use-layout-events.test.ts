@@ -4,6 +4,7 @@ import {
   type RunState,
   getCoreStartupError,
   takeDnsOverrideNotice,
+  takeServiceFallbackNotice,
   takeServiceRepairNotice,
 } from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
@@ -31,13 +32,13 @@ vi.mock('@/services/cmds', () => ({
   getCoreStartupError: vi.fn().mockResolvedValue(null),
   takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
-  takeServiceFallbackNotice: vi.fn().mockResolvedValue(false),
+  takeServiceFallbackNotice: vi.fn().mockResolvedValue(null),
   takeServiceRepairNotice: vi.fn().mockResolvedValue(false),
   takeServiceOwnerNotice: vi.fn().mockResolvedValue(null),
 }))
 vi.mock('@/services/service-request', () => ({ requestService: vi.fn() }))
 vi.mock('@/services/notice-service', () => ({
-  showNotice: { info: vi.fn(), error: vi.fn() },
+  showNotice: { info: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }))
 vi.mock('@/services/query-client', () => ({
   revalidateQueries: vi.fn(),
@@ -183,4 +184,27 @@ it('offers service reinstallation for a startup path refusal even before listene
   expect(requestService).toHaveBeenCalledExactlyOnceWith({
     reason: 'serviceLocationRefused',
   })
+})
+
+it('explains a startup core rejection instead of the generic fallback notice', async () => {
+  const reason =
+    'approved core was rejected: core path "C:\\" has an untrusted write ACE'
+  vi.mocked(takeServiceFallbackNotice)
+    .mockResolvedValueOnce({ kind: 'coreRejected', reason })
+    .mockResolvedValue(null)
+
+  useLayoutEvents(([status, message]) => {
+    handleNoticeMessage(status, message, (key) => key, vi.fn())
+  })
+
+  const [handlers, onSubscribed] = vi.mocked(subscribeVergeEvents).mock.calls[0]
+  onSubscribed?.()
+  handlers['verge://notice-message']?.(['service_core::sidecar_fallback', ''])
+  await new Promise((resolve) => setTimeout(resolve, 0))
+
+  expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
+    'settings.feedback.notifications.clashService.permissionFallback',
+    { reason },
+    0,
+  )
 })

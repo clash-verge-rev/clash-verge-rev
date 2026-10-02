@@ -113,7 +113,7 @@ pub async fn continue_with_sidecar() -> CmdResult {
 }
 
 #[tauri::command]
-pub fn take_service_fallback_notice() -> bool {
+pub fn take_service_fallback_notice() -> Option<crate::core::service::ServiceFallbackNotice> {
     crate::core::service::take_service_fallback_notice()
 }
 

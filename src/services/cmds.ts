@@ -186,8 +186,12 @@ export async function takeDnsOverrideNotice() {
   return invoke<boolean>('take_dns_override_notice')
 }
 
+export type ServiceFallbackNotice =
+  | { kind: 'unavailable' }
+  | { kind: 'coreRejected'; reason: string }
+
 export async function takeServiceFallbackNotice() {
-  return invoke<boolean>('take_service_fallback_notice')
+  return invoke<ServiceFallbackNotice | null>('take_service_fallback_notice')
 }
 
 export interface CoreFailure {
