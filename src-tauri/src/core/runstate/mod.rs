@@ -28,7 +28,7 @@ pub use env::FakeEnv;
 pub use env::{RealEnv, RunStateEnv};
 pub use health::{PendingAction, RunState, RunStateView, ServiceHealth};
 pub use owner::{OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch};
-pub use probe::{ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
+pub use probe::{CORE_REJECTED_PREFIX, ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
 
 use crate::core::manager::RunningMode;
 use health::StoredService;
