@@ -48,14 +48,49 @@ pub enum SingletonDisposition {
     Secondary,
 }
 
+/// What a probe against the recorded instance endpoint revealed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum InstanceProbe {
+    /// The running instance accepted the hand-off, so this process is redundant.
+    Handled,
+    /// The owner authenticated this probe but has not finished starting yet.
+    Starting,
+    /// Nothing that owns this singleton answered on the recorded port.
+    Unreachable,
+}
+
+/// `instance_auth` gates the command routes, so only a peer that accepted our
+/// private token can answer `503 starting`. A stale record pointing at some
+/// unrelated listener cannot, which is why every other status is `Unreachable`.
+const fn classify_probe_response(status: u16) -> InstanceProbe {
+    match status {
+        200..=299 => InstanceProbe::Handled,
+        503 => InstanceProbe::Starting,
+        _ => InstanceProbe::Unreachable,
+    }
+}
+
+/// A peer that authenticated our token owns the singleton even if it never
+/// reported readiness before the wait expired. Surfacing that as a startup
+/// error pops a modal dialog that nobody is present to dismiss on a login-item
+/// launch, stranding this redundant process and its dock icon. Step aside
+/// quietly instead, and keep reporting a genuinely absent owner as an error.
+fn disposition_after_wait_timeout(owner_is_alive: bool) -> Option<SingletonDisposition> {
+    owner_is_alive.then_some(SingletonDisposition::Secondary)
+}
+
 pub async fn check_singleton() -> Result<SingletonDisposition> {
     let record_path = instance_record_path().context("failed to resolve singleton instance record path")?;
     let lock = open_instance_lock(&record_path.with_file_name(INSTANCE_LOCK_FILE))
         .context("failed to initialize singleton lock")?;
     if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
+        let mut owner_is_alive = false;
         loop {
             if std::time::Instant::now() >= deadline {
+                if let Some(disposition) = disposition_after_wait_timeout(owner_is_alive) {
+                    return Ok(disposition);
+                }
                 bail!("another app instance is starting");
             }
             // A restarting instance releases this lock only after spawning this
@@ -64,10 +99,12 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
             if try_lock_instance(&lock).context("failed to acquire singleton lock")? {
                 break;
             }
-            if let Ok(record) = read_instance_record(&record_path)
-                && notify_existing_instance(&record).await
-            {
-                return Ok(SingletonDisposition::Secondary);
+            if let Ok(record) = read_instance_record(&record_path) {
+                match notify_existing_instance(&record).await {
+                    InstanceProbe::Handled => return Ok(SingletonDisposition::Secondary),
+                    InstanceProbe::Starting => owner_is_alive = true,
+                    InstanceProbe::Unreachable => {}
+                }
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
@@ -110,10 +147,10 @@ async fn bind_primary_listener(preferred: Option<u16>) -> Result<tokio::net::Tcp
     }
 }
 
-async fn notify_existing_instance(record: &InstanceRecord) -> bool {
+async fn notify_existing_instance(record: &InstanceRecord) -> InstanceProbe {
     let client = match ClientBuilder::new().timeout(Duration::from_millis(500)).build() {
         Ok(client) => client,
-        Err(_) => return false,
+        Err(_) => return InstanceProbe::Unreachable,
     };
     #[cfg(not(target_os = "macos"))]
     let request = if let Some(arg) = std::env::args().nth(1).as_deref() {
@@ -130,11 +167,10 @@ async fn notify_existing_instance(record: &InstanceRecord) -> bool {
     #[cfg(target_os = "macos")]
     let request = client.get(format!("http://127.0.0.1:{}/commands/visible", record.port));
 
-    request
-        .header(INSTANCE_TOKEN_HEADER, &record.token)
-        .send()
-        .await
-        .is_ok_and(|response| response.status().is_success())
+    match request.header(INSTANCE_TOKEN_HEADER, &record.token).send().await {
+        Ok(response) => classify_probe_response(response.status().as_u16()),
+        Err(_) => InstanceProbe::Unreachable,
+    }
 }
 
 fn instance_auth(token: String) -> impl warp::Filter<Extract = (), Error = warp::Rejection> + Clone {
@@ -441,7 +477,9 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::{
-        InstanceRecord, PAC_INITIAL_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record,
+        InstanceProbe, InstanceRecord, PAC_INITIAL_AVAILABLE, SingletonDisposition, bind_primary_listener,
+        classify_probe_response, disposition_after_wait_timeout, notify_existing_instance, read_instance_record,
+        write_instance_record,
     };
     #[cfg(unix)]
     use super::{open_instance_lock, try_lock_instance};
@@ -455,6 +493,41 @@ mod tests {
         Arc,
         atomic::{AtomicBool, AtomicUsize},
     };
+    #[test]
+    fn a_starting_owner_is_not_mistaken_for_an_absent_one() {
+        assert_eq!(classify_probe_response(200), InstanceProbe::Handled);
+        assert_eq!(classify_probe_response(204), InstanceProbe::Handled);
+        // `instance_auth` runs before the command routes, so reaching the
+        // `starting` branch already proves the peer accepted our private token.
+        assert_eq!(classify_probe_response(503), InstanceProbe::Starting);
+        // A stale record can name a port some unrelated process now owns.
+        assert_eq!(classify_probe_response(404), InstanceProbe::Unreachable);
+        assert_eq!(classify_probe_response(500), InstanceProbe::Unreachable);
+    }
+
+    #[test]
+    fn expired_wait_steps_aside_for_a_live_owner_and_still_reports_an_absent_one() {
+        assert_eq!(
+            disposition_after_wait_timeout(true),
+            Some(SingletonDisposition::Secondary)
+        );
+        assert_eq!(disposition_after_wait_timeout(false), None);
+    }
+
+    #[tokio::test]
+    async fn probing_a_port_nobody_owns_reports_unreachable() -> anyhow::Result<()> {
+        let reservation = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
+        let port = reservation.local_addr()?.port();
+        drop(reservation);
+
+        let record = InstanceRecord {
+            port,
+            token: "no-one-is-listening".to_string(),
+        };
+        assert_eq!(notify_existing_instance(&record).await, InstanceProbe::Unreachable);
+        Ok(())
+    }
+
     #[test]
     fn pac_is_fail_closed_before_core_readiness() {
         // Asserts the default rather than the live flag: PAC availability is now derived from
