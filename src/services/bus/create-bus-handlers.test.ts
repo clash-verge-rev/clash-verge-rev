@@ -4,6 +4,7 @@ import {
   type RunState,
   getCoreStartupError,
   takeDnsOverrideNotice,
+  takeServiceFallbackNotice,
   takeServiceRepairNotice,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -23,13 +24,13 @@ vi.mock('@/services/cmds', () => ({
   getPendingFailures: vi.fn().mockResolvedValue([]),
   takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
-  takeServiceFallbackNotice: vi.fn().mockResolvedValue(false),
+  takeServiceFallbackNotice: vi.fn().mockResolvedValue(null),
   takeServiceRepairNotice: vi.fn().mockResolvedValue(false),
   takeServiceOwnerNotice: vi.fn().mockResolvedValue(null),
 }))
 vi.mock('@/services/service-request', () => ({ requestService: vi.fn() }))
 vi.mock('@/services/notice-service', () => ({
-  showNotice: { info: vi.fn(), error: vi.fn() },
+  showNotice: { info: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }))
 vi.mock('@/services/query-client', () => ({
   revalidateQueries: vi.fn(),
@@ -207,4 +208,23 @@ it('routes every event exactly once through one handler', async () => {
     'profileUpdate/timerTick',
     'testAll/requested',
   ])
+})
+
+it('explains a startup core rejection instead of the generic fallback notice', async () => {
+  const reason =
+    'approved core was rejected: core path "C:\\" has an untrusted write ACE'
+  vi.mocked(takeServiceFallbackNotice)
+    .mockResolvedValueOnce({ kind: 'coreRejected', reason })
+    .mockResolvedValue(null)
+
+  const bus = await mountBus()
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message'](['service_core::sidecar_fallback', ''])
+  await flush()
+
+  expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
+    'settings.feedback.notifications.clashService.permissionFallback',
+    { reason },
+    0,
+  )
 })
