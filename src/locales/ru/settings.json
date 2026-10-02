@@ -464,7 +464,7 @@
         "usePacMode": "Использовать режим PAC",
         "proxyGuard": "Защита прокси",
         "guardDuration": "Период защиты",
-        "alwaysUseDefaultBypass": "Всегда использовать стандартный обход",
+        "alwaysUseDefaultBypass": "Добавлять стандартный список обхода",
         "enableBypassCheck": "Проверять формат обхода прокси",
         "proxyBypass": "Игнорируемые адреса: ",
         "bypass": "Игнорируемые адреса: ",

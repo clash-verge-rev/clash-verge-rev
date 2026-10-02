@@ -464,7 +464,7 @@
         "usePacMode": "PAC Modunu Kullan",
         "proxyGuard": "Vekil Koruyucusu",
         "guardDuration": "Koruma Süresi",
-        "alwaysUseDefaultBypass": "Her Zaman Varsayılan Baypas Kullan",
+        "alwaysUseDefaultBypass": "Varsayılan baypas listesini dahil et",
         "enableBypassCheck": "Proxy baypas biçimini doğrula",
         "proxyBypass": "Vekil Baypas Ayarları: ",
         "bypass": "Baypas: ",

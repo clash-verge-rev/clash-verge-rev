@@ -464,7 +464,7 @@
         "usePacMode": "استفاده از حالت PAC",
         "proxyGuard": "محافظ پراکسی",
         "guardDuration": "مدت محافظت",
-        "alwaysUseDefaultBypass": "همیشه از دور زدن پیش‌فرض استفاده کنید",
+        "alwaysUseDefaultBypass": "افزودن فهرست دور زدن پیش‌فرض",
         "enableBypassCheck": "اعتبارسنجی قالب دور زدن پراکسی",
         "proxyBypass": "دور زدن پراکسی: ",
         "bypass": "دور زدن: ",

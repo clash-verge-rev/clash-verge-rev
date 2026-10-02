@@ -464,7 +464,7 @@
         "usePacMode": "PAC режимын куллану",
         "proxyGuard": "Прокси саклаучы",
         "guardDuration": "Саклау вакыты",
-        "alwaysUseDefaultBypass": "Һәрвакыт төп Bypass-ны куллану",
+        "alwaysUseDefaultBypass": "Төп Bypass исемлеген өстәү",
         "enableBypassCheck": "Прокси урап узу форматын тикшерү",
         "proxyBypass": "Проксины әйләнеп узу:",
         "bypass": "Әйләнеп узу:",

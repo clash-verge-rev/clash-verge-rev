@@ -597,7 +597,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             />
             <Box sx={{ padding: '0 2px 5px' }}>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {splitBypass(defaultBypass()).map((item) => (
+                {Array.from(
+                  new Set([
+                    ...splitBypass(defaultBypass()),
+                    ...splitBypass(value.bypass),
+                  ]),
+                ).map((item) => (
                   <Chip key={item} label={item} size="small" />
                 ))}
               </Box>
