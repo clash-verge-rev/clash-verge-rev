@@ -3,6 +3,7 @@
     "actions": {
       "updateAll": "更新所有订阅",
       "viewRuntimeConfig": "查看运行时订阅",
+      "subscriptionRouting": "订阅分流",
       "reactivate": "重新激活订阅",
       "import": "导入"
     },
@@ -109,6 +110,50 @@
     }
   },
   "modals": {
+    "routing": {
+      "title": "订阅分流",
+      "mainProfile": "主订阅：{{name}}。未命中的流量仍使用主订阅。",
+      "noMainProfile": "未选择",
+      "bindings": "分流绑定",
+      "binding": "绑定设置",
+      "addBinding": "添加",
+      "empty": "暂无分流绑定。",
+      "emptyDetail": "添加订阅，即可让指定网站或独立本地代理端口使用它。",
+      "defaultTraffic": "默认流量使用主订阅",
+      "sourceProfile": "来源订阅",
+      "source": {
+        "remote": "远程订阅",
+        "local": "本地订阅",
+        "missing": "来源不可用"
+      },
+      "status": { "enabled": "已启用", "disabled": "已停用" },
+      "enabled": "启用绑定",
+      "domains": "网站域名（每行一个）",
+      "domainsHelp": "匹配该域名及其子域名。可输入域名或 HTTP(S) 网址。网站分流需要规则模式。",
+      "exactDomains": "精确域名（每行一个）",
+      "exactDomainsHelp": "仅匹配指定主机名，不包含子域名。",
+      "port": "独立本地代理端口（可选）",
+      "portHelp": "仅监听本机的 HTTP/SOCKS 端口，范围 1–65535；应用可直接连接。",
+      "policy": "节点选择",
+      "policies": {
+        "manual": "手动",
+        "fixed": "固定节点",
+        "auto": "自动",
+        "fallback": "故障转移"
+      },
+      "node": "节点名称",
+      "nodeHelp": "输入此订阅中的完整节点名称，也支持代理提供者的节点。",
+      "regions": "优选地区（每行一个）",
+      "regionsHelp": "每行输入节点名称的字面关键词；包含任意一个关键词即可匹配。留空则包含全部节点。",
+      "saveApply": "保存并应用",
+      "saved": "订阅分流已保存并应用",
+      "errors": {
+        "port": "请输入 1 至 65535 的端口，或留空。",
+        "targetRequired": "启用的绑定至少需要网站、精确域名或本地代理端口。",
+        "nodeRequired": "固定节点模式下请输入节点名称。",
+        "busy": "其他订阅操作正在进行，无法应用分流。请稍后重试。"
+      }
+    },
     "profileForm": {
       "title": {
         "create": "新建配置",

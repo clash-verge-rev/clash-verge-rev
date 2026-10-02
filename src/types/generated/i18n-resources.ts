@@ -420,11 +420,59 @@ export interface TranslationResources {
         qrViewer: {
           title: string
         }
+        routing: {
+          addBinding: string
+          binding: string
+          bindings: string
+          defaultTraffic: string
+          domains: string
+          domainsHelp: string
+          empty: string
+          emptyDetail: string
+          enabled: string
+          errors: {
+            busy: string
+            nodeRequired: string
+            port: string
+            targetRequired: string
+          }
+          exactDomains: string
+          exactDomainsHelp: string
+          mainProfile: string
+          node: string
+          nodeHelp: string
+          noMainProfile: string
+          policies: {
+            auto: string
+            fallback: string
+            fixed: string
+            manual: string
+          }
+          policy: string
+          port: string
+          portHelp: string
+          regions: string
+          regionsHelp: string
+          saveApply: string
+          saved: string
+          source: {
+            local: string
+            missing: string
+            remote: string
+          }
+          sourceProfile: string
+          status: {
+            disabled: string
+            enabled: string
+          }
+          title: string
+        }
       }
       page: {
         actions: {
           import: string
           reactivate: string
+          subscriptionRouting: string
           updateAll: string
           viewRuntimeConfig: string
         }

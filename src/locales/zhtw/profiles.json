@@ -3,6 +3,7 @@
     "actions": {
       "updateAll": "更新所有訂閱",
       "viewRuntimeConfig": "查看執行時訂閱",
+      "subscriptionRouting": "訂閱分流",
       "reactivate": "重新啟用訂閱",
       "import": "匯入"
     },
@@ -109,6 +110,50 @@
     }
   },
   "modals": {
+    "routing": {
+      "title": "訂閱分流",
+      "mainProfile": "主訂閱：{{name}}。未命中的流量仍使用主訂閱。",
+      "noMainProfile": "未選擇",
+      "bindings": "分流綁定",
+      "binding": "綁定設定",
+      "addBinding": "新增",
+      "empty": "尚無分流綁定。",
+      "emptyDetail": "新增訂閱，即可讓指定網站或獨立本機代理連接埠使用它。",
+      "defaultTraffic": "預設流量使用主訂閱",
+      "sourceProfile": "來源訂閱",
+      "source": {
+        "remote": "遠端訂閱",
+        "local": "本機訂閱",
+        "missing": "來源無法使用"
+      },
+      "status": { "enabled": "已啟用", "disabled": "已停用" },
+      "enabled": "啟用綁定",
+      "domains": "網站網域（每行一個）",
+      "domainsHelp": "比對此網域及其子網域。可輸入網域或 HTTP(S) 網址。網站分流需要規則模式。",
+      "exactDomains": "精確網域（每行一個）",
+      "exactDomainsHelp": "僅比對指定主機名稱，不包含子網域。",
+      "port": "獨立本機代理連接埠（選填）",
+      "portHelp": "僅監聽本機的 HTTP/SOCKS 連接埠，範圍 1–65535；應用程式可直接連線。",
+      "policy": "節點選擇",
+      "policies": {
+        "manual": "手動",
+        "fixed": "固定節點",
+        "auto": "自動",
+        "fallback": "故障轉移"
+      },
+      "node": "節點名稱",
+      "nodeHelp": "輸入此訂閱中的完整節點名稱，也支援代理提供者的節點。",
+      "regions": "優選地區（每行一個）",
+      "regionsHelp": "每行輸入節點名稱的字面關鍵字；包含任意一個關鍵字即可符合。留空則包含全部節點。",
+      "saveApply": "儲存並套用",
+      "saved": "訂閱分流已儲存並套用",
+      "errors": {
+        "port": "請輸入 1 至 65535 的連接埠，或留空。",
+        "targetRequired": "啟用的綁定至少需要網站、精確網域或本機代理連接埠。",
+        "nodeRequired": "固定節點模式下請輸入節點名稱。",
+        "busy": "其他訂閱操作正在進行，無法套用分流。請稍後重試。"
+      }
+    },
     "profileForm": {
       "title": {
         "create": "新增設定檔",

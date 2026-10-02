@@ -257,6 +257,18 @@ interface IProfileOption {
 interface IProfilesConfig {
   current?: string
   items?: IProfileItem[]
+  routing?: IProfileRoute[]
+}
+
+interface IProfileRoute {
+  profile: string
+  enabled: boolean
+  domains: string[]
+  exact_domains: string[]
+  port?: number
+  policy: 'manual' | 'fixed' | 'auto' | 'fallback'
+  node?: string
+  regions: string[]
 }
 
 interface IVergeTestItem {

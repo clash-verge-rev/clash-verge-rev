@@ -19,6 +19,13 @@
 </details>
 
 <details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+
+- 新增「订阅分流」，支持同时使用多个订阅，按网站或本地代理端口选择节点来源
+
+</details>
+
+<details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 
