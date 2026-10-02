@@ -212,12 +212,10 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
             ));
         }
         logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-        if crate::APP_HANDLE.get().is_some() {
-            if !lightweight::exit_lightweight_mode().await {
-                WindowManager::show_main_window().await;
-            } else {
-                logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-            }
+        // A successful exit has already restored the window, so only the "was not in
+        // lightweight mode" case needs the explicit show.
+        if crate::APP_HANDLE.get().is_some() && !lightweight::exit_lightweight_mode().await {
+            WindowManager::show_main_window().await;
         }
         Ok::<_, warp::Rejection>(warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK))
     });

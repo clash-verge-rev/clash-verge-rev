@@ -67,6 +67,43 @@ fn record_state_and_log(state: LightweightState) {
     }
 }
 
+/// Holds the `In -> Exiting` transition until the exit records its final state.
+///
+/// The exit body awaits (window creation, config read) and can be dropped mid-flight — the
+/// second-instance client aborts `/commands/visible` after 500 ms — or unwind. A state left
+/// at `Exiting` is unrecoverable: every later entry takes the `Normal -> In` arm, is refused,
+/// and the command still reports success to the UI.
+struct ExitTransition {
+    completed: bool,
+}
+
+impl ExitTransition {
+    fn begin() -> Option<Self> {
+        if !try_transition(LightweightState::In, LightweightState::Exiting) {
+            return None;
+        }
+        record_state_and_log(LightweightState::Exiting);
+        Some(Self { completed: false })
+    }
+
+    fn complete(mut self) {
+        self.completed = true;
+        record_state_and_log(LightweightState::Normal);
+    }
+}
+
+impl Drop for ExitTransition {
+    fn drop(&mut self) {
+        if self.completed {
+            return;
+        }
+        // An abandoned exit must not disable the toggle: `Normal` is what the recovery paths
+        // (`show_main_window` fallback, tray toggle, the next entry) expect.
+        LIGHTWEIGHT_STATE.store(LightweightState::Normal.as_u8(), Ordering::Release);
+        logging!(warn, Type::Lightweight, "轻量模式退出被打断，状态回滚为普通模式");
+    }
+}
+
 #[inline]
 pub fn is_in_lightweight_mode() -> bool {
     get_state() == LightweightState::In
@@ -122,7 +159,7 @@ pub async fn entry_lightweight_mode() -> bool {
 }
 
 pub async fn exit_lightweight_mode() -> bool {
-    if !try_transition(LightweightState::In, LightweightState::Exiting) {
+    let Some(exit) = ExitTransition::begin() else {
         logging!(
             debug,
             Type::Lightweight,
@@ -130,8 +167,7 @@ pub async fn exit_lightweight_mode() -> bool {
         );
         refresh_lightweight_tray_state().await;
         return false;
-    }
-    record_state_and_log(LightweightState::Exiting);
+    };
     WindowManager::show_main_window().await;
     let enable_auto_light_weight_mode = Config::verge()
         .await
@@ -143,7 +179,7 @@ pub async fn exit_lightweight_mode() -> bool {
         setup_webview_focus_listener();
     }
     cancel_light_weight_timer();
-    record_state_and_log(LightweightState::Normal);
+    exit.complete();
     refresh_lightweight_tray_state().await;
     true
 }
@@ -251,5 +287,61 @@ fn cancel_light_weight_timer() {
     if let Some(tx) = cancel_tx_guard.take() {
         let _ = tx.send(());
         logging!(debug, Type::Timer, "Timer cancelled");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The state is global, so tests that drive it must not interleave.
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+    fn set_state(state: LightweightState) {
+        LIGHTWEIGHT_STATE.store(state.as_u8(), Ordering::Release);
+    }
+
+    /// The second-instance client aborts `/commands/visible` after 500 ms, dropping the exit
+    /// future at its first await. Stranding `Exiting` left the toggle dead until a restart.
+    #[test]
+    fn an_abandoned_exit_leaves_the_state_usable() {
+        let _lock = TEST_LOCK.lock();
+        set_state(LightweightState::In);
+
+        // Holding the guard in an `Option` and dropping it unread is what an aborted exit
+        // does to the future that owns it.
+        let abandoned = ExitTransition::begin();
+        assert_eq!(get_state(), LightweightState::Exiting);
+        drop(abandoned);
+
+        assert_eq!(get_state(), LightweightState::Normal);
+        assert!(
+            try_transition(LightweightState::Normal, LightweightState::In),
+            "entering lightweight mode must work again"
+        );
+        set_state(LightweightState::Normal);
+    }
+
+    #[test]
+    fn a_completed_exit_stays_normal() {
+        let _lock = TEST_LOCK.lock();
+        set_state(LightweightState::In);
+
+        let exit = ExitTransition::begin();
+        assert!(exit.is_some());
+        if let Some(exit) = exit {
+            exit.complete();
+        }
+
+        assert_eq!(get_state(), LightweightState::Normal);
+    }
+
+    #[test]
+    fn an_exit_outside_lightweight_mode_takes_no_transition() {
+        let _lock = TEST_LOCK.lock();
+        set_state(LightweightState::Normal);
+
+        assert!(ExitTransition::begin().is_none());
+        assert_eq!(get_state(), LightweightState::Normal);
     }
 }
