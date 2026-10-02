@@ -1,9 +1,14 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { getPendingFailures, type PendingFailure } from '@/services/cmds'
+import {
+  getPendingFailures,
+  getSidecarFailure,
+  type PendingFailure,
+  type SidecarFailureSnapshot,
+} from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
-import { showNotice } from '@/services/notice-service'
+import { showNotice, syncSidecarFailure } from '@/services/notice-service'
 
 /** Failures handled by the recovery dialog instead of a toast. */
 const CODES_SHOWN_AS_A_DIALOG = new Set<string>([
@@ -28,13 +33,27 @@ const windowIsWatched = async () => {
 
 const usePendingFailureReader = (
   onFailures: (failures: PendingFailure[]) => void,
+  onSidecarFailure?: (snapshot: SidecarFailureSnapshot) => void,
 ) => {
   // Avoid resubscribing when the handler changes.
-  const handlerRef = useRef(onFailures)
-  handlerRef.current = onFailures
+  const handlerRef = useRef({ onFailures, onSidecarFailure })
+  handlerRef.current = { onFailures, onSidecarFailure }
 
   useEffect(() => {
+    let disposed = false
     const read = () => {
+      if (handlerRef.current.onSidecarFailure) {
+        void getSidecarFailure()
+          .then((snapshot) => {
+            if (!disposed) handlerRef.current.onSidecarFailure?.(snapshot)
+          })
+          .catch((error) => {
+            console.warn(
+              '[pending-failures] Sidecar failure could not be read:',
+              error,
+            )
+          })
+      }
       void (async () => {
         let failures: PendingFailure[]
         try {
@@ -43,7 +62,7 @@ const usePendingFailureReader = (
           console.warn('[pending-failures] could not be read:', error)
           return
         }
-        handlerRef.current(failures)
+        if (!disposed) handlerRef.current.onFailures(failures)
       })()
     }
 
@@ -62,6 +81,7 @@ const usePendingFailureReader = (
     })
 
     return () => {
+      disposed = true
       unsubscribe()
       document.removeEventListener('visibilitychange', readWhenVisible)
       void unlistenFocus.then((unlisten) => unlisten())
@@ -96,6 +116,7 @@ export const usePendingFailures = () => {
       },
       [showNewFailures],
     ),
+    syncSidecarFailure,
   )
 }
 
