@@ -34,6 +34,7 @@ notifications:
     body: A new version (v{version}) has been downloaded and is ready to install.
     installNow: Install Now
     later: Later
+    never: Never
 service:
   adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
   adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。

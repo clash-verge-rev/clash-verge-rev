@@ -34,6 +34,7 @@ notifications:
     body: A new version (v{version}) has been downloaded and is ready to install.
     installNow: Install Now
     later: Later
+    never: Never
 service:
   adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
   adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.

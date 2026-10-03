@@ -14,6 +14,13 @@
 </details>
 
 <details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+
+- 在启动时的更新对话框新增「永不」选项，可关闭自动检查更新并清除已下载的更新包
+
+</details>
+
+<details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 优化侧边栏流量图表的 CPU 占用
