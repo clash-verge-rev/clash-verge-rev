@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Qayda provayderi",
+      "dialogTitle": "Qayda provayderləri",
+      "actions": {
+        "updateAll": "Hamısını yenilə",
+        "update": "Yenilə"
+      }
+    },
+    "title": "Qaydalar"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} uğurla yeniləndi",
+        "updateFailed": "{{name}} yenilənə bilmədi: {{message}}",
+        "genericError": "Yeniləmə alınmadı: {{message}}",
+        "none": "Yenilənəcək provayder yoxdur",
+        "allUpdated": "Bütün provayderlər uğurla yeniləndi"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Qayda növü",
+          "content": "Qayda məzmunu",
+          "proxyPolicy": "Proksi siyasəti"
+        },
+        "toggles": {
+          "noResolve": "DNS həllinin söndürülməsi"
+        },
+        "actions": {
+          "prependRule": "Əvvələ qayda əlavə et",
+          "appendRule": "Sona qayda əlavə et"
+        },
+        "validation": {
+          "conditionRequired": "Qayda şərti tələb olunur",
+          "invalidRule": "Yanlış qayda"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Tam domenə görə uyğunluq",
+        "DOMAIN-SUFFIX": "Domen sonluğuna görə uyğunluq",
+        "DOMAIN-KEYWORD": "Domendəki açar sözə görə uyğunluq",
+        "DOMAIN-REGEX": "Domenin müntəzəm ifadəyə uyğunluğu",
+        "GEOSITE": "GeoSite daxilindəki domenlərə görə uyğunluq",
+        "GEOIP": "IP ünvanının ölkə koduna görə uyğunluq",
+        "SRC-GEOIP": "Mənbə IP ünvanının ölkə koduna görə uyğunluq",
+        "IP-ASN": "IP ünvanının ASN dəyərinə görə uyğunluq",
+        "SRC-IP-ASN": "Mənbə IP ünvanının ASN dəyərinə görə uyğunluq",
+        "IP-CIDR": "IP ünvanları aralığına görə uyğunluq",
+        "IP-CIDR6": "IPv6 ünvanları aralığına görə uyğunluq",
+        "SRC-IP-CIDR": "Mənbə IP ünvanları aralığına görə uyğunluq",
+        "IP-SUFFIX": "IP ünvanlarının sonluq aralığına görə uyğunluq",
+        "SRC-IP-SUFFIX": "Mənbə IP ünvanlarının sonluq aralığına görə uyğunluq",
+        "SRC-PORT": "Mənbə portları aralığına görə uyğunluq",
+        "DST-PORT": "Təyinat portları aralığına görə uyğunluq",
+        "IN-PORT": "Daxil olan əlaqənin portuna görə uyğunluq",
+        "DSCP": "DSCP etiketi (yalnız TPROXY ilə daxil olan UDP trafiki üçün)",
+        "PROCESS-NAME": "Prosesin adına görə uyğunluq",
+        "PROCESS-PATH": "Prosesin tam yoluna görə uyğunluq",
+        "PROCESS-NAME-REGEX": "Prosesin adının müntəzəm ifadəyə uyğunluğu",
+        "PROCESS-PATH-REGEX": "Prosesin tam yolunun müntəzəm ifadəyə uyğunluğu",
+        "NETWORK": "Şəbəkə protokoluna görə uyğunluq (TCP/UDP)",
+        "UID": "Linux istifadəçisinin identifikatoruna görə uyğunluq",
+        "IN-TYPE": "Daxil olan əlaqənin növünə görə uyğunluq",
+        "IN-USER": "Daxil olan əlaqənin istifadəçi adına görə uyğunluq",
+        "IN-NAME": "Daxil olan əlaqənin adına görə uyğunluq",
+        "SUB-RULE": "Alt qayda",
+        "RULE-SET": "Qayda dəstinə görə uyğunluq",
+        "AND": "Məntiqi və",
+        "OR": "Məntiqi və ya",
+        "NOT": "Məntiqi inkar",
+        "MATCH": "Bütün sorğulara uyğunluq"
+      },
+      "title": "Qaydaların redaktəsi"
+    }
+  }
+}

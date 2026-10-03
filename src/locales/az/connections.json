@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Əlaqələr"
+  },
+  "components": {
+    "fields": {
+      "host": "Qovşaq",
+      "dlSpeed": "Endirmə sürəti",
+      "ulSpeed": "Yükləmə sürəti",
+      "chains": "Zəncirlər",
+      "rule": "Qayda",
+      "process": "Proses",
+      "time": "Vaxt",
+      "source": "Mənbə",
+      "destination": "Təyinat",
+      "destinationPort": "Təyinat portu",
+      "type": "Növ"
+    },
+    "order": {
+      "default": "Standart",
+      "uploadSpeed": "Yükləmə sürəti",
+      "downloadSpeed": "Endirmə sürəti"
+    },
+    "actions": {
+      "active": "Aktiv",
+      "closed": "Bağlanmış",
+      "closeConnection": "Əlaqəni bağla"
+    },
+    "columnManager": {
+      "title": "Sütunlar",
+      "dragHandle": "Sürükləmə tutacağı"
+    }
+  }
+}
