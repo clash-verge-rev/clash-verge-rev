@@ -1,7 +1,7 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
-import type { FailedOperation } from '@/services/cmds'
+import type { FailedOperation, SidecarFailureSnapshot } from '@/services/cmds'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 
 type NoticeType = 'success' | 'error' | 'info' | 'warning'
@@ -97,6 +97,7 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
 
 let nextId = 0
 let notices: NoticeItem[] = []
+let sidecarFailureRevision = -1
 const subscribers: Set<NoticeSubscriber> = new Set()
 
 function notifySubscribers() {
@@ -461,7 +462,8 @@ const baseShowNotice = (
   const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
   const operation = failureOperation(raw) ?? failureOperation(message)
   // Suppress duplicate toasts while preserving the caller's id contract.
-  if (isReportedByDialog(code)) return id
+  // Sidecar failures come only from versioned backend state, never delayed command rejections.
+  if (isReportedByDialog(code) || code === 'SERVICE_SIDECAR_FAILED') return id
   const effectiveDuration = resolveDuration(type, duration)
   const timerId =
     effectiveDuration > 0
@@ -521,6 +523,29 @@ export function hideNotice(id: number) {
     clearTimeout(notice.timerId)
   }
   notices = notices.filter((candidate) => candidate.id !== id)
+  notifySubscribers()
+}
+
+function hideNoticesByCode(code: string) {
+  notices
+    .filter((notice) => notice.code === code)
+    .forEach(({ id }) => hideNotice(id))
+}
+
+export function syncSidecarFailure(snapshot: SidecarFailureSnapshot) {
+  if (snapshot.revision <= sidecarFailureRevision) return
+  sidecarFailureRevision = snapshot.revision
+  hideNoticesByCode('SERVICE_SIDECAR_FAILED')
+  if (snapshot.detail === null) return
+
+  const failure = { code: 'SERVICE_SIDECAR_FAILED', detail: snapshot.detail }
+  notices = [
+    ...notices,
+    buildNotice(nextId++, 'error', 0, {
+      ...normalizeNoticeMessage(failure),
+      code: failure.code,
+    }),
+  ]
   notifySubscribers()
 }
 

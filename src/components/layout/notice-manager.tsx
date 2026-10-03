@@ -68,6 +68,66 @@ const resolveNoticeMessage = (
   const i18n = notice.i18n
   if (!i18n) return bound(notice.message)
 
+  const detail = i18n.params?.message
+  const existingCore =
+    notice.code === 'SERVICE_SIDECAR_FAILED' && typeof detail === 'string'
+      ? /process verge-mihomo(?:-alpha)?(?:\.exe)? \(PID (\d+)\) is still running; refusing a second core\s*$/.exec(
+          detail,
+        )
+      : null
+  if (existingCore && typeof detail === 'string') {
+    const permissionRejected = detail.startsWith('Service core rejected:')
+    return (
+      <>
+        {permissionRejected && (
+          <Box sx={{ mb: 1 }}>
+            {t(
+              'settings.feedback.notifications.clashService.permissionRejectedReason',
+            )}{' '}
+            <Link
+              href={SERVICE_PERMISSION_GUIDE}
+              color="inherit"
+              underline="always"
+              onClick={(event) => {
+                event.preventDefault()
+                void openExternalUrl(SERVICE_PERMISSION_GUIDE).catch(
+                  showNotice.error,
+                )
+              }}
+            >
+              {t(
+                'settings.feedback.notifications.clashService.permissionRepairGuide',
+              )}
+            </Link>
+          </Box>
+        )}
+        {t('settings.feedback.errors.clashService.coreAlreadyRunning', {
+          pid: existingCore[1],
+        })}
+        <Box component="details" sx={{ mt: 1 }}>
+          <Box component="summary" sx={{ cursor: 'pointer' }}>
+            {t('shared.feedback.errors.details')}
+          </Box>
+          <Box
+            component="pre"
+            sx={{
+              m: 0,
+              mt: 1,
+              maxHeight: 160,
+              overflow: 'auto',
+              whiteSpace: 'pre-wrap',
+              overflowWrap: 'anywhere',
+              userSelect: 'text',
+              fontSize: 'inherit',
+            }}
+          >
+            {detail}
+          </Box>
+        </Box>
+      </>
+    )
+  }
+
   if (i18n.key === SERVICE_PERMISSION_NOTICE) {
     return (
       <>
