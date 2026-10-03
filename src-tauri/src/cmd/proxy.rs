@@ -4,7 +4,7 @@ use crate::{
     config::Config,
     core::{
         handle::Handle,
-        proxy_view::{ProxyViewBuilder, ProxyViewInput, ProxyViewV1},
+        proxy_view::{GroupScope, ProxyViewBuilder, ProxyViewInput, ProxyViewV1},
         tray::Tray,
     },
     process::AsyncHandler,
@@ -12,7 +12,7 @@ use crate::{
 use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
 use std::{
-    collections::HashSet,
+    collections::{BTreeMap, HashSet},
     sync::atomic::{AtomicBool, Ordering},
 };
 
@@ -50,11 +50,65 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
         .collect()
 }
 
+/// Mirrors Mihomo: `include-all`/`include-all-providers` replace `use` with every provider, sorted.
+fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope> {
+    let Some(config) = config else {
+        return BTreeMap::new();
+    };
+    let mut all_providers = config
+        .get("proxy-providers")
+        .and_then(|providers| providers.as_mapping())
+        .into_iter()
+        .flat_map(|providers| providers.keys())
+        .filter_map(|name| name.as_str())
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    all_providers.sort();
+    let flag = |group: &Mapping, key: &str| group.get(key).and_then(|value| value.as_bool()) == Some(true);
+
+    config
+        .get("proxy-groups")
+        .and_then(|groups| groups.as_sequence())
+        .into_iter()
+        .flatten()
+        .filter_map(|group| group.as_mapping())
+        .filter_map(|group| {
+            let name = group.get("name")?.as_str()?.to_owned();
+            let providers = if flag(group, "include-all") || flag(group, "include-all-providers") {
+                all_providers.clone()
+            } else {
+                group
+                    .get("use")
+                    .and_then(|providers| providers.as_sequence())
+                    .into_iter()
+                    .flatten()
+                    .filter_map(|provider| provider.as_str())
+                    .map(str::to_owned)
+                    .collect()
+            };
+            let exclude_types = group
+                .get("exclude-type")
+                .and_then(|types| types.as_str())
+                .filter(|types| !types.is_empty())
+                .map(|types| types.split('|').map(str::to_owned).collect())
+                .unwrap_or_default();
+            Some((
+                name,
+                GroupScope {
+                    providers,
+                    exclude_types,
+                },
+            ))
+        })
+        .collect()
+}
+
 #[tauri::command]
 pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let runtime = Config::runtime().await;
     let latest_runtime = runtime.latest_arc();
     let runtime_group_order = runtime_group_order(latest_runtime.config.as_ref());
+    let group_scopes = runtime_group_scopes(latest_runtime.config.as_ref());
 
     let mihomo = Handle::mihomo();
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
@@ -62,6 +116,7 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
 
     Ok(ProxyViewBuilder::build(ProxyViewInput {
         runtime_group_order,
+        group_scopes,
         proxies,
         providers: providers.ok(),
     }))
@@ -107,33 +162,5 @@ async fn run_tray_sync_loop() {
 
             break;
         }
-    }
-}
-
-#[cfg(test)]
-#[allow(clippy::expect_used)]
-mod tests {
-    use serde_yaml_ng::Value;
-
-    use super::runtime_group_order;
-
-    #[test]
-    fn runtime_order_keeps_first_non_empty_non_global_name() {
-        let config: Value = serde_yaml_ng::from_str(
-            r#"
-proxy-groups:
-  - name: Beta
-  - name: ""
-  - name: GLOBAL
-  - name: " Alpha "
-  - name: Beta
-"#,
-        )
-        .expect("parse runtime");
-
-        assert_eq!(
-            runtime_group_order(config.as_mapping()),
-            ["Beta".to_owned(), " Alpha ".to_owned()]
-        );
     }
 }
