@@ -49,6 +49,15 @@ static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 pub enum ServiceFallbackNotice {
     Unavailable,
     CoreRejected(String),
+    NotAutoStarted,
+}
+
+/// The release installer registers AutoStart.
+const SERVICE_NOT_AUTO_STARTED: &str = "the Windows service is stopped and no longer starts with Windows";
+
+pub(crate) fn is_not_auto_started(reason: &str) -> bool {
+    // Detection prefixes its own context to the reason.
+    reason.contains(SERVICE_NOT_AUTO_STARTED)
 }
 
 #[cfg(target_os = "windows")]
@@ -61,6 +70,8 @@ pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
     let reason = PENDING_SERVICE_FALLBACK_NOTICE.lock().take()?;
     Some(if reason.starts_with(CORE_REJECTED_PREFIX) {
         ServiceFallbackNotice::CoreRejected(reason)
+    } else if is_not_auto_started(&reason) {
+        ServiceFallbackNotice::NotAutoStarted
     } else {
         ServiceFallbackNotice::Unavailable
     })
@@ -266,7 +277,7 @@ fn open_registered_service() -> Result<Option<windows_service::service::Service>
     let manager = WindowsServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
     match manager.open_service(
         clash_verge_service_ipc::WINDOWS_SERVICE_NAME,
-        ServiceAccess::QUERY_STATUS,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::QUERY_CONFIG,
     ) {
         Ok(service) => Ok(Some(service)),
         Err(WindowsServiceError::Winapi(error)) if error.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) => {
@@ -281,21 +292,34 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
     Ok(open_registered_service()?.is_some())
 }
 
-/// Whether IPC cannot succeed until the service is started again. A service that is starting, or
-/// that the SCM has not started yet this boot, is left to the IPC retries, which wait for it.
+/// Why IPC cannot succeed until the service is started again, if it cannot. A starting service,
+/// or an AutoStart one the SCM has yet to start this boot, is left to the IPC retries.
 #[cfg(windows)]
-pub(crate) fn service_stopped() -> Result<bool> {
-    use windows_service::service::{ServiceExitCode, ServiceState};
+pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
+    use windows_service::service::{ServiceExitCode, ServiceStartType, ServiceState};
 
     const ERROR_SERVICE_NEVER_STARTED: u32 = 1077;
+    const NOT_RUNNING: &str = "the Windows service is not running";
     let Some(service) = open_registered_service()? else {
-        return Ok(true);
+        return Ok(Some(NOT_RUNNING));
     };
     let status = service
         .query_status()
         .context("failed to query Windows service status")?;
-    Ok(status.current_state == ServiceState::Stopped
-        && status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED))
+    if status.current_state != ServiceState::Stopped {
+        return Ok(None);
+    }
+    // The development channel registers an on-demand start.
+    if !cfg!(feature = "verge-dev")
+        && service
+            .query_config()
+            .context("failed to query Windows service configuration")?
+            .start_type
+            != ServiceStartType::AutoStart
+    {
+        return Ok(Some(SERVICE_NOT_AUTO_STARTED));
+    }
+    Ok((status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED)).then_some(NOT_RUNNING))
 }
 
 #[cfg(target_os = "linux")]

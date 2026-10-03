@@ -127,6 +127,7 @@ export const translationKeys = [
   'layout.components.navigation.menu.collapseNavBar',
   'layout.components.navigation.menu.expandNavBar',
   'layout.components.serviceMigration.locationRefusedMessage',
+  'layout.components.serviceMigration.notAutoStartedMessage',
   'layout.components.serviceMigration.title',
   'layout.components.serviceMigration.message',
   'layout.components.serviceMigration.checkingMessage',
