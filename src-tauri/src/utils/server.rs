@@ -324,7 +324,7 @@ fn open_instance_lock(path: &Path) -> Result<std::fs::File> {
     std::fs::create_dir_all(parent)?;
     #[cfg(windows)]
     {
-        crate::core::owner_identity::open_or_create_private_current_user_file(path)
+        crate::core::owner_identity::open_or_create_current_user_lock(path)
     }
 
     #[cfg(unix)]
