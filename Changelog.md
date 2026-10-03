@@ -3,6 +3,7 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复从开始菜单再次打开应用后，窗口反复弹出并提示启动失败的问题
 
 </details>
 
