@@ -526,7 +526,7 @@ export function hideNotice(id: number) {
   notifySubscribers()
 }
 
-export function hideNoticesByCode(code: string) {
+function hideNoticesByCode(code: string) {
   notices
     .filter((notice) => notice.code === code)
     .forEach(({ id }) => hideNotice(id))
