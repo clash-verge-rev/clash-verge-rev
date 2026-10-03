@@ -3,11 +3,11 @@ use crate::{
     cmd::StringifyErr as _,
     cmd::validate::{ValidationNoticeTarget, handle_validation_notice},
     config::{Config, IProfiles, PrfItem},
+    core::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     core::{
         CoreManager, handle,
         validate::{CoreConfigValidator, ValidationOutcome},
     },
-    module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     utils::dirs,
 };
 use clash_verge_logging::{Type, logging, logging_error};

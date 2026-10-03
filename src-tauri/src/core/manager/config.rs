@@ -1,4 +1,5 @@
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use crate::core::notify::NoticeStatus;
 use crate::core::service::StageRequest;
 use crate::{
     config::{Config, IProfiles, runtime::IRuntime},
@@ -129,7 +130,31 @@ where
 }
 
 impl CoreManager {
-    pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
+    pub(crate) fn claim_config_update(
+        &self,
+        _config_write: &tokio::sync::MutexGuard<'_, ()>,
+    ) -> Result<ConfigUpdateGuard<'_>> {
+        if !self.try_start_config_update() {
+            anyhow::bail!("configuration update is already running");
+        }
+        Ok(ConfigUpdateGuard(self))
+    }
+
+    pub(crate) async fn update_config_in_patch(&self, _update: &ConfigUpdateGuard<'_>) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            anyhow::bail!("application is exiting");
+        }
+        self.set_last_update(Instant::now());
+        Config::generate().await?;
+        let outcome = self.validate_and_apply_draft().await?;
+        if outcome.is_valid() {
+            Ok(())
+        } else {
+            Err(anyhow!("{outcome}"))
+        }
+    }
+
+    pub async fn use_default_config(&self, status: NoticeStatus, message: &str) -> Result<()> {
         use crate::constants::files::RUNTIME_CONFIG;
 
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
@@ -145,7 +170,7 @@ impl CoreManager {
         });
 
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
-        handle::Handle::notice_message(error_key, error_msg);
+        handle::Handle::notice(status, message);
         Ok(())
     }
 
@@ -299,6 +324,14 @@ impl CoreManager {
 
     /// Validates and applies the caller's transaction, committing only on success.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
+        let outcome = self.validate_and_apply_draft().await?;
+        if outcome.is_valid() {
+            transaction.commit();
+        }
+        Ok(outcome)
+    }
+
+    async fn validate_and_apply_draft(&self) -> Result<ValidationOutcome> {
         // One serialization feeds check and run files; the core never applies unvalidated bytes.
         let yaml = Config::runtime_config_yaml().await?;
         let outcome = CoreConfigValidator::global()
@@ -310,7 +343,6 @@ impl CoreManager {
 
         let run_path = Config::write_runtime_file(&yaml).await?;
         self.apply_config(run_path).await?;
-        transaction.commit();
         Ok(ValidationOutcome::Valid)
     }
 

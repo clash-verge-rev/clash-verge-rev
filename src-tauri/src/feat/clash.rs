@@ -1,3 +1,5 @@
+use crate::core::notify::NoticeStatus;
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, MixedPort},
     core::{CoreManager, handle, tray},
@@ -26,11 +28,11 @@ static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
 pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
         Ok(_) => {
-            handle::Handle::refresh_clash();
-            handle::Handle::notice_message("set_config::ok", "ok");
+            announce(Refresh::Clash);
+            handle::Handle::notice(NoticeStatus::SetConfigOk, "ok");
         }
         Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err:#}"));
+            handle::Handle::notice(NoticeStatus::SetConfigError, format!("{err:#}"));
             logging!(error, Type::Core, "restart core failed: {err:#}");
         }
     }
@@ -53,8 +55,8 @@ pub async fn restart_app() {
 
     if !cleanup_result.core_stopped {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "app_restart::core_stop_failed",
+        handle::Handle::notice(
+            NoticeStatus::AppRestartCoreStopFailed,
             cleanup_result.stop_error.unwrap_or_default(),
         );
         return;
@@ -95,7 +97,7 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
     let clash_data = clash.data_arc();
     if clash_data.save_config().await.is_ok() {
-        handle::Handle::refresh_clash();
+        announce(Refresh::Clash);
         tray::Tray::global().update_menu_and_icon().await;
     }
 

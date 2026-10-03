@@ -1,7 +1,7 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, MixedPort},
-    module::lightweight,
+    core::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
 };
@@ -54,20 +54,34 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
         .context("failed to initialize singleton lock")?;
     if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
-        loop {
-            if std::time::Instant::now() >= deadline {
-                bail!("another app instance is starting");
-            }
-            // Retry the lock: during restart, the old server stops before releasing it.
-            if try_lock_instance(&lock).context("failed to acquire singleton lock")? {
-                break;
-            }
-            if let Ok(record) = read_instance_record(&record_path)
-                && notify_existing_instance(&record).await
-            {
-                return Ok(SingletonDisposition::Secondary);
-            }
-            tokio::time::sleep(Duration::from_millis(50)).await;
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let secondary = retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add(400),
+                Duration::from_millis(50),
+            ),
+            |_| async {
+                if std::time::Instant::now() >= deadline {
+                    return Err(RetryError::Stop(anyhow::anyhow!("another app instance is starting")));
+                }
+                // A restarting primary releases the lock after spawning us, with its server down.
+                if try_lock_instance(&lock)
+                    .context("failed to acquire singleton lock")
+                    .map_err(RetryError::Stop)?
+                {
+                    return Ok(false);
+                }
+                if let Ok(record) = read_instance_record(&record_path)
+                    && notify_existing_instance(&record).await
+                {
+                    return Ok(true);
+                }
+                Err(RetryError::Retry(anyhow::anyhow!("another app instance is starting")))
+            },
+        )
+        .await?;
+        if secondary {
+            return Ok(SingletonDisposition::Secondary);
         }
     }
 

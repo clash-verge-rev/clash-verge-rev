@@ -388,12 +388,14 @@ impl SilentUpdater {
 
         // The new webview may not accept evaluation immediately.
         std::thread::spawn(move || {
-            for i in 0..10 {
-                std::thread::sleep(std::time::Duration::from_millis(100 * (i + 1)));
-                if window.eval(&js).is_ok() {
-                    return;
-                }
-            }
+            use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+            let _ = retry_sync(
+                RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(9), std::time::Duration::ZERO),
+                |index| {
+                    std::thread::sleep(std::time::Duration::from_millis(100 * (index as u64 + 1)));
+                    window.eval(&js).map_err(RetryError::Retry)
+                },
+            );
         });
 
         logging!(info, Type::System, "Update splash window shown");
@@ -447,8 +449,8 @@ impl SilentUpdater {
                 Type::System,
                 "Silent updater: breaking change detected in v{version}, notifying frontend"
             );
-            super::handle::Handle::notice_message(
-                "info",
+            super::handle::Handle::notice(
+                super::notify::NoticeStatus::Info,
                 format!("New version v{version} contains breaking changes. Please update manually."),
             );
             return Ok(());
@@ -488,6 +490,7 @@ impl SilentUpdater {
     }
 
     pub async fn start_background_check(&self, app_handle: tauri::AppHandle) {
+        // Permanent watcher: daily update cycles for the lifetime of the app.
         logging!(info, Type::System, "Silent updater: background task started");
 
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;
