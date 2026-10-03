@@ -244,7 +244,7 @@ impl CoreManager {
     pub(crate) fn invalidate_core_readiness(&self) {
         let _ = self
             .core_readiness_state
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |current| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |current| {
                 active_core_readiness_generation(current).map(inactive_core_readiness_state)
             });
     }
