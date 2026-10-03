@@ -172,7 +172,10 @@ const DEFAULT_DNS_CONFIG = {
     'https://dns.alidns.com/dns-query',
   ],
   fallback: [],
-  'nameserver-policy': {},
+  'nameserver-policy': {
+    '+.local': 'system',
+    '+.lan': 'system',
+  },
   'proxy-server-nameserver': [],
   'direct-nameserver': [],
   'direct-nameserver-follow-policy': false,
