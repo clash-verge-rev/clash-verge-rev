@@ -19,8 +19,8 @@ use std::{
 use anyhow::{Context as _, Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use std::sync::LazyLock;
 use tokio::sync::Notify;
 
 #[cfg(test)]
@@ -35,7 +35,7 @@ use health::StoredService;
 use probe::{CurrentServiceProbe, classify_service_health, probe_outcome};
 
 /// The process-wide Run State, observing the real machine.
-pub static RUN_STATE: Lazy<RunStateStore<RealEnv>> = Lazy::new(|| RunStateStore::new(RealEnv));
+pub static RUN_STATE: LazyLock<RunStateStore<RealEnv>> = LazyLock::new(|| RunStateStore::new(RealEnv));
 
 /// Distinguishes silence from a reply that updated Service health with a rejection.
 #[derive(Debug)]

@@ -7,8 +7,8 @@ use crate::{
 use anyhow::Result;
 use chrono::Local;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
+use std::sync::OnceLock;
 use std::{
     path::PathBuf,
     sync::{
@@ -92,7 +92,7 @@ pub struct AutoBackupManager {
 
 impl AutoBackupManager {
     pub fn global() -> &'static Self {
-        static INSTANCE: OnceCell<AutoBackupManager> = OnceCell::new();
+        static INSTANCE: OnceLock<AutoBackupManager> = OnceLock::new();
         INSTANCE.get_or_init(|| {
             let (tx, _rx) = watch::channel(AutoBackupSettings::default());
             Self {
