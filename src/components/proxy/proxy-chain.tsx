@@ -51,7 +51,11 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
+import {
+  isProxyChainConnected,
+  rebindProxyChainItems,
+  type ProxyChainItem,
+} from './proxy-chain-model'
 
 const chainPointerSensor = PointerSensor.configure({
   activationConstraints: () => undefined,
@@ -336,7 +340,8 @@ export const ProxyChain = ({
   const chainWarning = t('proxies.page.chain.warning')
   const { proxyView } = useProxiesData()
   const { refreshProxy } = useAppRefreshers()
-  const { data: runtimeConfig } = useRuntimeConfig(true)
+  const { data: runtimeConfig, refetch: refreshRuntimeConfig } =
+    useRuntimeConfig(true)
   const [isConnecting, setIsConnecting] = useState(false)
   const recordSelection = useRecordSelection()
   const markUnsavedChanges = useCallback(() => {
@@ -370,30 +375,17 @@ export const ProxyChain = ({
   )
 
   const isConnected = useMemo(() => {
-    if (!proxyView || currentProxyChain.length === 0) {
-      return false
-    }
+    const selectedExit =
+      mode === 'global'
+        ? proxyView?.global?.now
+        : proxyView?.groups.find((group) => group.name === selectedGroup)?.now
 
-    const lastNode = currentProxyChain[currentProxyChain.length - 1]
-    if (localStorage.getItem('proxy-chain-exit-node') === lastNode.name) {
-      return true
-    }
-    if (currentProxyChain.length < 2) return false
-
-    if (mode === 'global') {
-      return proxyView.global?.now === lastNode.name
-    }
-
-    if (!selectedGroup) {
-      return false
-    }
-
-    const proxyChainGroup = proxyView.groups.find(
-      (group) => group.name === selectedGroup,
+    return isProxyChainConnected(
+      currentProxyChain,
+      selectedExit,
+      (runtimeConfig as RuntimeConfigWithProxySequence | null)?.proxies,
     )
-
-    return proxyChainGroup?.now === lastNode.name
-  }, [proxyView, currentProxyChain, mode, selectedGroup])
+  }, [proxyView, currentProxyChain, mode, selectedGroup, runtimeConfig])
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(currentProxyChain.length)
@@ -472,7 +464,7 @@ export const ProxyChain = ({
         localStorage.removeItem('proxy-chain-items')
 
         await closeAllConnections()
-        await refreshProxy()
+        await Promise.all([refreshProxy(), refreshRuntimeConfig()])
 
         onUpdateChain([])
       } catch (error) {
@@ -524,7 +516,7 @@ export const ProxyChain = ({
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
       // 刷新代理信息以更新连接状态
-      refreshProxy()
+      await Promise.all([refreshProxy(), refreshRuntimeConfig()])
       debugLog('Successfully connected to proxy chain')
     } catch (error) {
       console.error('Failed to connect to proxy chain:', error)
@@ -537,6 +529,7 @@ export const ProxyChain = ({
     isConnected,
     t,
     refreshProxy,
+    refreshRuntimeConfig,
     mode,
     proxyView,
     selectedGroup,
