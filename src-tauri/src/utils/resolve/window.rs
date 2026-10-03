@@ -97,6 +97,15 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
         logging_error!(Type::Window, window.show());
         logging_error!(Type::Window, window.set_focus());
+
+        // Wayland/KWin imposes server-side decorations despite `decorations(false)`
+        // at build time, leaving the native titlebar buttons with a stale input
+        // region at first show. Re-issue the request after show so the
+        // compositor drops SSD (or at least refreshes its input region).
+        #[cfg(target_os = "linux")]
+        {
+            logging_error!(Type::Window, window.set_decorations(false));
+        }
     });
 
     if let Some(theme) = resolved_theme {
