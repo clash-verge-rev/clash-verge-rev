@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useEditorDocument } from '@/hooks/use-editor-document'
 import { viewProfile, readProfileFile, saveProfileFile } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 import { EnhanceHint } from './enhance-hint'
@@ -63,7 +64,10 @@ export const ProfileMore = (props: Props) => {
   const onOpenFile = useLockFn(async () => {
     setAnchorEl(null)
     try {
-      await viewProfile(id)
+      await mutate(() => viewProfile(id), {
+        id: 'view-profile',
+        errorNotice: false,
+      })
     } catch (err) {
       showNotice.error(err)
     }
@@ -96,7 +100,11 @@ export const ProfileMore = (props: Props) => {
 
   const handleSave = useLockFn(async () => {
     const currentValue = document.value
-    if (!(await saveProfileFile(id, currentValue))) {
+    const result = await mutate(() => saveProfileFile(id, currentValue), {
+      id: `save-profile-file:${id}`,
+      errorNotice: false,
+    })
+    if (!(result.ok && result.value === true)) {
       await document.reload()
       return
     }

@@ -3,10 +3,10 @@ pub use announce::{Refresh, after_commit, announce};
 pub mod desktop;
 pub mod handle;
 pub mod notification;
+pub use notification::frontend_wire_contract;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 pub enum NoticeStatus {
-    // dead send: no frontend handler
     #[serde(rename = "info")]
     Info,
     #[serde(rename = "import_sub_url::ok")]
@@ -77,33 +77,48 @@ pub enum NoticeStatus {
     MixedPortFallback,
     #[serde(rename = "mixed_port::fallback_error")]
     MixedPortFallbackError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::core_change")]
-    ConfigValidateCoreChange,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::stdout_error")]
-    ConfigValidateStdoutError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::yaml_key_error")]
-    ConfigValidateYamlKeyError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::yaml_error")]
-    ConfigValidateYamlError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::merge_key_error")]
-    ConfigValidateMergeKeyError,
-    // dead listener: frontend handler retained
-    #[allow(dead_code)]
-    #[serde(rename = "config_validate::merge_error")]
-    ConfigValidateMergeError,
-    // dead send: no frontend handler
-    #[serde(rename = "set_config::ok")]
-    SetConfigOk,
+}
+
+impl NoticeStatus {
+    /// Every variant in golden order. The wire-contract export and the golden
+    /// test both derive their variant list from here; expected strings stay
+    /// hand-written in the test so renames cannot slip through.
+    pub const ALL: [Self; 34] = [
+        Self::Info,
+        Self::ImportSubUrlOk,
+        Self::ImportSubUrlError,
+        Self::SetConfigError,
+        Self::CoreStartError,
+        Self::ServiceCoreRepairRequired,
+        Self::ServiceCoreAppDataNotOwned,
+        Self::ServiceCoreSidecarFallback,
+        Self::DnsOverrideAutoDisabled,
+        Self::EnhanceDiscardedKeys,
+        Self::TunModeAutoDisabled,
+        Self::TunModeAutoDisableFailed,
+        Self::AppRestartCoreStopFailed,
+        Self::AppQuitCoreStopFailed,
+        Self::UpdateWithClashProxy,
+        Self::UpdateFailedEvenWithClash,
+        Self::ReactivateProfilesError,
+        Self::UpdateFailed,
+        Self::ConfigValidateBootError,
+        Self::ConfigValidateError,
+        Self::ConfigValidateProcessTerminated,
+        Self::ConfigValidateScriptError,
+        Self::ConfigValidateScriptSyntaxError,
+        Self::ConfigValidateScriptMissingMain,
+        Self::ConfigValidateFileNotFound,
+        Self::ConfigValidateYamlSyntaxError,
+        Self::ConfigValidateYamlReadError,
+        Self::ConfigValidateYamlMappingError,
+        Self::ConfigValidateMergeSyntaxError,
+        Self::ConfigValidateMergeMappingError,
+        Self::ConfigCoreChangeSuccess,
+        Self::ConfigCoreChangeError,
+        Self::MixedPortFallback,
+        Self::MixedPortFallbackError,
+    ];
 }
 
 #[cfg(test)]
@@ -112,49 +127,7 @@ mod tests {
 
     #[test]
     fn notice_status_wire_contract() -> Result<(), serde_json::Error> {
-        let statuses = [
-            NoticeStatus::Info,
-            NoticeStatus::ImportSubUrlOk,
-            NoticeStatus::ImportSubUrlError,
-            NoticeStatus::SetConfigError,
-            NoticeStatus::CoreStartError,
-            NoticeStatus::ServiceCoreRepairRequired,
-            NoticeStatus::ServiceCoreAppDataNotOwned,
-            NoticeStatus::ServiceCoreSidecarFallback,
-            NoticeStatus::DnsOverrideAutoDisabled,
-            NoticeStatus::EnhanceDiscardedKeys,
-            NoticeStatus::TunModeAutoDisabled,
-            NoticeStatus::TunModeAutoDisableFailed,
-            NoticeStatus::AppRestartCoreStopFailed,
-            NoticeStatus::AppQuitCoreStopFailed,
-            NoticeStatus::UpdateWithClashProxy,
-            NoticeStatus::UpdateFailedEvenWithClash,
-            NoticeStatus::ReactivateProfilesError,
-            NoticeStatus::UpdateFailed,
-            NoticeStatus::ConfigValidateBootError,
-            NoticeStatus::ConfigValidateError,
-            NoticeStatus::ConfigValidateProcessTerminated,
-            NoticeStatus::ConfigValidateScriptError,
-            NoticeStatus::ConfigValidateScriptSyntaxError,
-            NoticeStatus::ConfigValidateScriptMissingMain,
-            NoticeStatus::ConfigValidateFileNotFound,
-            NoticeStatus::ConfigValidateYamlSyntaxError,
-            NoticeStatus::ConfigValidateYamlReadError,
-            NoticeStatus::ConfigValidateYamlMappingError,
-            NoticeStatus::ConfigValidateMergeSyntaxError,
-            NoticeStatus::ConfigValidateMergeMappingError,
-            NoticeStatus::ConfigCoreChangeSuccess,
-            NoticeStatus::ConfigCoreChangeError,
-            NoticeStatus::MixedPortFallback,
-            NoticeStatus::MixedPortFallbackError,
-            NoticeStatus::ConfigValidateCoreChange,
-            NoticeStatus::ConfigValidateStdoutError,
-            NoticeStatus::ConfigValidateYamlKeyError,
-            NoticeStatus::ConfigValidateYamlError,
-            NoticeStatus::ConfigValidateMergeKeyError,
-            NoticeStatus::ConfigValidateMergeError,
-            NoticeStatus::SetConfigOk,
-        ];
+        let statuses = NoticeStatus::ALL;
         let expected = [
             "info",
             "import_sub_url::ok",
@@ -190,13 +163,6 @@ mod tests {
             "config_core::change_error",
             "mixed_port::fallback",
             "mixed_port::fallback_error",
-            "config_validate::core_change",
-            "config_validate::stdout_error",
-            "config_validate::yaml_key_error",
-            "config_validate::yaml_error",
-            "config_validate::merge_key_error",
-            "config_validate::merge_error",
-            "set_config::ok",
         ];
         let actual: Vec<_> = statuses
             .into_iter()

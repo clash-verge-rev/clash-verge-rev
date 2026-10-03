@@ -15,7 +15,8 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, Switch } from '@/components/base'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useVerge } from '@/hooks/use-verge'
-import { saveProxyPorts } from '@/services/cmds'
+import { saveProxyPorts, type ProxyPortSettings } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -57,22 +58,31 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   )
 
   // 添加保存请求，防止GUI卡死
-  const { loading, runAsync: saveSettings } = useRequest(saveProxyPorts, {
-    manual: true,
-    onSuccess: (outcome) => {
-      if (outcome.status === 'conflict') {
-        showNotice.error('settings.modals.clashPort.messages.portInUse', {
-          port: outcome.port,
-        })
-        return
-      }
-      setOpen(false)
-      showNotice.success('settings.modals.clashPort.messages.saved')
+  const { loading, runAsync: saveSettings } = useRequest(
+    async (settings: ProxyPortSettings) =>
+      mutate(() => saveProxyPorts(settings), {
+        id: 'save-proxy-ports',
+        errorNotice: false,
+      }),
+    {
+      manual: true,
+      onSuccess: (result) => {
+        if (!result.ok) return
+        const outcome = result.value
+        if (outcome.status === 'conflict') {
+          showNotice.error('settings.modals.clashPort.messages.portInUse', {
+            port: outcome.port,
+          })
+          return
+        }
+        setOpen(false)
+        showNotice.success('settings.modals.clashPort.messages.saved')
+      },
+      onError: (error) => {
+        showNotice.error('settings.modals.clashPort.messages.saveFailed', error)
+      },
     },
-    onError: (error) => {
-      showNotice.error('settings.modals.clashPort.messages.saveFailed', error)
-    },
-  })
+  )
 
   useImperativeHandle(ref, () => ({
     open: () => {

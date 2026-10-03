@@ -8,9 +8,13 @@ import {
   type RunState,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-import { useQuery } from '@/services/query-client'
 
 import { ServiceMigrationDialog } from './service-migration-dialog'
+
+const store = vi.hoisted(() => ({
+  dispatch: vi.fn(),
+  runState: null as RunState | null,
+}))
 
 vi.mock('react', () => ({ useState: vi.fn() }))
 vi.mock('react-i18next', () => ({
@@ -18,8 +22,10 @@ vi.mock('react-i18next', () => ({
 }))
 vi.mock('@mui/material', () => ({ Alert: 'div' }))
 vi.mock('@/components/base', () => ({ BaseDialog: 'dialog' }))
-vi.mock('@/hooks/use-visibility', () => ({ useVisibility: () => true }))
-vi.mock('@/hooks/use-system-state', () => ({ runStateQueryKey: ['state'] }))
+vi.mock('@/store/app-store-context', () => ({
+  useAppDispatch: () => store.dispatch,
+  useRunState: () => store.runState,
+}))
 vi.mock('@/services/cmds', () => ({
   getRuntimeState: vi.fn(),
   installService: vi.fn(),
@@ -28,13 +34,10 @@ vi.mock('@/services/cmds', () => ({
 vi.mock('@/services/notice-service', () => ({
   showNotice: { warning: vi.fn(), error: vi.fn(), success: vi.fn() },
 }))
-vi.mock('@/services/query-client', () => ({
-  useQuery: vi.fn(),
-  setCacheData: vi.fn(),
-}))
 
 beforeEach(() => {
   vi.clearAllMocks()
+  store.runState = null
   vi.mocked(useState)
     .mockReturnValueOnce([false, vi.fn()])
     .mockReturnValueOnce([false, vi.fn()])
@@ -50,9 +53,7 @@ it.each([
 ] satisfies Partial<RunState>[])(
   'does not offer Sidecar continuation from %j',
   (state) => {
-    vi.mocked(useQuery).mockReturnValue({ data: state } as ReturnType<
-      typeof useQuery
-    >)
+    store.runState = state as unknown as RunState
     const dialog = ServiceMigrationDialog()
     expect(dialog.props.open).toBe(true)
     expect(dialog.props.disableCancel).toBe(true)
@@ -60,9 +61,10 @@ it.each([
 )
 
 it('reports the permission refusal and finishes after installation falls back to Sidecar', async () => {
-  vi.mocked(useQuery).mockReturnValue({
-    data: { service: 'notInstalled', mode: 'NotRunning' },
-  } as ReturnType<typeof useQuery>)
+  store.runState = {
+    service: 'notInstalled',
+    mode: 'NotRunning',
+  } as unknown as RunState
   const reason = 'core path C:\\ is writable by Everyone'
   vi.mocked(installService).mockResolvedValue({ status: 'sidecar', reason })
   vi.mocked(getRuntimeState).mockResolvedValue({
@@ -98,9 +100,7 @@ it.each([
 ] satisfies Partial<RunState>[])(
   'offers Sidecar continuation from %j',
   (state) => {
-    vi.mocked(useQuery).mockReturnValue({ data: state } as ReturnType<
-      typeof useQuery
-    >)
+    store.runState = state as unknown as RunState
     expect(ServiceMigrationDialog().props.disableCancel).toBe(false)
   },
 )

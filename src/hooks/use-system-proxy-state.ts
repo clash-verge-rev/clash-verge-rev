@@ -9,6 +9,7 @@ import {
   getEmbeddedServerPort,
   patchVergeConfig,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import {
   removeCacheData,
   revalidateQueries,
@@ -64,10 +65,16 @@ export const useSystemProxyState = () => {
       while (pendingRef.current !== null) {
         const target = pendingRef.current
         pendingRef.current = null
-        await patchVergeConfig({ enable_system_proxy: target })
+        await mutate(() => patchVergeConfig({ enable_system_proxy: target }), {
+          id: 'toggle-system-proxy',
+          errorNotice: false,
+        })
         confirmed = target
         if (!target && verge?.auto_close_connection) {
-          await closeAllConnections().catch(() => {})
+          await mutate(() => closeAllConnections(), {
+            id: 'close-all-connections',
+            errorNotice: false,
+          }).catch(() => {})
         }
       }
     } catch (error) {

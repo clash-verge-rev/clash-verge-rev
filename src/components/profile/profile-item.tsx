@@ -39,8 +39,12 @@ import {
   updateProfile,
   viewProfile,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
-import { useLoadingCache, useSetLoadingCache } from '@/services/states'
+import {
+  useProfileLoadingCache,
+  useSetProfileLoading,
+} from '@/store/app-store-context'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import { debugLog } from '@/utils/debug'
 import { isValidUrl } from '@/utils/network'
@@ -105,8 +109,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [position, setPosition] = useState({ left: 0, top: 0 })
-  const loadingCache = useLoadingCache()
-  const setLoadingCache = useSetLoadingCache()
+  const loadingCache = useProfileLoadingCache()
+  const setProfileLoading = useSetProfileLoading()
 
   const [showNextUpdate, setShowNextUpdate] = useState(false)
   const showNextUpdateRef = useRef(false)
@@ -116,17 +120,9 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   )
   const setLoading = useCallback(
     (loading: boolean) => {
-      setLoadingCache((cache) => {
-        const next = new Set(cache)
-        if (loading) {
-          next.add(itemData.uid)
-        } else {
-          next.delete(itemData.uid)
-        }
-        return next
-      })
+      setProfileLoading([itemData.uid], loading)
     },
-    [itemData.uid, setLoadingCache],
+    [itemData.uid, setProfileLoading],
   )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
@@ -374,7 +370,10 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const onOpenFile = useLockFn(async () => {
     setAnchorEl(null)
     try {
-      await viewProfile(itemData.uid)
+      await mutate(() => viewProfile(itemData.uid), {
+        id: 'view-profile',
+        errorNotice: false,
+      })
     } catch (err) {
       showNotice.error(err)
     }
@@ -403,7 +402,10 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
     try {
       const payload = Object.keys(option).length > 0 ? option : undefined
-      await updateProfile(itemData.uid, payload)
+      await mutate(() => updateProfile(itemData.uid, payload), {
+        id: `update-profile:${itemData.uid}`,
+        errorNotice: false,
+      })
 
       void mutateProfiles()
     } catch {
@@ -591,7 +593,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value
-    if (!(await saveProfileFile(uid, currentValue))) {
+    const result = await mutate(() => saveProfileFile(uid, currentValue), {
+      id: `save-profile-file:${uid}`,
+      errorNotice: false,
+    })
+    if (!(result.ok && result.value === true)) {
       await profileDocument.reload()
       return
     }
@@ -602,7 +608,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const handleSaveMergeDocument = useLockFn(async () => {
     const mergeUid = option?.merge ?? ''
     const currentValue = mergeDocument.value
-    if (!(await saveProfileFile(mergeUid, currentValue))) {
+    const result = await mutate(() => saveProfileFile(mergeUid, currentValue), {
+      id: `save-profile-file:${mergeUid}`,
+      errorNotice: false,
+    })
+    if (!(result.ok && result.value === true)) {
       await mergeDocument.reload()
       return
     }
@@ -613,7 +623,14 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const handleSaveScriptDocument = useLockFn(async () => {
     const scriptUid = option?.script ?? ''
     const currentValue = scriptDocument.value
-    if (!(await saveProfileFile(scriptUid, currentValue))) {
+    const result = await mutate(
+      () => saveProfileFile(scriptUid, currentValue),
+      {
+        id: `save-profile-file:${scriptUid}`,
+        errorNotice: false,
+      },
+    )
+    if (!(result.ok && result.value === true)) {
       await scriptDocument.reload()
       return
     }

@@ -16,6 +16,7 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
 import { restartApp } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 import { openExternalUrl } from '@/utils/open-external-url'
@@ -270,8 +271,14 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
 
     try {
-      await updateInfo.downloadAndInstall(onDownloadEvent)
-      await restartApp()
+      await mutate(() => updateInfo.downloadAndInstall(onDownloadEvent), {
+        id: 'install-app-update',
+        errorNotice: false,
+      })
+      await mutate(() => restartApp(), {
+        id: 'restart-app',
+        errorNotice: false,
+      })
     } catch (err: any) {
       showNotice.error(err)
     } finally {

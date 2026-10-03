@@ -13,6 +13,7 @@ import {
   openDevTools,
   openLogsDir,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { checkUpdateSafe as checkUpdate } from '@/services/update'
 import { version } from '@root/package.json'
@@ -61,7 +62,10 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   }
 
   const onExportDiagnosticInfo = useCallback(async () => {
-    await exportDiagnosticInfo()
+    await mutate(() => exportDiagnosticInfo(), {
+      id: 'export-diagnostic-info',
+      errorNotice: false,
+    })
     showNotice.success('shared.feedback.notifications.common.copySuccess', 1000)
   }, [])
 
@@ -128,7 +132,12 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
-        onClick={openDevTools}
+        onClick={() => {
+          void mutate(() => openDevTools(), {
+            id: 'open-devtools',
+            errorNotice: false,
+          }).catch(() => {})
+        }}
         label={t('settings.components.verge.advanced.fields.openDevTools')}
       />
 
@@ -145,7 +154,10 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
       <SettingItem
         onClick={() => {
-          exitApp()
+          void mutate(() => exitApp(), {
+            id: 'exit-app',
+            errorNotice: false,
+          }).catch(() => {})
         }}
         label={t('settings.components.verge.advanced.fields.exit')}
       />
