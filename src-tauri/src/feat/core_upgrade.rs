@@ -75,9 +75,22 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     // A hard link keeps the previous core reachable without touching the inode the running
     // core executes from, so publishing below stays one atomic rename.
     let rollback = target.with_file_name(format!(".{core}.rollback"));
-    let _ = std::fs::remove_file(&rollback);
-    // Nothing to roll back to when the core we are replacing could not report a version.
-    let restorable = !installed.is_empty() && std::fs::hard_link(&target, &rollback).is_ok();
+    // A failed backup must never turn a working installation into an unprotected upgrade.
+    let restorable = !installed.is_empty();
+    if restorable {
+        backup_core(&target, &rollback)
+            .with_context(|| format!("failed to back up the core to {}", rollback.display()))?;
+        #[cfg(windows)]
+        {
+            // A previous .old is redundant only after the working core has a fresh backup.
+            let displaced = target.with_extension("old");
+            match std::fs::remove_file(&displaced) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error).with_context(|| format!("failed to clear {}", displaced.display())),
+            }
+        }
+    }
 
     // Decided before anything can crash: after a failed restart the mode reads NotRunning, which
     // says nothing about whether this upgrade went through the Service.
@@ -112,10 +125,13 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
         // new core also restores: leaving the new file would make a retry read the new version
         // and report nothing to do while the service keeps running the old core.
         let core_is_down = matches!(*CoreManager::global().get_running_mode(), RunningMode::NotRunning);
-        if restorable
-            && (matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists())
-            && std::fs::rename(&rollback, &target).is_ok()
-        {
+        if restorable && (matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists()) {
+            if let Err(restore_error) = restore_core(&target, &rollback) {
+                return Err(error.context(format!(
+                    "failed to restore core; backup retained at {}: {restore_error:#}",
+                    rollback.display()
+                )));
+            }
             logging!(warn, Type::Core, "core upgrade: rolled back to {installed:?}");
             // Only a staging that SUCCEEDED left the failing bytes in the approved copy, and only
             // then must the restore reach it too — otherwise the restart below would spawn the
@@ -126,26 +142,24 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
             if matches!(service_staging, ServiceStaging::Succeeded)
                 && let Err(stage_error) = crate::core::service::stage_approved_core(&target)
             {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "core upgrade: could not restore the service copy: {stage_error:#}"
-                );
+                return Err(error.context(format!(
+                    "could not restore the service copy; backup retained at {}: {stage_error:#}",
+                    rollback.display()
+                )));
             }
-            if core_is_down {
-                let _ = CoreManager::global().restart_core().await;
+            if core_is_down && let Err(restart_error) = CoreManager::global().restart_core().await {
+                return Err(error.context(format!(
+                    "restored core failed to restart; backup retained at {}: {restart_error:#}",
+                    rollback.display()
+                )));
             }
-        }
-        // Renaming one hard link over the other succeeds without consuming the name.
-        let _ = std::fs::remove_file(&rollback);
-        // Redundant once the rollback link exists; without one it is the only copy left.
-        #[cfg(windows)]
-        if restorable {
-            let _ = std::fs::remove_file(target.with_extension("old"));
+            let _ = std::fs::remove_file(&rollback);
         }
         return Err(error);
     }
-    let _ = std::fs::remove_file(&rollback);
+    if restorable {
+        let _ = std::fs::remove_file(&rollback);
+    }
     // The displaced core could not be deleted while it was still executing.
     #[cfg(windows)]
     let _ = std::fs::remove_file(target.with_extension("old"));
@@ -179,6 +193,64 @@ fn managed_core_path(core: &str) -> Result<PathBuf> {
         .context("failed to locate the current executable")?
         .with_file_name(format!("{core}{extension}"));
     Ok(path)
+}
+
+pub(crate) async fn recover_core_on_startup() -> Result<()> {
+    let _serialized = UPGRADE_LOCK.lock().await;
+    let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    let target = managed_core_path(&core)?;
+    recover_core(&target, &core)
+}
+
+fn recover_core(target: &Path, core: &str) -> Result<()> {
+    if read_core_version(target).is_ok() {
+        return Ok(());
+    }
+    let directory = target.parent().context("the managed core has no parent directory")?;
+    let name = target.file_name().context("the managed core has no file name")?;
+    let candidates = [
+        directory.join(format!(".{core}.rollback")),
+        target.with_extension("old"),
+        directory.join("meta-backup").join(name),
+    ];
+    for backup in &candidates {
+        if read_core_version(backup).is_err() {
+            continue;
+        }
+        restore_core(target, backup)
+            .with_context(|| format!("failed to recover core; backup retained at {}", backup.display()))?;
+        logging!(warn, Type::Core, "Recovered core from {}", backup.display());
+        return Ok(());
+    }
+    // Let the normal startup path report its error when no usable backup exists.
+    Ok(())
+}
+
+fn restore_core(target: &Path, backup: &Path) -> Result<()> {
+    let directory = target.parent().context("the managed core has no parent directory")?;
+    let name = target.file_name().context("the managed core has no file name")?;
+    let (path, mut file) = create_staging_file(directory, name)?;
+    let staged = StagedCore { path };
+    let mut source = File::open(backup)?;
+    std::io::copy(&mut source, &mut file)?;
+    file.set_permissions(source.metadata()?.permissions())?;
+    file.sync_all()?;
+    drop(file);
+    read_core_version(&staged.path).context("the recovery copy is not runnable")?;
+    std::fs::rename(&staged.path, target).with_context(|| format!("failed to restore the core to {}", target.display()))
+}
+
+fn backup_core(target: &Path, rollback: &Path) -> Result<()> {
+    let directory = target.parent().context("the managed core has no parent directory")?;
+    let name = target.file_name().context("the managed core has no file name")?;
+    let (path, file) = create_staging_file(directory, name)?;
+    let staged = StagedCore { path };
+    drop(file);
+    std::fs::remove_file(&staged.path)?;
+    std::fs::hard_link(target, &staged.path)?;
+    // Keep an earlier recovery copy until its replacement is ready.
+    std::fs::rename(&staged.path, rollback)?;
+    Ok(())
 }
 
 /// Pins the package to the resolved version, so a release moving on mid-upgrade cannot 404.
@@ -409,7 +481,12 @@ impl StagedCore {
 
         // A running executable cannot be replaced on Windows, but it can be moved aside.
         let displaced = target.with_extension("old");
-        let _ = std::fs::remove_file(&displaced);
+        if displaced.try_exists()? {
+            bail!(
+                "cannot move the running core aside; existing backup retained at {}",
+                displaced.display()
+            );
+        }
         std::fs::rename(target, &displaced)
             .with_context(|| format!("failed to move the running core aside from {}", target.display()))?;
 
@@ -460,9 +537,13 @@ fn read_core_version(path: &Path) -> Result<std::string::String> {
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout
-        .split_whitespace()
-        .nth(2)
+    let mut words = stdout.split_whitespace();
+    if words.next() != Some("Mihomo") || words.next() != Some("Meta") {
+        bail!("unexpected version output from {}: {stdout}", path.display());
+    }
+    words
+        .next()
+        .filter(|version| is_usable_version(version))
         .map(str::to_owned)
         .with_context(|| format!("unexpected version output from {}: {stdout}", path.display()))
 }
@@ -498,5 +579,100 @@ mod tests {
             "{release}"
         );
         assert!(alpha.contains("/Prerelease-Alpha/"), "{alpha}");
+    }
+}
+
+#[cfg(all(test, unix))]
+mod recovery_tests {
+    use super::{STAGING_GENERATION, backup_core, read_core_version, recover_core, restore_core};
+    use anyhow::{Context as _, Result};
+    use std::{os::unix::fs::PermissionsExt as _, path::PathBuf, sync::atomic::Ordering};
+
+    struct Fixture(PathBuf);
+
+    impl Fixture {
+        fn new() -> Result<Self> {
+            let generation = STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
+            let path = std::env::temp_dir().join(format!("core-recovery-{}-{generation}", std::process::id()));
+            std::fs::create_dir(&path)?;
+            Ok(Self(path))
+        }
+
+        fn core(&self, name: &str) -> Result<PathBuf> {
+            let path = self.0.join(name);
+            std::fs::create_dir_all(path.parent().context("missing parent")?)?;
+            std::fs::write(&path, "#!/bin/sh\necho 'Mihomo Meta v1.19.30 test'\n")?;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755))?;
+            Ok(path)
+        }
+    }
+
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn backup_failure_preserves_existing_files() -> Result<()> {
+        let fixture = Fixture::new()?;
+        let target = fixture.core("verge-mihomo")?;
+        let backup = fixture.0.join(".verge-mihomo.rollback");
+        std::fs::create_dir(&backup)?;
+        assert!(backup_core(&target, &backup).is_err());
+        assert_eq!(read_core_version(&target)?, "v1.19.30");
+        assert!(backup.is_dir());
+        std::fs::remove_dir(&backup)?;
+        std::fs::rename(&target, &backup)?;
+        assert!(backup_core(&target, &backup).is_err());
+        assert_eq!(read_core_version(&backup)?, "v1.19.30");
+        Ok(())
+    }
+
+    #[test]
+    fn failed_restore_keeps_backup() -> Result<()> {
+        let fixture = Fixture::new()?;
+        let backup = fixture.core(".verge-mihomo.rollback")?;
+        let target = fixture.0.join("verge-mihomo");
+        std::fs::create_dir(&target)?;
+        assert!(restore_core(&target, &backup).is_err());
+        assert_eq!(read_core_version(&backup)?, "v1.19.30");
+        Ok(())
+    }
+
+    #[test]
+    fn startup_recovers_missing_and_empty_cores_from_each_backup() -> Result<()> {
+        for name in [".verge-mihomo.rollback", "verge-mihomo.old", "meta-backup/verge-mihomo"] {
+            for empty in [false, true] {
+                let fixture = Fixture::new()?;
+                let backup = fixture.core(name)?;
+                let target = fixture.0.join("verge-mihomo");
+                if empty {
+                    std::fs::write(&target, [])?;
+                }
+                recover_core(&target, "verge-mihomo")?;
+                assert_eq!(read_core_version(&target)?, "v1.19.30");
+                assert!(backup.exists());
+                backup_core(&target, &fixture.0.join(".verge-mihomo.rollback"))?;
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn startup_preserves_healthy_core_and_skips_invalid_backup() -> Result<()> {
+        let fixture = Fixture::new()?;
+        let target = fixture.core("verge-mihomo")?;
+        let bytes = std::fs::read(&target)?;
+        std::fs::write(fixture.0.join(".verge-mihomo.rollback"), [])?;
+        recover_core(&target, "verge-mihomo")?;
+        assert_eq!(std::fs::read(&target)?, bytes);
+        std::fs::write(&target, [])?;
+        recover_core(&target, "verge-mihomo")?;
+        assert!(std::fs::read(&target)?.is_empty());
+        fixture.core("verge-mihomo.old")?;
+        recover_core(&target, "verge-mihomo")?;
+        assert_eq!(read_core_version(&target)?, "v1.19.30");
+        Ok(())
     }
 }
