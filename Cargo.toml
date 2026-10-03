@@ -63,13 +63,13 @@ tracing-estuary = { git = "https://github.com/Tunglies/tracing-estuary.git", bra
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 tracing = "0.1.44"
 
-tauri = { version = "2.11.6" }
-tauri-plugin-clipboard-manager = "2.3.3"
+tauri = { version = "2.12.1" }
+tauri-plugin-clipboard-manager = "2.4.1"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
-tokio = { version = "1.53.1", features = [
+tokio = { version = "1.53.2", features = [
   "rt-multi-thread",
   "macros",
   "time",
