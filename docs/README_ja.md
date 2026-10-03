@@ -51,17 +51,17 @@ Windows (x64/x86)、Linux (x64/arm64)、macOS 10.15+ (Intel/Apple) をサポー�
 
 ## プロモーション
 
-#### [Doggygo VPN — 高性能グローバルアクセラレータ](https://verge.dginv.click/#/register?code=oaxsAGo6)
+#### [Doggygo VPN — 高性能グローバルアクセラレータ](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 - 無料トライアル、割引プラン、ストリーミング解放、世界初の Hysteria プロトコル対応を備えた高性能海外ネットワークサービス。
-- Clash Verge 専用リンクから登録すると、3 日間・1 日 1 GB の無料体験が利用できます。 [登録はこちら](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- Clash Verge 専用リンクから登録すると、3 日間・1 日 1 GB の無料体験が利用できます。 [登録はこちら](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 - Clash Verge 利用者限定 20% オフクーポン: `verge20`（先着 500 名）
 - 月額 15.8 元で 160 GB を利用できるプラン、年額契約ならさらに 20% オフ
 - 海外チーム運営による高信頼サービス、収益シェアは最大 50%
 - 負荷分散クラスタと高速専用回線（旧クライアント互換）、極低レイテンシで 4K も快適
 - 世界初の **QUIC プロトコル**対応。より高速な QUIC 系プロトコルを提供（Clash Verge クライアントとの相性抜群）
 - ストリーミングおよび ChatGPT の利用にも対応
-- 公式サイト: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- 公式サイト: [https://狗狗加速.com](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 ### 🤖 [GPTKefu — Crisp と深く統合された AI スマートカスタマーサービスプラットフォーム](https://gptkefu.com)
 
