@@ -34,7 +34,10 @@ async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str)
         SERVICE_MANAGER.handle_service_status(status).await
     };
     #[cfg(windows)]
-    return finish_service_installation(result, error_code, || manager.continue_with_sidecar()).await;
+    return finish_service_installation(result, error_code, |reason| async move {
+        manager.continue_with_sidecar(Some(&reason)).await
+    })
+    .await;
 
     #[cfg(not(windows))]
     result
@@ -49,7 +52,7 @@ async fn finish_service_installation<Fallback, FallbackFuture>(
     fallback: Fallback,
 ) -> CmdResult<ServiceInstallOutcome>
 where
-    Fallback: FnOnce() -> FallbackFuture,
+    Fallback: FnOnce(String) -> FallbackFuture,
     FallbackFuture: std::future::Future<Output = anyhow::Result<()>>,
 {
     let Err(error) = installation else {
@@ -72,12 +75,9 @@ where
         return Err(proxy_aware_coded_error(&error, error_code));
     }
     let reason = reasons.join("\n");
-    fallback().await.map_err(|error| {
-        proxy_aware_coded_error(
-            &error.context(format!("Service core rejected: {reason}; Sidecar fallback failed")),
-            "SERVICE_SIDECAR_FAILED",
-        )
-    })?;
+    fallback(reason.clone())
+        .await
+        .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))?;
     Ok(ServiceInstallOutcome::Sidecar { reason })
 }
 
@@ -107,9 +107,14 @@ pub async fn repair_service() -> CmdResult<ServiceInstallOutcome> {
 #[tauri::command]
 pub async fn continue_with_sidecar() -> CmdResult {
     crate::core::CoreManager::global()
-        .continue_with_sidecar()
+        .continue_with_sidecar(None)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))
+}
+
+#[tauri::command]
+pub fn get_sidecar_failure() -> crate::core::notification::SidecarFailureSnapshot {
+    crate::core::notification::sidecar_failure_snapshot()
 }
 
 #[tauri::command]
@@ -175,7 +180,7 @@ mod tests {
                 None => anyhow::anyhow!("{reason}"),
             }
             .context("install service failed");
-            let result = finish_service_installation(Err(error), "SERVICE_INSTALL_FAILED", || async {
+            let result = finish_service_installation(Err(error), "SERVICE_INSTALL_FAILED", |_| async {
                 fallback_called.set(true);
                 anyhow::ensure!(fallback_ready, "another core is running");
                 Ok(())
@@ -201,7 +206,6 @@ mod tests {
                     })
                 );
                 if rejected {
-                    assert!(error.detail.contains(reason));
                     assert!(error.detail.contains("another core is running"));
                 }
             }

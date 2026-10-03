@@ -1,4 +1,8 @@
-import type { PendingFailure, RunState } from '@/services/cmds'
+import type {
+  PendingFailure,
+  RunState,
+  SidecarFailureSnapshot,
+} from '@/services/cmds'
 
 /** Event-derived per-profile update tracking, shared by the profiles page and items. */
 export interface ProfileUpdatesState {
@@ -12,6 +16,7 @@ export interface AppStoreState {
   readonly runState: RunState | null
   /** Latest backend pending-failure snapshot; toasts/dialogs dedupe on sequence. */
   readonly pendingFailures: readonly PendingFailure[]
+  readonly sidecarFailure: SidecarFailureSnapshot | null
   readonly profileUpdates: ProfileUpdatesState
   /** Bumped once per test-all request; test items run their delay test per bump. */
   readonly testAllCounter: number
@@ -22,6 +27,7 @@ export interface AppStoreState {
 export const initialAppStoreState: AppStoreState = {
   runState: null,
   pendingFailures: [],
+  sidecarFailure: null,
   profileUpdates: {
     loading: new Set(),
     updateRevisions: new Map(),
@@ -34,6 +40,7 @@ export const initialAppStoreState: AppStoreState = {
 export type AppStoreAction =
   | { type: 'runState/loaded'; runState: RunState }
   | { type: 'pendingFailures/loaded'; failures: readonly PendingFailure[] }
+  | { type: 'sidecarFailure/loaded'; snapshot: SidecarFailureSnapshot }
   | { type: 'profileUpdate/started'; uid: string }
   | { type: 'profileUpdate/completed'; uid: string }
   | { type: 'profileUpdate/timerTick'; uid: string }
@@ -79,6 +86,14 @@ export function appStoreReducer(
       return { ...state, runState: action.runState }
     case 'pendingFailures/loaded':
       return { ...state, pendingFailures: action.failures }
+    case 'sidecarFailure/loaded':
+      if (
+        state.sidecarFailure &&
+        action.snapshot.revision <= state.sidecarFailure.revision
+      ) {
+        return state
+      }
+      return { ...state, sidecarFailure: action.snapshot }
     case 'profileUpdate/started':
       if (state.profileUpdates.loading.has(action.uid)) return state
       return withLoading(state, [action.uid], true)

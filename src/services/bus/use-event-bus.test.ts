@@ -28,6 +28,7 @@ vi.mock('@/store/app-store-context', () => ({
 }))
 vi.mock('@/services/cmds', () => ({
   getPendingFailures: vi.fn().mockResolvedValue([]),
+  getSidecarFailure: vi.fn().mockResolvedValue({ revision: 0, detail: null }),
   getRuntimeState: vi.fn().mockResolvedValue({ mode: 'NotRunning' }),
 }))
 vi.mock('@/services/query-client', () => ({ revalidateQueries: vi.fn() }))
@@ -85,5 +86,9 @@ it('drains event-only state only after every listener is registered', async () =
   expect(dispatch).toHaveBeenCalledWith({
     type: 'pendingFailures/loaded',
     failures: [],
+  })
+  expect(dispatch).toHaveBeenCalledWith({
+    type: 'sidecarFailure/loaded',
+    snapshot: { revision: 0, detail: null },
   })
 })

@@ -2,8 +2,11 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { PendingFailure } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
-import { usePendingFailureList } from '@/store/app-store-context'
+import { showNotice, syncSidecarFailure } from '@/services/notice-service'
+import {
+  usePendingFailureList,
+  useSidecarFailure,
+} from '@/store/app-store-context'
 
 /** Failures handled by the recovery dialog instead of a toast. */
 const CODES_SHOWN_AS_A_DIALOG = new Set<string>([
@@ -29,7 +32,12 @@ const windowIsWatched = async () => {
 /** Show each pending failure sequence once when the window can be read. */
 export const usePendingFailures = () => {
   const failures = usePendingFailureList()
+  const sidecarFailure = useSidecarFailure()
   const shownSequencesRef = useRef(new Map<string, number>())
+
+  useEffect(() => {
+    if (sidecarFailure) syncSidecarFailure(sidecarFailure)
+  }, [sidecarFailure])
 
   useEffect(() => {
     const asToast = failures.filter(

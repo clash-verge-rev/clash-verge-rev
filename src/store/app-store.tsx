@@ -1,7 +1,11 @@
 import { useEffect, useReducer } from 'react'
 import type { ReactNode } from 'react'
 
-import { getPendingFailures, getRuntimeState } from '@/services/cmds'
+import {
+  getPendingFailures,
+  getRuntimeState,
+  getSidecarFailure,
+} from '@/services/cmds'
 import { bindStoreDispatch } from '@/services/mutate'
 
 import { appStoreReducer, initialAppStoreState } from './app-state'
@@ -28,6 +32,13 @@ export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
         .catch(() => {})
     }
     const readPendingFailures = () => {
+      getSidecarFailure()
+        .then((snapshot) =>
+          dispatch({ type: 'sidecarFailure/loaded', snapshot }),
+        )
+        .catch((error) => {
+          console.warn('[app-store] Sidecar failure could not be read:', error)
+        })
       getPendingFailures()
         .then((failures) =>
           dispatch({ type: 'pendingFailures/loaded', failures }),

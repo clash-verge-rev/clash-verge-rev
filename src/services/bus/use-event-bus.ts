@@ -2,7 +2,11 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect } from 'react'
 
-import { getPendingFailures, getRuntimeState } from '@/services/cmds'
+import {
+  getPendingFailures,
+  getRuntimeState,
+  getSidecarFailure,
+} from '@/services/cmds'
 import { revalidateQueries } from '@/services/query-client'
 import { useAppDispatch } from '@/store/app-store-context'
 
@@ -23,6 +27,13 @@ export const useEventBus = (
       void revalidateQueries(keys.map((key) => [key]))
     }
     const readPendingFailures = () => {
+      getSidecarFailure()
+        .then((snapshot) =>
+          dispatch({ type: 'sidecarFailure/loaded', snapshot }),
+        )
+        .catch((error) => {
+          console.warn('[bus] Sidecar failure could not be read:', error)
+        })
       getPendingFailures()
         .then((failures) =>
           dispatch({ type: 'pendingFailures/loaded', failures }),
