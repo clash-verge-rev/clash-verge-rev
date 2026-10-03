@@ -334,6 +334,18 @@ enum HandoffOutcome {
     Failed,
 }
 
+fn report_sidecar_failure(error: anyhow::Error, service_rejection: Option<&str>) -> anyhow::Error {
+    let error = match service_rejection {
+        Some(reason) => error.context(format!("Service core rejected: {reason}; Sidecar fallback failed")),
+        None => error,
+    };
+    // Proxy failures have their own pending state and recovery dialog.
+    if SysproxyFailure::from_chain(&error).is_none() {
+        crate::core::notification::record_sidecar_failure(format!("{error:#}").into());
+    }
+    error
+}
+
 impl CoreManager {
     async fn rollback_failed_start(&self) {
         proxy_control::stop_guard().await;
@@ -364,9 +376,12 @@ impl CoreManager {
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(status = tracing::field::Empty, tun_disabled = false, readiness_generation = tracing::field::Empty))]
-    pub async fn continue_with_sidecar(&self) -> Result<()> {
+    pub async fn continue_with_sidecar(&self, service_rejection: Option<&str>) -> Result<()> {
         if !self.try_start_config_update() {
-            anyhow::bail!("configuration update is already running");
+            return Err(report_sidecar_failure(
+                anyhow::anyhow!("configuration update is already running"),
+                service_rejection,
+            ));
         }
         defer! {
             self.finish_config_update();
@@ -375,61 +390,66 @@ impl CoreManager {
         // draft without claiming it, so without this it can commit another transaction's staged patch.
         let config_write = Config::lock_config_write().await;
         let _life = self.lifecycle_lock.lock().await;
-        let status = SERVICE_MANAGER.current().await;
-        tracing::Span::current().record("status", tracing::field::debug(&status));
-        let mode = self.get_running_mode();
-        if !can_allow_sidecar_for_session(&mode, &status) {
-            anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
-        }
-        #[cfg(target_os = "windows")]
-        if matches!(*mode, RunningMode::NotRunning) {
-            clash_verge_service_ipc::execution::check_sidecar_available().await?;
-        }
-        if !matches!(status, ServiceStatus::SidecarAllowed) {
-            SERVICE_MANAGER.allow_sidecar_for_session()?;
-        }
-        // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
-        // Elevation alone carries TUN on Sidecar; a Sidecar that cannot must write it off.
-        let prepared = async {
-            let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
-            if crate::core::runstate::RUN_STATE
-                .state()
-                .tun_should_be_disabled(tun_enabled)
-            {
-                tracing::Span::current().record("tun_disabled", true);
-                Config::disable_tun_and_persist().await?;
-            }
-            Config::generate().await
-        }
-        .await;
-        drop(config_write);
-        if let Err(error) = prepared {
-            SERVICE_MANAGER.withdraw_sidecar_allowance();
-            return Err(error);
-        }
-        // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
-        proxy_control::stop_guard().await;
+        // Record failures before releasing the lifecycle lock, including preparation and rollback errors.
         let result = async {
-            self.start_core_inner().await?;
-            if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
-                || self.current_core_readiness_generation().is_none()
-            {
-                anyhow::bail!("Sidecar did not become ready");
+            let status = SERVICE_MANAGER.current().await;
+            tracing::Span::current().record("status", tracing::field::debug(&status));
+            let mode = self.get_running_mode();
+            if !can_allow_sidecar_for_session(&mode, &status) {
+                anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
             }
-            tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
-            self.apply_proxy_after_start().await
+            #[cfg(target_os = "windows")]
+            if matches!(*mode, RunningMode::NotRunning) {
+                clash_verge_service_ipc::execution::check_sidecar_available().await?;
+            }
+            if !matches!(status, ServiceStatus::SidecarAllowed) {
+                SERVICE_MANAGER.allow_sidecar_for_session()?;
+            }
+            // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
+            // Elevation alone carries TUN on Sidecar; a Sidecar that cannot must write it off.
+            let prepared = async {
+                let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+                if crate::core::runstate::RUN_STATE
+                    .state()
+                    .tun_should_be_disabled(tun_enabled)
+                {
+                    tracing::Span::current().record("tun_disabled", true);
+                    Config::disable_tun_and_persist().await?;
+                }
+                Config::generate().await
+            }
+            .await;
+            drop(config_write);
+            if let Err(error) = prepared {
+                SERVICE_MANAGER.withdraw_sidecar_allowance();
+                return Err(error);
+            }
+            // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
+            proxy_control::stop_guard().await;
+            let result = async {
+                self.start_core_inner().await?;
+                if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                    || self.current_core_readiness_generation().is_none()
+                {
+                    anyhow::bail!("Sidecar did not become ready");
+                }
+                tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
+                self.apply_proxy_after_start().await
+            }
+            .await;
+            if let Err(error) = result {
+                // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
+                SERVICE_MANAGER.withdraw_sidecar_allowance();
+                if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
+                    return Err(proxy_control::rollback_failure(error, cleanup_error)
+                        .context("failed to clear the proxy before rolling back"));
+                }
+                return Err(error);
+            }
+            Ok(())
         }
         .await;
-        if let Err(error) = result {
-            // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
-            SERVICE_MANAGER.withdraw_sidecar_allowance();
-            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
-                return Err(proxy_control::rollback_failure(error, cleanup_error)
-                    .context("failed to clear the proxy before rolling back"));
-            }
-            return Err(error);
-        }
-        Ok(())
+        result.map_err(|error| report_sidecar_failure(error, service_rejection))
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(readiness_generation = tracing::field::Empty))]
@@ -572,6 +592,7 @@ impl CoreManager {
         }
         // tell the window when a background apply lands
         Handle::refresh_verge();
+        crate::core::notification::retire_sidecar_failure();
         Ok(())
     }
 

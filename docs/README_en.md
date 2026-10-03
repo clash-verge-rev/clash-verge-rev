@@ -51,11 +51,11 @@ Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
 
 ## Promotion
 
-### ✈️ [Doggygo VPN — A Technical-Grade Proxy Service](https://verge.dginv.click/#/register?code=oaxsAGo6)
+### ✈️ [Doggygo VPN — A Technical-Grade Proxy Service](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 🚀 A high-performance, overseas, technical-grade proxy service offering free trials and discounted plans, fully unlocking streaming platforms and AI services. The world’s first provider to adopt the **QUIC protocol**.
 
-🎁 Register via the **Clash Verge exclusive invitation link** to receive **3 days of free trial**, with **1GB traffic per day**: 👉 [Register here](https://verge.dginv.click/#/register?code=oaxsAGo6)
+🎁 Register via the **Clash Verge exclusive invitation link** to receive **3 days of free trial**, with **1GB traffic per day**: 👉 [Register here](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 #### **Core Advantages:**
 
@@ -67,7 +67,7 @@ Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
 - ⚡ The world’s first **QUIC-protocol-based proxy service**, now featuring faster **QUIC-family protocols** (best paired with the Clash Verge client)
 - 🎬 Unlocks **streaming platforms and mainstream AI services**
 
-🌐 Official Website: 👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+🌐 Official Website: 👉 [https://狗狗加速.com](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 ### 🤖 [GPTKefu — AI-Powered Customer Service Platform Deeply Integrated with Crisp](https://gptkefu.com)
 
