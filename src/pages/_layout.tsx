@@ -23,7 +23,6 @@ import getSystem from '@/utils/get-system'
 import {
   useCustomTheme,
   useLayoutEvents,
-  useLoadingOverlay,
   usePendingFailures,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
@@ -62,8 +61,6 @@ const Layout = () => {
       ) : null,
     [decorated],
   )
-
-  useLoadingOverlay(themeReady)
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {

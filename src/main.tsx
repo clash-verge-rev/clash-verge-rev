@@ -8,6 +8,7 @@ import { RouterProvider } from 'react-router'
 import { SWRConfig } from 'swr'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
+import { AppRoot } from './components/app-root'
 import { BaseErrorBoundary } from './components/base'
 import { router } from './pages/_routers'
 import { preloadHomePageCards } from './pages/home'
@@ -55,7 +56,9 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
           <SWRConfig value={swrConfig}>
             <WindowProvider>
               <AppDataProvider>
-                <RouterProvider router={router} />
+                <AppRoot>
+                  <RouterProvider router={router} />
+                </AppRoot>
               </AppDataProvider>
             </WindowProvider>
           </SWRConfig>
