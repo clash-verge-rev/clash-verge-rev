@@ -68,6 +68,7 @@ tray:
   global: Глобаль
   profiles: Профильләр
   proxies: Проксилар
+  testLatency: Кичектерүне тикшерү
   systemProxy: Системалы прокси
   tunMode: TUN режимы
   closeAllConnections: Барлык тоташуларны ябу

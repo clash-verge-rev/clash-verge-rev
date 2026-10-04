@@ -47,6 +47,7 @@ import {
   useCoreDataStatus,
   useProxiesData,
 } from '@/providers/app-data-context'
+import { syncTrayProxySelection } from '@/services/cmds'
 import delayManager from '@/services/delay'
 import {
   findCurrentGroupMember,
@@ -907,6 +908,9 @@ export const CurrentProxyCard = () => {
     }
 
     refreshProxy()
+    syncTrayProxySelection().catch((error) => {
+      console.error('[CurrentProxyCard] 托盘延迟同步失败:', error)
+    })
   })
 
   const proxyOptions = useMemo(

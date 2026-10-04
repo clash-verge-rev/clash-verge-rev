@@ -68,6 +68,7 @@ tray:
   global: Глобальный
   profiles: Профили
   proxies: Прокси
+  testLatency: Проверить задержку
   systemProxy: Системный прокси
   tunMode: Режим TUN
   closeAllConnections: Закрыть все соединения
