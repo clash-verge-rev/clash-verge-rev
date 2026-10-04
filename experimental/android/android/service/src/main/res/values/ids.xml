@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="nf_clash_status" type="id" />
+    <item name="nf_vpn_status" type="id" />
+    <item name="nf_profile_worker" type="id" />
+</resources>

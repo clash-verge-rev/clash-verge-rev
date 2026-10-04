@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include
+        domain="sharedpref"
+        path="." />
+    <include
+        domain="database"
+        path="." />
+    <include
+        domain="file"
+        path="imported" />
+    <include
+        domain="file"
+        path="pending" />
+    <include
+        domain="file"
+        path="clash/override.json" />
+</full-backup-content>

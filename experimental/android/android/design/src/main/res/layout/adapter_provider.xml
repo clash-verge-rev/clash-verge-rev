@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="provider"
+            type="com.github.kr328.clash.core.model.Provider" />
+        <variable
+            name="state"
+            type="com.github.kr328.clash.design.model.ProviderState" />
+        <variable
+            name="currentTime"
+            type="com.github.kr328.clash.design.ui.ObservableCurrentTime" />
+        <variable
+            name="update"
+            type="android.view.View.OnClickListener" />
+
+        <import type="com.github.kr328.clash.design.util.I18nKt" />
+        <import type="com.github.kr328.clash.design.util.IntervalKt" />
+        <import type="android.view.View" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/item_min_height"
+        android:paddingStart="@dimen/item_header_margin"
+        android:paddingEnd="0dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/elapsed_view"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{provider.name}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/item_text_margin"
+                android:text="@{I18nKt.type(provider, context)}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/elapsed_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/item_midden_margin"
+            android:layout_toStartOf="@id/end_view"
+            android:text="@{IntervalKt.elapsedIntervalString(currentTime.value - state.updatedAt, context)}" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="@dimen/divider_size"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/end_view"
+            android:background="?attr/colorControlHighlight"
+            android:minHeight="@{@dimen/item_tailing_component_size * 1.5f}" />
+
+        <FrameLayout
+            android:id="@+id/end_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="@{!state.updating}"
+            android:focusable="@{!state.updating}"
+            android:nextFocusLeft="@id/root_view"
+            android:onClick="@{update}">
+
+            <ImageView
+                android:id="@+id/update_view"
+                android:layout_width="@dimen/item_tailing_component_size"
+                android:layout_height="@dimen/item_tailing_component_size"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/item_tailing_margin"
+                android:contentDescription="@string/more"
+                android:src="@drawable/ic_baseline_swap_vert"
+                android:visibility="@{state.updating ? View.GONE : View.VISIBLE}" />
+
+            <ProgressBar
+                android:layout_width="@dimen/item_tailing_component_size"
+                android:layout_height="@dimen/item_tailing_component_size"
+                android:layout_gravity="center"
+                android:layout_margin="@dimen/item_tailing_margin"
+                android:visibility="@{state.updating ? View.VISIBLE : View.GONE}" />
+        </FrameLayout>
+    </RelativeLayout>
+</layout>

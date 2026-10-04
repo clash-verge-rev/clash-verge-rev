@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/select_all"
+        android:title="@string/select_all" />
+    <item
+        android:id="@+id/select_none"
+        android:title="@string/select_none" />
+    <item
+        android:id="@+id/select_invert"
+        android:title="@string/select_invert" />
+
+    <item android:title="@string/filter">
+        <menu>
+            <item
+                android:id="@+id/system_apps"
+                android:checkable="true"
+                android:title="@string/system_apps" />
+        </menu>
+    </item>
+
+    <item android:title="@string/sort">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/name"
+                    android:title="@string/name" />
+                <item
+                    android:id="@+id/package_name"
+                    android:title="@string/package_name" />
+                <item
+                    android:id="@+id/install_time"
+                    android:title="@string/install_time" />
+                <item
+                    android:id="@+id/update_time"
+                    android:title="@string/update_time" />
+            </group>
+
+            <item
+                android:id="@+id/reverse"
+                android:checkable="true"
+                android:title="@string/reverse" />
+        </menu>
+    </item>
+
+    <item android:title="@string/external">
+        <menu>
+            <item
+                android:id="@+id/import_from_clipboard"
+                android:title="@string/import_from_clipboard" />
+            <item
+                android:id="@+id/export_to_clipboard"
+                android:title="@string/export_to_clipboard" />
+        </menu>
+    </item>
+</menu>

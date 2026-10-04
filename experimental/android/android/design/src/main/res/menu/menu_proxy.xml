@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:title="@string/filter">
+        <menu>
+            <item
+                android:id="@+id/not_selectable"
+                android:checkable="true"
+                android:title="@string/not_selectable" />
+        </menu>
+    </item>
+    <item android:title="@string/mode">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/dont_modify"
+                    android:title="@string/dont_modify" />
+                <item
+                    android:id="@+id/direct_mode"
+                    android:title="@string/direct_mode" />
+                <item
+                    android:id="@+id/global_mode"
+                    android:title="@string/global_mode" />
+                <item
+                    android:id="@+id/rule_mode"
+                    android:title="@string/rule_mode" />
+            </group>
+        </menu>
+    </item>
+    <item android:title="@string/layout">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/single"
+                    android:title="@string/single" />
+                <item
+                    android:id="@+id/doubles"
+                    android:title="@string/doubles" />
+                <item
+                    android:id="@+id/multiple"
+                    android:title="@string/multiple" />
+
+            </group>
+        </menu>
+    </item>
+    <item android:title="@string/sort">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/default_"
+                    android:title="@string/default_" />
+                <item
+                    android:id="@+id/name"
+                    android:title="@string/name" />
+                <item
+                    android:id="@+id/delay"
+                    android:title="@string/delay" />
+            </group>
+        </menu>
+    </item>
+</menu>

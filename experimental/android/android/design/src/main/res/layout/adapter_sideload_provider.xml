@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="appInfo"
+            type="com.github.kr328.clash.design.model.AppInfo" />
+        <variable
+            name="selected"
+            type="boolean" />
+
+        <import type="android.view.View" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="@dimen/item_min_height"
+        android:paddingVertical="@dimen/item_padding_vertical">
+
+        <View
+            android:id="@+id/icon_view"
+            android:layout_width="@dimen/item_header_component_size"
+            android:layout_height="@dimen/item_header_component_size"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginHorizontal="@dimen/item_header_margin"
+            android:background="@{appInfo.icon}" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/selected_view"
+            android:layout_toEndOf="@id/icon_view"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/label_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{appInfo.label}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+            <TextView
+                android:id="@+id/package_name_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/item_text_margin"
+                android:text="@{appInfo.packageName}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+                android:visibility="@{appInfo.packageName.length() == 0 ? View.GONE : View.VISIBLE}" />
+        </LinearLayout>
+
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/selected_view"
+            android:layout_width="@dimen/item_tailing_component_size"
+            android:layout_height="@dimen/item_tailing_component_size"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginHorizontal="@dimen/item_tailing_margin"
+            android:checked="@{selected}"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center" />
+    </RelativeLayout>
+</layout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="ThemeOverlay" />
+
+    <style name="ThemeOverlay.ControlColorError">
+        <item name="colorControlNormal">@color/color_error</item>
+        <item name="android:textColor">@color/color_error</item>
+    </style>
+</resources>

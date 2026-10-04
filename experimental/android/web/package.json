@@ -1,0 +1,25 @@
+{
+  "name": "verge-mobile-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build && node scripts/inline.mjs",
+    "test": "node --test src/bridge.test.ts"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "js-yaml": "5.4.2"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/js-yaml": "4.0.9",
+    "@types/node": "24.13.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.0"
+  }
+}

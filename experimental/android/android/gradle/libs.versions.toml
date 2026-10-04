@@ -1,0 +1,47 @@
+[versions]
+agp = "8.8.0"
+kotlin = "2.1.0"
+ksp = "2.1.0-1.0.29"
+golang = "1.0.4"
+coroutine = "1.10.1"
+coreKtx = "1.8.0"
+activity = "1.5.0"
+fragment = "1.5.0"
+appcompat = "1.4.2"
+coordinator = "1.2.0"
+recyclerview = "1.2.1"
+viewpager = "1.0.0"
+material = "1.6.1"
+serialization = "1.3.3"
+kaidl = "1.15"
+room = "2.4.2"
+multiprocess = "1.0.0"
+quickie = "1.11.0"
+androidx-activity-ktx = "1.9.0"
+
+[libraries]
+build-android = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+build-kotlin-common = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+build-kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
+build-ksp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
+build-golang = { module = "com.github.kr328.golang:gradle-plugin", version.ref = "golang" }
+kotlin-coroutine = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutine" }
+kotlin-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-activity = { module = "androidx.activity:activity", version.ref = "activity" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "fragment" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-coordinator = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "coordinator" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+androidx-viewpager = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+google-material = { module = "com.google.android.material:material", version.ref = "material" }
+kaidl-compiler = { module = "com.github.kr328.kaidl:kaidl", version.ref = "kaidl" }
+kaidl-runtime = { module = "com.github.kr328.kaidl:kaidl-runtime", version.ref = "kaidl" }
+rikkax-multiprocess = { module = "dev.rikka.rikkax.preference:multiprocess", version.ref = "multiprocess" }
+quickie-bundled = { group = "io.github.g00fy2.quickie", name = "quickie-bundled", version.ref = "quickie" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "androidx-activity-ktx" }
+
+[plugins]

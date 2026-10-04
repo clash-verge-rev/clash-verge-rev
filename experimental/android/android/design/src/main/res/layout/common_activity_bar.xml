@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/toolbar_height"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/activity_bar_close_view"
+        android:layout_width="@dimen/item_header_component_size"
+        android:layout_height="@dimen/item_header_component_size"
+        android:layout_marginHorizontal="@dimen/item_header_margin"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:contentDescription="@string/close"
+        android:focusable="true"
+        android:paddingHorizontal="@dimen/toolbar_image_action_padding"
+        android:src="@drawable/ic_baseline_arrow_back" />
+
+    <TextView
+        android:id="@+id/activity_bar_title_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+</LinearLayout>

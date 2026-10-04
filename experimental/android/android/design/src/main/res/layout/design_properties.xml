@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="self"
+            type="com.github.kr328.clash.design.PropertiesDesign" />
+        <variable
+            name="profile"
+            type="com.github.kr328.clash.service.model.Profile" />
+        <variable
+            name="processing"
+            type="boolean" />
+
+        <import type="com.github.kr328.clash.service.model.Profile.Type" />
+        <import type="android.view.View" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="@{self.surface.insets.start}"
+        android:paddingEnd="@{self.surface.insets.end}">
+
+        <com.github.kr328.clash.design.view.ObservableScrollView
+            android:id="@+id/scroll_root"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="@{(float) self.surface.insets.top + @dimen/toolbar_height}"
+                android:paddingBottom="@{self.surface.insets.bottom}">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingVertical="@dimen/item_padding_vertical">
+
+                    <View
+                        android:layout_width="@dimen/tips_icon_size"
+                        android:layout_height="@dimen/tips_icon_size"
+                        android:layout_marginHorizontal="@dimen/tips_icon_margin"
+                        android:background="@drawable/ic_outline_info" />
+
+                    <TextView
+                        android:id="@+id/tips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/item_tailing_margin"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+                </LinearLayout>
+
+                <com.github.kr328.clash.design.view.ActionTextField
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/properties_element_margin_vertical"
+                    android:onClick="@{() -> self.inputName()}"
+                    app:icon="@drawable/ic_outline_label"
+                    app:placeholder="@string/profile_name"
+                    app:text="@{profile.name}"
+                    app:title="@string/name" />
+
+                <com.github.kr328.clash.design.view.ActionTextField
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/properties_element_margin_vertical"
+                    android:onClick="@{() -> self.inputUrl()}"
+                    app:enabled="@{profile.type != Type.File}"
+                    app:icon="@drawable/ic_outline_inbox"
+                    app:placeholder="@string/accept_http_content"
+                    app:text="@{profile.source}"
+                    app:title="@string/url" />
+
+                <com.github.kr328.clash.design.view.ActionTextField
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/properties_element_margin_vertical"
+                    android:onClick="@{() -> self.inputAgeSecretKey()}"
+                    app:icon="@drawable/ic_baseline_key"
+                    app:placeholder="@string/age_secret_key_hint"
+                    app:text="@{profile.ageSecretKey}"
+                    app:title="@string/age_secret_key" />
+
+                <com.github.kr328.clash.design.view.ActionTextField
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/properties_element_margin_vertical"
+                    android:onClick="@{() -> self.inputInterval()}"
+                    app:enabled="@{profile.type != Type.File}"
+                    app:icon="@drawable/ic_outline_update"
+                    app:placeholder="@string/at_least_15_minutes"
+                    app:text="@{profile.interval == 0 ? @string/disabled : @string/format_minutes(profile.interval / 1000 / 60)}"
+                    app:title="@string/auto_update" />
+
+                <com.github.kr328.clash.design.view.ActionLabel
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginVertical="@dimen/properties_element_margin_vertical"
+                    android:onClick="@{() -> self.requestBrowseFiles()}"
+                    app:icon="@drawable/ic_outline_folder"
+                    app:subtext="@string/browse_configuration_providers"
+                    app:text="@string/browse_files" />
+            </LinearLayout>
+        </com.github.kr328.clash.design.view.ObservableScrollView>
+
+        <com.github.kr328.clash.design.view.ActivityBarLayout
+            android:id="@+id/activity_bar_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@{self.surface.insets.top}">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/item_tailing_margin">
+
+                <include
+                    layout="@layout/common_activity_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:layout_toStartOf="@id/action_layout" />
+
+                <FrameLayout
+                    android:id="@+id/action_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="@dimen/item_tailing_margin">
+
+                    <ProgressBar
+                        android:layout_width="@dimen/item_tailing_component_size"
+                        android:layout_height="@dimen/item_tailing_component_size"
+                        android:indeterminate="true"
+                        android:visibility="@{processing ? View.VISIBLE : View.GONE}" />
+
+                    <ImageView
+                        android:layout_width="@dimen/item_tailing_component_size"
+                        android:layout_height="@dimen/item_tailing_component_size"
+                        android:layout_gravity="end|center_vertical"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:contentDescription="@string/save"
+                        android:focusable="true"
+                        android:onClick="@{() -> self.requestCommit()}"
+                        android:padding="@dimen/toolbar_image_action_padding"
+                        android:src="@drawable/ic_baseline_save"
+                        android:visibility="@{processing ? View.GONE : View.VISIBLE}" />
+                </FrameLayout>
+            </RelativeLayout>
+        </com.github.kr328.clash.design.view.ActivityBarLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

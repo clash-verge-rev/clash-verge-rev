@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="fullScreenDialogTheme" format="reference" />
+
+    <attr name="colorClashStopped" format="color" />
+    <attr name="colorControlDisabled" format="color" />
+    <attr name="colorLogo" format="color" />
+
+    <attr name="enabled" format="boolean" />
+    <attr name="text" format="string" />
+    <attr name="subtext" format="string" />
+    <attr name="icon" format="reference" />
+    <attr name="color" format="color" />
+    <attr name="placeholder" format="string" />
+    <attr name="title" format="string" />
+
+    <declare-styleable name="LargeActionCard">
+        <attr name="text" />
+        <attr name="subtext" />
+        <attr name="icon" />
+    </declare-styleable>
+
+    <declare-styleable name="LargeActionLabel">
+        <attr name="text" />
+        <attr name="subtext" />
+        <attr name="icon" />
+    </declare-styleable>
+
+    <declare-styleable name="ActionLabel">
+        <attr name="enabled" />
+        <attr name="text" />
+        <attr name="subtext" />
+        <attr name="icon" />
+    </declare-styleable>
+
+    <declare-styleable name="ActionTextField">
+        <attr name="enabled" />
+        <attr name="icon" />
+        <attr name="title" />
+        <attr name="text" />
+        <attr name="placeholder" />
+    </declare-styleable>
+
+    <declare-styleable name="Clickable">
+        <attr name="android:focusable" />
+        <attr name="android:clickable" />
+        <attr name="android:background" />
+        <attr name="android:foreground" />
+    </declare-styleable>
+</resources>

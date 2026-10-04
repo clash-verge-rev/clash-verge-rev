@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="profile"
+            type="com.github.kr328.clash.service.model.Profile" />
+        <variable
+            name="currentTime"
+            type="com.github.kr328.clash.design.ui.ObservableCurrentTime" />
+        <variable
+            name="clicked"
+            type="android.view.View.OnClickListener" />
+        <variable
+            name="menu"
+            type="android.view.View.OnClickListener" />
+        <import type="android.view.View" />
+        <import type="com.github.kr328.clash.design.util.I18nKt" />
+        <import type="com.github.kr328.clash.design.util.IntervalKt" />
+    </data>
+
+    <RelativeLayout
+        android:elevation="5dp"
+        android:id="@+id/root_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="5dp"
+        android:layout_marginHorizontal="@dimen/item_header_margin"
+        android:background="@drawable/bg_b"
+        android:foreground="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:minHeight="@dimen/item_min_height"
+        android:nextFocusRight="@id/menu_view"
+        android:onClick="@{clicked}">
+
+        <RadioButton
+            android:id="@+id/icon_view"
+            android:layout_width="@dimen/item_header_component_size"
+            android:layout_height="@dimen/item_header_component_size"
+            android:layout_centerVertical="true"
+            android:layout_marginHorizontal="@dimen/item_header_margin"
+            android:checked="@{profile.active}"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/elapsed_view"
+            android:layout_toEndOf="@id/icon_view"
+            android:orientation="vertical"
+            android:paddingVertical="@dimen/item_padding_vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{profile.name}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/item_text_margin"
+                android:text="@{profile.pending ? @string/format_type_unsaved(I18nKt.toString(profile.type, context)) : I18nKt.toString(profile.type, context)}"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                >
+
+                <TextView
+                    android:textSize="12sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{profile.download &lt;2 ? View.GONE : View.VISIBLE}"
+                    android:text='@{profile.download >1  ?I18nKt.toBytesString(profile.download+profile.upload)+"/" :""}'
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+
+                <TextView
+                    android:textSize="12sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="@{profile.download &lt;2 ? View.GONE : View.VISIBLE}"
+                    android:text='@{profile.total >1 ?I18nKt.toBytesString(profile.total) : ""}'
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            </LinearLayout>
+            <TextView
+                android:textSize="12sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="@{profile.expire==0 ? View.GONE : View.VISIBLE}"
+                android:text='@{profile.expire>0 ? I18nKt.toDateStr(profile.expire):""}'
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+            <ProgressBar
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="1000"
+                android:visibility="@{profile.total &lt; 2 ? View.GONE : View.VISIBLE}"
+                android:progress="@{profile.total>1 ?I18nKt.toProgress ((profile.download+profile.upload)/(profile.total/1000)) :0}"
+                />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/elapsed_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/item_midden_margin"
+            android:layout_toStartOf="@id/menu_view"
+            android:text="@{IntervalKt.elapsedIntervalString(currentTime.value - profile.updatedAt, context)}"
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Tooltip" />
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_toStartOf="@id/menu_view"
+            android:background="@color/color_clash_dark" />
+
+        <FrameLayout
+            android:id="@+id/menu_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:nextFocusLeft="@id/root_view"
+            android:onClick="@{menu}">
+
+            <View
+                android:layout_width="@dimen/item_tailing_component_size"
+                android:layout_height="@dimen/item_tailing_component_size"
+                android:layout_margin="@dimen/item_tailing_margin"
+                android:background="@drawable/ic_baseline_more_vert" />
+        </FrameLayout>
+    </RelativeLayout>
+</layout>

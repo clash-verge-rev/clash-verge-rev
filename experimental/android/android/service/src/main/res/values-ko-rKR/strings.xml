@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="clash_service_status_channel">Clash 상태</string>
+    <string name="profile_service_status">구성 파일 서비스 상태</string>
+    <string name="profile_process_status">구성 파일 처리 상태</string>
+    <string name="profile_process_result">구성 파일 처리 결과</string>
+    <string name="update_successfully">업데이트 성공</string>
+    <string name="update_failure">업데이트 실패</string>
+    <string name="format_update_complete">%s 업데이트 성공</string>
+    <string name="format_update_failure">업데이트 %1$s: %2$s</string>
+    <string name="running">연결됨</string>
+    <string name="loading">로딩중</string>
+    <string name="clash_meta_for_android">Clash Meta for Android</string>
+    <string name="profiles_and_providers">구성 파일과 외부 리소스</string>
+    <string name="configuration_yaml">구성 파일.yaml</string>
+    <string name="provider_files">외부 리소스 파일</string>
+    <string name="profile_updater">구성 파일 업데이트</string>
+    <string name="profile_updating">구성 파일 업데이트 중</string>
+</resources>

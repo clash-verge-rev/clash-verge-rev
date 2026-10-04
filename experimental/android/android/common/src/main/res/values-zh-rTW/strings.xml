@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="receive_clash_broadcasts">接收 Clash 廣播</string>
+    <string name="receive_broadcasts_of_clash">接收來自 Clash 內部的廣播</string>
+</resources>

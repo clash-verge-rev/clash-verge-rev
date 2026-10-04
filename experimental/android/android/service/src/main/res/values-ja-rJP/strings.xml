@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="clash_service_status_channel">Clashステータス</string>
+    <string name="profile_service_status">プロファイルサービスのステータス</string>
+    <string name="profile_process_status">プロファイルの処理状況</string>
+    <string name="profile_process_result">プロファイルプロセスの結果</string>
+    <string name="update_successfully">正常に更新されました</string>
+    <string name="update_failure">更新に失敗しました</string>
+    <string name="format_update_complete">%sを更新しました</string>
+    <string name="format_update_failure">更新 %1$s: %2$s </string>
+    <string name="running">実行中</string>
+    <string name="loading">読み込み中</string>
+    <string name="clash_meta_for_android">Clash Meta for Android</string>
+    <string name="profiles_and_providers">プロファイルと外部リソース</string>
+    <string name="configuration_yaml">コンフィグ.yaml</string>
+    <string name="provider_files">外部リソースファイル</string>
+    <string name="profile_updater">プロファイルの更新</string>
+    <string name="profile_updating">プロファイルを更新中</string>
+</resources>

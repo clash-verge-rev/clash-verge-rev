@@ -1,0 +1,66 @@
+.gradle
+build/
+/app/foss/release
+/app/premium/release
+/captures
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar targetFile (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+# Ignore IDEA config
+*.iml
+/.idea/*
+!/.idea/codeStyles
+/core/src/main/golang/.idea/*
+!/core/src/main/golang/.idea/codeStyles
+/core/src/foss/golang/.idea/*
+!/core/src/foss/golang/.idea/codeStyles
+/core/src/premium/golang/.idea/*
+!/core/src/premium/golang/.idea/codeStyles
+
+# Ignore builtin geofiles
+app/src/main/assets
+
+# KeyStore
+signing.properties
+*.keystore
+*.jks
+
+# clion cmake build
+cmake-build-*
+
+# local.properties
+local.properties
+
+
+# tracker
+tracker.properties
+
+# vscode
+.vscode
+
+# cxx
+.cxx
+
+*.hprof
+
+# firebase
+google-services.json
+
+# Dolphin
+.directory
+
+# logs
+*.log
+
+# MacOS
+.DS_Store

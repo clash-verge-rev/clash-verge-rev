@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppFullScreenDialogLight" parent="AppFullScreenDialogLightBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="AppFullScreenDialogDark" parent="AppFullScreenDialogDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="AppBottomSheetDialogLight" parent="AppBottomSheetDialogLightBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="AppBottomSheetDialogDark" parent="AppBottomSheetDialogDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="AppThemeLight" parent="AppThemeLightBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="AppThemeDark" parent="AppThemeDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

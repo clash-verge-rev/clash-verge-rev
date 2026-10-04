@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="clash_service_status_channel">Clash 状态</string>
+    <string name="running">正在运行</string>
+    <string name="format_update_complete">更新 %s 成功</string>
+    <string name="format_update_failure">"更新 %1$s: %2$s "</string>
+    <string name="clash_meta_for_android">Clash Meta for Android</string>
+    <string name="profiles_and_providers">配置文件和外部资源</string>
+    <string name="configuration_yaml">配置文件.yaml</string>
+    <string name="provider_files">外部资源文件列表</string>
+    <string name="loading">载入中</string>
+    <string name="profile_process_status">配置文件处理状态</string>
+    <string name="update_successfully">更新成功</string>
+    <string name="update_failure">更新失败</string>
+    <string name="profile_updater">配置更新服务</string>
+    <string name="profile_updating">配置更新中</string>
+    <string name="profile_service_status">配置文件服务状态</string>
+    <string name="profile_process_result">配置文件处理结果</string>
+</resources>

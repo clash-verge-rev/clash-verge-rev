@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="master"
+            type="com.github.kr328.clash.design.FilesDesign" />
+        <variable
+            name="self"
+            type="android.app.Dialog" />
+        <variable
+            name="file"
+            type="com.github.kr328.clash.design.model.File" />
+        <variable
+            name="currentInBase"
+            type="boolean" />
+        <variable
+            name="configurationEditable"
+            type="boolean" />
+
+        <import type="android.view.View" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{() -> master.requestImport(self, file)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:visibility="@{!file.isDirectory &amp;&amp; (!currentInBase || configurationEditable) ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_baseline_get_app"
+            app:text="@string/import_" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{() -> master.requestExport(self, file)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:visibility="@{!file.isDirectory &amp;&amp; file.size > 0 ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_baseline_publish"
+            app:text="@string/export" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{() -> master.requestRename(self, file)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:visibility="@{!currentInBase ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_baseline_edit"
+            app:text="@string/rename" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="@{() -> master.requestDelete(self, file)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:theme="@style/ThemeOverlay.ControlColorError"
+            android:visibility="@{!currentInBase ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_outline_delete"
+            app:text="@string/delete" />
+    </LinearLayout>
+</layout>

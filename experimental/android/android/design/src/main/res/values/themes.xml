@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/bg_bottom_sheet</item>
+    </style>
+
+    <style name="AppFullScreenDialogLightBase" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+
+        <item name="colorPrimary">@color/color_clash_light</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorControlNormal">@android:color/black</item>
+        <item name="colorClashStopped">@color/color_light_clash_stopped</item>
+        <item name="colorControlDisabled">@color/color_light_control_disabled</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+        <item name="android:windowBackground">@color/color_light_background</item>
+    </style>
+
+    <style name="AppFullScreenDialogDarkBase" parent="Theme.MaterialComponents.Dialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+
+        <item name="colorPrimary">@color/color_clash_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSurface">@color/color_dark_surface</item>
+        <item name="colorControlDisabled">@color/color_dark_control_disabled</item>
+        <item name="android:windowBackground">@color/color_dark_background</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="colorClashStopped">?attr/colorSurface</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+    </style>
+
+    <style name="AppFullScreenDialogLight" parent="AppFullScreenDialogLightBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+    </style>
+
+    <style name="AppFullScreenDialogDark" parent="AppFullScreenDialogDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="AppBottomSheetDialogLightBase" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+
+        <item name="colorPrimary">@color/color_clash_light</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorControlNormal">@android:color/black</item>
+        <item name="colorClashStopped">@color/color_light_clash_stopped</item>
+        <item name="colorControlDisabled">@color/color_light_control_disabled</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+
+        <item name="bottomSheetStyle">@style/AppBottomSheetStyle</item>
+    </style>
+
+    <style name="AppBottomSheetDialogDarkBase" parent="Theme.MaterialComponents.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="paddingRightSystemWindowInsets">false</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="paddingLeftSystemWindowInsets">false</item>
+
+        <item name="colorPrimary">@color/color_clash_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSurface">@color/color_dark_surface</item>
+        <item name="colorControlDisabled">@color/color_dark_control_disabled</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="colorClashStopped">?attr/colorSurface</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+
+        <item name="bottomSheetStyle">@style/AppBottomSheetStyle</item>
+    </style>
+
+    <style name="AppBottomSheetDialogLight" parent="AppBottomSheetDialogLightBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+    </style>
+
+    <style name="AppBottomSheetDialogDark" parent="AppBottomSheetDialogDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="AppThemeLightBase" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:windowBackground">@color/color_light_background</item>
+        <item name="android:ambientShadowAlpha">0.08</item>
+        <item name="android:spotShadowAlpha">0.08</item>
+
+        <item name="colorPrimary">@color/color_clash_light</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorControlNormal">@android:color/black</item>
+        <item name="colorClashStopped">@color/color_light_clash_stopped</item>
+        <item name="colorControlDisabled">@color/color_light_control_disabled</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="colorLogo">?attr/colorControlActivated</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogLight</item>
+        <item name="fullScreenDialogTheme">@style/AppFullScreenDialogLight</item>
+    </style>
+
+    <style name="AppThemeDarkBase" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="android:windowBackground">@color/color_dark_background</item>
+        <item name="android:ambientShadowAlpha">0.08</item>
+        <item name="android:spotShadowAlpha">0.08</item>
+
+        <item name="colorPrimary">@color/color_clash_dark</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSurface">@color/color_dark_surface</item>
+        <item name="colorControlNormal">@android:color/white</item>
+        <item name="colorControlDisabled">@color/color_dark_control_disabled</item>
+
+        <item name="colorPrimaryDark">?attr/colorPrimary</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorOnSecondary">?attr/colorOnPrimary</item>
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="colorClashStopped">?attr/colorSurface</item>
+        <item name="colorLogo">?attr/colorControlNormal</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogDark</item>
+        <item name="fullScreenDialogTheme">@style/AppFullScreenDialogDark</item>
+    </style>
+
+    <style name="AppThemeLight" parent="AppThemeLightBase">
+        <item name="android:statusBarColor">@color/color_system_ui_overlay</item>
+        <item name="android:navigationBarColor">@color/color_system_ui_overlay</item>
+    </style>
+
+    <style name="AppThemeDark" parent="AppThemeDarkBase">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

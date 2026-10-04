@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <!-- from https://github.com/shadowsocks/shadowsocks-android/blob/master/core/src/main/res/values/strings.xml -->
+    <string name="clash_notification_content" translatable="false">"%1$s↑\t%2$s↓"</string>
+
+    <string name="clash_service_status_channel">Статус Clash</string>
+    <string name="profile_service_status">Статус сервиса профиля</string>
+    <string name="profile_process_status">Статус обработки профиля</string>
+    <string name="profile_process_result">Результат обработки профиля</string>
+    <string name="update_successfully">Успешно обновлено</string>
+    <string name="update_failure">Не удалось обновить</string>
+    <string name="format_update_complete">Обновление %s завершено</string>
+    <string name="format_update_failure">Обновление %1$s: %2$s</string>
+    <string name="running">Работает</string>
+    <string name="loading">Загружается</string>
+    <string name="clash_meta_for_android">Clash Meta для Android</string>
+    <string name="profiles_and_providers">Профили и провайдеры</string>
+    <string name="configuration_yaml">Configuration.yaml</string>
+    <string name="provider_files">Файлы провайдера</string>
+    <string name="profile_updater">Обновление профиля</string>
+    <string name="profile_updating">Профиль обновляется</string>
+</resources>

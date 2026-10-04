@@ -1,0 +1,374 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="PluralsCandidate">
+    <string name="launch_name_meta">Clash Meta</string>
+    <string name="launch_name_alpha">Clash Meta Alpha</string>
+    <string name="application_name_meta">Clash Meta for Android</string>
+    <string name="application_name_alpha">Clash Meta for Android Alpha</string>
+
+    <string name="stopped">Stopped</string>
+    <string name="tap_to_start">Tap to start</string>
+    <string name="running">Running</string>
+    <string name="format_traffic_forwarded">%s Forwarded</string>
+
+    <string name="proxy">Proxy</string>
+    <string name="direct_mode">Direct Mode</string>
+    <string name="rule_mode">Rule Mode</string>
+    <string name="global_mode">Global Mode</string>
+    <string name="proxy_empty_tips">No groups can be displayed</string>
+
+    <string name="profiles">Profiles</string>
+    <string name="not_selected">Not selected</string>
+    <string name="format_profile_activated">%s Activated</string>
+
+    <string name="logs">Logs</string>
+    <string name="settings">Settings</string>
+    <string name="help">Help</string>
+    <string name="about">About</string>
+
+    <string name="copied">Copied</string>
+
+    <string name="recently">Recently</string>
+
+    <string name="format_minutes">%d min</string>
+    <string name="format_elements">%d elements</string>
+
+    <string name="format_minutes_ago">%d min ago</string>
+    <string name="format_hours_ago">%d hours ago</string>
+    <string name="format_days_ago">%d days ago</string>
+    <string name="format_months_ago">%d months ago</string>
+    <string name="format_years_ago">%d years ago</string>
+
+    <string name="create_profile">Create Profile</string>
+    <string name="file">File</string>
+    <string name="import_from_file">Import from File</string>
+    <string name="url">URL</string>
+    <string name="qr" translatable="false">QR Code</string>
+    <string name="import_from_url">Import from URL</string>
+    <string name="import_from_qr">Import from QR Code</string>
+    <string name="external">External</string>
+    <string name="format_type_unsaved">%s (Unsaved)</string>
+
+    <string name="application_broken">Application Broken</string>
+    <string name="application_crashed">Application Crashed</string>
+    <string name="application_broken_tips">App lacks the necessary runtime components, which is usually caused by downloading an incomplete apk.</string>
+    <string name="reinstall">Reinstall</string>
+    <string name="github_releases">Github Releases</string>
+
+    <string name="profile">Profile</string>
+    <string name="name">Name</string>
+    <string name="profile_name">Profile Name</string>
+    <string name="profile_url">Profile URL</string>
+    <string name="auto_update">Auto Update</string>
+    <string name="auto_update_minutes">Auto Update (Minutes)</string>
+
+    <string name="accept_http_content">Accept only http(s)</string>
+    <string name="at_least_15_minutes">At least 15 minutes or empty</string>
+    <string name="age_secret_key">Age Secret Key</string>
+    <string name="age_secret_key_hint">AGE-SECRET-KEY-… (optional)</string>
+    <string name="age_secret_key_error">Invalid format. Key should start with AGE-SECRET-KEY-</string>
+    <string name="age_key_helper">Age Key</string>
+    <string name="age_key_category">Age Key</string>
+    <string name="age_key_generate_summary">Tap to generate</string>
+    <string name="age_key_type_x25519" translatable="false">X25519</string>
+    <string name="age_key_type_hybrid" translatable="false">MLKEM768-X25519</string>
+    <string name="age_public_key">Age Public Key</string>
+    <string name="age_public_key_error">Invalid age public key</string>
+    <string name="age_key_generate">Generate</string>
+    <string name="age_key_to_public">From Secret</string>
+    <string name="age_key_copy">Copy</string>
+    <string name="should_not_be_blank">Should not be blank</string>
+    <string name="detail">Detail</string>
+    <string name="update">Update</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="export">Export</string>
+    <string name="import_">Import</string>
+    <string name="properties">Properties</string>
+    <string name="duplicate">Duplicate</string>
+    <string name="active_unsaved_tips">Profile needs to be saved before activation</string>
+
+    <string name="exit_without_save">Exit without Save</string>
+    <string name="exit_without_save_warning">All changed will *LOST*</string>
+
+    <string name="raw_cn" translatable="false">cn</string>
+    <string name="disabled">Disabled</string>
+    <string name="unavailable">Unavailable</string>
+    <string name="empty_name">Empty Name</string>
+    <string name="invalid_url">Invalid URL</string>
+    <string name="loading">Loading</string>
+
+    <string name="format_fetching_configuration">Fetching configuration from \'%s\'</string>
+    <string name="format_fetching_provider">Fetching provider \'%s\'</string>
+    <string name="initializing">Initializing</string>
+    <string name="verifying">Verifying</string>
+
+    <string name="new_profile">New Profile</string>
+
+    <string name="delay">Delay</string>
+    <string name="sort">Sort</string>
+    <string name="default_">Default</string>
+
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset">Reset</string>
+
+    <string name="clash_logcat">Clash Logcat</string>
+    <string name="history">History</string>
+    <string name="logcat">Logcat</string>
+
+    <string name="delete_all_logs">Delete All Logs</string>
+    <string name="delete_all_logs_warn">All historical logs will *LOST*</string>
+    <string name="file_exported">File Exported</string>
+
+    <string name="behavior">Behavior</string>
+    <string name="network">Network</string>
+    <string name="interface_">Interface</string>
+    <string name="override">Override</string>
+
+    <string name="auto_restart">Auto Restart</string>
+    <string name="allow_clash_auto_restart">Allow clash auto restart</string>
+
+    <string name="route_system_traffic">Route System Traffic</string>
+    <string name="routing_via_vpn_service">Auto routing all system traffic via VpnService</string>
+
+    <string name="vpn_service_options">VpnService Options</string>
+    <string name="bypass_private_network">Bypass Private Network</string>
+    <string name="bypass_private_network_summary">Bypass private network addresses</string>
+    <string name="dns_hijacking">DNS Hijacking</string>
+    <string name="dns_hijacking_summary">Handle all dns packet</string>
+    <string name="block_loopback">Block Loopback</string>
+    <string name="block_loopback_summary">Block loopback connections</string>
+    <string name="allow_bypass">Allow Bypass</string>
+    <string name="allow_bypass_summary">Allows all apps to bypass this VPN connection</string>
+    <string name="allow_ipv6">Allow Ipv6</string>
+    <string name="allow_ipv6_summary">Allows ipv6 traffic via VpnService</string>
+    <string name="system_proxy">System Proxy</string>
+    <string name="system_proxy_summary">Attach http proxy to VpnService</string>
+    <string name="access_control_mode">Access Control Mode</string>
+    <string name="access_control_packages">Access Control Packages</string>
+    <string name="access_control_packages_summary">Configure access permission for apps</string>
+
+    <string name="options_unavailable">Options Unavailable until Clash Stopped</string>
+
+    <string name="general">General</string>
+    <string name="dns">DNS</string>
+    <string name="prefer_h3">Prefer h3</string>
+    <string name="http_port">HTTP Port</string>
+    <string name="socks_port">Socks Port</string>
+    <string name="redirect_port">Redirect Port</string>
+    <string name="mixed_port">Mixed Port</string>
+    <string name="tproxy_port">TProxy Port</string>
+    <string name="authentication">Authentication</string>
+    <string name="allow_lan">Allow LAN</string>
+    <string name="bind_address">Bind Address</string>
+    <string name="mode">Mode</string>
+    <string name="log_level">Log Level</string>
+    <string name="ipv6">IPv6</string>
+    <string name="external_controller">External Controller</string>
+    <string name="external_controller_tls">External Controller TLS</string>
+    <string name="allow_origins">External Controller Allow Origins</string>
+    <string name="allow_private_network">External Controller Allow Private Network</string>
+    <string name="secret">Secret</string>
+    <string name="hosts">Hosts</string>
+    <string name="_new">New</string>
+    <string name="value">Value</string>
+
+    <string name="strategy">Strategy</string>
+    <string name="listen">Listen</string>
+    <string name="append_system_dns">Append System DNS</string>
+    <string name="use_hosts">Use Hosts</string>
+    <string name="enhanced_mode">Enhanced Mode</string>
+    <string name="name_server">Name Server</string>
+    <string name="fallback">Fallback Name Server</string>
+    <string name="default_name_server">Default Name Server</string>
+    <string name="fakeip_filter">Fake-IP Filter</string>
+    <string name="fakeip_filter_mode">Fake-IP Filter Mode</string>
+    <string name="geoip_fallback">GeoIP Fallback</string>
+    <string name="geoip_fallback_code">GeoIP Fallback Code</string>
+    <string name="ipcidr_fallback">IPCIDR Fallback</string>
+    <string name="domain_fallback">Domain Fallback</string>
+    <string name="name_server_policy">Name Server Policy</string>
+
+    <string name="dont_modify">Do not modify</string>
+    <string name="empty">Empty</string>
+
+    <string name="enabled">Enabled</string>
+
+    <string name="info">Info</string>
+    <string name="warning">Warning</string>
+    <string name="error">Error</string>
+    <string name="debug">Debug</string>
+    <string name="silent">Silent</string>
+
+    <string name="force_enable">Force Enable</string>
+
+    <string name="mapping">Real-IP to domain mapping</string>
+    <string name="fakeip">Fake-IP to domain mapping</string>
+
+    <string name="blacklist">Black List</string>
+    <string name="whitelist">White List</string>
+
+    <string name="off">OFF</string>
+    <string name="strict">Strict</string>
+    <string name="always">Always</string>
+
+    <string name="system_apps">System Apps</string>
+    <string name="filter">Filter</string>
+    <string name="package_name">Package Name</string>
+    <string name="update_time">Update Time</string>
+    <string name="install_time">Install Time</string>
+    <string name="reverse">Reverse</string>
+    <string name="search">Search</string>
+    <string name="select_all">Select All</string>
+    <string name="select_invert">Select Invert</string>
+    <string name="select_none">Select None</string>
+    <string name="import_from_clipboard">Import from Clipboard</string>
+    <string name="export_to_clipboard">Export to Clipboard</string>
+
+    <string name="clash_meta_for_android">Clash Meta for Android</string>
+
+    <string name="document">Document</string>
+    <string name="feedback">Feedback</string>
+    <string name="sources">Sources</string>
+    <string name="donate">Donate</string>
+    <string name="clash_wiki">Clash Wiki</string>
+    <string name="github_issues">Github Issues</string>
+    <string name="google_play">Google Play</string>
+    <string name="clash_meta_core">Clash Meta Core</string>
+    <string name="clash_wiki_url" translatable="false">https://github.com/Dreamacro/clash/wiki</string>
+    <string name="meta_github_url" translatable="false">https://github.com/MetaCubeX/ClashMetaForAndroid</string>
+    <string name="clash_meta_core_url" translatable="false">https://github.com/MetaCubeX/Clash.Meta</string>
+
+    <string name="tips_properties"><![CDATA[Accept Only <strong>Clash Config</strong>(including <strong>Proxy</strong>/<strong>Rules</strong>)]]></string>
+    <string name="tips_help"><![CDATA[Clash Meta for Android is a <strong>freeware</strong> and we do <strong>NOT</strong> provide any service for it]]></string>
+
+    <string name="google_play_url" translatable="false">https://play.google.com/store/apps/details?id=com.github.kr328.clash</string>
+
+    <string name="app">App</string>
+    <string name="service">Service</string>
+
+    <string name="dark_mode">Dark Mode</string>
+
+    <string name="show_traffic">Show Traffic</string>
+    <string name="show_traffic_summary">Auto refresh traffic in notification</string>
+
+    <string name="follow_system_android_10">Follow System (Android 10+)</string>
+    <string name="always_dark">Always Dark</string>
+    <string name="always_light">Always Light</string>
+
+    <string name="tun_stack_mode">Stack Mode</string>
+    <string name="tun_stack_system">System Stack</string>
+    <string name="tun_stack_gvisor">Gvisor Stack</string>
+    <string name="tun_stack_mixed">Mixed Stack</string>
+    <string name="tun_stack_mips">Mips Stack</string>
+
+    <string name="allow_all_apps">Allow all apps</string>
+    <string name="allow_selected_apps">Allow selected apps</string>
+    <string name="deny_selected_apps">Deny selected apps</string>
+
+    <string name="no_profile_selected">No profile selected</string>
+
+    <string name="layout">Layout</string>
+    <string name="single">Single</string>
+    <string name="doubles">Double</string>
+    <string name="multiple">Multiple</string>
+    <string name="not_selectable">Not Selectable</string>
+
+    <string name="providers">Providers</string>
+
+    <string name="files">Files</string>
+    <string name="browse_files">Browse Files</string>
+    <string name="browse_configuration_providers"><![CDATA[Browse configuration & providers]]></string>
+    <string name="rename">Rename</string>
+    <string name="file_name">File Name</string>
+    <string name="invalid_file_name">Invalid file name</string>
+
+    <string name="reset_override_settings">Reset Override Settings</string>
+    <string name="reset_override_settings_message">All override settings will be discarded</string>
+    <string name="key">Key</string>
+
+    <string name="use_built_in">Use Built-in</string>
+    <string name="more">More</string>
+    <string name="save">Save</string>
+    <string name="delay_test">Delay Test</string>
+
+    <string name="format_provider_type">%1$s(%2$s)</string>
+    <string name="rule">Rule</string>
+    <string name="http">HTTP</string>
+    <string name="inline">Inline</string>
+    <string name="compatible">Compatible</string>
+    <string name="format_update_provider_failure">Update %1$s: %2$s</string>
+    <string name="update_all">Update All</string>
+
+    <string name="close">Close</string>
+    <string name="keyword">Keyword</string>
+
+    <string name="invalid_log_file">Invalid log file</string>
+    <string name="unable_to_start_vpn">Unable to start VPN component</string>
+
+    <string name="version_updated">App Updated</string>
+    <string name="version_updated_tips">The settings have been reseted and the old profiles needs to be saved again.</string>
+
+    <string name="mode_switch_tips">Valid only for current session</string>
+
+    <string name="clash_meta_wiki">Clash Meta Wiki</string>
+    <string name="clash_meta_wiki_url" translatable="false">https://wiki.metacubex.one</string>
+
+    <string name="meta_features">Meta Features</string>
+    <string name="unified_delay">Unified Delay</string>
+    <string name="geodata_mode">Geodata Mode</string>
+    <string name="tcp_concurrent">TCP Concurrent</string>
+    <string name="find_process_mode">Find Process Mode</string>
+
+    <string name="sniffer_setting">Sniffer Setting</string>
+    <string name="sniffer">Sniffer</string>
+    <string name="force_dns_mapping">Force DNS Mapping</string>
+    <string name="parse_pure_ip">Parse Pure IP</string>
+    <string name="override_destination">Override Destination</string>
+    <string name="force_domain">Force Domain</string>
+    <string name="skip_domain">Skip Domain</string>
+    <string name="skip_src_address">Skip Src Address</string>
+    <string name="skip_dst_address">Skip Dst Address</string>
+    <string name="sniff_http_ports">Sniff HTTP Ports</string>
+    <string name="sniff_tls_ports">Sniff TLS Ports</string>
+    <string name="sniff_quic_ports">Sniff QUIC Ports</string>
+    <string name="sniff_http_override_destination">Sniff HTTP Override Destination</string>
+    <string name="sniff_tls_override_destination">Sniff TLS Override Destination</string>
+    <string name="sniff_quic_override_destination">Sniff QUIC Override Destination</string>
+
+    <string name="geox_url_setting">GeoX Url Setting</string>
+    <string name="geox_geoip">GeoIp Url</string>
+    <string name="geox_mmdb">MMDB Url</string>
+    <string name="geox_geosite">Geosite Url</string>
+    <string name="geoip_url" translatable="false">https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat</string>
+    <string name="mmdb_url" translatable="false">https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/country.mmdb</string>
+    <string name="geosite_url" translatable="false">https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geosite.dat</string>
+    <string name="geox_files" >Geo Files</string>
+    <string name="import_geoip_file">Import GeoIP Database</string>
+    <string name="import_geosite_file">Import GeoSite Database</string>
+    <string name="import_country_file">Import Country Database</string>
+    <string name="import_asn_file">Import ASN Database</string>
+    <string name="press_to_import">Press to import...</string>
+    <string name="geofile_import_failed">Import failed</string>
+    <string name="geofile_unknown_db_format">Unknown Database format</string>
+    <string name="geofile_unknown_db_format_message">Only %1$s are supported</string>
+    <string name="geofile_imported">%1$s imported</string>
+    <string name="toast_profile_updated_complete">Update profile %s completed</string>
+    <string name="toast_profile_updated_failed">Update profile %1$s failed: %2$s</string>
+    <string name="external_control_activity">External Control</string>
+    <string name="external_control_started">Clash.Meta service started</string>
+    <string name="external_control_stopped">Clash.Meta service stopped</string>
+
+    <string name="hide_app_icon_title">Hide App Icon</string>
+    <string name="hide_app_icon_desc">You can dial *#*#252746382#*#* to open this App</string>
+    <string name="hide_from_recents_title">Hide from Recents</string>
+    <string name="hide_from_recents_desc">Hide app from the Recent apps screen</string>
+    <string name="import_from_qr_no_permission">Camera access is restricted. Please enable it in Settings.</string>
+    <string name="import_from_qr_exception">An unhandled system exception occurred.</string>
+
+    <string name="shortcut_toggle_short">Toggle Clash</string>
+    <string name="shortcut_toggle_long">Toggle Clash service on/off</string>
+    <string name="shortcut_start_short">Start Clash</string>
+    <string name="shortcut_start_long">Start Clash service</string>
+    <string name="shortcut_stop_short">Stop Clash</string>
+    <string name="shortcut_stop_long">Stop Clash service</string>
+</resources>

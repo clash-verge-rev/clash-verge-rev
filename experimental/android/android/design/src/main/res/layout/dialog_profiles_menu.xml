@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="master"
+            type="com.github.kr328.clash.design.ProfilesDesign" />
+        <variable
+            name="self"
+            type="android.app.Dialog" />
+        <variable
+            name="profile"
+            type="com.github.kr328.clash.service.model.Profile" />
+
+        <import type="com.github.kr328.clash.service.model.Profile.Type" />
+        <import type="android.view.View" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> master.requestUpdate(self, profile)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:visibility="@{profile.imported &amp;&amp; profile.type != Type.File ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_baseline_update"
+            app:text="@string/update" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> master.requestEdit(self, profile)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            app:icon="@drawable/ic_baseline_edit"
+            app:text="@string/edit" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> master.requestDuplicate(self, profile)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:visibility="@{profile.imported ? View.VISIBLE : View.GONE}"
+            app:icon="@drawable/ic_baseline_content_copy"
+            app:text="@string/duplicate" />
+
+        <com.github.kr328.clash.design.view.LargeActionLabel
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="@{() -> master.requestDelete(self, profile)}"
+            android:padding="@dimen/bottom_sheet_menu_items_padding"
+            android:theme="@style/ThemeOverlay.ControlColorError"
+            app:icon="@drawable/ic_outline_delete"
+            app:text="@string/delete" />
+    </LinearLayout>
+</layout>

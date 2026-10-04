@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <dimen name="divider_size">1dp</dimen>
+
+    <!-- Dialog -->
+    <dimen name="dialog_padding">20dp</dimen>
+    <dimen name="dialog_button_margin">5dp</dimen>
+    <dimen name="dialog_menu_min_width">150dp</dimen>
+
+    <!-- Surface -->
+    <dimen name="surface_landscape_min_width">500dp</dimen>
+
+    <!--  Toolbar  -->
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="toolbar_elevation">5dp</dimen>
+    <dimen name="toolbar_image_action_padding">5dp</dimen>
+
+    <!--  Tab Layout  -->
+    <dimen name="tab_layout_height">48dp</dimen>
+    <dimen name="tab_layout_elevation">5dp</dimen>
+
+    <!--  Bottom Sheet  -->
+    <dimen name="bottom_sheet_background_padding_top">10dp</dimen>
+    <dimen name="bottom_sheet_header_height">5dp</dimen>
+    <dimen name="bottom_sheet_menu_items_padding">5dp</dimen>
+
+    <!-- Large Item -->
+    <dimen name="large_item_padding_vertical">15dp</dimen>
+    <dimen name="large_item_header_component_size">30dp</dimen>
+    <dimen name="large_item_header_margin_horizontal">20dp</dimen>
+    <!-- @dimen/large_item_header_component_size + @dimen/large_item_header_margin_horizontal x2 -->
+    <dimen name="large_item_header_layout_size">70dp</dimen>
+    <dimen name="large_item_tailing_margin_horizontal">20dp</dimen>
+    <dimen name="large_item_text_margin">5dp</dimen>
+
+    <!--  Common Item  -->
+    <dimen name="item_min_height">75dp</dimen>
+    <dimen name="item_header_component_size">30dp</dimen>
+    <dimen name="item_header_margin">17.5dp</dimen>
+    <dimen name="item_tailing_component_size">30dp</dimen>
+    <dimen name="item_tailing_margin">17.5dp</dimen>
+    <dimen name="item_padding_vertical">16dp</dimen>
+    <dimen name="item_text_margin">5dp</dimen>
+    <dimen name="item_midden_margin">10dp</dimen>
+
+    <!-- Large Card -->
+    <dimen name="large_action_card_radius">8dp</dimen>
+    <dimen name="large_action_card_elevation">5dp</dimen>
+    <dimen name="large_action_card_min_height">85dp</dimen>
+
+    <!-- Tips -->
+    <dimen name="tips_icon_size">25dp</dimen>
+    <dimen name="tips_icon_margin">20dp</dimen>
+
+    <!-- Preference -->
+    <dimen name="preference_fullscreen_button_padding">20dp</dimen>
+
+    <!-- Main Design -->
+    <dimen name="main_card_margin_vertical">5dp</dimen>
+    <dimen name="main_label_margin_vertical">2dp</dimen>
+    <dimen name="main_padding_horizontal">30dp</dimen>
+    <dimen name="main_logo_size">50dp</dimen>
+    <dimen name="main_top_banner_height">90dp</dimen>
+
+    <!--  Proxy Design -->
+    <dimen name="proxy_layout_padding">3dp</dimen>
+    <dimen name="proxy_content_padding">15dp</dimen>
+    <dimen name="proxy_content_padding_grid3">12dp</dimen>
+    <dimen name="proxy_text_margin">10dp</dimen>
+    <dimen name="proxy_text_margin_grid3">5dp</dimen>
+    <dimen name="proxy_text_size">12sp</dimen>
+    <dimen name="proxy_text_size_grid3">11sp</dimen>
+    <dimen name="proxy_card_radius">5dp</dimen>
+    <dimen name="proxy_card_offset">0dp</dimen>
+
+    <!-- Properties Design -->
+    <dimen name="properties_element_margin_vertical">2.5dp</dimen>
+
+    <!-- About Design -->
+    <dimen name="about_icon_size">50dp</dimen>
+    <dimen name="about_text_margin">15dp</dimen>
+
+    <!-- Logcat Design -->
+    <dimen name="logcat_padding_vertical">12dp</dimen>
+    <dimen name="logcat_padding_horizontal">12dp</dimen>
+</resources>

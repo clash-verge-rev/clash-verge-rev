@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="insets"
+            type="com.github.kr328.clash.design.ui.Insets" />
+    </data>
+
+    <com.github.kr328.clash.design.view.AppRecyclerView
+        android:id="@+id/recycler_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingTop="@{(float) insets.top + @dimen/toolbar_height}"
+        android:paddingBottom="@{insets.bottom}" />
+</layout>
