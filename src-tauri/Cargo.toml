@@ -29,7 +29,7 @@ perf-harness = ["dep:tauri-plugin-wdio-webdriver"]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.6.3", features = [] }
+tauri-build = { version = "2.7.1", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -74,13 +74,13 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch 
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
-tauri-plugin-shell = "2.3.6"
-tauri-plugin-opener = "2.5.5"
-tauri-plugin-dialog = "2.7.3"
-tauri-plugin-fs = "2.5.2"
-tauri-plugin-process = "2.3.1"
-tauri-plugin-deep-link = "2.4.10"
-tauri-plugin-window-state = "2.4.1"
+tauri-plugin-shell = "2.4.0"
+tauri-plugin-opener = "2.7.0"
+tauri-plugin-dialog = "2.8.1"
+tauri-plugin-fs = "2.6.0"
+tauri-plugin-process = "2.4.0"
+tauri-plugin-deep-link = "2.6.1"
+tauri-plugin-window-state = "2.5.0"
 zip = "8.6.0"
 flate2 = "1.1.10"
 reqwest_dav = "0.3.3"
@@ -91,19 +91,19 @@ getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
-tauri-plugin-notification = "2.4.0"
+tauri-plugin-notification = "2.5.1"
 tokio-stream = "0.1.19"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
-tauri-plugin-http = "2.6.1"
+tauri-plugin-http = "2.8.0"
 tracing = { workspace = true }
-tauri-plugin-devtools = { version = "2.2.1", optional = true }
+tauri-plugin-devtools = { version = "2.2.2", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "main" }
 async-trait = "0.1.92"
 clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.7.6", version = "2.7.6", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
-tokio-rustls = "0.26.5"
+tokio-rustls = "0.26.6"
 rustls = { version = "0.23.45", features = ["ring"] }
 webpki-roots = "1.0.9"
 dark-light = "3.0.0"
@@ -111,7 +111,7 @@ bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
 
 [target.'cfg(unix)'.dependencies]
-libc = "0.2.189"
+libc = "0.2.190"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-plugin-wdio-webdriver = { version = "=1.4.0", optional = true }
@@ -146,9 +146,9 @@ windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 windows-sys.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.5.1"
-tauri-plugin-global-shortcut = "2.3.2"
-tauri-plugin-updater = "2.12.0"
+tauri-plugin-autostart = "2.7.0"
+tauri-plugin-global-shortcut = "2.4.0"
+tauri-plugin-updater = "2.13.1"
 
 [dev-dependencies]
 criterion = { workspace = true }

@@ -823,7 +823,12 @@ impl CoreManager {
             return;
         }
 
-        if crate::core::runstate::RUN_STATE.state().service_usable() {
+        let state = crate::core::runstate::RUN_STATE.state();
+        // Waiting cannot bring up a service nothing will start.
+        if state.service_usable()
+            || matches!(&state.health, crate::core::runstate::ServiceHealth::Unavailable(reason)
+                if crate::core::service::is_not_auto_started(reason))
+        {
             return;
         }
 
