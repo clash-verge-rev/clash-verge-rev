@@ -227,6 +227,7 @@ export interface TranslationResources {
           }
           locationRefusedMessage: string
           message: string
+          notAutoStartedMessage: string
           reinstall: string
           repair: string
           success: string

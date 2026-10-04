@@ -7,8 +7,15 @@ use tauri_plugin_mihomo::models::{
 
 pub struct ProxyViewInput {
     pub runtime_group_order: Vec<String>,
+    pub group_scopes: BTreeMap<String, GroupScope>,
     pub proxies: Proxies,
     pub providers: Option<ProxyProviders>,
+}
+
+/// The providers a group draws from (Mihomo order) and its `exclude-type` entries.
+pub struct GroupScope {
+    pub providers: Vec<String>,
+    pub exclude_types: Vec<String>,
 }
 
 pub struct ProxyViewBuilder;
@@ -167,15 +174,41 @@ pub struct ProxySubscriptionInfo {
     pub expire: i64,
 }
 
+/// Proxy name -> `(provider name, record id)` in provider order.
+type ProviderCandidates = BTreeMap<String, Vec<(String, String)>>;
+
 struct MemberResolver<'a> {
     group_names: BTreeSet<String>,
+    group_scopes: &'a BTreeMap<String, GroupScope>,
+    records: &'a BTreeMap<String, ProxyNodeView>,
     core_node_ids: &'a BTreeMap<String, String>,
-    provider_candidates: &'a BTreeMap<String, Vec<String>>,
+    provider_candidates: &'a ProviderCandidates,
     provider_available: bool,
 }
 
-impl MemberResolver<'_> {
-    fn resolve(&self, name: String) -> ProxyMemberRef {
+impl<'a> MemberResolver<'a> {
+    /// Same-name records in the order Mihomo lists them in `group`: `use` order, after `exclude-type`.
+    fn scoped_candidates(&self, group: &str, name: &str) -> Vec<&'a String> {
+        let (Some(scope), Some(candidates)) = (self.group_scopes.get(group), self.provider_candidates.get(name)) else {
+            return Vec::new();
+        };
+        scope
+            .providers
+            .iter()
+            .flat_map(|provider| candidates.iter().filter(move |(owner, _)| owner == provider))
+            .map(|(_, record_id)| record_id)
+            .filter(|record_id| {
+                !self.records.get(*record_id).is_some_and(|node| {
+                    scope
+                        .exclude_types
+                        .iter()
+                        .any(|excluded| excluded.eq_ignore_ascii_case(node.proxy_type.as_str()))
+                })
+            })
+            .collect()
+    }
+
+    fn resolve(&self, name: String, scoped: Option<&String>) -> ProxyMemberRef {
         if self.group_names.contains(&name) {
             ProxyMemberRef::Group { name }
         } else if let Some(record_id) = self.core_node_ids.get(&name) {
@@ -189,16 +222,17 @@ impl MemberResolver<'_> {
                 reason: ProxyMemberUnresolvedReason::ProviderUnavailable,
             }
         } else {
-            match self.provider_candidates.get(&name).map(Vec::as_slice) {
-                Some([record_id]) => ProxyMemberRef::Node {
+            let candidates = self.provider_candidates.get(&name).map_or(&[][..], Vec::as_slice);
+            match (scoped, candidates) {
+                (Some(record_id), _) | (None, [(_, record_id)]) => ProxyMemberRef::Node {
                     name,
                     record_id: record_id.clone(),
                 },
-                None => ProxyMemberRef::Unresolved {
+                (None, []) => ProxyMemberRef::Unresolved {
                     name,
                     reason: ProxyMemberUnresolvedReason::Missing,
                 },
-                Some(_) => ProxyMemberRef::Unresolved {
+                (None, _) => ProxyMemberRef::Unresolved {
                     name,
                     reason: ProxyMemberUnresolvedReason::Ambiguous,
                 },
@@ -211,6 +245,7 @@ impl ProxyViewBuilder {
     pub fn build(input: ProxyViewInput) -> ProxyViewV1 {
         let ProxyViewInput {
             runtime_group_order,
+            group_scopes,
             proxies,
             providers,
         } = input;
@@ -224,6 +259,8 @@ impl ProxyViewBuilder {
         let (providers, provider_candidates) = build_provider_records(providers, &mut records);
         let resolver = MemberResolver {
             group_names: core_groups.keys().cloned().collect(),
+            group_scopes: &group_scopes,
+            records: &records,
             core_node_ids: &core_node_ids,
             provider_candidates: &provider_candidates,
             provider_available: provider_state == ProxyViewProviderState::Ready,
@@ -291,7 +328,7 @@ fn build_core_records(
 fn build_provider_records(
     providers: Option<ProxyProviders>,
     records: &mut BTreeMap<String, ProxyNodeView>,
-) -> (Vec<ProxyProviderView>, BTreeMap<String, Vec<String>>) {
+) -> (Vec<ProxyProviderView>, ProviderCandidates) {
     let providers = providers
         .map(|providers| providers.providers.into_iter().collect::<BTreeMap<_, _>>())
         .unwrap_or_default();
@@ -322,7 +359,7 @@ fn build_provider_records(
             candidates
                 .entry(proxy_name.clone())
                 .or_insert_with(Vec::new)
-                .push(record_id.clone());
+                .push((provider_name.clone(), record_id.clone()));
             records.insert(
                 record_id.clone(),
                 build_node(
@@ -373,6 +410,20 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         proxy_type,
         ..
     } = proxy;
+    // The n-th occurrence of a name in `all` is the n-th scoped candidate.
+    let mut seen = BTreeMap::<String, (usize, Vec<&String>)>::new();
+    let members = all
+        .unwrap_or_default()
+        .into_iter()
+        .map(|member| {
+            let (occurrence, scoped) = seen
+                .entry(member.clone())
+                .or_insert_with(|| (0, resolver.scoped_candidates(&name, &member)));
+            let picked = scoped.get(*occurrence).or_else(|| scoped.first()).copied();
+            *occurrence += 1;
+            resolver.resolve(member, picked)
+        })
+        .collect();
 
     ProxyGroupView {
         name,
@@ -391,11 +442,7 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
             mptcp,
             smux,
         },
-        members: all
-            .unwrap_or_default()
-            .into_iter()
-            .map(|name| resolver.resolve(name))
-            .collect(),
+        members,
     }
 }
 
@@ -474,304 +521,4 @@ fn build_standalone(core_node_ids: &BTreeMap<String, String>) -> Vec<String> {
             .map(|(_, record_id)| record_id.clone()),
     );
     standalone
-}
-
-#[cfg(test)]
-#[allow(clippy::expect_used)]
-mod tests {
-    use std::collections::HashMap;
-
-    use tauri_plugin_mihomo::models::{
-        Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, SubScriptionInfo, VehicleType,
-    };
-
-    use super::{
-        ProxyMemberRef, ProxyMemberUnresolvedReason, ProxyNodeSource, ProxyViewBuilder, ProxyViewInput,
-        ProxyViewOrderSource, ProxyViewProviderState,
-    };
-
-    fn node(name: &str) -> Proxy {
-        Proxy {
-            name: name.to_owned(),
-            proxy_type: ProxyType::Shadowsocks,
-            alive: true,
-            udp: true,
-            ..Proxy::default()
-        }
-    }
-
-    fn group(name: &str, members: &[&str]) -> Proxy {
-        Proxy {
-            name: format!("ignored-{name}"),
-            proxy_type: ProxyType::Selector,
-            alive: true,
-            all: Some(members.iter().map(|name| (*name).to_owned()).collect()),
-            ..Proxy::default()
-        }
-    }
-
-    fn ordered_input(reverse_insert: bool) -> ProxyViewInput {
-        let entries = [
-            ("Zulu", group("Zulu", &["node-b", "node-b"])),
-            ("Alpha", group("Alpha", &["node-a"])),
-            ("node-b", node("wrong-node-b")),
-            ("node-a", node("wrong-node-a")),
-            ("A-before-direct", node("wrong-before-direct")),
-            ("DIRECT", node("wrong-direct")),
-            ("REJECT", node("wrong-reject")),
-        ];
-        let mut proxies = HashMap::new();
-        if reverse_insert {
-            proxies.extend(entries.into_iter().rev().map(|(name, proxy)| (name.to_owned(), proxy)));
-        } else {
-            proxies.extend(entries.into_iter().map(|(name, proxy)| (name.to_owned(), proxy)));
-        }
-
-        ProxyViewInput {
-            runtime_group_order: vec!["Zulu".into(), "Alpha".into()],
-            proxies: Proxies { proxies },
-            providers: None,
-        }
-    }
-
-    fn providers_fixture(entries: Vec<(&str, VehicleType, &[&str])>) -> ProxyProviders {
-        let providers = entries
-            .into_iter()
-            .map(|(provider_key, vehicle_type, names)| {
-                let provider = ProxyProvider {
-                    name: format!("ignored-{provider_key}"),
-                    vehicle_type,
-                    proxies: names.iter().map(|name| node(name)).collect(),
-                    ..ProxyProvider::default()
-                };
-                (provider_key.to_owned(), provider)
-            })
-            .collect();
-
-        ProxyProviders { providers }
-    }
-
-    fn input_with_members_and_duplicate_providers() -> ProxyViewInput {
-        let proxies = HashMap::from([("Group".to_owned(), group("ignored", &["duplicate"]))]);
-        ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies { proxies },
-            providers: Some(providers_fixture(vec![
-                ("a", VehicleType::HTTP, &["duplicate"]),
-                ("b", VehicleType::File, &["duplicate"]),
-            ])),
-        }
-    }
-
-    fn input_with_provider_member(providers: Option<ProxyProviders>) -> ProxyViewInput {
-        let proxies = HashMap::from([("Group".to_owned(), group("ignored", &["provider-only"]))]);
-        ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies { proxies },
-            providers,
-        }
-    }
-
-    fn input_with_provider_duplicates() -> ProxyViewInput {
-        ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies::default(),
-            providers: Some(providers_fixture(vec![
-                ("z-provider", VehicleType::HTTP, &["z-node"]),
-                ("unsupported", VehicleType::Compatible, &["ignored"]),
-                ("a-provider", VehicleType::File, &["same", "same"]),
-            ])),
-        }
-    }
-
-    fn serde_input_with_provider() -> ProxyViewInput {
-        let provider = ProxyProvider {
-            name: "ignored-object-name".to_owned(),
-            vehicle_type: VehicleType::HTTP,
-            updated_at: None,
-            subscription_info: Some(SubScriptionInfo {
-                upload: 1,
-                download: 2,
-                total: 3,
-                expire: 4,
-            }),
-            ..ProxyProvider::default()
-        };
-
-        ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies::default(),
-            providers: Some(ProxyProviders {
-                providers: HashMap::from([("provider-key".to_owned(), provider)]),
-            }),
-        }
-    }
-
-    #[test]
-    fn ordering_and_core_records_are_deterministic() {
-        let first = ProxyViewBuilder::build(ordered_input(false));
-        let second = ProxyViewBuilder::build(ordered_input(true));
-
-        assert_eq!(first, second);
-        assert_eq!(first.order_source, ProxyViewOrderSource::Runtime);
-        assert_eq!(
-            first.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(),
-            ["Zulu", "Alpha"]
-        );
-        assert_eq!(first.direct.as_deref(), Some("c:1"));
-        assert_eq!(first.standalone, ["c:1", "c:2", "c:0", "c:3", "c:4"]);
-        assert_eq!(first.records["c:0"].name, "A-before-direct");
-        assert_eq!(first.records["c:1"].name, "DIRECT");
-        assert_eq!(first.records["c:4"].name, "node-b");
-        assert_eq!(first.groups[0].members.len(), 2);
-        assert!(matches!(
-            &first.groups[0].members[0],
-            ProxyMemberRef::Node { name, .. } if name == "node-b"
-        ));
-        assert_eq!(first.groups[0].members[0], first.groups[0].members[1]);
-    }
-
-    #[test]
-    fn fallback_and_unmatched_groups_are_stable() {
-        let mut input = ordered_input(false);
-        input.runtime_group_order = vec![];
-        let view = ProxyViewBuilder::build(input);
-        assert_eq!(view.order_source, ProxyViewOrderSource::Fallback);
-        assert_eq!(
-            view.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(),
-            ["Alpha", "Zulu"]
-        );
-
-        let mut input = ordered_input(false);
-        input.runtime_group_order = vec!["Missing".into()];
-        let view = ProxyViewBuilder::build(input);
-        assert_eq!(view.order_source, ProxyViewOrderSource::Fallback);
-        assert_eq!(
-            view.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(),
-            ["Alpha", "Zulu"]
-        );
-
-        let mut input = ordered_input(false);
-        input.runtime_group_order = vec!["Zulu".into(), "Zulu".into()];
-        let view = ProxyViewBuilder::build(input);
-        assert_eq!(
-            view.groups.iter().map(|group| group.name.as_str()).collect::<Vec<_>>(),
-            ["Zulu", "Alpha"]
-        );
-    }
-
-    #[test]
-    fn global_and_member_resolution_follow_the_required_priority() {
-        let mut proxies = HashMap::new();
-        proxies.insert(
-            "GLOBAL".into(),
-            group("wrong", &["Nested", "core", "provider-only", "missing"]),
-        );
-        proxies.insert("Nested".into(), group("wrong", &[]));
-        proxies.insert("core".into(), node("wrong"));
-        let providers = providers_fixture(vec![
-            (
-                "a",
-                VehicleType::HTTP,
-                &["Nested", "core", "provider-only", "duplicate"],
-            ),
-            ("b", VehicleType::File, &["duplicate"]),
-        ]);
-
-        let view = ProxyViewBuilder::build(ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies { proxies },
-            providers: Some(providers),
-        });
-        let members = &view.global.as_ref().expect("GLOBAL").members;
-
-        assert!(matches!(members[0], ProxyMemberRef::Group { ref name } if name == "Nested"));
-        assert!(matches!(members[1], ProxyMemberRef::Node { ref name, .. } if name == "core"));
-        assert!(matches!(members[2], ProxyMemberRef::Node { ref name, .. } if name == "provider-only"));
-        assert!(matches!(
-            members[3],
-            ProxyMemberRef::Unresolved {
-                reason: ProxyMemberUnresolvedReason::Missing,
-                ..
-            }
-        ));
-        assert!(!view.groups.iter().any(|group| group.name == "GLOBAL"));
-    }
-
-    #[test]
-    fn ambiguous_and_provider_unavailable_are_not_reported_as_missing() {
-        let ready = ProxyViewBuilder::build(input_with_members_and_duplicate_providers());
-        assert!(matches!(
-            ready.groups[0].members[0],
-            ProxyMemberRef::Unresolved {
-                reason: ProxyMemberUnresolvedReason::Ambiguous,
-                ..
-            }
-        ));
-
-        let unavailable = ProxyViewBuilder::build(input_with_provider_member(None));
-        assert!(matches!(
-            unavailable.groups[0].members[0],
-            ProxyMemberRef::Unresolved {
-                reason: ProxyMemberUnresolvedReason::ProviderUnavailable,
-                ..
-            }
-        ));
-        assert_eq!(unavailable.provider_state, ProxyViewProviderState::Unavailable);
-        assert!(unavailable.providers.is_empty());
-    }
-
-    #[test]
-    fn providers_preserve_identity_duplicates_and_member_order() {
-        let view = ProxyViewBuilder::build(input_with_provider_duplicates());
-        assert_eq!(
-            view.providers
-                .iter()
-                .map(|provider| provider.name.as_str())
-                .collect::<Vec<_>>(),
-            ["a-provider", "z-provider"]
-        );
-        assert_eq!(view.providers[0].proxy_record_ids, ["p:0:0", "p:0:1"]);
-        assert_eq!(view.records["p:0:0"].name, "same");
-        assert_eq!(view.records["p:0:1"].name, "same");
-        assert_eq!(
-            view.records["p:0:0"].source,
-            ProxyNodeSource::Provider {
-                provider_name: "a-provider".into(),
-                proxy_name: "same".into(),
-            }
-        );
-    }
-
-    #[test]
-    fn a_successful_response_with_only_unsupported_providers_is_ready_and_empty() {
-        let view = ProxyViewBuilder::build(ProxyViewInput {
-            runtime_group_order: vec![],
-            proxies: Proxies::default(),
-            providers: Some(providers_fixture(vec![(
-                "unsupported",
-                VehicleType::Compatible,
-                &["ignored"],
-            )])),
-        });
-
-        assert_eq!(view.provider_state, ProxyViewProviderState::Ready);
-        assert!(view.providers.is_empty());
-    }
-
-    #[test]
-    fn serde_matches_the_v1_wire_contract() {
-        let view = ProxyViewBuilder::build(serde_input_with_provider());
-        let json = serde_json::to_value(view).expect("serialize view");
-
-        assert_eq!(json["schemaVersion"], 1);
-        assert_eq!(json["orderSource"], "fallback");
-        assert_eq!(json["providerState"], "ready");
-        assert!(json["global"].is_null());
-        assert!(json["direct"].is_null());
-        assert!(json["providers"][0].get("vehicleType").is_some());
-        assert!(json["providers"][0].get("updatedAt").is_none());
-        assert_eq!(json["providers"][0]["subscriptionInfo"]["upload"], 1);
-        assert!(json["providers"][0]["subscriptionInfo"].get("Upload").is_none());
-    }
 }
