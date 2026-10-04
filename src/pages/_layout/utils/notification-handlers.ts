@@ -124,6 +124,8 @@ export const handleNoticeMessage = (
               { reason: notice.reason },
               0,
             )
+          } else if (notice?.kind === 'notAutoStarted') {
+            requestService({ reason: 'serviceNotAutoStarted' })
           } else if (notice) {
             showNotice.warning(
               'settings.feedback.notifications.clashService.sidecarFallback',
