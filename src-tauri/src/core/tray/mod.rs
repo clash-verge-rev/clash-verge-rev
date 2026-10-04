@@ -296,6 +296,11 @@ impl Tray {
             .store(now_epoch_ms() + TRAY_MENU_OPEN_GUARD_MS, Ordering::Release);
     }
 
+    /// Selecting an item closes the native popup, so pending menu updates can proceed.
+    fn clear_tray_menu_opened(&self) {
+        self.menu_open_until.store(0, Ordering::Release);
+    }
+
     fn menu_update_deferred(&self) -> bool {
         now_epoch_ms() < self.menu_open_until.load(Ordering::Acquire)
     }
@@ -332,10 +337,10 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle, include_proxy_groups: bool) -> Result<()> {
-        let Some(tray) = app_handle.tray_by_id(TRAY_ID) else {
+        if app_handle.tray_by_id(TRAY_ID).is_none() {
             logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
             return Ok(());
-        };
+        }
 
         let _update_guard = self.menu_update_lock.lock().await;
 
@@ -353,23 +358,36 @@ impl Tray {
             return Ok(());
         }
 
-        // 菜单对象涉及 Win32 HMENU 的创建/销毁，统一放到主线程执行，
-        // 避免在 tokio 工作线程操作托盘 GUI 资源（#5520：怀疑非主线程更新导致事件通道失效）。
-        let menu = {
-            let app = app_handle.clone();
-            let app_in_closure = app_handle.clone();
-            let (tx, rx) = std::sync::mpsc::channel();
-            app.run_on_main_thread(move || {
-                let _ = tx.send(build_tray_menu(&app_in_closure, &data));
-            })
-            .map_err(|e| anyhow::anyhow!("failed to schedule tray menu build: {e}"))?;
-            rx.recv().map_err(|_| anyhow::anyhow!("tray menu build task dropped"))?
-        }?;
+        // Keep menu creation, installation, and destruction on the main thread.
+        // Recheck the guard inside the dispatched closure because collecting the
+        // menu data above awaits and the popup may open while that work is in flight.
+        let app = app_handle.clone();
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        app_handle
+            .run_on_main_thread(move || {
+                let result = (|| -> Result<bool> {
+                    if Self::global().menu_update_deferred() {
+                        return Ok(false);
+                    }
 
-        if let Err(e) = tray.set_menu(Some(menu)) {
-            // 失败时不能记录签名，否则后续相同的菜单内容会被跳过、菜单停留在旧状态
-            logging!(error, Type::Tray, "Failed to set tray menu: {e}");
-            return Err(e.into());
+                    let tray = app
+                        .tray_by_id(TRAY_ID)
+                        .ok_or_else(|| anyhow::anyhow!("Failed to update tray menu: tray not found"))?;
+                    let menu = build_tray_menu(&app, &data)?;
+                    tray.set_menu(Some(menu))?;
+                    Ok(true)
+                })();
+                let _ = tx.send(result);
+            })
+            .map_err(|e| anyhow::anyhow!("failed to schedule tray menu update: {e}"))?;
+
+        let menu_updated = rx
+            .await
+            .map_err(|_| anyhow::anyhow!("tray menu update task dropped"))??;
+        if !menu_updated {
+            logging!(debug, Type::Tray, "托盘弹出菜单可能正显示，延迟本次菜单更新");
+            self.schedule_deferred_menu_update();
+            return Ok(());
         }
 
         self.store_menu_signature(signature);
@@ -1100,6 +1118,7 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
     // 防止菜单显示期间被后台 set_menu 销毁导致点击无效。
     if let TrayIconEvent::Click {
         button: MouseButton::Right,
+        button_state: MouseButtonState::Down,
         ..
     } = tray_event
     {
@@ -1148,6 +1167,10 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
 }
 
 fn on_menu_event(_: &AppHandle, event: MenuEvent) {
+    // A menu item event is dispatched as the native popup closes. Release the
+    // guard even if click debouncing later drops this individual action.
+    Tray::global().clear_tray_menu_opened();
+
     if !Tray::global().should_handle_tray_click() {
         return;
     }
@@ -1290,6 +1313,17 @@ mod tests {
         let mut mode = sample_menu_data();
         mode.current_proxy_mode = "global".into();
         assert_ne!(sample_menu_data().signature(), mode.signature());
+    }
+
+    #[test]
+    fn menu_item_activation_releases_the_open_menu_guard() {
+        let tray = Tray::default();
+
+        tray.note_tray_menu_opened();
+        assert!(tray.menu_update_deferred());
+
+        tray.clear_tray_menu_opened();
+        assert!(!tray.menu_update_deferred());
     }
 
     #[test]
