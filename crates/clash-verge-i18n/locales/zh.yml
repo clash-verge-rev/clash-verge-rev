@@ -68,6 +68,7 @@ tray:
   global: 全局
   profiles: 订阅
   proxies: 代理
+  testLatency: 测试延迟
   systemProxy: 系统代理
   tunMode: TUN 模式
   closeAllConnections: 关闭所有连接

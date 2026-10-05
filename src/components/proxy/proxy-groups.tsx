@@ -23,6 +23,7 @@ import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData, useSystemData } from '@/providers/app-data-context'
+import { syncTrayProxySelection } from '@/services/cmds'
 import delayManager from '@/services/delay'
 import {
   isInteractableMember,
@@ -133,6 +134,9 @@ function useProxyRenderState(
         console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error)
       } finally {
         onProxies()
+        syncTrayProxySelection().catch((error) => {
+          console.error('[ProxyGroups] 托盘延迟同步失败:', error)
+        })
       }
     }),
   )

@@ -25,6 +25,8 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增系统托盘代理组中的「测试延迟」菜单项
+
 
 </details>
 
