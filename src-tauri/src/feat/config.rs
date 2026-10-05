@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger, proxy_control, tray},
+    core::{CoreManager, SilentUpdater, autostart, handle, hotkey, logger, proxy_control, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -310,6 +310,9 @@ pub(super) async fn apply_verge_patch_locked(
     // A failed patch rolls back to what the user already had; it never invents a value for them.
     process_terminated_flags(update_flags, patch).await?;
     transaction.commit();
+    if patch.auto_check_update == Some(false) {
+        SilentUpdater::global().discard_pending();
+    }
     announce_verge_change();
 
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
