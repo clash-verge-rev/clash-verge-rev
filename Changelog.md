@@ -23,6 +23,7 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化端口设置窗口的实现，精简重复代码
 - 优化侧边栏流量图表的 CPU 占用
 
 **🖥️ Windows**
