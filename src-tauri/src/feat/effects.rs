@@ -5,7 +5,6 @@ use std::collections::BTreeSet;
 pub(super) enum Effect {
     RestartCore,
     ClashConfig,
-    VergeConfig,
     Autostart,
     SystemProxy,
     TrayIcon,
@@ -90,8 +89,8 @@ verge_registry! {
     web_ui_list => NoEffect;
     clash_core => NoEffect;
     hotkeys => [Hotkey, TrayMenu];
-    enable_global_hotkey => [VergeConfig];
-    home_cards => [VergeConfig];
+    enable_global_hotkey => NoEffect;
+    home_cards => NoEffect;
     auto_close_connection => NoEffect;
     auto_check_update => NoEffect;
     default_latency_test => NoEffect;

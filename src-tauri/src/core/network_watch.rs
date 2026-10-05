@@ -5,13 +5,13 @@
 
 use crate::{config::Config, core::CoreManager, core::proxy_control, process::AsyncHandler};
 use clash_verge_logging::{Type, logging};
-use std::sync::atomic::{AtomicBool, Ordering};
+use parking_lot::Mutex;
 use sysproxy::NetworkServiceMonitor;
 
-static ARMED: AtomicBool = AtomicBool::new(false);
+static MONITOR: Mutex<Option<NetworkServiceMonitor>> = Mutex::new(None);
 
 pub fn is_armed() -> bool {
-    ARMED.load(Ordering::Acquire)
+    MONITOR.lock().is_some()
 }
 
 /// Subscribe to the primary IPv4 service on the main run loop. Armed on return, so a service
@@ -21,14 +21,7 @@ pub fn start() {
         AsyncHandler::spawn(reapply);
     }) {
         Ok(monitor) => {
-            if ARMED
-                .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                .is_err()
-            {
-                return;
-            }
-            // Dropping the monitor stops network notifications, so it must outlive the call.
-            std::mem::forget(monitor);
+            *MONITOR.lock() = Some(monitor);
             logging!(
                 debug,
                 Type::Core,
