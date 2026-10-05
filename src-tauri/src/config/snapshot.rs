@@ -3,7 +3,7 @@ use anyhow::{Context as _, Result, bail};
 use std::{io::ErrorKind, path::PathBuf};
 
 pub(crate) struct FileSnapshot {
-    path: PathBuf,
+    pub(crate) path: PathBuf,
     content: Option<Vec<u8>>,
 }
 
