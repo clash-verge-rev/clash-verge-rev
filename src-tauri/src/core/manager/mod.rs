@@ -238,7 +238,7 @@ impl CoreManager {
         }
     }
 
-    fn current_core_readiness_generation(&self) -> Option<u64> {
+    pub(crate) fn current_core_readiness_generation(&self) -> Option<u64> {
         active_core_readiness_generation(self.core_readiness_state.load(Ordering::Acquire))
     }
 

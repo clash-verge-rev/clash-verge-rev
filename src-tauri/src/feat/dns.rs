@@ -27,14 +27,6 @@ pub async fn set_dns_override(
     enabled: bool,
     confirmation: Option<String>,
 ) -> Result<DnsOverrideOutcome> {
-    crate::core::notify::after_commit(Box::pin(set_dns_override_inner(profile_uid, enabled, confirmation))).await
-}
-
-async fn set_dns_override_inner(
-    profile_uid: String,
-    enabled: bool,
-    confirmation: Option<String>,
-) -> Result<DnsOverrideOutcome> {
     let _profile_write = PROFILE_WRITE_LOCK.lock().await;
     let _config_write = Config::lock_config_write().await;
     let profiles = Config::profiles().await.data_arc();
@@ -83,8 +75,10 @@ async fn set_dns_override_inner(
     }
 
     transaction.commit();
-    verge.data_arc().save_file().await?;
+    // Core and memory state remain applied even when persistence fails.
+    let result = verge.data_arc().save_file().await;
     announce(Refresh::Verge);
     announce(Refresh::Clash);
+    result?;
     Ok(outcome)
 }

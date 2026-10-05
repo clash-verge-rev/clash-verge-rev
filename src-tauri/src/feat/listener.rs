@@ -27,12 +27,8 @@ pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutco
         .context("listener probe task failed")
 }
 
-pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
-    crate::core::notify::after_commit(Box::pin(save_proxy_ports_inner(settings))).await
-}
-
 #[allow(clippy::cognitive_complexity)]
-async fn save_proxy_ports_inner(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
+pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
     settings.validate()?;
     let _config_write = Config::lock_config_write().await;
     let manager = CoreManager::global();
