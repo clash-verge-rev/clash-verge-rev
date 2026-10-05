@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "端口 {{port}} 已被占用",
+        "runningPort": "当前运行端口：{{port}}",
+        "duplicatePort": "已启用的监听端口不能重复",
+        "invalidPort": "请输入 1 至 65535 之间的端口号",
         "saved": "端口设置已保存",
         "saveFailed": "端口设置保存失败",
         "automaticFallback": "端口 {{oldPort}} 已被占用，本次运行改用 {{newPort}}。设置未更改，下次启动会重新尝试 {{oldPort}}。",

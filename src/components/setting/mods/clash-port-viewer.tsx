@@ -13,6 +13,7 @@ import { forwardRef, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
+import { useClashInfo } from '@/hooks/use-clash'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useVerge } from '@/hooks/use-verge'
 import { saveProxyPorts } from '@/services/cmds'
@@ -32,11 +33,14 @@ const generateRandomPort = () =>
 export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
   const { verge } = useVerge()
+  const { clashInfo } = useClashInfo()
+  const configuredMixedPort =
+    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897
   const displayedMixedPort = useDisplayedMixedPort()
   const [open, setOpen] = useState(false)
 
   // Mixed Port
-  const [mixedPort, setMixedPort] = useState(displayedMixedPort)
+  const [mixedPort, setMixedPort] = useState(configuredMixedPort)
 
   // 其他端口状态
   const [socksPort, setSocksPort] = useState(verge?.verge_socks_port ?? 7898)
@@ -76,7 +80,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setMixedPort(displayedMixedPort)
+      setMixedPort(configuredMixedPort)
       setSocksPort(verge?.verge_socks_port ?? 7898)
       setSocksEnabled(verge?.verge_socks_enabled ?? false)
       setHttpPort(verge?.verge_port ?? 7899)
@@ -92,6 +96,14 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
   // TODO 减少代码复杂度，性能开支
   const onSave = useLockFn(async () => {
+    // The backend also rejects out-of-range ports on disabled listeners.
+    const isValidPort = (port: number) => port >= 1 && port <= 65535
+    const allPorts = [mixedPort, socksPort, httpPort, redirPort, tproxyPort]
+    if (!allPorts.every(isValidPort)) {
+      showNotice.error('settings.modals.clashPort.messages.invalidPort')
+      return
+    }
+
     // 端口冲突检测
     const portList = [
       mixedPort,
@@ -102,20 +114,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     ].filter((p) => p !== -1)
 
     if (new Set(portList).size !== portList.length) {
-      return
-    }
-
-    // 验证端口范围
-    const isValidPort = (port: number) => port >= 1 && port <= 65535
-    const allPortsValid = [
-      mixedPort,
-      socksEnabled ? socksPort : 0,
-      httpEnabled ? httpPort : 0,
-      redirEnabled ? redirPort : 0,
-      tproxyEnabled ? tproxyPort : 0,
-    ].every((port) => port === 0 || isValidPort(port))
-
-    if (!allPortsValid) {
+      showNotice.error('settings.modals.clashPort.messages.duplicatePort')
       return
     }
 
@@ -154,7 +153,17 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
           <ListItemText
             primary={t('settings.modals.clashPort.fields.mixed')}
-            slotProps={{ primary: { sx: { fontSize: 12 } } }}
+            secondary={
+              displayedMixedPort !== configuredMixedPort
+                ? t('settings.modals.clashPort.messages.runningPort', {
+                    port: displayedMixedPort,
+                  })
+                : undefined
+            }
+            slotProps={{
+              primary: { sx: { fontSize: 12 } },
+              secondary: { sx: { fontSize: 12 } },
+            }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <TextField

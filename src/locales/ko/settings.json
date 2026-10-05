@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "현재 사용 중인 포트: {{port}}",
+        "duplicatePort": "활성화된 리스너는 서로 다른 포트를 사용해야 합니다",
+        "invalidPort": "1에서 65535 사이의 포트 번호를 입력하세요",
         "saved": "포트 설정이 저장되었습니다",
         "saveFailed": "포트 설정 저장에 실패했습니다",
         "automaticFallback": "포트 {{oldPort}}이(가) 사용 중이어서 이번 실행은 {{newPort}}을(를) 사용합니다. 설정은 변경되지 않았으며 다음 시작 시 {{oldPort}}을(를) 다시 시도합니다.",
