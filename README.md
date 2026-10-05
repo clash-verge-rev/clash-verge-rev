@@ -50,7 +50,7 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 11+ (intel/apple).
 
 ### ✈️ [AI云边 -- 全新架构机场 ClaudeBorder](https://cruise.54678999.xyz/#/register?code=58q5UJZc)
 
-🔥热销中使用本链接注册即送 3 天免费试用**，每日 **1GB 流量**：👉 [点此注册](https://cruise.54678999.xyz/#/register?code=58q5UJZc)
+🔥热销中使用本链接注册即送 **3 天免费试用**，每日 **1GB 流量**：👉 [点此注册](https://cruise.54678999.xyz/#/register?code=58q5UJZc)
 
 #### AI云边 -- 全新架构机场。
 
