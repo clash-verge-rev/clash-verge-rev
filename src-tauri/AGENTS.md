@@ -6,10 +6,13 @@ These rules supplement the repository's root `AGENTS.md`.
    its draft and persistence APIs. Patch orchestration must use
    `feat/effects.rs` and `feat/executor.rs`; refresh notifications must use
    `core::notify::announce` after successful persistence and commit. This keeps
-   failed transactions from publishing state. Independent transactions retain
-   their boundaries and announce via `after_commit`; runtime-only profile
-   activation announces after successful application. Cross-layer operations
-   must preserve these ownership and transaction boundaries.
+   rolled-back transactions from publishing state. If runtime and memory state
+   are already committed and cannot be rolled back, announce that state even
+   when persistence fails, while preserving the persistence error. Independent
+   transactions retain their boundaries and announce their own committed
+   results; runtime-only profile activation announces after successful
+   application. Cross-layer operations must preserve these ownership and
+   transaction boundaries.
 2. **Register every new `IVerge` field.** Register the field in the
    exhaustive effect registry, including an explicit `NoEffect` where
    appropriate, and preserve its platform attributes. Manual field-to-flag

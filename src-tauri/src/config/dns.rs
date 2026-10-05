@@ -143,9 +143,9 @@ impl Config {
             PENDING_DNS_OVERRIDE_NOTICE.store(true, Ordering::Relaxed);
             Handle::notice(NoticeStatus::DnsOverrideAutoDisabled, "");
         }
-        verge.data_arc().save_file().await?;
+        let result = verge.data_arc().save_file().await;
         Handle::refresh_verge();
-        Ok(())
+        result
     }
 }
 

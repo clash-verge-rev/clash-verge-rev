@@ -1045,6 +1045,8 @@ fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
 }
 
 static PROVIDER_SYNC_QUEUED: AtomicBool = AtomicBool::new(false);
+// Serializing the whole read-and-publish pass prevents an older cache from replacing a newer one.
+static PROVIDER_SYNC_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 static SYNC_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 const RUNTIME_PROVIDER_SYNC_ATTEMPTS: u32 = 4;
 const CONTENT_COMPARE_CHUNK: usize = 64 * 1024;
@@ -1063,10 +1065,13 @@ pub(crate) fn request_runtime_provider_sync(delay: Duration) {
             ),
             |index| async move {
                 let attempt = index as u32 + 1;
-                if attempt == 1 {
-                    PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
-                }
-                let outcome = sync_runtime_providers_by_service().await;
+                let outcome = {
+                    let _serial = PROVIDER_SYNC_SERIAL.lock().await;
+                    if attempt == 1 {
+                        PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+                    }
+                    sync_runtime_providers_by_service().await
+                };
                 match outcome {
                     Ok(ProviderSync { pending: 0, .. }) => Ok(()),
                     Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
