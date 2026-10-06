@@ -472,23 +472,24 @@ pub fn run() -> std::process::ExitCode {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+        tauri::RunEvent::Exit => {
             // Windows session ending currently reaches Tao as WM_ENDSESSION and
             // destroys the loop without a preventable ExitRequested event.
             if !handle::Handle::global().is_exiting() {
                 handle::Handle::global().set_is_exiting();
-                let cleanup_result = feat::clean_session_ending_best_effort().await;
-                logging!(
-                    info,
-                    Type::System,
-                    "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
-                    cleanup_result.core_stopped,
-                    cleanup_result.all_success
-                );
+                if let Some(cleanup_result) = feat::clean_session_ending_with_hard_deadline() {
+                    logging!(
+                        info,
+                        Type::System,
+                        "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
+                        cleanup_result.core_stopped,
+                        cleanup_result.all_success
+                    );
+                }
             }
             logging!(info, Type::System, "Application exited");
             crate::core::logger::Logger::global().flush_logs();
-        }),
+        }
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {

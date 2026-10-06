@@ -297,7 +297,7 @@ importers:
         version: 2.5.1(react@19.3.0)
       tauri-plugin-mihomo-api:
         specifier: github:clash-verge-rev/tauri-plugin-mihomo#main
-        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ba8434c08c869916b8041d707ad66599bb5230b2
+        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7a03d16f4d39b1bb885b7babe66b9e153e34b615
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
@@ -4865,8 +4865,8 @@ packages:
     resolution: {integrity: sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA==}
     engines: {node: '>=18'}
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ba8434c08c869916b8041d707ad66599bb5230b2:
-    resolution: {gitHosted: true, integrity: sha512-dxCM8Uw9QJGOicxNZwBQYnDScIIO8E6wlVLEcZ6RQGDfK8UMuFFL1tiQYWxBjUd9z5JBqjHKOCoYTGezxd/3Yg==, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ba8434c08c869916b8041d707ad66599bb5230b2}
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7a03d16f4d39b1bb885b7babe66b9e153e34b615:
+    resolution: {gitHosted: true, integrity: sha512-1d1ELlQxqD6vb/77T7A9AKdLjPP1s9c+21i6D6Kw96DoCqxC5/aJFcG+ecYpSuSCggoYyVwWUuol1StgasB8Gw==, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7a03d16f4d39b1bb885b7babe66b9e153e34b615}
     version: 0.6.0
 
   teex@1.0.1:
@@ -10190,7 +10190,7 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ba8434c08c869916b8041d707ad66599bb5230b2:
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7a03d16f4d39b1bb885b7babe66b9e153e34b615:
     dependencies:
       '@tauri-apps/api': 2.12.1
 
