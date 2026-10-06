@@ -394,6 +394,8 @@ impl CoreManager {
         self.set_job_handle(None);
         proxy_control::stop_guard().await;
         self.core_stopped();
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::dns::sync_public_dns().await;
     }
 }
 

@@ -515,7 +515,13 @@ impl CoreManager {
     }
 
     async fn stop_sidecar_after_proxy_clear(&self) -> Result<()> {
-        run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await
+        let result =
+            run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await;
+        #[cfg(target_os = "macos")]
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            crate::utils::resolve::dns::sync_public_dns().await;
+        }
+        result
     }
 
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
@@ -544,6 +550,8 @@ impl CoreManager {
         .ok_or_else(|| {
             anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
         })?;
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::dns::sync_public_dns().await;
         // At login the app usually beats the network. Leave the write to the network watcher
         // rather than fail — only if the watcher is actually live; a user toggling while
         // offline still fails fast.
@@ -615,6 +623,8 @@ impl CoreManager {
         tracing::Span::current().record("decision", tracing::field::debug(&startup));
         if matches!(startup, StartupDecision::Wait) {
             self.rollback_failed_start().await;
+            #[cfg(target_os = "macos")]
+            crate::utils::resolve::dns::sync_public_dns().await;
             #[cfg(target_os = "windows")]
             self.try_sidecar_after_service_unavailable().await?;
             return Ok(());
@@ -649,6 +659,8 @@ impl CoreManager {
         // A failed start must not leave a locally reported running mode.
         if result.is_err() {
             self.rollback_failed_start().await;
+            #[cfg(target_os = "macos")]
+            crate::utils::resolve::dns::sync_public_dns().await;
             return result;
         }
 
@@ -737,11 +749,17 @@ impl CoreManager {
 
     async fn stop_core_unprepared_inner(&self) -> Result<()> {
         CLASH_LOGGER.clear_logs();
-        match *self.get_running_mode() {
+        let result = match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar_unprepared().await,
             RunningMode::NotRunning => Ok(()),
+        };
+        // A Sidecar whose exit wait failed is already marked stopped; a core still running keeps its DNS.
+        #[cfg(target_os = "macos")]
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            crate::utils::resolve::dns::sync_public_dns().await;
         }
+        result
     }
 
     #[tracing::instrument(skip_all, level = "info")]

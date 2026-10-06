@@ -81,15 +81,20 @@ where
 
 async fn restore_dns_after_core_stop() -> bool {
     #[cfg(target_os = "macos")]
+    // Outlasts the script's own deadline, so a hung restore is killed with its process group before exit.
     match timeout(
-        Duration::from_millis(1000),
+        crate::utils::resolve::dns::DNS_SCRIPT_TIMEOUT + Duration::from_secs(1),
         crate::utils::resolve::dns::restore_public_dns(),
     )
     .await
     {
-        Ok(_) => {
+        Ok(Ok(())) => {
             logging!(debug, Type::Window, "DNS设置已恢复");
             true
+        }
+        Ok(Err(err)) => {
+            logging!(warn, Type::Window, "恢复DNS设置失败: {err:#}");
+            false
         }
         Err(_) => {
             logging!(warn, Type::Window, "恢复DNS设置超时");
@@ -128,6 +133,19 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 
     if should_abort_exit_after_cleanup(cleanup_result.core_stopped) {
         handle::Handle::global().clear_is_exiting();
+        // A failed stop may still have marked the core stopped, and exit cleanup skipped the DNS restore.
+        // A core that kept running keeps its DNS, whatever an unapplied config draft says.
+        #[cfg(target_os = "macos")]
+        {
+            let manager = CoreManager::global();
+            let _lifecycle = manager.lifecycle_lock.lock().await;
+            if matches!(
+                *manager.get_running_mode(),
+                crate::core::manager::RunningMode::NotRunning
+            ) {
+                crate::utils::resolve::dns::sync_public_dns().await;
+            }
+        }
         handle::Handle::notice_message(
             "app_quit::core_stop_failed",
             cleanup_result.stop_error.unwrap_or_default(),
@@ -178,6 +196,9 @@ pub async fn clean_async() -> CleanupResult {
 pub async fn clean_session_ending_best_effort() -> CleanupResult {
     #[cfg(target_os = "windows")]
     let stop_timeout = Duration::from_secs(2);
+    // TODO(macOS): a DNS script already blocked when the session ends holds the lifecycle lock for up to
+    // DNS_SCRIPT_TIMEOUT, past this deadline; the stop is cancelled, the DNS restore skipped, and the
+    // script can still write after the app exits.
     #[cfg(not(target_os = "windows"))]
     let stop_timeout = Duration::from_secs(3);
 
