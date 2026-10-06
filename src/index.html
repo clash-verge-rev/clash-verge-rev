@@ -52,6 +52,9 @@
     </style>
   </head>
   <body>
+    <!-- 启动遮罩：遮盖 HTML 已加载、React 未就绪期间的闪烁。
+         出生于本文件（静态 HTML），由 AppRoot 在 React 树挂载后隐藏
+         （src/components/app-root.tsx）。新增任何顶层渲染路径无需关心本遮罩。 -->
     <div id="initial-loading-overlay"></div>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
