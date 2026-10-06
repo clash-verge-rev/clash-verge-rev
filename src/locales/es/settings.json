@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "Puerto actual: {{port}}",
+        "duplicatePort": "Los servicios de escucha habilitados deben usar puertos diferentes",
+        "invalidPort": "Introduce un puerto entre 1 y 65535",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "El puerto {{oldPort}} está en uso, por lo que esta sesión usa {{newPort}}. Tu configuración no ha cambiado y se volverá a intentar {{oldPort}} en el próximo inicio.",

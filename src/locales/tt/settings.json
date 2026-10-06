@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "Хәзер {{port}} порты кулланыла",
+        "duplicatePort": "Кабызылган тыңлаучылар төрле портлар кулланырга тиеш",
+        "invalidPort": "1 белән 65535 арасындагы порт номерын кертегез",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "Port {{oldPort}} was in use, so this session runs on {{newPort}}. Your setting is unchanged and {{oldPort}} is retried on the next start.",

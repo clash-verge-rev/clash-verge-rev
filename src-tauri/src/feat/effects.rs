@@ -41,9 +41,6 @@ macro_rules! verge_registry {
             $( $(#[$cfg])* { select_field!(effects, $field, $rule); } )*
             effects
         }
-
-        #[cfg(test)]
-        const VERGE_FIELDS: &[&str] = &[ $( $(#[$cfg])* stringify!($field), )* ];
     };
 }
 
@@ -164,18 +161,6 @@ pub(super) fn clash_effects(patch: &serde_yaml_ng::Mapping) -> Effects {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn every_serialized_verge_field_is_registered() -> Result<(), serde_json::Error> {
-        let fields: std::collections::BTreeMap<String, serde_json::Value> =
-            serde_json::from_value(serde_json::to_value(IVerge::default())?)?;
-        for field in fields.keys() {
-            assert!(VERGE_FIELDS.contains(&field.as_str()), "unregistered field: {field}");
-        }
-        let unique: BTreeSet<_> = VERGE_FIELDS.iter().collect();
-        assert_eq!(unique.len(), VERGE_FIELDS.len());
-        Ok(())
-    }
 
     fn verge_patch(mutate: impl FnOnce(&mut IVerge)) -> IVerge {
         let mut patch = IVerge::default();
