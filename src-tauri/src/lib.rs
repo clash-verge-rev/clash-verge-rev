@@ -138,6 +138,8 @@ mod app_init {
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
             cmd::restart_app,
+            cmd::install_update,
+            cmd::cancel_update_download,
             cmd::restart_core,
             cmd::upgrade_clash_core,
             cmd::get_runtime_state,
