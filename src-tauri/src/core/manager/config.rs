@@ -322,7 +322,7 @@ impl CoreManager {
         self.validate_and_apply(transaction).await
     }
 
-    /// Validates and applies the caller's transaction, committing only on success.
+    /// Commits the applied runtime even if restoring the system proxy subsequently fails.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
         let outcome = self.validate_and_apply_draft().await?;
         if outcome.is_valid() {
@@ -342,7 +342,10 @@ impl CoreManager {
         }
 
         let run_path = Config::write_runtime_file(&yaml).await?;
-        self.apply_config(run_path).await?;
+        let previous = self.current_core_readiness_generation();
+        let result = self.apply_config(run_path).await;
+        self.retain_applied_runtime(&Config::runtime().await, previous, &result);
+        result?;
         // Under the lifecycle lock, so a stop for exit waits for this write instead of outrunning it.
         #[cfg(target_os = "macos")]
         {
@@ -350,6 +353,21 @@ impl CoreManager {
             crate::utils::resolve::dns::sync_public_dns().await;
         }
         Ok(ValidationOutcome::Valid)
+    }
+
+    fn retain_applied_runtime(
+        &self,
+        runtime: &clash_verge_draft::Draft<IRuntime>,
+        previous: Option<u64>,
+        result: &Result<()>,
+    ) {
+        if result.is_ok()
+            || self
+                .current_core_readiness_generation()
+                .is_some_and(|current| Some(current) != previous)
+        {
+            runtime.apply();
+        }
     }
 
     /// Applies a generated configuration through the active core owner.
@@ -442,6 +460,31 @@ mod tests {
     use super::{ConfigApplication, StageAttempt, StageRequest, plan_config_application, stage_with_confirmation};
     use clash_verge_service_ipc::{StageRejection, StageRuntimeOutcome};
     use std::{cell::Cell, time::Duration};
+
+    #[test]
+    fn a_ready_replacement_keeps_the_applied_runtime_when_proxy_restore_fails() -> anyhow::Result<()> {
+        use crate::{config::runtime::IRuntime, core::CoreManager};
+        use clash_verge_draft::{Draft, DraftTransaction};
+
+        for replaced in [false, true] {
+            let manager = CoreManager::default();
+            manager.mark_core_ready();
+            let previous = manager.current_core_readiness_generation();
+            let runtime = Draft::new(IRuntime::default());
+            let transaction = DraftTransaction::begin(vec![&runtime])?;
+            runtime.edit_draft(|draft| {
+                draft.exists_keys.insert("replacement".into());
+            });
+            if replaced {
+                manager.mark_core_ready();
+            }
+            let result = Err(anyhow::anyhow!("system proxy restore failed"));
+            manager.retain_applied_runtime(&runtime, previous, &result);
+            transaction.rollback();
+            assert_eq!(runtime.data_arc().exists_keys.contains("replacement"), replaced);
+        }
+        Ok(())
+    }
 
     const CONFIRM_WITHIN: Duration = Duration::from_secs(5);
 

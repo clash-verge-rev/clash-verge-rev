@@ -1,46 +1,18 @@
-use backon::{BackoffBuilder as _, ExponentialBackoff, ExponentialBuilder};
 use std::{future::Future, num::NonZeroUsize, time::Duration};
-
-#[derive(Clone, Copy, Debug)]
-pub enum Backoff {
-    Fixed(Duration),
-    #[allow(dead_code)]
-    Exponential {
-        base: Duration,
-        cap: Duration,
-    },
-}
 
 #[derive(Clone, Copy, Debug)]
 pub struct RetryPolicy {
     pub attempts: NonZeroUsize,
-    pub backoff: Backoff,
-    pub jitter: bool,
+    delay: Duration,
 }
 
 impl RetryPolicy {
     pub const fn fixed(attempts: NonZeroUsize, delay: Duration) -> Self {
-        Self {
-            attempts,
-            backoff: Backoff::Fixed(delay),
-            jitter: false,
-        }
+        Self { attempts, delay }
     }
 
-    fn delays(self) -> ExponentialBackoff {
-        let (base, cap, factor) = match self.backoff {
-            Backoff::Fixed(delay) => (delay, delay, 1.0),
-            Backoff::Exponential { base, cap } => (base, cap, 2.0),
-        };
-        let mut builder = ExponentialBuilder::default()
-            .with_min_delay(base)
-            .with_max_delay(cap)
-            .with_factor(factor)
-            .with_max_times(self.attempts.get() - 1);
-        if self.jitter {
-            builder = builder.with_jitter();
-        }
-        builder.build()
+    fn delays(self) -> impl Iterator<Item = Duration> {
+        std::iter::repeat_n(self.delay, self.attempts.get() - 1)
     }
 }
 
@@ -82,11 +54,7 @@ pub async fn try_strategies<
     mut operation: impl FnMut(S) -> Fut + Send,
 ) -> Result<(S, T), E> {
     retry(
-        RetryPolicy {
-            attempts: NonZeroUsize::MIN.saturating_add(N),
-            backoff: Backoff::Fixed(Duration::ZERO),
-            jitter: false,
-        },
+        RetryPolicy::fixed(NonZeroUsize::MIN.saturating_add(N), Duration::ZERO),
         move |attempt| {
             let strategy = if attempt == 0 { first } else { rest[attempt - 1] };
             let future = operation(strategy);
@@ -145,11 +113,7 @@ mod tests {
 
     #[tokio::test]
     async fn retries_stop_at_success_terminal_error_or_attempt_limit() {
-        let policy = RetryPolicy {
-            attempts: NonZeroUsize::MIN.saturating_add(2),
-            backoff: Backoff::Fixed(Duration::ZERO),
-            jitter: false,
-        };
+        let policy = RetryPolicy::fixed(NonZeroUsize::MIN.saturating_add(2), Duration::ZERO);
         let mut calls = 0;
         let success = retry(policy, |attempt| {
             calls += 1;

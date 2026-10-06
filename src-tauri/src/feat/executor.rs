@@ -63,8 +63,6 @@ async fn ensure_effect(
         }
         Effect::ClashConfig => {
             manager.update_config_in_patch(update).await?;
-            Config::runtime().await.apply();
-            announce(Refresh::Clash);
         }
         Effect::Autostart => autostart::update_launch().await?,
         Effect::Language => {
@@ -123,7 +121,7 @@ async fn ensure_effect(
     Ok(())
 }
 
-async fn apply_inner(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
+pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
     let manager = CoreManager::global();
     let update = manager.claim_config_update(config_write)?;
     let clash = Config::clash().await;
@@ -167,6 +165,7 @@ async fn apply_inner(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effect
     if let Err(error) = result {
         transaction.rollback();
         if !Arc::ptr_eq(&original_runtime, &runtime.data_arc()) {
+            announce(Refresh::Clash);
             // The Core already loaded this runtime; restoring its file would only hide that state.
             let runtime_path = crate::utils::dirs::app_home_dir()?.join(crate::constants::files::RUNTIME_CONFIG);
             snapshots.retain(|snapshot| snapshot.path != runtime_path);
@@ -179,22 +178,15 @@ async fn apply_inner(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effect
     transaction.commit();
     match patch {
         Patch::Verge { .. } => {
+            if effects.contains(&Effect::ClashConfig) {
+                announce(Refresh::Clash);
+            }
             logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
             announce(Refresh::Verge);
         }
         Patch::Clash(_) => announce(Refresh::Clash),
     }
     Ok(())
-}
-
-pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
-    let runtime = Config::runtime().await;
-    let original = runtime.data_arc();
-    let result = crate::core::notify::after_commit(apply_inner(config_write, patch, effects)).await;
-    if result.is_err() && !Arc::ptr_eq(&original, &runtime.data_arc()) {
-        announce(Refresh::Clash);
-    }
-    result
 }
 
 #[cfg(test)]
