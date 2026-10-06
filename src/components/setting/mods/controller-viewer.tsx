@@ -2,7 +2,6 @@ import { ContentCopy } from '@mui/icons-material'
 import {
   Alert,
   Box,
-  CircularProgress,
   IconButton,
   List,
   ListItem,
@@ -16,9 +15,9 @@ import { useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
-import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { getExternalController, saveExternalController } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { revalidateQueries } from '@/services/query-client'
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
@@ -26,55 +25,52 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [copySuccess, setCopySuccess] = useState<null | string>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  const { clashInfo, patchInfo } = useClashInfo()
-  const { verge, patchVerge } = useVerge()
-  const [controller, setController] = useState(clashInfo?.server || '')
-  const [secret, setSecret] = useState(clashInfo?.secret || '')
-  const [enableController, setEnableController] = useState(
-    verge?.enable_external_controller ?? false,
-  )
+  const [controller, setController] = useState('')
+  const [secret, setSecret] = useState('')
+  const [enableController, setEnableController] = useState(false)
 
-  // 对话框打开时初始化配置
   useImperativeHandle(ref, () => ({
     open: async () => {
-      setOpen(true)
-      setController(clashInfo?.server || '')
-      setSecret(clashInfo?.secret || '')
-      setEnableController(verge?.enable_external_controller ?? false)
+      try {
+        const settings = await getExternalController()
+        setController(settings.address)
+        setSecret(settings.secret)
+        setEnableController(settings.enabled)
+        setOpen(true)
+      } catch (err) {
+        showNotice.error(err)
+      }
     },
-    close: () => setOpen(false),
+    close: () => {
+      if (!isSaving) setOpen(false)
+    },
   }))
 
-  // 保存配置
   const onSave = useLockFn(async () => {
+    if (enableController && !controller.trim()) {
+      showNotice.error(
+        'settings.sections.externalController.messages.addressRequired',
+      )
+      return
+    }
+    if (enableController && !secret.trim()) {
+      showNotice.error(
+        'settings.sections.externalController.messages.secretRequired',
+      )
+      return
+    }
     try {
       setIsSaving(true)
-
-      // 先保存 enable_external_controller 设置
-      await patchVerge({ enable_external_controller: enableController })
-
-      // 如果启用了外部控制器，则保存控制器地址和密钥
-      if (enableController) {
-        if (!controller.trim()) {
-          showNotice.error(
-            'settings.sections.externalController.messages.addressRequired',
-          )
-          return
-        }
-
-        if (!secret.trim()) {
-          showNotice.error(
-            'settings.sections.externalController.messages.secretRequired',
-          )
-          return
-        }
-
-        await patchInfo({ 'external-controller': controller, secret })
-      } else {
-        // 如果禁用了外部控制器，则清空控制器地址
-        await patchInfo({ 'external-controller': '' })
-      }
-
+      await saveExternalController({
+        enabled: enableController,
+        address: controller,
+        secret,
+      })
+      void revalidateQueries([
+        ['getClashInfo'],
+        ['getVergeConfig'],
+        ['getRuntimeConfig'],
+      ])
       showNotice.success('shared.feedback.notifications.common.saveSuccess')
       setOpen(false)
     } catch (err) {
@@ -87,6 +83,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setIsSaving(false)
     }
   })
+
+  const onClose = () => {
+    if (!isSaving) setOpen(false)
+  }
 
   // 复制到剪贴板
   const handleCopyToClipboard = useLockFn(
@@ -109,19 +109,12 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={t('settings.sections.externalController.title')}
       contentSx={{ width: 400 }}
-      okBtn={
-        isSaving ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CircularProgress size={16} color="inherit" />
-            {t('shared.statuses.saving')}
-          </Box>
-        ) : (
-          t('shared.actions.save')
-        )
-      }
+      okBtn={t('shared.actions.save')}
       cancelBtn={t('shared.actions.cancel')}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      loading={isSaving}
+      disableCancel={isSaving}
+      onClose={onClose}
+      onCancel={onClose}
       onOk={onSave}
     >
       <List>

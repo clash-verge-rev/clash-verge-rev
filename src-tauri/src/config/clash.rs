@@ -174,6 +174,10 @@ impl IClashTemp {
         }
     }
 
+    pub fn get_external_controller_address(&self) -> String {
+        Self::guard_server_ctrl(&self.0)
+    }
+
     /// 容错读取当前代理模式。
     ///
     /// 仅从已保存的 clash 配置 Mapping 中提取 `mode` 字段，不依赖 mihomo `/configs`
