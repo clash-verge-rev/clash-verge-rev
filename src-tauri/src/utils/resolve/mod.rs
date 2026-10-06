@@ -21,6 +21,7 @@ use crate::{
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_signal;
 
+#[cfg(target_os = "macos")]
 pub mod dns;
 mod scheme;
 pub(crate) mod window;
@@ -102,7 +103,7 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     #[cfg(target_os = "macos")]
     {
         use dns::restore_public_dns;
-        restore_public_dns().await;
+        restore_public_dns().await?;
     }
 
     Ok(())

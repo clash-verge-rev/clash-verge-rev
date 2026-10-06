@@ -311,6 +311,12 @@ impl CoreManager {
         let run_path = Config::write_runtime_file(&yaml).await?;
         self.apply_config(run_path).await?;
         transaction.commit();
+        // Under the lifecycle lock, so a stop for exit waits for this write instead of outrunning it.
+        #[cfg(target_os = "macos")]
+        {
+            let _lifecycle = self.lifecycle_lock.lock().await;
+            crate::utils::resolve::dns::sync_public_dns().await;
+        }
         Ok(ValidationOutcome::Valid)
     }
 
