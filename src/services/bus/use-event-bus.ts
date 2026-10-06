@@ -31,10 +31,6 @@ export const useEventBus = (
       dispatch,
       handleNotice,
       revalidateKeys,
-      revalidateProfiles: () => {
-        void revalidateQueries([['getProfiles']])
-      },
-      refreshProxyView: () => revalidateKeys(['getProxyView']),
       readPendingFailures,
       readRunState,
     })
