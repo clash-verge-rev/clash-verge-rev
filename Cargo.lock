@@ -384,7 +384,7 @@ dependencies = [
  "os_info",
  "smappservice-rs",
  "thiserror 2.0.20",
- "windows-registry 0.6.1",
+ "windows-registry",
  "windows-result 0.4.1",
 ]
 
@@ -1113,7 +1113,7 @@ dependencies = [
  "getrandom 0.4.3",
  "libc",
  "log",
- "minisign-verify",
+ "minisign-verify 0.3.0",
  "nanoid",
  "network-interface",
  "objc2",
@@ -1125,7 +1125,7 @@ dependencies = [
  "regex",
  "reqwest 0.13.5",
  "reqwest_dav",
- "rfd",
+ "rfd 0.17.2",
  "runas",
  "rustls",
  "scopeguard",
@@ -3335,7 +3335,7 @@ dependencies = [
  "tokio",
  "tower-service",
  "tracing",
- "windows-registry 0.5.3",
+ "windows-registry",
 ]
 
 [[package]]
@@ -4164,6 +4164,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22f9645cb765ea72b8111f36c522475d2daa0d22c957a9826437e97534bc4e9e"
 
 [[package]]
+name = "minisign-verify"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "871285dc19d8d0ebe0eef3d0e99a205f2a71363b122632cbbfa4a6c370a960ce"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4480,9 +4486,9 @@ dependencies = [
 
 [[package]]
 name = "objc2"
-version = "0.6.4"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a12a8ed07aefc768292f076dc3ac8c48f3781c8f2d5851dd3d98950e8c5a89f"
+checksum = "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8"
 dependencies = [
  "objc2-encode",
  "objc2-exception-helper",
@@ -5892,6 +5898,29 @@ dependencies = [
  "wasm-bindgen-futures",
  "web-sys",
  "windows-sys 0.60.2",
+]
+
+[[package]]
+name = "rfd"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20dafead71c16a34e1ff357ddefc8afc11e7d51d6d2b9fbd07eaa48e3e540220"
+dependencies = [
+ "block2",
+ "dispatch2",
+ "js-sys",
+ "libc",
+ "log",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-foundation",
+ "percent-encoding",
+ "raw-window-handle",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7308,7 +7337,7 @@ dependencies = [
  "thiserror 2.0.20",
  "tracing",
  "url",
- "windows-registry 0.6.1",
+ "windows-registry",
  "windows-result 0.4.1",
 ]
 
@@ -7347,7 +7376,7 @@ checksum = "daf9a5c92e39bdd84f22f6be9230e39d0c4e140345f71ffe6058dca4f71127cf"
 dependencies = [
  "log",
  "raw-window-handle",
- "rfd",
+ "rfd 0.16.0",
  "serde",
  "serde_json",
  "tauri",
@@ -7530,7 +7559,7 @@ dependencies = [
  "http",
  "infer",
  "log",
- "minisign-verify",
+ "minisign-verify 0.2.5",
  "osakit",
  "percent-encoding",
  "reqwest 0.13.5",
@@ -9277,17 +9306,6 @@ checksum = "6e2e40844ac143cdb44aead537bbf727de9b044e107a0f1220392177d15b0f26"
 dependencies = [
  "windows-core 0.62.2",
  "windows-link 0.2.1",
-]
-
-[[package]]
-name = "windows-registry"
-version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b8a9ed28765efc97bbc954883f4e6796c33a06546ebafacbabee9696967499e"
-dependencies = [
- "windows-link 0.1.3",
- "windows-result 0.3.4",
- "windows-strings 0.4.2",
 ]
 
 [[package]]
