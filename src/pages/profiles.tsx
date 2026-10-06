@@ -6,6 +6,7 @@ import {
 } from '@dnd-kit/react'
 import { isSortable } from '@dnd-kit/react/sortable'
 import {
+  AltRouteRounded,
   CheckBoxOutlineBlankRounded,
   CheckBoxRounded,
   ClearRounded,
@@ -38,6 +39,7 @@ import {
   ProfileViewer,
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
+import { RoutingViewer } from '@/components/profile/routing-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { useListen } from '@/hooks/use-listen'
 import { fetchProfilesIntoCache, useProfiles } from '@/hooks/use-profiles'
@@ -45,6 +47,7 @@ import {
   createProfile,
   deleteProfile,
   enhanceProfiles,
+  getProfiles,
   getRuntimeLogs,
   importProfile,
   reorderProfile,
@@ -92,6 +95,9 @@ const ProfilePage = () => {
     string | null
   >(null)
   const [loading, setLoading] = useState(false)
+  const [routingLoading, setRoutingLoading] = useState(false)
+  const [routingSnapshot, setRoutingSnapshot] =
+    useState<IProfilesConfig | null>(null)
   const [timerUpdateRevisions, setTimerUpdateRevisions] = useState<
     Map<string, number>
   >(() => new Map())
@@ -609,6 +615,17 @@ const ProfilePage = () => {
     if (text) setUrl(text)
   }
 
+  const onOpenRouting = async () => {
+    setRoutingLoading(true)
+    try {
+      setRoutingSnapshot(await getProfiles())
+    } catch (error) {
+      showNotice.error(error)
+    } finally {
+      setRoutingLoading(false)
+    }
+  }
+
   const toggleBatchMode = () => {
     setBatchMode(!batchMode)
     if (!batchMode) {
@@ -742,6 +759,16 @@ const ProfilePage = () => {
                 <TextSnippetOutlined />
               </IconButton>
 
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<AltRouteRounded />}
+                loading={routingLoading}
+                onClick={() => void onOpenRouting()}
+              >
+                {t('profiles.page.actions.subscriptionRouting')}
+              </Button>
+
               <IconButton
                 size="small"
                 color="primary"
@@ -818,6 +845,13 @@ const ProfilePage = () => {
         </Box>
       }
     >
+      {routingSnapshot && (
+        <RoutingViewer
+          profiles={routingSnapshot}
+          onSave={patchProfiles}
+          onClose={() => setRoutingSnapshot(null)}
+        />
+      )}
       <Stack
         direction="row"
         spacing={1}

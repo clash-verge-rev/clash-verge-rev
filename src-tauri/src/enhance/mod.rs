@@ -1,6 +1,7 @@
 mod chain;
 pub mod field;
 mod merge;
+mod routing;
 mod script;
 pub mod seq;
 mod tun;
@@ -21,7 +22,7 @@ use crate::{
     constants,
     utils::tmpl,
 };
-use anyhow::{Context as _, Result};
+use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::{Mapping, Value};
@@ -963,6 +964,7 @@ pub async fn enhance(
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 
+    let (config, result_map) = apply_profile_routing(config, profiles, result_map).await?;
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
 
@@ -970,6 +972,58 @@ pub async fn enhance(
     exists_keys_set.extend(exists_keys);
 
     Ok((config, exists_keys_set, result_map, dns_override))
+}
+
+async fn apply_profile_routing(
+    config: Mapping,
+    profiles: &IProfiles,
+    mut logs: HashMap<String, ResultLog>,
+) -> Result<(Mapping, HashMap<String, ResultLog>)> {
+    let mut sources = Vec::new();
+    for route in profiles.routing.iter().flatten().filter(|route| route.enabled) {
+        let item = profiles.get_item(&route.profile)?;
+        if !matches!(item.itype.as_deref(), Some("remote" | "local")) {
+            bail!("Subscription routing requires a local or remote profile");
+        }
+        let source_profiles = IProfiles {
+            current: Some(route.profile.clone()),
+            // Global extensions have already run on the base configuration.
+            items: profiles.items.as_ref().map(|items| {
+                items
+                    .iter()
+                    .filter(|item| {
+                        !matches!(
+                            item.uid.as_deref(),
+                            Some("Merge" | "Script" | "Rules" | "Proxies" | "Groups")
+                        )
+                    })
+                    .cloned()
+                    .collect()
+            }),
+            routing: None,
+        };
+        let source = collect_profile_items(&source_profiles).await?;
+        let source_config = process_seq_items(
+            source.config,
+            source.rules_item,
+            source.proxies_item,
+            source.groups_item,
+        );
+        let authoritative = AuthoritativeFields::capture(&source_config, &[], Mapping::new());
+        let (source_config, _, source_logs) = process_profile_items(
+            source_config,
+            Vec::new(),
+            HashMap::new(),
+            source.merge_item,
+            source.script_item,
+            &source.profile_name,
+            &authoritative,
+        )
+        .await;
+        logs.extend(source_logs);
+        sources.push((route.clone(), source_config));
+    }
+    Ok((routing::apply_routes(config, &sources)?, logs))
 }
 
 #[cfg(test)]

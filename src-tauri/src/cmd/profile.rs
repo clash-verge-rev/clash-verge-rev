@@ -11,7 +11,14 @@ use crate::{
         },
         profiles_append_item_safe,
     },
-    core::{CoreManager, handle, timer::Timer, tray::Tray, validate::ValidationOutcome},
+    core::{
+        CoreManager, handle,
+        listener::{ListenerProbe, ListenerProbeOutcome, ListenerTransport},
+        manager::RunningMode,
+        timer::Timer,
+        tray::Tray,
+        validate::ValidationOutcome,
+    },
     feat,
     utils::{dirs, help},
 };
@@ -206,6 +213,7 @@ async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
     let restore_profiles = IProfiles {
         current: Some(prev_profile.to_owned()),
         items: None,
+        routing: None,
     };
     Config::profiles()
         .await
@@ -230,6 +238,7 @@ async fn commit_current_profile(profiles: &Draft<IProfiles>, current: Option<Str
             committed.patch_config(&IProfiles {
                 current: Some(current),
                 items: None,
+                routing: None,
             });
             Ok((committed, ()))
         })
@@ -324,6 +333,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
     }
     let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
+    if profiles.routing.is_some() {
+        defer! {
+            CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
+        }
+        return apply_profile_routing(profiles).await;
+    }
+
     let target_profile = profiles.current.as_ref();
 
     let previous_profile = Config::profiles().await.data_arc().current.clone();
@@ -335,10 +351,114 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
         .map_err(|error| coded_error("PROFILE_SWITCH_FAILED", error))
 }
 
+async fn apply_profile_routing(patch: IProfiles) -> CmdResult<ValidationOutcome> {
+    let profiles = Config::profiles().await;
+    let result = profiles
+        .with_data_modify(|mut candidate| async move {
+            let original = candidate.clone();
+            candidate.patch_config(&patch);
+            normalize_profile_routing(&mut candidate)?;
+            probe_routing_ports(&candidate, &original).await?;
+            match CoreManager::global()
+                .update_config_forced_with_profiles(&candidate, &original)
+                .await?
+            {
+                Ok(guard) => Ok((candidate, Ok(guard))),
+                Err(outcome) => Ok((original, Err(outcome))),
+            }
+        })
+        .await
+        .with_error_code("PROFILE_UPDATE_FAILED")?;
+    let guard = match result {
+        Ok(guard) => guard,
+        Err(outcome) => return Ok(outcome),
+    };
+    profiles::activate_selected_nodes();
+    drop(guard);
+    logging_error!(Type::Config, Config::sync_dns_override().await);
+    handle::Handle::refresh_clash();
+    Ok(ValidationOutcome::Valid)
+}
+
+fn normalize_profile_routing(profiles: &mut IProfiles) -> anyhow::Result<()> {
+    for route in profiles.routing.iter().flatten() {
+        let source = profiles.get_item(&route.profile)?;
+        if !matches!(source.itype.as_deref(), Some("remote" | "local")) {
+            anyhow::bail!("Subscription routing requires a local or remote profile");
+        }
+    }
+    for route in profiles.routing.iter_mut().flatten() {
+        route.domains = route
+            .domains
+            .iter()
+            .map(|domain| crate::config::normalize_domain(domain))
+            .collect::<anyhow::Result<_>>()?;
+        route.exact_domains = route
+            .exact_domains
+            .iter()
+            .map(|domain| crate::config::normalize_domain(domain))
+            .collect::<anyhow::Result<_>>()?;
+    }
+    Ok(())
+}
+
+async fn probe_routing_ports(candidate: &IProfiles, previous: &IProfiles) -> anyhow::Result<()> {
+    let running = !matches!(*CoreManager::global().get_running_mode(), RunningMode::NotRunning);
+    let runtime = Config::runtime().await.data_arc();
+    for port in candidate
+        .routing
+        .iter()
+        .flatten()
+        .filter(|route| route.enabled)
+        .filter_map(|route| route.port)
+    {
+        let was_applied = runtime
+            .config
+            .as_ref()
+            .and_then(|config| config.get("listeners"))
+            .and_then(serde_yaml_ng::Value::as_sequence)
+            .is_some_and(|listeners| {
+                listeners.iter().any(|listener| {
+                    listener
+                        .get("name")
+                        .and_then(serde_yaml_ng::Value::as_str)
+                        .is_some_and(|name| name.starts_with("CVR:"))
+                        && listener.get("type").and_then(serde_yaml_ng::Value::as_str) == Some("mixed")
+                        && listener.get("listen").and_then(serde_yaml_ng::Value::as_str) == Some("127.0.0.1")
+                        && listener.get("port").and_then(serde_yaml_ng::Value::as_u64) == Some(u64::from(port))
+                })
+            });
+        if running
+            && was_applied
+            && previous
+                .routing
+                .iter()
+                .flatten()
+                .any(|route| route.enabled && route.port == Some(port))
+        {
+            continue;
+        }
+        let outcome = feat::probe_listener(ListenerProbe {
+            address: format!("127.0.0.1:{port}"),
+            transports: vec![ListenerTransport::Tcp, ListenerTransport::Udp],
+        })
+        .await?;
+        match outcome {
+            ListenerProbeOutcome::Available => {}
+            ListenerProbeOutcome::Conflict { .. } => anyhow::bail!("Local proxy port {port} is already in use"),
+            ListenerProbeOutcome::Invalid { message } | ListenerProbeOutcome::Indeterminate { message } => {
+                anyhow::bail!(message)
+            }
+        }
+    }
+    Ok(())
+}
+
 pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<ValidationOutcome> {
     let profiles = IProfiles {
         current: Some(profile_index),
         items: None,
+        routing: None,
     };
     patch_profiles_config(profiles).await
 }
@@ -487,14 +607,21 @@ mod tests {
 
     #[tokio::test]
     async fn committing_profile_switch_preserves_profiles_added_after_draft_creation() -> anyhow::Result<()> {
+        let routing = vec![crate::config::ProfileRoute {
+            profile: "a".into(),
+            domains: vec!["example.com".into()],
+            ..Default::default()
+        }];
         let profiles = Draft::new(IProfiles {
             current: Some("a".into()),
             items: Some(vec![profile("a"), profile("b")]),
+            routing: Some(routing.clone()),
         });
         profiles.edit_draft(|draft| {
             draft.patch_config(&IProfiles {
                 current: Some("b".into()),
                 items: None,
+                routing: None,
             });
         });
         profiles
@@ -509,6 +636,7 @@ mod tests {
         let committed = profiles.data_arc();
         assert_eq!(committed.current.as_deref(), Some("b"));
         assert!(committed.get_item("new").is_ok());
+        assert_eq!(committed.routing, Some(routing));
         Ok(())
     }
 

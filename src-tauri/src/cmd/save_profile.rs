@@ -99,24 +99,31 @@ async fn restore_original(
 }
 
 fn profile_affects_runtime(profiles: &IProfiles, index: &str) -> bool {
-    let Some(current_uid) = profiles.current.as_ref() else {
-        return false;
-    };
-    if current_uid == index {
+    if profiles.uses_profile(index) {
         return true;
     }
-
-    let Ok(item) = profiles.get_item(current_uid) else {
-        return false;
-    };
-    [
-        item.current_merge().map_or("Merge", String::as_str),
-        item.current_script().map_or("Script", String::as_str),
-        item.current_rules().map_or("Rules", String::as_str),
-        item.current_proxies().map_or("Proxies", String::as_str),
-        item.current_groups().map_or("Groups", String::as_str),
-    ]
-    .contains(&index)
+    profiles
+        .current
+        .iter()
+        .chain(
+            profiles
+                .routing
+                .iter()
+                .flatten()
+                .filter(|route| route.enabled)
+                .map(|route| &route.profile),
+        )
+        .filter_map(|uid| profiles.get_item(uid).ok())
+        .any(|item| {
+            [
+                item.current_merge().map_or("Merge", String::as_str),
+                item.current_script().map_or("Script", String::as_str),
+                item.current_rules().map_or("Rules", String::as_str),
+                item.current_proxies().map_or("Proxies", String::as_str),
+                item.current_groups().map_or("Groups", String::as_str),
+            ]
+            .contains(&index)
+        })
 }
 
 async fn handle_saved_profile_file(
@@ -177,5 +184,39 @@ async fn handle_saved_profile_file(
             restore_original(file_path, original_content, original_existed).await?;
             Err(err.to_string().into())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::profile_affects_runtime;
+    use crate::config::{IProfiles, PrfItem, PrfOption, ProfileRoute};
+
+    #[test]
+    fn routing_source_extensions_trigger_runtime_updates_only_when_enabled() {
+        let mut profiles = IProfiles {
+            current: Some("base".into()),
+            items: Some(vec![PrfItem {
+                uid: Some("source".into()),
+                option: Some(PrfOption {
+                    script: Some("source-script".into()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }]),
+            routing: Some(vec![ProfileRoute {
+                profile: "source".into(),
+                domains: vec!["example.com".into()],
+                ..Default::default()
+            }]),
+        };
+        assert!(profile_affects_runtime(&profiles, "source"));
+        assert!(profile_affects_runtime(&profiles, "source-script"));
+        assert!(!profile_affects_runtime(&profiles, "unrelated-script"));
+        for route in profiles.routing.iter_mut().flatten() {
+            route.enabled = false;
+        }
+        assert!(!profile_affects_runtime(&profiles, "source"));
+        assert!(!profile_affects_runtime(&profiles, "source-script"));
     }
 }

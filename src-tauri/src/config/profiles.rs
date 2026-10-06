@@ -1,5 +1,5 @@
 use super::{
-    PrfOption,
+    PrfOption, ProfileRoute,
     prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
 };
 use crate::{
@@ -50,6 +50,9 @@ pub struct IProfiles {
     pub current: Option<String>,
 
     pub items: Option<Vec<PrfItem>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub routing: Option<Vec<ProfileRoute>>,
 }
 
 pub struct IProfilePreview<'a> {
@@ -149,6 +152,10 @@ impl IProfiles {
     pub fn patch_config(&mut self, patch: &Self) {
         if self.items.is_none() {
             self.items = Some(vec![]);
+        }
+
+        if let Some(routing) = &patch.routing {
+            self.routing = Some(routing.clone());
         }
 
         if let Some(current) = &patch.current
@@ -333,6 +340,13 @@ impl IProfiles {
     }
 
     pub(crate) fn plan_delete_item(&mut self, uid: &str) -> Result<(bool, ProfileDeletePlan)> {
+        if self
+            .routing
+            .as_ref()
+            .is_some_and(|routes| routes.iter().any(|route| route.profile == uid))
+        {
+            bail!("Remove this profile's subscription routing entry before deleting it");
+        }
         let deleting_current = self.current.as_deref().is_none_or(|current| current == uid);
         let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
             [
@@ -387,6 +401,14 @@ impl IProfiles {
             }
             _ => Ok(Mapping::new()),
         }
+    }
+
+    pub(crate) fn uses_profile(&self, uid: &str) -> bool {
+        self.current.as_deref() == Some(uid)
+            || self
+                .routing
+                .as_ref()
+                .is_some_and(|routes| routes.iter().any(|route| route.enabled && route.profile == uid))
     }
 
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
@@ -1091,6 +1113,7 @@ mod tests {
     async fn missing_reorder_ids_preserve_ordered_items() -> Result<()> {
         let mut profiles = IProfiles {
             current: Some("a".into()),
+            routing: None,
             items: Some(vec![
                 PrfItem {
                     uid: Some("a".into()),
@@ -1128,6 +1151,7 @@ mod tests {
     fn raising_intervals_only_touches_those_scheduled_too_often() {
         let mut profiles = IProfiles {
             current: None,
+            routing: None,
             items: Some(vec![
                 interval_item("too-often", Some(60)),
                 interval_item("just-under", Some(1439)),
@@ -1165,9 +1189,37 @@ mod tests {
     }
 
     #[test]
+    fn routing_sources_refresh_only_when_enabled_and_cannot_be_deleted() -> Result<()> {
+        let mut profiles = IProfiles {
+            current: Some("base".into()),
+            items: Some(vec![
+                deletion_item("base", "remote", "base.yaml", None),
+                deletion_item("source", "remote", "source.yaml", None),
+            ]),
+            routing: Some(vec![ProfileRoute {
+                profile: "source".into(),
+                domains: vec!["example.com".into()],
+                ..Default::default()
+            }]),
+        };
+        assert!(profiles.uses_profile("base"));
+        assert!(profiles.uses_profile("source"));
+        assert!(profiles.plan_delete_item("source").is_err());
+        for route in profiles.routing.iter_mut().flatten() {
+            route.enabled = false;
+        }
+        assert!(!profiles.uses_profile("source"));
+        assert!(profiles.plan_delete_item("source").is_err());
+        profiles.routing = Some(vec![]);
+        assert!(!profiles.plan_delete_item("source")?.0);
+        Ok(())
+    }
+
+    #[test]
     fn delete_plan_defers_files_and_selects_replacement() -> Result<()> {
         let mut profiles = IProfiles {
             current: Some("a".into()),
+            routing: None,
             items: Some(vec![
                 deletion_item("a", "remote", "a.yaml", Some("owned")),
                 deletion_item("owned", "merge", "owned.yaml", None),
