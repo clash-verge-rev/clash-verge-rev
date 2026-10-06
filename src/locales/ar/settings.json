@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "المنفذ المستخدم حاليًا: {{port}}",
+        "duplicatePort": "يجب أن تستخدم المستمعات المفعّلة منافذ مختلفة",
+        "invalidPort": "أدخل منفذًا بين 1 و65535",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "المنفذ {{oldPort}} مستخدم، لذا تعمل هذه الجلسة على {{newPort}}. لم يتغيّر إعدادك وسيُعاد تجربة {{oldPort}} عند التشغيل التالي.",

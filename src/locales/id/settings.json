@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "Port yang sedang digunakan: {{port}}",
+        "duplicatePort": "Listener yang diaktifkan harus menggunakan port yang berbeda",
+        "invalidPort": "Masukkan port antara 1 dan 65535",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "Port {{oldPort}} sedang digunakan, jadi sesi ini menggunakan {{newPort}}. Pengaturan Anda tidak berubah dan {{oldPort}} akan dicoba lagi saat mulai berikutnya.",

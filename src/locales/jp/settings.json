@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "現在使用中のポート：{{port}}",
+        "duplicatePort": "有効なリスナーには異なるポートを指定してください",
+        "invalidPort": "1〜65535のポート番号を入力してください",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "ポート {{oldPort}} が使用中のため、今回は {{newPort}} で動作します。設定は変更されておらず、次回起動時に {{oldPort}} を再試行します。",

@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "Aktuell verwendeter Port: {{port}}",
+        "duplicatePort": "Aktivierte Listener müssen unterschiedliche Ports verwenden",
+        "invalidPort": "Geben Sie einen Port zwischen 1 und 65535 ein",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "Port {{oldPort}} ist belegt, daher läuft diese Sitzung auf {{newPort}}. Die Einstellung bleibt unverändert und {{oldPort}} wird beim nächsten Start erneut versucht.",
