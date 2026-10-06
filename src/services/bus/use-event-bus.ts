@@ -2,13 +2,8 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect } from 'react'
 
-import {
-  getPendingFailures,
-  getRuntimeState,
-  getSidecarFailure,
-} from '@/services/cmds'
 import { revalidateQueries } from '@/services/query-client'
-import { useAppDispatch } from '@/store/app-store-context'
+import { useAppDispatch, useAppReads } from '@/store/app-store-context'
 
 import { createEventBus } from './create-bus-handlers'
 
@@ -21,31 +16,15 @@ export const useEventBus = (
   handleNotice: (payload: [string, string]) => void,
 ) => {
   const dispatch = useAppDispatch()
+  const reads = useAppReads()
 
   useEffect(() => {
     const revalidateKeys = (keys: readonly string[]) => {
       void revalidateQueries(keys.map((key) => [key]))
     }
-    const readPendingFailures = () => {
-      getSidecarFailure()
-        .then((snapshot) =>
-          dispatch({ type: 'sidecarFailure/loaded', snapshot }),
-        )
-        .catch((error) => {
-          console.warn('[bus] Sidecar failure could not be read:', error)
-        })
-      getPendingFailures()
-        .then((failures) =>
-          dispatch({ type: 'pendingFailures/loaded', failures }),
-        )
-        .catch((error) => {
-          console.warn('[bus] pending failures could not be read:', error)
-        })
-    }
+    const { readPendingFailures } = reads
     const readRunState = () => {
-      getRuntimeState()
-        .then((runState) => dispatch({ type: 'runState/loaded', runState }))
-        .catch(() => {})
+      void reads.readRunState().catch(() => {})
     }
 
     const bus = createEventBus({
@@ -91,5 +70,5 @@ export const useEventBus = (
       for (const unlisten of unlisteners.splice(0)) unlisten()
       void unlistenFocus.then((unlisten) => unlisten())
     }
-  }, [dispatch, handleNotice])
+  }, [dispatch, handleNotice, reads])
 }

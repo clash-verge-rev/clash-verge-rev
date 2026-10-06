@@ -257,7 +257,10 @@ export const BackupHistoryViewer = ({
         showNotice.success('settings.modals.backup.messages.restoreSuccess')
         setIsRestarting(true)
         window.setTimeout(() => {
-          void restartApp().catch((err: unknown) => {
+          void mutate(() => restartApp(), {
+            id: 'restart-app',
+            errorNotice: false,
+          }).catch((err: unknown) => {
             setIsRestarting(false)
             showNotice.error(err)
           })

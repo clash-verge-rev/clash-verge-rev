@@ -1113,6 +1113,7 @@ dependencies = [
  "getrandom 0.4.3",
  "libc",
  "log",
+ "minisign-verify",
  "nanoid",
  "network-interface",
  "objc2",
