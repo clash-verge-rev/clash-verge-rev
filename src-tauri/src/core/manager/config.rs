@@ -19,6 +19,7 @@ use smartstring::alias::String;
 use std::{
     collections::HashSet,
     path::PathBuf,
+    sync::Arc,
     time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::Error as MihomoError;
@@ -259,6 +260,7 @@ impl CoreManager {
         let outcome = self.perform_config_update(Some(profiles)).await?;
         if outcome.is_valid() {
             crate::config::profiles::restore_selected_nodes().await;
+            handle::Handle::refresh_clash();
             Ok(())
         } else {
             Err(anyhow!("failed to restore previous Core configuration: {outcome}"))
@@ -324,7 +326,18 @@ impl CoreManager {
 
     /// Commits the applied runtime even if restoring the system proxy subsequently fails.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
-        let outcome = self.validate_and_apply_draft().await?;
+        let runtime = Config::runtime().await;
+        let original_runtime = runtime.data_arc();
+        let outcome = match self.validate_and_apply_draft().await {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                transaction.rollback();
+                if !Arc::ptr_eq(&original_runtime, &runtime.data_arc()) {
+                    handle::Handle::refresh_clash();
+                }
+                return Err(error);
+            }
+        };
         if outcome.is_valid() {
             transaction.commit();
         }

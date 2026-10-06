@@ -77,12 +77,12 @@ verge_registry! {
     enable_bypass_check => NoEffect;
     enable_dns_settings => NoEffect;
     profile_dns_settings => NoEffect;
-    use_default_bypass => NoEffect;
+    use_default_bypass => [SystemProxy];
     system_proxy_bypass => [SystemProxy];
     proxy_guard_duration => [SystemProxy];
     proxy_auto_config => [SystemProxy];
     pac_file_content => [SystemProxy];
-    proxy_host => NoEffect;
+    proxy_host => [SystemProxy];
     theme_setting => NoEffect;
     web_ui_list => NoEffect;
     clash_core => NoEffect;
@@ -173,7 +173,7 @@ mod tests {
     fn representative_verge_patches_map_to_frozen_effects() {
         assert_eq!(verge_effects(&IVerge::default()), Effects::new());
 
-        let cases: [(IVerge, &[Effect]); 7] = [
+        let cases: [(IVerge, &[Effect]); 9] = [
             (
                 verge_patch(|p| p.verge_mixed_port = Some(27899)),
                 &[Effect::RestartCore],
@@ -197,6 +197,14 @@ mod tests {
             ),
             (
                 verge_patch(|p| p.system_proxy_bypass = Some("localhost".into())),
+                &[Effect::SystemProxy],
+            ),
+            (
+                verge_patch(|p| p.use_default_bypass = Some(false)),
+                &[Effect::SystemProxy],
+            ),
+            (
+                verge_patch(|p| p.proxy_host = Some("localhost".into())),
                 &[Effect::SystemProxy],
             ),
             (
