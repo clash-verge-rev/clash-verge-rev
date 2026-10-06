@@ -269,6 +269,10 @@ export async function restartApp() {
   return invoke<void>('restart_app')
 }
 
+export async function installCachedUpdate(version: string) {
+  return invoke<boolean>('install_cached_update', { version })
+}
+
 export async function getAppDir() {
   return invoke<string>('get_app_dir')
 }

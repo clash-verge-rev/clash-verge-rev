@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr as _, feat, utils::dirs};
+use crate::{cmd::StringifyErr as _, core::SilentUpdater, feat, utils::dirs};
 use smartstring::alias::String;
 use tauri::{AppHandle, Manager as _};
 
@@ -42,6 +42,14 @@ pub async fn exit_app() {
 pub async fn restart_app() -> CmdResult<()> {
     feat::restart_app().await;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn install_cached_update(app_handle: AppHandle, version: String) -> CmdResult<bool> {
+    SilentUpdater::global()
+        .install_cached(&app_handle, &version)
+        .await
+        .stringify_err()
 }
 
 #[tauri::command]

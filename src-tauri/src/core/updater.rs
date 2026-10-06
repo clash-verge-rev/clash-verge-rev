@@ -2,7 +2,6 @@ use crate::{config::Config, singleton, utils::dirs};
 use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
-use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
@@ -12,9 +11,6 @@ use tauri_plugin_updater::{Update, UpdaterExt as _};
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
-    pending_bytes: RwLock<Option<Vec<u8>>>,
-    pending_update: RwLock<Option<Update>>,
-    pending_version: RwLock<Option<String>>,
 }
 
 singleton!(SilentUpdater, SILENT_UPDATER);
@@ -23,9 +19,6 @@ impl SilentUpdater {
     const fn new() -> Self {
         Self {
             update_ready: AtomicBool::new(false),
-            pending_bytes: RwLock::new(None),
-            pending_update: RwLock::new(None),
-            pending_version: RwLock::new(None),
         }
     }
 
@@ -99,6 +92,72 @@ impl SilentUpdater {
             }
         }
     }
+
+    /// Returns the cached installer for `update`, deleting a cache that does not match it.
+    fn verified_cache(app_handle: &tauri::AppHandle, update: &Update) -> Option<Vec<u8>> {
+        let meta = Self::read_cache_meta().ok()?;
+        let bytes = if meta.version == update.version {
+            Self::read_cache_bytes().and_then(|bytes| {
+                verify_signature(app_handle, &bytes, &update.signature, &update.version)?;
+                Ok(bytes)
+            })
+        } else {
+            Err(anyhow::anyhow!("server offers v{}", update.version))
+        };
+        match bytes {
+            Ok(bytes) => Some(bytes),
+            Err(e) => {
+                logging!(
+                    info,
+                    Type::System,
+                    "Update cache v{} is unusable: {e:#}, cleaning up",
+                    meta.version
+                );
+                Self::delete_cache();
+                None
+            }
+        }
+    }
+}
+
+/// The cache directory is user-writable and feeds an elevated installer, so it is re-verified
+/// with the same rules `Update::download` applies.
+fn verify_signature(app_handle: &tauri::AppHandle, bytes: &[u8], signature: &str, version: &str) -> Result<()> {
+    use base64::Engine as _;
+
+    let decode = |value: &str| -> Result<String> {
+        Ok(String::from_utf8(
+            base64::engine::general_purpose::STANDARD.decode(value)?,
+        )?)
+    };
+    let config: tauri_plugin_updater::Config = serde_json::from_value(
+        app_handle
+            .config()
+            .plugins
+            .0
+            .get("updater")
+            .cloned()
+            .context("updater is not configured")?,
+    )?;
+
+    let public_key = minisign_verify::PublicKey::decode(&decode(&config.pubkey)?)?;
+    let signature = minisign_verify::Signature::decode(&decode(signature)?)?;
+    public_key
+        .verify(bytes, &signature, true)
+        .context("signature mismatch")?;
+
+    match signature
+        .trusted_comment()
+        .split('\t')
+        .find_map(|field| field.strip_prefix("version:"))
+    {
+        Some(signed) => anyhow::ensure!(
+            signed.trim_start_matches('v') == version,
+            "signed for v{signed}, not v{version}"
+        ),
+        None => anyhow::ensure!(!config.require_signed_version, "signature carries no version"),
+    }
+    Ok(())
 }
 
 pub fn is_build_to_stable(current: &str, remote: &str) -> bool {
@@ -148,6 +207,23 @@ fn nsis_language_id(app_language: &str) -> &'static str {
 }
 
 impl SilentUpdater {
+    /// Checks the server; Windows receives `/LANG` to suppress the NSIS language dialog,
+    /// see `packages/windows/installer.nsi`.
+    async fn check(app_handle: &tauri::AppHandle) -> Result<Option<Update>> {
+        let updater_builder = app_handle.updater_builder();
+        #[cfg(target_os = "windows")]
+        let updater_builder = {
+            let verge_lang = Config::verge().await.latest_arc().language.clone();
+            let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
+            updater_builder.installer_arg(format!("/LANG={lang_id}"))
+        };
+        Ok(updater_builder.build()?.check().await?)
+    }
+
+    async fn install(update: Update, bytes: Vec<u8>) -> Result<()> {
+        Ok(tokio::task::spawn_blocking(move || update.install(&bytes)).await??)
+    }
+
     /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
         let current_version = env!("CARGO_PKG_VERSION");
@@ -185,71 +261,30 @@ impl SilentUpdater {
             return false;
         }
 
-        let bytes = match Self::read_cache_bytes() {
-            Ok(b) => b,
-            Err(e) => {
+        let update = match Self::check(app_handle).await {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 logging!(
-                    warn,
+                    info,
                     Type::System,
-                    "Failed to read cached update bytes: {e:#}, cleaning up"
+                    "No update available from server, cache may be stale, cleaning up"
                 );
                 Self::delete_cache();
                 return false;
             }
-        };
-
-        // Refresh metadata without re-downloading. Windows receives `/LANG` to suppress the
-        // NSIS language dialog; see `packages/windows/installer.nsi`.
-        let updater_builder = app_handle.updater_builder();
-        #[cfg(target_os = "windows")]
-        let updater_builder = {
-            let verge_lang = Config::verge().await.latest_arc().language.clone();
-            let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
-            updater_builder.installer_arg(format!("/LANG={lang_id}"))
-        };
-        let update = match updater_builder.build() {
-            Ok(updater) => match updater.check().await {
-                Ok(Some(u)) => u,
-                Ok(None) => {
-                    logging!(
-                        info,
-                        Type::System,
-                        "No update available from server, cache may be stale, cleaning up"
-                    );
-                    Self::delete_cache();
-                    return false;
-                }
-                Err(e) => {
-                    logging!(
-                        warn,
-                        Type::System,
-                        "Failed to check for update at startup: {e}, will retry next launch"
-                    );
-                    return false; // Keep cache for next attempt
-                }
-            },
             Err(e) => {
                 logging!(
                     warn,
                     Type::System,
-                    "Failed to create updater: {e}, will retry next launch"
+                    "Failed to check for update at startup: {e:#}, will retry next launch"
                 );
-                return false;
+                return false; // Keep cache for next attempt
             }
         };
 
-        // A changed server version invalidates the cached bytes.
-        if update.version != *cached_version {
-            logging!(
-                info,
-                Type::System,
-                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
-                update.version,
-                cached_version
-            );
-            Self::delete_cache();
+        let Some(bytes) = Self::verified_cache(app_handle, &update) else {
             return false;
-        }
+        };
 
         let version = update.version.clone();
         logging!(info, Type::System, "Installing cached update v{version} at startup...");
@@ -257,49 +292,49 @@ impl SilentUpdater {
         Self::show_update_splash(app_handle, &version);
 
         // `install()` may hang (#2558); on Windows NSIS can take over without returning.
-        let install_result = tokio::task::spawn_blocking({
-            let bytes = bytes.clone();
-            let update = update.clone();
-            move || update.install(&bytes)
-        });
-
-        let success = match tokio::time::timeout(std::time::Duration::from_secs(30), install_result).await {
-            Ok(Ok(Ok(()))) => {
+        let install = tokio::time::timeout(std::time::Duration::from_secs(30), Self::install(update, bytes));
+        match install
+            .await
+            .unwrap_or_else(|_| Err(anyhow::anyhow!("install timed out (30s)")))
+        {
+            Ok(()) => {
                 logging!(info, Type::System, "Update v{version} install triggered at startup");
                 Self::delete_cache();
                 true
             }
-            Ok(Ok(Err(e))) => {
+            Err(e) => {
                 logging!(
                     warn,
                     Type::System,
-                    "Startup install failed: {e}, will retry next launch"
+                    "Startup install failed: {e:#}, will retry next launch"
                 );
+                Self::close_update_splash(app_handle);
                 false
             }
-            Ok(Err(e)) => {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Startup install task panicked: {e}, will retry next launch"
-                );
-                false
-            }
-            Err(_) => {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Startup install timed out (30s), will retry next launch"
-                );
-                false
+        }
+    }
+
+    /// Installs the background-downloaded `version`; `false` sends the caller to a fresh download.
+    pub async fn install_cached(&self, app_handle: &tauri::AppHandle, version: &str) -> Result<bool> {
+        if Self::read_cache_meta().map_or(true, |meta| meta.version != version) {
+            return Ok(false);
+        }
+        let update = match Self::check(app_handle).await {
+            Ok(Some(update)) if update.version == version => update,
+            Ok(_) => return Ok(false),
+            Err(e) => {
+                logging!(warn, Type::System, "Cached update check failed: {e:#}");
+                return Ok(false);
             }
         };
+        let Some(bytes) = Self::verified_cache(app_handle, &update) else {
+            return Ok(false);
+        };
 
-        if !success {
-            Self::close_update_splash(app_handle);
-        }
-
-        success
+        logging!(info, Type::System, "Installing cached update v{version}...");
+        Self::install(update, bytes).await?;
+        Self::delete_cache();
+        Ok(true)
     }
 }
 
@@ -454,29 +489,27 @@ impl SilentUpdater {
             return Ok(());
         }
 
-        logging!(info, Type::System, "Silent updater: downloading v{version}...");
-        let bytes = update
-            .download(
-                |chunk_len, content_len| {
-                    logging!(
-                        debug,
-                        Type::System,
-                        "Silent updater download progress: chunk={chunk_len}, total={content_len:?}"
-                    );
-                },
-                || {
-                    logging!(info, Type::System, "Silent updater: download complete");
-                },
-            )
-            .await?;
-
-        if let Err(e) = Self::write_cache(&bytes, &version) {
-            logging!(warn, Type::System, "Silent updater: failed to write cache: {e:#}");
+        if Self::verified_cache(app_handle, &update).is_some() {
+            logging!(info, Type::System, "Silent updater: v{version} already cached");
+        } else {
+            logging!(info, Type::System, "Silent updater: downloading v{version}...");
+            let bytes = update
+                .download(
+                    |chunk_len, content_len| {
+                        logging!(
+                            debug,
+                            Type::System,
+                            "Silent updater download progress: chunk={chunk_len}, total={content_len:?}"
+                        );
+                    },
+                    || {
+                        logging!(info, Type::System, "Silent updater: download complete");
+                    },
+                )
+                .await?;
+            Self::write_cache(&bytes, &version)?;
         }
 
-        *self.pending_bytes.write() = Some(bytes);
-        *self.pending_update.write() = Some(update);
-        *self.pending_version.write() = Some(version.clone());
         self.update_ready.store(true, Ordering::Release);
 
         logging!(
