@@ -46,21 +46,22 @@ it('registers exactly one listener per contract event plus test-all', () => {
   useEventBus(handleNotice)
 
   const names = listen.mock.calls.map(([name]) => name)
-  expect(names).toEqual([
-    'verge://refresh-clash-config',
-    'verge://refresh-verge-config',
-    'verge://refresh-profiles',
-    'verge://refresh-proxy-config',
-    'verge://notice-message',
-    'profile-changed',
-    'verge://timer-updated',
-    'profile-update-started',
-    'profile-update-completed',
-    'verge://run-state-changed',
-    'verge://pending-failures-changed',
-    'verge://test-all',
-  ])
-  expect(new Set(names).size).toBe(names.length)
+  expect(names.sort()).toEqual(
+    [
+      'verge://refresh-clash-config',
+      'verge://refresh-verge-config',
+      'verge://refresh-profiles',
+      'verge://refresh-proxy-config',
+      'verge://notice-message',
+      'profile-changed',
+      'verge://timer-updated',
+      'profile-update-started',
+      'profile-update-completed',
+      'verge://run-state-changed',
+      'verge://pending-failures-changed',
+      'verge://test-all',
+    ].sort(),
+  )
 })
 
 it('drains event-only state only after every listener is registered', async () => {

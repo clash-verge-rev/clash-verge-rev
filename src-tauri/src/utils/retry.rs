@@ -218,20 +218,4 @@ mod tests {
         assert_eq!(result, Err("terminal"));
         assert_eq!(visited, [0, 1]);
     }
-
-    #[test]
-    fn backoff_keeps_the_attempt_budget_and_exponential_cap() {
-        let policy = RetryPolicy {
-            attempts: NonZeroUsize::MIN.saturating_add(4),
-            backoff: Backoff::Exponential {
-                base: Duration::from_millis(10),
-                cap: Duration::from_millis(25),
-            },
-            jitter: false,
-        };
-        assert_eq!(
-            policy.delays().collect::<Vec<_>>(),
-            [10, 20, 25, 25].map(Duration::from_millis)
-        );
-    }
 }

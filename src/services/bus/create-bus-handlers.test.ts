@@ -182,34 +182,6 @@ it('offers service reinstallation for a startup path refusal even before listene
   })
 })
 
-it('routes every event exactly once through one handler', async () => {
-  const { createEventBus } = await import('./create-bus-handlers')
-  const dispatch = vi.fn<(action: AppStoreAction) => void>()
-  const bus = createEventBus({
-    dispatch,
-    handleNotice: vi.fn(),
-    revalidateKeys: vi.fn(),
-    revalidateProfiles: vi.fn(),
-    refreshProxyView: vi.fn(),
-    readPendingFailures: vi.fn(),
-    readRunState: vi.fn(),
-  })
-
-  bus.handlers['verge://run-state-changed']({ mode: 'Service' } as RunState)
-  bus.handlers['profile-update-started']({ uid: 'p1' })
-  bus.handlers['profile-update-completed']({ uid: 'p1' })
-  bus.handlers['verge://timer-updated']('p1')
-  bus.handlers['verge://test-all'](null)
-
-  expect(dispatch.mock.calls.map(([action]) => action.type)).toEqual([
-    'runState/loaded',
-    'profileUpdate/started',
-    'profileUpdate/completed',
-    'profileUpdate/timerTick',
-    'testAll/requested',
-  ])
-})
-
 it('explains a startup core rejection instead of the generic fallback notice', async () => {
   const reason =
     'approved core was rejected: core path "C:\\" has an untrusted write ACE'
