@@ -458,7 +458,7 @@ export const ProxyChain = ({
         if (targetGroup) {
           try {
             await mutate(() => selectNodeForGroup(targetGroup, 'DIRECT'), {
-              id: 'select-proxy-node',
+              id: `select-proxy-node:${targetGroup}`,
               errorNotice: false,
             })
             recordSelection(targetGroup, 'DIRECT')
@@ -469,7 +469,7 @@ export const ProxyChain = ({
                   () =>
                     selectNodeForGroup(targetGroup, currentProxyChain[0].name),
                   {
-                    id: 'select-proxy-node',
+                    id: `select-proxy-node:${targetGroup}`,
                     errorNotice: false,
                   },
                 )
@@ -539,7 +539,7 @@ export const ProxyChain = ({
       await mutate(
         () => selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name),
         {
-          id: 'select-proxy-node',
+          id: `select-proxy-node:${targetGroup || 'GLOBAL'}`,
           errorNotice: false,
         },
       )

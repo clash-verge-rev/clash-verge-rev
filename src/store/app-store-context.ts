@@ -5,10 +5,21 @@ import type {
   AppStoreState,
   ProfileUpdatesState,
 } from './app-state'
+import type { createStoreReads } from './store-reads'
 
 export const AppStateContext = createContext<AppStoreState | null>(null)
 export const AppDispatchContext =
   createContext<AppStoreActionDispatcher | null>(null)
+
+export const AppReadsContext = createContext<ReturnType<
+  typeof createStoreReads
+> | null>(null)
+
+export const useAppReads = () => {
+  const reads = use(AppReadsContext)
+  if (!reads) throw new Error('app store is missing its provider')
+  return reads
+}
 
 export type AppStoreActionDispatcher = (action: AppStoreAction) => void
 

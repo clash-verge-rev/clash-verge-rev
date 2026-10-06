@@ -74,7 +74,11 @@ export const useProfiles = () => {
   const patchCurrent = useCallback(
     async (value: Partial<IProfileItem>) => {
       if (profiles?.current) {
-        await patchProfile(profiles.current, value)
+        const uid = profiles.current
+        await mutate(() => patchProfile(uid, value), {
+          id: `patch-profile:${uid}`,
+          errorNotice: false,
+        })
         void mutateProfiles()
       }
     },

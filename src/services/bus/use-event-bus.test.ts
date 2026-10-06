@@ -1,5 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest'
 
+import { createStoreReads } from '@/store/store-reads'
+
 import { useEventBus } from './use-event-bus'
 
 const listen = vi.hoisted(() =>
@@ -25,6 +27,7 @@ vi.mock('react', async (importOriginal) => {
 })
 vi.mock('@/store/app-store-context', () => ({
   useAppDispatch: () => dispatch,
+  useAppReads: () => createStoreReads(dispatch),
 }))
 vi.mock('@/services/cmds', () => ({
   getPendingFailures: vi.fn().mockResolvedValue([]),

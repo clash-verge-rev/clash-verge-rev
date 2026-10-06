@@ -2,39 +2,23 @@
 
 These rules supplement the repository's root `AGENTS.md`.
 
-1. **Keep configuration ownership in `config`.** Configuration writes must use
-   its draft and persistence APIs. Patch orchestration must use
-   `feat/effects.rs` and `feat/executor.rs`; refresh notifications must use
-   `core::notify::announce` after successful persistence and commit. This keeps
-   rolled-back transactions from publishing state. If runtime and memory state
-   are already committed and cannot be rolled back, announce that state even
-   when persistence fails, while preserving the persistence error. Independent
-   transactions retain their boundaries and announce their own committed
-   results; runtime-only profile activation announces after successful
-   application. Cross-layer operations must preserve these ownership and
-   transaction boundaries.
-2. **Register every new `IVerge` field.** Register the field in the
-   exhaustive effect registry, including an explicit `NoEffect` where
-   appropriate, and preserve its platform attributes. Manual field-to-flag
-   chains hide missing effects and are forbidden.
-3. **Use `utils::retry` for bounded retries.** Do not introduce handwritten retry
-   loops, including `loop` plus `sleep`; preserve attempt budgets, delays and
-   terminal errors. Permanent watchers are the exception and must document
-   their exit conditions. Traversal of distinct data or port candidates is not
-   a retry policy.
-4. **Keep notifications typed.** Send notice statuses through `NoticeStatus` and
-   use `Arc<str>` for notice message payloads. Preserve the event names and
-   status strings as a shared wire contract. Contract changes must keep
-   frontend consumers and backend producers aligned.
-5. **Preserve lock order.** The order is `config_write` before
-   `config_update_in_progress` before `lifecycle_lock`. Patch callers must use
-   the executor's guarded claim instead of independently combining these locks;
-   this preserves Busy rejection and prevents inverted acquisition. Existing
-   lifecycle and independent port transactions keep their established locking
-   boundaries. A new lock requires registering its position in this rule before
-   introducing acquisition sites.
-6. **Prefer reconciliation.** Express new effects as idempotent `ensure`
-   operations in `EFFECT_ORDER` so repeated application converges on the same
-   state. A trigger chain is an exception only with a code comment explaining
-   why the operation cannot be idempotent. Configuration rollback does not
-   authorize reverse OS effects.
+- **Configuration ownership.** `config` owns source configuration, drafts and
+  persistence. The effects layer owns patch orchestration. Rollbackable
+  transactions publish state after persistence and commit; already applied
+  runtime and independently committed state remain authoritative even when a
+  later step fails. Preserve that state, its notifications and the error.
+- **Effect ownership.** The declarative registry classifies every Verge patch field,
+  including fields without effects and platform-specific fields. Effects
+  reconcile toward the requested state with explicit dependencies and ordering.
+  Configuration rollback does not imply reversal of OS or lifecycle effects.
+- **Shared wire contract.** Notifications are typed. Event names, status values
+  and payload shapes stay compatible with frontend producers and consumers.
+- **Synchronization ownership.** Configuration-write serialization precedes
+  configuration-update ownership, which precedes Core lifecycle ownership.
+  When both are held, the lifecycle lock precedes the DNS lock. Independent
+  transactions retain their ownership boundaries; asynchronous work does not
+  hold synchronous data guards across suspension.
+- **Retry ownership.** Bounded retries share backend policy while preserving
+  attempts, delays and terminal errors. Background monitors own their lifetime
+  and cancellation separately; waiting for a condition or traversing distinct
+  candidates is not a retry policy.

@@ -1,11 +1,6 @@
-import {
-  getAppUptime,
-  getRuntimeState,
-  type RunState,
-  type RunningMode,
-} from '@/services/cmds'
+import { getAppUptime, type RunState, type RunningMode } from '@/services/cmds'
 import { useQuery } from '@/services/query-client'
-import { useAppDispatch, useRunState } from '@/store/app-store-context'
+import { useAppReads, useRunState } from '@/store/app-store-context'
 
 const appUptimeQueryKey = ['appUptime'] as const
 
@@ -25,7 +20,7 @@ const unknownRunState: RunState = {
 
 /** Event-driven run state; Rust owns all derived availability decisions. */
 export function useSystemState() {
-  const dispatch = useAppDispatch()
+  const { readRunState } = useAppReads()
   const snapshot = useRunState()
   const runState = snapshot ?? unknownRunState
 
@@ -37,11 +32,7 @@ export function useSystemState() {
     isServiceMode: runState.mode === 'Service',
     isTunModeAvailable: runState.tunCapable,
     serviceNeedsAttention: runState.serviceNeedsAttention,
-    mutateSystemState: async () => {
-      const fresh = await getRuntimeState()
-      dispatch({ type: 'runState/loaded', runState: fresh })
-      return fresh
-    },
+    mutateSystemState: readRunState,
     isLoading: snapshot == null,
   }
 }

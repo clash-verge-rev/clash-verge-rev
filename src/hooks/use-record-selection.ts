@@ -11,7 +11,7 @@ export const useRecordSelection = () => {
   return useCallback(async (groupName: string, proxyName: string) => {
     try {
       await mutate(() => recordSelectedNode(groupName, proxyName), {
-        id: 'record-selected-node',
+        id: `persist-selected-node:${groupName}`,
         errorNotice: false,
       })
     } catch (error) {
@@ -24,7 +24,7 @@ export const useForgetSelection = () => {
   return useCallback(async (groupName: string) => {
     try {
       await mutate(() => forgetSelectedNode(groupName), {
-        id: 'forget-selected-node',
+        id: `persist-selected-node:${groupName}`,
         errorNotice: false,
       })
     } catch (error) {
