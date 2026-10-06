@@ -1,32 +1,23 @@
 # Frontend Architecture Guardrails
 
-These rules supplement the repository's root `AGENTS.md` and define the
-frontend's ownership and module boundaries.
+These rules supplement the repository's root `AGENTS.md`.
 
-1. **Contract is generated, never hand-typed.** Event names, payload shapes,
-   and the `NoticeStatus` union come from `src/services/contract.ts`
-   (`@generated`) from the backend wire contract. Keep backend producers,
-   generated types, and the exhaustive notice table
-   (`src/services/notice-handlers.ts`) aligned; `Record<NoticeStatus, …>`
-   makes notice handling part of that contract.
-2. **`listen(`/`emit(` live only in the event bus.** All Tauri event
-   subscriptions and emissions go through `src/services/bus/`. The shared
-   bus owns subscription registration and teardown at the layout root.
-   Components and pages never touch `@tauri-apps/api/event`.
-   Window-lifecycle helpers that do not use the event-module API may stay
-   with their owning component.
-3. **Event-derived state lives in the app store.** Cross-component state
-   produced by events is written only through pure reducer actions dispatched
-   by the bus or the funnel (`src/store/`). Handlers may perform documented
-   side effects (SWR revalidation, notices) but must not write store state
-   directly. New event-consumed state needs a reducer action first, not a
-   local `useState` in a page.
-4. **User intent funnels through `mutate`.** Every mutating backend command
-   call goes through `src/services/mutate.ts` — components, hooks, and
-   dialogs included. Give each intent a stable `id`; express optimistic
-   writes as `optimistic`/`rollback` and success refreshes as `revalidate`/
-   `onFulfilled`. Flows with bespoke error UX keep it via `errorNotice:
-   false`; suppressing both the funnel's and the site's handling is a bug.
-5. **`invoke(` lives only in services.** Backend commands are wrapped in
-   `src/services/cmds.ts`; mihomo-plugin mutations use the same intent funnel.
-   Pages and components import the wrapper, never `@tauri-apps/api/core`.
+- **Contract ownership.** Generated event and notice contracts are owned by the
+  backend wire contract. Handwritten payload types are acceptable when they
+  match their producers. Event names, payloads and the typed notice table stay
+  aligned across backend and frontend.
+- **Event ownership.** `services/bus` owns event subscriptions, emissions and
+  their lifetime. Components and pages consume the bus rather than subscribing
+  independently; window lifecycle remains with its owning component.
+- **State ownership.** `store` owns shared event state and the snapshot reads that
+  reconcile it through pure reducer actions. Query caches retain ordinary
+  configuration and profile reads. Reads and live events share an ordering
+  boundary so an older reply cannot replace newer authoritative state.
+  Components keep local UI state.
+- **Intent ownership.** Mutating commands pass through the shared intent funnel.
+  Resource ownership determines serialization; distinct requests are preserved,
+  and success effects follow actual command success. Bespoke error flows retain
+  their handling without duplicate or suppressed errors.
+- **Command ownership.** `services` owns backend command invocation and transport
+  wrappers. Components and hooks use those boundaries; plugin mutations follow
+  the same intent ownership as backend commands.
