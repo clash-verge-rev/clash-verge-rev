@@ -7,6 +7,7 @@ import { debugLog } from '@/utils/debug'
 import { commands } from './bindings'
 import type {
   DownloadEvent,
+  ExternalControllerSettings,
   JsonValue,
   ListenerProbe,
   ProxyPortSettings,
@@ -20,6 +21,7 @@ import type {
 export type {
   RunningMode,
   RunStateView_Serialize as RunState,
+  ExternalControllerSettings,
   FailedOperation,
   PendingFailure,
   SidecarFailureSnapshot,
@@ -108,6 +110,16 @@ export async function patchProfile(index: string, profile: ProfilePatch) {
 
 export async function getClashInfo() {
   return commands.getClashInfo()
+}
+
+export async function getExternalController() {
+  return commands.getExternalController()
+}
+
+export async function saveExternalController(
+  settings: ExternalControllerSettings,
+) {
+  return commands.saveExternalController(settings)
 }
 
 // Fallback mode read independent of strict mihomo `/configs` deserialization.
