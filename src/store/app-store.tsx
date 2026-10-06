@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
 
-import { bindStoreDispatch } from '@/services/mutate'
-
 import {
   type AppStoreAction,
   appStoreReducer,
@@ -33,11 +31,6 @@ export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
     },
     [reads],
   )
-
-  useEffect(() => {
-    bindStoreDispatch(dispatch)
-    return () => bindStoreDispatch(null)
-  }, [])
 
   useEffect(() => {
     const readRunState = () => {
