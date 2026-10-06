@@ -2,15 +2,19 @@ use crate::{config::Config, singleton, utils::dirs};
 use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    time::Duration,
 };
 use tauri_plugin_updater::{Update, UpdaterExt as _};
+use tokio_util::sync::CancellationToken;
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
+    manual_cancel: Mutex<Option<CancellationToken>>,
 }
 
 singleton!(SilentUpdater, SILENT_UPDATER);
@@ -19,6 +23,7 @@ impl SilentUpdater {
     const fn new() -> Self {
         Self {
             update_ready: AtomicBool::new(false),
+            manual_cancel: Mutex::new(None),
         }
     }
 
@@ -206,6 +211,103 @@ fn nsis_language_id(app_language: &str) -> &'static str {
     }
 }
 
+/// Same wire shape as the updater plugin's JS `DownloadEvent`.
+#[derive(Clone, Serialize)]
+#[serde(tag = "event", content = "data")]
+pub enum DownloadEvent {
+    #[serde(rename_all = "camelCase")]
+    Started {
+        content_length: Option<u64>,
+    },
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        chunk_length: usize,
+    },
+    Finished,
+}
+
+const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"];
+/// A source delivering less than this per window is dropped for the next one.
+const MIN_PROGRESS: u64 = 1024 * 1024;
+const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
+
+/// The manifest's URL, then the other mirror, then GitHub itself.
+fn download_sources(url: &tauri::Url) -> Vec<tauri::Url> {
+    let origin = MIRRORS
+        .iter()
+        .find_map(|mirror| url.as_str().strip_prefix(mirror))
+        .unwrap_or(url.as_str());
+    let mut sources = vec![url.clone()];
+    if origin.starts_with("https://github.com/") {
+        let candidates = MIRRORS.iter().map(|mirror| format!("{mirror}{origin}"));
+        for candidate in candidates.chain([origin.to_owned()]) {
+            if let Ok(candidate) = tauri::Url::parse(&candidate)
+                && !sources.contains(&candidate)
+            {
+                sources.push(candidate);
+            }
+        }
+    }
+    sources
+}
+
+/// Tries every source with a throughput floor, then again stopping only on a stall, so a link
+/// that is slow everywhere still finishes.
+async fn download(update: &Update, on_event: impl Fn(DownloadEvent) + Sync) -> Result<Vec<u8>> {
+    let sources = download_sources(&update.download_url);
+    let mut last_error = None;
+    for floor in [MIN_PROGRESS, 1] {
+        for url in &sources {
+            logging!(info, Type::System, "Downloading update v{} from {url}", update.version);
+            match download_from(update, url, floor, &on_event).await {
+                Ok(bytes) => {
+                    on_event(DownloadEvent::Finished);
+                    return Ok(bytes);
+                }
+                Err(e) => {
+                    logging!(warn, Type::System, "Update download from {url} failed: {e:#}");
+                    last_error = Some(e);
+                }
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("no update download source")))
+}
+
+async fn download_from(
+    update: &Update,
+    url: &tauri::Url,
+    floor: u64,
+    on_event: &(impl Fn(DownloadEvent) + Sync),
+) -> Result<Vec<u8>> {
+    let mut source = update.clone();
+    source.download_url = url.clone();
+    let received = AtomicU64::new(0);
+    let mut started = false;
+    let fetch = source.download(
+        |chunk_length, content_length| {
+            if !std::mem::replace(&mut started, true) {
+                on_event(DownloadEvent::Started { content_length });
+            }
+            received.fetch_add(chunk_length as u64, Ordering::Relaxed);
+            on_event(DownloadEvent::Progress { chunk_length });
+        },
+        || {},
+    );
+    tokio::pin!(fetch);
+    let mut seen = 0;
+    loop {
+        tokio::select! {
+            result = &mut fetch => return Ok(result?),
+            () = tokio::time::sleep(PROGRESS_WINDOW) => {
+                let total = received.load(Ordering::Relaxed);
+                anyhow::ensure!(total - seen >= floor, "only {} bytes in {PROGRESS_WINDOW:?}", total - seen);
+                seen = total;
+            }
+        }
+    }
+}
+
 impl SilentUpdater {
     /// Checks the server; Windows receives `/LANG` to suppress the NSIS language dialog,
     /// see `packages/windows/installer.nsi`.
@@ -314,27 +416,55 @@ impl SilentUpdater {
         }
     }
 
-    /// Installs the background-downloaded `version`; `false` sends the caller to a fresh download.
-    pub async fn install_cached(&self, app_handle: &tauri::AppHandle, version: &str) -> Result<bool> {
-        if Self::read_cache_meta().map_or(true, |meta| meta.version != version) {
-            return Ok(false);
-        }
-        let update = match Self::check(app_handle).await {
-            Ok(Some(update)) if update.version == version => update,
-            Ok(_) => return Ok(false),
-            Err(e) => {
-                logging!(warn, Type::System, "Cached update check failed: {e:#}");
-                return Ok(false);
-            }
+    /// Installs `version` for the update dialog, reusing the cache when it holds that version;
+    /// `false` when cancelled before the installer starts.
+    pub async fn install_update(
+        &self,
+        app_handle: &tauri::AppHandle,
+        version: &str,
+        on_event: impl Fn(DownloadEvent) + Sync,
+    ) -> Result<bool> {
+        let cancel = CancellationToken::new();
+        *self.manual_cancel.lock() = Some(cancel.clone());
+        let prepared = tokio::select! {
+            prepared = Self::prepare_install(app_handle, version, on_event) => Some(prepared),
+            () = cancel.cancelled() => None,
         };
-        let Some(bytes) = Self::verified_cache(app_handle, &update) else {
+        // `cancel_download` cancels under the lock, so once the token is taken back its state is
+        // final; a cancel during the last synchronous poll of `prepare_install` still wins.
+        self.manual_cancel.lock().take();
+        let Some((update, bytes)) = prepared.filter(|_| !cancel.is_cancelled()).transpose()? else {
+            logging!(info, Type::System, "Update v{version} cancelled");
             return Ok(false);
         };
 
-        logging!(info, Type::System, "Installing cached update v{version}...");
+        logging!(info, Type::System, "Installing update v{version}...");
         Self::install(update, bytes).await?;
         Self::delete_cache();
         Ok(true)
+    }
+
+    async fn prepare_install(
+        app_handle: &tauri::AppHandle,
+        version: &str,
+        on_event: impl Fn(DownloadEvent) + Sync,
+    ) -> Result<(Update, Vec<u8>)> {
+        let update = Self::check(app_handle)
+            .await?
+            .filter(|update| update.version == version)
+            .with_context(|| format!("v{version} is no longer offered"))?;
+        let bytes = match Self::verified_cache(app_handle, &update) {
+            Some(bytes) => bytes,
+            None => download(&update, on_event).await?,
+        };
+        Ok((update, bytes))
+    }
+
+    pub fn cancel_download(&self) {
+        let mut slot = self.manual_cancel.lock();
+        if let Some(cancel) = slot.take() {
+            cancel.cancel();
+        }
     }
 }
 
@@ -493,20 +623,8 @@ impl SilentUpdater {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {
             logging!(info, Type::System, "Silent updater: downloading v{version}...");
-            let bytes = update
-                .download(
-                    |chunk_len, content_len| {
-                        logging!(
-                            debug,
-                            Type::System,
-                            "Silent updater download progress: chunk={chunk_len}, total={content_len:?}"
-                        );
-                    },
-                    || {
-                        logging!(info, Type::System, "Silent updater: download complete");
-                    },
-                )
-                .await?;
+            let bytes = download(&update, |_| {}).await?;
+            logging!(info, Type::System, "Silent updater: download complete");
             Self::write_cache(&bytes, &version)?;
         }
 

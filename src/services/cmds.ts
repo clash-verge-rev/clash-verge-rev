@@ -1,4 +1,5 @@
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
+import type { DownloadEvent } from '@tauri-apps/plugin-updater'
 import dayjs from 'dayjs'
 
 import type { CommandFailure } from '@/services/notice-service'
@@ -269,8 +270,17 @@ export async function restartApp() {
   return invoke<void>('restart_app')
 }
 
-export async function installCachedUpdate(version: string) {
-  return invoke<boolean>('install_cached_update', { version })
+export async function installUpdate(
+  version: string,
+  onEvent: (event: DownloadEvent) => void,
+) {
+  const channel = new Channel<DownloadEvent>()
+  channel.onmessage = onEvent
+  return invoke<boolean>('install_update', { version, onEvent: channel })
+}
+
+export async function cancelUpdateDownload() {
+  return invoke<void>('cancel_update_download')
 }
 
 export async function getAppDir() {
