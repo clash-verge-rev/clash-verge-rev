@@ -86,6 +86,7 @@ flate2 = "1.1.10"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
 base64 = "0.23.1"
+minisign-verify = "0.2.5"
 sha2 = "0.11"
 getrandom = "0.4.3"
 futures = "0.3.34"
