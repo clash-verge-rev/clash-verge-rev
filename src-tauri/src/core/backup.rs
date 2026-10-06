@@ -6,13 +6,12 @@ use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
 use reqwest_dav::list_cmd::{ListEntity, ListFile, ListMultiStatus};
 use smartstring::alias::String;
-use std::sync::OnceLock;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
     io::Write as _,
     path::PathBuf,
-    sync::Arc,
+    sync::{Arc, OnceLock},
     time::Duration,
 };
 use tokio::{fs, time::timeout};

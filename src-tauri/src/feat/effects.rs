@@ -1,19 +1,20 @@
 use crate::config::IVerge;
 use std::collections::BTreeSet;
 
+/// Variant order defines execution dependency order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum Effect {
     RestartCore,
     ClashConfig,
     Autostart,
+    Language,
     SystemProxy,
-    TrayIcon,
     Hotkey,
     TrayMenu,
+    TrayIcon,
     TrayTooltip,
     TrayClick,
     Lightweight,
-    Language,
     LogLevel,
     LogFile,
 }

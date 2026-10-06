@@ -10,7 +10,7 @@ mod probe;
 
 use std::{
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, Ordering},
     },
     time::Duration,
@@ -20,7 +20,6 @@ use anyhow::{Context as _, Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
-use std::sync::LazyLock;
 use tokio::sync::Notify;
 
 #[cfg(test)]

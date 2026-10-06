@@ -8,11 +8,10 @@ use anyhow::Result;
 use chrono::Local;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
-use std::sync::OnceLock;
 use std::{
     path::PathBuf,
     sync::{
-        Arc,
+        Arc, OnceLock,
         atomic::{AtomicBool, AtomicI64, Ordering},
     },
     time::{Duration, UNIX_EPOCH},

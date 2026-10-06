@@ -6,11 +6,10 @@ mod state;
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use clash_verge_logging::{LogRing, Type, logging};
-use std::sync::LazyLock;
 use std::{
     fmt,
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Instant,

@@ -17,7 +17,7 @@ use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Value;
-use std::{collections::HashSet, net::SocketAddr, str::FromStr as _, sync::LazyLock};
+use std::{collections::HashSet, net::SocketAddr, str::FromStr as _};
 
 #[derive(Clone, Copy)]
 struct MixedPortFallback {
@@ -25,7 +25,7 @@ struct MixedPortFallback {
     current: u16,
 }
 
-static PENDING_FALLBACK_NOTICE: LazyLock<Mutex<Option<MixedPortFallback>>> = LazyLock::new(|| Mutex::new(None));
+static PENDING_FALLBACK_NOTICE: Mutex<Option<MixedPortFallback>> = Mutex::new(None);
 static STARTUP_CORE_BLOCK_REASON: Mutex<Option<String>> = Mutex::new(None);
 
 impl Config {

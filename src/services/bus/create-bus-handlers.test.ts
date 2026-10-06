@@ -54,8 +54,6 @@ const mountBus = async () => {
       notice(status, message, (key) => key, vi.fn())
     },
     revalidateKeys: (keys) => void revalidateQueries(keys.map((key) => [key])),
-    revalidateProfiles: () => {},
-    refreshProxyView: () => {},
     readPendingFailures: () => {},
     readRunState: () => {},
   })

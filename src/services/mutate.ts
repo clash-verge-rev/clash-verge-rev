@@ -14,12 +14,10 @@ export interface MutateOptions<T> {
   /** Shown after a fulfilled result (most flows leave this to backend notices). */
   successNotice?: MutateNoticeInput
   /** `false` suppresses the default error toast. */
-  errorNotice?: false | MutateNoticeInput
+  errorNotice?: false
 }
 
-export type MutateResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; busy: true; value?: T }
+export type MutateResult<T> = { ok: true; value: T } | { ok: false; value: T }
 
 /** ValidationOutcome-shaped results report backend-side Busy rejection this way. */
 const isBusyOutcome = (value: unknown): boolean =>
@@ -44,7 +42,7 @@ export async function mutate<T>(
   try {
     const value = await invoke()
     if (isBusyOutcome(value)) {
-      return { ok: false, busy: true, value }
+      return { ok: false, value }
     }
     options.onFulfilled?.(value)
     if (options.revalidate?.length) {
@@ -56,9 +54,7 @@ export async function mutate<T>(
     return { ok: true, value }
   } catch (error) {
     if (options.errorNotice !== false) {
-      showNotice.error(
-        options.errorNotice !== undefined ? options.errorNotice : error,
-      )
+      showNotice.error(error)
     }
     throw error
   } finally {
