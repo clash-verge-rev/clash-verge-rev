@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "{{port}} portu zaten kullanımda",
+        "runningPort": "Şu anda kullanılan port: {{port}}",
+        "duplicatePort": "Etkin dinleyiciler farklı portlar kullanmalıdır",
+        "invalidPort": "1 ile 65535 arasında bir port girin",
         "saved": "Port ayarları kaydedildi",
         "saveFailed": "Port ayarları kaydedilemedi",
         "automaticFallback": "{{oldPort}} portu kullanımda olduğu için bu oturum {{newPort}} portunu kullanıyor. Ayarınız değişmedi ve sonraki başlatmada {{oldPort}} yeniden denenecek.",

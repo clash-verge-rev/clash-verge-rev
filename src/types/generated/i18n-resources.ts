@@ -962,9 +962,12 @@ export interface TranslationResources {
           messages: {
             automaticFallback: string
             automaticFallbackFailed: string
+            duplicatePort: string
+            invalidPort: string
             portInUse: string
             portTooHigh: string
             portTooLow: string
+            runningPort: string
             saved: string
             saveFailed: string
           }
