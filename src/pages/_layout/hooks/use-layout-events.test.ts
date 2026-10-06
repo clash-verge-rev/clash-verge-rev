@@ -6,6 +6,7 @@ import {
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
   takeServiceRepairNotice,
+  takeTunGuardRestoreNotice,
 } from '@/services/cmds'
 import { subscribeVergeEvents } from '@/services/events'
 import { showNotice } from '@/services/notice-service'
@@ -32,6 +33,7 @@ vi.mock('@/services/cmds', () => ({
   getCoreStartupError: vi.fn().mockResolvedValue(null),
   takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
+  takeTunGuardRestoreNotice: vi.fn().mockResolvedValue(null),
   takeServiceFallbackNotice: vi.fn().mockResolvedValue(null),
   takeServiceRepairNotice: vi.fn().mockResolvedValue(false),
   takeServiceOwnerNotice: vi.fn().mockResolvedValue(null),
@@ -50,8 +52,85 @@ beforeEach(async () => {
   ;({ handleNoticeMessage } = await import('../utils/notification-handlers'))
   vi.clearAllMocks()
   vi.mocked(getCoreStartupError).mockResolvedValue(null)
+  vi.mocked(takeTunGuardRestoreNotice).mockReset().mockResolvedValue(null)
   nativeWindow.isVisible.mockResolvedValue(true)
   nativeWindow.isMinimized.mockResolvedValue(false)
+})
+
+it('explains pending TUN forwarding restoration and preserves its error detail', async () => {
+  vi.mocked(takeTunGuardRestoreNotice).mockResolvedValueOnce(
+    'administrator access required',
+  )
+  handleNoticeMessage(
+    'tun_compatibility_guard::restore_failed',
+    'administrator access required',
+    (key) => key,
+    vi.fn(),
+  )
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
+    'settings.modals.tun.messages.compatibilityRestoreFailed',
+    'administrator access required',
+  )
+})
+
+it.each(['startup first', 'live event first'])(
+  'drains an early TUN restoration failure once when %s',
+  async (order) => {
+    const detail = 'previous uplink is unavailable'
+    vi.mocked(takeTunGuardRestoreNotice).mockResolvedValueOnce(detail)
+    useLayoutEvents(([status, message]) => {
+      handleNoticeMessage(status, message, (key) => key, vi.fn())
+    })
+    expect(takeTunGuardRestoreNotice).not.toHaveBeenCalled()
+    const [handlers, onSubscribed] =
+      vi.mocked(subscribeVergeEvents).mock.calls[0]
+    const liveEvent = () => {
+      handlers['verge://notice-message']?.([
+        'tun_compatibility_guard::restore_failed',
+        detail,
+      ])
+    }
+    if (order === 'startup first') {
+      onSubscribed?.()
+      liveEvent()
+    } else {
+      liveEvent()
+      onSubscribed?.()
+    }
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(takeTunGuardRestoreNotice).toHaveBeenCalledTimes(2)
+    expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
+      'settings.modals.tun.messages.compatibilityRestoreFailed',
+      detail,
+    )
+  },
+)
+
+it('does not replay a resolved TUN restoration failure from a stale live event', async () => {
+  handleNoticeMessage(
+    'tun_compatibility_guard::restore_failed',
+    'already restored',
+    (key) => key,
+    vi.fn(),
+  )
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(takeTunGuardRestoreNotice).toHaveBeenCalledOnce()
+  expect(showNotice.error).not.toHaveBeenCalled()
+})
+
+it('warns about a changed TUN uplink without offering an automatic repair', () => {
+  handleNoticeMessage(
+    'tun_compatibility_guard::check_failed',
+    'selected adapter is unavailable',
+    (key) => key,
+    vi.fn(),
+  )
+  expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
+    'settings.modals.tun.messages.compatibilityCheckFailed',
+    'selected adapter is unavailable',
+  )
+  expect(requestService).not.toHaveBeenCalled()
 })
 
 it('does not replay a recovered startup error after WebView recreation', async () => {

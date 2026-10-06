@@ -7,6 +7,7 @@ import {
   takeServiceFallbackNotice,
   takeServiceOwnerNotice,
   takeServiceRepairNotice,
+  takeTunGuardRestoreNotice,
 } from '@/services/cmds'
 import { hideNotice, showNotice } from '@/services/notice-service'
 import { requestService } from '@/services/service-request'
@@ -173,6 +174,28 @@ export const handleNoticeMessage = (
     'tun_mode::auto_disable_failed': () =>
       showNotice.error(
         'settings.sections.system.notifications.tunMode.autoDisableFailed',
+      ),
+    'tun_compatibility_guard::restore_failed': () => {
+      void takeTunGuardRestoreNotice()
+        .then((detail) => {
+          if (detail !== null) {
+            showNotice.error(
+              'settings.modals.tun.messages.compatibilityRestoreFailed',
+              detail,
+            )
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'Failed to read the pending TUN restoration notice',
+            error,
+          )
+        })
+    },
+    'tun_compatibility_guard::check_failed': () =>
+      showNotice.warning(
+        'settings.modals.tun.messages.compatibilityCheckFailed',
+        msg || undefined,
       ),
     'app_restart::core_stop_failed': () =>
       showNotice.error(

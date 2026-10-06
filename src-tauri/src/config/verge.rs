@@ -70,6 +70,8 @@ pub struct IVerge {
 
     pub enable_tun_mode: Option<bool>,
 
+    pub enable_tun_compatibility_guard: Option<bool>,
+
     pub enable_auto_launch: Option<bool>,
 
     pub enable_silent_start: Option<bool>,
@@ -346,6 +348,7 @@ impl IVerge {
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
             tun_tray_icon: Some(false),
+            enable_tun_compatibility_guard: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_hover_jump_navigator: Some(true),
@@ -435,6 +438,7 @@ impl IVerge {
         patch!(tun_tray_icon);
 
         patch!(enable_tun_mode);
+        patch!(enable_tun_compatibility_guard);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);

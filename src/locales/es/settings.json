@@ -494,17 +494,31 @@
         "routeExcludeAddress": "Direcciones excluidas de ruta",
         "strictRoute": "Enrutamiento estricto",
         "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
+        "lockOutboundInterface": "Lock Outbound Interface",
+        "interfaceName": "Outbound Interface",
+        "tunCompatibilityGuard": "TUN Compatibility Guard",
         "dnsHijack": "Secuestro de DNS",
         "mtu": "Unidad máxima de transmisión",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "tunCompatibilityGuard": "While TUN is enabled, temporarily disables IPv4 forwarding on the selected outbound interface.",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "Ajustes aplicados",
         "invalidRouteExcludeAddress": "Introduce un bloque CIDR válido",
+        "interfaceNameRequired": "Please select an outbound interface",
+        "interfaceNameHint": "Locks default outbound connections to the selected interface. Select again when switching networks; node-specific interfaces take precedence.",
+        "interfacesEmpty": "No interfaces found. Refresh to try again.",
+        "interfacesLoadFailed": "Could not load interfaces. Refresh to try again.",
+        "interfaceNotDetected": "Not detected",
+        "tunCompatibilityGuardHint": "Applies only to the selected interface. Requires administrator privileges and a locked outbound interface; may affect this computer's network sharing.",
+        "tunCompatibilityGuardRequiresInterface": "Lock and select an outbound interface before enabling TUN Compatibility Guard.",
+        "partialSaveFailed": "Some settings were saved, but the remaining settings could not be applied. Review the error and retry.",
+        "compatibilityRestoreFailed": "Could not restore IPv4 forwarding on a previously protected interface. Relaunch this app as administrator and retry.",
+        "compatibilityCheckFailed": "TUN Compatibility Guard could not verify the selected interface. Reselect the outbound interface and retry.",
         "routeExcludeAddressHint": "Solo se admiten bloques CIDR de IPv4/IPv6, como 192.168.0.0/16 o fd00::/8"
       }
     },

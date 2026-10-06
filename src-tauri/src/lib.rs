@@ -173,6 +173,7 @@ mod app_init {
             cmd::apply_dns_config,
             cmd::set_dns_override,
             cmd::take_dns_override_notice,
+            cmd::take_tun_guard_restore_notice,
             cmd::take_service_fallback_notice,
             cmd::get_core_startup_error,
             cmd::take_service_repair_notice,

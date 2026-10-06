@@ -103,6 +103,9 @@ pub struct CoreManager {
     // sidecar→service 交接 watcher 单实例标志。
     #[cfg(target_os = "windows")]
     handoff_watcher_running: AtomicBool,
+    #[cfg(target_os = "windows")]
+    tun_guard_watcher_running: AtomicBool,
+    tun_guard_restore_deferred: AtomicBool,
 }
 
 /// Process-level state owned by `CoreManager`.
@@ -129,6 +132,9 @@ impl Default for CoreManager {
             lifecycle_lock: tokio::sync::Mutex::new(()),
             #[cfg(target_os = "windows")]
             handoff_watcher_running: AtomicBool::new(false),
+            #[cfg(target_os = "windows")]
+            tun_guard_watcher_running: AtomicBool::new(false),
+            tun_guard_restore_deferred: AtomicBool::new(false),
         }
     }
 }
@@ -183,6 +189,7 @@ impl CoreManager {
     /// Run State derives PAC availability and the outward mode mirror from this; callers must
     /// not set those alongside.
     pub fn core_started(&self, mode: RunningMode) {
+        self.tun_guard_restore_deferred.store(false, Ordering::Release);
         let previous = *self.get_running_mode();
         if previous != mode {
             logging!(info, Type::Core, "Core running mode changed: {previous} -> {mode}");
@@ -279,6 +286,10 @@ impl CoreManager {
     #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]
     pub async fn init(&self) -> Result<bool> {
         const MAX_PORT_FALLBACK_RETRIES: usize = 3;
+
+        self.recover_tun_guard().await?;
+        #[cfg(target_os = "windows")]
+        self.spawn_tun_guard_watcher();
 
         if let Some(reason) = crate::config::Config::startup_core_block_reason() {
             anyhow::bail!("core startup blocked after mixed proxy port fallback failure: {reason}");

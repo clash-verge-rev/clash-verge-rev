@@ -1,16 +1,69 @@
 use super::{CoreManager, RunningMode};
 use crate::config::{Config, IVerge};
-use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
 use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
+use crate::core::{handle::Handle, tun_guard};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
+#[cfg(any(target_os = "windows", test))]
+use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::path::Path;
+use std::{
+    path::Path,
+    sync::atomic::{AtomicBool, Ordering},
+};
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+
+#[cfg(any(target_os = "windows", test))]
+fn tun_guard_interface<'a>(enabled: bool, saved: &Mapping, runtime: &'a Mapping) -> Result<Option<&'a str>> {
+    if !enabled {
+        return Ok(None);
+    }
+    let tun = runtime.get("tun").and_then(Value::as_mapping);
+    if !tun
+        .and_then(|tun| tun.get("enable"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        return Ok(None);
+    }
+    let saved_name = saved
+        .get("interface-name")
+        .and_then(Value::as_str)
+        .filter(|name| !name.trim().is_empty())
+        .ok_or_else(|| {
+            anyhow::anyhow!("TUN compatibility protection requires an explicitly selected outbound adapter")
+        })?;
+    let name = runtime
+        .get("interface-name")
+        .and_then(Value::as_str)
+        .filter(|name| *name == saved_name)
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "TUN compatibility protection requires the selected adapter to match the runtime configuration"
+            )
+        })?;
+    if tun
+        .and_then(|tun| tun.get("auto-detect-interface"))
+        .and_then(Value::as_bool)
+        != Some(false)
+    {
+        anyhow::bail!("TUN compatibility protection requires outbound adapter auto-detection to be disabled");
+    }
+    Ok(Some(name))
+}
+
+const fn can_restore_tun_guard(stop_confirmed: bool, mode: RunningMode, deferred: bool) -> bool {
+    stop_confirmed && matches!(mode, RunningMode::NotRunning) && !deferred
+}
+
+#[cfg(any(target_os = "windows", test))]
+const fn needs_tun_guard_start_reservation(interface_selected: bool, mode: RunningMode) -> bool {
+    interface_selected && matches!(mode, RunningMode::NotRunning)
+}
 
 #[cfg(any(target_os = "windows", test))]
 const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admin: bool) -> bool {
@@ -347,6 +400,166 @@ fn report_sidecar_failure(error: anyhow::Error, service_rejection: Option<&str>)
 }
 
 impl CoreManager {
+    pub(super) async fn tun_guard_selection(&self, yaml: &str) -> Result<Option<String>> {
+        #[cfg(target_os = "windows")]
+        {
+            if self.tun_guard_restore_deferred.load(Ordering::Acquire) && tun_guard::has_owned_guard() {
+                anyhow::bail!(
+                    "TUN compatibility protection cannot change while the previous core's ownership or exit is uncertain; stop other cores and restart Clash Verge"
+                );
+            }
+            let enabled = Config::verge()
+                .await
+                .latest_arc()
+                .enable_tun_compatibility_guard
+                .unwrap_or(false);
+            let saved = Config::clash().await.latest_arc();
+            let runtime: Mapping = serde_yaml_ng::from_str(yaml)?;
+            Ok(tun_guard_interface(enabled, &saved.0, &runtime)?.map(String::from))
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let _ = yaml;
+            Ok(None)
+        }
+    }
+
+    pub(super) async fn prepare_tun_guard(&self, yaml: &str) -> Result<tun_guard::GuardTransaction> {
+        let interface = self.tun_guard_selection(yaml).await?;
+        tun_guard::prepare(interface.as_deref())
+    }
+
+    pub(super) async fn prepare_service_tun_guard(
+        &self,
+        interface: Option<&str>,
+    ) -> Result<tun_guard::GuardTransaction> {
+        let prepared = async {
+            #[cfg(target_os = "windows")]
+            if needs_tun_guard_start_reservation(interface.is_some(), *self.get_running_mode()) {
+                // Release before the Start RPC: the Service acquires this same reservation itself.
+                let _execution = clash_verge_service_ipc::execution::reserve_sidecar().await?;
+                return tun_guard::prepare(interface);
+            }
+            tun_guard::prepare(interface)
+        }
+        .await;
+        // The reservation is gone by the caller's cleanup; another owner could have started.
+        if prepared.is_err() {
+            self.defer_tun_guard_restore();
+        }
+        prepared
+    }
+
+    pub(super) fn commit_tun_guard(transaction: tun_guard::GuardTransaction) {
+        // The Core already applied this config; a cleanup failure cannot roll its drafts back.
+        if let Err(error) = transaction.commit() {
+            Self::report_tun_guard_restore_failure(error);
+        }
+        #[cfg(target_os = "windows")]
+        Self::global().spawn_tun_guard_watcher();
+    }
+
+    pub(super) fn retain_tun_guard(&self, transaction: tun_guard::GuardTransaction) {
+        self.defer_tun_guard_restore();
+        if let Err(error) = transaction.retain() {
+            Self::report_tun_guard_restore_failure(error);
+        }
+    }
+
+    pub(crate) fn defer_tun_guard_restore(&self) {
+        self.tun_guard_restore_deferred.store(true, Ordering::Release);
+    }
+
+    pub(crate) fn confirm_tun_guard_stop(&self) {
+        self.tun_guard_restore_deferred.store(false, Ordering::Release);
+    }
+
+    pub(crate) fn restore_tun_guard(&self, stop_confirmed: bool) {
+        if !can_restore_tun_guard(
+            stop_confirmed,
+            *self.get_running_mode(),
+            self.tun_guard_restore_deferred.load(Ordering::Acquire),
+        ) {
+            return;
+        }
+        if let Err(error) = tun_guard::restore() {
+            Self::report_tun_guard_restore_failure(error);
+        }
+    }
+
+    fn report_tun_guard_restore_failure(error: anyhow::Error) {
+        logging!(
+            warn,
+            Type::Core,
+            "Failed to restore TUN compatibility protection: {error:#}"
+        );
+        let detail = format!("{error:#}");
+        tun_guard::record_restore_notice(detail.clone());
+        Handle::notice_message("tun_compatibility_guard::restore_failed", detail);
+    }
+
+    pub(super) async fn recover_tun_guard(&self) -> Result<()> {
+        let recover = async {
+            if !tun_guard::needs_recovery()? {
+                return Ok(());
+            }
+            // Recover only while the Service and Sidecar cannot acquire core execution.
+            #[cfg(target_os = "windows")]
+            let _execution = clash_verge_service_ipc::execution::reserve_sidecar().await?;
+            tun_guard::recover()
+        }
+        .await;
+        if let Err(error) = recover {
+            self.defer_tun_guard_restore();
+            if Config::verge()
+                .await
+                .latest_arc()
+                .enable_tun_compatibility_guard
+                .unwrap_or(false)
+            {
+                return Err(error.context("failed to recover TUN compatibility protection before startup"));
+            }
+            Self::report_tun_guard_restore_failure(error);
+        }
+        Ok(())
+    }
+
+    #[cfg(target_os = "windows")]
+    pub(super) fn spawn_tun_guard_watcher(&self) {
+        use std::time::Duration;
+
+        if self.tun_guard_watcher_running.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        crate::process::AsyncHandler::spawn(|| async {
+            let manager = Self::global();
+            let mut interval = tokio::time::interval(Duration::from_secs(5));
+            let mut previous_error = None;
+            loop {
+                interval.tick().await;
+                if Handle::global().is_exiting() {
+                    if matches!(*manager.get_running_mode(), RunningMode::NotRunning) {
+                        break;
+                    }
+                    continue;
+                }
+                let _lifecycle = manager.lifecycle_lock.lock().await;
+                match tun_guard::check() {
+                    Ok(()) => previous_error = None,
+                    Err(error) => {
+                        let message = format!("{error:#}");
+                        if previous_error.as_ref() != Some(&message) {
+                            logging!(warn, Type::Core, "TUN compatibility protection check failed: {message}");
+                            Handle::notice_message("tun_compatibility_guard::check_failed", message.clone());
+                            previous_error = Some(message);
+                        }
+                    }
+                }
+            }
+            manager.tun_guard_watcher_running.store(false, Ordering::Release);
+        });
+    }
+
     async fn rollback_failed_start(&self) {
         proxy_control::stop_guard().await;
         self.core_stopped();
@@ -525,19 +738,34 @@ impl CoreManager {
     }
 
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
-        run_service_config_replacement_transition(
+        let yaml = tokio::fs::read_to_string(config_file).await?;
+        let interface = self.tun_guard_selection(&yaml).await?;
+        tun_guard::preflight(interface.as_deref())?;
+        let stopped = AtomicBool::new(false);
+        let result = run_service_config_replacement_transition(
             cfg!(target_os = "macos"),
             proxy_control::stop_guard,
             proxy_control::clear,
-            || self.stop_core_unprepared_inner(),
-            || self.start_core_by_service_with_config(config_file),
+            || async {
+                self.stop_core_unprepared_inner().await?;
+                stopped.store(true, Ordering::Release);
+                Ok(())
+            },
+            || async {
+                let guard = self.prepare_service_tun_guard(interface.as_deref()).await?;
+                self.start_core_by_service_with_prepared_guard(config_file, guard).await
+            },
             || {
                 matches!(*self.get_running_mode(), RunningMode::Service)
                     && self.current_core_readiness_generation().is_some()
             },
             || self.apply_proxy_after_start(),
         )
-        .await
+        .await;
+        if result.is_err() {
+            self.restore_tun_guard(stopped.load(Ordering::Acquire));
+        }
+        result
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode(), readiness_generation = self.current_core_readiness_generation(), owner_generation = crate::core::service::owner_monitor_generation()))]
@@ -719,7 +947,9 @@ impl CoreManager {
     #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode()))]
     pub async fn stop_core(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
-        self.controlled_stop_core_inner().await
+        let result = self.controlled_stop_core_inner().await;
+        self.restore_tun_guard(result.is_ok());
+        result
     }
 
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
@@ -776,8 +1006,13 @@ impl CoreManager {
     pub(crate) async fn restart_core_during_config_update(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
         let proxy_intent = self.proxy_stop_intent().await;
-        run_core_replacement_transition(
-            || self.controlled_stop_core_with_intent(proxy_intent),
+        let stopped = AtomicBool::new(false);
+        let result = run_core_replacement_transition(
+            || async {
+                self.controlled_stop_core_with_intent(proxy_intent).await?;
+                stopped.store(true, Ordering::Release);
+                Ok(())
+            },
             || async {
                 self.start_core_inner().await?;
                 if matches!(*self.get_running_mode(), RunningMode::NotRunning)
@@ -789,7 +1024,11 @@ impl CoreManager {
             },
             || self.apply_proxy_after_start(),
         )
-        .await
+        .await;
+        if result.is_err() {
+            self.restore_tun_guard(stopped.load(Ordering::Acquire));
+        }
+        result
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(core = %clash_core))]
@@ -1018,12 +1257,15 @@ impl CoreManager {
 mod tests {
     use super::{
         CoreManager, ProxyRestoreExpectation, ProxyStopIntent, StartupDecision, can_allow_sidecar_for_session,
-        run_controlled_stop_transition, run_core_replacement_transition, run_core_start_transition,
-        run_ready_core_start_transition, run_service_config_replacement_transition, run_sidecar_termination_transition,
-        run_uninstall_transition, should_wait_for_service, startup_decision,
+        can_restore_tun_guard, needs_tun_guard_start_reservation, run_controlled_stop_transition,
+        run_core_replacement_transition, run_core_start_transition, run_ready_core_start_transition,
+        run_service_config_replacement_transition, run_sidecar_termination_transition, run_uninstall_transition,
+        should_wait_for_service, startup_decision, tun_guard_interface,
     };
+    use crate::config::IVerge;
     use crate::core::{manager::RunningMode, service::ServiceStatus};
     use parking_lot::Mutex;
+    use serde_yaml_ng::{Mapping, Value};
     use std::{
         future,
         sync::{
@@ -1033,6 +1275,69 @@ mod tests {
         task::Poll,
     };
     use tokio::sync::{Barrier, Mutex as AsyncMutex};
+
+    #[test]
+    fn only_protected_fresh_service_starts_reserve_execution_before_changing_forwarding() {
+        assert!(needs_tun_guard_start_reservation(true, RunningMode::NotRunning));
+        for mode in [RunningMode::NotRunning, RunningMode::Service, RunningMode::Sidecar] {
+            assert!(!needs_tun_guard_start_reservation(false, mode));
+        }
+        for mode in [RunningMode::Service, RunningMode::Sidecar] {
+            assert!(!needs_tun_guard_start_reservation(true, mode));
+        }
+    }
+
+    #[test]
+    fn tun_guard_restore_requires_a_confirmed_stop_of_our_own_core() {
+        assert!(can_restore_tun_guard(true, RunningMode::NotRunning, false));
+        assert!(!can_restore_tun_guard(false, RunningMode::NotRunning, false));
+        assert!(!can_restore_tun_guard(true, RunningMode::NotRunning, true));
+        for mode in [RunningMode::Service, RunningMode::Sidecar] {
+            assert!(!can_restore_tun_guard(true, mode, false));
+        }
+    }
+
+    #[test]
+    fn tun_compatibility_protection_is_opt_in_and_never_blocks_tun_off() -> anyhow::Result<()> {
+        let empty = Mapping::new();
+        let runtime: Mapping = serde_yaml_ng::from_str("tun: {enable: true}")?;
+        assert_eq!(
+            tun_guard_interface(
+                IVerge::default().enable_tun_compatibility_guard.unwrap_or(false),
+                &empty,
+                &runtime,
+            )?,
+            None
+        );
+        assert!(
+            !IVerge::template()
+                .enable_tun_compatibility_guard
+                .ok_or_else(|| anyhow::anyhow!("Verge template must define TUN compatibility protection"))?
+        );
+        assert_eq!(tun_guard_interface(true, &empty, &empty)?, None);
+        let runtime: Mapping = serde_yaml_ng::from_str("tun: {enable: false}")?;
+        assert_eq!(tun_guard_interface(true, &empty, &runtime)?, None);
+        Ok(())
+    }
+
+    #[test]
+    fn protected_tun_requires_the_same_explicitly_selected_adapter() -> anyhow::Result<()> {
+        let saved: Mapping = serde_yaml_ng::from_str("interface-name: 以太网 2")?;
+        let mut runtime: Mapping =
+            serde_yaml_ng::from_str("interface-name: 以太网 2\ntun: {enable: true, auto-detect-interface: false}")?;
+        assert_eq!(tun_guard_interface(true, &saved, &runtime)?, Some("以太网 2"));
+        assert!(tun_guard_interface(true, &Mapping::new(), &runtime).is_err());
+        runtime.insert("interface-name".into(), "WLAN".into());
+        assert!(tun_guard_interface(true, &saved, &runtime).is_err());
+        runtime.insert("interface-name".into(), "以太网 2".into());
+        runtime
+            .get_mut("tun")
+            .and_then(Value::as_mapping_mut)
+            .ok_or_else(|| anyhow::anyhow!("Protected TUN fixture must contain a tun mapping"))?
+            .insert("auto-detect-interface".into(), true.into());
+        assert!(tun_guard_interface(true, &saved, &runtime).is_err());
+        Ok(())
+    }
 
     struct FakeGuardCoordinator {
         generation: AtomicU64,

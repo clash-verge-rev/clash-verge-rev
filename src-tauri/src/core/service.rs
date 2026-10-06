@@ -1767,7 +1767,15 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
         clear_proxy_after_owner_loss().await;
     }
     clear_active_service_session();
-    CoreManager::global().core_stopped();
+    let manager = CoreManager::global();
+    if !matches!(reason, OwnerRecoveryReason::SameOwnerFailure) {
+        manager.defer_tun_guard_restore();
+    }
+    manager.core_stopped();
+    if matches!(reason, OwnerRecoveryReason::SameOwnerFailure) {
+        manager.confirm_tun_guard_stop();
+        manager.restore_tun_guard(true);
+    }
     // A displaced Service may still run TUN for its new owner, and DNS settings are system-wide.
     #[cfg(target_os = "macos")]
     if policy.reset_system_proxy {

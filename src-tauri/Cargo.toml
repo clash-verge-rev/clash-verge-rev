@@ -144,7 +144,7 @@ runas = "=1.2.0"
 winreg = "0.56.0"
 windows-service = "0.8.1"
 windows = { version = "0.62.2", features = ["Win32_Globalization"] }
-windows-sys.workspace = true
+windows-sys = { workspace = true, features = ["Win32_NetworkManagement_Ndis"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.7.0"

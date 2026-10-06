@@ -133,6 +133,11 @@ pub fn take_dns_override_notice() -> bool {
 }
 
 #[tauri::command]
+pub fn take_tun_guard_restore_notice() -> Option<std::string::String> {
+    crate::core::tun_guard::take_restore_notice()
+}
+
+#[tauri::command]
 pub async fn set_dns_override(
     profile_uid: String,
     enabled: bool,

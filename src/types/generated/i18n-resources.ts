@@ -1188,20 +1188,34 @@ export interface TranslationResources {
             autoRoute: string
             device: string
             dnsHijack: string
+            interfaceName: string
+            lockOutboundInterface: string
             mtu: string
             routeExcludeAddress: string
             stack: string
             strictRoute: string
+            tunCompatibilityGuard: string
           }
           messages: {
             applied: string
+            compatibilityCheckFailed: string
+            compatibilityRestoreFailed: string
+            interfaceNameHint: string
+            interfaceNameRequired: string
+            interfaceNotDetected: string
+            interfacesEmpty: string
+            interfacesLoadFailed: string
             invalidRouteExcludeAddress: string
+            partialSaveFailed: string
             routeExcludeAddressHint: string
+            tunCompatibilityGuardHint: string
+            tunCompatibilityGuardRequiresInterface: string
           }
           title: string
           tooltips: {
             autoRedirect: string
             dnsHijack: string
+            tunCompatibilityGuard: string
           }
         }
         update: {

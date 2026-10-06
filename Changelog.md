@@ -24,6 +24,11 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增 TUN 出口网卡锁定选项，可从网卡列表中选择、刷新或恢复自动选择
+
+**🖥️ Windows**
+
+- 新增可选的 TUN 兼容性保护，临时调整所选出口网卡的转发设置并在关闭 TUN 后恢复
 
 </details>
 

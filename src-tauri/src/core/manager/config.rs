@@ -348,7 +348,7 @@ impl CoreManager {
                 );
                 return Err(anyhow!("{message}"));
             }
-            ConfigApplication::ReloadFrom(staged) => match self.reload_config(&staged).await {
+            ConfigApplication::ReloadFrom(staged) => match self.reload_config(&staged).await? {
                 Ok(()) => {
                     tracing::Span::current().record("outcome", "staged");
                     crate::core::service::request_runtime_provider_sync(timing::RUNTIME_PROVIDER_SYNC_DELAY);
@@ -378,7 +378,11 @@ impl CoreManager {
     /// Reload the Core from `path`, and replace the Core if it will not take it.
     #[tracing::instrument(skip_all, level = "info", fields(outcome = tracing::field::Empty))]
     async fn reload_or_restart(&self, path: &str) -> Result<()> {
-        let Err(err) = self.reload_config(path).await else {
+        let reload = {
+            let _lifecycle = self.lifecycle_lock.lock().await;
+            self.reload_config(path).await?
+        };
+        let Err(err) = reload else {
             tracing::Span::current().record("outcome", "reloaded");
             return Ok(());
         };
@@ -400,8 +404,15 @@ impl CoreManager {
         }
     }
 
-    async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
-        handle::Handle::mihomo().reload_config(true, path).await
+    async fn reload_config(&self, path: &str) -> Result<std::result::Result<(), MihomoError>> {
+        let guard = self.prepare_tun_guard(&Config::runtime_config_yaml().await?).await?;
+        let result = handle::Handle::mihomo().reload_config(true, path).await;
+        if result.is_ok() {
+            Self::commit_tun_guard(guard);
+        } else {
+            self.retain_tun_guard(guard);
+        }
+        Ok(result)
     }
 }
 

@@ -330,6 +330,7 @@ const CONTROL_PLANE_KEYS: &[&str] = &[
 struct AuthoritativeFields {
     control_plane: Mapping,
     tun: Mapping,
+    interface_name: Option<Value>,
     dns: Mapping,
     hosts: Option<Value>,
 }
@@ -339,14 +340,23 @@ impl AuthoritativeFields {
         Self {
             control_plane: snapshot_control_plane(config),
             tun: snapshot_tun(config, gui_tun_keys),
+            interface_name: None,
             dns: take_mapping(&mut dns_settings, "dns"),
             hosts: dns_settings.remove("hosts"),
         }
     }
 
+    fn with_gui_interface(mut self, interface_name: Option<Value>) -> Self {
+        self.interface_name = interface_name;
+        self
+    }
+
     fn enforce(self, config: Mapping) -> Mapping {
         let config = enforce_control_plane(config, self.control_plane);
         let mut config = enforce_tun(config, self.tun);
+        if let Some(interface_name) = self.interface_name {
+            config.insert("interface-name".into(), interface_name);
+        }
         if !self.dns.is_empty() {
             let mut dns = take_mapping(&mut config, "dns");
             dns.extend(self.dns);
@@ -365,6 +375,11 @@ impl AuthoritativeFields {
         Self {
             control_plane: snapshot_control_plane(config),
             tun: snapshot_tun(config, &tun_keys),
+            interface_name: self
+                .interface_name
+                .as_ref()
+                .and_then(|_| config.get("interface-name"))
+                .cloned(),
             dns: self
                 .dns
                 .keys()
@@ -388,6 +403,12 @@ impl AuthoritativeFields {
             if before.tun.get(key) != after.tun.get(key) && after.tun.get(key) != self.tun.get(key) {
                 keys.push(format!("tun.{}", key.as_str().unwrap_or_default()).into());
             }
+        }
+        if self.interface_name.is_some()
+            && before.interface_name != after.interface_name
+            && after.interface_name != self.interface_name
+        {
+            keys.push("interface-name".into());
         }
         for key in self.dns.keys() {
             if before.dns.get(key) != after.dns.get(key) && after.dns.get(key) != self.dns.get(key) {
@@ -918,6 +939,7 @@ pub async fn enhance(
     let config = process_seq_items(config, rules_item, proxies_item, groups_item);
     let exists_keys = use_keys(&config).collect::<Vec<_>>();
     let gui_tun_keys = gui_tun_keys(&clash_config);
+    let gui_interface_name = clash_config.get("interface-name").cloned();
 
     let config = merge_default_config(
         config,
@@ -935,7 +957,8 @@ pub async fn enhance(
     let config = use_tun(config, enable_tun);
     let (config, dns_settings) = apply_dns_settings(config, enable_dns_settings).await;
 
-    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
+    let authoritative =
+        AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings).with_gui_interface(gui_interface_name);
 
     let (config, exists_keys, result_map) = process_global_items(
         config,
@@ -1391,6 +1414,56 @@ mod authoritative_field_tests {
         let result = authoritative.enforce(overridden);
 
         assert_eq!(result.get(Value::from("profile-key")), Some(&Value::from(1)));
+    }
+
+    #[test]
+    fn gui_interface_lock_and_unlock_survive_a_merge() {
+        for (interface_name, auto_detect) in [("WLAN", false), ("", true)] {
+            let saved = config_with(&[
+                ("interface-name", Value::from(interface_name)),
+                (
+                    "tun",
+                    config_with(&[("auto-detect-interface", Value::from(auto_detect))]).into(),
+                ),
+            ]);
+            let authoritative = AuthoritativeFields::capture(&saved, &super::gui_tun_keys(&saved), Mapping::new())
+                .with_gui_interface(saved.get("interface-name").cloned());
+            let override_config = config_with(&[
+                ("interface-name", Value::from("other-interface")),
+                (
+                    "tun",
+                    config_with(&[("auto-detect-interface", Value::from(!auto_detect))]).into(),
+                ),
+            ]);
+            let merged = super::use_merge(&override_config, saved.clone());
+            let discarded = authoritative.overridden(&authoritative, &authoritative.current(&merged));
+            assert!(discarded.contains(&"interface-name".into()));
+            let result = authoritative.enforce(merged);
+
+            assert_eq!(result.get("interface-name"), Some(&Value::from(interface_name)));
+            assert_eq!(
+                result.get("tun").and_then(|tun| tun.get("auto-detect-interface")),
+                Some(&Value::from(auto_detect))
+            );
+        }
+    }
+
+    #[test]
+    fn an_unsaved_gui_interface_leaves_advanced_selection_overridable() {
+        let saved = Mapping::new();
+        let profile = config_with(&[("interface-name", Value::from("profile-interface"))]);
+        let authoritative = AuthoritativeFields::capture(&profile, &[], Mapping::new())
+            .with_gui_interface(saved.get("interface-name").cloned());
+        let override_config = config_with(&[("interface-name", Value::from("script-interface"))]);
+        let merged = super::use_merge(&override_config, profile);
+
+        assert!(
+            authoritative
+                .overridden(&authoritative, &authoritative.current(&merged))
+                .is_empty()
+        );
+        let result = authoritative.enforce(merged);
+        assert_eq!(result.get("interface-name"), Some(&Value::from("script-interface")));
     }
 
     #[test]

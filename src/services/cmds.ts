@@ -187,6 +187,10 @@ export async function takeDnsOverrideNotice() {
   return invoke<boolean>('take_dns_override_notice')
 }
 
+export async function takeTunGuardRestoreNotice() {
+  return invoke<string | null>('take_tun_guard_restore_notice')
+}
+
 export type ServiceFallbackNotice =
   | { kind: 'unavailable' }
   | { kind: 'coreRejected'; reason: string }
