@@ -530,13 +530,7 @@ const ProfilePage = () => {
   const loadingCache = useProfileLoadingCache()
   const { updateRevisions: completedUpdateRevisions, timerRevisions } =
     useProfileUpdates()
-  const setStoreLoadingProfiles = useSetProfileLoading()
-  const setLoadingProfiles = useCallback(
-    (uids: string[], loading: boolean) => {
-      setStoreLoadingProfiles(uids, loading)
-    },
-    [setStoreLoadingProfiles],
-  )
+  const setLoadingProfiles = useSetProfileLoading()
 
   const runProfileUpdates = useCallback(
     async (uids: string[]) => {

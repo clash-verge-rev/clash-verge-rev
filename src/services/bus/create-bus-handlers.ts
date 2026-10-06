@@ -20,20 +20,10 @@ export interface BusHandlerDeps {
   /** Notice-table entry point; layout owns t/navigate wiring. */
   handleNotice: (payload: [string, string]) => void
   revalidateKeys: (keys: readonly string[]) => void
-  revalidateProfiles: () => void
-  refreshProxyView: () => void
   /** Re-read the backend pending-failure snapshot into the store. */
   readPendingFailures: () => void
   /** Re-read the run-state snapshot into the store. */
   readRunState: () => void
-}
-
-export interface EventBus {
-  handlers: BusHandlers
-  /** Re-read event-only state after listeners are live (initial race window). */
-  onSubscribed: () => void
-  /** The window regained focus: replay a possibly recovered startup error. */
-  onWindowFocus: () => void
 }
 
 /**
@@ -43,7 +33,7 @@ export interface EventBus {
  * throttles below live in the returned closure, mirroring the previous
  * scattered listeners.
  */
-export const createEventBus = (deps: BusHandlerDeps): EventBus => {
+export const createEventBus = (deps: BusHandlerDeps) => {
   let lastProfileId: string | null = null
   let lastProfileChangeTime = 0
   let lastProxyRefreshTime = 0
@@ -59,14 +49,14 @@ export const createEventBus = (deps: BusHandlerDeps): EventBus => {
     }
     lastProfileId = newProfileId
     lastProfileChangeTime = now
-    deps.revalidateProfiles()
+    deps.revalidateKeys(['getProfiles'])
   }
 
   const handleRefreshProxyConfig = () => {
     const now = Date.now()
     if (now - lastProxyRefreshTime <= refreshThrottle) return
     lastProxyRefreshTime = now
-    deps.refreshProxyView()
+    deps.revalidateKeys(['getProxyView'])
   }
 
   const handlers: BusHandlers = {
@@ -87,7 +77,7 @@ export const createEventBus = (deps: BusHandlerDeps): EventBus => {
         'getSystemProxy',
         'getAutotemProxy',
       ]),
-    'verge://refresh-profiles': () => deps.revalidateProfiles(),
+    'verge://refresh-profiles': () => deps.revalidateKeys(['getProfiles']),
     'verge://refresh-proxy-config': handleRefreshProxyConfig,
     'verge://notice-message': (payload) => deps.handleNotice(payload),
     'profile-changed': handleProfileChanged,
@@ -97,7 +87,7 @@ export const createEventBus = (deps: BusHandlerDeps): EventBus => {
       deps.dispatch({ type: 'profileUpdate/started', uid }),
     'profile-update-completed': ({ uid }) => {
       deps.dispatch({ type: 'profileUpdate/completed', uid })
-      deps.revalidateProfiles()
+      deps.revalidateKeys(['getProfiles'])
     },
     'verge://run-state-changed': (payload) => {
       deps.dispatch({ type: 'runState/loaded', runState: payload })
@@ -106,7 +96,7 @@ export const createEventBus = (deps: BusHandlerDeps): EventBus => {
     },
     'verge://pending-failures-changed': () => deps.readPendingFailures(),
     [TEST_ALL_EVENT]: () => deps.dispatch({ type: 'testAll/requested' }),
-  } as BusHandlers
+  }
 
   const onSubscribed = () => {
     // Run state is read after subscribing so an event racing the store's

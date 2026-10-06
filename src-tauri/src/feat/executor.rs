@@ -20,22 +20,6 @@ pub(super) enum Patch<'a> {
     Clash(&'a Mapping),
 }
 
-const EFFECT_ORDER: &[Effect] = &[
-    Effect::RestartCore,
-    Effect::ClashConfig,
-    Effect::Autostart,
-    Effect::Language,
-    Effect::SystemProxy,
-    Effect::Hotkey,
-    Effect::TrayMenu,
-    Effect::TrayIcon,
-    Effect::TrayTooltip,
-    Effect::TrayClick,
-    Effect::Lightweight,
-    Effect::LogLevel,
-    Effect::LogFile,
-];
-
 async fn ensure_restart(manager: &CoreManager) -> Result<()> {
     Config::generate().await?;
     let previous = manager.current_core_readiness_generation();
@@ -143,15 +127,13 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
         Patch::Clash(patch) => clash.edit_draft(|draft| draft.patch_config(patch)),
     }
     let result: Result<()> = async {
-        for &effect in EFFECT_ORDER {
-            if effects.contains(&effect) {
-                let result = Box::pin(ensure_effect(effect, verge_patch, manager, &update)).await;
-                if matches!(patch, Patch::Clash(_)) && matches!(effect, Effect::TrayMenu | Effect::TrayIcon) {
-                    // Tray failures must not reject an applied Clash mode change.
-                    logging_error!(Type::Tray, result);
-                } else {
-                    result?;
-                }
+        for effect in effects.iter().copied() {
+            let result = Box::pin(ensure_effect(effect, verge_patch, manager, &update)).await;
+            if matches!(patch, Patch::Clash(_)) && matches!(effect, Effect::TrayMenu | Effect::TrayIcon) {
+                // Tray failures must not reject an applied Clash mode change.
+                logging_error!(Type::Tray, result);
+            } else {
+                result?;
             }
         }
         match patch {
