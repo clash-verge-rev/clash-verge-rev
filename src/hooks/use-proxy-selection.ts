@@ -78,17 +78,14 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
       }
 
       try {
-        if (isFixedProxy) {
-          await mutate(() => unfixedProxy(groupName), {
-            id: 'select-proxy-node',
-            errorNotice: false,
-          })
-        } else {
-          await mutate(() => selectNodeForGroup(groupName, proxyName), {
-            id: 'select-proxy-node',
-            errorNotice: false,
-          })
-        }
+        const result = await mutate(
+          () =>
+            isFixedProxy
+              ? unfixedProxy(groupName)
+              : selectNodeForGroup(groupName, proxyName),
+          { id: `select-proxy-node:${groupName}`, errorNotice: false },
+        )
+        if (!result.ok) return
         onSuccess?.()
         syncTraySelection()
         if (isFixedProxy) {

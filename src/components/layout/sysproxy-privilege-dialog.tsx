@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog } from '@/components/base'
 import { useDialogFailure } from '@/pages/_layout/hooks'
 import {
-  getRuntimeState,
   installService,
   patchVergeConfig,
   reinstallService,
@@ -23,6 +22,7 @@ import {
   type ServiceRequest,
   type ServiceRequestReason,
 } from '@/services/service-request'
+import { useAppReads } from '@/store/app-store-context'
 import getSystem from '@/utils/get-system'
 
 type Remedy = 'installAndRestart' | 'reinstallAndRestart' | 'restartOnly'
@@ -84,6 +84,7 @@ const STEP_MESSAGE = {
 } as const
 
 export const SysproxyPrivilegeDialog = () => {
+  const { readRunState } = useAppReads()
   const { t } = useTranslation()
   const { failure, dismiss } = useDialogFailure()
   const asked = useSyncExternalStore(subscribeServiceRequest, getServiceRequest)
@@ -135,7 +136,7 @@ export const SysproxyPrivilegeDialog = () => {
         errorNotice: false,
       })
 
-      const runState = await getRuntimeState()
+      const runState = await readRunState()
       const usingAdminFallback =
         remedy !== 'reinstallAndRestart' &&
         getSystem() === 'windows' &&

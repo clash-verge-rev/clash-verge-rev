@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog } from '@/components/base'
 import {
   continueWithSidecar,
-  getRuntimeState,
   installService,
   reinstallService,
   repairService,
@@ -14,14 +13,14 @@ import {
 } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
-import { useAppDispatch, useRunState } from '@/store/app-store-context'
+import { useAppReads, useRunState } from '@/store/app-store-context'
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
-  const dispatch = useAppDispatch()
+  const { readRunState } = useAppReads()
   const runState = useRunState()
   // Whether the service needs a decision is derived once, in Rust, and travels with the
   // snapshot; a failed refresh is treated as needing one, since we cannot tell otherwise.
@@ -59,8 +58,7 @@ export const ServiceMigrationDialog = () => {
   // One store entry to refresh, so there is nothing left to keep coherent by hand.
   const refreshRunState = async () => {
     try {
-      const data = await getRuntimeState()
-      dispatch({ type: 'runState/loaded', runState: data })
+      const data = await readRunState()
       setStateRefreshFailed(false)
       return data
     } catch (error) {

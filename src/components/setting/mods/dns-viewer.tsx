@@ -41,6 +41,7 @@ import {
   saveDnsConfig,
   validateDnsConfig,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -519,7 +520,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         config = parsedConfig as Record<string, any>
       }
 
-      await saveDnsConfig(config)
+      await mutate(() => saveDnsConfig(config), {
+        id: 'save-dns-config',
+        errorNotice: false,
+      })
 
       const validation = await validateDnsConfig()
 
@@ -558,7 +562,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       if (dnsEnabled) {
-        await applyDnsConfig(true)
+        await mutate(() => applyDnsConfig(true), {
+          id: 'apply-dns-config',
+          errorNotice: false,
+        })
         mutateClash()
       }
 

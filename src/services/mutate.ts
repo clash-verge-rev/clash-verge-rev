@@ -6,7 +6,7 @@ import type { AppStoreAction } from '@/store/app-state'
 type MutateNoticeInput = Parameters<typeof showNotice.error>[0]
 
 export interface MutateOptions<T> {
-  /** Busy/in-flight identity; a second intent with the same id resolves `{ busy: true }`. */
+  /** Commands with the same identity execute in request order. */
   id: string
   /** Applied before the command runs; undone by `rollback` on failure. */
   optimistic?: () => void
@@ -34,7 +34,7 @@ const isBusyOutcome = (value: unknown): boolean =>
   value !== null &&
   (value as { status?: unknown }).status === 'busy'
 
-const inFlight = new Set<string>()
+const inFlight = new Map<string, Promise<void>>()
 let storeDispatch: ((action: AppStoreAction) => void) | null = null
 
 /** The app store registers its dispatcher so the funnel can record busy state. */
@@ -54,12 +54,17 @@ export async function mutate<T>(
   options: MutateOptions<T>,
 ): Promise<MutateResult<T>> {
   const { id } = options
-  if (inFlight.has(id)) return { ok: false, busy: true }
-  inFlight.add(id)
+  const previous = inFlight.get(id)
+  let release!: () => void
+  const settled = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  inFlight.set(id, settled)
+  if (previous) await previous
   storeDispatch?.({ type: 'busy/started', id })
 
-  options.optimistic?.()
   try {
+    options.optimistic?.()
     const value = await invoke()
     if (isBusyOutcome(value)) {
       if (options.busyNotice !== undefined) {
@@ -84,7 +89,8 @@ export async function mutate<T>(
     }
     throw error
   } finally {
-    inFlight.delete(id)
+    release()
+    if (inFlight.get(id) === settled) inFlight.delete(id)
     storeDispatch?.({ type: 'busy/settled', id })
   }
 }

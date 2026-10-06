@@ -1,15 +1,19 @@
-import { useEffect, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
 
-import {
-  getPendingFailures,
-  getRuntimeState,
-  getSidecarFailure,
-} from '@/services/cmds'
 import { bindStoreDispatch } from '@/services/mutate'
 
-import { appStoreReducer, initialAppStoreState } from './app-state'
-import { AppDispatchContext, AppStateContext } from './app-store-context'
+import {
+  type AppStoreAction,
+  appStoreReducer,
+  initialAppStoreState,
+} from './app-state'
+import {
+  AppDispatchContext,
+  AppReadsContext,
+  AppStateContext,
+} from './app-store-context'
+import { createStoreReads } from './store-reads'
 
 /**
  * Single app store (React context + reducer, per the frozen design). Event-bus
@@ -20,6 +24,16 @@ import { AppDispatchContext, AppStateContext } from './app-store-context'
 export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
   const [state, dispatch] = useReducer(appStoreReducer, initialAppStoreState)
 
+  const reads = useMemo(() => createStoreReads(dispatch), [dispatch])
+  const dispatchEvent = useCallback(
+    (action: AppStoreAction) => {
+      if (action.type === 'runState/loaded')
+        reads.acceptRunState(action.runState)
+      else dispatch(action)
+    },
+    [reads],
+  )
+
   useEffect(() => {
     bindStoreDispatch(dispatch)
     return () => bindStoreDispatch(null)
@@ -27,26 +41,9 @@ export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
 
   useEffect(() => {
     const readRunState = () => {
-      getRuntimeState()
-        .then((runState) => dispatch({ type: 'runState/loaded', runState }))
-        .catch(() => {})
+      void reads.readRunState().catch(() => {})
     }
-    const readPendingFailures = () => {
-      getSidecarFailure()
-        .then((snapshot) =>
-          dispatch({ type: 'sidecarFailure/loaded', snapshot }),
-        )
-        .catch((error) => {
-          console.warn('[app-store] Sidecar failure could not be read:', error)
-        })
-      getPendingFailures()
-        .then((failures) =>
-          dispatch({ type: 'pendingFailures/loaded', failures }),
-        )
-        .catch((error) => {
-          console.warn('[app-store] pending failures could not be read:', error)
-        })
-    }
+    const { readPendingFailures } = reads
 
     readRunState()
     readPendingFailures()
@@ -70,12 +67,17 @@ export const AppStoreProvider = ({ children }: { children?: ReactNode }) => {
       window.removeEventListener('focus', readWhenFocused)
       document.removeEventListener('visibilitychange', readWhenFocused)
       window.clearInterval(timer)
+      reads.invalidate()
     }
-  }, [])
+  }, [reads])
 
   return (
     <AppStateContext value={state}>
-      <AppDispatchContext value={dispatch}>{children}</AppDispatchContext>
+      <AppReadsContext value={reads}>
+        <AppDispatchContext value={dispatchEvent}>
+          {children}
+        </AppDispatchContext>
+      </AppReadsContext>
     </AppStateContext>
   )
 }

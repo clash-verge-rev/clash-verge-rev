@@ -23,7 +23,7 @@ vi.mock('react-i18next', () => ({
 vi.mock('@mui/material', () => ({ Alert: 'div' }))
 vi.mock('@/components/base', () => ({ BaseDialog: 'dialog' }))
 vi.mock('@/store/app-store-context', () => ({
-  useAppDispatch: () => store.dispatch,
+  useAppReads: () => ({ readRunState: getRuntimeState }),
   useRunState: () => store.runState,
 }))
 vi.mock('@/services/cmds', () => ({

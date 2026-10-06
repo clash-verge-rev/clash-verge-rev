@@ -43,6 +43,7 @@ import {
   getSystemProxy,
   patchVergeConfig,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
@@ -374,9 +375,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 : currentSysProxy?.enable
 
               if (isProxyActive) {
-                await patchVergeConfig({ enable_system_proxy: false })
-                await sleep(50)
-                await patchVergeConfig({ enable_system_proxy: true })
+                await mutate(
+                  async () => {
+                    await patchVergeConfig({ enable_system_proxy: false })
+                    await sleep(50)
+                    await patchVergeConfig({ enable_system_proxy: true })
+                  },
+                  { id: 'patch-verge-config', errorNotice: false },
+                )
                 await invalidateProxyState()
               }
             }
