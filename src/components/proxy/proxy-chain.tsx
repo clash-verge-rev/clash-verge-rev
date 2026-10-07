@@ -465,7 +465,7 @@ export const ProxyChain = ({
               id: `select-proxy-node:${targetGroup}`,
               errorNotice: false,
             })
-            recordSelection(targetGroup, 'DIRECT')
+            await recordSelection(targetGroup, 'DIRECT')
           } catch {
             if (currentProxyChain.length >= 1) {
               try {
@@ -477,7 +477,7 @@ export const ProxyChain = ({
                     errorNotice: false,
                   },
                 )
-                recordSelection(targetGroup, currentProxyChain[0].name)
+                await recordSelection(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
               }
@@ -553,12 +553,12 @@ export const ProxyChain = ({
       )
       // The chain moves the group like any other selection, so the profile has to learn about
       // it: what the profile holds is what gets re-applied the next time the core starts.
-      recordSelection(targetGroup || 'GLOBAL', lastNode.name)
+      await recordSelection(targetGroup || 'GLOBAL', lastNode.name)
       localStorage.setItem('proxy-chain-group', targetGroup || 'GLOBAL')
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
       // 刷新代理信息以更新连接状态
-      refreshProxy()
+      await refreshProxy()
       debugLog('Successfully connected to proxy chain')
     } catch (error) {
       console.error('Failed to connect to proxy chain:', error)

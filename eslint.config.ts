@@ -12,6 +12,92 @@ import pluginUnusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+const ipcBoundaryRules = ({
+  allowCommands = false,
+  allowInvoke = false,
+  allowEvents = false,
+} = {}) => {
+  const paths = [
+    ...(!allowInvoke
+      ? [
+          {
+            name: '@tauri-apps/api/core',
+            importNames: ['invoke'],
+            allowTypeImports: true,
+            message: 'Invoke backend commands through services/cmds.',
+          },
+        ]
+      : []),
+    ...(!allowEvents
+      ? [
+          {
+            name: '@tauri-apps/api/event',
+            importNames: ['listen', 'emit', 'emitTo', 'once'],
+            allowTypeImports: true,
+            message:
+              'The event bus owns Tauri event subscriptions and emissions.',
+          },
+        ]
+      : []),
+  ]
+  const patterns = allowCommands
+    ? []
+    : [
+        {
+          regex: '(^|/)bindings(\\.ts)?$',
+          importNames: ['commands'],
+          allowTypeImports: true,
+          message:
+            'Only services/cmds may import generated command implementations.',
+        },
+      ]
+  const modules = [
+    ...(!allowInvoke ? ['@tauri-apps/api/core'] : []),
+    ...(!allowEvents ? ['@tauri-apps/api/event'] : []),
+  ]
+  const syntax = modules.flatMap((name) => [
+    {
+      selector: `ImportExpression[source.value='${name}']`,
+      message:
+        'Use the owned IPC service boundary instead of dynamically importing Tauri APIs.',
+    },
+    {
+      selector: `CallExpression[callee.name='require'][arguments.0.value='${name}']`,
+      message:
+        'Use the owned IPC service boundary instead of requiring Tauri APIs.',
+    },
+    {
+      selector: `TSImportEqualsDeclaration[moduleReference.expression.value='${name}']`,
+      message: 'Use the owned IPC service boundary for Tauri APIs.',
+    },
+  ])
+  if (!allowCommands) {
+    syntax.push(
+      {
+        selector: 'ImportExpression[source.value=/bindings(\\.ts)?$/]',
+        message:
+          'Only services/cmds may load generated command implementations.',
+      },
+      {
+        selector:
+          "CallExpression[callee.name='require'][arguments.0.value=/bindings(\\.ts)?$/]",
+        message:
+          'Only services/cmds may load generated command implementations.',
+      },
+      {
+        selector:
+          'TSImportEqualsDeclaration[moduleReference.expression.value=/bindings(\\.ts)?$/]',
+        message:
+          'Only services/cmds may load generated command implementations.',
+      },
+    )
+  }
+  return {
+    'no-restricted-imports': ['error', { paths, patterns }],
+    'no-restricted-syntax': ['error', ...syntax],
+  }
+}
+
 export default defineConfig([
   pluginESx.configs['flat/restrict-to-es2022'],
   {
@@ -160,6 +246,35 @@ export default defineConfig([
         projectService: false,
         project: './scripts/perf/tsconfig.node.json',
       },
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx,js,jsx,mts,mjs}'],
+    rules: ipcBoundaryRules(),
+  },
+  {
+    files: ['src/services/cmds.ts'],
+    rules: ipcBoundaryRules({ allowCommands: true }),
+  },
+  {
+    files: ['src/services/bindings.ts'],
+    rules: ipcBoundaryRules({ allowCommands: true, allowInvoke: true }),
+  },
+  {
+    files: ['src/services/bus/**/*.{ts,tsx}'],
+    rules: ipcBoundaryRules({ allowEvents: true }),
+  },
+  {
+    files: [
+      'src/components/proxy/proxy-chain.tsx',
+      'src/components/proxy/proxy-groups-chain.tsx',
+      'src/pages/proxies.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        { ignoreVoid: false },
+      ],
     },
   },
 ])
