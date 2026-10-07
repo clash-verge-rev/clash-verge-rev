@@ -324,6 +324,12 @@ pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    // Without systemd, the installer registers an OpenRC script instead of a unit.
+    if !Path::new("/run/systemd/system").exists() && Path::new("/run/openrc").exists() {
+        return Ok(Path::new("/etc/init.d")
+            .join(clash_verge_service_ipc::SERVICE_SLUG)
+            .exists());
+    }
     let unit = format!("{}.service", clash_verge_service_ipc::SERVICE_SLUG);
     let output = StdCommand::new("systemctl")
         .args(["show", "--property=LoadState", "--value", &unit])
