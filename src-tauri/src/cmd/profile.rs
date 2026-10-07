@@ -408,15 +408,16 @@ pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<Vali
     }
     let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
+    let profiles = IProfiles {
+        current: profiles.current,
+        items: None,
+    };
     let target_profile = profiles.current.as_ref();
 
     let previous_profile = Config::profiles().await.data_arc().current.clone();
 
     Config::profiles().await.edit_draft(|d| {
-        d.patch_config(&IProfiles {
-            current: profiles.current.clone(),
-            items: None,
-        });
+        d.patch_config(&profiles);
     });
 
     perform_config_update(target_profile, previous_profile.as_ref())
@@ -477,7 +478,6 @@ pub async fn patch_profile(index: std::string::String, profile: ProfilePatch) ->
 #[tauri::command]
 #[specta::specta]
 pub async fn view_profile(index: std::string::String) -> CmdResult {
-    let index: String = index.into();
     let profiles = Config::profiles().await;
     let profiles_ref = profiles.latest_arc();
     let file = profiles_ref
@@ -503,7 +503,6 @@ pub async fn view_profile(index: std::string::String) -> CmdResult {
 #[tauri::command]
 #[specta::specta]
 pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::string::String> {
-    let index: String = index.into();
     let item = {
         let profiles = Config::profiles().await;
         let profiles_ref = profiles.latest_arc();
@@ -540,7 +539,6 @@ pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::str
 #[tauri::command]
 #[specta::specta]
 pub async fn get_next_update_time(uid: std::string::String) -> CmdResult<Option<i64>> {
-    let uid: String = uid.into();
     let timer = Timer::global();
     let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)

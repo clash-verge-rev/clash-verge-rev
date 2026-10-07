@@ -52,7 +52,6 @@ pub fn take_discarded_keys_notice() -> Option<std::string::String> {
 pub async fn get_runtime_proxy_chain_config(
     proxy_chain_exit_node: std::string::String,
 ) -> CmdResult<std::string::String> {
-    let proxy_chain_exit_node: String = proxy_chain_exit_node.into();
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();
 
@@ -73,7 +72,7 @@ pub async fn get_runtime_proxy_chain_config(
                 false
             }
         }) {
-            proxies_chain.push(proxy.to_owned());
+            proxies_chain.push(proxy);
             proxy_name = proxy.get("dialer-proxy").map(|x| x.as_str());
         }
 
@@ -82,12 +81,12 @@ pub async fn get_runtime_proxy_chain_config(
             .find(|proxy| proxy.get("name").map(|x| x.as_str()) == proxy_name)
             && !proxies_chain.is_empty()
         {
-            proxies_chain.push(entry_proxy.to_owned());
+            proxies_chain.push(entry_proxy);
         }
 
         proxies_chain.reverse();
 
-        let mut config: HashMap<String, Vec<serde_yaml_ng::Value>> = HashMap::new();
+        let mut config: HashMap<String, Vec<&serde_yaml_ng::Value>> = HashMap::new();
 
         config.insert("proxies".into(), proxies_chain);
 

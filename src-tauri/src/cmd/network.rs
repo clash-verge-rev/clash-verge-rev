@@ -16,16 +16,16 @@ pub async fn get_sys_proxy() -> CmdResult<SystemProxy> {
         other => other.stringify_err()?,
     };
     let Sysproxy {
-        ref host,
-        ref bypass,
-        ref port,
-        ref enable,
+        host,
+        bypass,
+        port,
+        enable,
     } = sys_proxy;
 
     Ok(SystemProxy {
-        enable: *enable,
+        enable,
         server: format!("{host}:{port}"),
-        bypass: bypass.to_string(),
+        bypass,
     })
 }
 
@@ -37,12 +37,9 @@ pub async fn get_auto_proxy() -> CmdResult<AutoProxy> {
         Err(error) if proxy_control::is_missing_network_service(&error) => Autoproxy::default(),
         other => other.stringify_err()?,
     };
-    let Autoproxy { ref enable, ref url } = auto_proxy;
+    let Autoproxy { enable, url } = auto_proxy;
 
-    Ok(AutoProxy {
-        enable: *enable,
-        url: url.to_string(),
-    })
+    Ok(AutoProxy { enable, url })
 }
 
 #[tauri::command]
