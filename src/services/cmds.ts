@@ -12,8 +12,9 @@ import type {
   ProxyPortSettings,
   UnlockItem,
   ProxyViewV1_Serialize as ProxyViewV1,
-  IProfiles_Deserialize,
-  PrfItem_Deserialize,
+  ProfileSelection,
+  ProfilePatch,
+  ProfileCreate,
 } from './bindings'
 
 export type {
@@ -41,15 +42,24 @@ export async function enhanceProfiles() {
   return (await commands.enhanceProfiles()).status === 'valid'
 }
 
-export async function patchProfilesConfig(profiles: IProfiles_Deserialize) {
-  return commands.patchProfilesConfig(profiles)
+export async function patchProfilesConfig(profiles: ProfileSelection) {
+  return commands.patchProfilesConfig({ current: profiles.current })
 }
 
 export async function createProfile(
-  item: PrfItem_Deserialize,
+  item: ProfileCreate,
   fileData?: string | null,
 ) {
-  return commands.createProfile(item, fileData ?? null)
+  return commands.createProfile(
+    {
+      type: item.type,
+      name: item.name,
+      desc: item.desc,
+      ...(item.type === 'remote' ? { url: item.url } : {}),
+      option: item.option,
+    },
+    fileData ?? null,
+  )
 }
 
 export async function viewProfile(index: string) {
@@ -80,11 +90,20 @@ export async function deleteProfile(index: string) {
   return commands.deleteProfile(index)
 }
 
-export async function patchProfile(
-  index: string,
-  profile: PrfItem_Deserialize,
-) {
-  return commands.patchProfile(index, profile)
+export async function patchProfile(index: string, profile: ProfilePatch) {
+  const { type, name, desc, file, url, selected, extra, updated, option } =
+    profile
+  return commands.patchProfile(index, {
+    type,
+    name,
+    desc,
+    file,
+    url,
+    selected,
+    extra,
+    updated,
+    option,
+  })
 }
 
 export async function getClashInfo() {

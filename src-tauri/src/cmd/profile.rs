@@ -121,7 +121,8 @@ pub async fn reorder_profile(active_id: std::string::String, over_id: std::strin
 
 #[tauri::command]
 #[specta::specta]
-pub async fn create_profile(item: PrfItem, file_data: Option<std::string::String>) -> CmdResult {
+pub async fn create_profile(item: ProfileCreate, file_data: Option<std::string::String>) -> CmdResult {
+    let item: PrfItem = item.into();
     let file_data = file_data.map(String::from);
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
@@ -129,9 +130,6 @@ pub async fn create_profile(item: PrfItem, file_data: Option<std::string::String
                 .await
                 .with_error_code("PROFILE_CREATE_FAILED")?;
             logging_error!(Type::Timer, Timer::global().refresh().await);
-            if let Some(uid) = &item.uid {
-                handle::Handle::notify_profile_changed(uid);
-            }
             Ok(())
         }
         Err(err) => Err(coded_error("PROFILE_CREATE_FAILED", err)),
@@ -325,10 +323,82 @@ async fn perform_config_update(
     }
 }
 
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfileSelection {
+    #[specta(type = Option<std::string::String>)]
+    pub current: Option<String>,
+}
+
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfileCreate {
+    #[serde(rename = "type")]
+    #[specta(type = Option<std::string::String>)]
+    pub itype: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub desc: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub url: Option<String>,
+    pub option: Option<PrfOption>,
+}
+
+impl From<ProfileCreate> for PrfItem {
+    fn from(item: ProfileCreate) -> Self {
+        Self {
+            itype: item.itype,
+            name: item.name,
+            desc: item.desc,
+            url: item.url,
+            option: item.option,
+            ..Self::default()
+        }
+    }
+}
+
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfilePatch {
+    #[serde(rename = "type")]
+    #[specta(type = Option<std::string::String>)]
+    pub itype: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub desc: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub file: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub url: Option<String>,
+    pub selected: Option<Vec<crate::config::PrfSelected>>,
+    pub extra: Option<crate::config::PrfExtra>,
+    pub updated: Option<usize>,
+    pub option: Option<PrfOption>,
+}
+
+impl From<ProfilePatch> for PrfItem {
+    fn from(patch: ProfilePatch) -> Self {
+        Self {
+            itype: patch.itype,
+            name: patch.name,
+            desc: patch.desc,
+            file: patch.file,
+            url: patch.url,
+            selected: patch.selected,
+            extra: patch.extra,
+            updated: patch.updated,
+            option: patch.option,
+            ..Self::default()
+        }
+    }
+}
+
 #[tauri::command]
 #[tracing::instrument(skip_all, level = "info", fields(target = ?profiles.current))]
 #[specta::specta]
-pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationOutcome> {
+pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<ValidationOutcome> {
     if CURRENT_SWITCHING_PROFILE
         .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
         .is_err()
@@ -342,7 +412,12 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
 
     let previous_profile = Config::profiles().await.data_arc().current.clone();
 
-    Config::profiles().await.edit_draft(|d| d.patch_config(&profiles));
+    Config::profiles().await.edit_draft(|d| {
+        d.patch_config(&IProfiles {
+            current: profiles.current.clone(),
+            items: None,
+        });
+    });
 
     perform_config_update(target_profile, previous_profile.as_ref())
         .await
@@ -350,16 +425,16 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
 }
 
 pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<ValidationOutcome> {
-    let profiles = IProfiles {
+    let profiles = ProfileSelection {
         current: Some(profile_index),
-        items: None,
     };
     patch_profiles_config(profiles).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn patch_profile(index: std::string::String, profile: PrfItem) -> CmdResult {
+pub async fn patch_profile(index: std::string::String, profile: ProfilePatch) -> CmdResult {
+    let profile: PrfItem = profile.into();
     let index: String = index.into();
     let profiles = Config::profiles().await;
     let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)

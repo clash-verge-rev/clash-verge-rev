@@ -140,13 +140,13 @@ export const commands = {
     __TAURI_INVOKE<NetworkInterfaceView[]>('get_network_interfaces_info'),
   getProfiles: () => __TAURI_INVOKE<IProfiles_Serialize>('get_profiles'),
   enhanceProfiles: () => __TAURI_INVOKE<ValidationOutcome>('enhance_profiles'),
-  patchProfilesConfig: (profiles: IProfiles_Deserialize) =>
+  patchProfilesConfig: (profiles: ProfileSelection) =>
     __TAURI_INVOKE<ValidationOutcome>('patch_profiles_config', { profiles }),
   viewProfile: (index: string) =>
     __TAURI_INVOKE<null>('view_profile', { index }),
-  patchProfile: (index: string, profile: PrfItem_Deserialize) =>
+  patchProfile: (index: string, profile: ProfilePatch_Deserialize) =>
     __TAURI_INVOKE<null>('patch_profile', { index, profile }),
-  createProfile: (item: PrfItem_Deserialize, fileData: string | null) =>
+  createProfile: (item: ProfileCreate_Deserialize, fileData: string | null) =>
     __TAURI_INVOKE<null>('create_profile', { item, fileData }),
   importProfile: (
     url: string,
@@ -733,6 +733,24 @@ export type PrfSelected = {
   now?: string | null
 }
 
+export type ProfileCreate = ProfileCreate_Serialize | ProfileCreate_Deserialize
+
+export type ProfileCreate_Deserialize = {
+  type?: string | null
+  name?: string | null
+  desc?: string | null
+  url?: string | null
+  option?: PrfOption_Deserialize | null
+}
+
+export type ProfileCreate_Serialize = {
+  type: string | null
+  name: string | null
+  desc: string | null
+  url: string | null
+  option: PrfOption_Serialize | null
+}
+
 export type ProfileDnsSettings =
   | ProfileDnsSettings_Serialize
   | ProfileDnsSettings_Deserialize
@@ -745,6 +763,36 @@ export type ProfileDnsSettings_Deserialize = {
 export type ProfileDnsSettings_Serialize = {
   enabled: boolean
   confirmation?: string | null
+}
+
+export type ProfilePatch = ProfilePatch_Serialize | ProfilePatch_Deserialize
+
+export type ProfilePatch_Deserialize = {
+  type?: string | null
+  name?: string | null
+  desc?: string | null
+  file?: string | null
+  url?: string | null
+  selected?: PrfSelected[] | null
+  extra?: PrfExtra | null
+  updated?: number | null
+  option?: PrfOption_Deserialize | null
+}
+
+export type ProfilePatch_Serialize = {
+  type: string | null
+  name: string | null
+  desc: string | null
+  file: string | null
+  url: string | null
+  selected: PrfSelected[] | null
+  extra: PrfExtra | null
+  updated: number | null
+  option: PrfOption_Serialize | null
+}
+
+export type ProfileSelection = {
+  current?: string | null
 }
 
 export type ProfileUpdatePayload = {

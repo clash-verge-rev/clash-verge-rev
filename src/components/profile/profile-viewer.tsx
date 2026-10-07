@@ -115,7 +115,13 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         const name = form.name || `${form.type} file`
-        const item = { ...form, name, option }
+        const item = {
+          type: form.type,
+          name,
+          desc: form.desc,
+          option,
+          ...(form.type === 'remote' ? { url: form.url } : {}),
+        }
         const isRemote = form.type === 'remote'
         const isUpdate = openType === 'edit'
 

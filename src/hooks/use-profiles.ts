@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react'
 
+import type { ProfilePatch, ProfileSelection } from '@/services/bindings'
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
@@ -41,7 +42,7 @@ export const useProfiles = () => {
   }, [])
 
   const patchProfiles = useCallback(
-    async (value: Partial<IProfilesConfig>) => {
+    async (value: ProfileSelection) => {
       try {
         const result = await mutate(() => patchProfilesConfig(value), {
           id: 'patch-profiles-config',
@@ -72,7 +73,7 @@ export const useProfiles = () => {
   )
 
   const patchCurrent = useCallback(
-    async (value: Partial<IProfileItem>) => {
+    async (value: ProfilePatch) => {
       if (profiles?.current) {
         const uid = profiles.current
         await mutate(() => patchProfile(uid, value), {
