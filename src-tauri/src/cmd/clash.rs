@@ -18,8 +18,7 @@ use tokio::fs;
 #[tauri::command]
 #[specta::specta]
 pub async fn copy_clash_env() -> CmdResult {
-    feat::copy_clash_env().await;
-    Ok(())
+    feat::copy_clash_env().await.stringify_err()
 }
 
 #[tauri::command]
