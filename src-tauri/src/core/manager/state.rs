@@ -247,7 +247,7 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = String::from_utf8_lossy(&line).into_owned();
+                        let message = String::from_utf8_lossy_owned(line);
                         Logger::global().writer_sidecar_log(Level::Error, &message);
                         CLASH_LOGGER.append_log(message);
                     }

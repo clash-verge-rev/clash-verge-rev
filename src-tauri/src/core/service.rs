@@ -1030,7 +1030,7 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
     let content = decode_hex(&encoded).context("服务返回了无效的核心日志快照")?;
-    Ok(String::from_utf8_lossy(&content).into_owned())
+    Ok(String::from_utf8_lossy_owned(content))
 }
 
 fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
