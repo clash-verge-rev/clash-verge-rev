@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 env:
   HUSKY: 0
@@ -99,20 +100,7 @@ jobs:
         id: check_inputs
         uses: dorny/paths-filter@v4
         with:
-          filters: |
-            contract:
-              - 'src/services/contract.ts'
-              - 'src/services/bindings.ts'
-              - 'Cargo.lock'
-              - 'Cargo.toml'
-              - 'src-tauri/Cargo.toml'
-              - 'crates/**'
-              - 'src-tauri/src/**'
-              - 'scripts/gen-contract.mjs'
-              - 'src-tauri/src/core/notify/**'
-              - 'src-tauri/src/bin/**'
-              - 'src-tauri/src/lib.rs'
-              - '.github/workflows/frontend-check.yml'
+          filters: scripts/contract-inputs.json
 
       - name: Skip if contract inputs unchanged
         if: steps.check_inputs.outputs.contract != 'true'
@@ -165,8 +153,6 @@ jobs:
             touch "src-tauri/sidecar/${bin}-x86_64-unknown-linux-gnu"
           done
 
-      - name: Regenerate contract and require empty diff
+      - name: Check generated contract without changing the checkout
         if: steps.check_inputs.outputs.contract == 'true'
-        run: |
-          pnpm gen:contract
-          git diff --exit-code -- src/services/bindings.ts
+        run: pnpm gen:contract --check
