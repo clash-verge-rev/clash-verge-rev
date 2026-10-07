@@ -85,7 +85,7 @@ flate2 = "1.1.10"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
 base64 = "0.23.1"
-minisign-verify = "0.2.5"
+minisign-verify = "0.3.0"
 sha2 = "0.11"
 getrandom = "0.4.3"
 futures = "0.3.34"
@@ -115,7 +115,7 @@ libc = "0.2.190"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-plugin-wdio-webdriver = { version = "=1.4.0", optional = true }
-objc2 = "0.6.4"
+objc2 = "0.6.5"
 objc2-foundation = { version = "0.3.2", features = [
   "NSString",
   "NSDictionary",
