@@ -133,7 +133,7 @@
     "vite": "^8.3.0",
     "vite-plugin-svgr": "^5.2.0",
     "vitest": "^5.0.1",
-    "webdriverio": "9.32.0",
+    "webdriverio": "10.0.0",
     "ws": "8.22.0"
   },
   "lint-staged": {
