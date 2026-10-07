@@ -130,11 +130,8 @@ impl From<reqwest_dav::list_cmd::ListFile> for WebDavFile {
 #[derive(serde::Serialize, specta::Type)]
 pub struct NetworkInterfaceView {
     pub name: String,
-    #[specta(type = Vec<InterfaceAddress>)]
-    pub addr: Vec<network_interface::Addr>,
+    pub addr: Vec<InterfaceAddress>,
     pub mac_addr: Option<String>,
-    pub index: u32,
-    pub internal: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, specta::Type)]
@@ -146,18 +143,25 @@ pub enum InterfaceAddress {
 #[derive(serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct IpAddress {
     pub ip: String,
-    pub broadcast: Option<String>,
-    pub netmask: Option<String>,
 }
 
 impl From<network_interface::NetworkInterface> for NetworkInterfaceView {
     fn from(interface: network_interface::NetworkInterface) -> Self {
         Self {
             name: interface.name,
-            addr: interface.addr,
+            addr: interface
+                .addr
+                .into_iter()
+                .map(|address| match address {
+                    network_interface::Addr::V4(address) => InterfaceAddress::V4(IpAddress {
+                        ip: address.ip.to_string(),
+                    }),
+                    network_interface::Addr::V6(address) => InterfaceAddress::V6(IpAddress {
+                        ip: address.ip.to_string(),
+                    }),
+                })
+                .collect(),
             mac_addr: interface.mac_addr,
-            index: interface.index,
-            internal: interface.internal,
         }
     }
 }

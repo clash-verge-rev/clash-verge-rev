@@ -544,8 +544,6 @@ export type InterfaceAddress =
 
 export type IpAddress = {
   ip: string
-  broadcast: string | null
-  netmask: string | null
 }
 
 export type JsonValue =
@@ -581,8 +579,6 @@ export type NetworkInterfaceView = {
   name: string
   addr: InterfaceAddress[]
   mac_addr: string | null
-  index: number
-  internal: boolean
 }
 
 export type NoticeStatus =
