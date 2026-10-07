@@ -1,10 +1,10 @@
 use super::NoticeStatus;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
 use std::sync::Arc;
+use std::sync::LazyLock;
 use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
@@ -238,7 +238,7 @@ pub fn what_was_asked() -> FailedOperation {
         .unwrap_or(FailedOperation::SystemProxyRestore)
 }
 
-static PENDING_FAILURES: Lazy<FailureTable> = Lazy::new(FailureTable::default);
+static PENDING_FAILURES: LazyLock<FailureTable> = LazyLock::new(FailureTable::default);
 
 /// A removal has a revision too, so a delayed read cannot restore a resolved failure.
 #[derive(Debug, Default, Clone, serde::Serialize)]
@@ -262,7 +262,7 @@ impl SidecarFailureSnapshot {
     }
 }
 
-static SIDECAR_FAILURE: Lazy<Mutex<SidecarFailureSnapshot>> = Lazy::new(Mutex::default);
+static SIDECAR_FAILURE: LazyLock<Mutex<SidecarFailureSnapshot>> = LazyLock::new(Mutex::default);
 
 pub fn sidecar_failure_snapshot() -> SidecarFailureSnapshot {
     SIDECAR_FAILURE.lock().clone()

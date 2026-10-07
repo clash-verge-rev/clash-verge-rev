@@ -15,7 +15,6 @@ use crate::{
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_yaml_ng::Value;
 use std::{collections::HashSet, net::SocketAddr, str::FromStr as _};
@@ -26,7 +25,7 @@ struct MixedPortFallback {
     current: u16,
 }
 
-static PENDING_FALLBACK_NOTICE: Lazy<Mutex<Option<MixedPortFallback>>> = Lazy::new(|| Mutex::new(None));
+static PENDING_FALLBACK_NOTICE: Mutex<Option<MixedPortFallback>> = Mutex::new(None);
 static STARTUP_CORE_BLOCK_REASON: Mutex<Option<String>> = Mutex::new(None);
 
 impl Config {

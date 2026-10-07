@@ -7,12 +7,12 @@ use crate::{
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
 use serde::{Deserialize, Serialize};
 use std::io::{Read as _, Write as _};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::oneshot;
@@ -33,9 +33,9 @@ struct InstanceRecord {
     token: String,
 }
 
-static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
-static EMBEDDED_PORT: OnceCell<u16> = OnceCell::new();
-static INSTANCE_LOCK: OnceCell<std::fs::File> = OnceCell::new();
+static SHUTDOWN_SENDER: OnceLock<Mutex<Option<oneshot::Sender<()>>>> = OnceLock::new();
+static EMBEDDED_PORT: OnceLock<u16> = OnceLock::new();
+static INSTANCE_LOCK: OnceLock<std::fs::File> = OnceLock::new();
 const PAC_INITIAL_AVAILABLE: bool = false;
 static PAC_AVAILABLE: AtomicBool = AtomicBool::new(PAC_INITIAL_AVAILABLE);
 static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
