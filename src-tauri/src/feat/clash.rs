@@ -29,7 +29,6 @@ pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
         Ok(_) => {
             announce(Refresh::Clash);
-            handle::Handle::notice(NoticeStatus::SetConfigOk, "ok");
         }
         Err(err) => {
             handle::Handle::notice(NoticeStatus::SetConfigError, format!("{err:#}"));

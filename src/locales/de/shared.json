@@ -108,7 +108,6 @@
       "config": {
         "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
         "bootFailed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
-        "coreChangeFailed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
         "processTerminated": "Der Validierungsprozess wurde beendet. Bitte prüfen Sie, ob eine Sicherheitssoftware die Ausführung des Kerns verhindert oder ob die CPU und Laufzeitumgebung Ihres Computers das Kernprogramm unterstützen."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
         "readError": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
-        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht.",
-        "keyError": "YAML-Schlüsselfehler. Die Änderungen wurden rückgängig gemacht.",
-        "generalError": "YAML-Fehler. Die Änderungen wurden rückgängig gemacht."
+        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht."
       },
       "merge": {
         "syntaxError": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
+        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
       }
     }
   },

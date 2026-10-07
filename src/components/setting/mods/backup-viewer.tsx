@@ -19,6 +19,7 @@ import {
   createWebdavBackup,
   importLocalBackup,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { errorDetail, showNotice } from '@/services/notice-service'
 import { buildWebdavSignature, setWebdavStatus } from '@/services/webdav-status'
 
@@ -55,12 +56,18 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setBusyAction(target)
       if (target === 'local') {
-        await createLocalBackup()
-        showNotice.success('settings.modals.backup.messages.localBackupCreated')
+        await mutate(() => createLocalBackup(), {
+          id: 'create-local-backup',
+          errorNotice: false,
+          successNotice: 'settings.modals.backup.messages.localBackupCreated',
+        })
       } else {
-        await createWebdavBackup()
-        showNotice.success('settings.modals.backup.messages.backupCreated')
-        setWebdavStatus(webdavSignature, 'ready')
+        await mutate(() => createWebdavBackup(), {
+          id: 'create-webdav-backup',
+          errorNotice: false,
+          successNotice: 'settings.modals.backup.messages.backupCreated',
+          onFulfilled: () => setWebdavStatus(webdavSignature, 'ready'),
+        })
       }
     } catch (error) {
       console.error(error)
@@ -86,8 +93,11 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
     if (!selected || Array.isArray(selected)) return
     try {
       setLocalImporting(true)
-      await importLocalBackup(selected)
-      showNotice.success('settings.modals.backup.messages.localBackupImported')
+      await mutate(() => importLocalBackup(selected), {
+        id: 'import-local-backup',
+        errorNotice: false,
+        successNotice: 'settings.modals.backup.messages.localBackupImported',
+      })
       openHistory('local')
     } catch (error) {
       console.error(error)

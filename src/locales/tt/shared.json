@@ -108,7 +108,6 @@
       "config": {
         "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
         "bootFailed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
-        "coreChangeFailed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
         "processTerminated": "Тикшерү процессы туктатылды. Иминлек программасы үзәкнең эшләвенә комачауламыймы һәм компьютерның CPU/эш мохите үзәк программасын эшләтә аламы икәнен тикшерегез."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML syntax error, changes reverted",
         "readError": "YAML read error, changes reverted",
-        "mappingError": "YAML mapping error, changes reverted",
-        "keyError": "YAML key error, changes reverted",
-        "generalError": "YAML error, changes reverted"
+        "mappingError": "YAML mapping error, changes reverted"
       },
       "merge": {
         "syntaxError": "Merge file syntax error, changes reverted",
-        "mappingError": "Merge file mapping error, changes reverted",
-        "keyError": "Merge file key error, changes reverted",
-        "generalError": "Merge file error, changes reverted"
+        "mappingError": "Merge file mapping error, changes reverted"
       }
     }
   },
