@@ -34,7 +34,7 @@ static STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 /// `.rollback` and `.old` are fixed paths, so two upgrades must not overlap.
 static UPGRADE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, specta::Type)]
 pub struct CoreUpgradeReport {
     /// False when the managed core was already at the latest version.
     pub upgraded: bool,

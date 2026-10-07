@@ -18,6 +18,7 @@
   "ignoreDependencies": ["lint-staged"],
   "ignoreIssues": {
     "src/types/generated/**": ["exports", "types"],
+    "src/services/bindings.ts": ["exports", "types"],
     "src/services/contract.ts": ["exports", "types"]
   },
   "cycles": {

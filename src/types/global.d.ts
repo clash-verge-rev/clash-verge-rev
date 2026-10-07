@@ -13,10 +13,7 @@ type Platform =
 
 declare const OS_PLATFORM: Platform
 
-type ValidationOutcome =
-  | { status: 'valid' | 'busy' }
-  | { status: 'invalid'; kind: string; message: string }
-  | { status: 'skipped'; reason: string }
+type ValidationOutcome = import('@/services/bindings').ValidationOutcome
 
 interface IConfigData {
   port: number
@@ -207,82 +204,19 @@ interface IConnectionSetting {
   layout: 'table' | 'list'
 }
 
-interface IClashInfo {
-  mixed_port?: number // clash mixed port
-  socks_port?: number // clash socks port
-  redir_port?: number // clash redir port
-  tproxy_port?: number // clash tproxy port
-  port?: number // clash http port
-  server?: string // external-controller
-  secret?: string
-}
+type IClashInfo = import('@/services/bindings').ClashInfo
 
-interface IProfileItem {
-  uid: string
-  type?: 'local' | 'remote' | 'merge' | 'script'
-  name?: string
-  desc?: string
-  file?: string
-  url?: string
-  updated?: number
-  selected?: {
-    name?: string
-    now?: string
-  }[]
-  extra?: {
-    upload: number
-    download: number
-    total: number
-    expire: number
-  }
-  option?: IProfileOption
-  home?: string
-}
+type IProfileItem = import('@/services/bindings').PrfItem_Serialize
 
-interface IProfileOption {
-  user_agent?: string
-  with_proxy?: boolean
-  self_proxy?: boolean
-  update_interval?: number
-  timeout_seconds?: number
-  danger_accept_invalid_certs?: boolean
-  allow_auto_update?: boolean
-  merge?: string
-  script?: string
-  rules?: string
-  proxies?: string
-  groups?: string
-}
+type IProfileOption = import('@/services/bindings').PrfOption_Deserialize
 
-interface IProfilesConfig {
-  current?: string
-  items?: IProfileItem[]
-}
+type IProfilesConfig = Partial<
+  import('@/services/bindings').IProfiles_Serialize
+>
 
-interface IVergeTestItem {
-  uid: string
-  name?: string
-  icon?: string
-  url: string
-}
-interface IAddress {
-  V4?: {
-    ip: string
-    broadcast?: string
-    netmask?: string
-  }
-  V6?: {
-    ip: string
-    broadcast?: string
-    netmask?: string
-  }
-}
-interface INetworkInterface {
-  name: string
-  addr: IAddress[]
-  mac_addr?: string
-  index: number
-}
+type IVergeTestItem = import('@/services/bindings').IVergeTestItem
+type IAddress = import('@/services/bindings').InterfaceAddress
+type INetworkInterface = import('@/services/bindings').NetworkInterfaceView
 
 interface ISeqProfileConfig {
   prepend: []
@@ -850,119 +784,24 @@ interface IProxyConfig
     | 'sudoku'
 }
 
-interface IVergeConfig {
-  app_log_level?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | string
-  app_log_max_size?: number // KB
-  app_log_max_count?: number
-  language?: string
-  tray_event?:
-    | 'main_window'
-    | 'tray_menu'
-    | 'system_proxy'
-    | 'tun_mode'
-    | string
-  env_type?: 'bash' | 'cmd' | 'powershell' | 'fish' | string
-  startup_script?: string
-  start_page?: string
-  clash_core?: string
-  theme_mode?: 'light' | 'dark' | 'system'
-  traffic_graph?: boolean
-  enable_memory_usage?: boolean
-  enable_group_icon?: boolean
-  pause_render_traffic_stats_on_blur?: boolean
-  menu_icon?: 'monochrome' | 'colorful' | 'disable'
-  menu_order?: string[]
-  proxy_group_tools_position?: 'left' | 'right'
-  notice_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-  collapse_navbar?: boolean
-  tray_icon?: 'monochrome' | 'colorful'
-  common_tray_icon?: boolean
-  sysproxy_tray_icon?: boolean
-  tun_tray_icon?: boolean
-  enable_tray_speed?: boolean
-  tray_proxy_groups_display_mode?: 'default' | 'inline' | 'disable'
-  tray_inline_outbound_modes?: boolean
-  enable_tun_mode?: boolean
-  enable_auto_light_weight_mode?: boolean
-  auto_light_weight_minutes?: number
-  enable_auto_launch?: boolean
-  enable_silent_start?: boolean
-  enable_system_proxy?: boolean
-  enable_global_hotkey?: boolean
-  enable_dns_settings?: boolean
-  profile_dns_settings?: Record<string, { enabled: boolean }>
-  proxy_auto_config?: boolean
-  pac_file_content?: string
-  proxy_host?: string
-  enable_random_port?: boolean
-  verge_mixed_port?: number
-  verge_socks_port?: number
-  verge_redir_port?: number
-  verge_tproxy_port?: number
-  verge_port?: number
-  verge_redir_enabled?: boolean
-  verge_tproxy_enabled?: boolean
-  verge_socks_enabled?: boolean
-  verge_http_enabled?: boolean
-  enable_proxy_guard?: boolean
-  enable_bypass_check?: boolean
-  use_default_bypass?: boolean
-  proxy_guard_duration?: number
-  system_proxy_bypass?: string
-  web_ui_list?: string[]
-  hotkeys?: string[]
-  theme_setting?: {
-    primary_color?: string
-    secondary_color?: string
-    primary_text?: string
-    secondary_text?: string
-    info_color?: string
-    error_color?: string
-    warning_color?: string
-    success_color?: string
-    font_family?: string
-    css_injection?: string
-    background_image?: string
-    background_blend_mode?: string
-    background_opacity?: number
-  }
-  auto_close_connection?: boolean
-  auto_check_update?: boolean
-  default_latency_test?: string
-  default_latency_timeout?: number
-  enable_auto_delay_detection?: boolean
-  auto_delay_detection_interval_minutes?: number
-  enable_builtin_enhanced?: boolean
-  auto_log_clean?: 0 | 1 | 2 | 3 | 4
-  enable_auto_backup_schedule?: boolean
-  auto_backup_interval_hours?: number
-  auto_backup_on_change?: boolean
-  proxy_layout_column?: number
-  test_list?: IVergeTestItem[]
-  webdav_url?: string
-  webdav_username?: string
-  webdav_password?: string
-  home_cards?: Record<string, boolean>
-  enable_hover_jump_navigator?: boolean
-  hover_jump_navigator_delay?: number
-  enable_external_controller?: boolean
+type IVergeConfig = Omit<
+  Partial<import('@/services/bindings').IVerge_Serialize>,
+  'theme_setting'
+> & {
+  theme_setting?:
+    | (import('@/services/bindings').IVergeTheme & {
+        background_image?: string
+        background_blend_mode?: string
+        background_opacity?: number
+      })
+    | null
 }
 
-interface IWebDavFile {
+type IWebDavFile = import('@/services/bindings').WebDavFile & {
   filename: string
-  href: string
-  last_modified: string
-  content_length: number
-  content_type: string
-  tag: string
 }
 
-interface ILocalBackupFile {
-  filename: string
-  path: string
-  last_modified: string
-  content_length: number
-}
+type ILocalBackupFile = import('@/services/bindings').LocalBackupFile
 
 interface IWebDavConfig {
   url: string

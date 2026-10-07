@@ -52,10 +52,7 @@ impl Handle {
     /// Sent on every transition, so the frontend does not have to poll to notice that the Core
     /// stopped or that the Service came back.
     pub fn notify_run_state(state: &crate::core::runstate::RunStateView) {
-        let Ok(state) = serde_json::to_value(state) else {
-            return;
-        };
-        Self::send_event(FrontendEvent::RunStateChanged { state });
+        Self::send_event(FrontendEvent::RunStateChanged { state: state.clone() });
     }
 
     pub fn notify_profile_changed(profile_id: &String) {

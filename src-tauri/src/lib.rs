@@ -7,6 +7,7 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
+pub mod ipc;
 mod process;
 pub mod utils;
 
@@ -26,9 +27,6 @@ use tauri_plugin_deep_link::DeepLinkExt as _;
 
 pub static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 
-// Re-exported for src/bin/frontend-contract.rs; the wire contract stays owned
-// by core::notify.
-pub use crate::core::notify::frontend_wire_contract;
 /// Application initialization helper functions
 mod app_init {
     use super::*;
@@ -127,100 +125,10 @@ mod app_init {
     }
 
     pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
-        tauri::generate_handler![
-            tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
-            tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
-            tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
-            cmd::probe_listener,
-            cmd::save_proxy_ports,
-            cmd::get_sys_proxy,
-            cmd::get_auto_proxy,
-            cmd::get_embedded_server_port,
-            cmd::open_app_dir,
-            cmd::open_logs_dir,
-            cmd::open_core_dir,
-            cmd::get_network_interfaces,
-            cmd::get_system_hostname,
-            cmd::restart_app,
-            cmd::install_update,
-            cmd::cancel_update_download,
-            cmd::restart_core,
-            cmd::upgrade_clash_core,
-            cmd::get_runtime_state,
-            cmd::get_pending_failures,
-            cmd::get_sidecar_failure,
-            cmd::entry_lightweight_mode,
-            cmd::install_service,
-            cmd::uninstall_service,
-            cmd::reinstall_service,
-            cmd::repair_service,
-            cmd::continue_with_sidecar,
-            cmd::sync_runtime_providers,
-            cmd::get_clash_info,
-            cmd::patch_clash_config,
-            cmd::patch_clash_mode,
-            cmd::get_clash_mode,
-            cmd::change_clash_core,
-            cmd::get_runtime_config,
-            cmd::get_proxy_view,
-            cmd::get_runtime_yaml,
-            cmd::get_runtime_logs,
-            cmd::get_runtime_proxy_chain_config,
-            cmd::update_proxy_chain_config_in_runtime,
-            cmd::invoke_uwp_tool,
-            cmd::copy_clash_env,
-            cmd::sync_tray_proxy_selection,
-            cmd::record_selected_node,
-            cmd::forget_selected_node,
-            cmd::save_dns_config,
-            cmd::apply_dns_config,
-            cmd::set_dns_override,
-            cmd::take_dns_override_notice,
-            cmd::take_service_fallback_notice,
-            cmd::get_core_startup_error,
-            cmd::take_service_repair_notice,
-            cmd::take_service_owner_notice,
-            cmd::take_discarded_keys_notice,
-            cmd::get_dns_config_content,
-            cmd::validate_dns_config,
-            cmd::get_clash_logs,
-            cmd::get_verge_config,
-            cmd::patch_verge_config,
-            cmd::test_delay,
-            cmd::get_app_dir,
-            cmd::copy_icon_file,
-            cmd::download_icon_cache,
-            cmd::open_devtools,
-            cmd::exit_app,
-            cmd::get_network_interfaces_info,
-            cmd::get_profiles,
-            cmd::enhance_profiles,
-            cmd::patch_profiles_config,
-            cmd::view_profile,
-            cmd::patch_profile,
-            cmd::create_profile,
-            cmd::import_profile,
-            cmd::reorder_profile,
-            cmd::update_profile,
-            cmd::delete_profile,
-            cmd::read_profile_file,
-            cmd::save_profile_file,
-            cmd::get_next_update_time,
-            cmd::create_local_backup,
-            cmd::list_local_backup,
-            cmd::delete_local_backup,
-            cmd::restore_local_backup,
-            cmd::import_local_backup,
-            cmd::export_local_backup,
-            cmd::create_webdav_backup,
-            cmd::save_webdav_config,
-            cmd::list_webdav_backup,
-            cmd::delete_webdav_backup,
-            cmd::restore_webdav_backup,
-            cmd::get_unlock_items,
-            cmd::check_media_unlock,
-            cmd::check_media_unlock_item,
-        ]
+        {
+            let builder = crate::ipc::builder();
+            move |invoke| builder.invoke_handler()(invoke)
+        }
     }
 }
 

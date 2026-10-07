@@ -102,6 +102,12 @@ jobs:
           filters: |
             contract:
               - 'src/services/contract.ts'
+              - 'src/services/bindings.ts'
+              - 'Cargo.lock'
+              - 'Cargo.toml'
+              - 'src-tauri/Cargo.toml'
+              - 'crates/**'
+              - 'src-tauri/src/**'
               - 'scripts/gen-contract.mjs'
               - 'src-tauri/src/core/notify/**'
               - 'src-tauri/src/bin/**'
@@ -163,4 +169,4 @@ jobs:
         if: steps.check_inputs.outputs.contract == 'true'
         run: |
           pnpm gen:contract
-          git diff --exit-code -- src/services/contract.ts
+          git diff --exit-code -- src/services/bindings.ts

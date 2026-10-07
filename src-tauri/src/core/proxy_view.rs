@@ -20,7 +20,7 @@ pub struct GroupScope {
 
 pub struct ProxyViewBuilder;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyViewV1 {
     pub schema_version: u8,
@@ -34,21 +34,21 @@ pub struct ProxyViewV1 {
     pub providers: Vec<ProxyProviderView>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewOrderSource {
     Runtime,
     Fallback,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewProviderState {
     Ready,
     Unavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxyCapabilities {
     pub udp: bool,
     pub xudp: bool,
@@ -57,11 +57,12 @@ pub struct ProxyCapabilities {
     pub smux: bool,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyGroupView {
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
     pub alive: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,20 +75,23 @@ pub struct ProxyGroupView {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test_url: Option<String>,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
     #[serde(flatten)]
     pub capabilities: ProxyCapabilities,
     pub members: Vec<ProxyMemberRef>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyNodeView {
     pub record_id: String,
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
     pub alive: bool,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -102,7 +106,7 @@ pub struct ProxyNodeView {
     pub source: ProxyNodeSource,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyNodeSource {
     Core {
@@ -117,7 +121,7 @@ pub enum ProxyNodeSource {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyMemberRef {
     Group {
@@ -134,7 +138,7 @@ pub enum ProxyMemberRef {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyMemberUnresolvedReason {
     #[serde(rename = "missing")]
     Missing,
@@ -144,7 +148,7 @@ pub enum ProxyMemberUnresolvedReason {
     ProviderUnavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyProviderView {
     pub name: String,
@@ -156,7 +160,7 @@ pub struct ProxyProviderView {
     pub proxy_record_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyProviderVehicleType {
     #[serde(rename = "HTTP")]
     Http,
@@ -166,7 +170,7 @@ pub enum ProxyProviderVehicleType {
     Inline,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxySubscriptionInfo {
     pub upload: i64,
     pub download: i64,

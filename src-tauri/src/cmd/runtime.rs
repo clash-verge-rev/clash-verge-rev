@@ -2,43 +2,58 @@ use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
 use clash_verge_logging::{Type, logging};
-use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::HashMap;
 
 #[tauri::command]
-pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
-    Ok(Config::runtime().await.latest_arc().config.clone())
+#[specta::specta]
+pub async fn get_runtime_config() -> CmdResult<Option<crate::ipc::YamlMapping>> {
+    Ok(Config::runtime()
+        .await
+        .latest_arc()
+        .config
+        .clone()
+        .map(crate::ipc::YamlMapping))
 }
 
 #[tauri::command]
-pub async fn get_runtime_yaml() -> CmdResult<String> {
+#[specta::specta]
+pub async fn get_runtime_yaml() -> CmdResult<std::string::String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();
 
     let config = runtime.config.as_ref();
     config
         .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
-        .and_then(|config| {
-            yaml_emitter::to_mihomo_config_string(config)
-                .context("failed to convert config to yaml")
-                .map(|s| s.into())
-        })
+        .and_then(|config| yaml_emitter::to_mihomo_config_string(config).context("failed to convert config to yaml"))
         .stringify_err()
 }
 
 #[tauri::command]
-pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
-    Ok(Config::runtime().await.latest_arc().chain_logs.clone())
+#[specta::specta]
+pub async fn get_runtime_logs() -> CmdResult<RuntimeLogs> {
+    Ok(RuntimeLogs(Config::runtime().await.latest_arc().chain_logs.clone()))
+}
+
+#[derive(serde::Serialize, specta::Type)]
+#[serde(transparent)]
+pub struct RuntimeLogs(
+    #[specta(type = HashMap<std::string::String, Vec<(std::string::String, std::string::String)>>)]
+    HashMap<String, Vec<(String, String)>>,
+);
+
+#[tauri::command]
+#[specta::specta]
+pub fn take_discarded_keys_notice() -> Option<std::string::String> {
+    crate::enhance::take_discarded_keys_notice().map(Into::into)
 }
 
 #[tauri::command]
-pub fn take_discarded_keys_notice() -> Option<String> {
-    crate::enhance::take_discarded_keys_notice()
-}
-
-#[tauri::command]
-pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
+#[specta::specta]
+pub async fn get_runtime_proxy_chain_config(
+    proxy_chain_exit_node: std::string::String,
+) -> CmdResult<std::string::String> {
+    let proxy_chain_exit_node: String = proxy_chain_exit_node.into();
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();
 
@@ -79,7 +94,6 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         yaml_emitter::to_mihomo_config_string(&config)
             .context("YAML generation failed")
-            .map(|s| s.into())
             .stringify_err()
     } else {
         Err("failed to get proxies or proxy-groups".into())
@@ -87,7 +101,9 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 }
 
 #[tauri::command]
-pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<serde_yaml_ng::Value>) -> CmdResult<()> {
+#[specta::specta]
+pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<crate::ipc::YamlValue>) -> CmdResult<()> {
+    let proxy_chain_config = proxy_chain_config.map(|value| value.0);
     match CoreManager::global()
         .update_runtime_config(|d| d.update_proxy_chain_config(proxy_chain_config))
         .await

@@ -57,7 +57,7 @@ fn claim_core_readiness_generation(state: &AtomicU64, captured_generation: u64) 
         .is_ok()
 }
 
-#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
 pub enum RunningMode {
     Service,
     Sidecar,
@@ -75,7 +75,7 @@ impl fmt::Display for RunningMode {
 }
 
 /// Why the Core is not running, kept until a Core starts again.
-#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
 #[serde(tag = "kind", content = "detail", rename_all = "camelCase")]
 pub enum CoreFailure {
     StartFailed(String),

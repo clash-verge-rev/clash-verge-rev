@@ -438,7 +438,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           <Switch
             edge="end"
             disabled={!enabled}
-            checked={value.pac}
+            checked={value.pac!}
             onChange={(_, e) => setValue((v) => ({ ...v, pac: e }))}
           />
         </ListItem>
@@ -455,7 +455,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           <Switch
             edge="end"
             disabled={!enabled}
-            checked={value.guard}
+            checked={value.guard!}
             onChange={(_, e) => setValue((v) => ({ ...v, guard: e }))}
             sx={{ marginLeft: 'auto' }}
           />

@@ -50,9 +50,9 @@ export const BackupConfigViewer = memo(
 
     const { register, handleSubmit, watch } = useForm<IWebDavConfig>({
       defaultValues: {
-        url: webdav_url,
-        username: webdav_username,
-        password: webdav_password,
+        url: webdav_url!,
+        username: webdav_username!,
+        password: webdav_password!,
       },
     })
     const url = watch('url')
