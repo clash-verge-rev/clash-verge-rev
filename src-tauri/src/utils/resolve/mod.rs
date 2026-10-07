@@ -59,7 +59,13 @@ async fn resolve_setup() {
     logging_error!(Type::Setup, init::migrate_short_update_intervals().await);
 
     #[cfg(target_os = "macos")]
-    resolve_dock_show().await;
+    {
+        resolve_dock_show().await;
+        // Legacy entries are not covered by the current LaunchAgent
+        // registration, so removal runs once per startup rather than only
+        // when the auto-launch setting changes.
+        crate::core::autostart::cleanup_legacy_autostart();
+    }
     init_startup_script().await;
     init_service_manager().await;
     let config_initialized = init_verge_config_before_window().await;
