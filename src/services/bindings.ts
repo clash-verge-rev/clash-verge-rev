@@ -1054,9 +1054,6 @@ export type VergeEventPayloads = {
 export type WebDavFile = {
   href: string
   last_modified: string
-  content_length: number
-  content_type: string
-  tag: string | null
 }
 
 export type YamlMapping = { [key in string]: JsonValue }

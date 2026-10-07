@@ -116,9 +116,6 @@ pub struct WebDavFile {
     pub href: String,
     #[specta(type = String)]
     pub last_modified: chrono::DateTime<chrono::Utc>,
-    pub content_length: i64,
-    pub content_type: String,
-    pub tag: Option<String>,
 }
 
 impl From<reqwest_dav::list_cmd::ListFile> for WebDavFile {
@@ -126,9 +123,6 @@ impl From<reqwest_dav::list_cmd::ListFile> for WebDavFile {
         Self {
             href: file.href,
             last_modified: file.last_modified,
-            content_length: file.content_length,
-            content_type: file.content_type,
-            tag: file.tag,
         }
     }
 }

@@ -424,7 +424,6 @@ export async function listWebDavBackup() {
   return (await commands.listWebdavBackup()).map((item) => ({
     ...item,
     filename: item.href.split('/').pop() ?? '',
-    tag: item.tag,
   }))
 }
 
