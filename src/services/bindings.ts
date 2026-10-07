@@ -278,8 +278,6 @@ export type CoreFailure =
 export type CoreUpgradeReport = {
   /**  False when the managed core was already at the latest version. */
   upgraded: boolean
-  from: string
-  to: string
 }
 
 export type DelayHistory = {
