@@ -380,17 +380,9 @@ fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str,
     }
     .to_view();
     vec![
-        (
-            FrontendEvent::RefreshClash,
-            "verge://refresh-clash-config",
-            json!("yes"),
-        ),
-        (
-            FrontendEvent::RefreshVerge,
-            "verge://refresh-verge-config",
-            json!("yes"),
-        ),
-        (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!("yes")),
+        (FrontendEvent::RefreshClash, "verge://refresh-clash-config", json!(null)),
+        (FrontendEvent::RefreshVerge, "verge://refresh-verge-config", json!(null)),
+        (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!(null)),
         (
             FrontendEvent::RefreshProxyConfig,
             "verge://refresh-proxy-config",
@@ -460,9 +452,9 @@ macro_rules! frontend_events {
 }
 
 frontend_events! {
-    refresh_clash: std::string::String = "verge://refresh-clash-config", FrontendEvent::RefreshClash => "yes".to_owned();
-    refresh_verge: std::string::String = "verge://refresh-verge-config", FrontendEvent::RefreshVerge => "yes".to_owned();
-    refresh_profiles: std::string::String = "verge://refresh-profiles", FrontendEvent::RefreshProfiles => "yes".to_owned();
+    refresh_clash: () = "verge://refresh-clash-config", FrontendEvent::RefreshClash => ();
+    refresh_verge: () = "verge://refresh-verge-config", FrontendEvent::RefreshVerge => ();
+    refresh_profiles: () = "verge://refresh-profiles", FrontendEvent::RefreshProfiles => ();
     refresh_proxy: () = "verge://refresh-proxy-config", FrontendEvent::RefreshProxyConfig => ();
     notice: (NoticeStatus, std::string::String) = "verge://notice-message", FrontendEvent::NoticeMessage { status, ref message } => (status, message.to_string());
     profile_changed: std::string::String = "profile-changed", FrontendEvent::ProfileChanged { current_profile_id } => current_profile_id.to_string();

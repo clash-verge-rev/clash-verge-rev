@@ -1038,9 +1038,9 @@ export type ValidationOutcome =
 export type ValidationSkipReason = 'exiting' | 'debounced'
 
 export type VergeEventPayloads = {
-  'verge://refresh-clash-config': string
-  'verge://refresh-verge-config': string
-  'verge://refresh-profiles': string
+  'verge://refresh-clash-config': null
+  'verge://refresh-verge-config': null
+  'verge://refresh-profiles': null
   'verge://refresh-proxy-config': null
   'verge://notice-message': [NoticeStatus, string]
   'profile-changed': string
