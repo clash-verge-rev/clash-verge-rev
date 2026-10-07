@@ -989,11 +989,6 @@ export type SidecarFailureSnapshot = {
 export type SystemInfo = {
   system_name: string
   system_version: string
-  system_kernel_version: string
-  system_arch: string
-  app_version: string
-  app_core_mode: string
-  app_is_admin: boolean
 }
 
 export type SystemProxy = {

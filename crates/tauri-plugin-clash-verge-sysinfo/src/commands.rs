@@ -9,23 +9,13 @@ use crate::Platform;
 pub struct SystemInfo {
     pub system_name: String,
     pub system_version: String,
-    pub system_kernel_version: String,
-    pub system_arch: String,
-    pub app_version: String,
-    pub app_core_mode: String,
-    pub app_is_admin: bool,
 }
 
-impl From<Platform> for SystemInfo {
-    fn from(platform: Platform) -> Self {
+impl From<&Platform> for SystemInfo {
+    fn from(platform: &Platform) -> Self {
         Self {
-            system_name: platform.sysinfo.system_name,
-            system_version: platform.sysinfo.system_version,
-            system_kernel_version: platform.sysinfo.system_kernel_version,
-            system_arch: platform.sysinfo.system_arch,
-            app_version: platform.appinfo.app_version,
-            app_core_mode: platform.appinfo.app_core_mode,
-            app_is_admin: platform.appinfo.app_is_admin,
+            system_name: platform.sysinfo.system_name.clone(),
+            system_version: platform.sysinfo.system_version.clone(),
         }
     }
 }
@@ -34,7 +24,7 @@ impl From<Platform> for SystemInfo {
 #[specta::specta]
 pub fn get_system_info(state: State<'_, RwLock<Platform>>) -> Result<SystemInfo, String> {
     let platform = state.inner().read();
-    Ok(SystemInfo::from(platform.clone()))
+    Ok(SystemInfo::from(&*platform))
 }
 
 /// 获取应用的运行时间（毫秒）
