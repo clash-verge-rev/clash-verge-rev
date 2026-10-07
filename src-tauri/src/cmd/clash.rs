@@ -179,7 +179,7 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             );
         })?;
 
-        let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
+        serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
             logging!(
                 error,
                 Type::Config,
@@ -187,13 +187,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
                 dns_path.display()
             );
         })?;
-
-        let mut patch = serde_yaml_ng::Mapping::new();
-        patch.insert("dns".into(), patch_config.into());
-
-        Config::runtime().await.edit_draft(|d| {
-            d.patch_config(&patch);
-        });
 
         CoreManager::global().update_config_checked().await.map_err(|error| {
             logging!(error, Type::Config, "failed to apply the config with DNS: {error:#}");
