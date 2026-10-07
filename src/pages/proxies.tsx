@@ -71,23 +71,27 @@ const ProxyPage = () => {
   const onToggleChainMode = useLockFn(async () => {
     const newChainMode = !isChainMode
 
-    setIsChainMode(newChainMode)
-    // 保存链式代理按钮状态到 localStorage
-    localStorage.setItem('proxy-chain-mode-enabled', newChainMode.toString())
-
     if (!newChainMode) {
       // 退出链式代理模式时，清除链式代理配置
       try {
         debugLog('Exiting chain mode, clearing chain configuration')
-        await mutate(() => updateProxyChainConfigInRuntime(null), {
-          id: 'update-proxy-chain-runtime',
-          errorNotice: false,
-        })
+        const result = await mutate(
+          () => updateProxyChainConfigInRuntime(null),
+          {
+            id: 'update-proxy-chain-runtime',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
         debugLog('Chain configuration cleared successfully')
       } catch (error) {
         console.error('Failed to clear chain configuration:', error)
+        showNotice.error(error)
+        return
       }
     }
+    setIsChainMode(newChainMode)
+    localStorage.setItem('proxy-chain-mode-enabled', newChainMode.toString())
   })
 
   // 当开启链式代理模式时，获取配置数据

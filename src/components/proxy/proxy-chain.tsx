@@ -445,10 +445,14 @@ export const ProxyChain = ({
     if (isConnected) {
       setIsConnecting(true)
       try {
-        await mutate(() => updateProxyChainConfigInRuntime(null), {
-          id: 'update-proxy-chain-runtime',
-          errorNotice: false,
-        })
+        const result = await mutate(
+          () => updateProxyChainConfigInRuntime(null),
+          {
+            id: 'update-proxy-chain-runtime',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
 
         const targetGroup =
           mode === 'global'
@@ -519,10 +523,14 @@ export const ProxyChain = ({
       // 第一步：保存链式代理配置
       const chainProxies = currentProxyChain.map((node) => node.name)
       debugLog('Saving chain config:', chainProxies)
-      await mutate(() => updateProxyChainConfigInRuntime(chainProxies), {
-        id: 'update-proxy-chain-runtime',
-        errorNotice: false,
-      })
+      const result = await mutate(
+        () => updateProxyChainConfigInRuntime(chainProxies),
+        {
+          id: 'update-proxy-chain-runtime',
+          errorNotice: false,
+        },
+      )
+      if (!result.ok) return
       debugLog('Chain configuration saved successfully')
 
       // 第二步：连接到代理链的最后一个节点
@@ -619,14 +627,15 @@ export const ProxyChain = ({
             <IconButton
               size="small"
               onClick={() => {
-                mutate(() => updateProxyChainConfigInRuntime(null), {
+                void mutate(() => updateProxyChainConfigInRuntime(null), {
                   id: 'update-proxy-chain-runtime',
-                  errorNotice: false,
-                })
-                localStorage.removeItem('proxy-chain-group')
-                localStorage.removeItem('proxy-chain-exit-node')
-                localStorage.removeItem('proxy-chain-items')
-                onUpdateChain([])
+                  onFulfilled: () => {
+                    localStorage.removeItem('proxy-chain-group')
+                    localStorage.removeItem('proxy-chain-exit-node')
+                    localStorage.removeItem('proxy-chain-items')
+                    onUpdateChain([])
+                  },
+                }).catch(() => {})
               }}
               sx={{
                 color: theme.palette.error.main,

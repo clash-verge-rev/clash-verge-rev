@@ -134,9 +134,14 @@ export async function getRuntimeProxyChainConfig(proxyChainExitNode: string) {
 export async function updateProxyChainConfigInRuntime(
   proxyChainConfig: unknown,
 ) {
-  return commands.updateProxyChainConfigInRuntime(
+  const outcome = await commands.updateProxyChainConfigInRuntime(
     proxyChainConfig == null ? null : (proxyChainConfig as JsonValue),
   )
+  if (outcome.status === 'invalid') throw new Error(outcome.message)
+  if (outcome.status === 'skipped') {
+    throw new Error(`Proxy chain validation skipped: ${outcome.reason}`)
+  }
+  return outcome
 }
 
 export async function patchClashConfig(payload: Partial<IConfigData>) {

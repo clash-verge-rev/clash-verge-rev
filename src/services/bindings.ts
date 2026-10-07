@@ -71,7 +71,7 @@ export const commands = {
       proxyChainExitNode,
     }),
   updateProxyChainConfigInRuntime: (proxyChainConfig: JsonValue | null) =>
-    __TAURI_INVOKE<null>('update_proxy_chain_config_in_runtime', {
+    __TAURI_INVOKE<ValidationOutcome>('update_proxy_chain_config_in_runtime', {
       proxyChainConfig,
     }),
   invokeUwpTool: () => __TAURI_INVOKE<null>('invoke_uwp_tool'),

@@ -1,7 +1,6 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
-use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::collections::HashMap;
 
@@ -102,21 +101,12 @@ pub async fn get_runtime_proxy_chain_config(
 
 #[tauri::command]
 #[specta::specta]
-pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<crate::ipc::YamlValue>) -> CmdResult<()> {
+pub async fn update_proxy_chain_config_in_runtime(
+    proxy_chain_config: Option<crate::ipc::YamlValue>,
+) -> CmdResult<crate::core::validate::ValidationOutcome> {
     let proxy_chain_config = proxy_chain_config.map(|value| value.0);
-    match CoreManager::global()
+    CoreManager::global()
         .update_runtime_config(|d| d.update_proxy_chain_config(proxy_chain_config))
         .await
-    {
-        Ok(outcome) if outcome.is_valid() => {}
-        Ok(outcome) => logging!(
-            warn,
-            Type::Core,
-            "Failed to apply runtime proxy chain config: {}",
-            outcome
-        ),
-        Err(err) => logging!(error, Type::Core, "Failed to apply runtime proxy chain config: {err:#}"),
-    }
-
-    Ok(())
+        .stringify_err()
 }

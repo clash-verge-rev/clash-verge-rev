@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { commands } from './bindings'
-import { createProfile, patchProfile, patchProfilesConfig } from './cmds'
+import {
+  createProfile,
+  patchProfile,
+  patchProfilesConfig,
+  updateProxyChainConfigInRuntime,
+} from './cmds'
+import { mutate } from './mutate'
 
 vi.mock('./bindings', () => ({
   commands: {
+    updateProxyChainConfigInRuntime: vi.fn(),
     createProfile: vi.fn(),
     patchProfile: vi.fn(),
     patchProfilesConfig: vi.fn(),
@@ -59,5 +66,41 @@ describe('profile IPC projections', () => {
     const [payload, content] = vi.mocked(commands.createProfile).mock.calls[0]
     expect(wirePayload(payload)).toEqual({ type: 'local', name: 'local' })
     expect(content).toBe('content')
+  })
+})
+
+vi.mock('@/services/notice-service', () => ({
+  showNotice: { error: vi.fn(), success: vi.fn() },
+}))
+vi.mock('@/services/query-client', () => ({ revalidateQueries: vi.fn() }))
+
+describe('proxy chain runtime confirmation', () => {
+  it('does not continue after a busy runtime update', async () => {
+    vi.mocked(commands.updateProxyChainConfigInRuntime).mockResolvedValue({
+      status: 'busy',
+    })
+    const onFulfilled = vi.fn()
+    const result = await mutate(() => updateProxyChainConfigInRuntime(null), {
+      id: 'update-proxy-chain-runtime',
+      onFulfilled,
+    })
+    expect(result.ok).toBe(false)
+    expect(onFulfilled).not.toHaveBeenCalled()
+  })
+
+  it('rejects failed validation without a success continuation', async () => {
+    vi.mocked(commands.updateProxyChainConfigInRuntime).mockResolvedValue({
+      status: 'invalid',
+      kind: 'yamlSyntax',
+      message: 'invalid proxy chain',
+    })
+    const onFulfilled = vi.fn()
+    await expect(
+      mutate(() => updateProxyChainConfigInRuntime(['node']), {
+        id: 'update-proxy-chain-runtime',
+        onFulfilled,
+      }),
+    ).rejects.toThrow('invalid proxy chain')
+    expect(onFulfilled).not.toHaveBeenCalled()
   })
 })
