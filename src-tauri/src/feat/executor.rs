@@ -6,7 +6,10 @@ use crate::{
         snapshot::{capture_config_files, restore_files},
     },
     core::auto_backup::AutoBackupManager,
-    core::{CoreManager, autostart, hotkey, lightweight, logger, manager::ConfigUpdateGuard, proxy_control, tray},
+    core::{
+        CoreManager, SilentUpdater, autostart, hotkey, lightweight, logger, manager::ConfigUpdateGuard, proxy_control,
+        tray,
+    },
 };
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
@@ -159,7 +162,10 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
     }
     transaction.commit();
     match patch {
-        Patch::Verge { .. } => {
+        Patch::Verge { patch, .. } => {
+            if patch.auto_check_update == Some(false) {
+                SilentUpdater::global().discard_pending();
+            }
             if effects.contains(&Effect::ClashConfig) {
                 announce(Refresh::Clash);
             }
