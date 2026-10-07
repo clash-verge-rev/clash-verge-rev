@@ -1,5 +1,7 @@
 //! Reconciles TUN with current Core and Service availability.
 
+use crate::core::notify::NoticeStatus;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use clash_verge_logging::{Type, logging};
@@ -75,10 +77,10 @@ pub async fn reconcile_tun_availability() {
 
     // Skip recursive reconciliation for this internal patch.
     match super::apply_verge_patch_locked(&config_write, &patch, false).await {
-        Ok(()) => Handle::notice_message("tun_mode::auto_disabled", ""),
+        Ok(()) => Handle::notice(NoticeStatus::TunModeAutoDisabled, ""),
         Err(error) => {
             logging!(error, Type::Core, "failed to turn TUN mode off: {error:#}");
-            Handle::notice_message("tun_mode::auto_disable_failed", "");
+            Handle::notice(NoticeStatus::TunModeAutoDisableFailed, "");
         }
     }
 }

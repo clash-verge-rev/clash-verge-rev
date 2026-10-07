@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::{config::with_encryption, process::AsyncHandler};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
@@ -58,7 +59,7 @@ fn parse_mapping(yaml_str: String, path: PathBuf) -> Result<Mapping> {
             let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
             logging!(error, Type::Config, "{}", error_msg);
 
-            crate::core::handle::Handle::notice_message("config_validate::yaml_syntax_error", &error_msg);
+            crate::core::handle::Handle::notice(NoticeStatus::ConfigValidateYamlSyntaxError, error_msg.as_str());
 
             bail!("YAML syntax error: {}", err)
         }
