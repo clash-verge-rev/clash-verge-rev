@@ -256,7 +256,7 @@ export async function getSystemProxy() {
   return commands.getSysProxy()
 }
 
-export async function getAutotemProxy() {
+export async function getAutoProxy() {
   try {
     debugLog('[API] 开始调用 get_auto_proxy')
     const result = await commands.getAutoProxy()
