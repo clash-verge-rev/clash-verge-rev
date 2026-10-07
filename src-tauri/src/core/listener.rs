@@ -271,10 +271,7 @@ fn proxy_bind_addresses(config: &Mapping) -> Result<Vec<IpAddr>> {
         return Ok(vec![IpAddr::V4(Ipv4Addr::LOCALHOST)]);
     }
 
-    let normalized = bind_address
-        .strip_prefix('[')
-        .and_then(|address| address.strip_suffix(']'))
-        .unwrap_or(bind_address);
+    let normalized = bind_address.strip_circumfix('[', ']').unwrap_or(bind_address);
     Ok(vec![
         IpAddr::from_str(normalized).with_context(|| format!("invalid bind-address {bind_address:?}"))?,
     ])
@@ -298,11 +295,7 @@ fn parse_listener_address(address: &str) -> Result<(Vec<IpAddr>, u16)> {
     if port == 0 {
         bail!("listener port must be between 1 and 65535");
     }
-    let host = host
-        .trim()
-        .strip_prefix('[')
-        .and_then(|host| host.strip_suffix(']'))
-        .unwrap_or_else(|| host.trim());
+    let host = host.trim().strip_circumfix('[', ']').unwrap_or_else(|| host.trim());
     if host.eq_ignore_ascii_case("localhost") {
         return Ok((vec![IpAddr::V4(Ipv4Addr::LOCALHOST)], port));
     }
