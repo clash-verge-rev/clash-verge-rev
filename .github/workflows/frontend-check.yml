@@ -91,7 +91,7 @@ jobs:
         run: node scripts/check-architecture.mjs listen emit invoke
 
   contract-parity:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
