@@ -13,11 +13,11 @@
   "feedback": {
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} erfolgreich aktualisiert",
+        "updateFailed": "Aktualisierung von {{name}} fehlgeschlagen: {{message}}",
+        "genericError": "Aktualisierung fehlgeschlagen: {{message}}",
+        "none": "Keine Regelsammlungen zum Aktualisieren vorhanden",
+        "allUpdated": "Alle Regelsammlungen erfolgreich aktualisiert"
       }
     }
   },
