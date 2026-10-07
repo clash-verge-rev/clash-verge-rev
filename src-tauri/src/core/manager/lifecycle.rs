@@ -1,6 +1,7 @@
 use super::{CoreManager, RunningMode};
 use crate::config::{Config, IVerge};
 use crate::core::manager::CLASH_LOGGER;
+use crate::core::notify::NoticeStatus;
 use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use crate::core::{handle::Handle, tun_guard};
@@ -260,6 +261,10 @@ where
     let Err(error) = start_service().await else {
         return Ok(());
     };
+    // The selected uplink is a local configuration problem, not evidence of a broken service.
+    if tun_guard::interface_unavailable(&error).is_some() {
+        return Err(error);
+    }
     let refusal = error.downcast_ref::<crate::core::service::ServiceStartRefusal>();
     let location_refused = refusal.is_some_and(|refusal| {
         refusal.code == clash_verge_service_ipc::ServiceErrorCode::InvalidInstallLocation as u16
@@ -495,7 +500,7 @@ impl CoreManager {
         );
         let detail = format!("{error:#}");
         tun_guard::record_restore_notice(detail.clone());
-        Handle::notice_message("tun_compatibility_guard::restore_failed", detail);
+        Handle::notice(NoticeStatus::TunCompatibilityGuardRestoreFailed, detail);
     }
 
     pub(super) async fn recover_tun_guard(&self) -> Result<()> {
@@ -550,7 +555,7 @@ impl CoreManager {
                         let message = format!("{error:#}");
                         if previous_error.as_ref() != Some(&message) {
                             logging!(warn, Type::Core, "TUN compatibility protection check failed: {message}");
-                            Handle::notice_message("tun_compatibility_guard::check_failed", message.clone());
+                            Handle::notice(NoticeStatus::TunCompatibilityGuardCheckFailed, message.clone());
                             previous_error = Some(message);
                         }
                     }
@@ -577,7 +582,7 @@ impl CoreManager {
 
     pub(crate) async fn start_core_during_config_update(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
-        run_core_start_transition(
+        let result = run_core_start_transition(
             || self.start_core_inner(),
             || {
                 !matches!(*self.get_running_mode(), RunningMode::NotRunning)
@@ -585,7 +590,15 @@ impl CoreManager {
             },
             || self.apply_proxy_after_start(),
         )
-        .await
+        .await;
+        result.inspect_err(|error| self.report_core_start_failure(error))
+    }
+
+    fn report_core_start_failure(&self, error: &anyhow::Error) {
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            self.record_startup_error(super::CoreFailure::from_start_error(error));
+            Handle::notice(NoticeStatus::CoreStartError, "");
+        }
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(status = tracing::field::Empty, tun_disabled = false, readiness_generation = tracing::field::Empty))]
@@ -1028,7 +1041,7 @@ impl CoreManager {
         if result.is_err() {
             self.restore_tun_guard(stopped.load(Ordering::Acquire));
         }
-        result
+        result.inspect_err(|error| self.report_core_start_failure(error))
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(core = %clash_core))]
@@ -1123,29 +1136,34 @@ impl CoreManager {
         AsyncHandler::spawn(|| async move {
             let manager = Self::global();
             let started = Instant::now();
-            loop {
+            use crate::utils::retry::{RetryError, RetryPolicy, retry};
+            let attempts = std::num::NonZeroUsize::MIN.saturating_add(
+                (timing::SERVICE_HANDOFF_WINDOW.as_millis() / timing::SERVICE_HANDOFF_INTERVAL.as_millis()) as usize,
+            );
+            let _ = retry(RetryPolicy::fixed(attempts, std::time::Duration::ZERO), |_| async {
                 if started.elapsed() >= timing::SERVICE_HANDOFF_WINDOW {
                     logging!(
                         info,
                         Type::Core,
                         "service handoff window elapsed; staying in sidecar mode"
                     );
-                    break;
+                    return Ok(());
                 }
+                // The window is checked before waiting, including the final handoff attempt.
                 tokio::time::sleep(timing::SERVICE_HANDOFF_INTERVAL).await;
-
                 if !matches!(*manager.get_running_mode(), RunningMode::Sidecar) {
-                    break;
+                    return Ok(());
                 }
                 match manager.try_handoff_sidecar_to_service().await {
-                    HandoffOutcome::Done => break,
+                    HandoffOutcome::Done => Ok(()),
                     HandoffOutcome::Failed => {
                         logging!(warn, Type::Core, "handoff attempt failed; staying in sidecar mode");
-                        break;
+                        Ok(())
                     }
-                    HandoffOutcome::NotReady => {}
+                    HandoffOutcome::NotReady => Err(RetryError::Retry(())),
                 }
-            }
+            })
+            .await;
             manager.handoff_watcher_running.store(false, Ordering::Release);
         });
     }
@@ -1854,6 +1872,42 @@ mod tests {
         for status in &rejected_statuses {
             assert!(!can_allow_sidecar_for_session(&RunningMode::NotRunning, status));
         }
+    }
+
+    #[tokio::test]
+    async fn disconnected_selected_interface_does_not_implicate_service_or_start_sidecar() {
+        use crate::core::runstate::{FakeEnv, RunStateStore, ServiceHealth};
+        use crate::core::tun_guard::{InterfaceUnavailable, InterfaceUnavailableReason};
+
+        let store = RunStateStore::new(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let probed = AtomicBool::new(false);
+        let started = AtomicBool::new(false);
+        let result = super::run_service_start_with_sidecar_fallback(
+            || async {
+                Err(anyhow::Error::new(InterfaceUnavailable {
+                    name: "WLAN".into(),
+                    reason: InterfaceUnavailableReason::Disconnected,
+                })
+                .context("prepare selected uplink"))
+            },
+            || async {
+                probed.store(true, Ordering::SeqCst);
+                Ok(())
+            },
+            |_| async {
+                started.store(true, Ordering::SeqCst);
+                Ok(())
+            },
+            |reason| store.observe(ServiceHealth::Unavailable(reason)),
+        )
+        .await;
+
+        assert!(result.is_err_and(|error| crate::core::tun_guard::interface_unavailable(&error).is_some()));
+        assert!(!probed.load(Ordering::SeqCst));
+        assert!(!started.load(Ordering::SeqCst));
+        assert!(store.state().service_usable());
+        assert!(!store.state().service_needs_attention());
     }
 
     #[tokio::test]

@@ -494,16 +494,16 @@
         "routeExcludeAddress": "排除自定义网段",
         "strictRoute": "严格路由",
         "autoDetectInterface": "自动选择流量出口接口",
-        "lockOutboundInterface": "锁定流量出口接口",
+        "manualOutboundInterface": "手动指定出口网卡",
         "interfaceName": "出口网卡",
-        "tunCompatibilityGuard": "TUN 兼容性保护",
         "dnsHijack": "DNS 劫持",
         "mtu": "最大传输单元",
         "autoRedirect": "自动重定向"
       },
       "tooltips": {
         "dnsHijack": "多个 DNS 服务器请使用 , 分隔",
-        "tunCompatibilityGuard": "启用 TUN 时，临时关闭所选出口网卡的 IPv4 转发。",
+        "manualOutboundInterface": "关闭自动检测出口网卡，使用所选网卡作为流量出口。",
+        "manualOutboundInterfaceWindows": "关闭自动检测出口网卡；启用 TUN 时，临时关闭所选网卡的 IPv4 转发。需要管理员权限，可能影响网络共享。",
         "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
       },
       "messages": {
@@ -511,11 +511,9 @@
         "invalidRouteExcludeAddress": "请输入有效的 CIDR 网段",
         "interfaceNameRequired": "请选择出口网卡",
         "interfaceNameHint": "将所选网卡设为默认流量出口。切换网络后请重新选择；节点单独指定的接口优先。",
-        "interfacesEmpty": "没有可选网卡，请刷新列表重试。",
-        "interfacesLoadFailed": "读取网卡列表失败，请刷新重试。",
+        "interfacesEmpty": "没有可选网卡，请重新打开列表重试。",
+        "interfacesLoadFailed": "读取网卡列表失败，请重新打开列表重试。",
         "interfaceNotDetected": "未检测到",
-        "tunCompatibilityGuardHint": "仅保护所选网卡。需要管理员权限并锁定出口网卡，可能影响电脑的网络共享。",
-        "tunCompatibilityGuardRequiresInterface": "请先锁定并选择出口网卡，再开启 TUN 兼容性保护。",
         "partialSaveFailed": "部分设置已保存，但其余设置未能应用。请检查错误并重试。",
         "compatibilityRestoreFailed": "未能恢复此前受保护网卡的 IPv4 转发设置，请以管理员身份重新运行应用后重试。",
         "compatibilityCheckFailed": "TUN 兼容性保护检查失败，请重新选择出口网卡后重试。",
@@ -673,6 +671,7 @@
         "restartFailed": "重启内核失败",
         "startFailed": "启动内核失败",
         "serviceCoreStopped": "服务运行的内核意外停止",
+        "selectedInterfaceUnavailable": "所选出口网卡“{{name}}”当前不可用（不存在、未连接或没有 IPv4 默认路由），内核未启动。请重新连接该网卡，或在 TUN 设置中重新选择，然后保存或重启内核。已保存的网卡选择未改变。",
         "stopFailed": "停止内核失败"
       },
       "clashService": {

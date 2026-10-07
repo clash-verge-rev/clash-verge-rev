@@ -7,7 +7,6 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
-mod module;
 mod process;
 pub mod utils;
 
@@ -19,13 +18,17 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
 use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
 
-pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
+pub static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
+
+// Re-exported for src/bin/frontend-contract.rs; the wire contract stays owned
+// by core::notify.
+pub use crate::core::notify::frontend_wire_contract;
 /// Application initialization helper functions
 mod app_init {
     use super::*;
@@ -337,7 +340,7 @@ pub fn run() -> std::process::ExitCode {
 
     mod event_handlers {
         #[cfg(target_os = "macos")]
-        use crate::module::lightweight;
+        use crate::core::lightweight;
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
@@ -493,7 +496,7 @@ pub fn run() -> std::process::ExitCode {
         }
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
+            if core::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
                 api.prevent_exit();
             } else if code.is_none() {
                 api.prevent_exit();

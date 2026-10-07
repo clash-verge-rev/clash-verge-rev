@@ -17,7 +17,8 @@
   "ignoreBinaries": ["rustc", "cc"],
   "ignoreDependencies": ["lint-staged"],
   "ignoreIssues": {
-    "src/types/generated/**": ["exports", "types"]
+    "src/types/generated/**": ["exports", "types"],
+    "src/services/contract.ts": ["exports", "types"]
   },
   "cycles": {
     "dynamicImports": true

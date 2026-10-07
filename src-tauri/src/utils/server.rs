@@ -1,18 +1,18 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, MixedPort},
-    module::lightweight,
+    core::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
 use serde::{Deserialize, Serialize};
 use std::io::{Read as _, Write as _};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::oneshot;
@@ -33,9 +33,9 @@ struct InstanceRecord {
     token: String,
 }
 
-static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
-static EMBEDDED_PORT: OnceCell<u16> = OnceCell::new();
-static INSTANCE_LOCK: OnceCell<std::fs::File> = OnceCell::new();
+static SHUTDOWN_SENDER: OnceLock<Mutex<Option<oneshot::Sender<()>>>> = OnceLock::new();
+static EMBEDDED_PORT: OnceLock<u16> = OnceLock::new();
+static INSTANCE_LOCK: OnceLock<std::fs::File> = OnceLock::new();
 const PAC_INITIAL_AVAILABLE: bool = false;
 static PAC_AVAILABLE: AtomicBool = AtomicBool::new(PAC_INITIAL_AVAILABLE);
 static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
@@ -54,20 +54,34 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
         .context("failed to initialize singleton lock")?;
     if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
-        loop {
-            if std::time::Instant::now() >= deadline {
-                bail!("another app instance is starting");
-            }
-            // Retry the lock: during restart, the old server stops before releasing it.
-            if try_lock_instance(&lock).context("failed to acquire singleton lock")? {
-                break;
-            }
-            if let Ok(record) = read_instance_record(&record_path)
-                && notify_existing_instance(&record).await
-            {
-                return Ok(SingletonDisposition::Secondary);
-            }
-            tokio::time::sleep(Duration::from_millis(50)).await;
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let secondary = retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add(400),
+                Duration::from_millis(50),
+            ),
+            |_| async {
+                if std::time::Instant::now() >= deadline {
+                    return Err(RetryError::Stop(anyhow::anyhow!("another app instance is starting")));
+                }
+                // A restarting primary releases the lock after spawning us, with its server down.
+                if try_lock_instance(&lock)
+                    .context("failed to acquire singleton lock")
+                    .map_err(RetryError::Stop)?
+                {
+                    return Ok(false);
+                }
+                if let Ok(record) = read_instance_record(&record_path)
+                    && notify_existing_instance(&record).await
+                {
+                    return Ok(true);
+                }
+                Err(RetryError::Retry(anyhow::anyhow!("another app instance is starting")))
+            },
+        )
+        .await?;
+        if secondary {
+            return Ok(SingletonDisposition::Secondary);
         }
     }
 

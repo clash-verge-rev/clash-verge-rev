@@ -24,6 +24,7 @@ import {
 import { useClash } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { enhanceProfiles, getNetworkInterfacesInfo } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 import { areValidIpCidrs } from '@/utils/network'
@@ -63,7 +64,6 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     autoDetectInterface: true,
     lockOutboundInterface: false,
     interfaceName: '',
-    tunCompatibilityGuard: false,
     dnsHijack: ['any:53'],
     strictRoute: false,
     mtu: 1500,
@@ -81,8 +81,11 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     : t('settings.modals.tun.messages.routeExcludeAddressHint')
   const interfaceNameError =
     values.lockOutboundInterface && values.interfaceName.trim() === ''
-  const hasLockedInterface =
-    values.lockOutboundInterface && values.interfaceName.trim() !== ''
+  const compatibilityGuardNeedsUpdate =
+    OS === 'windows' &&
+    (compatibilityGuardChanged ||
+      values.lockOutboundInterface !==
+        (verge?.enable_tun_compatibility_guard ?? false))
   const interfaceNameMissing =
     values.interfaceName !== '' &&
     !networkInterfaces?.some((iface) => iface.name === values.interfaceName)
@@ -134,7 +137,6 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         autoDetectInterface,
         lockOutboundInterface: interfaceName !== '' && !autoDetectInterface,
         interfaceName,
-        tunCompatibilityGuard: verge?.enable_tun_compatibility_guard ?? false,
         dnsHijack: clash?.tun['dns-hijack'] ?? ['any:53'],
         strictRoute: clash?.tun['strict-route'] ?? false,
         mtu: clash?.tun.mtu ?? 1500,
@@ -160,23 +162,18 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      if (
-        OS === 'windows' &&
-        values.tunCompatibilityGuard &&
-        !hasLockedInterface
-      ) {
-        showNotice.error(
-          'settings.modals.tun.messages.tunCompatibilityGuardRequiresInterface',
-        )
-        return
+      if (compatibilityGuardNeedsUpdate) {
+        setCompatibilityGuardChanged(true)
       }
 
       const interfaceName = values.lockOutboundInterface
         ? values.interfaceName
         : ''
-      const interfacePatch = outboundInterfaceChanged
-        ? { 'interface-name': interfaceName }
-        : {}
+      const interfacePatch =
+        outboundInterfaceChanged ||
+        (OS === 'windows' && values.lockOutboundInterface)
+          ? { 'interface-name': interfaceName }
+          : {}
       const tun: IConfigData['tun'] = {
         stack: values.stack,
         device:
@@ -199,11 +196,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         'strict-route': values.strictRoute,
         mtu: values.mtu ?? 1500,
       }
-      if (
-        OS === 'windows' &&
-        compatibilityGuardChanged &&
-        !values.tunCompatibilityGuard
-      ) {
+      if (compatibilityGuardNeedsUpdate && !values.lockOutboundInterface) {
         await patchVerge({ enable_tun_compatibility_guard: false })
         settingsApplied = true
       }
@@ -217,16 +210,15 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         }),
         false,
       )
-      if (
-        OS === 'windows' &&
-        compatibilityGuardChanged &&
-        values.tunCompatibilityGuard
-      ) {
+      if (compatibilityGuardNeedsUpdate && values.lockOutboundInterface) {
         await patchVerge({ enable_tun_compatibility_guard: true })
       }
       setOpen(false)
       showNotice.success('settings.modals.tun.messages.applied')
-      void enhanceProfiles().catch((err: any) => {
+      void mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      }).catch((err: any) => {
         showNotice.error(err)
       })
     } catch (err: any) {
@@ -272,7 +264,6 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 autoDetectInterface: true,
                 lockOutboundInterface: false,
                 interfaceName: '',
-                tunCompatibilityGuard: false,
                 dnsHijack: ['any:53'],
                 strictRoute: false,
                 mtu: 1500,
@@ -398,130 +389,111 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
-          <ListItemText
-            primary={t('settings.modals.tun.fields.lockOutboundInterface')}
-          />
-          <Switch
-            edge="end"
-            checked={values.lockOutboundInterface}
-            onChange={(_, c) => {
-              setOutboundInterfaceChanged(true)
-              setValues((v) => ({
-                ...v,
-                lockOutboundInterface: c,
-                interfaceName: c ? v.interfaceName : '',
-                autoDetectInterface: !c,
-              }))
-            }}
-          />
-        </ListItem>
-
-        {values.lockOutboundInterface && (
-          <ListItem
-            sx={{ padding: '5px 2px', alignItems: 'flex-start', gap: 1 }}
-          >
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label={t('settings.modals.tun.fields.interfaceName')}
-              value={values.interfaceName}
-              disabled={interfacesLoading}
-              error={interfaceNameError}
-              helperText={
-                <>
-                  {interfaceNameError
-                    ? t('settings.modals.tun.messages.interfaceNameRequired')
-                    : t('settings.modals.tun.messages.interfaceNameHint')}
-                  {interfacesStatus && (
-                    <Box component="span" sx={{ display: 'block' }}>
-                      {interfacesStatus}
-                    </Box>
-                  )}
-                </>
-              }
-              slotProps={{
-                select: {
-                  renderValue: () =>
-                    interfaceNameNotDetected
-                      ? `${values.interfaceName} (${t('settings.modals.tun.messages.interfaceNotDetected')})`
-                      : values.interfaceName,
-                },
-              }}
-              onChange={(e) => {
-                setOutboundInterfaceChanged(true)
-                setValues((v) => ({ ...v, interfaceName: e.target.value }))
-              }}
-            >
-              <MenuItem value="" disabled>
-                {t('settings.modals.tun.messages.interfaceNameRequired')}
-              </MenuItem>
-              {(networkInterfaces ?? []).map((iface) => (
-                <MenuItem key={iface.name} value={iface.name}>
-                  <ListItemText
-                    primary={iface.name}
-                    secondary={iface.addr
-                      .map((address) => address.V4?.ip ?? address.V6?.ip)
-                      .filter(Boolean)
-                      .join(', ')}
-                  />
-                </MenuItem>
-              ))}
-              {interfaceNameMissing && (
-                <MenuItem value={values.interfaceName}>
-                  <ListItemText
-                    primary={values.interfaceName}
-                    secondary={
-                      interfaceNameNotDetected
-                        ? t('settings.modals.tun.messages.interfaceNotDetected')
-                        : undefined
-                    }
-                  />
-                </MenuItem>
-              )}
-            </TextField>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={interfacesLoading}
-              onClick={() => void fetchNetworkInterfaces()}
-              sx={{ flexShrink: 0, minHeight: 40 }}
-            >
-              {t('shared.actions.refresh')}
-            </Button>
-          </ListItem>
-        )}
-
-        {OS === 'windows' && (
+        <Tooltip
+          title={[
+            t(
+              OS === 'windows'
+                ? 'settings.modals.tun.tooltips.manualOutboundInterfaceWindows'
+                : 'settings.modals.tun.tooltips.manualOutboundInterface',
+            ),
+            interfaceNameError
+              ? t('settings.modals.tun.messages.interfaceNameRequired')
+              : t('settings.modals.tun.messages.interfaceNameHint'),
+            interfacesStatus,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          arrow
+        >
           <ListItem sx={{ padding: '5px 2px', gap: 1 }}>
             <ListItemText
-              primary={t('settings.modals.tun.fields.tunCompatibilityGuard')}
-              secondary={t(
-                'settings.modals.tun.messages.tunCompatibilityGuardHint',
-              )}
+              primary={t('settings.modals.tun.fields.manualOutboundInterface')}
+              sx={{ minWidth: 0 }}
             />
-            <Tooltip
-              title={t('settings.modals.tun.tooltips.tunCompatibilityGuard')}
-              arrow
+            <Box
+              component="span"
+              sx={{ display: 'inline-flex', width: 190, flexShrink: 0 }}
             >
-              <span>
-                <Switch
-                  edge="end"
-                  checked={values.tunCompatibilityGuard}
-                  disabled={
-                    !values.tunCompatibilityGuard && !hasLockedInterface
-                  }
-                  onChange={(_, c) => {
-                    setCompatibilityGuardChanged(true)
-                    if (c) setOutboundInterfaceChanged(true)
-                    setValues((v) => ({ ...v, tunCompatibilityGuard: c }))
-                  }}
-                />
-              </span>
-            </Tooltip>
+              <TextField
+                select
+                fullWidth
+                size="small"
+                value={values.interfaceName}
+                disabled={!values.lockOutboundInterface || interfacesLoading}
+                error={interfaceNameError}
+                slotProps={{
+                  select: {
+                    displayEmpty: true,
+                    inputProps: {
+                      'aria-label': t(
+                        'settings.modals.tun.fields.interfaceName',
+                      ),
+                    },
+                    onOpen: () => void fetchNetworkInterfaces(),
+                    renderValue: () =>
+                      interfaceNameNotDetected
+                        ? `${values.interfaceName} (${t('settings.modals.tun.messages.interfaceNotDetected')})`
+                        : values.interfaceName ||
+                          interfacesStatus ||
+                          t(
+                            'settings.modals.tun.messages.interfaceNameRequired',
+                          ),
+                  },
+                }}
+                onChange={(e) => {
+                  setOutboundInterfaceChanged(true)
+                  setValues((v) => ({ ...v, interfaceName: e.target.value }))
+                }}
+              >
+                <MenuItem value="" disabled>
+                  {interfacesStatus ||
+                    t('settings.modals.tun.messages.interfaceNameRequired')}
+                </MenuItem>
+                {(networkInterfaces ?? []).map((iface) => (
+                  <MenuItem key={iface.name} value={iface.name}>
+                    <ListItemText
+                      primary={iface.name}
+                      secondary={iface.addr
+                        .map((address) => address.V4?.ip ?? address.V6?.ip)
+                        .filter(Boolean)
+                        .join(', ')}
+                    />
+                  </MenuItem>
+                ))}
+                {interfaceNameMissing && (
+                  <MenuItem value={values.interfaceName}>
+                    <ListItemText
+                      primary={values.interfaceName}
+                      secondary={
+                        interfaceNameNotDetected
+                          ? t(
+                              'settings.modals.tun.messages.interfaceNotDetected',
+                            )
+                          : undefined
+                      }
+                    />
+                  </MenuItem>
+                )}
+              </TextField>
+            </Box>
+            <Switch
+              edge="end"
+              checked={values.lockOutboundInterface}
+              onChange={(_, c) => {
+                setOutboundInterfaceChanged(true)
+                if (OS === 'windows') {
+                  setCompatibilityGuardChanged(true)
+                }
+                setValues((v) => ({
+                  ...v,
+                  lockOutboundInterface: c,
+                  interfaceName: c ? v.interfaceName : '',
+                  autoDetectInterface: !c,
+                }))
+              }}
+            />
           </ListItem>
-        )}
+        </Tooltip>
 
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText

@@ -10,7 +10,7 @@ mod probe;
 
 use std::{
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, Ordering},
     },
     time::Duration,
@@ -19,7 +19,6 @@ use std::{
 use anyhow::{Context as _, Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use tokio::sync::Notify;
 
@@ -35,7 +34,7 @@ use health::StoredService;
 use probe::{CurrentServiceProbe, classify_service_health, probe_outcome};
 
 /// The process-wide Run State, observing the real machine.
-pub static RUN_STATE: Lazy<RunStateStore<RealEnv>> = Lazy::new(|| RunStateStore::new(RealEnv));
+pub static RUN_STATE: LazyLock<RunStateStore<RealEnv>> = LazyLock::new(|| RunStateStore::new(RealEnv));
 
 /// Distinguishes silence from a reply that updated Service health with a rejection.
 #[derive(Debug)]
@@ -130,20 +129,21 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Retries transport failures but stops at the first readable reply, including a rejection.
     pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
-        let mut last_error = None;
-        for attempt in 0..attempts {
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let attempts = std::num::NonZeroUsize::new(attempts).ok_or_else(|| {
+            ReadyWaitError::Unreachable(anyhow::anyhow!(
+                "service readiness wait was configured with no attempts"
+            ))
+        })?;
+        retry(RetryPolicy::fixed(attempts, interval), |_| async {
             match self.env.probe_service_version().await {
-                Ok(reply) => return self.record_reply(&reply).map_err(ReadyWaitError::Rejected),
-                Err(error) => last_error = Some(error),
+                Ok(reply) => self
+                    .record_reply(&reply)
+                    .map_err(|error| RetryError::Stop(ReadyWaitError::Rejected(error))),
+                Err(error) => Err(RetryError::Retry(ReadyWaitError::Unreachable(error))),
             }
-            if attempt + 1 < attempts {
-                tokio::time::sleep(interval).await;
-            }
-        }
-
-        Err(ReadyWaitError::Unreachable(last_error.unwrap_or_else(|| {
-            anyhow::anyhow!("service readiness wait was configured with no attempts")
-        })))
+        })
+        .await
     }
 
     fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {

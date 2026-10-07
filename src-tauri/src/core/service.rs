@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::utils::dirs;
 use crate::{
     config::{Config, runtime::IRuntime},
@@ -25,7 +26,6 @@ use clash_verge_service_ipc::{
     RuntimeBundle, RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, ServiceStatusSnapshot,
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::{
     collections::HashMap,
@@ -38,7 +38,7 @@ use std::{
 };
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
-static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
+static ACTIVE_SERVICE_SESSION: Mutex<Option<ActiveServiceSession>> = Mutex::new(None);
 static PENDING_SERVICE_FALLBACK_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
@@ -63,7 +63,7 @@ pub(crate) fn is_not_auto_started(reason: &str) -> bool {
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_service_fallback(reason: &str) {
     *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(reason.to_owned());
-    Handle::notice_message("service_core::sidecar_fallback", "");
+    Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
 }
 
 pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
@@ -351,35 +351,40 @@ static SERVICE_CORE_STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
 fn create_service_core_staging_file(directory: &Path, core_name: &std::ffi::OsStr) -> Result<(PathBuf, std::fs::File)> {
-    for _ in 0..32 {
-        let generation = SERVICE_CORE_STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
-        let temporary_name = format!(
-            ".{}.{}.{generation}.tmp",
-            core_name.to_string_lossy(),
-            std::process::id()
-        );
-        let temporary_path = directory.join(temporary_name);
-        match std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temporary_path)
-        {
-            Ok(file) => return Ok((temporary_path, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                return Err(error).with_context(|| {
+    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+    retry_sync(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(31),
+            std::time::Duration::ZERO,
+        ),
+        |_| {
+            let generation = SERVICE_CORE_STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
+            let temporary_name = format!(
+                ".{}.{}.{generation}.tmp",
+                core_name.to_string_lossy(),
+                std::process::id()
+            );
+            let temporary_path = directory.join(temporary_name);
+            match std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temporary_path)
+            {
+                Ok(file) => Ok((temporary_path, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    Err(RetryError::Retry(anyhow::anyhow!(
+                        "failed to create a unique temporary development Service core in {}",
+                        directory.display()
+                    )))
+                }
+                Err(error) => Err(RetryError::Stop(anyhow::Error::from(error).context({
                     format!(
                         "failed to create temporary development Service core {}",
                         temporary_path.display()
                     )
-                });
+                }))),
             }
-        }
-    }
-
-    bail!(
-        "failed to create a unique temporary development Service core in {}",
-        directory.display()
+        },
     )
 }
 
@@ -923,11 +928,11 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         #[cfg(target_os = "windows")]
         if response.code == ServiceErrorCode::InvalidInstallLocation as u16 {
             PENDING_SERVICE_REPAIR_NOTICE.store(true, Ordering::Relaxed);
-            Handle::notice_message("service_core::repair_required", "");
+            Handle::notice(NoticeStatus::ServiceCoreRepairRequired, "");
         }
         if response.code == ServiceErrorCode::AppDataRootNotOwned as u16 {
             *PENDING_SERVICE_OWNER_NOTICE.lock() = app_data_owner_command(&credentials);
-            Handle::notice_message("service_core::app_data_not_owned", "");
+            Handle::notice(NoticeStatus::ServiceCoreAppDataNotOwned, "");
         }
         start_owner_monitor();
         return Err(record_service_start_refusal(
@@ -1039,7 +1044,8 @@ fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
 }
 
 static PROVIDER_SYNC_QUEUED: AtomicBool = AtomicBool::new(false);
-static PROVIDER_SYNC_SERIAL: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
+// Serializing the whole read-and-publish pass prevents an older cache from replacing a newer one.
+static PROVIDER_SYNC_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 static SYNC_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 const RUNTIME_PROVIDER_SYNC_ATTEMPTS: u32 = 4;
 const CONTENT_COMPARE_CHUNK: usize = 64 * 1024;
@@ -1050,38 +1056,47 @@ pub(crate) fn request_runtime_provider_sync(delay: Duration) {
     }
     AsyncHandler::spawn(move || async move {
         tokio::time::sleep(delay).await;
-        for attempt in 1..=RUNTIME_PROVIDER_SYNC_ATTEMPTS {
-            let outcome = {
-                let _serial = PROVIDER_SYNC_SERIAL.lock().await;
-                if attempt == 1 {
-                    PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let _ = retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add((RUNTIME_PROVIDER_SYNC_ATTEMPTS - 1) as usize),
+                constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY,
+            ),
+            |index| async move {
+                let attempt = index as u32 + 1;
+                let outcome = {
+                    let _serial = PROVIDER_SYNC_SERIAL.lock().await;
+                    if attempt == 1 {
+                        PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+                    }
+                    sync_runtime_providers_by_service().await
+                };
+                match outcome {
+                    Ok(ProviderSync { pending: 0, .. }) => Ok(()),
+                    Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
+                        logging!(
+                            info,
+                            Type::Service,
+                            "{pending} provider caches are not ready yet; retrying"
+                        );
+                        Err(RetryError::Retry(()))
+                    }
+                    Ok(ProviderSync { pending, .. }) => {
+                        logging!(warn, Type::Service, "{pending} provider caches were not synced");
+                        Ok(())
+                    }
+                    Err(error) => {
+                        logging!(
+                            warn,
+                            Type::Service,
+                            "failed to sync provider caches from the service: {error:#}"
+                        );
+                        Ok(())
+                    }
                 }
-                sync_runtime_providers_by_service().await
-            };
-            match outcome {
-                Ok(ProviderSync { pending: 0, .. }) => return,
-                Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
-                    logging!(
-                        info,
-                        Type::Service,
-                        "{pending} provider caches are not ready yet; retrying"
-                    );
-                }
-                Ok(ProviderSync { pending, .. }) => {
-                    logging!(warn, Type::Service, "{pending} provider caches were not synced");
-                    return;
-                }
-                Err(error) => {
-                    logging!(
-                        warn,
-                        Type::Service,
-                        "failed to sync provider caches from the service: {error:#}"
-                    );
-                    return;
-                }
-            }
-            tokio::time::sleep(constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY).await;
-        }
+            },
+        )
+        .await;
     });
 }
 
@@ -1389,21 +1404,29 @@ async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
         .file_name()
         .map(|name| name.to_string_lossy())
         .unwrap_or_default();
-    for _ in 0..8 {
-        let sequence = SYNC_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-        let temp = target.with_file_name(format!(".{name}.sync-{}-{sequence}.tmp", std::process::id()));
-        match tokio::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temp)
-            .await
-        {
-            Ok(file) => return Ok((temp, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => return Err(error).with_context(|| format!("failed to create {}", temp.display())),
-        }
-    }
-    bail!("no free temporary name beside {}", target.display())
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    retry(
+        RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(7), std::time::Duration::ZERO),
+        |_| async {
+            let sequence = SYNC_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+            let temp = target.with_file_name(format!(".{name}.sync-{}-{sequence}.tmp", std::process::id()));
+            match tokio::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temp)
+                .await
+            {
+                Ok(file) => Ok((temp, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Err(RetryError::Retry(
+                    anyhow::anyhow!("no free temporary name beside {}", target.display()),
+                )),
+                Err(error) => Err(RetryError::Stop(
+                    anyhow::anyhow!(error).context(format!("failed to create {}", temp.display())),
+                )),
+            }
+        },
+    )
+    .await
 }
 
 async fn same_contents(temp: &Path, target: &Path) -> bool {
@@ -1647,7 +1670,7 @@ fn report_service_core_stopped(status: &ServiceStatusSnapshot) {
     );
     logging!(error, Type::Service, "service core stopped: {detail}");
     CoreManager::global().record_startup_error(CoreFailure::ServiceCoreStopped(detail));
-    Handle::notice_message("core_start::error", "");
+    Handle::notice(NoticeStatus::CoreStartError, "");
 }
 
 /// Samples ownership, treating every unusable reply as unreadable.
@@ -1784,22 +1807,28 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
 }
 
 async fn clear_proxy_after_owner_loss() {
-    let mut last_error = None;
-    for attempt in 1..=3 {
-        match proxy_control::clear().await {
-            Ok(()) => return,
-            Err(error) => {
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    let result = retry(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(2),
+            Duration::from_millis(100),
+        ),
+        |index| async move {
+            let attempt = index + 1;
+            proxy_control::clear().await.map_err(|error| {
                 logging!(
                     warn,
                     Type::Service,
                     "proxy clear attempt {attempt}/3 after owner loss failed: {error:#}"
                 );
-                last_error = Some(error);
-                tokio::time::sleep(Duration::from_millis(100)).await;
-            }
-        }
-    }
-    if let Some(error) = last_error {
+                RetryError::Retry(error)
+            })
+        },
+    )
+    .await;
+    if let Err(error) = result {
+        // The existing recovery path also waits after its final failed clear.
+        tokio::time::sleep(Duration::from_millis(100)).await;
         logging!(
             error,
             Type::Service,

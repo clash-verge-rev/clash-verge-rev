@@ -494,16 +494,16 @@
         "routeExcludeAddress": "排除自訂網段",
         "strictRoute": "嚴格路由",
         "autoDetectInterface": "自動偵測流量輸出介面",
-        "lockOutboundInterface": "鎖定流量輸出介面",
+        "manualOutboundInterface": "手動指定出口網卡",
         "interfaceName": "流量輸出介面",
-        "tunCompatibilityGuard": "TUN 相容性保護",
         "dnsHijack": "DNS 綁架",
         "mtu": "最大傳輸單位",
         "autoRedirect": "自動重導"
       },
       "tooltips": {
         "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器",
-        "tunCompatibilityGuard": "啟用 TUN 時，暫時關閉所選流量輸出介面的 IPv4 轉送。",
+        "manualOutboundInterface": "關閉自動偵測出口網卡，使用所選網卡作為流量出口。",
+        "manualOutboundInterfaceWindows": "關閉自動偵測出口網卡；啟用 TUN 時，暫時關閉所選網卡的 IPv4 轉送。需要系統管理員權限，可能影響網路共用。",
         "autoRedirect": "自動配置 nftables/iptables 的 TCP 重導"
       },
       "messages": {
@@ -511,11 +511,9 @@
         "invalidRouteExcludeAddress": "請輸入有效的 CIDR 網段",
         "interfaceNameRequired": "請選擇流量輸出介面",
         "interfaceNameHint": "將所選介面設為預設流量出口。切換網路後請重新選擇；節點個別指定的介面優先。",
-        "interfacesEmpty": "沒有可選介面，請重新整理清單後再試。",
-        "interfacesLoadFailed": "讀取介面清單失敗，請重新整理後再試。",
+        "interfacesEmpty": "沒有可選介面，請重新開啟清單後再試。",
+        "interfacesLoadFailed": "讀取介面清單失敗，請重新開啟清單後再試。",
         "interfaceNotDetected": "未偵測到",
-        "tunCompatibilityGuardHint": "僅保護所選介面。需要系統管理員權限並鎖定流量輸出介面，可能影響電腦的網路共用。",
-        "tunCompatibilityGuardRequiresInterface": "請先鎖定並選擇流量輸出介面，再啟用 TUN 相容性保護。",
         "partialSaveFailed": "部分設定已儲存，但其餘設定未能套用。請檢查錯誤後再試。",
         "compatibilityRestoreFailed": "無法還原先前受保護介面的 IPv4 轉送設定，請以系統管理員身分重新執行應用程式後再試。",
         "compatibilityCheckFailed": "TUN 相容性保護檢查失敗，請重新選擇流量輸出介面後再試。",
@@ -673,6 +671,7 @@
         "restartFailed": "重啟內核失敗",
         "startFailed": "啟動內核失敗",
         "serviceCoreStopped": "服務執行的內核意外停止",
+        "selectedInterfaceUnavailable": "所選出口網卡「{{name}}」目前無法使用（不存在、未連線或沒有 IPv4 預設路由），核心尚未啟動。請重新連線該網卡，或在 TUN 設定中重新選擇，然後儲存或重新啟動核心。已儲存的網卡選擇未改變。",
         "stopFailed": "停止內核失敗"
       },
       "clashService": {

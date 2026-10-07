@@ -2,6 +2,39 @@
 
 use anyhow::Result;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum InterfaceUnavailableReason {
+    Missing,
+    Disconnected,
+}
+
+#[derive(Debug)]
+pub(crate) struct InterfaceUnavailable {
+    pub(crate) name: String,
+    pub(crate) reason: InterfaceUnavailableReason,
+}
+
+impl std::fmt::Display for InterfaceUnavailable {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.reason {
+            InterfaceUnavailableReason::Missing => {
+                write!(formatter, "The selected TUN interface was not found: {}", self.name)
+            }
+            InterfaceUnavailableReason::Disconnected => write!(
+                formatter,
+                "The selected TUN interface is not a connected IPv4 uplink: {}",
+                self.name
+            ),
+        }
+    }
+}
+
+impl std::error::Error for InterfaceUnavailable {}
+
+pub(crate) fn interface_unavailable(error: &anyhow::Error) -> Option<&InterfaceUnavailable> {
+    error.downcast_ref()
+}
+
 static PENDING_RESTORE_NOTICE: parking_lot::Mutex<Option<String>> = parking_lot::Mutex::new(None);
 
 pub(crate) fn record_restore_notice(detail: String) {
@@ -19,6 +52,7 @@ fn clear_restore_notice() {
 
 #[cfg(any(windows, test))]
 mod state {
+    use super::{InterfaceUnavailable, InterfaceUnavailableReason};
     use anyhow::{Result, bail};
     use serde::{Deserialize, Serialize};
 
@@ -46,10 +80,11 @@ mod state {
                 );
             }
             if !self.up || !self.uplink {
-                bail!(
-                    "The selected TUN interface is not a connected IPv4 uplink: {}",
-                    self.target.name
-                );
+                return Err(InterfaceUnavailable {
+                    name: self.target.name.clone(),
+                    reason: InterfaceUnavailableReason::Disconnected,
+                }
+                .into());
             }
             Ok(())
         }
@@ -332,6 +367,7 @@ mod state {
 #[cfg(windows)]
 mod native {
     use super::state::{Adapter, Backend, Record, State, Target};
+    use super::{InterfaceUnavailable, InterfaceUnavailableReason};
     use anyhow::{Context as _, Result, bail};
     use clash_verge_logging::{Type, logging};
     use parking_lot::Mutex;
@@ -349,13 +385,14 @@ mod native {
     use windows_sys::{
         Win32::{
             Foundation::{
-                ERROR_ACCESS_DENIED, ERROR_ALREADY_EXISTS, ERROR_FILE_NOT_FOUND, ERROR_NOT_FOUND, GetLastError,
+                ERROR_ACCESS_DENIED, ERROR_ALREADY_EXISTS, ERROR_FILE_NOT_FOUND, ERROR_INVALID_PARAMETER,
+                ERROR_NOT_FOUND, GetLastError,
             },
             NetworkManagement::{
                 IpHelper::{
-                    ConvertInterfaceAliasToLuid, ConvertInterfaceGuidToLuid, FreeMibTable, GetIfEntry2,
+                    ConvertInterfaceAliasToLuid, ConvertInterfaceGuidToLuid, FreeMibTable, GetIfEntry2, GetIfTable2,
                     GetIpForwardTable2, GetIpInterfaceEntry, IF_TYPE_ETHERNET_CSMACD, IF_TYPE_IEEE80211, MIB_IF_ROW2,
-                    MIB_IPFORWARD_TABLE2, MIB_IPINTERFACE_ROW, SetIpInterfaceEntry,
+                    MIB_IF_TABLE2, MIB_IPFORWARD_TABLE2, MIB_IPINTERFACE_ROW, SetIpInterfaceEntry,
                 },
                 Ndis::{IfOperStatusUp, NET_LUID_LH},
             },
@@ -500,6 +537,41 @@ mod native {
         })
     }
 
+    fn interface_alias_missing(name: &str) -> Result<bool> {
+        let mut table = std::ptr::null_mut();
+        // SAFETY: table receives a system-allocated interface table, freed below.
+        check_code(unsafe { GetIfTable2(&mut table) }, "query network interfaces")?;
+        struct Interfaces(*mut MIB_IF_TABLE2);
+        impl Drop for Interfaces {
+            fn drop(&mut self) {
+                // SAFETY: this is the allocation returned by GetIfTable2.
+                unsafe { FreeMibTable(self.0.cast()) };
+            }
+        }
+        let table = Interfaces(table);
+        if table.0.is_null() {
+            bail!("Windows returned no network interface table");
+        }
+        // SAFETY: the allocation contains NumEntries aligned MIB_IF_ROW2 entries.
+        let rows = unsafe { std::slice::from_raw_parts((*table.0).Table.as_ptr(), (*table.0).NumEntries as usize) };
+        let folded_name = name.to_lowercase();
+        for row in rows {
+            let end = row
+                .Alias
+                .iter()
+                .position(|value| *value == 0)
+                .unwrap_or(row.Alias.len());
+            let alias = String::from_utf16(&row.Alias[..end]).context("network interface alias is invalid UTF-16")?;
+            if alias == name {
+                return Ok(false);
+            }
+            if alias.to_lowercase() == folded_name {
+                bail!("The locked interface name must exactly match its Windows alias");
+            }
+        }
+        Ok(true)
+    }
+
     fn target_luid(target: &Target) -> Result<Option<NET_LUID_LH>> {
         let mut luid = NET_LUID_LH::default();
         // SAFETY: target contains a complete GUID and luid is writable.
@@ -543,10 +615,17 @@ mod native {
         fn adapter(&mut self, name: &str) -> Result<Adapter> {
             let mut luid = NET_LUID_LH::default();
             // SAFETY: name is validated against embedded NUL before this call and luid is writable.
-            check_code(
-                unsafe { ConvertInterfaceAliasToLuid(wide(std::ffi::OsStr::new(name)).as_ptr(), &mut luid) },
-                "resolve locked interface",
-            )?;
+            let code = unsafe { ConvertInterfaceAliasToLuid(wide(std::ffi::OsStr::new(name)).as_ptr(), &mut luid) };
+            if matches!(code, ERROR_FILE_NOT_FOUND | ERROR_NOT_FOUND | ERROR_INVALID_PARAMETER)
+                && interface_alias_missing(name)?
+            {
+                return Err(InterfaceUnavailable {
+                    name: name.to_owned(),
+                    reason: InterfaceUnavailableReason::Missing,
+                }
+                .into());
+            }
+            check_code(code, "resolve locked interface")?;
             let adapter = inspect_luid(luid)?;
             if adapter.target.name != name {
                 bail!("The locked interface name must exactly match its Windows alias");
@@ -988,7 +1067,7 @@ impl Drop for GuardTransaction {
             );
             let detail = format!("{error:#}");
             record_restore_notice(detail.clone());
-            super::handle::Handle::notice_message("tun_compatibility_guard::restore_failed", detail);
+            super::handle::Handle::notice(super::notify::NoticeStatus::TunCompatibilityGuardRestoreFailed, detail);
         }
     }
 }
@@ -1062,6 +1141,7 @@ pub fn check() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::state::{Adapter, Backend, Record, State, Target};
+    use super::{InterfaceUnavailableReason, interface_unavailable};
     use anyhow::{Result, bail};
     use std::collections::HashMap;
 
@@ -1153,6 +1233,30 @@ mod tests {
     }
 
     #[test]
+    fn disconnected_uplink_remains_typed_through_error_context() -> Result<()> {
+        for (up, uplink) in [(false, true), (true, false), (false, false)] {
+            let adapter = Adapter {
+                target: target("WLAN"),
+                forwarding: false,
+                hardware: true,
+                ethernet_or_wifi: true,
+                up,
+                uplink,
+            };
+            let error = adapter
+                .validate()
+                .err()
+                .ok_or_else(|| anyhow::anyhow!("disconnected uplink was accepted"))?
+                .context("core startup");
+            let unavailable = interface_unavailable(&error)
+                .ok_or_else(|| anyhow::anyhow!("selected uplink error lost its interface type"))?;
+            assert_eq!(unavailable.name, "WLAN");
+            assert_eq!(unavailable.reason, InterfaceUnavailableReason::Disconnected);
+        }
+        Ok(())
+    }
+
+    #[test]
     fn preflight_checks_target_and_permissions_without_mutating_or_claiming() -> Result<()> {
         let (state, mut backend) = setup();
         state.preflight(&mut backend, Some("A"))?;
@@ -1237,7 +1341,11 @@ mod tests {
     fn already_disabled_is_still_audited_and_virtual_interfaces_are_rejected() -> Result<()> {
         let (mut state, mut backend) = setup();
         backend.physical = false;
-        assert!(state.prepare(&mut backend, Some("A")).is_err());
+        let error = state
+            .prepare(&mut backend, Some("A"))
+            .err()
+            .ok_or_else(|| anyhow::anyhow!("virtual interface was accepted"))?;
+        assert!(interface_unavailable(&error).is_none());
         assert_eq!(backend.writes, 0);
         backend.physical = true;
         backend.forwarding.insert(target("A").guid, false);

@@ -3,6 +3,8 @@ mod clash;
 mod config;
 mod core_upgrade;
 mod dns;
+mod effects;
+mod executor;
 mod icon;
 mod listener;
 mod profile;

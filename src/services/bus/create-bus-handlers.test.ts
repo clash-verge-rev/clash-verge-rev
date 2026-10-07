@@ -8,29 +8,21 @@ import {
   takeServiceRepairNotice,
   takeTunGuardRestoreNotice,
 } from '@/services/cmds'
-import { subscribeVergeEvents } from '@/services/events'
-import { showNotice } from '@/services/notice-service'
+import { hideNotice, showNotice } from '@/services/notice-service'
 import { revalidateQueries } from '@/services/query-client'
 import { requestService } from '@/services/service-request'
-
-import { useLayoutEvents } from './use-layout-events'
-
-let handleNoticeMessage: typeof import('../utils/notification-handlers').handleNoticeMessage
+import type { AppStoreAction } from '@/store/app-state'
 
 const nativeWindow = vi.hoisted(() => ({
   isVisible: vi.fn().mockResolvedValue(true),
   isMinimized: vi.fn().mockResolvedValue(false),
-  onFocusChanged: vi.fn().mockResolvedValue(() => {}),
 }))
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => nativeWindow,
 }))
-vi.mock('react', () => ({ useEffect: (effect: () => void) => effect() }))
-vi.mock('@/hooks/use-profiles', () => ({ revalidateProfiles: vi.fn() }))
-vi.mock('@/hooks/use-system-state', () => ({ runStateQueryKey: ['state'] }))
-vi.mock('@/services/events', () => ({ subscribeVergeEvents: vi.fn() }))
 vi.mock('@/services/cmds', () => ({
   getCoreStartupError: vi.fn().mockResolvedValue(null),
+  getPendingFailures: vi.fn().mockResolvedValue([]),
   takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
   takeTunGuardRestoreNotice: vi.fn().mockResolvedValue(null),
@@ -40,16 +32,37 @@ vi.mock('@/services/cmds', () => ({
 }))
 vi.mock('@/services/service-request', () => ({ requestService: vi.fn() }))
 vi.mock('@/services/notice-service', () => ({
+  hideNotice: vi.fn(),
   showNotice: { info: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }))
 vi.mock('@/services/query-client', () => ({
   revalidateQueries: vi.fn(),
-  setCacheData: vi.fn(),
 }))
 
-beforeEach(async () => {
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+// Everything (bus + notice handlers) comes from one fresh module registry per
+// test: startup-error dedup state is module-scoped in notice-handlers.
+const mountBus = async () => {
   vi.resetModules()
-  ;({ handleNoticeMessage } = await import('../utils/notification-handlers'))
+  const [{ createEventBus }, { handleNoticeMessage: notice }] =
+    await Promise.all([
+      import('./create-bus-handlers'),
+      import('@/services/notice-handlers'),
+    ])
+  const dispatch = vi.fn<(action: AppStoreAction) => void>()
+  return createEventBus({
+    dispatch,
+    handleNotice: ([status, message]: [string, string]) => {
+      notice(status, message, (key) => key, vi.fn())
+    },
+    revalidateKeys: (keys) => void revalidateQueries(keys.map((key) => [key])),
+    readPendingFailures: () => {},
+    readRunState: () => {},
+  })
+}
+
+beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(getCoreStartupError).mockResolvedValue(null)
   vi.mocked(takeTunGuardRestoreNotice).mockReset().mockResolvedValue(null)
@@ -61,13 +74,12 @@ it('explains pending TUN forwarding restoration and preserves its error detail',
   vi.mocked(takeTunGuardRestoreNotice).mockResolvedValueOnce(
     'administrator access required',
   )
-  handleNoticeMessage(
+  const bus = await mountBus()
+  bus.handlers['verge://notice-message']([
     'tun_compatibility_guard::restore_failed',
     'administrator access required',
-    (key) => key,
-    vi.fn(),
-  )
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  ])
+  await flush()
   expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
     'settings.modals.tun.messages.compatibilityRestoreFailed',
     'administrator access required',
@@ -79,26 +91,22 @@ it.each(['startup first', 'live event first'])(
   async (order) => {
     const detail = 'previous uplink is unavailable'
     vi.mocked(takeTunGuardRestoreNotice).mockResolvedValueOnce(detail)
-    useLayoutEvents(([status, message]) => {
-      handleNoticeMessage(status, message, (key) => key, vi.fn())
-    })
+    const bus = await mountBus()
     expect(takeTunGuardRestoreNotice).not.toHaveBeenCalled()
-    const [handlers, onSubscribed] =
-      vi.mocked(subscribeVergeEvents).mock.calls[0]
     const liveEvent = () => {
-      handlers['verge://notice-message']?.([
+      bus.handlers['verge://notice-message']([
         'tun_compatibility_guard::restore_failed',
         detail,
       ])
     }
     if (order === 'startup first') {
-      onSubscribed?.()
+      bus.onSubscribed()
       liveEvent()
     } else {
       liveEvent()
-      onSubscribed?.()
+      bus.onSubscribed()
     }
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    await flush()
     expect(takeTunGuardRestoreNotice).toHaveBeenCalledTimes(2)
     expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
       'settings.modals.tun.messages.compatibilityRestoreFailed',
@@ -108,24 +116,22 @@ it.each(['startup first', 'live event first'])(
 )
 
 it('does not replay a resolved TUN restoration failure from a stale live event', async () => {
-  handleNoticeMessage(
+  const bus = await mountBus()
+  bus.handlers['verge://notice-message']([
     'tun_compatibility_guard::restore_failed',
     'already restored',
-    (key) => key,
-    vi.fn(),
-  )
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  ])
+  await flush()
   expect(takeTunGuardRestoreNotice).toHaveBeenCalledOnce()
   expect(showNotice.error).not.toHaveBeenCalled()
 })
 
-it('warns about a changed TUN uplink without offering an automatic repair', () => {
-  handleNoticeMessage(
+it('warns about a changed TUN uplink without offering an automatic repair', async () => {
+  const bus = await mountBus()
+  bus.handlers['verge://notice-message']([
     'tun_compatibility_guard::check_failed',
     'selected adapter is unavailable',
-    (key) => key,
-    vi.fn(),
-  )
+  ])
   expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
     'settings.modals.tun.messages.compatibilityCheckFailed',
     'selected adapter is unavailable',
@@ -134,19 +140,22 @@ it('warns about a changed TUN uplink without offering an automatic repair', () =
 })
 
 it('does not replay a recovered startup error after WebView recreation', async () => {
+  const first = await import('@/services/notice-handlers')
   vi.mocked(getCoreStartupError).mockResolvedValue({
     kind: 'startFailed',
     detail: 'startup failed',
   })
-  handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  first.handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
+  await flush()
   expect(showNotice.error).toHaveBeenCalledOnce()
 
+  // Mocked modules share one instance across resetModules; the notice-handlers
+  // module state is what a WebView recreation actually resets.
   vi.mocked(getCoreStartupError).mockResolvedValue(null)
   vi.resetModules()
-  const recreated = await import('../utils/notification-handlers')
+  const recreated = await import('@/services/notice-handlers')
   recreated.handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  await flush()
   expect(showNotice.error).toHaveBeenCalledOnce()
 })
 
@@ -163,20 +172,15 @@ it.each([
       kind: 'startFailed',
       detail,
     })
-    useLayoutEvents(([status, message]) => {
-      handleNoticeMessage(status, message, (key) => key, vi.fn())
-    })
-    const [handlers, onSubscribed] =
-      vi.mocked(subscribeVergeEvents).mock.calls[0]
-    onSubscribed?.()
-    handlers['verge://notice-message']?.(['core_start::error', ''])
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    const bus = await mountBus()
+    bus.onSubscribed()
+    bus.handlers['verge://notice-message'](['core_start::error', ''])
+    await flush()
     expect(showNotice.error).not.toHaveBeenCalled()
     nativeWindow.isVisible.mockResolvedValue(true)
     nativeWindow.isMinimized.mockResolvedValue(false)
-    const onFocus = nativeWindow.onFocusChanged.mock.calls[0][0]
-    onFocus({ payload: true })
-    await new Promise((resolve) => setTimeout(resolve, 0))
+    bus.onWindowFocus()
+    await flush()
     expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
       'settings.feedback.errors.clash.startFailed',
       detail,
@@ -190,13 +194,58 @@ it('delivers an early core startup failure once after listeners mount', async ()
     kind: 'startFailed',
     detail,
   })
-  useLayoutEvents(([status, message]) => {
-    handleNoticeMessage(status, message, (key) => key, vi.fn())
+  const bus = await mountBus()
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
+  expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
+    'settings.feedback.errors.clash.startFailed',
+    detail,
+  )
+})
+
+it('keeps a disconnected selected-interface startup reminder until the core starts', async () => {
+  vi.mocked(getCoreStartupError).mockResolvedValue({
+    kind: 'selectedInterfaceUnavailable',
+    detail: 'WLAN',
   })
-  const [handlers, onSubscribed] = vi.mocked(subscribeVergeEvents).mock.calls[0]
-  onSubscribed?.()
-  handlers['verge://notice-message']?.(['core_start::error', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  vi.mocked(showNotice.warning).mockReturnValueOnce(42)
+  const bus = await mountBus()
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
+
+  expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
+    'settings.feedback.errors.clash.selectedInterfaceUnavailable',
+    { name: 'WLAN' },
+    0,
+  )
+  expect(showNotice.error).not.toHaveBeenCalled()
+  expect(requestService).not.toHaveBeenCalled()
+
+  bus.handlers['verge://run-state-changed']({ mode: 'Service' } as RunState)
+  expect(hideNotice).toHaveBeenCalledExactlyOnceWith(42)
+})
+
+it('replaces a selected-interface reminder with the latest core startup failure', async () => {
+  vi.mocked(getCoreStartupError).mockResolvedValue({
+    kind: 'selectedInterfaceUnavailable',
+    detail: 'WLAN',
+  })
+  vi.mocked(showNotice.warning).mockReturnValueOnce(42)
+  const bus = await mountBus()
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
+
+  const detail = 'administrator access required to change IPv4 forwarding'
+  vi.mocked(getCoreStartupError).mockResolvedValue({
+    kind: 'startFailed',
+    detail,
+  })
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
+
+  expect(hideNotice).toHaveBeenCalledExactlyOnceWith(42)
   expect(showNotice.error).toHaveBeenCalledExactlyOnceWith(
     'settings.feedback.errors.clash.startFailed',
     detail,
@@ -204,20 +253,16 @@ it('delivers an early core startup failure once after listeners mount', async ()
 })
 
 it('shows the same core failure again after the core has started in between', async () => {
-  const { useLayoutEvents } = await import('./use-layout-events')
   const failure = { kind: 'serviceCoreStopped', detail: 'stopped' } as const
   vi.mocked(getCoreStartupError).mockResolvedValue(failure)
-  useLayoutEvents(([status, message]) => {
-    handleNoticeMessage(status, message, (key) => key, vi.fn())
-  })
-  const [handlers] = vi.mocked(subscribeVergeEvents).mock.calls[0]
-  handlers['verge://notice-message']?.(['core_start::error', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  const bus = await mountBus()
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
 
   // The core started and stopped again before the window handled either event.
-  handlers['verge://run-state-changed']?.({ mode: 'Service' } as RunState)
-  handlers['verge://notice-message']?.(['core_start::error', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  bus.handlers['verge://run-state-changed']({ mode: 'Service' } as RunState)
+  bus.handlers['verge://notice-message'](['core_start::error', ''])
+  await flush()
   expect(showNotice.error).toHaveBeenCalledTimes(2)
 })
 
@@ -226,24 +271,18 @@ it('drains a DNS notice after listeners mount without duplicating its live event
     .mockResolvedValueOnce(true)
     .mockResolvedValue(false)
 
-  useLayoutEvents(([status, message]) => {
-    handleNoticeMessage(status, message, (key) => key, vi.fn())
-  })
+  const bus = await mountBus()
 
   expect(takeDnsOverrideNotice).not.toHaveBeenCalled()
-  const [handlers, onSubscribed] = vi.mocked(subscribeVergeEvents).mock.calls[0]
-  onSubscribed?.()
+  bus.onSubscribed()
   expect(takeDnsOverrideNotice).toHaveBeenCalledOnce()
-  handlers['verge://notice-message']?.(['dns_override::auto_disabled', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  bus.handlers['verge://notice-message'](['dns_override::auto_disabled', ''])
+  await flush()
 
   expect(showNotice.info).toHaveBeenCalledExactlyOnceWith(
     'settings.modals.dns.protection.autoDisabled',
   )
-  expect(revalidateQueries).toHaveBeenCalledWith([
-    ['getRuntimeState'],
-    ['getVergeConfig'],
-  ])
+  expect(revalidateQueries).toHaveBeenCalledWith([['getVergeConfig']])
 })
 
 it('offers service reinstallation for a startup path refusal even before listeners mount', async () => {
@@ -251,14 +290,11 @@ it('offers service reinstallation for a startup path refusal even before listene
     .mockResolvedValueOnce(true)
     .mockResolvedValue(false)
 
-  useLayoutEvents(([status, message]) => {
-    handleNoticeMessage(status, message, (key) => key, vi.fn())
-  })
+  const bus = await mountBus()
 
-  const [handlers, onSubscribed] = vi.mocked(subscribeVergeEvents).mock.calls[0]
-  onSubscribed?.()
-  handlers['verge://notice-message']?.(['service_core::repair_required', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message'](['service_core::repair_required', ''])
+  await flush()
 
   expect(requestService).toHaveBeenCalledExactlyOnceWith({
     reason: 'serviceLocationRefused',
@@ -272,14 +308,10 @@ it('explains a startup core rejection instead of the generic fallback notice', a
     .mockResolvedValueOnce({ kind: 'coreRejected', reason })
     .mockResolvedValue(null)
 
-  useLayoutEvents(([status, message]) => {
-    handleNoticeMessage(status, message, (key) => key, vi.fn())
-  })
-
-  const [handlers, onSubscribed] = vi.mocked(subscribeVergeEvents).mock.calls[0]
-  onSubscribed?.()
-  handlers['verge://notice-message']?.(['service_core::sidecar_fallback', ''])
-  await new Promise((resolve) => setTimeout(resolve, 0))
+  const bus = await mountBus()
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message'](['service_core::sidecar_fallback', ''])
+  await flush()
 
   expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
     'settings.feedback.notifications.clashService.permissionFallback',

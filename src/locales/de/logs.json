@@ -3,7 +3,7 @@
     "title": "Protokolle"
   },
   "actions": {
-    "showDescending": "Newest first",
-    "showAscending": "Oldest first"
+    "showDescending": "Neueste zuerst",
+    "showAscending": "Älteste zuerst"
   }
 }

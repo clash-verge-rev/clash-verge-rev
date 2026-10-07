@@ -183,6 +183,22 @@ export async function setDnsOverride(
   >('set_dns_override', { profileUid, enabled, confirmation })
 }
 
+export async function getDnsConfigContent() {
+  return invoke<string | null>('get_dns_config_content')
+}
+
+export async function saveDnsConfig(dnsConfig: Record<string, unknown>) {
+  return invoke<void>('save_dns_config', { dnsConfig })
+}
+
+export async function validateDnsConfig() {
+  return invoke<ValidationOutcome>('validate_dns_config')
+}
+
+export async function applyDnsConfig(apply: boolean) {
+  return invoke<void>('apply_dns_config', { apply })
+}
+
 export async function takeDnsOverrideNotice() {
   return invoke<boolean>('take_dns_override_notice')
 }
@@ -201,7 +217,7 @@ export async function takeServiceFallbackNotice() {
 }
 
 export interface CoreFailure {
-  kind: 'startFailed' | 'serviceCoreStopped'
+  kind: 'startFailed' | 'serviceCoreStopped' | 'selectedInterfaceUnavailable'
   detail: string
 }
 
@@ -571,4 +587,23 @@ export const probeListener = async (request: ListenerProbe) => {
 
 export const saveProxyPorts = async (settings: ProxyPortSettings) => {
   return invoke<SaveProxyPortsOutcome>('save_proxy_ports', { settings })
+}
+
+export interface UnlockItem {
+  name: string
+  status: string
+  region?: string | null
+  check_time?: string | null
+}
+
+export async function getUnlockItems() {
+  return invoke<UnlockItem[]>('get_unlock_items')
+}
+
+export async function checkMediaUnlock(onComplete: Channel<UnlockItem>) {
+  return invoke<UnlockItem[]>('check_media_unlock', { onComplete })
+}
+
+export async function checkMediaUnlockItem(name: string) {
+  return invoke<UnlockItem>('check_media_unlock_item', { name })
 }

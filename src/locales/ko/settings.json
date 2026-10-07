@@ -494,28 +494,26 @@
         "routeExcludeAddress": "라우트 제외 주소",
         "strictRoute": "엄격 라우팅",
         "autoDetectInterface": "인터페이스 자동 감지",
-        "lockOutboundInterface": "Lock Outbound Interface",
+        "manualOutboundInterface": "Manual Outbound Interface",
         "interfaceName": "Outbound Interface",
-        "tunCompatibilityGuard": "TUN Compatibility Guard",
         "dnsHijack": "DNS 하이재킹",
         "mtu": "MTU",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "여러 DNS 서버는 쉼표(,)로 구분하세요",
-        "tunCompatibilityGuard": "While TUN is enabled, temporarily disables IPv4 forwarding on the selected outbound interface.",
+        "manualOutboundInterface": "Disables automatic outbound interface detection and uses the selected outbound interface.",
+        "manualOutboundInterfaceWindows": "Disables automatic outbound interface detection and, while TUN is enabled, temporarily disables IPv4 forwarding on the selected interface. Requires administrator privileges; may affect network sharing.",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "설정이 적용되었습니다",
         "invalidRouteExcludeAddress": "유효한 CIDR 대역을 입력하세요",
         "interfaceNameRequired": "Please select an outbound interface",
-        "interfaceNameHint": "Locks default outbound connections to the selected interface. Select again when switching networks; node-specific interfaces take precedence.",
-        "interfacesEmpty": "No interfaces found. Refresh to try again.",
-        "interfacesLoadFailed": "Could not load interfaces. Refresh to try again.",
+        "interfaceNameHint": "Uses the selected interface for default outbound connections. Select again when switching networks; node-specific interfaces take precedence.",
+        "interfacesEmpty": "No interfaces found. Reopen the list to retry.",
+        "interfacesLoadFailed": "Could not load interfaces. Reopen the list to retry.",
         "interfaceNotDetected": "Not detected",
-        "tunCompatibilityGuardHint": "Applies only to the selected interface. Requires administrator privileges and a locked outbound interface; may affect this computer's network sharing.",
-        "tunCompatibilityGuardRequiresInterface": "Lock and select an outbound interface before enabling TUN Compatibility Guard.",
         "partialSaveFailed": "Some settings were saved, but the remaining settings could not be applied. Review the error and retry.",
         "compatibilityRestoreFailed": "Could not restore IPv4 forwarding on a previously protected interface. Relaunch this app as administrator and retry.",
         "compatibilityCheckFailed": "TUN Compatibility Guard could not verify the selected interface. Reselect the outbound interface and retry.",
@@ -673,6 +671,7 @@
         "restartFailed": "코어를 재시작하지 못했습니다",
         "startFailed": "코어를 시작하지 못했습니다",
         "serviceCoreStopped": "서비스에서 실행 중인 코어가 예기치 않게 중지되었습니다",
+        "selectedInterfaceUnavailable": "선택한 아웃바운드 인터페이스 '{{name}}'를 사용할 수 없어(존재하지 않거나 연결이 끊어졌거나 IPv4 기본 경로가 없음) 코어가 시작되지 않았습니다. 다시 연결하거나 TUN 설정에서 다른 인터페이스를 선택한 후 저장하거나 코어를 다시 시작하세요. 저장된 인터페이스 선택은 변경되지 않았습니다.",
         "stopFailed": "코어를 중지하지 못했습니다"
       },
       "clashService": {

@@ -20,6 +20,7 @@ import {
   installUpdate,
   restartApp,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 import { openExternalUrl } from '@/utils/open-external-url'
@@ -274,8 +275,18 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
 
     try {
-      if (await installUpdate(updateInfo.version, onDownloadEvent)) {
-        await restartApp()
+      const result = await mutate(
+        () => installUpdate(updateInfo.version, onDownloadEvent),
+        {
+          id: 'install-app-update',
+          errorNotice: false,
+        },
+      )
+      if (result.ok && result.value) {
+        await mutate(() => restartApp(), {
+          id: 'restart-app',
+          errorNotice: false,
+        })
       }
     } catch (err: any) {
       showNotice.error(err)
@@ -341,7 +352,10 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onClose={() => setOpen(false)}
       onCancel={() => {
         if (updateState) {
-          void cancelUpdateDownload().catch(showNotice.error)
+          void mutate(() => cancelUpdateDownload(), {
+            id: 'cancel-update-download',
+            errorNotice: false,
+          }).catch(showNotice.error)
         }
         setOpen(false)
       }}

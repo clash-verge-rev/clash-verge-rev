@@ -816,6 +816,7 @@ export interface TranslationResources {
             configUpdateFailed: string
             modeUpdateFailed: string
             restartFailed: string
+            selectedInterfaceUnavailable: string
             serviceCoreStopped: string
             startFailed: string
             stopFailed: string
@@ -1189,12 +1190,11 @@ export interface TranslationResources {
             device: string
             dnsHijack: string
             interfaceName: string
-            lockOutboundInterface: string
+            manualOutboundInterface: string
             mtu: string
             routeExcludeAddress: string
             stack: string
             strictRoute: string
-            tunCompatibilityGuard: string
           }
           messages: {
             applied: string
@@ -1208,14 +1208,13 @@ export interface TranslationResources {
             invalidRouteExcludeAddress: string
             partialSaveFailed: string
             routeExcludeAddressHint: string
-            tunCompatibilityGuardHint: string
-            tunCompatibilityGuardRequiresInterface: string
           }
           title: string
           tooltips: {
             autoRedirect: string
             dnsHijack: string
-            tunCompatibilityGuard: string
+            manualOutboundInterface: string
+            manualOutboundInterfaceWindows: string
           }
         }
         update: {
@@ -1483,13 +1482,10 @@ export interface TranslationResources {
         validation: {
           config: {
             bootFailed: string
-            coreChangeFailed: string
             failed: string
             processTerminated: string
           }
           merge: {
-            generalError: string
-            keyError: string
             mappingError: string
             syntaxError: string
           }
@@ -1500,8 +1496,6 @@ export interface TranslationResources {
             syntaxError: string
           }
           yaml: {
-            generalError: string
-            keyError: string
             mappingError: string
             readError: string
             syntaxError: string

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, Switch } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 // Development origins must never be persisted into production configuration.
@@ -135,7 +136,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
             ),
           },
         })
-        await restartCore()
+        await mutate(() => restartCore(), {
+          id: 'restart-core',
+          errorNotice: false,
+        })
         await mutateClash()
       },
       {

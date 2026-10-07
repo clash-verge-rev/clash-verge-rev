@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
@@ -13,8 +14,8 @@ use crate::{
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
+    core::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     feat,
-    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     process::AsyncHandler,
     utils::{init, server, window_manager::WindowManager},
 };
@@ -223,8 +224,8 @@ async fn init_core_manager() -> bool {
         Ok(initialized) => initialized,
         Err(error) => {
             logging!(error, Type::Setup, "core manager initialization failed: {error:#}");
-            CoreManager::global().record_startup_error(CoreFailure::StartFailed(format!("{error:#}")));
-            Handle::notice_message("core_start::error", "");
+            CoreManager::global().record_startup_error(CoreFailure::from_start_error(&error));
+            Handle::notice(NoticeStatus::CoreStartError, "");
             false
         }
     }

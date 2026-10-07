@@ -17,18 +17,18 @@
       "type": "Typ"
     },
     "order": {
-      "default": "Default",
+      "default": "Standard",
       "uploadSpeed": "Upload-Geschwindigkeit",
       "downloadSpeed": "Download-Geschwindigkeit"
     },
     "actions": {
-      "active": "Active",
-      "closed": "Closed",
+      "active": "Aktiv",
+      "closed": "Geschlossen",
       "closeConnection": "Verbindung schließen"
     },
     "columnManager": {
       "title": "Spalten",
-      "dragHandle": "Drag handle"
+      "dragHandle": "Ziehpunkt"
     }
   }
 }

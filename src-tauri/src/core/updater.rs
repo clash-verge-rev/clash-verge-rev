@@ -15,6 +15,7 @@ use tokio_util::sync::CancellationToken;
 pub struct SilentUpdater {
     update_ready: AtomicBool,
     manual_cancel: Mutex<Option<CancellationToken>>,
+    background_cancel: Mutex<Option<CancellationToken>>,
 }
 
 singleton!(SilentUpdater, SILENT_UPDATER);
@@ -24,6 +25,7 @@ impl SilentUpdater {
         Self {
             update_ready: AtomicBool::new(false),
             manual_cancel: Mutex::new(None),
+            background_cancel: Mutex::new(None),
         }
     }
 
@@ -328,6 +330,11 @@ impl SilentUpdater {
 
     /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
+        if !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true) {
+            Self::delete_cache();
+            return false;
+        }
+
         let current_version = env!("CARGO_PKG_VERSION");
 
         let meta = match Self::read_cache_meta() {
@@ -466,6 +473,16 @@ impl SilentUpdater {
             cancel.cancel();
         }
     }
+
+    /// Drops the downloaded update and aborts a background download in flight.
+    pub fn discard_pending(&self) {
+        let cancel = self.background_cancel.lock().take();
+        if let Some(cancel) = cancel {
+            cancel.cancel();
+        }
+        self.update_ready.store(false, Ordering::Release);
+        Self::delete_cache();
+    }
 }
 
 impl SilentUpdater {
@@ -553,12 +570,14 @@ impl SilentUpdater {
 
         // The new webview may not accept evaluation immediately.
         std::thread::spawn(move || {
-            for i in 0..10 {
-                std::thread::sleep(std::time::Duration::from_millis(100 * (i + 1)));
-                if window.eval(&js).is_ok() {
-                    return;
-                }
-            }
+            use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+            let _ = retry_sync(
+                RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(9), std::time::Duration::ZERO),
+                |index| {
+                    std::thread::sleep(std::time::Duration::from_millis(100 * (index as u64 + 1)));
+                    window.eval(&js).map_err(RetryError::Retry)
+                },
+            );
         });
 
         logging!(info, Type::System, "Update splash window shown");
@@ -575,6 +594,9 @@ impl SilentUpdater {
 
 impl SilentUpdater {
     async fn check_and_download(&self, app_handle: &tauri::AppHandle) -> Result<()> {
+        // Registered before reading the switch, so `discard_pending` either cancels it or ran first.
+        let cancel = CancellationToken::new();
+        *self.background_cancel.lock() = Some(cancel.clone());
         let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
         if !auto_check {
             logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");
@@ -612,8 +634,8 @@ impl SilentUpdater {
                 Type::System,
                 "Silent updater: breaking change detected in v{version}, notifying frontend"
             );
-            super::handle::Handle::notice_message(
-                "info",
+            super::handle::Handle::notice(
+                super::notify::NoticeStatus::Info,
                 format!("New version v{version} contains breaking changes. Please update manually."),
             );
             return Ok(());
@@ -623,9 +645,29 @@ impl SilentUpdater {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {
             logging!(info, Type::System, "Silent updater: downloading v{version}...");
-            let bytes = download(&update, |_| {}).await?;
+            let downloaded = tokio::select! {
+                bytes = download(&update, |_| {}) => Some(bytes),
+                () = cancel.cancelled() => None,
+            };
+            let Some(bytes) = downloaded else {
+                logging!(info, Type::System, "Silent updater: download cancelled");
+                return Ok(());
+            };
+            let bytes = bytes?;
             logging!(info, Type::System, "Silent updater: download complete");
             Self::write_cache(&bytes, &version)?;
+        }
+
+        // Serialized with `discard_pending` in the verge patch, which holds the same lock.
+        let _config_write = Config::lock_config_write().await;
+        if cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true) {
+            logging!(
+                info,
+                Type::System,
+                "Silent updater: auto check was disabled, discarding v{version}"
+            );
+            Self::delete_cache();
+            return Ok(());
         }
 
         self.update_ready.store(true, Ordering::Release);
@@ -639,6 +681,7 @@ impl SilentUpdater {
     }
 
     pub async fn start_background_check(&self, app_handle: tauri::AppHandle) {
+        // Permanent watcher: daily update cycles for the lifetime of the app.
         logging!(info, Type::System, "Silent updater: background task started");
 
         tokio::time::sleep(std::time::Duration::from_secs(10)).await;

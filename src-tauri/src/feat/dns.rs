@@ -1,3 +1,4 @@
+use crate::core::notify::{Refresh, announce};
 use anyhow::{Result, ensure};
 use clash_verge_draft::DraftTransaction;
 use serde::Serialize;
@@ -10,7 +11,7 @@ use crate::{
         profiles::PROFILE_WRITE_LOCK,
     },
     constants::files::DNS_CONFIG,
-    core::{CoreManager, handle::Handle},
+    core::CoreManager,
     utils::dirs,
 };
 
@@ -74,8 +75,10 @@ pub async fn set_dns_override(
     }
 
     transaction.commit();
-    Handle::refresh_verge();
-    Handle::refresh_clash();
-    verge.data_arc().save_file().await?;
+    // Core and memory state remain applied even when persistence fails.
+    let result = verge.data_arc().save_file().await;
+    announce(Refresh::Verge);
+    announce(Refresh::Clash);
+    result?;
     Ok(outcome)
 }

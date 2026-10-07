@@ -494,28 +494,26 @@
         "routeExcludeAddress": "ルート除外アドレス",
         "strictRoute": "厳格なルート",
         "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
-        "lockOutboundInterface": "Lock Outbound Interface",
+        "manualOutboundInterface": "Manual Outbound Interface",
         "interfaceName": "Outbound Interface",
-        "tunCompatibilityGuard": "TUN Compatibility Guard",
         "dnsHijack": "DNSハイジャック",
         "mtu": "最大転送単位",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
-        "tunCompatibilityGuard": "While TUN is enabled, temporarily disables IPv4 forwarding on the selected outbound interface.",
+        "manualOutboundInterface": "Disables automatic outbound interface detection and uses the selected outbound interface.",
+        "manualOutboundInterfaceWindows": "Disables automatic outbound interface detection and, while TUN is enabled, temporarily disables IPv4 forwarding on the selected interface. Requires administrator privileges; may affect network sharing.",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "設定が適用されました",
         "invalidRouteExcludeAddress": "有効な CIDR ブロックを入力してください",
         "interfaceNameRequired": "Please select an outbound interface",
-        "interfaceNameHint": "Locks default outbound connections to the selected interface. Select again when switching networks; node-specific interfaces take precedence.",
-        "interfacesEmpty": "No interfaces found. Refresh to try again.",
-        "interfacesLoadFailed": "Could not load interfaces. Refresh to try again.",
+        "interfaceNameHint": "Uses the selected interface for default outbound connections. Select again when switching networks; node-specific interfaces take precedence.",
+        "interfacesEmpty": "No interfaces found. Reopen the list to retry.",
+        "interfacesLoadFailed": "Could not load interfaces. Reopen the list to retry.",
         "interfaceNotDetected": "Not detected",
-        "tunCompatibilityGuardHint": "Applies only to the selected interface. Requires administrator privileges and a locked outbound interface; may affect this computer's network sharing.",
-        "tunCompatibilityGuardRequiresInterface": "Lock and select an outbound interface before enabling TUN Compatibility Guard.",
         "partialSaveFailed": "Some settings were saved, but the remaining settings could not be applied. Review the error and retry.",
         "compatibilityRestoreFailed": "Could not restore IPv4 forwarding on a previously protected interface. Relaunch this app as administrator and retry.",
         "compatibilityCheckFailed": "TUN Compatibility Guard could not verify the selected interface. Reselect the outbound interface and retry.",
@@ -673,6 +671,7 @@
         "restartFailed": "コアの再起動に失敗しました",
         "startFailed": "コアの起動に失敗しました",
         "serviceCoreStopped": "サービスで実行中のコアが予期せず停止しました",
+        "selectedInterfaceUnavailable": "選択した送信インターフェース「{{name}}」は利用できません（存在しない、未接続、または IPv4 のデフォルトルートがありません）。コアは起動されていません。再接続するか、TUN 設定で別のインターフェースを選択し、保存またはコアを再起動してください。保存済みの選択は変更されていません。",
         "stopFailed": "コアの停止に失敗しました"
       },
       "clashService": {
