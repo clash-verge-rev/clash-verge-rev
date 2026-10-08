@@ -3,7 +3,7 @@ import { useCallback, useEffect, useReducer } from 'react'
 import { useProfiles } from '@/hooks/use-profiles'
 import {
   profileTestUrls,
-  scheduleProfileTestUrl,
+  commitProfileTestUrl,
 } from '@/services/proxy-test-url'
 
 import { ProxySortType } from './use-filter-sort'
@@ -139,7 +139,7 @@ export function useHeadStateNew() {
     (groupName: string, obj: Partial<HeadState>) => {
       dispatch({ type: 'update', groupName, patch: obj })
       if (current && obj.testUrl !== undefined) {
-        scheduleProfileTestUrl(current, groupName, obj.testUrl)
+        void commitProfileTestUrl(current, groupName, obj.testUrl)
       }
     },
     [current],

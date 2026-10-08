@@ -20,15 +20,48 @@ fn is_latency_test_url(raw: &str) -> bool {
         && tauri::Url::parse(raw).is_ok_and(|url| url.has_host() && matches!(url.scheme(), "http" | "https"))
 }
 
+pub(super) fn test_url(
+    group: &crate::core::proxy_view::ProxyGroupView,
+    verge: &crate::config::IVerge,
+    profiles: &crate::config::IProfiles,
+) -> String {
+    let custom_url = profiles
+        .current
+        .as_ref()
+        .and_then(|uid| profiles.get_item(uid).ok())
+        .and_then(|profile| profile.latency_test_urls.as_ref())
+        .and_then(|urls| urls.get(group.name.as_str()))
+        .map(|url| url.as_str())
+        .filter(|url| !url.trim().is_empty());
+    let group_url = group.test_url.as_deref().filter(|url| !url.trim().is_empty());
+    let default_url = verge
+        .default_latency_test
+        .as_deref()
+        .filter(|url| !url.trim().is_empty());
+    custom_url
+        .or(group_url)
+        .or(default_url)
+        .filter(|&url| is_latency_test_url(url))
+        .unwrap_or(TRAY_DEFAULT_LATENCY_URL)
+        .trim()
+        .to_owned()
+}
+
 static RUNNING: parking_lot::Mutex<std::collections::BTreeSet<String>> =
     parking_lot::Mutex::new(std::collections::BTreeSet::new());
+
+pub(super) fn is_running(group_name: &str) -> bool {
+    RUNNING.lock().contains(group_name)
+}
 
 pub(super) async fn test_proxy_group_delay(group_name: &str) {
     if !RUNNING.lock().insert(group_name.to_owned()) {
         return;
     }
+    Tray::global().refresh_latency_item(group_name);
     let _running = scopeguard::guard(group_name, |name| {
         RUNNING.lock().remove(name);
+        Tray::global().refresh_latency_item(name);
     });
     use futures::{StreamExt as _, stream};
 
@@ -52,27 +85,11 @@ pub(super) async fn test_proxy_group_delay(group_name: &str) {
     };
 
     let profiles = Config::profiles().await.latest_arc();
-    let custom_url = profiles
-        .current
-        .as_ref()
-        .and_then(|uid| profiles.get_item(uid).ok())
-        .and_then(|profile| profile.latency_test_urls.as_ref())
-        .and_then(|urls| urls.get(group_name))
-        .map(|url| url.as_str())
-        .filter(|url| !url.trim().is_empty());
-    let group_url = group.test_url.as_deref().filter(|url| !url.trim().is_empty());
-    let default_url = verge
-        .default_latency_test
-        .as_deref()
-        .filter(|url| !url.trim().is_empty());
-    let url = custom_url
-        .or(group_url)
-        .or(default_url)
-        .filter(|&url| is_latency_test_url(url))
-        .unwrap_or(TRAY_DEFAULT_LATENCY_URL)
-        .trim()
-        .to_owned();
-    let timeout = verge.default_latency_timeout.unwrap_or(10000).max(1) as u32;
+    let url = test_url(group, &verge, &profiles);
+    let timeout = verge
+        .default_latency_timeout
+        .filter(|timeout| *timeout > 0)
+        .unwrap_or(10000) as u32;
 
     let mut targets: Vec<(std::string::String, Option<std::string::String>)> = Vec::with_capacity(group.members.len());
     for member in &group.members {
@@ -110,7 +127,7 @@ pub(super) async fn test_proxy_group_delay(group_name: &str) {
     .for_each(|()| std::future::ready(()))
     .await;
 
-    if let Err(err) = Tray::global().update_menu().await {
+    if let Err(err) = cmd::proxy::sync_tray_proxy_selection().await {
         logging!(warn, Type::Tray, "Failed to refresh tray after latency test: {err}");
     }
 

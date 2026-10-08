@@ -63,21 +63,20 @@ describe('group delay completion', () => {
 test('uses newer core history after a tray test without hiding an active page test', () => {
   const member = node('tray-refresh')
   if (member.kind !== 'node') throw new Error('Expected node')
-  const cached = delayManager.setDelay(member.ref.name, 'tray-group', 50)
-  member.node.history = [
-    { time: new Date(cached.updatedAt + 1000).toISOString(), delay: 300 },
-  ]
+  const cached = delayManager.setDelay(member, 'tray-group', 50)
+  member.node.extra = {
+    [delayManager.getUrl('tray-group')]: {
+      alive: true,
+      history: [
+        { time: new Date(cached.updatedAt + 1000).toISOString(), delay: 300 },
+      ],
+    },
+  }
 
   expect(delayManager.getDelayFix(member, 'tray-group')).toBe(300)
-  expect(
-    delayManager.getDelayUpdate(
-      member.ref.name,
-      'tray-group',
-      member.node.history,
-    )?.delay,
-  ).toBe(300)
+  expect(delayManager.getDelayUpdate(member, 'tray-group')?.delay).toBe(300)
 
-  delayManager.setDelay(member.ref.name, 'tray-group', -2)
+  delayManager.setDelay(member, 'tray-group', -2)
   expect(delayManager.getDelayFix(member, 'tray-group')).toBe(-2)
 })
 
@@ -96,4 +95,68 @@ test('latency URL validation rejects malformed hosts and ports and trims valid U
   }
   delayManager.setUrl('url-validation', ' HTTP://localhost:8080/ ')
   expect(delayManager.getUrl('url-validation')).toBe('HTTP://localhost:8080/')
+})
+
+test('another URL cannot replace a group measurement, but a newer matching URL can', () => {
+  const member = node('url-isolation')
+  if (member.kind !== 'node') throw new Error('Expected node')
+  delayManager.setUrl('url-a', 'http://localhost/a')
+  const cached = delayManager.setDelay(member, 'url-a', 50)
+  const newer = new Date(cached.updatedAt + 1000).toISOString()
+  Object.assign(member.node, {
+    history: [{ time: newer, delay: 126 }],
+    extra: {
+      'http://localhost/a': {
+        alive: true,
+        history: [
+          { time: new Date(cached.updatedAt - 1000).toISOString(), delay: 49 },
+        ],
+      },
+      'http://localhost/b': {
+        alive: true,
+        history: [{ time: newer, delay: 126 }],
+      },
+    },
+  })
+  expect(delayManager.getDelayFix(member, 'url-a')).toBe(50)
+  Object.assign(member.node, {
+    extra: {
+      'http://localhost/a': {
+        alive: true,
+        history: [{ time: newer, delay: 75 }],
+      },
+    },
+  })
+  expect(delayManager.getDelayFix(member, 'url-a')).toBe(75)
+})
+
+test('same-named provider members keep separate measurements and listeners', async () => {
+  const first = node('same-provider-name')
+  const second = node('same-provider-name')
+  if (first.kind !== 'node' || second.kind !== 'node')
+    throw new Error('Expected nodes')
+  first.node.recordId = 'provider-a:N'
+  first.node.source = { kind: 'provider', providerName: 'a', proxyName: 'N' }
+  second.node.recordId = 'provider-b:N'
+  second.node.source = { kind: 'provider', providerName: 'b', proxyName: 'N' }
+  const { healthcheckNodeInProvider } = await import('tauri-plugin-mihomo-api')
+  vi.mocked(healthcheckNodeInProvider)
+    .mockResolvedValueOnce({ delay: 40 })
+    .mockResolvedValueOnce({ delay: 125 })
+  const firstListener = vi.fn()
+  const secondListener = vi.fn()
+  delayManager.setListener(first, 'provider-collision', firstListener)
+  delayManager.setListener(second, 'provider-collision', secondListener)
+  await delayManager.checkListDelay([first, second], 'provider-collision', 5000)
+  await flush()
+  expect(firstListener).toHaveBeenLastCalledWith(
+    expect.objectContaining({ delay: 40 }),
+  )
+  expect(secondListener).toHaveBeenLastCalledWith(
+    expect.objectContaining({ delay: 125 }),
+  )
+  delayManager.removeListener(first, 'provider-collision')
+  delayManager.removeListener(second, 'provider-collision')
+  expect(delayManager.getDelayFix(first, 'provider-collision')).toBe(40)
+  expect(delayManager.getDelayFix(second, 'provider-collision')).toBe(125)
 })

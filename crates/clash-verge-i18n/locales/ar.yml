@@ -69,6 +69,7 @@ tray:
   profiles: الملفات التعريفية
   proxies: وكلاء
   testLatency: اختبار التأخير
+  testingLatency: جارٍ اختبار التأخير…
   systemProxy: وكيل النظام
   tunMode: وضع TUN
   closeAllConnections: إغلاق كل الاتصالات

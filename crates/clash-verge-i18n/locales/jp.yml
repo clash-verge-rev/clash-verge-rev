@@ -69,6 +69,7 @@ tray:
   profiles: プロファイル
   proxies: プロキシ
   testLatency: 遅延テスト
+  testingLatency: 遅延をテスト中…
   systemProxy: システムプロキシ
   tunMode: TUN モード
   closeAllConnections: すべての接続を閉じる

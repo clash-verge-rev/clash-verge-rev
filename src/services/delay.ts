@@ -18,7 +18,12 @@ export type DelaySnapshot = {
   of: (member: ResolvedProxyMember) => number
 }
 
-const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
+const hashKey = (member: ResolvedProxyMember, group: string) =>
+  JSON.stringify([
+    group,
+    member.kind,
+    member.kind === 'node' ? member.node.recordId : member.ref.name,
+  ])
 
 export interface DelayUpdate {
   delay: number
@@ -29,7 +34,7 @@ export interface DelayUpdate {
 const CACHE_TTL = 30 * 60 * 1000
 
 class DelayManager {
-  private cache = new Map<string, DelayUpdate>()
+  private cache = new Map<string, DelayUpdate & { url: string }>()
   private urlMap = new Map<string, string>()
 
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
@@ -153,13 +158,13 @@ class DelayManager {
   }
 
   setUrl(group: string, url: string) {
-    if (!isValidLatencyTestUrl(url)) {
-      debugLog(`[DelayManager] 拒绝无效测试URL，组: ${group}, URL: ${url}`)
+    const previous = this.getUrl(group)
+    if (isValidLatencyTestUrl(url)) {
+      this.urlMap.set(group, url.trim())
+    } else {
       this.urlMap.delete(group)
-      return
     }
-    debugLog(`[DelayManager] 设置测试URL，组: ${group}, URL: ${url}`)
-    this.urlMap.set(group, url.trim())
+    if (previous !== this.getUrl(group)) this.queueGroupNotification(group)
   }
 
   getUrl(group: string) {
@@ -171,16 +176,16 @@ class DelayManager {
   }
 
   setListener(
-    name: string,
+    member: ResolvedProxyMember,
     group: string,
     listener: (update: DelayUpdate) => void,
   ) {
-    const key = hashKey(name, group)
+    const key = hashKey(member, group)
     this.listenerMap.set(key, listener)
   }
 
-  removeListener(name: string, group: string) {
-    const key = hashKey(name, group)
+  removeListener(member: ResolvedProxyMember, group: string) {
+    const key = hashKey(member, group)
     this.listenerMap.delete(key)
   }
 
@@ -199,14 +204,14 @@ class DelayManager {
   }
 
   setDelay(
-    name: string,
+    member: ResolvedProxyMember,
     group: string,
     delay: number,
-    meta?: { elapsed?: number },
+    meta?: { elapsed?: number; url?: string },
   ): DelayUpdate {
-    const key = hashKey(name, group)
+    const key = hashKey(member, group)
     debugLog(
-      `[DelayManager] 设置延迟，代理: ${name}, 组: ${group}, 延迟: ${delay}`,
+      `[DelayManager] 设置延迟，代理: ${member.ref.name}, 组: ${group}, 延迟: ${delay}`,
     )
     const update: DelayUpdate = {
       delay,
@@ -214,7 +219,9 @@ class DelayManager {
       updatedAt: Date.now(),
     }
 
-    this.cache.set(key, update)
+    const url = meta?.url ?? this.getUrl(group)
+    if (url !== this.getUrl(group)) return update
+    this.cache.set(key, { ...update, url })
 
     const queue = this.pendingItemUpdates.get(key)
     if (queue) {
@@ -227,13 +234,11 @@ class DelayManager {
     return update
   }
 
-  getDelayUpdate(
-    name: string,
-    group: string,
-    history?: { time: string; delay: number }[],
-  ) {
-    const key = hashKey(name, group)
-    const entry = this.cache.get(key)
+  getDelayUpdate(member: ResolvedProxyMember, group: string) {
+    const history = this.getHistory(member, group)
+    const key = hashKey(member, group)
+    const cached = this.cache.get(key)
+    const entry = cached?.url === this.getUrl(group) ? cached : undefined
     const latest = history?.at(-1)
     const updatedAt = latest ? Date.parse(latest.time) : 0
     if (latest && entry?.delay !== -2 && updatedAt > (entry?.updatedAt ?? 0)) {
@@ -249,23 +254,24 @@ class DelayManager {
     return { ...entry }
   }
 
-  getDelay(name: string, group: string) {
-    const update = this.getDelayUpdate(name, group)
+  getDelay(member: ResolvedProxyMember, group: string) {
+    const update = this.getDelayUpdate(member, group)
     return update ? update.delay : -1
+  }
+
+  getHistory(member: ResolvedProxyMember, group: string) {
+    return memberDetails(member)?.extra?.[this.getUrl(group)]?.history
   }
 
   getDelayFix(member: ResolvedProxyMember, group: string) {
     if (member.kind === 'unresolved') return -1
-    const details = memberDetails(member)
-    const name = member.ref.name
-    const update = this.getDelayUpdate(name, group, details?.history)
+    const history = this.getHistory(member, group)
+    const update = this.getDelayUpdate(member, group)
     if (update && (update.delay >= 0 || update.delay === -2)) {
       return update.delay
     }
 
-    if (details?.history && details.history.length > 0) {
-      return details.history[details.history.length - 1].delay || 1e6
-    }
+    if (history?.length) return history[history.length - 1].delay || 1e6
     return -1
   }
 
@@ -307,12 +313,12 @@ class DelayManager {
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     )
 
-    this.setDelay(name, group, -2)
+    const url = this.getUrl(group)
+    this.setDelay(member, group, -2, { url })
 
     const startTime = Date.now()
 
     try {
-      const url = this.getUrl(group)
       debugLog(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`)
 
       const timeoutPromise = new Promise<ProxyDelay>((resolve) => {
@@ -333,14 +339,14 @@ class DelayManager {
       const elapsed = elapsedTime
       debugLog(`[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`)
 
-      return this.setDelay(name, group, delay, { elapsed })
+      return this.setDelay(member, group, delay, { elapsed, url })
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 500))
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error)
       const delay = 1e6 // error
       const elapsed = Date.now() - startTime
 
-      return this.setDelay(name, group, delay, { elapsed })
+      return this.setDelay(member, group, delay, { elapsed, url })
     }
   }
 
@@ -353,10 +359,9 @@ class DelayManager {
     debugLog(
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
-    const names = proxies.map((member) => member.ref.name)
     this.activeBatches.set(group, (this.activeBatches.get(group) ?? 0) + 1)
-    names.forEach((name) => {
-      this.setDelay(name, group, -2)
+    proxies.forEach((member) => {
+      this.setDelay(member, group, -2)
     })
 
     let index = 0
@@ -368,7 +373,7 @@ class DelayManager {
       const currName = currMember.ref.name
 
       try {
-        this.setDelay(currName, group, -2)
+        this.setDelay(currMember, group, -2)
 
         // Stagger requests so a batch does not hit the core at once.
         if (index > 1) {
@@ -384,13 +389,13 @@ class DelayManager {
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
           error,
         )
-        this.setDelay(currName, group, 1e6)
+        this.setDelay(currMember, group, 1e6)
       }
 
       return help()
     }
 
-    const actualConcurrency = Math.min(concurrency, names.length, 10)
+    const actualConcurrency = Math.min(concurrency, proxies.length, 10)
     debugLog(`[DelayManager] 实际并发数: ${actualConcurrency}`)
 
     const promiseList: Promise<void>[] = []

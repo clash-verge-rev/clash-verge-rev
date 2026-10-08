@@ -56,8 +56,15 @@ enum IconKind {
     Tun,
 }
 
+struct LatencyMenuItem {
+    item: MenuItem<Wry>,
+    running: bool,
+}
+
 pub struct Tray {
     limiter: SystemLimiter,
+    menu_update: tokio::sync::Mutex<()>,
+    latency_items: parking_lot::Mutex<HashMap<std::string::String, LatencyMenuItem>>,
     #[cfg(target_os = "macos")]
     speed_controller: speed_task::TraySpeedController,
 }
@@ -131,6 +138,8 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            menu_update: tokio::sync::Mutex::new(()),
+            latency_items: parking_lot::Mutex::new(HashMap::new()),
             #[cfg(target_os = "macos")]
             speed_controller: speed_task::TraySpeedController::new(),
         }
@@ -196,6 +205,7 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle, include_proxy_groups: bool) -> Result<()> {
+        let _update = self.menu_update.lock().await;
         let Some(tray) = app_handle.tray_by_id(TRAY_ID) else {
             logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
             return Ok(());
@@ -220,27 +230,61 @@ impl Tray {
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        logging_error!(
-            Type::Tray,
-            tray.set_menu(Some(
-                create_tray_menu(
-                    app_handle,
-                    Some(mode.as_str()),
-                    *system_proxy,
-                    *tun_mode,
-                    tun_mode_available,
-                    profiles_preview,
-                    TrayMenuOptions {
-                        is_lightweight_mode,
-                        include_proxy_groups,
-                    },
-                )
-                .await?,
-            ))
-        );
+        let (menu, latency_items) = create_tray_menu(
+            app_handle,
+            Some(mode.as_str()),
+            *system_proxy,
+            *tun_mode,
+            tun_mode_available,
+            profiles_preview,
+            TrayMenuOptions {
+                is_lightweight_mode,
+                include_proxy_groups,
+            },
+        )
+        .await?;
+        tray.set_menu(Some(menu))?;
+        let groups: Vec<_> = latency_items.keys().cloned().collect();
+        *self.latency_items.lock() = latency_items;
+        for group in groups {
+            self.refresh_latency_item(&group);
+        }
 
         logging!(debug, Type::Tray, "托盘菜单更新成功");
         Ok(())
+    }
+
+    fn refresh_latency_item(&self, group_name: &str) {
+        let group_name = group_name.to_owned();
+        logging_error!(
+            Type::Tray,
+            handle::Handle::app_handle().run_on_main_thread(move || {
+                Self::global().refresh_latency_item_on_main_thread(&group_name);
+            })
+        );
+    }
+
+    fn refresh_latency_item_on_main_thread(&self, group_name: &str) {
+        let running = latency::is_running(group_name);
+        let item = {
+            let mut items = self.latency_items.lock();
+            items.get_mut(group_name).and_then(|entry| {
+                if entry.running == running {
+                    return None;
+                }
+                entry.running = running;
+                Some(entry.item.clone())
+            })
+        };
+        if let Some(item) = item {
+            let label = if running {
+                clash_verge_i18n::t!("tray.testingLatency")
+            } else {
+                clash_verge_i18n::t!("tray.testLatency")
+            };
+            logging_error!(Type::Tray, item.set_text(label));
+            logging_error!(Type::Tray, item.set_enabled(!running));
+        }
     }
 
     pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
@@ -462,7 +506,10 @@ fn create_subcreate_proxy_menu_item(
     app_handle: &AppHandle,
     proxy_mode: &str,
     view: Option<ProxyViewV1>,
-    test_latency_label: &str,
+    latency_items: &mut HashMap<std::string::String, LatencyMenuItem>,
+    texts: &MenuTexts,
+    verge: &IVerge,
+    profiles: &crate::config::IProfiles,
 ) -> Vec<Submenu<Wry>> {
     let Some(view) = view else { return Vec::new() };
     view.groups
@@ -472,21 +519,31 @@ fn create_subcreate_proxy_menu_item(
             if group.hidden.unwrap_or_default() || (proxy_mode == "global") != (group.name == "GLOBAL") {
                 return None;
             }
+            let url = latency::test_url(group, verge, profiles);
+            let timeout = verge
+                .default_latency_timeout
+                .filter(|timeout| *timeout > 0)
+                .unwrap_or(10000);
             let group_items: Vec<CheckMenuItem<Wry>> = group
                 .members
                 .iter()
                 .filter_map(|member| {
                     let (name, history) = match member {
-                        ProxyMemberRef::Node { name, record_id } => {
-                            (name, view.records.get(record_id).map(|node| &node.history))
-                        }
+                        ProxyMemberRef::Node { name, record_id } => (
+                            name,
+                            view.records
+                                .get(record_id)
+                                .and_then(|node| node.extra.get(&url))
+                                .map(|extra| &extra.history),
+                        ),
                         ProxyMemberRef::Group { name } => (
                             name,
                             view.groups
                                 .iter()
                                 .chain(view.global.iter())
                                 .find(|group| &group.name == name)
-                                .map(|group| &group.history),
+                                .and_then(|group| group.extra.get(&url))
+                                .map(|extra| &extra.history),
                         ),
                         ProxyMemberRef::Unresolved { name, .. } => (name, None),
                     };
@@ -494,7 +551,7 @@ fn create_subcreate_proxy_menu_item(
                         .and_then(|history| history.last())
                         .map(|h| match h.delay {
                             0 => "-ms".into(),
-                            delay if delay >= 10000 => "-ms".into(),
+                            delay if u32::from(delay) >= timeout as u32 => "-ms".into(),
                             delay => format!("{delay}ms"),
                         })
                         .unwrap_or_else(|| "-ms".into());
@@ -513,14 +570,26 @@ fn create_subcreate_proxy_menu_item(
             if group_items.is_empty() {
                 return None;
             }
+            let running = latency::is_running(&group.name);
             let test_item = MenuItem::with_id(
                 app_handle,
                 format!("{}_{}", MenuIds::TEST_LATENCY, group.name),
-                test_latency_label,
-                true,
+                if running {
+                    clash_verge_i18n::t!("tray.testingLatency")
+                } else {
+                    texts.test_latency.clone()
+                },
+                !running,
                 None::<&str>,
             )
             .ok()?;
+            latency_items.insert(
+                group.name.clone(),
+                LatencyMenuItem {
+                    item: test_item.clone(),
+                    running,
+                },
+            );
             let separator = PredefinedMenuItem::separator(app_handle).ok()?;
             let mut items: Vec<&dyn IsMenuItem<Wry>> = vec![&test_item, &separator];
             items.extend(group_items.iter().map(|item| item as &dyn IsMenuItem<Wry>));
@@ -581,19 +650,22 @@ async fn create_tray_menu(
     tun_mode_available: bool,
     profiles_preview: Vec<IProfilePreview<'_>>,
     options: TrayMenuOptions,
-) -> Result<tauri::menu::Menu<Wry>> {
+) -> Result<(tauri::menu::Menu<Wry>, HashMap<std::string::String, LatencyMenuItem>)> {
     let current_proxy_mode = mode.unwrap_or("");
 
     let mut verge_settings = Config::verge().await.latest_arc();
     let fetch_proxy_groups =
         options.include_proxy_groups && verge_settings.tray_proxy_groups_display_mode.as_deref() != Some("disable");
 
-    // TODO: should update tray menu again when it was timeout error
     let proxy_view = if fetch_proxy_groups {
-        tokio::time::timeout(Duration::from_millis(1000), cmd::proxy::get_proxy_view())
-            .await
-            .ok()
-            .and_then(Result::ok)
+        Some(
+            tokio::time::timeout(
+                Duration::from_millis(1000),
+                cmd::proxy::proxy_view(Some(Duration::from_millis(750))),
+            )
+            .await?
+            .map_err(anyhow::Error::msg)?,
+        )
     } else {
         None
     };
@@ -601,6 +673,8 @@ async fn create_tray_menu(
     if fetch_proxy_groups {
         verge_settings = Config::verge().await.latest_arc();
     }
+
+    let profiles_config = Config::profiles().await.latest_arc();
 
     let tray_proxy_groups_display_mode = verge_settings
         .tray_proxy_groups_display_mode
@@ -687,9 +761,17 @@ async fn create_tray_menu(
         &profile_menu_items_refs,
     )?;
 
+    let mut latency_items = HashMap::new();
     let (proxies_menu, inline_proxy_items) = if include_proxy_groups {
-        let proxy_sub_menus =
-            create_subcreate_proxy_menu_item(app_handle, current_proxy_mode, proxy_view, &texts.test_latency);
+        let proxy_sub_menus = create_subcreate_proxy_menu_item(
+            app_handle,
+            current_proxy_mode,
+            proxy_view,
+            &mut latency_items,
+            &texts,
+            &verge_settings,
+            &profiles_config,
+        );
 
         match tray_proxy_groups_display_mode {
             "default" => create_proxy_menu_item(app_handle, false, proxy_sub_menus, &texts.proxies)?,
@@ -833,7 +915,7 @@ async fn create_tray_menu(
     ]);
 
     let menu = tauri::menu::MenuBuilder::new(app_handle).items(&menu_items).build()?;
-    Ok(menu)
+    Ok((menu, latency_items))
 }
 
 fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {

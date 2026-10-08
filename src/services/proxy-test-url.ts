@@ -1,4 +1,8 @@
-import { getProfiles, patchProfile } from '@/services/cmds'
+import {
+  getProfiles,
+  patchProfile,
+  syncTrayProxySelection,
+} from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 
 export function readLegacyTestUrls(uid: string): Record<string, string> {
@@ -34,6 +38,12 @@ export async function saveProfileTestUrls(
           ...urls,
         },
       })
+      await syncTrayProxySelection().catch((error) => {
+        console.error(
+          'Failed to refresh tray after saving latency test URL:',
+          error,
+        )
+      })
     },
     { id: `patch-profile:${uid}`, revalidate: [['getProfiles']] },
   )
@@ -56,31 +66,36 @@ export function migrateProfileTestUrls(profiles: IProfilesConfig) {
   }
 }
 
-const pending = new Map<
-  string,
-  { urls: Record<string, string>; timer: ReturnType<typeof setTimeout> }
->()
+const pending = new Map<string, Record<string, { url: string }>>()
 
-export function scheduleProfileTestUrl(
+export async function commitProfileTestUrl(
   uid: string,
   group: string,
   url: string,
 ) {
-  const previous = pending.get(uid)
-  if (previous) clearTimeout(previous.timer)
-  const urls = { ...previous?.urls, [group]: url.trim() }
-  const timer = setTimeout(() => {
-    void saveProfileTestUrls(uid, urls)
-      .catch((error) => {
-        console.error('Failed to save latency test URLs:', error)
-      })
-      .finally(() => {
-        if (pending.get(uid)?.urls === urls) pending.delete(uid)
-      })
-  }, 300)
-  pending.set(uid, { urls, timer })
+  const edit = { url: url.trim() }
+  const urls = { ...pending.get(uid), [group]: edit }
+  pending.set(uid, urls)
+  try {
+    await saveProfileTestUrls(uid, { [group]: edit.url })
+    const current = pending.get(uid)
+    if (current?.[group] === edit) {
+      delete current[group]
+      if (!Object.keys(current).length) pending.delete(uid)
+    }
+  } catch (error) {
+    console.error('Failed to save latency test URL:', error)
+  }
 }
 
 export function profileTestUrls(profile: IProfileItem): Record<string, string> {
-  return { ...profile.latency_test_urls, ...pending.get(profile.uid)?.urls }
+  return {
+    ...profile.latency_test_urls,
+    ...Object.fromEntries(
+      Object.entries(pending.get(profile.uid) ?? {}).map(([group, edit]) => [
+        group,
+        edit.url,
+      ]),
+    ),
+  }
 }

@@ -69,6 +69,7 @@ tray:
   profiles: Profiles
   proxies: Proxies
   testLatency: Test Latency
+  testingLatency: Testing latency…
   systemProxy: System Proxy
   tunMode: TUN Mode
   closeAllConnections: Close All Connections

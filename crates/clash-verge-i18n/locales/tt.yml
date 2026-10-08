@@ -69,6 +69,7 @@ tray:
   profiles: Профильләр
   proxies: Проксилар
   testLatency: Кичектерүне тикшерү
+  testingLatency: Кичектерү тикшерелә…
   systemProxy: Системалы прокси
   tunMode: TUN режимы
   closeAllConnections: Барлык тоташуларны ябу

@@ -69,6 +69,7 @@ tray:
   profiles: پروفایل‌ها
   proxies: پروکسی‌ها
   testLatency: آزمایش تأخیر
+  testingLatency: در حال آزمایش تأخیر…
   systemProxy: پروکسی سیستم
   tunMode: حالت TUN
   closeAllConnections: بستن همه اتصال‌ها

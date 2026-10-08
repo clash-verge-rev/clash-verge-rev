@@ -9,7 +9,7 @@ import VisibilityOffRounded from '@mui/icons-material/VisibilityOffRounded'
 import VisibilityRounded from '@mui/icons-material/VisibilityRounded'
 import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded'
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
-import { Box, IconButton, type SxProps, TextField } from '@mui/material'
+import { Box, IconButton, type SxProps } from '@mui/material'
 import { useDebounceFn } from 'ahooks'
 import { memo, useEffect, useRef } from 'react'
 import { flushSync } from 'react-dom'
@@ -22,6 +22,7 @@ import { isValidLatencyTestUrl } from '@/utils/network'
 
 import { BaseSearchBox, type SearchState } from '../base'
 
+import { ProxyTestUrlInput } from './proxy-test-url-input'
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 
@@ -115,7 +116,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
       )}
 
       {textState === 'url' && (
-        <TextField
+        <ProxyTestUrlInput
           inputRef={inputRef}
           autoComplete="new-password"
           hiddenLabel
@@ -128,7 +129,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             e.preventDefault()
             e.stopPropagation()
           }}
-          onChange={(e) => onHeadState({ testUrl: e.target.value })}
+          onCommit={(testUrl) => onHeadState({ testUrl })}
           sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}

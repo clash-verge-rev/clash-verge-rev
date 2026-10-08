@@ -11,7 +11,7 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from '@mui/icons-material'
-import { Box, IconButton, TextField, type SxProps } from '@mui/material'
+import { Box, IconButton, type SxProps } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -22,6 +22,7 @@ import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 import { isValidLatencyTestUrl } from '@/utils/network'
 
+import { ProxyTestUrlInput } from './proxy-test-url-input'
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 
@@ -191,7 +192,7 @@ export const ProxyHead = ({
       )}
 
       {textState === 'url' && (
-        <TextField
+        <ProxyTestUrlInput
           autoComplete="new-password"
           autoFocus={autoFocus}
           hiddenLabel
@@ -200,7 +201,7 @@ export const ProxyHead = ({
           size="small"
           variant="outlined"
           placeholder={t('proxies.page.placeholders.delayCheckUrl')}
-          onChange={(e) => onHeadState({ testUrl: e.target.value })}
+          onCommit={(testUrl) => onHeadState({ testUrl })}
           sx={{ ml: 0.5, flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
