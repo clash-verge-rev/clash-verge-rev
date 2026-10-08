@@ -1,6 +1,6 @@
 use crate::config::{IProfilePreview, IVerge};
 use crate::core::lightweight;
-use crate::core::proxy_view::{ProxyMemberRef, ProxyViewV1};
+use crate::core::proxy_view::{ProxyGroupView, ProxyMemberRef, ProxyViewV1};
 use crate::core::tray::menu_def::TrayAction;
 use crate::process::AsyncHandler;
 use crate::singleton;
@@ -502,6 +502,56 @@ fn create_profile_menu_item(
         .collect()
 }
 
+const UNTESTED_DELAY_TEXT: &str = "-ms";
+const TIMEOUT_DELAY_TEXT: &str = "T/O";
+const TRAY_GROUP_DEPTH_LIMIT: usize = 8;
+
+fn member_name(member: &ProxyMemberRef) -> &str {
+    match member {
+        ProxyMemberRef::Node { name, .. }
+        | ProxyMemberRef::Group { name }
+        | ProxyMemberRef::Unresolved { name, .. } => name.as_str(),
+    }
+}
+
+fn find_group<'a>(view: &'a ProxyViewV1, name: &str) -> Option<&'a ProxyGroupView> {
+    view.groups.iter().chain(view.global.iter()).find(|group| group.name.as_str() == name)
+}
+
+/// The delay recorded for `url`, falling back to the node's latest measurement under any URL, so a
+/// node the core tested on its own still shows a value.
+fn node_delay(view: &ProxyViewV1, record_id: &str, url: &str) -> Option<u16> {
+    view.records
+        .get(record_id)
+        .map(|node| node.extra.get(url).map_or(&node.history, |extra| &extra.history))
+        .and_then(|history| history.last())
+        .map(|history| history.delay)
+}
+
+/// A group row shows the delay of the node the group currently selects. The core never writes a
+/// history for the group itself, so `now` is followed until the chain reaches a node.
+fn selected_member_delay(view: &ProxyViewV1, group_name: &str, url: &str) -> Option<u16> {
+    let mut current = group_name;
+    for _ in 0..TRAY_GROUP_DEPTH_LIMIT {
+        let Some(group) = find_group(view, current) else { break };
+        let Some(now) = group.now.as_deref().filter(|now| !now.is_empty() && *now != current) else {
+            break;
+        };
+        let Some(member) = group.members.iter().find(|member| member_name(member) == now) else {
+            break;
+        };
+        match member {
+            ProxyMemberRef::Node { record_id, .. } => return node_delay(view, record_id, url),
+            ProxyMemberRef::Group { name } => current = name.as_str(),
+            ProxyMemberRef::Unresolved { .. } => break,
+        }
+    }
+    find_group(view, group_name)
+        .map(|group| group.extra.get(url).map_or(&group.history, |extra| &extra.history))
+        .and_then(|history| history.last())
+        .map(|history| history.delay)
+}
+
 fn create_subcreate_proxy_menu_item(
     app_handle: &AppHandle,
     proxy_mode: &str,
@@ -528,31 +578,21 @@ fn create_subcreate_proxy_menu_item(
                 .members
                 .iter()
                 .filter_map(|member| {
-                    let (name, history) = match member {
-                        ProxyMemberRef::Node { name, record_id } => (
-                            name,
-                            view.records
-                                .get(record_id)
-                                .map(|node| node.extra.get(&url).map_or(&node.history, |extra| &extra.history)),
-                        ),
-                        ProxyMemberRef::Group { name } => (
-                            name,
-                            view.groups
-                                .iter()
-                                .chain(view.global.iter())
-                                .find(|group| &group.name == name)
-                                .map(|group| group.extra.get(&url).map_or(&group.history, |extra| &extra.history)),
-                        ),
+                    let (name, delay) = match member {
+                        ProxyMemberRef::Node { name, record_id } => (name, node_delay(&view, record_id, &url)),
+                        ProxyMemberRef::Group { name } => (name, selected_member_delay(&view, name, &url)),
                         ProxyMemberRef::Unresolved { name, .. } => (name, None),
                     };
-                    let delay_text = history
-                        .and_then(|history| history.last())
-                        .map(|h| match h.delay {
-                            0 => "-ms".into(),
-                            delay if u32::from(delay) >= timeout as u32 => "-ms".into(),
-                            delay => format!("{delay}ms"),
-                        })
-                        .unwrap_or_else(|| "-ms".into());
+                    let delay_text = delay.map_or_else(
+                        || UNTESTED_DELAY_TEXT.to_owned(),
+                        |delay| {
+                            if delay == 0 || u32::from(delay) >= timeout as u32 {
+                                TIMEOUT_DELAY_TEXT.to_owned()
+                            } else {
+                                format!("{delay}ms")
+                            }
+                        },
+                    );
                     CheckMenuItem::with_id(
                         app_handle,
                         format!("proxy_{}_{}", group.name, name),
