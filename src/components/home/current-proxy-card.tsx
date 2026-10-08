@@ -49,6 +49,8 @@ import {
 } from '@/providers/app-data-context'
 import { syncTrayProxySelection } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { mutate } from '@/services/mutate'
+import { profileTestUrls } from '@/services/proxy-test-url'
 import {
   findCurrentGroupMember,
   getRecord,
@@ -676,6 +678,20 @@ export const CurrentProxyCard = () => {
     [proxyView],
   )
 
+  useEffect(() => {
+    if (!selectedGroup) return
+    const customUrl = currentProfile
+      ? profileTestUrls(currentProfile)[selectedGroup.name]
+      : undefined
+    delayManager.setUrl(
+      selectedGroup.name,
+      customUrl?.trim() ||
+        selectedGroup.testUrl?.trim() ||
+        verge?.default_latency_test?.trim() ||
+        'http://cp.cloudflare.com/generate_204',
+    )
+  }, [selectedGroup, currentProfile, verge?.default_latency_test])
+
   const unsortedProxyOptions = useMemo(
     () => optionsForGroup(selectedGroup),
     [optionsForGroup, selectedGroup],
@@ -908,8 +924,11 @@ export const CurrentProxyCard = () => {
     }
 
     refreshProxy()
-    syncTrayProxySelection().catch((error) => {
-      console.error('[CurrentProxyCard] 托盘延迟同步失败:', error)
+    mutate(() => syncTrayProxySelection(), {
+      id: 'sync-tray-selection',
+      errorNotice: false,
+    }).catch((error) => {
+      console.error('[CurrentProxyCard] Failed to sync tray latency:', error)
     })
   })
 

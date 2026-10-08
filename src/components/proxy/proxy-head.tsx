@@ -20,7 +20,7 @@ import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
-import { isValidUrl } from '@/utils/network'
+import { isValidLatencyTestUrl } from '@/utils/network'
 
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
@@ -72,7 +72,10 @@ export const ProxyHead = ({
     'http://cp.cloudflare.com/generate_204'
 
   useEffect(() => {
-    delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
+    delayManager.setUrl(
+      groupName,
+      testUrl?.trim() || url?.trim() || defaultLatencyUrl,
+    )
   }, [groupName, testUrl, defaultLatencyUrl, url])
 
   return (
@@ -97,7 +100,7 @@ export const ProxyHead = ({
             debugLog(`[ProxyHead] 使用自定义测试URL: ${testUrl}`)
             onHeadState({ textState: 'url' })
           }
-          if (testUrl?.trim() && !isValidUrl(testUrl)) {
+          if (testUrl?.trim() && !isValidLatencyTestUrl(testUrl)) {
             showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
             return
           }

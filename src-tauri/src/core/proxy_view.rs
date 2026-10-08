@@ -294,7 +294,7 @@ fn partition_core(proxies: Proxies) -> (BTreeMap<String, Proxy>, BTreeMap<String
     for (name, proxy) in proxies.proxies {
         if proxy.all.is_some() {
             groups.insert(name, proxy);
-        } else {
+        } else if proxy.provider_name.is_empty() {
             nodes.insert(name, proxy);
         }
     }
@@ -521,4 +521,49 @@ fn build_standalone(core_node_ids: &BTreeMap<String, String>) -> Vec<String> {
             .map(|(_, record_id)| record_id.clone()),
     );
     standalone
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn provider_echo_in_proxies_does_not_override_group_membership() -> anyhow::Result<()> {
+        let view = ProxyViewBuilder::build(ProxyViewInput {
+            runtime_group_order: vec!["A".into(), "B".into()],
+            group_scopes: ["A", "B"]
+                .into_iter()
+                .map(|name| {
+                    (
+                        name.into(),
+                        GroupScope {
+                            providers: vec![name.into()],
+                            exclude_types: vec![],
+                        },
+                    )
+                })
+                .collect(),
+            proxies: serde_json::from_value(json!({"proxies": {
+                "A": {"all": ["node"], "type": "Selector"},
+                "B": {"all": ["node"], "type": "Selector"},
+                "node": {"name": "node", "provider-name": "A", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}
+            }}))?,
+            providers: Some(serde_json::from_value(json!({"providers": {
+                "A": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}]},
+                "B": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 123}]}]}
+            }}))?),
+        });
+        for (group, expected) in view.groups.iter().zip([32, 123]) {
+            let ProxyMemberRef::Node { record_id, .. } = &group.members[0] else {
+                anyhow::bail!("Expected node")
+            };
+            let record = &view.records[record_id];
+            assert_eq!(record.history.last().map(|entry| entry.delay), Some(expected));
+            assert!(
+                matches!(&record.source, ProxyNodeSource::Provider { provider_name, .. } if provider_name == &group.name)
+            );
+        }
+        Ok(())
+    }
 }

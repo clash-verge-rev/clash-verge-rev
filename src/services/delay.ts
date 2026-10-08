@@ -12,7 +12,7 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
-import { isValidUrl } from '@/utils/network'
+import { isValidLatencyTestUrl } from '@/utils/network'
 
 export type DelaySnapshot = {
   of: (member: ResolvedProxyMember) => number
@@ -153,13 +153,13 @@ class DelayManager {
   }
 
   setUrl(group: string, url: string) {
-    if (!isValidUrl(url)) {
+    if (!isValidLatencyTestUrl(url)) {
       debugLog(`[DelayManager] 拒绝无效测试URL，组: ${group}, URL: ${url}`)
       this.urlMap.delete(group)
       return
     }
     debugLog(`[DelayManager] 设置测试URL，组: ${group}, URL: ${url}`)
-    this.urlMap.set(group, url)
+    this.urlMap.set(group, url.trim())
   }
 
   getUrl(group: string) {
@@ -227,9 +227,18 @@ class DelayManager {
     return update
   }
 
-  getDelayUpdate(name: string, group: string) {
+  getDelayUpdate(
+    name: string,
+    group: string,
+    history?: { time: string; delay: number }[],
+  ) {
     const key = hashKey(name, group)
     const entry = this.cache.get(key)
+    const latest = history?.at(-1)
+    const updatedAt = latest ? Date.parse(latest.time) : 0
+    if (latest && entry?.delay !== -2 && updatedAt > (entry?.updatedAt ?? 0)) {
+      return { delay: latest.delay || 1e6, updatedAt }
+    }
     if (!entry) return undefined
 
     if (Date.now() - entry.updatedAt > CACHE_TTL) {
@@ -249,7 +258,7 @@ class DelayManager {
     if (member.kind === 'unresolved') return -1
     const details = memberDetails(member)
     const name = member.ref.name
-    const update = this.getDelayUpdate(name, group)
+    const update = this.getDelayUpdate(name, group, details?.history)
     if (update && (update.delay >= 0 || update.delay === -2)) {
       return update.delay
     }

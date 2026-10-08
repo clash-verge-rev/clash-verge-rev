@@ -59,3 +59,41 @@ describe('group delay completion', () => {
     stop()
   })
 })
+
+test('uses newer core history after a tray test without hiding an active page test', () => {
+  const member = node('tray-refresh')
+  if (member.kind !== 'node') throw new Error('Expected node')
+  const cached = delayManager.setDelay(member.ref.name, 'tray-group', 50)
+  member.node.history = [
+    { time: new Date(cached.updatedAt + 1000).toISOString(), delay: 300 },
+  ]
+
+  expect(delayManager.getDelayFix(member, 'tray-group')).toBe(300)
+  expect(
+    delayManager.getDelayUpdate(
+      member.ref.name,
+      'tray-group',
+      member.node.history,
+    )?.delay,
+  ).toBe(300)
+
+  delayManager.setDelay(member.ref.name, 'tray-group', -2)
+  expect(delayManager.getDelayFix(member, 'tray-group')).toBe(-2)
+})
+
+test('latency URL validation rejects malformed hosts and ports and trims valid URLs', () => {
+  for (const url of [
+    'http://?',
+    'http://host:invalid',
+    'http://bad host/',
+    'ftp://localhost',
+    'http:localhost',
+  ]) {
+    delayManager.setUrl('url-validation', url)
+    expect(delayManager.getUrl('url-validation')).toBe(
+      'http://cp.cloudflare.com/generate_204',
+    )
+  }
+  delayManager.setUrl('url-validation', ' HTTP://localhost:8080/ ')
+  expect(delayManager.getUrl('url-validation')).toBe('HTTP://localhost:8080/')
+})

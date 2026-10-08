@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 import { showNotice } from '@/services/notice-service'
-import { isValidUrl } from '@/utils/network'
+import { isValidLatencyTestUrl } from '@/utils/network'
 
 import { BaseSearchBox, type SearchState } from '../base'
 
@@ -69,7 +69,10 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
+    delayManager.setUrl(
+      groupName,
+      testUrl?.trim() || url?.trim() || defaultLatencyUrl,
+    )
   }, [groupName, testUrl, defaultLatencyUrl, url])
 
   // 过滤输入是高频操作，且每次都会触发整组代理的重新过滤/排序与虚拟列表重渲染，
@@ -176,7 +179,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           if (testUrl?.trim() && textState !== 'filter') {
             onHeadState({ textState: 'url' })
           }
-          if (testUrl?.trim() && !isValidUrl(testUrl)) {
+          if (testUrl?.trim() && !isValidLatencyTestUrl(testUrl)) {
             showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
             return
           }
