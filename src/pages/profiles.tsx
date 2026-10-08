@@ -117,7 +117,7 @@ const ProfilePage = () => {
   } = useProfiles()
 
   useEffect(() => {
-    currentProfileRef.current = profiles.current
+    currentProfileRef.current = profiles.current!
   }, [profiles])
 
   useEffect(() => {
@@ -574,7 +574,7 @@ const ProfilePage = () => {
   const onUpdateAll = useLockFn(async () => {
     const items = profileItems.filter((e) => e.type === 'remote')
     const target = items
-      .map((item) => item.uid)
+      .map((item) => item.uid!)
       .filter((uid) => !loadingCache.has(uid))
 
     setLoadingProfiles(target, true)
@@ -606,7 +606,7 @@ const ProfilePage = () => {
   }
 
   const selectAllProfiles = () => {
-    setSelectedProfiles(new Set(profileItems.map((item) => item.uid)))
+    setSelectedProfiles(new Set(profileItems.map((item) => item.uid!)))
   }
 
   const clearAllSelections = () => {
@@ -898,20 +898,20 @@ const ProfilePage = () => {
             {profileItems.map((item, index) => (
               <ProfileItem
                 key={item.uid}
-                id={item.uid}
+                id={item.uid!}
                 index={index}
                 selected={(switchTarget ?? profiles.current) === item.uid}
                 activating={
-                  activatings.includes(item.uid) ||
+                  activatings.includes(item.uid!) ||
                   visibleSwitchingProfile === item.uid
                 }
                 itemData={item}
-                timerUpdateRevision={timerRevisions.get(item.uid) ?? 0}
+                timerUpdateRevision={timerRevisions.get(item.uid!) ?? 0}
                 completedUpdateRevision={
-                  completedUpdateRevisions.get(item.uid) ?? 0
+                  completedUpdateRevisions.get(item.uid!) ?? 0
                 }
                 mutateProfiles={mutateProfiles}
-                onSelect={(f) => onSelect(item.uid, f)}
+                onSelect={(f) => onSelect(item.uid!, f)}
                 onEdit={() => viewerRef.current?.edit(item)}
                 onSave={async (prev, curr) => {
                   if (prev !== curr && profiles.current === item.uid) {
@@ -920,14 +920,14 @@ const ProfilePage = () => {
                 }}
                 onDelete={() => {
                   if (batchMode) {
-                    toggleProfileSelection(item.uid)
+                    toggleProfileSelection(item.uid!)
                   } else {
-                    onDelete(item.uid)
+                    onDelete(item.uid!)
                   }
                 }}
                 batchMode={batchMode}
-                isSelected={selectedProfiles.has(item.uid)}
-                onSelectionChange={() => toggleProfileSelection(item.uid)}
+                isSelected={selectedProfiles.has(item.uid!)}
+                onSelectionChange={() => toggleProfileSelection(item.uid!)}
               />
             ))}
           </Box>

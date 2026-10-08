@@ -948,7 +948,15 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     logging!(error, Type::Tray, "Failed to close all connections from tray: {err}");
                 }
             }
-            MenuIds::COPY_ENV => feat::copy_clash_env().await,
+            MenuIds::COPY_ENV => {
+                if let Err(err) = feat::copy_clash_env().await {
+                    logging!(
+                        error,
+                        Type::Tray,
+                        "Failed to copy proxy environment variables from tray: {err:#}"
+                    );
+                }
+            }
             MenuIds::CONF_DIR => {
                 let _ = cmd::open_app_dir().await;
             }

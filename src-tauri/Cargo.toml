@@ -109,6 +109,9 @@ webpki-roots = "1.0.9"
 dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
+specta = { version = "=2.0.0-rc.25", features = ["derive", "function", "serde_json"] }
+tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+specta-typescript = "=0.0.12"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.190"

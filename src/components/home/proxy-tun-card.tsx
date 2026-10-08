@@ -201,7 +201,7 @@ export const ProxyTunCard: FC = () => {
           onClick={() => handleTabChange('tun')}
           icon={TroubleshootRounded}
           label={t('settings.sections.system.toggles.tunMode')}
-          hasIndicator={enable_tun_mode && isTunModeAvailable}
+          hasIndicator={enable_tun_mode! && isTunModeAvailable}
         />
       </Stack>
 

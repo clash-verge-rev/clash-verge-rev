@@ -1,141 +1,172 @@
-import { Channel, invoke } from '@tauri-apps/api/core'
-import type { DownloadEvent } from '@tauri-apps/plugin-updater'
+import { Channel } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 
-import type { CommandFailure } from '@/services/notice-service'
 import { showNotice } from '@/services/notice-service'
-import type { ProxyViewV1 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
+import { commands } from './bindings'
+import type {
+  DownloadEvent,
+  JsonValue,
+  ListenerProbe,
+  ProxyPortSettings,
+  UnlockItem,
+  ProxyViewV1_Serialize as ProxyViewV1,
+  ProfileSelection,
+  ProfilePatch,
+  ProfileCreate,
+} from './bindings'
+
+export type {
+  RunningMode,
+  RunStateView as RunState,
+  FailedOperation,
+  PendingFailure,
+  SidecarFailureSnapshot,
+  ServiceInstallOutcome,
+  ProxyPortSettings,
+  ListenerTransport,
+  ListenerProbe,
+  UnlockItem,
+} from './bindings'
+
 export async function copyClashEnv() {
-  return invoke<void>('copy_clash_env')
+  return commands.copyClashEnv()
 }
 
-export async function getProfiles() {
-  return invoke<IProfilesConfig>('get_profiles')
+export async function getProfiles(): Promise<IProfilesConfig> {
+  return commands.getProfiles()
 }
 
 export async function enhanceProfiles() {
-  return (
-    (await invoke<ValidationOutcome>('enhance_profiles')).status === 'valid'
-  )
+  return (await commands.enhanceProfiles()).status === 'valid'
 }
 
-export async function patchProfilesConfig(profiles: IProfilesConfig) {
-  return invoke<ValidationOutcome>('patch_profiles_config', { profiles })
+export async function patchProfilesConfig(profiles: ProfileSelection) {
+  return commands.patchProfilesConfig({ current: profiles.current })
 }
 
 export async function createProfile(
-  item: Partial<IProfileItem>,
+  item: ProfileCreate,
   fileData?: string | null,
 ) {
-  return invoke<void>('create_profile', { item, fileData })
-}
-
-export async function viewProfile(index: string) {
-  return invoke<void>('view_profile', { index })
-}
-
-export async function readProfileFile(index: string) {
-  return invoke<string>('read_profile_file', { index })
-}
-
-export async function saveProfileFile(index: string, fileData: string) {
-  return (
-    (
-      await invoke<ValidationOutcome>('save_profile_file', {
-        index,
-        fileData,
-      })
-    ).status === 'valid'
+  return commands.createProfile(
+    {
+      type: item.type,
+      name: item.name,
+      desc: item.desc,
+      ...(item.type === 'remote' ? { url: item.url } : {}),
+      option: item.option,
+    },
+    fileData ?? null,
   )
 }
 
+export async function viewProfile(index: string) {
+  return commands.viewProfile(index)
+}
+
+export async function readProfileFile(index: string) {
+  return commands.readProfileFile(index)
+}
+
+export async function saveProfileFile(index: string, fileData: string) {
+  return (await commands.saveProfileFile(index, fileData)).status === 'valid'
+}
+
 export async function importProfile(url: string, option?: IProfileOption) {
-  return invoke<void>('import_profile', {
-    url,
-    option: option || { with_proxy: true },
-  })
+  return commands.importProfile(url, option || { with_proxy: true })
 }
 
 export async function reorderProfile(activeId: string, overId: string) {
-  return invoke<void>('reorder_profile', {
-    activeId,
-    overId,
-  })
+  return commands.reorderProfile(activeId, overId)
 }
 
 export async function updateProfile(index: string, option?: IProfileOption) {
-  return invoke<void>('update_profile', { index, option })
+  return commands.updateProfile(index, option ?? null)
 }
 
 export async function deleteProfile(index: string) {
-  return invoke<void>('delete_profile', { index })
+  return commands.deleteProfile(index)
 }
 
-export async function patchProfile(
-  index: string,
-  profile: Partial<IProfileItem>,
-) {
-  return invoke<void>('patch_profile', { index, profile })
+export async function patchProfile(index: string, profile: ProfilePatch) {
+  const { type, name, desc, file, url, selected, extra, updated, option } =
+    profile
+  return commands.patchProfile(index, {
+    type,
+    name,
+    desc,
+    file,
+    url,
+    selected,
+    extra,
+    updated,
+    option,
+  })
 }
 
 export async function getClashInfo() {
-  return invoke<IClashInfo | null>('get_clash_info')
+  return commands.getClashInfo()
 }
 
 // Fallback mode read independent of strict mihomo `/configs` deserialization.
 export async function getClashMode() {
-  return invoke<string | null>('get_clash_mode')
+  return commands.getClashMode()
 }
 
 export async function getRuntimeConfig() {
-  return invoke<IConfigData | null>('get_runtime_config')
+  return (await commands.getRuntimeConfig()) as IConfigData | null
 }
 
 export async function getRuntimeYaml() {
-  return invoke<string | null>('get_runtime_yaml')
+  return commands.getRuntimeYaml()
 }
 
 export async function getRuntimeLogs() {
-  return invoke<Record<string, [string, string][]>>('get_runtime_logs')
+  return commands.getRuntimeLogs()
 }
 
 export async function getRuntimeProxyChainConfig(proxyChainExitNode: string) {
-  return invoke<string>('get_runtime_proxy_chain_config', {
-    proxyChainExitNode,
-  })
+  return commands.getRuntimeProxyChainConfig(proxyChainExitNode)
 }
 
-export async function updateProxyChainConfigInRuntime(proxyChainConfig: any) {
-  return invoke<void>('update_proxy_chain_config_in_runtime', {
-    proxyChainConfig,
-  })
+export async function updateProxyChainConfigInRuntime(
+  proxyChainConfig: unknown,
+) {
+  const outcome = await commands.updateProxyChainConfigInRuntime(
+    proxyChainConfig == null ? null : (proxyChainConfig as JsonValue),
+  )
+  if (outcome.status === 'invalid') throw new Error(outcome.message)
+  if (outcome.status === 'skipped') {
+    throw new Error(`Proxy chain validation skipped: ${outcome.reason}`)
+  }
+  return outcome
 }
 
 export async function patchClashConfig(payload: Partial<IConfigData>) {
-  return invoke<void>('patch_clash_config', { payload })
+  return commands.patchClashConfig(payload as Record<string, JsonValue>)
 }
 
 export async function patchClashMode(payload: string) {
-  return invoke<void>('patch_clash_mode', { payload })
+  return commands.patchClashMode(payload)
 }
 
 export async function syncTrayProxySelection() {
-  return invoke<void>('sync_tray_proxy_selection')
+  return commands.syncTrayProxySelection()
 }
 
 /** Sends one selection pair so the backend can merge against current profile state. */
 export async function recordSelectedNode(groupName: string, node: string) {
-  return invoke<void>('record_selected_node', { groupName, node })
+  return commands.recordSelectedNode(groupName, node)
 }
 
 export async function forgetSelectedNode(groupName: string) {
-  return invoke<void>('forget_selected_node', { groupName })
+  return commands.forgetSelectedNode(groupName)
 }
 
 export async function getProxyView(): Promise<ProxyViewV1> {
-  const view = await invoke<ProxyViewV1>('get_proxy_view')
+  const view = await commands.getProxyView()
   if (view.schemaVersion !== 1) {
     throw new Error('Unsupported proxy view schema: ' + view.schemaVersion)
   }
@@ -145,7 +176,7 @@ export async function getProxyView(): Promise<ProxyViewV1> {
 export async function getClashLogs() {
   const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
   const newRegex = /(.+?)\s+(.+?)\s+(.+)/
-  const logs = await invoke<string[]>('get_clash_logs')
+  const logs = await commands.getClashLogs()
 
   return logs.reduce<ILogItem[]>((acc, log) => {
     const result = log.match(regex)
@@ -165,12 +196,12 @@ export async function getClashLogs() {
   }, [])
 }
 
-export async function getVergeConfig() {
-  return invoke<IVergeConfig>('get_verge_config')
+export async function getVergeConfig(): Promise<IVergeConfig> {
+  return commands.getVergeConfig()
 }
 
 export async function patchVergeConfig(payload: IVergeConfig) {
-  return invoke<void>('patch_verge_config', { payload })
+  return commands.patchVergeConfig(payload)
 }
 
 export async function setDnsOverride(
@@ -178,76 +209,57 @@ export async function setDnsOverride(
   enabled: boolean,
   confirmation?: string,
 ) {
-  return invoke<
-    { status: 'applied' } | { status: 'confirmation_required'; source: string }
-  >('set_dns_override', { profileUid, enabled, confirmation })
+  return commands.setDnsOverride(profileUid, enabled, confirmation ?? null)
 }
 
 export async function getDnsConfigContent() {
-  return invoke<string | null>('get_dns_config_content')
+  return commands.getDnsConfigContent()
 }
 
 export async function saveDnsConfig(dnsConfig: Record<string, unknown>) {
-  return invoke<void>('save_dns_config', { dnsConfig })
+  return commands.saveDnsConfig(dnsConfig as Record<string, JsonValue>)
 }
 
 export async function validateDnsConfig() {
-  return invoke<ValidationOutcome>('validate_dns_config')
+  return commands.validateDnsConfig()
 }
 
 export async function applyDnsConfig(apply: boolean) {
-  return invoke<void>('apply_dns_config', { apply })
+  return commands.applyDnsConfig(apply)
 }
 
 export async function takeDnsOverrideNotice() {
-  return invoke<boolean>('take_dns_override_notice')
+  return commands.takeDnsOverrideNotice()
 }
-
-export type ServiceFallbackNotice =
-  | { kind: 'unavailable' }
-  | { kind: 'coreRejected'; reason: string }
-  | { kind: 'notAutoStarted' }
 
 export async function takeServiceFallbackNotice() {
-  return invoke<ServiceFallbackNotice | null>('take_service_fallback_notice')
-}
-
-export interface CoreFailure {
-  kind: 'startFailed' | 'serviceCoreStopped'
-  detail: string
+  return commands.takeServiceFallbackNotice()
 }
 
 export async function getCoreStartupError() {
-  return invoke<CoreFailure | null>('get_core_startup_error')
+  return commands.getCoreStartupError()
 }
 
 export async function takeServiceRepairNotice() {
-  return invoke<boolean>('take_service_repair_notice')
+  return commands.takeServiceRepairNotice()
 }
 
 export async function takeServiceOwnerNotice() {
-  return invoke<string | null>('take_service_owner_notice')
+  return commands.takeServiceOwnerNotice()
 }
 
 export async function takeDiscardedKeysNotice() {
-  return invoke<string | null>('take_discarded_keys_notice')
+  return commands.takeDiscardedKeysNotice()
 }
 
 export async function getSystemProxy() {
-  return invoke<{
-    enable: boolean
-    server: string
-    bypass: string
-  }>('get_sys_proxy')
+  return commands.getSysProxy()
 }
 
-export async function getAutotemProxy() {
+export async function getAutoProxy() {
   try {
     debugLog('[API] 开始调用 get_auto_proxy')
-    const result = await invoke<{
-      enable: boolean
-      url: string
-    }>('get_auto_proxy')
+    const result = await commands.getAutoProxy()
     debugLog('[API] get_auto_proxy 调用成功:', result)
     return result
   } catch (error) {
@@ -260,30 +272,23 @@ export async function getAutotemProxy() {
 }
 
 export async function getEmbeddedServerPort() {
-  return invoke<number>('get_embedded_server_port')
+  return commands.getEmbeddedServerPort()
 }
 
 export async function changeClashCore(clashCore: string) {
-  return invoke<CommandFailure | null>('change_clash_core', { clashCore })
+  return commands.changeClashCore(clashCore)
 }
 
 export async function restartCore() {
-  return invoke<void>('restart_core')
-}
-
-export interface CoreUpgradeReport {
-  /** False when the managed core was already at the latest version. */
-  upgraded: boolean
-  from: string
-  to: string
+  return commands.restartCore()
 }
 
 export async function upgradeClashCore(force = false) {
-  return invoke<CoreUpgradeReport>('upgrade_clash_core', { force })
+  return commands.upgradeClashCore(force)
 }
 
 export async function restartApp() {
-  return invoke<void>('restart_app')
+  return commands.restartApp()
 }
 
 export async function installUpdate(
@@ -292,69 +297,57 @@ export async function installUpdate(
 ) {
   const channel = new Channel<DownloadEvent>()
   channel.onmessage = onEvent
-  return invoke<boolean>('install_update', { version, onEvent: channel })
+  return commands.installUpdate(version, channel)
 }
 
 export async function cancelUpdateDownload() {
-  return invoke<void>('cancel_update_download')
+  return commands.cancelUpdateDownload()
 }
 
 export async function getAppDir() {
-  return invoke<string>('get_app_dir')
+  return commands.getAppDir()
 }
 
 export async function openAppDir() {
-  return invoke<void>('open_app_dir').catch((err) => showNotice.error(err))
+  return commands.openAppDir().catch((err) => showNotice.error(err))
 }
 
 export async function openCoreDir() {
-  return invoke<void>('open_core_dir').catch((err) => showNotice.error(err))
+  return commands.openCoreDir().catch((err) => showNotice.error(err))
 }
 
 export async function openLogsDir() {
-  return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
+  return commands.openLogsDir().catch((err) => showNotice.error(err))
 }
 
 export async function syncRuntimeProviders() {
-  return invoke<void>('sync_runtime_providers').catch((err) => {
+  return commands.syncRuntimeProviders().catch((err) => {
     console.warn('failed to queue the provider cache sync', err)
   })
 }
 
 export async function cmdTestDelay(url: string) {
-  return invoke<number>('test_delay', { url })
+  return commands.testDelay(url)
 }
 
 export async function invoke_uwp_tool() {
-  return invoke<void>('invoke_uwp_tool').catch((err) =>
-    showNotice.error(err, 1500),
-  )
+  return commands.invokeUwpTool().catch((err) => showNotice.error(err, 1500))
 }
 
 export async function openDevTools() {
-  return invoke('open_devtools')
+  return commands.openDevtools()
 }
 
 export async function exitApp() {
-  return invoke('exit_app')
+  return commands.exitApp()
 }
 
 export async function exportDiagnosticInfo() {
-  return invoke('export_diagnostic_info')
-}
-
-interface SystemInfo {
-  system_name: string
-  system_version: string
-  system_kernel_version: string
-  system_arch: string
-  app_version: string
-  app_core_mode: string
-  app_is_admin: boolean
+  return commands.exportDiagnosticInfo()
 }
 
 export async function getSystemInfo() {
-  return invoke<SystemInfo>('get_system_info')
+  return commands.getSystemInfo()
 }
 
 export async function copyIconFile(
@@ -373,55 +366,55 @@ export async function copyIconFile(
     current_t: currentTime,
   }
 
-  return invoke<void>('copy_icon_file', { path, iconInfo })
+  return commands.copyIconFile(path, iconInfo)
 }
 
 export async function downloadIconCache(url: string, name: string) {
-  return invoke<string>('download_icon_cache', { url, name })
+  return commands.downloadIconCache(url, name)
 }
 
 export async function getNetworkInterfaces() {
-  return invoke<string[]>('get_network_interfaces')
+  return commands.getNetworkInterfaces()
 }
 
 export async function getSystemHostname() {
-  return invoke<string>('get_system_hostname')
+  return commands.getSystemHostname()
 }
 
 export async function getNetworkInterfacesInfo() {
-  return invoke<INetworkInterface[]>('get_network_interfaces_info')
+  return commands.getNetworkInterfacesInfo()
 }
 
 export async function createWebdavBackup() {
-  return invoke<void>('create_webdav_backup')
+  return commands.createWebdavBackup()
 }
 
 export async function createLocalBackup() {
-  return invoke<void>('create_local_backup')
+  return commands.createLocalBackup()
 }
 
 export async function deleteWebdavBackup(filename: string) {
-  return invoke<void>('delete_webdav_backup', { filename })
+  return commands.deleteWebdavBackup(filename)
 }
 
 export async function deleteLocalBackup(filename: string) {
-  return invoke<void>('delete_local_backup', { filename })
+  return commands.deleteLocalBackup(filename)
 }
 
 export async function restoreWebDavBackup(filename: string) {
-  return invoke<void>('restore_webdav_backup', { filename })
+  return commands.restoreWebdavBackup(filename)
 }
 
 export async function restoreLocalBackup(filename: string) {
-  return invoke<void>('restore_local_backup', { filename })
+  return commands.restoreLocalBackup(filename)
 }
 
 export async function importLocalBackup(source: string) {
-  return invoke<string>('import_local_backup', { source })
+  return commands.importLocalBackup(source)
 }
 
 export async function exportLocalBackup(filename: string, destination: string) {
-  return invoke<void>('export_local_backup', { filename, destination })
+  return commands.exportLocalBackup(filename, destination)
 }
 
 export async function saveWebdavConfig(
@@ -429,177 +422,82 @@ export async function saveWebdavConfig(
   username: string,
   password: string,
 ) {
-  return invoke<void>('save_webdav_config', {
-    url,
-    username,
-    password,
-  })
+  return commands.saveWebdavConfig(url, username, password)
 }
 
 export async function listWebDavBackup() {
-  const list: IWebDavFile[] = await invoke<IWebDavFile[]>('list_webdav_backup')
-  list.forEach((item) => {
-    item.filename = item.href.split('/').pop() as string
-  })
-  return list
+  return (await commands.listWebdavBackup()).map((item) => ({
+    ...item,
+    filename: item.href.split('/').pop() ?? '',
+  }))
 }
 
 export async function listLocalBackup() {
-  return invoke<ILocalBackupFile[]>('list_local_backup')
+  return commands.listLocalBackup()
 }
-
-export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
-
-type ServiceHealth =
-  | 'unknown'
-  | 'ready'
-  | 'notInstalled'
-  | 'versionMismatch'
-  | 'unavailable'
-
-type PendingServiceAction =
-  | 'install'
-  | 'uninstall'
-  | 'reinstall'
-  | 'forceReinstall'
 
 /** Consistent core/service snapshot with backend-derived availability flags. */
-export interface RunState {
-  mode: RunningMode
-  service: ServiceHealth
-  serviceUnavailableReason: string | null
-  pendingAction: PendingServiceAction | null
-  sidecarAllowed: boolean
-  isAdmin: boolean
-  opInFlight: boolean
-  serviceUsable: boolean
-  tunCapable: boolean
-  serviceNeedsAttention: boolean
-}
 
 export const getRuntimeState = async () => {
-  return invoke<RunState>('get_runtime_state')
-}
-
-export type FailedOperation =
-  | 'systemProxyEnable'
-  | 'systemProxyDisable'
-  | 'systemProxyRestore'
-  | 'systemProxyGuard'
-
-export interface PendingFailure {
-  code: string
-  detail: string
-  operation: FailedOperation
-  sequence: number
+  return commands.getRuntimeState()
 }
 
 export const getPendingFailures = async () => {
-  return invoke<PendingFailure[]>('get_pending_failures')
-}
-
-export interface SidecarFailureSnapshot {
-  revision: number
-  detail: string | null
+  return commands.getPendingFailures()
 }
 
 export const getSidecarFailure = async () => {
-  return invoke<SidecarFailureSnapshot>('get_sidecar_failure')
+  return commands.getSidecarFailure()
 }
 
 export const getAppUptime = async () => {
-  return invoke<number>('get_app_uptime')
+  return commands.getAppUptime()
 }
 
-export type ServiceInstallOutcome =
-  | { status: 'installed' }
-  | { status: 'sidecar'; reason: string }
-
 export const installService = async () => {
-  return invoke<ServiceInstallOutcome>('install_service')
+  return commands.installService()
 }
 
 export const uninstallService = async () => {
-  return invoke<void>('uninstall_service')
+  return commands.uninstallService()
 }
 
 export const reinstallService = async () => {
-  return invoke<ServiceInstallOutcome>('reinstall_service')
+  return commands.reinstallService()
 }
 
 export const repairService = async () => {
-  return invoke<ServiceInstallOutcome>('repair_service')
+  return commands.repairService()
 }
 
 export const continueWithSidecar = async () => {
-  return invoke<void>('continue_with_sidecar')
+  return commands.continueWithSidecar()
 }
 
 export const entry_lightweight_mode = async () => {
-  return invoke<void>('entry_lightweight_mode')
+  return commands.entryLightweightMode()
 }
 
 export async function getNextUpdateTime(uid: string) {
-  return invoke<number | null>('get_next_update_time', { uid })
+  return commands.getNextUpdateTime(uid)
 }
-
-interface ToggleableProxyPort {
-  enabled: boolean
-  port: number
-}
-
-export interface ProxyPortSettings {
-  mixedPort: number
-  socks: ToggleableProxyPort
-  http: ToggleableProxyPort
-  redir: ToggleableProxyPort
-  tproxy: ToggleableProxyPort
-}
-
-export type ListenerTransport = 'tcp' | 'udp'
-
-export interface ListenerProbe {
-  address: string
-  transports: ListenerTransport[]
-}
-
-export type ListenerProbeOutcome =
-  | { status: 'available' }
-  | {
-      status: 'conflict'
-      port: number
-      transport: ListenerTransport
-    }
-  | { status: 'invalid'; message: string }
-  | { status: 'indeterminate'; message: string }
-
-export type SaveProxyPortsOutcome =
-  | { status: 'saved' }
-  | { status: 'conflict'; port: number; transport: ListenerTransport }
 
 export const probeListener = async (request: ListenerProbe) => {
-  return invoke<ListenerProbeOutcome>('probe_listener', { request })
+  return commands.probeListener(request)
 }
 
 export const saveProxyPorts = async (settings: ProxyPortSettings) => {
-  return invoke<SaveProxyPortsOutcome>('save_proxy_ports', { settings })
-}
-
-export interface UnlockItem {
-  name: string
-  status: string
-  region?: string | null
-  check_time?: string | null
+  return commands.saveProxyPorts(settings)
 }
 
 export async function getUnlockItems() {
-  return invoke<UnlockItem[]>('get_unlock_items')
+  return commands.getUnlockItems()
 }
 
 export async function checkMediaUnlock(onComplete: Channel<UnlockItem>) {
-  return invoke<UnlockItem[]>('check_media_unlock', { onComplete })
+  return commands.checkMediaUnlock(onComplete)
 }
 
 export async function checkMediaUnlockItem(name: string) {
-  return invoke<UnlockItem>('check_media_unlock_item', { name })
+  return commands.checkMediaUnlockItem(name)
 }

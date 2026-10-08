@@ -18,6 +18,7 @@ use std::{
 
 /// Merges one selection pair into fresh backend state to avoid stale-list overwrites.
 #[tauri::command]
+#[specta::specta]
 pub async fn record_selected_node(group_name: String, node: String) -> CmdResult<()> {
     crate::config::profiles::record_selected_node(&group_name, &node)
         .await
@@ -25,6 +26,7 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn forget_selected_node(group_name: String) -> CmdResult<()> {
     crate::config::profiles::forget_selected_node(&group_name)
         .await
@@ -104,6 +106,7 @@ fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let runtime = Config::runtime().await;
     let latest_runtime = runtime.latest_arc();
@@ -123,6 +126,7 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
     if TRAY_SYNC_RUNNING
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)

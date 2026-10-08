@@ -445,10 +445,14 @@ export const ProxyChain = ({
     if (isConnected) {
       setIsConnecting(true)
       try {
-        await mutate(() => updateProxyChainConfigInRuntime(null), {
-          id: 'update-proxy-chain-runtime',
-          errorNotice: false,
-        })
+        const result = await mutate(
+          () => updateProxyChainConfigInRuntime(null),
+          {
+            id: 'update-proxy-chain-runtime',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
 
         const targetGroup =
           mode === 'global'
@@ -461,7 +465,7 @@ export const ProxyChain = ({
               id: `select-proxy-node:${targetGroup}`,
               errorNotice: false,
             })
-            recordSelection(targetGroup, 'DIRECT')
+            await recordSelection(targetGroup, 'DIRECT')
           } catch {
             if (currentProxyChain.length >= 1) {
               try {
@@ -473,7 +477,7 @@ export const ProxyChain = ({
                     errorNotice: false,
                   },
                 )
-                recordSelection(targetGroup, currentProxyChain[0].name)
+                await recordSelection(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
               }
@@ -519,10 +523,14 @@ export const ProxyChain = ({
       // 第一步：保存链式代理配置
       const chainProxies = currentProxyChain.map((node) => node.name)
       debugLog('Saving chain config:', chainProxies)
-      await mutate(() => updateProxyChainConfigInRuntime(chainProxies), {
-        id: 'update-proxy-chain-runtime',
-        errorNotice: false,
-      })
+      const result = await mutate(
+        () => updateProxyChainConfigInRuntime(chainProxies),
+        {
+          id: 'update-proxy-chain-runtime',
+          errorNotice: false,
+        },
+      )
+      if (!result.ok) return
       debugLog('Chain configuration saved successfully')
 
       // 第二步：连接到代理链的最后一个节点
@@ -545,12 +553,12 @@ export const ProxyChain = ({
       )
       // The chain moves the group like any other selection, so the profile has to learn about
       // it: what the profile holds is what gets re-applied the next time the core starts.
-      recordSelection(targetGroup || 'GLOBAL', lastNode.name)
+      await recordSelection(targetGroup || 'GLOBAL', lastNode.name)
       localStorage.setItem('proxy-chain-group', targetGroup || 'GLOBAL')
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
       // 刷新代理信息以更新连接状态
-      refreshProxy()
+      await refreshProxy()
       debugLog('Successfully connected to proxy chain')
     } catch (error) {
       console.error('Failed to connect to proxy chain:', error)
@@ -619,14 +627,15 @@ export const ProxyChain = ({
             <IconButton
               size="small"
               onClick={() => {
-                mutate(() => updateProxyChainConfigInRuntime(null), {
+                void mutate(() => updateProxyChainConfigInRuntime(null), {
                   id: 'update-proxy-chain-runtime',
-                  errorNotice: false,
-                })
-                localStorage.removeItem('proxy-chain-group')
-                localStorage.removeItem('proxy-chain-exit-node')
-                localStorage.removeItem('proxy-chain-items')
-                onUpdateChain([])
+                  onFulfilled: () => {
+                    localStorage.removeItem('proxy-chain-group')
+                    localStorage.removeItem('proxy-chain-exit-node')
+                    localStorage.removeItem('proxy-chain-items')
+                    onUpdateChain([])
+                  },
+                }).catch(() => {})
               }}
               sx={{
                 color: theme.palette.error.main,

@@ -56,26 +56,7 @@ const openProfileHome = (url: string) => {
   void openExternalUrl(url).catch(showNotice.error)
 }
 
-// 使用类型定义，而不是导入
-interface ProfileExtra {
-  upload: number
-  download: number
-  total: number
-  expire: number
-}
-
-interface ProfileItem {
-  uid: string
-  type?: 'local' | 'remote' | 'merge' | 'script'
-  name?: string
-  desc?: string
-  file?: string
-  url?: string
-  updated?: number
-  extra?: ProfileExtra
-  home?: string
-  option?: any
-}
+type ProfileItem = IProfileItem
 
 interface HomeProfileCardProps {
   current: ProfileItem | null | undefined
@@ -298,10 +279,13 @@ export const HomeProfileCard = ({
 
     setUpdating(true)
     try {
-      await mutate(() => updateProfile(current.uid, current.option), {
-        id: `update-profile:${current.uid}`,
-        errorNotice: false,
-      })
+      await mutate(
+        () => updateProfile(current.uid!, current.option ?? undefined),
+        {
+          id: `update-profile:${current.uid}`,
+          errorNotice: false,
+        },
+      )
       onProfileUpdated?.()
 
       // 刷新首页数据
@@ -345,7 +329,7 @@ export const HomeProfileCard = ({
             flex: 1,
           },
         }}
-        title={current.name}
+        title={current.name!}
       >
         <span>{current.name}</span>
         <LaunchOutlined
