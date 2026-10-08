@@ -533,8 +533,7 @@ fn create_subcreate_proxy_menu_item(
                             name,
                             view.records
                                 .get(record_id)
-                                .and_then(|node| node.extra.get(&url))
-                                .map(|extra| &extra.history),
+                                .map(|node| node.extra.get(&url).map_or(&node.history, |extra| &extra.history)),
                         ),
                         ProxyMemberRef::Group { name } => (
                             name,
@@ -542,8 +541,7 @@ fn create_subcreate_proxy_menu_item(
                                 .iter()
                                 .chain(view.global.iter())
                                 .find(|group| &group.name == name)
-                                .and_then(|group| group.extra.get(&url))
-                                .map(|extra| &extra.history),
+                                .map(|group| group.extra.get(&url).map_or(&group.history, |extra| &extra.history)),
                         ),
                         ProxyMemberRef::Unresolved { name, .. } => (name, None),
                     };
@@ -657,15 +655,15 @@ async fn create_tray_menu(
     let fetch_proxy_groups =
         options.include_proxy_groups && verge_settings.tray_proxy_groups_display_mode.as_deref() != Some("disable");
 
+    // Proxy data must remain optional so a stopped Core cannot roll back unrelated settings.
     let proxy_view = if fetch_proxy_groups {
-        Some(
-            tokio::time::timeout(
-                Duration::from_millis(1000),
-                cmd::proxy::proxy_view(Some(Duration::from_millis(750))),
-            )
-            .await?
-            .map_err(anyhow::Error::msg)?,
+        tokio::time::timeout(
+            Duration::from_millis(1000),
+            cmd::proxy::proxy_view(Some(Duration::from_millis(750))),
         )
+        .await
+        .ok()
+        .and_then(Result::ok)
     } else {
         None
     };

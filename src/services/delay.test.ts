@@ -160,3 +160,39 @@ test('same-named provider members keep separate measurements and listeners', asy
   expect(delayManager.getDelayFix(first, 'provider-collision')).toBe(40)
   expect(delayManager.getDelayFix(second, 'provider-collision')).toBe(125)
 })
+
+test.each(['core', 'provider'] as const)(
+  'cached %s delays follow source identity after record IDs move',
+  (kind) => {
+    const original = node(`stable-${kind}`)
+    const replacement = node(`replacement-${kind}`)
+    if (original.kind !== 'node' || replacement.kind !== 'node')
+      throw new Error('Expected nodes')
+    const source = (proxyName: string) =>
+      kind === 'core'
+        ? { kind, proxyName }
+        : { kind, providerName: 'subscription', proxyName }
+    original.node.source = source(original.ref.name)
+    replacement.node.source = source(replacement.ref.name)
+    original.node.recordId = 'position:0'
+    replacement.node.recordId = 'position:0'
+    delayManager.setDelay(original, `reorder-${kind}`, 40)
+    expect(delayManager.getDelayFix(replacement, `reorder-${kind}`)).toBe(-1)
+    original.node.recordId = 'position:1'
+    expect(delayManager.getDelayFix(original, `reorder-${kind}`)).toBe(40)
+  },
+)
+
+test('unmeasured selectors show automatic history without replacing a manual URL result', () => {
+  const member = node('selector-member')
+  if (member.kind !== 'node') throw new Error('Expected node')
+  member.node.history = [
+    { time: new Date(Date.now() + 1000).toISOString(), delay: 126 },
+  ]
+  member.node.extra = {
+    'http://localhost/automatic': { alive: true, history: member.node.history },
+  }
+  expect(delayManager.getDelayFix(member, 'selector')).toBe(126)
+  delayManager.setDelay(member, 'selector', 50)
+  expect(delayManager.getDelayFix(member, 'selector')).toBe(50)
+})

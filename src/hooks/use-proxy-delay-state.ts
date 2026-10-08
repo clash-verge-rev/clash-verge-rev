@@ -5,6 +5,7 @@ import { useVerge } from '@/hooks/use-verge'
 import delayManager, { type DelayUpdate } from '@/services/delay'
 import {
   isInteractableMember,
+  memberDetails,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 
@@ -65,7 +66,9 @@ export function useProxyDelayState(
     }
 
     let updatedAt = 0
-    const history = delayManager.getHistory(member, groupName)
+    const history =
+      delayManager.getHistory(member, groupName) ??
+      memberDetails(member)?.history
     if (history && history.length > 0) {
       const lastRecord = history[history.length - 1]
       const parsed = Date.parse(lastRecord.time)

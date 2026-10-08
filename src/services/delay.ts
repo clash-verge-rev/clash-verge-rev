@@ -18,12 +18,17 @@ export type DelaySnapshot = {
   of: (member: ResolvedProxyMember) => number
 }
 
-const hashKey = (member: ResolvedProxyMember, group: string) =>
-  JSON.stringify([
+const hashKey = (member: ResolvedProxyMember, group: string) => {
+  if (member.kind !== 'node')
+    return JSON.stringify([group, member.kind, member.ref.name])
+  const source = member.node.source
+  return JSON.stringify([
     group,
-    member.kind,
-    member.kind === 'node' ? member.node.recordId : member.ref.name,
+    source.kind,
+    source.kind === 'provider' ? source.providerName : null,
+    source.proxyName,
   ])
+}
 
 export interface DelayUpdate {
   delay: number
@@ -265,7 +270,8 @@ class DelayManager {
 
   getDelayFix(member: ResolvedProxyMember, group: string) {
     if (member.kind === 'unresolved') return -1
-    const history = this.getHistory(member, group)
+    const history =
+      this.getHistory(member, group) ?? memberDetails(member)?.history
     const update = this.getDelayUpdate(member, group)
     if (update && (update.delay >= 0 || update.delay === -2)) {
       return update.delay

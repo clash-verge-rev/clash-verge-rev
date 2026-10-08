@@ -117,6 +117,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
 
       {textState === 'url' && (
         <ProxyTestUrlInput
+          name={groupName}
           inputRef={inputRef}
           autoComplete="new-password"
           hiddenLabel

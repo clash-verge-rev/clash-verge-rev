@@ -193,6 +193,7 @@ export const ProxyHead = ({
 
       {textState === 'url' && (
         <ProxyTestUrlInput
+          name={groupName}
           autoComplete="new-password"
           autoFocus={autoFocus}
           hiddenLabel
