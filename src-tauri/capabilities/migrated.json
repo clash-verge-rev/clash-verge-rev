@@ -5,13 +5,13 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "fs:allow-read-file",
+    "fs:allow-read-text-file",
     "fs:allow-exists",
     {
       "identifier": "fs:scope",
       "allow": ["$APPDATA/**", "$RESOURCE/../**", "**"]
     },
-    "fs:allow-write-file",
+    "fs:allow-write-text-file",
     {
       "identifier": "fs:scope",
       "allow": ["$APPDATA/**", "$RESOURCE/../**", "**"]

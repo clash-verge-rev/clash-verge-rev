@@ -16,7 +16,8 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
 import { useProfiles } from '@/hooks/use-profiles'
-import { createProfile, patchProfile } from '@/services/cmds'
+import { useSubscriptionGroups } from '@/hooks/use-subscription-groups'
+import { createProfile, patchProfile, getProfiles } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { version } from '@root/package.json'
 
@@ -42,6 +43,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const [openType, setOpenType] = useState<'new' | 'edit'>('new')
   const [loading, setLoading] = useState(false)
   const { profiles } = useProfiles()
+  const { groups, setProfileGroup } = useSubscriptionGroups()
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
 
   const fileDataRef = useRef<string | null>(null)
 
@@ -63,6 +66,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   useImperativeHandle(ref, () => ({
     create: () => {
       setOpenType('new')
+      setSelectedGroupId('')
       setOpen(true)
     },
     edit: (item: IProfileItem) => {
@@ -70,6 +74,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         Object.entries(item).forEach(([key, value]) => {
           setValue(key as any, value)
         })
+        const foundGroup = groups.find((g) => g.uids.includes(item.uid))
+        setSelectedGroupId(foundGroup ? foundGroup.id : '')
       }
       setOpenType('edit')
       setOpen(true)
@@ -126,6 +132,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           self_proxy: form.option?.self_proxy,
         }
 
+        // Custom subscription groups: remember the existing profile uids first so
+        // the newly created profile can be identified once creation succeeded.
+        const knownMainUids =
+          openType === 'new'
+            ? new Set(
+                (profiles?.items ?? [])
+                  .filter(
+                    (profile) =>
+                      profile?.uid &&
+                      (profile.type === 'local' || profile.type === 'remote'),
+                  )
+                  .map((profile) => profile.uid ?? ''),
+              )
+            : null
+
         if (!isRemote) {
           if (openType === 'new') {
             await createProfile(item, fileDataRef.current)
@@ -180,6 +201,25 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               'profiles.modals.profileForm.feedback.notifications.creationSuccess',
             )
           }
+        }
+
+        // Custom subscription groups: assign the created/edited profile to the
+        // selected group. Applies to both local and remote profiles.
+        if (openType === 'new') {
+          const latestProfiles = await getProfiles()
+          const createdUid =
+            latestProfiles?.items?.find(
+              (profile) =>
+                profile?.uid &&
+                (profile.type === 'local' || profile.type === 'remote') &&
+                !knownMainUids?.has(profile.uid),
+            )?.uid ?? null
+
+          if (createdUid) {
+            await setProfileGroup(createdUid, selectedGroupId || null)
+          }
+        } else if (form.uid) {
+          await setProfileGroup(form.uid, selectedGroupId || null)
         }
 
         setOpen(false)
@@ -279,6 +319,23 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           />
         )}
       />
+
+      <FormControl size="small" fullWidth sx={{ mt: 1.5, mb: 1 }}>
+        <InputLabel id="profile-group-select-label">所属分组</InputLabel>
+        <Select
+          labelId="profile-group-select-label"
+          value={selectedGroupId}
+          label="所属分组"
+          onChange={(e) => setSelectedGroupId(e.target.value as string)}
+        >
+          <MenuItem value="">无</MenuItem>
+          {groups.map((group) => (
+            <MenuItem key={group.id} value={group.id}>
+              {group.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       {isLocal && openType === 'new' && (
         <FileInput
