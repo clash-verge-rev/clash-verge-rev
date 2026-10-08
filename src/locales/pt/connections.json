@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Conexões"
+  },
+  "components": {
+    "fields": {
+      "host": "Host",
+      "dlSpeed": "Vel. de download",
+      "ulSpeed": "Vel. de upload",
+      "chains": "Cadeias",
+      "rule": "Regra",
+      "process": "Processo",
+      "time": "Hora",
+      "source": "Origem",
+      "destination": "Destino",
+      "destinationPort": "Porta de destino",
+      "type": "Tipo"
+    },
+    "order": {
+      "default": "Padrão",
+      "uploadSpeed": "Velocidade de upload",
+      "downloadSpeed": "Velocidade de download"
+    },
+    "actions": {
+      "active": "Ativas",
+      "closed": "Fechadas",
+      "closeConnection": "Fechar conexão"
+    },
+    "columnManager": {
+      "title": "Colunas",
+      "dragHandle": "Alça de arrastar"
+    }
+  }
+}

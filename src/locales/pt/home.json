@@ -1,0 +1,156 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "Modo leve",
+      "manual": "Manual",
+      "settings": "Configurações do início"
+    },
+    "cards": {
+      "trafficStats": "Estatísticas de tráfego",
+      "networkSettings": "Configurações de rede",
+      "proxyMode": "Modo de proxy"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Cartão de perfil",
+        "currentProxy": "Cartão do proxy atual",
+        "network": "Cartão de configurações de rede",
+        "proxyMode": "Cartão do modo de proxy",
+        "traffic": "Cartão de estatísticas de tráfego",
+        "tests": "Cartão de testes de sites",
+        "ip": "Cartão de informações de IP",
+        "clashInfo": "Cartões de informações do Clash",
+        "systemInfo": "Cartões de informações do sistema"
+      },
+      "title": "Configurações do início"
+    },
+    "title": "Início"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "Proxy do sistema ativado",
+        "systemProxyDisabled": "Proxy do sistema desativado",
+        "tunModeServiceRequired": "Modo TUN requer o serviço",
+        "tunModeEnabled": "Modo TUN ativado",
+        "tunModeDisabled": "Modo TUN desativado"
+      },
+      "tooltips": {
+        "systemProxy": "Informações do proxy do sistema",
+        "tunMode": "Informações de interceptação do modo TUN"
+      }
+    },
+    "clashInfo": {
+      "title": "Informações do Clash",
+      "fields": {
+        "coreVersion": "Versão do núcleo",
+        "systemProxyAddress": "Endereço do proxy do sistema",
+        "mixedPort": "Porta mista",
+        "uptime": "Tempo ativo",
+        "rulesCount": "Quantidade de regras"
+      }
+    },
+    "systemInfo": {
+      "title": "Informações do sistema",
+      "fields": {
+        "osInfo": "Informações do SO",
+        "autoLaunch": "Início automático",
+        "runningMode": "Modo de execução",
+        "lastCheckUpdate": "Última verificação de atualização",
+        "vergeVersion": "Versão do Verge"
+      },
+      "actions": {
+        "settings": "Configurações"
+      },
+      "badges": {
+        "notRunning": "Núcleo não está em execução",
+        "adminMode": "Modo administrador",
+        "serviceMode": "Modo serviço",
+        "sidecarMode": "Modo usuário",
+        "adminServiceMode": "Modo admin + serviço"
+      }
+    },
+    "ipInfo": {
+      "title": "Informações de IP",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Localização",
+        "timezone": "Fuso horário",
+        "autoRefresh": "Atualização automática",
+        "unknown": "Desconhecido"
+      },
+      "errors": {
+        "load": "Falha ao obter informações de IP",
+        "loadWithDetails": "Falha ao obter informações de IP: {{message}}",
+        "noServices": "Nenhum serviço de detecção de IP disponível"
+      }
+    },
+    "currentProxy": {
+      "title": "Nó atual",
+      "actions": {
+        "refreshDelay": "Teste de latência"
+      },
+      "labels": {
+        "globalMode": "Modo global",
+        "directMode": "Modo direto",
+        "group": "Grupo",
+        "proxy": "Proxy",
+        "noActiveNode": "Nenhum nó de proxy ativo"
+      },
+      "status": {
+        "testing": "Testando",
+        "untested": "Não testado",
+        "error": "Erro",
+        "timeout": "Tempo esgotado",
+        "latencyHigh": "Latência alta",
+        "latencyMedium": "Latência moderada",
+        "latencyGood": "Latência boa",
+        "latencyExcellent": "Latência excelente",
+        "uninitialized": "Não inicializado",
+        "noProxyNode": "Nenhum nó de proxy"
+      }
+    },
+    "tests": {
+      "title": "Testes de sites"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Velocidade de upload",
+        "downloadSpeed": "Velocidade de download",
+        "activeConnections": "Conexões ativas",
+        "memoryUsage": "Uso do núcleo"
+      },
+      "legends": {
+        "upload": "Envio",
+        "download": "Recebimento"
+      },
+      "patterns": {
+        "minutes": "{{time}} minutos"
+      },
+      "unknownTime": "Horário desconhecido",
+      "chartStyles": {
+        "smooth": "Suave",
+        "linear": "Linear"
+      },
+      "diagnostics": "Pontos: {{points}} | Agrupados: {{compressed}} | FPS: {{fps}}"
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Erro de comunicação com o núcleo, reinicie o computador e tente novamente"
+      },
+      "labels": {
+        "rule": "Regra",
+        "global": "Global",
+        "direct": "Direto"
+      },
+      "descriptions": {
+        "rule": "Escolhe proxies automaticamente de acordo com o conjunto de regras.",
+        "global": "Encaminha todas as requisições de rede pelo proxy selecionado.",
+        "direct": "Ignora o proxy e conecta diretamente à internet."
+      }
+    }
+  }
+}
