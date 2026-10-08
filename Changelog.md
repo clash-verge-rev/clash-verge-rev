@@ -22,6 +22,10 @@
 
 - 修复 macOS 关闭 TUN 或退出后，系统 DNS 仍停留在 `114.114.114.114` 导致无法解析域名的问题
 
+**🖥️/🍎 Windows/macOS**
+
+- 修复 Windows/macOS 打开系统托盘菜单时，节点延迟与自动选择状态未刷新的问题
+
 </details>
 
 <details>
