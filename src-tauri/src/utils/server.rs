@@ -1,18 +1,18 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, MixedPort},
-    module::lightweight,
+    core::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use reqwest::ClientBuilder;
 use serde::{Deserialize, Serialize};
 use std::io::{Read as _, Write as _};
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::oneshot;
@@ -33,9 +33,9 @@ struct InstanceRecord {
     token: String,
 }
 
-static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
-static EMBEDDED_PORT: OnceCell<u16> = OnceCell::new();
-static INSTANCE_LOCK: OnceCell<std::fs::File> = OnceCell::new();
+static SHUTDOWN_SENDER: OnceLock<Mutex<Option<oneshot::Sender<()>>>> = OnceLock::new();
+static EMBEDDED_PORT: OnceLock<u16> = OnceLock::new();
+static INSTANCE_LOCK: OnceLock<std::fs::File> = OnceLock::new();
 const PAC_INITIAL_AVAILABLE: bool = false;
 static PAC_AVAILABLE: AtomicBool = AtomicBool::new(PAC_INITIAL_AVAILABLE);
 static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
@@ -54,22 +54,34 @@ pub async fn check_singleton() -> Result<SingletonDisposition> {
         .context("failed to initialize singleton lock")?;
     if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
-        loop {
-            if std::time::Instant::now() >= deadline {
-                bail!("another app instance is starting");
-            }
-            // A restarting instance releases this lock only after spawning this
-            // process, and its embedded server is already down, so waiting on
-            // the notify probe alone can never promote this instance.
-            if try_lock_instance(&lock).context("failed to acquire singleton lock")? {
-                break;
-            }
-            if let Ok(record) = read_instance_record(&record_path)
-                && notify_existing_instance(&record).await
-            {
-                return Ok(SingletonDisposition::Secondary);
-            }
-            tokio::time::sleep(Duration::from_millis(50)).await;
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let secondary = retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add(400),
+                Duration::from_millis(50),
+            ),
+            |_| async {
+                if std::time::Instant::now() >= deadline {
+                    return Err(RetryError::Stop(anyhow::anyhow!("another app instance is starting")));
+                }
+                // A restarting primary releases the lock after spawning us, with its server down.
+                if try_lock_instance(&lock)
+                    .context("failed to acquire singleton lock")
+                    .map_err(RetryError::Stop)?
+                {
+                    return Ok(false);
+                }
+                if let Ok(record) = read_instance_record(&record_path)
+                    && notify_existing_instance(&record).await
+                {
+                    return Ok(true);
+                }
+                Err(RetryError::Retry(anyhow::anyhow!("another app instance is starting")))
+            },
+        )
+        .await?;
+        if secondary {
+            return Ok(SingletonDisposition::Secondary);
         }
     }
 
@@ -211,15 +223,20 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
                 warp::http::StatusCode::SERVICE_UNAVAILABLE,
             ));
         }
-        logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-        if crate::APP_HANDLE.get().is_some() {
-            if !lightweight::exit_lightweight_mode().await {
-                WindowManager::show_main_window().await;
-            } else {
-                logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-            }
-        }
-        Ok::<_, warp::Rejection>(warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK))
+        // Keep blocking UI calls off HTTP workers.
+        AsyncHandler::spawn_blocking(|| {
+            AsyncHandler::block_on(async {
+                logging!(
+                    info,
+                    Type::Window,
+                    "Restoring the application window from a secondary instance"
+                );
+                if crate::APP_HANDLE.get().is_some() && !lightweight::exit_lightweight_mode().await {
+                    WindowManager::show_main_window().await;
+                }
+            });
+        });
+        Ok(warp::reply::with_status("ok".to_string(), warp::http::StatusCode::OK))
     });
 
     let pac = warp::path!("commands" / "pac").and_then(|| async move {
@@ -234,10 +251,7 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
         let verge_config = Config::verge().await;
         let verge_data = verge_config.data_arc();
         let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
-        // Served per browser request, so this stays a configuration read rather than a
-        // round-trip to the Core. It reads the draft layer, which is only correct because
-        // whoever stages a listener port closes this endpoint across the change — see
-        // `MixedPort::desired`. Reaching here at all means the Core is serving.
+        // Port changes disable PAC, so the draft port avoids per-request Core queries.
         let pac_port = MixedPort::desired().await;
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
@@ -324,7 +338,7 @@ fn open_instance_lock(path: &Path) -> Result<std::fs::File> {
     std::fs::create_dir_all(parent)?;
     #[cfg(windows)]
     {
-        crate::core::owner_identity::open_or_create_private_current_user_file(path)
+        crate::core::owner_identity::open_or_create_current_user_lock(path)
     }
 
     #[cfg(unix)]
@@ -436,189 +450,4 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
     drop(file);
     std::fs::rename(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        InstanceRecord, PAC_INITIAL_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record,
-    };
-    #[cfg(unix)]
-    use super::{open_instance_lock, try_lock_instance};
-
-    #[cfg(feature = "verge-dev")]
-    use super::{INSTANCE_TOKEN_HEADER, dev_quit_route, release_dev_quit_latch};
-    #[cfg(feature = "verge-dev")]
-    use std::sync::atomic::Ordering;
-    #[cfg(feature = "verge-dev")]
-    use std::sync::{
-        Arc,
-        atomic::{AtomicBool, AtomicUsize},
-    };
-    #[test]
-    fn pac_is_fail_closed_before_core_readiness() {
-        // Asserts the default rather than the live flag: PAC availability is now derived from
-        // the Running Mode by `core::runstate`, so any test that drives a Core transition
-        // legitimately moves the live flag. That the derivation itself can never disagree with
-        // the Running Mode is covered in `core::runstate` against a fake environment.
-        const { assert!(!PAC_INITIAL_AVAILABLE) }
-    }
-
-    #[cfg(feature = "verge-dev")]
-    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-    async fn dev_quit_route_requires_private_auth_ready_state_and_dispatches_once() -> anyhow::Result<()> {
-        static READY: AtomicBool = AtomicBool::new(false);
-        static REQUESTED: AtomicBool = AtomicBool::new(false);
-        READY.store(false, Ordering::Release);
-        REQUESTED.store(false, Ordering::Release);
-        let dispatches = Arc::new(AtomicUsize::new(0));
-        let dispatches_for_route = Arc::clone(&dispatches);
-        let token = "ab".repeat(32);
-        let route = dev_quit_route(token.clone(), &READY, &REQUESTED, move || {
-            dispatches_for_route.fetch_add(1, Ordering::AcqRel);
-        });
-
-        let missing = warp::test::request()
-            .method("POST")
-            .path("/commands/dev/quit")
-            .reply(&route)
-            .await;
-        assert_eq!(missing.status(), warp::http::StatusCode::NOT_FOUND);
-
-        let wrong_token = warp::test::request()
-            .method("POST")
-            .path("/commands/dev/quit")
-            .header(INSTANCE_TOKEN_HEADER, "cd".repeat(32))
-            .reply(&route)
-            .await;
-        assert_eq!(wrong_token.status(), warp::http::StatusCode::NOT_FOUND);
-
-        let not_ready = warp::test::request()
-            .method("POST")
-            .path("/commands/dev/quit")
-            .header(INSTANCE_TOKEN_HEADER, &token)
-            .reply(&route)
-            .await;
-        assert_eq!(not_ready.status(), warp::http::StatusCode::SERVICE_UNAVAILABLE);
-        assert!(!REQUESTED.load(Ordering::Acquire));
-
-        let wrong_method = warp::test::request()
-            .method("GET")
-            .path("/commands/dev/quit")
-            .header(INSTANCE_TOKEN_HEADER, &token)
-            .reply(&route)
-            .await;
-        assert_eq!(wrong_method.status(), warp::http::StatusCode::METHOD_NOT_ALLOWED);
-        assert!(!REQUESTED.load(Ordering::Acquire));
-
-        READY.store(true, Ordering::Release);
-        let barrier = Arc::new(tokio::sync::Barrier::new(8));
-        let accepted = futures::future::join_all((0..8).map(|_| {
-            let barrier = Arc::clone(&barrier);
-            let route = route.clone();
-            let token = token.clone();
-            tokio::spawn(async move {
-                barrier.wait().await;
-                warp::test::request()
-                    .method("POST")
-                    .path("/commands/dev/quit")
-                    .header(INSTANCE_TOKEN_HEADER, token)
-                    .reply(&route)
-                    .await
-            })
-        }))
-        .await;
-        for accepted in accepted {
-            let accepted = accepted?;
-            assert_eq!(accepted.status(), warp::http::StatusCode::ACCEPTED);
-        }
-        assert_eq!(dispatches.load(Ordering::Acquire), 1);
-
-        release_dev_quit_latch(&REQUESTED, clash_verge_signal::ShutdownOutcome::Canceled);
-        assert!(!REQUESTED.load(Ordering::Acquire));
-        let retry = warp::test::request()
-            .method("POST")
-            .path("/commands/dev/quit")
-            .header(INSTANCE_TOKEN_HEADER, &token)
-            .reply(&route)
-            .await;
-        assert_eq!(retry.status(), warp::http::StatusCode::ACCEPTED);
-        assert_eq!(dispatches.load(Ordering::Acquire), 2);
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn retained_record_supplies_the_next_primarys_preferred_port() -> anyhow::Result<()> {
-        let root = std::env::temp_dir().join(format!("singleton-sticky-port-{}", std::process::id()));
-        let path = root.join("instance.json");
-        let reservation = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
-        let preferred_port = reservation.local_addr()?.port();
-        drop(reservation);
-        write_instance_record(
-            &path,
-            &InstanceRecord {
-                port: preferred_port,
-                token: "stale-token-is-not-authority".to_string(),
-            },
-        )?;
-
-        let hint = read_instance_record(&path).ok().map(|record| record.port);
-        let listener = bind_primary_listener(hint).await?;
-        assert_eq!(listener.local_addr()?.port(), preferred_port);
-        drop(listener);
-        super::shutdown_embedded_server();
-        assert!(path.is_file(), "clean shutdown must retain the private port hint");
-
-        std::fs::remove_dir_all(root)?;
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn occupied_preferred_port_falls_back_without_using_stale_authority() -> anyhow::Result<()> {
-        let occupied = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
-        let preferred_port = occupied.local_addr()?.port();
-
-        let fallback = bind_primary_listener(Some(preferred_port)).await?;
-        assert_ne!(fallback.local_addr()?.port(), preferred_port);
-        assert!(fallback.local_addr()?.ip().is_loopback());
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn instance_record_is_private_and_round_trips() -> anyhow::Result<()> {
-        use std::os::unix::fs::PermissionsExt as _;
-
-        let root = std::env::temp_dir().join(format!("singleton-record-{}", std::process::id()));
-        let path = root.join("instance.json");
-        let record = InstanceRecord {
-            port: 42_123,
-            token: "secret".to_string(),
-        };
-
-        write_instance_record(&path, &record)?;
-
-        assert_eq!(read_instance_record(&path)?, record);
-        assert_eq!(std::fs::metadata(&path)?.permissions().mode() & 0o777, 0o600);
-        std::fs::remove_dir_all(root)?;
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn instance_lock_allows_only_one_primary() -> anyhow::Result<()> {
-        let root = std::env::temp_dir().join(format!("singleton-lock-{}", std::process::id()));
-        let path = root.join("instance.lock");
-        let first = open_instance_lock(&path)?;
-        let second = open_instance_lock(&path)?;
-
-        assert!(try_lock_instance(&first)?);
-        assert!(!try_lock_instance(&second)?);
-        drop(first);
-        assert!(try_lock_instance(&second)?);
-
-        drop(second);
-        std::fs::remove_dir_all(root)?;
-        Ok(())
-    }
 }

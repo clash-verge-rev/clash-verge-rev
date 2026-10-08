@@ -1,15 +1,15 @@
 mod config;
+pub(crate) use config::ConfigUpdateGuard;
 mod lifecycle;
 mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use clash_verge_logging::{LogRing, Type, logging};
-use once_cell::sync::Lazy;
 use std::{
     fmt,
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Instant,
@@ -21,7 +21,7 @@ use crate::singleton;
 #[cfg(target_os = "windows")]
 use std::os::windows::io::OwnedHandle;
 
-pub(crate) static CLASH_LOGGER: Lazy<Arc<LogRing>> = Lazy::new(|| Arc::new(LogRing::new()));
+pub(crate) static CLASH_LOGGER: LazyLock<Arc<LogRing>> = LazyLock::new(|| Arc::new(LogRing::new()));
 
 tokio::task_local! {
     static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
@@ -237,14 +237,14 @@ impl CoreManager {
         }
     }
 
-    fn current_core_readiness_generation(&self) -> Option<u64> {
+    pub(crate) fn current_core_readiness_generation(&self) -> Option<u64> {
         active_core_readiness_generation(self.core_readiness_state.load(Ordering::Acquire))
     }
 
     pub(crate) fn invalidate_core_readiness(&self) {
         let _ = self
             .core_readiness_state
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |current| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |current| {
                 active_core_readiness_generation(current).map(inactive_core_readiness_state)
             });
     }
@@ -284,48 +284,56 @@ impl CoreManager {
             anyhow::bail!("core startup blocked after mixed proxy port fallback failure: {reason}");
         }
 
-        let mut retries = 0;
-        loop {
-            match self.start_core().await {
-                Ok(()) => {
-                    crate::config::Config::notify_startup_mixed_port_fallback();
-                    return Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning));
-                }
-                Err(start_error) if retries < MAX_PORT_FALLBACK_RETRIES => {
-                    if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add(MAX_PORT_FALLBACK_RETRIES),
+                std::time::Duration::ZERO,
+            ),
+            |retries| async move {
+                match self.start_core().await {
+                    Ok(()) => {
                         crate::config::Config::notify_startup_mixed_port_fallback();
-                        return Err(start_error);
+                        Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning))
                     }
-                    match crate::config::Config::resolve_startup_mixed_port().await {
-                        Ok(true) => {
-                            retries += 1;
-                            tracing::Span::current().record("retries", retries);
-                            logging!(
-                                warn,
-                                Type::Core,
-                                "Retrying core startup after mixed proxy port fallback ({}/{}): {start_error:#}",
-                                retries,
-                                MAX_PORT_FALLBACK_RETRIES
-                            );
-                        }
-                        Ok(false) => {
+                    Err(start_error) if retries < MAX_PORT_FALLBACK_RETRIES => {
+                        if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
                             crate::config::Config::notify_startup_mixed_port_fallback();
-                            return Err(start_error);
+                            return Err(RetryError::Stop(start_error));
                         }
-                        Err(fallback_error) => {
-                            crate::config::Config::block_startup_core(&fallback_error);
-                            return Err(start_error.context(format!(
-                                "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
-                            )));
+                        match crate::config::Config::resolve_startup_mixed_port().await {
+                            Ok(true) => {
+                                let retries = retries + 1;
+                                tracing::Span::current().record("retries", retries);
+                                logging!(
+                                    warn,
+                                    Type::Core,
+                                    "Retrying core startup after mixed proxy port fallback ({}/{}): {start_error:#}",
+                                    retries,
+                                    MAX_PORT_FALLBACK_RETRIES
+                                );
+                                Err(RetryError::Retry(start_error))
+                            }
+                            Ok(false) => {
+                                crate::config::Config::notify_startup_mixed_port_fallback();
+                                Err(RetryError::Stop(start_error))
+                            }
+                            Err(fallback_error) => {
+                                crate::config::Config::block_startup_core(&fallback_error);
+                                Err(RetryError::Stop(start_error.context(format!(
+                                    "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
+                                ))))
+                            }
                         }
                     }
+                    Err(error) => {
+                        crate::config::Config::notify_startup_mixed_port_fallback();
+                        Err(RetryError::Stop(error))
+                    }
                 }
-                Err(error) => {
-                    crate::config::Config::notify_startup_mixed_port_fallback();
-                    return Err(error);
-                }
-            }
-        }
+            },
+        )
+        .await
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::module::lightweight;
+use crate::core::lightweight;
 
 use super::CmdResult;
 

@@ -6,7 +6,6 @@ import {
 import { isSortable } from '@dnd-kit/react/sortable'
 import { Add, NetworkCheck } from '@mui/icons-material'
 import { Box, IconButton, Tooltip, alpha, styled } from '@mui/material'
-import { emit } from '@tauri-apps/api/event'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,6 +19,7 @@ import { SortableItem } from '@/components/base'
 import { TestItem } from '@/components/test/test-item'
 import { TestViewer, type TestViewerRef } from '@/components/test/test-viewer'
 import { useVerge } from '@/hooks/use-verge'
+import { emitTestAll } from '@/services/bus'
 
 import { EnhancedCard } from './enhanced-card'
 
@@ -178,7 +178,7 @@ export const TestCard = () => {
   )
 
   const handleTestAll = useCallback(() => {
-    emit('verge://test-all')
+    emitTestAll()
   }, [])
 
   const handleCreateTest = useCallback(() => {

@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 mod chain;
 pub mod field;
 mod merge;
@@ -436,7 +437,7 @@ fn notify_discarded_keys(keys: Vec<String>) {
     drop(notice);
 
     if should_notify {
-        Handle::notice_message("enhance::discarded_keys", "");
+        Handle::notice(NoticeStatus::EnhanceDiscardedKeys, "");
     }
 }
 
@@ -506,10 +507,7 @@ fn enforce_tun(mut config: Mapping, snapshot: Mapping) -> Mapping {
 
 fn is_loopback_bind_address(addr: &str) -> bool {
     let addr = addr.trim();
-    let addr = addr
-        .strip_prefix('[')
-        .and_then(|addr| addr.strip_suffix(']'))
-        .unwrap_or(addr);
+    let addr = addr.strip_circumfix('[', ']').unwrap_or(addr);
 
     addr.eq_ignore_ascii_case("localhost")
         || addr.parse::<std::net::IpAddr>().is_ok_and(|addr| addr.is_loopback())

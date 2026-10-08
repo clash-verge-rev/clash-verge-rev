@@ -1,4 +1,5 @@
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use crate::core::notify::NoticeStatus;
 use crate::core::service::StageRequest;
 use crate::{
     config::{Config, IProfiles, runtime::IRuntime},
@@ -18,6 +19,7 @@ use smartstring::alias::String;
 use std::{
     collections::HashSet,
     path::PathBuf,
+    sync::Arc,
     time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::Error as MihomoError;
@@ -129,7 +131,31 @@ where
 }
 
 impl CoreManager {
-    pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
+    pub(crate) fn claim_config_update(
+        &self,
+        _config_write: &tokio::sync::MutexGuard<'_, ()>,
+    ) -> Result<ConfigUpdateGuard<'_>> {
+        if !self.try_start_config_update() {
+            anyhow::bail!("configuration update is already running");
+        }
+        Ok(ConfigUpdateGuard(self))
+    }
+
+    pub(crate) async fn update_config_in_patch(&self, _update: &ConfigUpdateGuard<'_>) -> Result<()> {
+        if handle::Handle::global().is_exiting() {
+            anyhow::bail!("application is exiting");
+        }
+        self.set_last_update(Instant::now());
+        Config::generate().await?;
+        let outcome = self.validate_and_apply_draft().await?;
+        if outcome.is_valid() {
+            Ok(())
+        } else {
+            Err(anyhow!("{outcome}"))
+        }
+    }
+
+    pub async fn use_default_config(&self, status: NoticeStatus, message: &str) -> Result<()> {
         use crate::constants::files::RUNTIME_CONFIG;
 
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
@@ -145,7 +171,7 @@ impl CoreManager {
         });
 
         help::save_yaml(&runtime_path, &clash_config, Some("# Clash Verge Runtime")).await?;
-        handle::Handle::notice_message(error_key, error_msg);
+        handle::Handle::notice(status, message);
         Ok(())
     }
 
@@ -234,6 +260,7 @@ impl CoreManager {
         let outcome = self.perform_config_update(Some(profiles)).await?;
         if outcome.is_valid() {
             crate::config::profiles::restore_selected_nodes().await;
+            handle::Handle::refresh_clash();
             Ok(())
         } else {
             Err(anyhow!("failed to restore previous Core configuration: {outcome}"))
@@ -297,8 +324,27 @@ impl CoreManager {
         self.validate_and_apply(transaction).await
     }
 
-    /// Validates and applies the caller's transaction, committing only on success.
+    /// Commits the applied runtime even if restoring the system proxy subsequently fails.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
+        let runtime = Config::runtime().await;
+        let original_runtime = runtime.data_arc();
+        let outcome = match self.validate_and_apply_draft().await {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                transaction.rollback();
+                if !Arc::ptr_eq(&original_runtime, &runtime.data_arc()) {
+                    handle::Handle::refresh_clash();
+                }
+                return Err(error);
+            }
+        };
+        if outcome.is_valid() {
+            transaction.commit();
+        }
+        Ok(outcome)
+    }
+
+    async fn validate_and_apply_draft(&self) -> Result<ValidationOutcome> {
         // One serialization feeds check and run files; the core never applies unvalidated bytes.
         let yaml = Config::runtime_config_yaml().await?;
         let outcome = CoreConfigValidator::global()
@@ -309,9 +355,32 @@ impl CoreManager {
         }
 
         let run_path = Config::write_runtime_file(&yaml).await?;
-        self.apply_config(run_path).await?;
-        transaction.commit();
+        let previous = self.current_core_readiness_generation();
+        let result = self.apply_config(run_path).await;
+        self.retain_applied_runtime(&Config::runtime().await, previous, &result);
+        result?;
+        // Under the lifecycle lock, so a stop for exit waits for this write instead of outrunning it.
+        #[cfg(target_os = "macos")]
+        {
+            let _lifecycle = self.lifecycle_lock.lock().await;
+            crate::utils::resolve::dns::sync_public_dns().await;
+        }
         Ok(ValidationOutcome::Valid)
+    }
+
+    fn retain_applied_runtime(
+        &self,
+        runtime: &clash_verge_draft::Draft<IRuntime>,
+        previous: Option<u64>,
+        result: &Result<()>,
+    ) {
+        if result.is_ok()
+            || self
+                .current_core_readiness_generation()
+                .is_some_and(|current| Some(current) != previous)
+        {
+            runtime.apply();
+        }
     }
 
     /// Applies a generated configuration through the active core owner.
@@ -404,6 +473,31 @@ mod tests {
     use super::{ConfigApplication, StageAttempt, StageRequest, plan_config_application, stage_with_confirmation};
     use clash_verge_service_ipc::{StageRejection, StageRuntimeOutcome};
     use std::{cell::Cell, time::Duration};
+
+    #[test]
+    fn a_ready_replacement_keeps_the_applied_runtime_when_proxy_restore_fails() -> anyhow::Result<()> {
+        use crate::{config::runtime::IRuntime, core::CoreManager};
+        use clash_verge_draft::{Draft, DraftTransaction};
+
+        for replaced in [false, true] {
+            let manager = CoreManager::default();
+            manager.mark_core_ready();
+            let previous = manager.current_core_readiness_generation();
+            let runtime = Draft::new(IRuntime::default());
+            let transaction = DraftTransaction::begin(vec![&runtime])?;
+            runtime.edit_draft(|draft| {
+                draft.exists_keys.insert("replacement".into());
+            });
+            if replaced {
+                manager.mark_core_ready();
+            }
+            let result = Err(anyhow::anyhow!("system proxy restore failed"));
+            manager.retain_applied_runtime(&runtime, previous, &result);
+            transaction.rollback();
+            assert_eq!(runtime.data_arc().exists_keys.contains("replacement"), replaced);
+        }
+        Ok(())
+    }
 
     const CONFIRM_WITHIN: Duration = Duration::from_secs(5);
 

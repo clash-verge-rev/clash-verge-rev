@@ -1,14 +1,14 @@
 use crate::config::{IProfilePreview, IVerge};
+use crate::core::lightweight;
 use crate::core::tray::menu_def::TrayAction;
-use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd,
     config::Config,
+    core::lightweight::is_in_lightweight_mode,
     feat, logging,
-    module::lightweight::is_in_lightweight_mode,
     utils::{dirs::find_target_icons, help},
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
@@ -926,9 +926,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
             mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
-                if let Some(stripped) = mode.strip_prefix("tray_")
-                    && let Some(final_mode) = stripped.strip_suffix("_mode")
-                {
+                if let Some(final_mode) = mode.strip_circumfix("tray_", "_mode") {
                     logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
                     let _ = feat::change_clash_mode(final_mode.into()).await;
                 }

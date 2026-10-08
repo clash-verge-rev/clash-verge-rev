@@ -334,6 +334,18 @@ enum HandoffOutcome {
     Failed,
 }
 
+fn report_sidecar_failure(error: anyhow::Error, service_rejection: Option<&str>) -> anyhow::Error {
+    let error = match service_rejection {
+        Some(reason) => error.context(format!("Service core rejected: {reason}; Sidecar fallback failed")),
+        None => error,
+    };
+    // Proxy failures have their own pending state and recovery dialog.
+    if SysproxyFailure::from_chain(&error).is_none() {
+        crate::core::notification::record_sidecar_failure(format!("{error:#}").into());
+    }
+    error
+}
+
 impl CoreManager {
     async fn rollback_failed_start(&self) {
         proxy_control::stop_guard().await;
@@ -364,9 +376,12 @@ impl CoreManager {
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(status = tracing::field::Empty, tun_disabled = false, readiness_generation = tracing::field::Empty))]
-    pub async fn continue_with_sidecar(&self) -> Result<()> {
+    pub async fn continue_with_sidecar(&self, service_rejection: Option<&str>) -> Result<()> {
         if !self.try_start_config_update() {
-            anyhow::bail!("configuration update is already running");
+            return Err(report_sidecar_failure(
+                anyhow::anyhow!("configuration update is already running"),
+                service_rejection,
+            ));
         }
         defer! {
             self.finish_config_update();
@@ -375,61 +390,66 @@ impl CoreManager {
         // draft without claiming it, so without this it can commit another transaction's staged patch.
         let config_write = Config::lock_config_write().await;
         let _life = self.lifecycle_lock.lock().await;
-        let status = SERVICE_MANAGER.current().await;
-        tracing::Span::current().record("status", tracing::field::debug(&status));
-        let mode = self.get_running_mode();
-        if !can_allow_sidecar_for_session(&mode, &status) {
-            anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
-        }
-        #[cfg(target_os = "windows")]
-        if matches!(*mode, RunningMode::NotRunning) {
-            clash_verge_service_ipc::execution::check_sidecar_available().await?;
-        }
-        if !matches!(status, ServiceStatus::SidecarAllowed) {
-            SERVICE_MANAGER.allow_sidecar_for_session()?;
-        }
-        // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
-        // Elevation alone carries TUN on Sidecar; a Sidecar that cannot must write it off.
-        let prepared = async {
-            let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
-            if crate::core::runstate::RUN_STATE
-                .state()
-                .tun_should_be_disabled(tun_enabled)
-            {
-                tracing::Span::current().record("tun_disabled", true);
-                Config::disable_tun_and_persist().await?;
-            }
-            Config::generate().await
-        }
-        .await;
-        drop(config_write);
-        if let Err(error) = prepared {
-            SERVICE_MANAGER.withdraw_sidecar_allowance();
-            return Err(error);
-        }
-        // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
-        proxy_control::stop_guard().await;
+        // Record failures before releasing the lifecycle lock, including preparation and rollback errors.
         let result = async {
-            self.start_core_inner().await?;
-            if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
-                || self.current_core_readiness_generation().is_none()
-            {
-                anyhow::bail!("Sidecar did not become ready");
+            let status = SERVICE_MANAGER.current().await;
+            tracing::Span::current().record("status", tracing::field::debug(&status));
+            let mode = self.get_running_mode();
+            if !can_allow_sidecar_for_session(&mode, &status) {
+                anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
             }
-            tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
-            self.apply_proxy_after_start().await
+            #[cfg(target_os = "windows")]
+            if matches!(*mode, RunningMode::NotRunning) {
+                clash_verge_service_ipc::execution::check_sidecar_available().await?;
+            }
+            if !matches!(status, ServiceStatus::SidecarAllowed) {
+                SERVICE_MANAGER.allow_sidecar_for_session()?;
+            }
+            // Settling on Sidecar is what makes the verdict final, so ask only once it is recorded.
+            // Elevation alone carries TUN on Sidecar; a Sidecar that cannot must write it off.
+            let prepared = async {
+                let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+                if crate::core::runstate::RUN_STATE
+                    .state()
+                    .tun_should_be_disabled(tun_enabled)
+                {
+                    tracing::Span::current().record("tun_disabled", true);
+                    Config::disable_tun_and_persist().await?;
+                }
+                Config::generate().await
+            }
+            .await;
+            drop(config_write);
+            if let Err(error) = prepared {
+                SERVICE_MANAGER.withdraw_sidecar_allowance();
+                return Err(error);
+            }
+            // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
+            proxy_control::stop_guard().await;
+            let result = async {
+                self.start_core_inner().await?;
+                if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                    || self.current_core_readiness_generation().is_none()
+                {
+                    anyhow::bail!("Sidecar did not become ready");
+                }
+                tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
+                self.apply_proxy_after_start().await
+            }
+            .await;
+            if let Err(error) = result {
+                // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
+                SERVICE_MANAGER.withdraw_sidecar_allowance();
+                if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
+                    return Err(proxy_control::rollback_failure(error, cleanup_error)
+                        .context("failed to clear the proxy before rolling back"));
+                }
+                return Err(error);
+            }
+            Ok(())
         }
         .await;
-        if let Err(error) = result {
-            // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
-            SERVICE_MANAGER.withdraw_sidecar_allowance();
-            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
-                return Err(proxy_control::rollback_failure(error, cleanup_error)
-                    .context("failed to clear the proxy before rolling back"));
-            }
-            return Err(error);
-        }
-        Ok(())
+        result.map_err(|error| report_sidecar_failure(error, service_rejection))
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(readiness_generation = tracing::field::Empty))]
@@ -495,7 +515,13 @@ impl CoreManager {
     }
 
     async fn stop_sidecar_after_proxy_clear(&self) -> Result<()> {
-        run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await
+        let result =
+            run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await;
+        #[cfg(target_os = "macos")]
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            crate::utils::resolve::dns::sync_public_dns().await;
+        }
+        result
     }
 
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
@@ -524,6 +550,8 @@ impl CoreManager {
         .ok_or_else(|| {
             anyhow::anyhow!("cannot apply system proxy before core readiness").context(SysproxyFailure::CoreNotReady)
         })?;
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::dns::sync_public_dns().await;
         // At login the app usually beats the network. Leave the write to the network watcher
         // rather than fail — only if the watcher is actually live; a user toggling while
         // offline still fails fast.
@@ -572,6 +600,7 @@ impl CoreManager {
         }
         // tell the window when a background apply lands
         Handle::refresh_verge();
+        crate::core::notification::retire_sidecar_failure();
         Ok(())
     }
 
@@ -594,6 +623,8 @@ impl CoreManager {
         tracing::Span::current().record("decision", tracing::field::debug(&startup));
         if matches!(startup, StartupDecision::Wait) {
             self.rollback_failed_start().await;
+            #[cfg(target_os = "macos")]
+            crate::utils::resolve::dns::sync_public_dns().await;
             #[cfg(target_os = "windows")]
             self.try_sidecar_after_service_unavailable().await?;
             return Ok(());
@@ -628,6 +659,8 @@ impl CoreManager {
         // A failed start must not leave a locally reported running mode.
         if result.is_err() {
             self.rollback_failed_start().await;
+            #[cfg(target_os = "macos")]
+            crate::utils::resolve::dns::sync_public_dns().await;
             return result;
         }
 
@@ -678,7 +711,7 @@ impl CoreManager {
             SERVICE_MANAGER.withdraw_sidecar_allowance();
             self.rollback_failed_start().await;
         } else {
-            crate::core::service::notify_service_fallback();
+            crate::core::service::notify_service_fallback(&reason);
         }
         result.map_err(|error| error.context(format!("Service failure before Sidecar startup: {reason}")))
     }
@@ -716,11 +749,17 @@ impl CoreManager {
 
     async fn stop_core_unprepared_inner(&self) -> Result<()> {
         CLASH_LOGGER.clear_logs();
-        match *self.get_running_mode() {
+        let result = match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => self.stop_core_by_sidecar_unprepared().await,
             RunningMode::NotRunning => Ok(()),
+        };
+        // A Sidecar whose exit wait failed is already marked stopped; a core still running keeps its DNS.
+        #[cfg(target_os = "macos")]
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            crate::utils::resolve::dns::sync_public_dns().await;
         }
+        result
     }
 
     #[tracing::instrument(skip_all, level = "info")]
@@ -802,7 +841,12 @@ impl CoreManager {
             return;
         }
 
-        if crate::core::runstate::RUN_STATE.state().service_usable() {
+        let state = crate::core::runstate::RUN_STATE.state();
+        // Waiting cannot bring up a service nothing will start.
+        if state.service_usable()
+            || matches!(&state.health, crate::core::runstate::ServiceHealth::Unavailable(reason)
+                if crate::core::service::is_not_auto_started(reason))
+        {
             return;
         }
 
@@ -840,29 +884,34 @@ impl CoreManager {
         AsyncHandler::spawn(|| async move {
             let manager = Self::global();
             let started = Instant::now();
-            loop {
+            use crate::utils::retry::{RetryError, RetryPolicy, retry};
+            let attempts = std::num::NonZeroUsize::MIN.saturating_add(
+                (timing::SERVICE_HANDOFF_WINDOW.as_millis() / timing::SERVICE_HANDOFF_INTERVAL.as_millis()) as usize,
+            );
+            let _ = retry(RetryPolicy::fixed(attempts, std::time::Duration::ZERO), |_| async {
                 if started.elapsed() >= timing::SERVICE_HANDOFF_WINDOW {
                     logging!(
                         info,
                         Type::Core,
                         "service handoff window elapsed; staying in sidecar mode"
                     );
-                    break;
+                    return Ok(());
                 }
+                // The window is checked before waiting, including the final handoff attempt.
                 tokio::time::sleep(timing::SERVICE_HANDOFF_INTERVAL).await;
-
                 if !matches!(*manager.get_running_mode(), RunningMode::Sidecar) {
-                    break;
+                    return Ok(());
                 }
                 match manager.try_handoff_sidecar_to_service().await {
-                    HandoffOutcome::Done => break,
+                    HandoffOutcome::Done => Ok(()),
                     HandoffOutcome::Failed => {
                         logging!(warn, Type::Core, "handoff attempt failed; staying in sidecar mode");
-                        break;
+                        Ok(())
                     }
-                    HandoffOutcome::NotReady => {}
+                    HandoffOutcome::NotReady => Err(RetryError::Retry(())),
                 }
-            }
+            })
+            .await;
             manager.handoff_watcher_running.store(false, Ordering::Release);
         });
     }

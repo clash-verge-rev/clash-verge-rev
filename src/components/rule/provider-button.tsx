@@ -23,6 +23,7 @@ import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 import { syncRuntimeProviders } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
@@ -50,11 +51,17 @@ export const ProviderButton = () => {
     try {
       setUpdating((prev) => ({ ...prev, [name]: true }))
 
-      await updateRuleProvider(name)
+      await mutate(() => updateRuleProvider(name), {
+        id: `update-rule-provider-${name}`,
+        errorNotice: false,
+      })
 
       await refreshRules()
       await refreshRuleProviders()
-      void syncRuntimeProviders()
+      void mutate(() => syncRuntimeProviders(), {
+        id: 'sync-runtime-providers',
+        errorNotice: false,
+      })
 
       showNotice.success(
         'rules.feedback.notifications.provider.updateSuccess',
@@ -91,7 +98,10 @@ export const ProviderButton = () => {
 
       for (const name of allProviders) {
         try {
-          await updateRuleProvider(name)
+          await mutate(() => updateRuleProvider(name), {
+            id: `update-rule-provider-${name}`,
+            errorNotice: false,
+          })
           setUpdating((prev) => ({ ...prev, [name]: false }))
         } catch (err) {
           console.error(`更新 ${name} 失败`, err)
@@ -100,7 +110,10 @@ export const ProviderButton = () => {
 
       await refreshRules()
       await refreshRuleProviders()
-      void syncRuntimeProviders()
+      void mutate(() => syncRuntimeProviders(), {
+        id: 'sync-runtime-providers',
+        errorNotice: false,
+      })
 
       showNotice.success('rules.feedback.notifications.provider.allUpdated')
     } catch (err) {

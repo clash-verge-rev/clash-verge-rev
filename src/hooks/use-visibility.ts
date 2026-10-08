@@ -1,4 +1,3 @@
-import { TauriEvent } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect, useState } from 'react'
 
@@ -42,13 +41,10 @@ export const useVisibility = () => {
     window.addEventListener('focus', handleVisibleEvent)
 
     const unlistenFocusChanged = appWindow.onFocusChanged(updateVisibleSoon)
-    const unlistenCloseRequested = appWindow.listen(
-      TauriEvent.WINDOW_CLOSE_REQUESTED,
-      () => {
-        setVisible(false)
-        updateVisibleSoon()
-      },
-    )
+    const unlistenCloseRequested = appWindow.onCloseRequested(() => {
+      setVisible(false)
+      updateVisibleSoon()
+    })
     void updateVisible()
 
     return () => {
