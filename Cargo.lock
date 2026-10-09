@@ -10187,8 +10187,3 @@ dependencies = [
  "syn 3.0.5",
  "winnow 1.0.4",
 ]
-
-[[patch.unused]]
-name = "tray-icon"
-version = "0.24.1"
-source = "git+https://github.com/Tunglies/tray-icon.git?branch=fix%2Fmacos-27-click-reentrancy#5750c67d02d32f2af100e120ad665959d4268cef"
