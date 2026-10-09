@@ -49,6 +49,9 @@ pub struct PrfItem {
     pub selected: Option<Vec<PrfSelected>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub latency_test_urls: Option<std::collections::BTreeMap<String, String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub extra: Option<PrfExtra>,
 
     pub updated: Option<usize>,
@@ -217,6 +220,7 @@ impl PrfItem {
             desc: Some(desc),
             file: Some(file),
             url: None,
+            latency_test_urls: None,
             selected: None,
             extra: None,
             option: Some(PrfOption {
@@ -396,6 +400,7 @@ impl PrfItem {
             desc: desc.cloned(),
             file: Some(file),
             url: Some(url.as_str().into()),
+            latency_test_urls: None,
             selected: None,
             extra,
             option: Some(PrfOption {

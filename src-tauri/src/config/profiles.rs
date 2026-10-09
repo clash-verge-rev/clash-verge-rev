@@ -248,6 +248,7 @@ impl IProfiles {
                 patch!(each, item, file);
                 patch!(each, item, url);
                 patch!(each, item, selected);
+                patch!(each, item, latency_test_urls);
                 patch!(each, item, extra);
                 patch!(each, item, updated);
                 patch!(each, item, option);

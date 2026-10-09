@@ -68,6 +68,8 @@ tray:
   global: Küresel
   profiles: Profiller
   proxies: Vekil'ler
+  testLatency: Gecikmeyi Test Et
+  testingLatency: Gecikme test ediliyor…
   systemProxy: Sistem Vekil'i
   tunMode: TUN Modu
   closeAllConnections: Tüm Bağlantıları Kapat

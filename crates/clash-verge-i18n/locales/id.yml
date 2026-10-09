@@ -68,6 +68,8 @@ tray:
   global: Global
   profiles: Profil
   proxies: Proksi
+  testLatency: Uji Latensi
+  testingLatency: Menguji latensi…
   systemProxy: Proksi Sistem
   tunMode: Mode TUN
   closeAllConnections: Tutup Semua Koneksi
