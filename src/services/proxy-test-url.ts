@@ -5,7 +5,7 @@ import {
 } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 
-export function readLegacyTestUrls(uid: string): Record<string, string> {
+function readLegacyTestUrls(uid: string): Record<string, string> {
   try {
     const states = JSON.parse(localStorage.getItem('proxy-head-state') || '{}')[
       uid
