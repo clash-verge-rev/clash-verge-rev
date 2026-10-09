@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: نصب سرویس Clash Verge به دسترسی مدیر نیاز دارد.
   adminUninstallPrompt: حذف سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+core:
+  alreadyRunning: 'هسته شروع نمی‌شود: یک فرایند هسته از قبل در حال اجراست. برنامه مرتبط را ببندید یا فرایند باقی‌مانده را متوقف کنید و دوباره تلاش کنید. اگر مشکل ادامه داشت، رایانه را راه‌اندازی مجدد کنید.'
 launchGuard:
   currentExeError: 'مکان برنامه مشخص نشد: {error}'
   homeDirError: 'پوشهٔ خانگی کاربر فعلی مشخص نشد. برنامه بسته خواهد شد: {error}'
@@ -68,6 +70,8 @@ tray:
   global: سراسری
   profiles: پروفایل‌ها
   proxies: پروکسی‌ها
+  testLatency: آزمایش تأخیر
+  testingLatency: در حال آزمایش تأخیر…
   systemProxy: پروکسی سیستم
   tunMode: حالت TUN
   closeAllConnections: بستن همه اتصال‌ها

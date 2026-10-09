@@ -44,6 +44,7 @@ const languageOptions = supportedLanguages.map((code) => {
     es: 'Español',
     jp: '日本語',
     zhtw: '繁體中文',
+    pt: 'Português',
   }
   const label = labels[code] || code
   return { code, label }

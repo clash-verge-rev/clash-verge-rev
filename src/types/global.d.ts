@@ -218,6 +218,7 @@ interface IClashInfo {
 }
 
 interface IProfileItem {
+  latency_test_urls?: Record<string, string>
   uid: string
   type?: 'local' | 'remote' | 'merge' | 'script'
   name?: string

@@ -1,0 +1,716 @@
+{
+  "page": {
+    "actions": {
+      "manual": "Manual",
+      "telegram": "Canal do Telegram",
+      "github": "Repositório do Github"
+    },
+    "actionsGroupLabel": "Links das configurações",
+    "title": "Configurações"
+  },
+  "sections": {
+    "system": {
+      "title": "Configurações do Sistema",
+      "toggles": {
+        "tunMode": "Modo Tun",
+        "systemProxy": "Proxy do Sistema"
+      },
+      "tooltips": {
+        "silentStart": "Inicia o programa em segundo plano sem exibir o painel"
+      },
+      "fields": {
+        "autoLaunch": "Iniciar com o Sistema",
+        "silentStart": "Início Silencioso"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "Modo TUN desativado automaticamente porque o serviço está indisponível",
+          "autoDisableFailed": "Falha ao desativar o Modo TUN automaticamente"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "Ative para modificar as configurações de proxy do sistema operacional. Se a ativação falhar, modifique as configurações de proxy do sistema operacional manualmente",
+        "tunMode": "Modo Tun (placa de rede virtual): captura todo o tráfego do sistema. Quando ativado, não é necessário ativar o proxy do sistema.",
+        "tunUnavailable": "O TUN requer o Modo Serviço ou o Modo Administrador"
+      },
+      "actions": {
+        "installService": "Instalar Serviço",
+        "uninstallService": "Desinstalar Serviço",
+        "switchToServiceMode": "Mudar para o modo serviço"
+      },
+      "fields": {
+        "systemProxy": "Proxy do Sistema",
+        "tunMode": "Modo Tun"
+      },
+      "messages": {
+        "installedCheckProxy": "O serviço está instalado e o núcleo está em execução por meio dele. Verifique o interruptor do proxy do sistema e refaça a alteração se ela não tiver sido aplicada.",
+        "installedCoreNotOnService": "O serviço está instalado, mas o núcleo não está em execução por meio dele. Verifique o núcleo e tente novamente.",
+        "installedProxyRestored": "O serviço está instalado, o núcleo está em execução por meio dele e a alteração do proxy do sistema foi aplicada."
+      }
+    },
+    "externalController": {
+      "title": "Controlador Externo",
+      "fields": {
+        "enable": "Ativar Controlador Externo",
+        "address": "Controlador Externo",
+        "secret": "Segredo do Núcleo"
+      },
+      "placeholders": {
+        "address": "Obrigatório",
+        "secret": "Recomendado"
+      },
+      "tooltips": {
+        "copy": "Copiar para a área de transferência"
+      },
+      "messages": {
+        "addressRequired": "O endereço do controlador não pode estar vazio",
+        "secretRequired": "O segredo não pode estar vazio",
+        "copyFailed": "Falha ao copiar",
+        "controllerCopied": "Endereço do controlador copiado para a área de transferência",
+        "secretCopied": "Segredo copiado para a área de transferência"
+      }
+    },
+    "externalCors": {
+      "title": "Configuração de CORS Externo",
+      "fields": {
+        "allowPrivateNetwork": "Permitir acesso à rede privada",
+        "allowedOrigins": "Origens Permitidas"
+      },
+      "placeholders": {
+        "origin": "Insira uma URL válida"
+      },
+      "actions": {
+        "add": "Adicionar"
+      },
+      "messages": {
+        "alwaysIncluded": "Origens sempre incluídas: {{urls}}"
+      },
+      "tooltips": {
+        "open": "Configurações de CORS Externo"
+      }
+    },
+    "appearance": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    },
+    "clash": {
+      "title": "Configurações do Clash",
+      "form": {
+        "fields": {
+          "allowLan": "Permitir LAN",
+          "dnsOverwrite": "Sobrescrever DNS",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Atraso Unificado",
+          "logLevel": "Nível de Log",
+          "portConfig": "Configuração de Portas",
+          "external": "Externo",
+          "webUI": "Web UI",
+          "clashCore": "Núcleo do Clash",
+          "openUwpTool": "Abrir ferramenta UWP",
+          "updateGeoData": "Atualizar GeoData",
+          "tunnels": {
+            "title": "Gerenciamento de Túneis",
+            "localAddr": "Endereço de Escuta Local",
+            "localPort": "Porta de Escuta Local",
+            "targetAddr": "Endereço de Destino",
+            "targetPort": "Porta de Destino",
+            "proxyGroup": "Grupo de Proxy",
+            "proxyNode": "Nó de Proxy",
+            "protocols": "Protocolo",
+            "existing": "Túneis Existentes",
+            "default": "Seguir a Configuração Atual",
+            "optional": "Opcional",
+            "messages": {
+              "incomplete": "Preencha todos os campos obrigatórios do túnel",
+              "invalidLocalAddr": "Endereço de escuta local inválido",
+              "invalidLocalPort": "Porta de escuta local inválida",
+              "invalidTargetAddr": "Endereço de destino inválido",
+              "invalidTargetPort": "Porta de destino inválida"
+            },
+            "actions": {
+              "add": "Adicionar",
+              "addNew": "Adicionar Novo Túnel"
+            }
+          }
+        },
+        "tooltips": {
+          "networkInterface": "Interface de Rede",
+          "unifiedDelay": "Com o atraso unificado ativado, dois testes de atraso são realizados para eliminar as diferenças de atraso entre diferentes tipos de nós causadas por handshakes de conexão, etc.",
+          "logLevel": "Este parâmetro é válido apenas para os arquivos de log do núcleo na pasta Service do diretório de logs",
+          "openUwpTool": "Desde o Windows 8, os aplicativos UWP (como a Microsoft Store) são impedidos de acessar diretamente os serviços de rede do host local, e esta ferramenta pode ser usada para contornar essa restrição"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Aviso",
+            "error": "Erro",
+            "silent": "Silencioso"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Configurações Básicas do Verge",
+        "actions": {
+          "browse": "Procurar"
+        },
+        "trayOptions": {
+          "showMainWindow": "Abrir Janela",
+          "showTrayMenu": "Abrir Menu",
+          "disable": "Desativar"
+        },
+        "fields": {
+          "language": "Idioma",
+          "themeMode": "Modo do Tema",
+          "trayClickEvent": "Ação de Clique na Bandeja",
+          "copyEnvType": "Tipo de Env ao Copiar",
+          "startPage": "Página Inicial",
+          "startupScript": "Script de Inicialização",
+          "themeSetting": "Configurações do Tema",
+          "layoutSetting": "Configurações de Layout",
+          "misc": "Diversos",
+          "hotkeySetting": "Configurações de Atalhos"
+        }
+      },
+      "advanced": {
+        "title": "Configurações Avançadas do Verge",
+        "tooltips": {
+          "backupInfo": "Suporta backup local ou via WebDAV dos arquivos de configuração",
+          "openConfDir": "Se o software funcionar de forma anormal, FAÇA BACKUP e exclua todos os arquivos desta pasta e reinicie o software",
+          "liteMode": "Fecha a interface gráfica e mantém apenas o núcleo em execução"
+        },
+        "actions": {
+          "copyVersion": "Copiar Versão"
+        },
+        "notifications": {
+          "latestVersion": "Você já está na versão mais recente",
+          "versionCopied": "Versão copiada para a área de transferência"
+        },
+        "fields": {
+          "backupSetting": "Configurações de Backup",
+          "runtimeConfig": "Configuração em Execução",
+          "openConfDir": "Abrir Pasta de Configuração",
+          "openCoreDir": "Abrir Pasta do Núcleo",
+          "openLogsDir": "Abrir Pasta de Logs",
+          "checkUpdates": "Verificar Atualizações",
+          "openDevTools": "Ferramentas de Desenvolvedor",
+          "liteModeSettings": "Configurações do Modo Leve",
+          "exit": "Sair",
+          "exportDiagnostics": "Exportar Informações de Diagnóstico",
+          "vergeVersion": "Versão do Verge"
+        }
+      },
+      "theme": {
+        "title": "Configurações do Tema",
+        "fields": {
+          "primaryColor": "Cor Primária",
+          "secondaryColor": "Cor Secundária",
+          "primaryText": "Texto Primário",
+          "secondaryText": "Texto Secundário",
+          "infoColor": "Cor de Informação",
+          "warningColor": "Cor de Aviso",
+          "errorColor": "Cor de Erro",
+          "successColor": "Cor de Sucesso",
+          "fontFamily": "Família da Fonte",
+          "cssInjection": "Injeção de CSS"
+        },
+        "actions": {
+          "editCss": "Editar CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Editar CSS"
+        }
+      },
+      "layout": {
+        "title": "Configurações de Layout",
+        "fields": {
+          "preferSystemTitlebar": "Preferir Barra de Título do Sistema",
+          "trafficGraph": "Gráfico de Tráfego",
+          "memoryUsage": "Uso do Núcleo",
+          "proxyGroupIcon": "Ícone do Grupo de Proxy",
+          "toastPosition": "Posição das Notificações",
+          "hoverNavigator": "Navegador de Salto ao Passar o Mouse",
+          "hoverNavigatorDelay": "Atraso do Navegador de Salto ao Passar o Mouse",
+          "navIcon": "Ícone de Navegação",
+          "collapseNavBar": "Recolher Barra de Navegação",
+          "trayIcon": "Ícone da Bandeja",
+          "proxyGroupsDisplayMode": "Modo de Exibição dos Grupos de Proxy",
+          "showOutboundModesInline": "Mostrar Modos de Saída em Linha",
+          "commonTrayIcon": "Ícone Comum da Bandeja",
+          "systemProxyTrayIcon": "Ícone da Bandeja do Proxy do Sistema",
+          "tunTrayIcon": "Ícone da Bandeja do Tun",
+          "enableTrayIcon": "Ativar Ícone da Bandeja",
+          "enableTraySpeed": "Ativar Velocidade na Bandeja",
+          "pauseRenderTrafficStatsOnBlur": "Pausar a renderização das estatísticas de tráfego quando sem foco"
+        },
+        "tooltips": {
+          "hoverNavigator": "Rola automaticamente até o grupo de proxy correspondente ao passar o mouse sobre as letras do alfabeto",
+          "hoverNavigatorDelay": "Atraso antes da rolagem automática ao passar o mouse, em milissegundos"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Monocromático",
+            "colorful": "Colorido",
+            "disable": "Desativar"
+          },
+          "toastPosition": {
+            "topLeft": "Superior Esquerdo",
+            "topRight": "Superior Direito",
+            "bottomLeft": "Inferior Esquerdo",
+            "bottomRight": "Inferior Direito"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Padrão",
+            "inline": "Em Linha",
+            "disable": "Desativar"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "Configuração de Portas",
+      "fields": {
+        "mixed": "Porta Mista",
+        "socks": "Porta Socks",
+        "http": "Porta Http(s)",
+        "redir": "Porta Redir",
+        "tproxy": "Porta Tproxy"
+      },
+      "actions": {
+        "random": "Porta Aleatória"
+      },
+      "messages": {
+        "portInUse": "A porta {{port}} já está em uso",
+        "runningPort": "Usando atualmente a porta {{port}}",
+        "duplicatePort": "Os listeners ativados devem usar portas diferentes",
+        "invalidPort": "Insira uma porta entre 1 e 65535",
+        "saved": "Configurações de porta salvas",
+        "saveFailed": "Falha ao salvar as configurações de porta",
+        "automaticFallback": "A porta {{oldPort}} estava em uso, então esta sessão é executada em {{newPort}}. Sua configuração não foi alterada e {{oldPort}} será tentada novamente na próxima inicialização.",
+        "automaticFallbackFailed": "Falha no fallback automático da porta mista do proxy: {{error}}",
+        "portTooLow": "A porta deve ser 1000 ou maior",
+        "portTooHigh": "A porta deve ser 65535 ou menor"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "Versão Release",
+        "alpha": "Versão Alpha"
+      }
+    },
+    "liteMode": {
+      "title": "Configurações do Modo Leve",
+      "actions": {
+        "enterNow": "Entrar no Modo Leve Agora"
+      },
+      "toggles": {
+        "autoEnter": "Entrar Automaticamente no Modo Leve"
+      },
+      "tooltips": {
+        "autoEnter": "Ative para acionar automaticamente o Modo Leve depois que a janela ficar fechada por um período"
+      },
+      "fields": {
+        "delay": "Atraso para Entrar Automaticamente no Modo Leve"
+      },
+      "messages": {
+        "autoEnterHint": "Ao fechar a janela, o Modo Leve será ativado automaticamente após {{n}} minutos"
+      }
+    },
+    "backup": {
+      "title": "Configurações de Backup",
+      "tabs": {
+        "local": "Backup local",
+        "webdav": "Backup WebDAV"
+      },
+      "actions": {
+        "selectTarget": "Selecionar destino do backup",
+        "backup": "Backup",
+        "export": "Exportar",
+        "exportBackup": "Exportar Backup",
+        "importBackup": "Importar Backup",
+        "deleteBackup": "Excluir Backup",
+        "restore": "Restaurar",
+        "restoreBackup": "Restaurar Backup",
+        "viewHistory": "Ver histórico"
+      },
+      "fields": {
+        "webdavUrl": "URL do Servidor WebDAV",
+        "username": "Usuário",
+        "info": "Os backups são armazenados localmente no diretório de dados do aplicativo. Use a lista abaixo para restaurar ou excluir backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "A URL do WebDAV não pode estar vazia",
+        "invalidWebdavUrl": "Formato de URL do WebDAV inválido",
+        "usernameRequired": "O usuário não pode estar vazio",
+        "passwordRequired": "A senha não pode estar vazia",
+        "webdavConfigSaved": "Configuração do WebDAV salva com sucesso",
+        "webdavConfigSaveFailed": "Falha ao salvar a configuração do WebDAV: {{error}}",
+        "backupCreated": "Backup criado com sucesso",
+        "backupFailed": "Falha no backup: {{error}}",
+        "localBackupCreated": "Backup local criado com sucesso",
+        "localBackupFailed": "Falha no backup local",
+        "restoreSuccess": "Restauração concluída, o aplicativo será reiniciado em 1s",
+        "localBackupExported": "Backup local exportado com sucesso",
+        "localBackupExportFailed": "Falha ao exportar o backup local",
+        "localBackupImported": "Backup local importado com sucesso",
+        "localBackupImportFailed": "Falha ao importar o backup local: {{error}}",
+        "webdavRefreshSuccess": "Atualização do WebDAV concluída com sucesso",
+        "webdavRefreshFailed": "Falha na atualização do WebDAV: {{error}}",
+        "confirmDelete": "Confirmar a exclusão deste arquivo de backup?",
+        "confirmRestore": "Confirmar a restauração deste arquivo de backup?"
+      },
+      "auto": {
+        "title": "Backup automático",
+        "scheduleLabel": "Ativar backup agendado",
+        "scheduleHelper": "Cria backups locais em segundo plano no intervalo configurado.",
+        "intervalLabel": "Frequência do backup",
+        "changeLabel": "Backup em alterações críticas",
+        "changeHelper": "Faz backup automaticamente quando a Configuração/Script Global Estendido é alterado.",
+        "options": {
+          "hours": "A cada {{n}} horas",
+          "days": "A cada {{n}} dias"
+        }
+      },
+      "manual": {
+        "title": "Backup manual",
+        "local": "Cria um snapshot neste dispositivo, armazenado no diretório de dados do aplicativo.",
+        "webdav": "Envia um snapshot para o seu servidor WebDAV assim que as credenciais forem definidas.",
+        "configureWebdav": "Configurar WebDAV"
+      },
+      "history": {
+        "title": "Histórico de backups",
+        "summary": "{{count}} backups • mais recente {{recent}}",
+        "empty": "Nenhum backup disponível",
+        "unknownPlatform": "desconhecida",
+        "unknownTime": "Hora desconhecida"
+      },
+      "webdav": {
+        "title": "Configurações do WebDAV"
+      },
+      "table": {
+        "filename": "Nome do Arquivo",
+        "backupTime": "Hora do Backup",
+        "actions": "Ações",
+        "noBackups": "Nenhum backup disponível",
+        "rowsPerPage": "Linhas por página"
+      }
+    },
+    "misc": {
+      "title": "Diversos",
+      "fields": {
+        "appLogLevel": "Nível de Log do Aplicativo",
+        "appLogMaxSize": "Tamanho Máximo do Log do Aplicativo",
+        "appLogMaxCount": "Quantidade Máxima de Logs do Aplicativo",
+        "autoCloseConnections": "Fechar Conexões Automaticamente",
+        "autoCheckUpdate": "Verificar Atualizações Automaticamente",
+        "enableBuiltinEnhanced": "Ativar Aprimoramento Integrado",
+        "proxyLayoutColumns": "Colunas do Layout de Proxy",
+        "autoLogClean": "Limpeza Automática de Logs",
+        "autoDelayDetection": "Detecção Automática de Atraso",
+        "autoDelayDetectionInterval": "Intervalo da Detecção Automática de Atraso",
+        "defaultLatencyTest": "Teste de Latência Padrão",
+        "defaultLatencyTimeout": "Tempo Limite de Latência Padrão"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Encerra as conexões estabelecidas quando a seleção do grupo de proxy ou o modo de proxy muda",
+        "enableBuiltinEnhanced": "Tratamento de compatibilidade para o arquivo de configuração",
+        "autoDelayDetection": "Testa periodicamente a latência do nó atual em segundo plano",
+        "defaultLatencyTest": "Usado apenas para testes de requisição do cliente HTTP e não afeta o arquivo de configuração"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Colunas Automáticas"
+        },
+        "autoLogClean": {
+          "never": "Nunca Limpar",
+          "retainDays": "Manter {{n}} Dias"
+        }
+      }
+    },
+    "update": {
+      "title": "Nova Versão v{{version}}",
+      "actions": {
+        "goToRelease": "Ir para a Página da Release",
+        "update": "Atualizar"
+      },
+      "messages": {
+        "breakChangeError": "Esta versão é uma atualização importante e não oferece suporte a atualizações dentro do aplicativo. Desinstale-a e baixe e instale a nova versão manualmente",
+        "available": "Uma nova versão está disponível"
+      },
+      "alerts": {
+        "note": "Nota",
+        "tip": "Dica",
+        "important": "Importante",
+        "warning": "Aviso",
+        "caution": "Cuidado"
+      }
+    },
+    "sysproxy": {
+      "title": "Configurações do Proxy do Sistema",
+      "fieldsets": {
+        "currentStatus": "Proxy do Sistema Atual"
+      },
+      "fields": {
+        "enableStatus": "Status de Ativação:",
+        "serverAddr": "Endereço do Servidor: ",
+        "pacUrl": "URL do PAC: ",
+        "proxyHost": "Host do Proxy",
+        "usePacMode": "Usar Modo PAC",
+        "proxyGuard": "Proteção do Proxy",
+        "guardDuration": "Duração da Proteção",
+        "alwaysUseDefaultBypass": "Sempre usar o Bypass Padrão",
+        "enableBypassCheck": "Validar Formato do Bypass do Proxy",
+        "proxyBypass": "Configurações de Bypass do Proxy: ",
+        "bypass": "Bypass: ",
+        "pacScriptContent": "Conteúdo do Script PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "Ative para impedir que outros softwares modifiquem as configurações de proxy do sistema operacional"
+      },
+      "messages": {
+        "durationTooShort": "A duração do daemon do proxy não pode ser menor que 1 segundo",
+        "invalidBypass": "Formato de Bypass inválido",
+        "invalidProxyHost": "Formato de host do proxy inválido"
+      },
+      "actions": {
+        "editPac": "Editar PAC"
+      }
+    },
+    "tun": {
+      "title": "Modo Tun",
+      "fields": {
+        "stack": "Stack do Tun",
+        "device": "Nome do Dispositivo",
+        "autoRoute": "Rota Automática",
+        "routeExcludeAddress": "Endereços Excluídos da Rota",
+        "strictRoute": "Rota Estrita",
+        "autoDetectInterface": "Detectar Interface Automaticamente",
+        "dnsHijack": "Sequestro de DNS",
+        "mtu": "Unidade Máxima de Transmissão",
+        "autoRedirect": "Redirecionamento Automático"
+      },
+      "tooltips": {
+        "dnsHijack": "Use , para separar vários servidores DNS",
+        "autoRedirect": "Configura automaticamente os redirecionamentos TCP do nftables/iptables"
+      },
+      "messages": {
+        "applied": "Configurações Aplicadas",
+        "invalidRouteExcludeAddress": "Insira um bloco CIDR válido",
+        "routeExcludeAddressHint": "Somente CIDR IPv4/IPv6 é suportado, como 192.168.0.0/16 ou fd00::/8"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "Sobrescrever DNS",
+        "profileScope": "A opção de sobrescrever DNS é salva separadamente para cada perfil e se aplica somente a esse perfil.",
+        "warning": "Se você não está familiarizado com estas configurações, não as modifique e mantenha a Sobrescrita de DNS desativada"
+      },
+      "protection": {
+        "title": "Ativar Sobrescrita de DNS?",
+        "message": "Esta assinatura contém configurações de DNS personalizadas. A Sobrescrita de DNS pode substituí-las, impedindo que os nós se conectem ou que alguns sites sejam carregados. Ativar mesmo assim?",
+        "enableAnyway": "Ativar mesmo assim",
+        "keepDisabled": "Manter desativada",
+        "autoDisabled": "A Sobrescrita de DNS foi desativada para preservar as configurações de DNS personalizadas da assinatura atual."
+      },
+      "sections": {
+        "general": "Configurações de DNS",
+        "fallbackFilter": "Configurações do Filtro de Fallback",
+        "hosts": "Configurações de Hosts"
+      },
+      "fields": {
+        "enable": "Ativar DNS",
+        "listen": "Escuta do DNS",
+        "enhancedMode": "Modo Aprimorado",
+        "fakeIpRange": "Intervalo de Fake IP",
+        "fakeIpRange6": "Intervalo de Fake IP (IPv6)",
+        "fakeIpFilterMode": "Modo do Filtro de Fake IP",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Ativar resolução DNS IPv6"
+        },
+        "preferH3": {
+          "label": "Preferir H3",
+          "description": "O DNS DOH usa HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respeitar Regras",
+          "description": "As conexões DNS seguem as regras de roteamento"
+        },
+        "useHosts": {
+          "label": "Usar Hosts",
+          "description": "Ative para resolver hosts por meio do arquivo hosts"
+        },
+        "useSystemHosts": {
+          "label": "Usar Hosts do Sistema",
+          "description": "Ative para resolver hosts por meio do arquivo hosts do sistema"
+        },
+        "directPolicy": {
+          "label": "Nameserver Direto Segue a Política",
+          "description": "Define se deve seguir a política de nameserver"
+        },
+        "defaultNameserver": {
+          "label": "Nameserver Padrão",
+          "description": "Servidores DNS padrão usados para resolver servidores DNS"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "Lista de servidores DNS, separados por vírgula"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "Lista de servidores DNS de fallback, separados por vírgula"
+        },
+        "proxy": {
+          "label": "Nameserver do Servidor Proxy",
+          "description": "Servidores DNS para resolução de domínios dos nós de proxy"
+        },
+        "directNameserver": {
+          "label": "Nameserver Direto",
+          "description": "Servidores DNS para resolução de domínios de saída direta, suporta a palavra-chave 'system', separados por vírgula"
+        },
+        "fakeIpFilter": {
+          "label": "Filtro de Fake IP",
+          "description": "Domínios que ignoram a resolução de fake IP, separados por vírgula"
+        },
+        "nameserverPolicy": {
+          "label": "Política de Nameserver",
+          "description": "Servidor DNS específico por domínio, vários servidores separados por ponto e vírgula, formato: domínio=servidor1;servidor2"
+        },
+        "geoipFiltering": {
+          "label": "Filtragem GeoIP",
+          "description": "Ativar filtragem GeoIP para o fallback"
+        },
+        "geoipCode": "Código GeoIP",
+        "fallbackIpCidr": {
+          "label": "CIDR de IP do Fallback",
+          "description": "CIDRs de IP que não usam servidores de fallback, separados por vírgula"
+        },
+        "fallbackDomain": {
+          "label": "Domínio do Fallback",
+          "description": "Domínios que usam servidores de fallback, separados por vírgula"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Mapeamento personalizado de domínio para IP ou domínio"
+        }
+      },
+      "messages": {
+        "saved": "Configurações de DNS salvas",
+        "configError": "Erro na configuração de DNS:"
+      },
+      "errors": {
+        "invalid": "Configuração inválida",
+        "invalidYaml": "Formato YAML inválido"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Abrir URL"
+      },
+      "title": "Web UI",
+      "messages": {
+        "supportedPlaceholders": "Suporta %host, %port, %secret",
+        "placeholderInstruction": "Substitua host, port, secret por %host, %port, %secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "As informações de conexão do núcleo não estão disponíveis",
+        "invalidServer": "O endereço do servidor do núcleo \"{{server}}\" é inválido",
+        "openFailed": "Falha ao abrir a Web UI"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Ativar Atalho Global"
+      },
+      "title": "Configurações de Atalhos",
+      "functions": {
+        "rule": "Modo Regra",
+        "global": "Modo Global",
+        "openOrCloseDashboard": "Abrir/Fechar Painel",
+        "toggleSystemProxy": "Ativar/Desativar Proxy do Sistema",
+        "toggleTunMode": "Ativar/Desativar Modo Tun",
+        "entryLightweightMode": "Entrar no Modo Leve",
+        "direct": "Modo Direto",
+        "reactivateProfiles": "Reativar Perfis"
+      }
+    },
+    "networkInterface": {
+      "title": "Interface de Rede",
+      "fields": {
+        "ipAddress": "Endereço IP",
+        "macAddress": "Endereço MAC"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Falha ao atualizar a configuração do núcleo",
+        "modeUpdateFailed": "Falha ao alterar o modo de proxy",
+        "restartFailed": "Falha ao reiniciar o núcleo",
+        "startFailed": "Falha ao iniciar o núcleo",
+        "serviceCoreStopped": "O núcleo do serviço parou inesperadamente",
+        "stopFailed": "Falha ao parar o núcleo"
+      },
+      "clashService": {
+        "installFailed": "Falha ao instalar o serviço",
+        "uninstallFailed": "Falha ao desinstalar o serviço",
+        "reinstallFailed": "Falha ao reinstalar o serviço",
+        "repairFailed": "Falha ao reparar o serviço",
+        "sidecarFailed": "Falha ao continuar com o Sidecar",
+        "coreAlreadyRunning": "Não é possível iniciar o núcleo: já há um processo do núcleo em execução. Feche o aplicativo correspondente ou encerre o processo remanescente e tente novamente. Se o problema persistir, reinicie o computador."
+      },
+      "sysproxy": {
+        "privilegeRequired": "Não é possível definir o proxy do sistema: o macOS recusou a alteração por falta de privilégios. Instale o serviço do Clash Verge; um administrador também pode desativar a exigência de senha de administrador para configurações do sistema, nas opções avançadas em Ajustes do Sistema → Privacidade e Segurança.",
+        "directFallback": "Falha ao definir o proxy do sistema; o tráfego foi revertido para conexão direta.",
+        "guardStopped": "A proteção do proxy do sistema parou após falhar várias vezes ao executar. O proxy do sistema não está mais sendo mantido.",
+        "sidecarWhileServiceReady": "Não foi possível definir o proxy do sistema porque o núcleo ainda está em execução como Sidecar, embora o serviço do Clash Verge esteja pronto. Reinicie o núcleo para mudar para o modo serviço.",
+        "coreNotReady": "Não foi possível ativar o proxy do sistema porque o núcleo não está em execução. Inicie o núcleo (ou instale/repare o serviço do Clash Verge) e tente novamente.",
+        "systemCallFailed": "Não foi possível gravar o proxy do sistema porque uma chamada de sistema do Windows falhou. Geralmente é temporário, então tente novamente."
+      }
+    },
+    "notifications": {
+      "clash": {
+        "restartSuccess": "Núcleo do Clash Reiniciado",
+        "versionUpdated": "Versão do Núcleo Atualizada",
+        "alreadyLatestVersion": "Já Está Usando a Versão Mais Recente do Núcleo",
+        "changeSuccess": "Núcleo alterado com sucesso",
+        "changeFailed": "Falha ao alterar o núcleo",
+        "geoDataUpdated": "GeoData Atualizado"
+      },
+      "clashService": {
+        "appDataNotOwned": "O serviço se recusou a iniciar o núcleo porque, no disco, a pasta de dados do aplicativo não pertence à sua conta (comum quando a pasta pessoal está em um disco externo). Reparar o serviço não resolverá isso. Execute este comando em um terminal e reinicie o aplicativo:",
+        "installSuccess": "Serviço Instalado com Sucesso",
+        "permissionFallback": "{{reason}} Mudou para o modo normal (Sidecar); o TUN requer privilégios de administrador. Siga o guia para corrigir e reinstalar o serviço. Se preferir não corrigir ou não souber como, execute o aplicativo como administrador sem instalar o serviço.",
+        "permissionWritableReason": "Contas comuns podem modificar os arquivos do núcleo ou uma pasta superior, então o serviço se recusou a executar o núcleo com privilégios elevados.",
+        "permissionRejectedReason": "O serviço não conseguiu confirmar que os arquivos e pastas do núcleo são seguros para execução com privilégios elevados.",
+        "permissionRepairGuide": "Ver instruções de reparo",
+        "sidecarFallback": "O serviço não conseguiu iniciar o núcleo. Mudou para o modo Sidecar; o serviço continua indisponível.",
+        "uninstallSuccess": "Serviço Desinstalado com Sucesso"
+      },
+      "updater": {
+        "withClashProxySuccess": "Atualização com o proxy do Clash concluída com sucesso",
+        "withClashProxyFailed": "A atualização falhou mesmo com o proxy do Clash"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "Parando o Núcleo...",
+      "restarting": "Reiniciando o Núcleo..."
+    },
+    "clashService": {
+      "installing": "Instalando o Serviço...",
+      "uninstalling": "Desinstalando o Serviço..."
+    }
+  }
+}

@@ -20,6 +20,19 @@ export const isValidUrl = (value: string) =>
     require_tld: false,
   })
 
+export const isValidLatencyTestUrl = (value: string) => {
+  const raw = value.trim()
+  if (!/^https?:\/\//i.test(raw)) return false
+  try {
+    const url = new URL(raw)
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') && !!url.hostname
+    )
+  } catch {
+    return false
+  }
+}
+
 export const isValidPort = (value: string) => isPort(value.trim())
 
 export const normalizeHost = (value: string): string | null => {

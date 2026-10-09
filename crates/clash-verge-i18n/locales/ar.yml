@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
   adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.
+core:
+  alreadyRunning: 'تعذّر بدء النواة: توجد عملية نواة قيد التشغيل بالفعل. أغلق التطبيق المعني أو أنهِ العملية المتبقية، ثم أعد المحاولة. إذا استمرت المشكلة، فأعد تشغيل الكمبيوتر.'
 launchGuard:
   currentExeError: 'تعذر تحديد موقع التطبيق: {error}'
   homeDirError: 'تعذر تحديد المجلد الرئيسي للمستخدم الحالي. سيتم إنهاء التطبيق: {error}'
@@ -68,6 +70,8 @@ tray:
   global: عام
   profiles: الملفات التعريفية
   proxies: وكلاء
+  testLatency: اختبار التأخير
+  testingLatency: جارٍ اختبار التأخير…
   systemProxy: وكيل النظام
   tunMode: وضع TUN
   closeAllConnections: إغلاق كل الاتصالات

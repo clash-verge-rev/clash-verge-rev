@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
+core:
+  alreadyRunning: 'Çekirdek başlatılamıyor: bir çekirdek işlemi zaten çalışıyor. İlgili uygulamayı kapatın veya kalan işlemi sonlandırıp yeniden deneyin. Sorun devam ederse bilgisayarı yeniden başlatın.'
 launchGuard:
   currentExeError: 'Uygulamanın konumu belirlenemedi: {error}'
   homeDirError: 'Geçerli kullanıcının ana dizini belirlenemedi. Uygulama kapatılacak: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Küresel
   profiles: Profiller
   proxies: Vekil'ler
+  testLatency: Gecikmeyi Test Et
+  testingLatency: Gecikme test ediliyor…
   systemProxy: Sistem Vekil'i
   tunMode: TUN Modu
   closeAllConnections: Tüm Bağlantıları Kapat

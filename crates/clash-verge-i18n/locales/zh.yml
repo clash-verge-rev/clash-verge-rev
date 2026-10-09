@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: 安装 Clash Verge 服务需要管理员权限
   adminUninstallPrompt: 卸载 Clash Verge 服务需要管理员权限
+core:
+  alreadyRunning: 无法启动内核：已有内核进程正在运行。请退出相关应用或清理残留进程后重试。若仍无法解决，请重启电脑。
 launchGuard:
   currentExeError: 无法确定应用位置：{error}
   homeDirError: 无法确定当前用户主目录，应用将退出：{error}
@@ -68,6 +70,8 @@ tray:
   global: 全局
   profiles: 订阅
   proxies: 代理
+  testLatency: 测试延迟
+  testingLatency: 正在测试延迟…
   systemProxy: 系统代理
   tunMode: TUN 模式
   closeAllConnections: 关闭所有连接
