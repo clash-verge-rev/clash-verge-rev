@@ -667,7 +667,7 @@
         "reinstallFailed": "Falha ao reinstalar o serviço",
         "repairFailed": "Falha ao reparar o serviço",
         "sidecarFailed": "Falha ao continuar com o Sidecar",
-        "coreAlreadyRunning": "Não foi possível iniciar o modo normal (Sidecar): outro núcleo ainda está em execução (PID {{pid}}). Saia das outras instâncias do Clash Verge ou do aplicativo que usa este núcleo e tente novamente."
+        "coreAlreadyRunning": "Não é possível iniciar o núcleo: já há um processo do núcleo em execução. Feche o aplicativo correspondente ou encerre o processo remanescente e tente novamente. Se o problema persistir, reinicie o computador."
       },
       "sysproxy": {
         "privilegeRequired": "Não é possível definir o proxy do sistema: o macOS recusou a alteração por falta de privilégios. Instale o serviço do Clash Verge; um administrador também pode desativar a exigência de senha de administrador para configurações do sistema, nas opções avançadas em Ajustes do Sistema → Privacidade e Segurança.",

@@ -667,7 +667,7 @@
         "reinstallFailed": "重新安裝服務失敗",
         "repairFailed": "修復服務失敗",
         "sidecarFailed": "繼續使用 Sidecar 失敗",
-        "coreAlreadyRunning": "無法啟動一般模式（Sidecar）：已有核心程序正在執行（PID {{pid}}）。請先結束其他 Clash Verge 執行個體或使用該核心的程式，然後重試。"
+        "coreAlreadyRunning": "無法啟動核心：已有核心程序正在執行。請結束相關應用程式或清理殘留程序後重試。若仍無法解決，請重新啟動電腦。"
       },
       "sysproxy": {
         "privilegeRequired": "無法設定系統代理：macOS 以權限不足為由拒絕了這次修改。請安裝 Clash Verge 服務；管理者也可以在系統設定 → 隱私權與安全性的進階選項中，關閉存取系統層級設定需要管理者密碼的要求。",

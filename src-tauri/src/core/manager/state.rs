@@ -17,6 +17,15 @@ use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
+pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
+    let detail = error.to_string();
+    if detail.starts_with("process verge-mihomo") && detail.ends_with("; refusing a second core") {
+        error.context(clash_verge_i18n::t!("core.alreadyRunning").into_owned())
+    } else {
+        error
+    }
+}
+
 #[cfg(target_os = "windows")]
 fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
     use serde_yaml_ng::{Mapping, Value};
@@ -154,7 +163,8 @@ impl CoreManager {
         self.wait_for_sidecar_exit().await?;
         let execution = clash_verge_service_ipc::execution::reserve_sidecar()
             .await
-            .inspect_err(service::record_residual_service)?;
+            .inspect_err(service::record_residual_service)
+            .map_err(explain_core_occupancy)?;
         self.core_stopped();
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
@@ -510,6 +520,20 @@ mod readiness_tests {
         },
         time::Duration,
     };
+
+    #[test]
+    fn core_occupancy_explanation_preserves_the_original_error() {
+        for detail in [
+            "process verge-mihomo remains after IPC failure; refusing a second core",
+            "process verge-mihomo-alpha.exe (PID 123) is still running; refusing a second core",
+        ] {
+            let error = super::explain_core_occupancy(anyhow::anyhow!(detail));
+            assert_eq!(error.to_string(), clash_verge_i18n::t!("core.alreadyRunning"));
+            assert_eq!(error.root_cause().to_string(), detail);
+        }
+        let error = super::explain_core_occupancy(anyhow::anyhow!("could not inspect remaining cores"));
+        assert_eq!(error.to_string(), "could not inspect remaining cores");
+    }
 
     #[tokio::test]
     async fn sidecar_readiness_poll_is_bounded_and_accepts_a_real_api_response() -> anyhow::Result<()> {

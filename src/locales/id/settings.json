@@ -667,7 +667,7 @@
         "reinstallFailed": "Gagal memasang ulang layanan",
         "repairFailed": "Gagal memperbaiki layanan",
         "sidecarFailed": "Gagal melanjutkan dengan Sidecar",
-        "coreAlreadyRunning": "Tidak dapat memulai mode Sidecar: inti lain masih berjalan (PID {{pid}}). Tutup instans Clash Verge lain atau aplikasi yang menggunakan inti tersebut, lalu coba lagi."
+        "coreAlreadyRunning": "Tidak dapat memulai inti: proses inti sudah berjalan. Tutup aplikasi terkait atau hentikan proses yang tersisa, lalu coba lagi. Jika masalah berlanjut, mulai ulang komputer."
       },
       "sysproxy": {
         "privilegeRequired": "Tidak dapat mengatur proxy sistem: macOS menolak perubahan ini karena hak akses tidak mencukupi. Pasang layanan Clash Verge; jika Anda administrator, Anda juga dapat mematikan keharusan kata sandi administrator untuk pengaturan seluruh sistem di opsi lanjutan Pengaturan Sistem → Privasi & Keamanan.",

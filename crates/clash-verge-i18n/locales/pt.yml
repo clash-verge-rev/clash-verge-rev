@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: A instalação do serviço do Clash Verge requer privilégios de administrador.
   adminUninstallPrompt: A desinstalação do serviço do Clash Verge requer privilégios de administrador.
+core:
+  alreadyRunning: 'Não é possível iniciar o núcleo: já há um processo do núcleo em execução. Feche o aplicativo correspondente ou encerre o processo remanescente e tente novamente. Se o problema persistir, reinicie o computador.'
 launchGuard:
   currentExeError: 'Não foi possível determinar a localização do aplicativo: {error}'
   homeDirError: 'Não foi possível determinar o diretório pessoal do usuário atual. O aplicativo será encerrado: {error}'
