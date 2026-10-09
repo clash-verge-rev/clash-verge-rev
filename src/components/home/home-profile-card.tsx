@@ -26,7 +26,9 @@ import { useNavigate } from 'react-router'
 
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { updateProfile } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
+import { isValidUrl } from '@/utils/network'
 import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -41,7 +43,7 @@ const round = keyframes`
 // 辅助函数解析URL和过期时间
 const parseUrl = (url?: string) => {
   if (!url) return '-'
-  if (url.startsWith('http')) return new URL(url).host
+  if (isValidUrl(url)) return new URL(url).host
   return 'local'
 }
 
@@ -296,7 +298,10 @@ export const HomeProfileCard = ({
 
     setUpdating(true)
     try {
-      await updateProfile(current.uid, current.option)
+      await mutate(() => updateProfile(current.uid, current.option), {
+        id: `update-profile:${current.uid}`,
+        errorNotice: false,
+      })
       onProfileUpdated?.()
 
       // 刷新首页数据

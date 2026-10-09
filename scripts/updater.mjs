@@ -40,10 +40,11 @@ async function resolveUpdater() {
   const tags = allTags
   console.log(`Retrieved ${tags.length} tags in total`)
 
-  const stableTagRegex = /^v\d+\.\d+\.\d+$/
   const preReleaseRegex = /^(alpha|beta|rc|pre)$/i
 
-  const stableTag = tags.find((t) => stableTagRegex.test(t.name))
+  const { data: latestRelease } =
+    await github.rest.repos.getLatestRelease(options)
+  const stableTag = { name: latestRelease.tag_name }
   const preReleaseTag = tags.find((t) => preReleaseRegex.test(t.name))
 
   console.log('All tags:', tags.map((t) => t.name).join(', '))

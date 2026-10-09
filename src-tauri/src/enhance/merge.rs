@@ -1,5 +1,3 @@
-use clash_verge_logging::{Type, logging};
-
 use super::field::use_lowercase;
 use serde_yaml_ng::{self, Mapping, Value};
 
@@ -18,20 +16,19 @@ fn deep_merge(a: &mut Value, b: Value) {
     }
 }
 
-pub fn use_merge(merge: &Mapping, config: Mapping) -> Mapping {
-    let mut config = Value::from(config);
-    let merge = use_lowercase(merge);
-
-    deep_merge(&mut config, Value::from(merge));
-
-    config.as_mapping().cloned().unwrap_or_else(|| {
-        logging!(
-            error,
-            Type::Core,
-            "Failed to convert merged config to mapping, using empty mapping"
-        );
-        Mapping::new()
-    })
+pub fn use_merge(merge: &Mapping, mut config: Mapping) -> Mapping {
+    for (key, value) in use_lowercase(merge) {
+        match (config.get_mut(&key), value) {
+            (Some(Value::Mapping(existing)), Value::Mapping(overlay)) if key.as_str() == Some("dns") => {
+                existing.extend(overlay);
+            }
+            (Some(existing), value) if key.as_str() != Some("hosts") => deep_merge(existing, value),
+            (_, value) => {
+                config.insert(key, value);
+            }
+        }
+    }
+    config
 }
 
 #[test]
@@ -54,18 +51,49 @@ fn test_merge() -> anyhow::Result<()> {
       enable: true
     dns:
       enable: true
+      nameserver-policy:
+        new.example: 1.1.1.1
+      fallback-filter:
+        geoip: false
+    hosts:
+      new.example: 192.0.2.2
   ";
 
     let config = r"
     rules:
       - aaaaa
     script1: test
+    tun:
+      mtu: 1500
+    dns:
+      nameserver: [9.9.9.9]
+      nameserver-policy:
+        old.example: 8.8.8.8
+      fallback-filter:
+        geoip: true
+        domain: [old.example]
+    hosts:
+      old.example: 192.0.2.1
   ";
 
     let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
     let config = serde_yaml_ng::from_str::<Mapping>(config)?;
 
-    let _ = serde_yaml_ng::to_string(&use_merge(&merge, config))?;
+    let result = use_merge(&merge, config);
+    assert_eq!(result["dns"]["nameserver-policy"], merge["dns"]["nameserver-policy"]);
+    assert_eq!(result["dns"]["fallback-filter"], merge["dns"]["fallback-filter"]);
+    assert_eq!(result["hosts"], merge["hosts"]);
+    assert_eq!(result["dns"]["nameserver"], serde_yaml_ng::to_value(["9.9.9.9"])?);
+    assert_eq!(result["tun"]["mtu"], Value::from(1500));
+    assert_eq!(result["rules"], merge["rules"]);
+    assert_eq!(result["script1"], Value::from("test"));
+
+    let cleared = serde_yaml_ng::from_str::<Mapping>(
+        "dns: {enable: false, nameserver-policy: {}, fallback-filter: {}, nameserver: []}\nhosts: {}",
+    )?;
+    let result = use_merge(&cleared, result);
+    assert_eq!(result["dns"], cleared["dns"]);
+    assert_eq!(result["hosts"], cleared["hosts"]);
 
     Ok(())
 }

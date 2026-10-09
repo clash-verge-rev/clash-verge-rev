@@ -16,6 +16,7 @@ import {
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 
@@ -57,7 +58,10 @@ const ProxyPage = () => {
   const onChangeMode = useLockFn(async (mode: Mode) => {
     try {
       // patchClashMode 在后端 PATCH 失败时会 reject，需提示用户而非静默失败
-      await patchClashMode(mode)
+      await mutate(() => patchClashMode(mode), {
+        id: 'patch-clash-mode',
+        errorNotice: false,
+      })
       refreshClashConfig()
     } catch (error) {
       showNotice.error(error)
@@ -75,7 +79,10 @@ const ProxyPage = () => {
       // 退出链式代理模式时，清除链式代理配置
       try {
         debugLog('Exiting chain mode, clearing chain configuration')
-        await updateProxyChainConfigInRuntime(null)
+        await mutate(() => updateProxyChainConfigInRuntime(null), {
+          id: 'update-proxy-chain-runtime',
+          errorNotice: false,
+        })
         debugLog('Chain configuration cleared successfully')
       } catch (error) {
         console.error('Failed to clear chain configuration:', error)

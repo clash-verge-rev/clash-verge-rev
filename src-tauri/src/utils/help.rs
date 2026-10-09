@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::{config::with_encryption, process::AsyncHandler};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
@@ -16,9 +17,13 @@ pub async fn read_yaml<T: DeserializeOwned>(path: &Path) -> Result<T> {
         bail!("file not found \"{}\"", path.display());
     }
 
-    let yaml_str = tokio::fs::read_to_string(path).await?;
+    let yaml_str = tokio::fs::read_to_string(path)
+        .await
+        .with_context(|| format!("failed to read YAML file {}", path.display()))?;
 
-    Ok(with_encryption(|| async { serde_yaml_ng::from_str::<T>(&yaml_str) }).await?)
+    with_encryption(|| async { serde_yaml_ng::from_str::<T>(&yaml_str) })
+        .await
+        .with_context(|| format!("failed to parse YAML file {}", path.display()))
 }
 
 pub async fn read_mapping(path: &Path) -> Result<Mapping> {
@@ -54,7 +59,7 @@ fn parse_mapping(yaml_str: String, path: PathBuf) -> Result<Mapping> {
             let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
             logging!(error, Type::Config, "{}", error_msg);
 
-            crate::core::handle::Handle::notice_message("config_validate::yaml_syntax_error", &error_msg);
+            crate::core::handle::Handle::notice(NoticeStatus::ConfigValidateYamlSyntaxError, error_msg.as_str());
 
             bail!("YAML syntax error: {}", err)
         }

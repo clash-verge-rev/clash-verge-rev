@@ -18,8 +18,6 @@ pub enum NotificationEvent<'a> {
     LightweightModeEntered,
     ProfilesReactivated,
     AppQuit,
-    #[cfg(target_os = "macos")]
-    AppHidden,
 }
 
 /// Whether no app window can currently show the failure.
@@ -93,12 +91,6 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
         NotificationEvent::AppQuit => {
             let title = clash_verge_i18n::t!("notifications.appQuit.title");
             let body = clash_verge_i18n::t!("notifications.appQuit.body");
-            notify(title, body);
-        }
-        #[cfg(target_os = "macos")]
-        NotificationEvent::AppHidden => {
-            let title = clash_verge_i18n::t!("notifications.appHidden.title");
-            let body = clash_verge_i18n::t!("notifications.appHidden.body");
             notify(title, body);
         }
     }

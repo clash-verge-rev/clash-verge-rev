@@ -17,7 +17,7 @@ import {
   TextSnippetOutlined,
 } from '@mui/icons-material'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
-import { TauriEvent } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
@@ -39,7 +39,6 @@ import {
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
-import { useListen } from '@/hooks/use-listen'
 import { fetchProfilesIntoCache, useProfiles } from '@/hooks/use-profiles'
 import {
   createProfile,
@@ -50,15 +49,17 @@ import {
   reorderProfile,
   updateProfile,
 } from '@/services/cmds'
-import { subscribeVergeEvents } from '@/services/events'
+import { mutate } from '@/services/mutate'
 import { errorDetail, showNotice } from '@/services/notice-service'
 import { revalidateQuery, useQuery } from '@/services/query-client'
+import { useThemeMode } from '@/services/states'
 import {
-  useLoadingCache,
-  useSetLoadingCache,
-  useThemeMode,
-} from '@/services/states'
+  useProfileLoadingCache,
+  useProfileUpdates,
+  useSetProfileLoading,
+} from '@/store/app-store-context'
 import { debugLog } from '@/utils/debug'
+import { isValidUrl } from '@/utils/network'
 
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
 const PROFILE_UPDATE_WORKER_LIMIT = 8
@@ -81,7 +82,6 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
 const ProfilePage = () => {
   const { t } = useTranslation()
   const location = useLocation()
-  const { addListener } = useListen()
   const [url, setUrl] = useState('')
   const [disabled, setDisabled] = useState(false)
   const [profileDndRevision, setProfileDndRevision] = useState(0)
@@ -91,12 +91,6 @@ const ProfilePage = () => {
     string | null
   >(null)
   const [loading, setLoading] = useState(false)
-  const [timerUpdateRevisions, setTimerUpdateRevisions] = useState<
-    Map<string, number>
-  >(() => new Map())
-  const [completedUpdateRevisions, setCompletedUpdateRevisions] = useState<
-    Map<string, number>
-  >(() => new Map())
 
   const [batchMode, setBatchMode] = useState(false)
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
@@ -127,44 +121,42 @@ const ProfilePage = () => {
   }, [profiles])
 
   useEffect(() => {
-    const handleFileDrop = async () => {
-      const unlisten = await addListener(
-        TauriEvent.DRAG_DROP,
-        async (event: any) => {
-          const paths = event.payload.paths
+    const unlisten = getCurrentWindow().onDragDropEvent(async (event) => {
+      if (event.payload.type !== 'drop') return
+      const paths = event.payload.paths
 
-          for (const file of paths) {
-            if (!file.endsWith('.yaml') && !file.endsWith('.yml')) {
-              showNotice.error('profiles.page.feedback.errors.onlyYaml')
-              continue
-            }
-            const item = {
-              type: 'local',
-              name: file.split(/\/|\\/).pop() ?? 'New Profile',
-              desc: '',
-              url: '',
-              option: {
-                with_proxy: false,
-                self_proxy: false,
-              },
-            } as IProfileItem
-            const data = await readTextFile(file)
-            await createProfile(item, data)
-            await mutateProfiles()
-          }
-          await enhanceProfiles()
-        },
-      )
-
-      return unlisten
-    }
-
-    const unsubscribe = handleFileDrop()
+      for (const file of paths) {
+        if (!file.endsWith('.yaml') && !file.endsWith('.yml')) {
+          showNotice.error('profiles.page.feedback.errors.onlyYaml')
+          continue
+        }
+        const item = {
+          type: 'local',
+          name: file.split(/\/|\\/).pop() ?? 'New Profile',
+          desc: '',
+          url: '',
+          option: {
+            with_proxy: false,
+            self_proxy: false,
+          },
+        } as IProfileItem
+        const data = await readTextFile(file)
+        await mutate(() => createProfile(item, data), {
+          id: 'create-profile',
+          errorNotice: false,
+          revalidate: [['getProfiles']],
+        })
+      }
+      await mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      })
+    })
 
     return () => {
-      unsubscribe.then((cleanup) => cleanup())
+      void unlisten.then((cleanup) => cleanup())
     }
-  }, [addListener, mutateProfiles])
+  }, [])
 
   const onEmergencyRefresh = useLockFn(async () => {
     debugLog('[紧急刷新] 开始强制刷新所有数据')
@@ -214,7 +206,7 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return
-    if (!/^https?:\/\//i.test(url)) {
+    if (!isValidUrl(url)) {
       showNotice.error('profiles.page.feedback.errors.invalidUrl')
       return
     }
@@ -226,7 +218,10 @@ const ProfilePage = () => {
       await performRobustRefresh()
     }
     try {
-      await importProfile(url)
+      await mutate(() => importProfile(url), {
+        id: 'import-profile',
+        errorNotice: false,
+      })
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
       console.warn('[订阅导入] 首次导入失败:', initialErr)
@@ -239,10 +234,17 @@ const ProfilePage = () => {
 
       showNotice.info('profiles.page.feedback.notifications.importRetry')
       try {
-        await importProfile(url, {
-          with_proxy: false,
-          self_proxy: true,
-        })
+        await mutate(
+          () =>
+            importProfile(url, {
+              with_proxy: false,
+              self_proxy: true,
+            }),
+          {
+            id: 'import-profile',
+            errorNotice: false,
+          },
+        )
         await handleImportSuccess(
           'shared.feedback.notifications.importWithClashProxy',
         )
@@ -323,7 +325,10 @@ const ProfilePage = () => {
     if (activeId == null || overId == null || activeId === overId) return
 
     try {
-      await reorderProfile(activeId, overId)
+      await mutate(() => reorderProfile(activeId, overId), {
+        id: 'reorder-profile',
+        errorNotice: false,
+      })
       mutateProfiles()
     } catch (error) {
       setProfileDndRevision((revision) => revision + 1)
@@ -354,7 +359,10 @@ const ProfilePage = () => {
         if (outcome.status === 'valid') {
           currentProfileRef.current = profile
           void mutateLogs().catch(() => {})
-          void closeAllConnections().catch(() => {})
+          void mutate(() => closeAllConnections(), {
+            id: 'close-all-connections',
+            errorNotice: false,
+          }).catch(() => {})
 
           if (
             notifySuccess &&
@@ -480,7 +488,11 @@ const ProfilePage = () => {
     setActivatings((prev) => [...new Set([...prev, ...currentProfiles])])
 
     try {
-      if (!(await enhanceProfiles())) return
+      const result = await mutate(() => enhanceProfiles(), {
+        id: 'enhance-profiles',
+        errorNotice: false,
+      })
+      if (!(result.ok && result.value === true)) return
       mutateLogs()
       if (notifySuccess) {
         showNotice.success(
@@ -499,7 +511,10 @@ const ProfilePage = () => {
     const current = profiles.current === uid
     try {
       setActivatings([...(current ? currentActivatings() : []), uid])
-      await deleteProfile(uid)
+      await mutate(() => deleteProfile(uid), {
+        id: 'delete-profile',
+        errorNotice: false,
+      })
       mutateProfiles()
       mutateLogs()
       if (current) {
@@ -512,51 +527,10 @@ const ProfilePage = () => {
     }
   })
 
-  const loadingCache = useLoadingCache()
-  const setLoadingCache = useSetLoadingCache()
-  const setLoadingProfiles = useCallback(
-    (uids: string[], loading: boolean) => {
-      setLoadingCache((cache) => {
-        const next = new Set(cache)
-        for (const uid of uids) {
-          if (loading) {
-            next.add(uid)
-          } else {
-            next.delete(uid)
-          }
-        }
-        return next
-      })
-    },
-    [setLoadingCache],
-  )
-
-  useEffect(
-    () =>
-      subscribeVergeEvents({
-        'profile-update-started': ({ uid }) => {
-          if (uid) setLoadingProfiles([uid], true)
-        },
-        'profile-update-completed': ({ uid }) => {
-          if (!uid) return
-          setLoadingProfiles([uid], false)
-          setCompletedUpdateRevisions((current) => {
-            const next = new Map(current)
-            next.set(uid, (next.get(uid) ?? 0) + 1)
-            return next
-          })
-          void mutateProfiles()
-        },
-        'verge://timer-updated': (uid) => {
-          setTimerUpdateRevisions((current) => {
-            const next = new Map(current)
-            next.set(uid, (next.get(uid) ?? 0) + 1)
-            return next
-          })
-        },
-      }),
-    [mutateProfiles, setLoadingProfiles],
-  )
+  const loadingCache = useProfileLoadingCache()
+  const { updateRevisions: completedUpdateRevisions, timerRevisions } =
+    useProfileUpdates()
+  const setLoadingProfiles = useSetProfileLoading()
 
   const runProfileUpdates = useCallback(
     async (uids: string[]) => {
@@ -569,7 +543,11 @@ const ProfilePage = () => {
 
       const updateOne = async (uid: string) => {
         try {
-          await updateProfile(uid)
+          // Per-uid id: the worker pool must not dedupe distinct subscriptions.
+          await mutate(() => updateProfile(uid), {
+            id: `update-profile:${uid}`,
+            errorNotice: false,
+          })
           throttleMutate()
         } catch (err: any) {
           console.error(`更新订阅 ${uid} 失败:`, err)
@@ -663,7 +641,10 @@ const ProfilePage = () => {
       setActivatings((prev) => [...new Set([...prev, ...currentActivating])])
 
       for (const uid of selectedProfiles) {
-        await deleteProfile(uid)
+        await mutate(() => deleteProfile(uid), {
+          id: 'delete-profile',
+          errorNotice: false,
+        })
       }
 
       await mutateProfiles()
@@ -907,7 +888,9 @@ const ProfilePage = () => {
               mb: 1.5,
               display: 'grid',
               overflow: 'hidden',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              // Up to 4 columns until a column would pass 480px, then more; 24px is the 3 gaps from `gap: 1`.
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(clamp(260px, calc((100% - 24px) / 4), 480px), 1fr))',
               gap: 1,
               px: 0.5,
             }}
@@ -923,7 +906,7 @@ const ProfilePage = () => {
                   visibleSwitchingProfile === item.uid
                 }
                 itemData={item}
-                timerUpdateRevision={timerUpdateRevisions.get(item.uid) ?? 0}
+                timerUpdateRevision={timerRevisions.get(item.uid) ?? 0}
                 completedUpdateRevision={
                   completedUpdateRevisions.get(item.uid) ?? 0
                 }

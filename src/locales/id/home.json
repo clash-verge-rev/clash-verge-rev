@@ -63,6 +63,7 @@
         "settings": "Pengaturan"
       },
       "badges": {
+        "notRunning": "Inti tidak berjalan",
         "adminMode": "Administrator Mode",
         "serviceMode": "Mode Layanan",
         "sidecarMode": "User Mode",

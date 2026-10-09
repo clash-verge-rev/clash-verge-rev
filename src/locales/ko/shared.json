@@ -108,7 +108,6 @@
       "config": {
         "failed": "설정 검증 실패",
         "bootFailed": "부팅 설정 검증 실패",
-        "coreChangeFailed": "코어 변경 설정 검증 실패",
         "processTerminated": "설정 검증 프로세스가 종료되었습니다. 보안 소프트웨어가 코어 실행을 차단하고 있는지 또는 컴퓨터의 CPU 및 실행 환경이 코어 프로그램을 지원하는지 확인하세요."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML 구문 오류",
         "readError": "YAML 읽기 오류",
-        "mappingError": "YAML 매핑 오류",
-        "keyError": "YAML 키 오류",
-        "generalError": "YAML 오류"
+        "mappingError": "YAML 매핑 오류"
       },
       "merge": {
         "syntaxError": "병합 파일 구문 오류",
-        "mappingError": "병합 파일 매핑 오류",
-        "keyError": "병합 파일 키 오류",
-        "generalError": "병합 파일 오류"
+        "mappingError": "병합 파일 매핑 오류"
       }
     }
   },

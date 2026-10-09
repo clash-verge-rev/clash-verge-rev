@@ -14,21 +14,12 @@ async function resolveUpdater() {
   const options = { owner: context.repo.owner, repo: context.repo.repo }
   const github = getOctokit(process.env.GITHUB_TOKEN)
 
-  const { data: tags } = await github.rest.repos.listTags({
-    ...options,
-    per_page: 10,
-    page: 1,
-  })
-
-  const tag = tags.find((t) => t.name.startsWith('v'))
+  const { data: latestRelease } =
+    await github.rest.repos.getLatestRelease(options)
+  const tag = { name: latestRelease.tag_name }
 
   console.log(tag)
   console.log()
-
-  const { data: latestRelease } = await github.rest.repos.getReleaseByTag({
-    ...options,
-    tag: tag.name,
-  })
 
   const updateData = {
     name: tag.name,

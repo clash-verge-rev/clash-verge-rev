@@ -63,8 +63,8 @@ pub(crate) fn open_private_current_user_file(path: &Path) -> Result<std::fs::Fil
 }
 
 #[cfg(windows)]
-pub(crate) fn open_or_create_private_current_user_file(path: &Path) -> Result<std::fs::File> {
-    windows_owner::open_or_create_private_file(path)
+pub(crate) fn open_or_create_current_user_lock(path: &Path) -> Result<std::fs::File> {
+    windows_owner::open_or_create_lock_file(path)
 }
 
 /// Repairs an application data root Windows no longer reports as owned by the current user.
@@ -110,7 +110,7 @@ mod windows_owner {
         BY_HANDLE_FILE_INFORMATION, CREATE_NEW, CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_DIRECTORY,
         FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_NORMAL, FILE_ATTRIBUTE_REPARSE_POINT, FILE_FLAG_BACKUP_SEMANTICS,
         FILE_FLAG_OPEN_REPARSE_POINT, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_TYPE_DISK,
-        GetFileInformationByHandle, GetFileType, OPEN_EXISTING, READ_CONTROL, WRITE_DAC, WRITE_OWNER,
+        GetFileInformationByHandle, GetFileType, OPEN_ALWAYS, OPEN_EXISTING, READ_CONTROL, WRITE_DAC, WRITE_OWNER,
     };
     use windows_sys::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
 
@@ -215,22 +215,49 @@ mod windows_owner {
         Ok(file)
     }
 
-    pub(super) fn open_or_create_private_file(path: &Path) -> Result<std::fs::File> {
+    pub(super) fn open_or_create_lock_file(path: &Path) -> Result<std::fs::File> {
         let sid = current_sid()?;
         let descriptor = LocalSecurityDescriptor::from_sid(&sid)?;
-        match create_file(path, &descriptor) {
-            Ok(file) => Ok(file),
-            Err(error)
-                if error
-                    .downcast_ref::<std::io::Error>()
-                    .is_some_and(|error| error.raw_os_error() == Some(ERROR_FILE_EXISTS as i32)) =>
-            {
-                let file = open_file(path)?;
-                validate_private_file(&file, descriptor.owner()?)?;
-                Ok(file)
-            }
-            Err(error) => Err(error),
+        let attributes = SECURITY_ATTRIBUTES {
+            nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
+            lpSecurityDescriptor: descriptor.0,
+            bInheritHandle: 0,
+        };
+        let wide = wide_path(path)?;
+        let handle = unsafe {
+            CreateFileW(
+                wide.as_ptr(),
+                GENERIC_READ | READ_CONTROL | WRITE_DAC,
+                // Replacing a live lock would let a second instance lock a different file.
+                FILE_SHARE_READ | FILE_SHARE_WRITE,
+                &attributes,
+                OPEN_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
+                std::ptr::null_mut(),
+            )
+        };
+        if handle == INVALID_HANDLE_VALUE {
+            return Err(std::io::Error::last_os_error()).context("failed to open current-user lock file");
         }
+        let file = unsafe { std::fs::File::from_raw_handle(handle) };
+        let mut information = BY_HANDLE_FILE_INFORMATION::default();
+        if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
+            return Err(std::io::Error::last_os_error()).context("failed to inspect current-user lock file");
+        }
+        if information.dwFileAttributes & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT) != 0
+            || unsafe { GetFileType(file.as_raw_handle()) } != FILE_TYPE_DISK
+            || information.nNumberOfLinks != 1
+        {
+            bail!("current-user lock is not an ordinary, single-link file");
+        }
+        let expected_owner = descriptor.owner()?;
+        if !owner_matches(&file, expected_owner)? {
+            bail!("current-user lock belongs to a different Windows user");
+        }
+        // Lock contents are never trusted; records and tokens retain their separate validation.
+        descriptor.apply_dacl(file.as_raw_handle())?;
+        validate_private_file(&file, expected_owner)?;
+        Ok(file)
     }
 
     fn create_file(path: &Path, descriptor: &LocalSecurityDescriptor) -> Result<std::fs::File> {
@@ -392,13 +419,10 @@ mod windows_owner {
     }
 
     pub(super) fn repair_root_owner(root: &Path) -> Result<()> {
+        // Elevated Windows processes can create directories owned by Administrators.
+        std::fs::create_dir_all(root).context("failed to create the application data root before owner repair")?;
         // The Service canonicalizes before checking, so resolve junctions to the same object.
-        let root = match std::fs::canonicalize(root) {
-            Ok(path) => path,
-            // Nothing to repair: this process creates the root and owns it by construction.
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-            Err(error) => return Err(error).context("failed to canonicalize the application data root"),
-        };
+        let root = std::fs::canonicalize(root).context("failed to canonicalize the application data root")?;
         let root = root.as_path();
 
         let sid = current_sid()?;
@@ -445,7 +469,8 @@ mod windows_owner {
                 {
                     continue;
                 }
-                // A DACL that refuses even the owner read settles it just as well.
+                // Failed inspection does not prove that a live lock belongs to another user.
+                Err(error) if name == crate::utils::server::INSTANCE_LOCK_FILE => return Err(error),
                 Err(_) => false,
             };
             if !ours {
@@ -715,7 +740,7 @@ mod windows_owner {
                 )
             };
             if status != 0 {
-                bail!("failed to restrict owner token DACL: Windows error {status}");
+                bail!("failed to restrict current-user file DACL: Windows error {status}");
             }
             Ok(())
         }

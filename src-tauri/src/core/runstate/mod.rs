@@ -10,7 +10,7 @@ mod probe;
 
 use std::{
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, Ordering},
     },
     time::Duration,
@@ -19,7 +19,6 @@ use std::{
 use anyhow::{Context as _, Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use tokio::sync::Notify;
 
@@ -28,14 +27,14 @@ pub use env::FakeEnv;
 pub use env::{RealEnv, RunStateEnv};
 pub use health::{PendingAction, RunState, RunStateView, ServiceHealth};
 pub use owner::{OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch};
-pub use probe::{ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
+pub use probe::{CORE_REJECTED_PREFIX, ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
 
 use crate::core::manager::RunningMode;
 use health::StoredService;
 use probe::{CurrentServiceProbe, classify_service_health, probe_outcome};
 
 /// The process-wide Run State, observing the real machine.
-pub static RUN_STATE: Lazy<RunStateStore<RealEnv>> = Lazy::new(|| RunStateStore::new(RealEnv));
+pub static RUN_STATE: LazyLock<RunStateStore<RealEnv>> = LazyLock::new(|| RunStateStore::new(RealEnv));
 
 /// Distinguishes silence from a reply that updated Service health with a rejection.
 #[derive(Debug)]
@@ -130,20 +129,21 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Retries transport failures but stops at the first readable reply, including a rejection.
     pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
-        let mut last_error = None;
-        for attempt in 0..attempts {
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let attempts = std::num::NonZeroUsize::new(attempts).ok_or_else(|| {
+            ReadyWaitError::Unreachable(anyhow::anyhow!(
+                "service readiness wait was configured with no attempts"
+            ))
+        })?;
+        retry(RetryPolicy::fixed(attempts, interval), |_| async {
             match self.env.probe_service_version().await {
-                Ok(reply) => return self.record_reply(&reply).map_err(ReadyWaitError::Rejected),
-                Err(error) => last_error = Some(error),
+                Ok(reply) => self
+                    .record_reply(&reply)
+                    .map_err(|error| RetryError::Stop(ReadyWaitError::Rejected(error))),
+                Err(error) => Err(RetryError::Retry(ReadyWaitError::Unreachable(error))),
             }
-            if attempt + 1 < attempts {
-                tokio::time::sleep(interval).await;
-            }
-        }
-
-        Err(ReadyWaitError::Unreachable(last_error.unwrap_or_else(|| {
-            anyhow::anyhow!("service readiness wait was configured with no attempts")
-        })))
+        })
+        .await
     }
 
     fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {
@@ -151,6 +151,10 @@ impl<E: RunStateEnv> RunStateStore<E> {
             ServiceVersionCheck::Ready => {
                 self.observe(ServiceHealth::Ready);
                 Ok(self.state())
+            }
+            ServiceVersionCheck::CoreUnavailable(error) => {
+                self.observe(ServiceHealth::Unavailable(error.clone()));
+                bail!(error)
             }
             ServiceVersionCheck::NeedsReinstall(error) => {
                 self.observe(ServiceHealth::VersionMismatch);
@@ -178,7 +182,10 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
 
         match self.env.probe_service_version().await {
-            Ok(reply) => classify_service_health(probe_outcome(&reply), has_marker, ""),
+            Ok(reply) => match classify_service_version_reply(&reply) {
+                ServiceVersionCheck::CoreUnavailable(reason) => ServiceHealth::Unavailable(reason),
+                _ => classify_service_health(probe_outcome(&reply), has_marker, ""),
+            },
             Err(error) => {
                 logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
                 classify_service_health(
@@ -316,6 +323,21 @@ impl<E: RunStateEnv> RunStateStore<E> {
         if !permitted {
             bail!("sidecar cannot be allowed from service state {:?}", state.service);
         }
+        state.service.allow_sidecar();
+        state.bump();
+        drop(state);
+        self.announce();
+        Ok(())
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn allow_sidecar_after_service_refusal(&self, reason: String) -> Result<()> {
+        let mut state = self.service.lock();
+        if self.operation_running.load(Ordering::Acquire) || state.service.pending.is_some() {
+            bail!("cannot fall back while a service operation is pending");
+        }
+        // Publish the refusal and allowance together so it never asks the UI for a repair.
+        state.service.health = ServiceHealth::Unavailable(reason);
         state.service.allow_sidecar();
         state.bump();
         drop(state);
@@ -472,6 +494,7 @@ mod tests {
 
     fn ready_reply() -> ServiceVersionReply {
         ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),

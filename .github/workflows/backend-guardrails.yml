@@ -1,0 +1,26 @@
+name: Backend Guardrails
+
+on:
+  pull_request:
+    paths:
+      - "src-tauri/**"
+      - ".github/workflows/backend-guardrails.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  banned-patterns:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: No Handle::refresh calls in feat
+        run: '! grep -rn "Handle::refresh" src-tauri/src/feat'
+
+      - name: No notice_message outside core/notify
+        run: '! grep -rn "notice_message(" src-tauri/src --include="*.rs" | grep -v "core/notify"'
+
+      - name: No manual update-flag chains
+        run: '! grep -rnE "determine_update_flags|UpdateFlags" src-tauri/src'

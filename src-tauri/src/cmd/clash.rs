@@ -1,4 +1,5 @@
 use super::{CmdResult, CommandFailure, WithErrorCode as _, proxy_aware_coded_error, proxy_aware_error};
+use crate::core::notify::NoticeStatus;
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -56,14 +57,14 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
 
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
-                    handle::Handle::notice_message("config_core::change_success", clash_core);
+                    handle::Handle::notice(NoticeStatus::ConfigCoreChangeSuccess, clash_core.as_str());
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }
                 Err(err) => {
                     let failed = err.context("core changed but failed to restart");
                     let error_msg: String = format!("{failed:#}").into();
-                    handle::Handle::notice_message("config_core::change_error", error_msg.clone());
+                    handle::Handle::notice(NoticeStatus::ConfigCoreChangeError, error_msg.as_str());
                     logging!(error, Type::Core, "core changed but failed to restart: {error_msg}");
                     Ok(Some(proxy_aware_coded_error(&failed, "CORE_CHANGE_FAILED")))
                 }
@@ -72,7 +73,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
         Err(err) => {
             let error_msg: String = format!("{err:#}").into();
             logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", error_msg);
+            handle::Handle::notice(NoticeStatus::ConfigCoreChangeError, error_msg.as_str());
             Ok(Some(proxy_aware_coded_error(&err, "CORE_CHANGE_FAILED")))
         }
     }
@@ -133,8 +134,12 @@ pub fn take_dns_override_notice() -> bool {
 }
 
 #[tauri::command]
-pub async fn set_dns_override(enabled: bool, confirmation: Option<String>) -> CmdResult<feat::DnsOverrideOutcome> {
-    feat::set_dns_override(enabled, confirmation)
+pub async fn set_dns_override(
+    profile_uid: String,
+    enabled: bool,
+    confirmation: Option<String>,
+) -> CmdResult<feat::DnsOverrideOutcome> {
+    feat::set_dns_override(profile_uid, enabled, confirmation)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))
 }
@@ -145,16 +150,26 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
-            logging!(warn, Type::Config, "DNS config file not found");
+            logging!(warn, Type::Config, "DNS config file not found: {}", dns_path.display());
             return Err("DNS config file not found".into());
         }
 
         let dns_yaml = fs::read_to_string(&dns_path).await.stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to read DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to read DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
-            logging!(error, Type::Config, "Failed to parse DNS config: {e}");
+            logging!(
+                error,
+                Type::Config,
+                "Failed to parse DNS config {}: {e}",
+                dns_path.display()
+            );
         })?;
 
         let mut patch = serde_yaml_ng::Mapping::new();
@@ -210,7 +225,8 @@ pub async fn validate_dns_config() -> CmdResult<ValidationOutcome> {
         return Ok(ValidationOutcome::invalid_from_message("DNS config file not found"));
     }
 
-    CoreConfigValidator::validate_config_file_outcome(dns_path_str, None)
+    // A fragment, not a runnable config; the merged result is validated on apply.
+    CoreConfigValidator::validate_config_file_outcome(dns_path_str, Some(true))
         .await
         .stringify_err()
 }

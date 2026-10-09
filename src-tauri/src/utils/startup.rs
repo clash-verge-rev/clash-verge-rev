@@ -14,7 +14,7 @@ pub(crate) fn report_error(error: &anyhow::Error) {
     eprintln!("[clash-verge] startup failed: {detail}");
 
     let log_result = startup_log_path().and_then(|path| {
-        append_error(&path, &detail)?;
+        append_error(&path, &detail).with_context(|| format!("startup log {}", path.display()))?;
         Ok(path)
     });
     let message = match log_result {

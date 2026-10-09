@@ -46,6 +46,10 @@ inherits = "fast-release"
 codegen-units = 1
 split-debuginfo = "unpacked"
 
+[patch.crates-io]
+# Backport Windows menu command ID recycling on the muda 0.20 compatibility branch.
+muda = { git = "https://github.com/wonfen/muda.git", rev = "547de49352791653fbdfa785f20f3c7ece8468e2" }
+
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
@@ -55,24 +59,30 @@ clash-verge-i18n = { path = "crates/clash-verge-i18n" }
 clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tracing-estuary = { git = "https://github.com/Tunglies/tracing-estuary.git", branch = "main" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
-tracing = "0.1"
+tracing = "0.1.44"
 
-tauri = { version = "2.11.5" }
-tauri-plugin-clipboard-manager = "2.3.2"
+tauri = { version = "2.12.1" }
+tauri-plugin-clipboard-manager = "2.4.1"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
-tokio = { version = "1.53.1", features = [
+tokio = { version = "1.53.2", features = [
   "rt-multi-thread",
   "macros",
   "time",
   "sync",
 ] }
 flexi_logger = "0.31.10"
-log = "0.4.33"
+log = "0.4.34"
 regex = "1.13.1"
-reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
+reqwest = { version = "0.13.5", features = [
+  "json",
+  "cookies",
+  "gzip",
+  "rustls",
+  "form",
+] }
 rust_iso3166 = "0.2.0"
 
 smartstring = { version = "1.0.1" }
@@ -80,7 +90,7 @@ smartstring = { version = "1.0.1" }
 serde = { version = "1.0.229" }
 serde_json = { version = "1.0.151" }
 serde_yaml_ng = { version = "0.10.0" }
-bitflags = { version = "2.13.1" }
+bitflags = { version = "2.13.2" }
 socket2 = "0.6.5"
 
 # *** For Windows platform only ***
@@ -93,7 +103,8 @@ windows-sys = { version = "0.61.2", features = [
   "Win32_Security_Authorization",
   "Win32_Storage_FileSystem",
   "Win32_System_Threading",
-  "Win32_System_JobObjects"
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_JobObjects",
 ] }
 # *********************************
 

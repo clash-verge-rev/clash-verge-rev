@@ -30,9 +30,17 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           DRAFT: ${{ github.event.pull_request.draft }}
+          ASSOCIATION: ${{ github.event.pull_request.author_association }}
+          AUTHOR_TYPE: ${{ github.event.pull_request.user.type }}
         run: |
           if [ "$DRAFT" = "true" ] || printf '%s' "$LABELS" | grep -q 'no-issue-needed'; then
             echo "Draft or no-issue-needed; linkage check skipped."
+            exit 0
+          fi
+          # OWNER/MEMBER/COLLABORATOR and bots mirror the slop review's
+          # skip-roles/skip-bots trust tier.
+          if [ "$AUTHOR_TYPE" = "Bot" ] || [ "$ASSOCIATION" = "OWNER" ] || [ "$ASSOCIATION" = "MEMBER" ] || [ "$ASSOCIATION" = "COLLABORATOR" ]; then
+            echo "Bot or trusted author ($ASSOCIATION); linkage check skipped."
             exit 0
           fi
           if printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" | grep -Eq '#[0-9]+|issues/[0-9]+'; then

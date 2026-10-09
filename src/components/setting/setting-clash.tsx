@@ -9,8 +9,10 @@ import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { invoke_uwp_tool, setDnsOverride } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -36,6 +38,12 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash()
   const { verge, mutateVerge } = useVerge()
+  const { current: currentProfile } = useProfiles()
+  const dnsEnabled = currentProfile
+    ? (verge?.profile_dns_settings?.[currentProfile.uid]?.enabled ??
+      verge?.enable_dns_settings ??
+      false)
+    : false
   const displayedMixedPort = useDisplayedMixedPort()
   const [, setClashLog] = useClashLog()
 
@@ -46,7 +54,10 @@ const SettingClash = ({ onError }: Props) => {
     'unified-delay': unifiedDelay,
   } = clash ?? {}
 
-  const [dnsConfirmation, setDnsConfirmation] = useState<string | null>(null)
+  const [dnsConfirmation, setDnsConfirmation] = useState<{
+    profileUid: string
+    source: string
+  } | null>(null)
   const [dnsUpdating, setDnsUpdating] = useState(false)
 
   const webRef = useRef<DialogRef>(null)
@@ -64,7 +75,10 @@ const SettingClash = ({ onError }: Props) => {
   }
   const onUpdateGeo = async () => {
     try {
-      await updateGeo()
+      await mutate(() => updateGeo(), {
+        id: 'update-geo',
+        errorNotice: false,
+      })
       showNotice.success('settings.feedback.notifications.clash.geoDataUpdated')
     } catch (err: any) {
       showNotice.error(err)
@@ -72,12 +86,25 @@ const SettingClash = ({ onError }: Props) => {
   }
 
   const handleDnsToggle = useLockFn(
-    async (enable: boolean, confirmation?: string) => {
+    async (
+      enable: boolean,
+      confirmation?: string,
+      profileUid = currentProfile?.uid,
+    ) => {
+      if (!profileUid) return
       setDnsUpdating(true)
       try {
-        const outcome = await setDnsOverride(enable, confirmation)
+        const result = await mutate(
+          () => setDnsOverride(profileUid, enable, confirmation),
+          {
+            id: 'set-dns-override',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
+        const outcome = result.value
         if (outcome.status === 'confirmation_required') {
-          setDnsConfirmation(outcome.source)
+          setDnsConfirmation({ profileUid, source: outcome.source })
         } else {
           setDnsConfirmation(null)
         }
@@ -114,7 +141,12 @@ const SettingClash = ({ onError }: Props) => {
         onCancel={closeDnsConfirmation}
         onClose={closeDnsConfirmation}
         onOk={() => {
-          if (dnsConfirmation) void handleDnsToggle(true, dnsConfirmation)
+          if (dnsConfirmation)
+            void handleDnsToggle(
+              true,
+              dnsConfirmation.source,
+              dnsConfirmation.profileUid,
+            )
         }}
       >
         <Typography variant="body2">
@@ -151,16 +183,22 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t('settings.sections.clash.form.fields.dnsOverwrite')}
         extra={
-          <TooltipIcon
-            icon={SettingsRounded}
-            onClick={() => dnsRef.current?.open()}
-          />
+          <>
+            <TooltipIcon
+              icon={SettingsRounded}
+              onClick={() => dnsRef.current?.open()}
+            />
+            <TooltipIcon
+              title={t('settings.modals.dns.dialog.profileScope')}
+              sx={{ opacity: '0.7' }}
+            />
+          </>
         }
       >
         <Switch
           edge="end"
-          checked={verge?.enable_dns_settings ?? false}
-          disabled={dnsUpdating || dnsConfirmation !== null}
+          checked={dnsEnabled}
+          disabled={!currentProfile || dnsUpdating || dnsConfirmation !== null}
           onChange={(_, checked) => handleDnsToggle(checked)}
         />
       </SettingItem>

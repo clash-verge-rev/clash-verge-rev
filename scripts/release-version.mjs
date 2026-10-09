@@ -1,5 +1,5 @@
 /**
- * CLI tool to update version numbers in package.json, src-tauri/Cargo.toml, and src-tauri/tauri.conf.json.
+ * CLI tool to update version numbers in package.json, src-tauri/Cargo.toml, Cargo.lock, and src-tauri/tauri.conf.json.
  *
  * Usage:
  *   pnpm release-version <version>
@@ -108,17 +108,20 @@ async function updatePackageVersion(newVersion) {
       '[INFO]: Current package.json version is: ',
       packageJson.version,
     )
-    packageJson.version = newVersion.startsWith('v')
+    const versionWithoutV = newVersion.startsWith('v')
       ? newVersion.slice(1)
       : newVersion
-    await fs.writeFile(
-      packageJsonPath,
-      JSON.stringify(packageJson, null, 2),
-      'utf8',
+    const updatedData = data.replace(
+      /^(\s*"version"\s*:\s*)"[^"]+"/m,
+      `$1"${versionWithoutV}"`,
     )
-    console.log(
-      `[INFO]: package.json version updated to: ${packageJson.version}`,
-    )
+
+    if (updatedData === data) {
+      throw new Error('version field was not found in package.json')
+    }
+
+    await fs.writeFile(packageJsonPath, updatedData, 'utf8')
+    console.log(`[INFO]: package.json version updated to: ${versionWithoutV}`)
   } catch (error) {
     console.error('Error updating package.json version:', error)
     throw error
@@ -153,6 +156,34 @@ async function updateCargoVersion(newVersion) {
   }
 }
 
+async function updateCargoLockVersion(newVersion) {
+  const _dirname = process.cwd()
+  const cargoLockPath = path.join(_dirname, 'Cargo.lock')
+  const versionWithoutV = newVersion.startsWith('v')
+    ? newVersion.slice(1)
+    : newVersion
+  const packageVersionPattern =
+    /(\[\[package\]\]\r?\nname = "clash-verge"\r?\nversion = )"[^"]+"/
+
+  try {
+    const data = await fs.readFile(cargoLockPath, 'utf8')
+    const updatedData = data.replace(
+      packageVersionPattern,
+      `$1"${versionWithoutV}"`,
+    )
+
+    if (updatedData === data) {
+      throw new Error('clash-verge package entry was not found in Cargo.lock')
+    }
+
+    await fs.writeFile(cargoLockPath, updatedData, 'utf8')
+    console.log(`[INFO]: Cargo.lock version updated to: ${versionWithoutV}`)
+  } catch (error) {
+    console.error('Error updating Cargo.lock version:', error)
+    throw error
+  }
+}
+
 async function updateTauriConfigVersion(newVersion) {
   const _dirname = process.cwd()
   const tauriConfigPath = path.join(_dirname, 'src-tauri', 'tauri.conf.json')
@@ -168,13 +199,16 @@ async function updateTauriConfigVersion(newVersion) {
       tauriConfig.version,
     )
 
-    tauriConfig.version = versionWithoutV
-
-    await fs.writeFile(
-      tauriConfigPath,
-      JSON.stringify(tauriConfig, null, 2),
-      'utf8',
+    const updatedData = data.replace(
+      /^(\s*"version"\s*:\s*)"[^"]+"/m,
+      `$1"${versionWithoutV}"`,
     )
+
+    if (updatedData === data) {
+      throw new Error('version field was not found in tauri.conf.json')
+    }
+
+    await fs.writeFile(tauriConfigPath, updatedData, 'utf8')
     console.log(
       `[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`,
     )
@@ -239,6 +273,7 @@ async function main(versionArg) {
     console.log(`[INFO]: Updating versions to: ${newVersion}`)
     await updatePackageVersion(newVersion)
     await updateCargoVersion(newVersion)
+    await updateCargoLockVersion(newVersion)
     await updateTauriConfigVersion(newVersion)
     console.log('[SUCCESS]: All version updates completed successfully!')
   } catch (error) {

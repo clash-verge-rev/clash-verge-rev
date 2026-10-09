@@ -1,4 +1,5 @@
 use super::{IClashTemp, IProfiles, IVerge, MixedPort};
+use crate::core::notify::NoticeStatus;
 use crate::{
     config::{PrfItem, profiles_append_item_to_safe, runtime::IRuntime},
     constants::{files, timing},
@@ -6,6 +7,7 @@ use crate::{
         CoreManager,
         handle::{self, Handle},
         listener::MIXED_PORT_KEY,
+        runtime_bundle::resolve_provider_path_conflicts,
         tray,
         validate::CoreConfigValidator,
     },
@@ -68,6 +70,12 @@ impl Config {
         CONFIG_WRITE_LOCK.lock().await
     }
 
+    pub(crate) fn try_lock_config_write() -> Result<MutexGuard<'static, ()>> {
+        CONFIG_WRITE_LOCK
+            .try_lock()
+            .map_err(|_| anyhow!("configuration update is already running"))
+    }
+
     pub async fn init_config_before_window() -> Result<()> {
         Self::ensure_default_profile_items().await?;
 
@@ -105,7 +113,7 @@ impl Config {
 
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(timing::STARTUP_ERROR_DELAY).await;
-            handle::Handle::notice_message(msg_type, msg_content);
+            handle::Handle::notice(msg_type, msg_content.as_str());
         }
 
         Self::runtime().await.apply();
@@ -136,14 +144,14 @@ impl Config {
         Ok(())
     }
 
-    async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
+    async fn generate_and_validate() -> Result<Option<(NoticeStatus, String)>> {
         if let Err(err) = Self::generate().await {
             let error_msg: String = err.to_string().into();
             logging!(error, Type::Config, "生成运行时配置失败: {}", error_msg);
             CoreManager::global()
-                .use_default_config("config_validate::boot_error", &error_msg)
+                .use_default_config(NoticeStatus::ConfigValidateBootError, &error_msg)
                 .await?;
-            return Ok(Some(("config_validate::boot_error", error_msg)));
+            return Ok(Some((NoticeStatus::ConfigValidateBootError, error_msg)));
         }
         logging!(debug, Type::Config, "生成运行时配置成功");
 
@@ -170,25 +178,25 @@ impl Config {
                         error_msg
                     );
                     CoreManager::global()
-                        .use_default_config("config_validate::boot_error", &error_msg)
+                        .use_default_config(NoticeStatus::ConfigValidateBootError, &error_msg)
                         .await?;
-                    Ok(Some(("config_validate::boot_error", error_msg)))
+                    Ok(Some((NoticeStatus::ConfigValidateBootError, error_msg)))
                 }
                 Err(err) => {
                     logging!(warn, Type::Config, "验证过程执行失败: {err:#}");
                     CoreManager::global()
-                        .use_default_config("config_validate::process_terminated", "")
+                        .use_default_config(NoticeStatus::ConfigValidateProcessTerminated, "")
                         .await?;
-                    Ok(Some(("config_validate::process_terminated", String::new())))
+                    Ok(Some((NoticeStatus::ConfigValidateProcessTerminated, String::new())))
                 }
             }
         } else {
             let error_msg = config_result.err().map(|err| err.to_string()).unwrap_or_default();
             logging!(warn, Type::Config, "生成配置文件失败，使用默认配置: {error_msg}");
             CoreManager::global()
-                .use_default_config("config_validate::error", "")
+                .use_default_config(NoticeStatus::ConfigValidateError, "")
                 .await?;
-            Ok(Some(("config_validate::error", String::new())))
+            Ok(Some((NoticeStatus::ConfigValidateError, String::new())))
         }
     }
 
@@ -228,6 +236,7 @@ impl Config {
     pub(crate) async fn generate_with_profiles(profiles: &IProfiles) -> Result<()> {
         let (mut config, exists_keys, logs, dns_override) = enhance::enhance(profiles).await?;
 
+        resolve_provider_path_conflicts(&mut config, &dirs::app_home_dir()?)?;
         sanitize_tunnels_proxy(&mut config);
         // Apply only to generated core config so the saved choice survives the next launch.
         if let Some(port) = MixedPort::session_fallback() {

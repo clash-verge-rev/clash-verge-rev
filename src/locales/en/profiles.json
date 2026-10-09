@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Extensions wrote {{keys}}, which Settings manages, so those values were discarded",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "Cannot edit in read-only editor"
+      },
+      "enhance": {
+        "globalMerge": "Applies to all profiles, after app settings. The global script, profile config and profile script can still change the result.",
+        "globalScript": "Applies to all profiles, using the result of the global config merge. The profile config and profile script can still change the result.",
+        "profileMerge": "Applies only to this profile, after the global config and global script. The profile script can still change the result.",
+        "profileScript": "Applies only to this profile, using the result of the profile config merge. This is the last extension step before app settings are reapplied.",
+        "order": "Order: Original profile → App settings → <globalMerge>Global extend config</globalMerge> → <globalScript>Global extend script</globalScript> → <profileMerge>Profile extend config</profileMerge> → <profileScript>Profile extend script</profileScript> → App settings reapplied",
+        "settingsPriority": "Note: Fields managed by app settings always use those settings in the final config. Changing these fields in extensions has no effect."
       }
     },
     "confirmDelete": {

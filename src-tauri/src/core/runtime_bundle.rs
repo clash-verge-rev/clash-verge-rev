@@ -2,11 +2,13 @@ use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
 use serde_yaml_ng::{Mapping, Value};
-use std::collections::HashSet;
+use sha2::{Digest as _, Sha256};
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 
 pub(crate) const GEO_ASSETS: &[&str] = &[
     "Country.mmdb",
+    "ASN.mmdb",
     "geoip.dat",
     "geosite.dat",
     "geoip.metadb",
@@ -51,6 +53,94 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
 
 pub(crate) fn remote_providers_of(config: &Mapping, config_root: &Path) -> Result<Vec<RemoteProviderRef>> {
     Ok(collect_runtime_parts(Value::Mapping(config.clone()), config_root)?.remote_providers)
+}
+
+#[derive(Default)]
+struct ProviderPathOwners {
+    remote: BTreeMap<String, Vec<(&'static str, Value)>>,
+    local: bool,
+}
+
+pub(crate) fn resolve_provider_path_conflicts(config: &mut Mapping, config_root: &Path) -> Result<()> {
+    let config_root = std::fs::canonicalize(config_root)?;
+    let mut paths = BTreeMap::<String, ProviderPathOwners>::new();
+    let mut reserved: HashSet<String> = GEO_ASSETS.iter().map(|name| (*name).to_owned()).collect();
+    for section in ["proxy-providers", "rule-providers"] {
+        let Some(providers) = config.get(section).and_then(Value::as_mapping) else {
+            continue;
+        };
+        for (name, provider) in providers {
+            let Some(raw_path) = provider.get("path").and_then(Value::as_str) else {
+                continue;
+            };
+            let is_remote = provider.get("type").and_then(Value::as_str) == Some("http");
+            let destination = if is_remote {
+                provider_destination(&config_root, raw_path)
+            } else {
+                local_provider_source(&config_root, raw_path)
+                    .and_then(|source| destination_below_root(&config_root, &source))
+                    .or_else(|_| provider_destination(&config_root, raw_path))
+            };
+            let Ok(destination) = destination else {
+                continue;
+            };
+            reserved.insert(destination.clone());
+            let owners = paths.entry(destination).or_default();
+            match (is_remote, provider.get("url").and_then(Value::as_str)) {
+                (true, Some(url)) => owners
+                    .remote
+                    .entry(url.to_owned())
+                    .or_default()
+                    .push((section, name.clone())),
+                _ => owners.local = true,
+            }
+        }
+    }
+
+    for (destination, owners) in paths {
+        if owners.local || owners.remote.len() < 2 {
+            continue;
+        }
+        // Allocate every source in a conflict group, so declaration order cannot select a cache's owner.
+        for (url, providers) in owners.remote {
+            let replacement = allocate_provider_destination(&destination, &url, &mut reserved);
+            for (section, name) in providers {
+                config[section][&name]["path"] = Value::String(replacement.clone());
+                logging!(
+                    warn,
+                    Type::Config,
+                    "provider {section}/{name:?} shared cache {destination:?} with another source; using {replacement:?}"
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn allocate_provider_destination(destination: &str, url: &str, reserved: &mut HashSet<String>) -> String {
+    let mut digest = Sha256::new();
+    digest.update(destination.as_bytes());
+    digest.update([0]);
+    digest.update(url.as_bytes());
+    let digest: String = digest.finalize().iter().map(|byte| format!("{byte:02x}")).collect();
+    let path = Path::new(destination);
+    let extension = path
+        .extension()
+        .map(|ext| format!(".{}", ext.to_string_lossy()))
+        .unwrap_or_default();
+    let mut suffix = String::new();
+    let mut sequence = 0;
+    loop {
+        let candidate = path
+            .with_file_name(format!("cvr-{digest}{suffix}{extension}"))
+            .to_string_lossy()
+            .replace('\\', "/");
+        if reserved.insert(candidate.clone()) {
+            return candidate;
+        }
+        sequence += 1;
+        suffix = format!("-{sequence}");
+    }
 }
 
 fn collect_runtime_parts(mut config: Value, config_root: &Path) -> Result<RuntimeParts> {
@@ -254,7 +344,91 @@ fn normalized_destination(relative: &Path) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::collect_runtime_bundle;
+    use super::{collect_runtime_bundle, remote_providers_of, resolve_provider_path_conflicts};
+
+    #[tokio::test]
+    async fn conflicting_sources_get_separate_paths_in_config_bundle_and_readback() -> anyhow::Result<()> {
+        let root = std::env::temp_dir().join(format!("clash-verge-provider-paths-{}", std::process::id()));
+        std::fs::create_dir_all(&root)?;
+        let mut config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(
+            "rule-providers:\n  AppleDev:\n    type: http\n    url: https://one.example/AppleDev.yaml\n    path: ./providers/rule/AppleDev.yaml\n  mirror:\n    type: http\n    url: https://two.example/AppleDev.yaml\n    path: providers/rule/AppleDev.yaml\n",
+        )?;
+        let original = config.clone();
+        let root = std::fs::canonicalize(root)?;
+        let mut reordered = config.clone();
+        reordered["rule-providers"] = serde_yaml_ng::from_str(&format!(
+            "mirror:\n  type: http\n  url: https://two.example/AppleDev.yaml\n  path: {}\nAppleDev:\n  type: http\n  url: https://one.example/AppleDev.yaml\n  path: providers/rule/AppleDev.yaml\n",
+            root.join("providers/rule/AppleDev.yaml").display(),
+        ))?;
+
+        resolve_provider_path_conflicts(&mut config, &root)?;
+        let config_file = root.join("config.yaml");
+        std::fs::write(&config_file, serde_yaml_ng::to_string(&config)?)?;
+        let bundle = collect_runtime_bundle(&config_file, &root.join("mihomo")).await?;
+        let paths = &config["rule-providers"];
+        assert_ne!(paths["AppleDev"]["path"], paths["mirror"]["path"]);
+        resolve_provider_path_conflicts(&mut reordered, &root)?;
+        assert_eq!(
+            config, reordered,
+            "path allocation must not depend on declaration order or path spelling"
+        );
+        let resolved = config.clone();
+        resolve_provider_path_conflicts(&mut config, &root)?;
+        assert_eq!(
+            config, resolved,
+            "resolving an already generated config must be idempotent"
+        );
+
+        assert_eq!(serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&bundle.yaml)?, config);
+        let readback = remote_providers_of(&config, &root)?;
+        assert_eq!(bundle.remote_providers.len(), 2);
+        for declared in readback {
+            assert!(bundle.remote_providers.contains(&declared.provider));
+            assert_eq!(
+                config[declared.section][&declared.name]["path"],
+                declared.provider.destination
+            );
+            assert_eq!(
+                config[declared.section][&declared.name]["url"],
+                original[declared.section][&declared.name]["url"]
+            );
+        }
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[test]
+    fn allocated_provider_paths_do_not_claim_another_declared_path() -> anyhow::Result<()> {
+        let root = std::env::temp_dir();
+        let original: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(
+            "proxy-providers:\n  a:\n    type: http\n    url: https://one.example/p.yaml\n    path: ./providers/shared.yaml\nrule-providers:\n  b:\n    type: http\n    url: https://two.example/r.yaml\n    path: ./providers/shared.yaml\n",
+        )?;
+        let mut config = original.clone();
+        resolve_provider_path_conflicts(&mut config, &root)?;
+        let allocated = config["proxy-providers"]["a"]["path"].clone();
+        let mut config = original;
+        config["rule-providers"]["reserved"] = serde_yaml_ng::from_str("type: file\npath: placeholder")?;
+        config["rule-providers"]["reserved"]["path"] = allocated.clone();
+        resolve_provider_path_conflicts(&mut config, &root)?;
+        assert_ne!(config["proxy-providers"]["a"]["path"], allocated);
+        assert_ne!(
+            config["proxy-providers"]["a"]["path"],
+            config["rule-providers"]["b"]["path"]
+        );
+        assert_eq!(config["rule-providers"]["reserved"]["path"], allocated);
+        Ok(())
+    }
+
+    #[test]
+    fn provider_path_resolution_leaves_shared_sources_and_local_files_unchanged() -> anyhow::Result<()> {
+        let mut config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(
+            "rule-providers:\n  a:\n    type: http\n    url: https://one.example/r.yaml\n    path: ./rules/shared.yaml\n  b:\n    type: http\n    url: https://one.example/r.yaml\n    path: ./rules/shared.yaml\n  local:\n    type: file\n    path: ./rules/local.yaml\n  remote:\n    type: http\n    url: https://two.example/r.yaml\n    path: ./rules/local.yaml\n  mirror:\n    type: http\n    url: https://three.example/r.yaml\n    path: ./rules/local.yaml\n",
+        )?;
+        let original = config.clone();
+        resolve_provider_path_conflicts(&mut config, &std::env::temp_dir())?;
+        assert_eq!(config, original);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn collects_only_local_providers_and_existing_geo_assets() -> anyhow::Result<()> {

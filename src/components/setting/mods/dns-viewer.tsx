@@ -1,5 +1,6 @@
 import { RestartAltRounded } from '@mui/icons-material'
 import {
+  Alert,
   Box,
   Button,
   FormControl,
@@ -12,7 +13,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import * as yaml from 'js-yaml'
 import type { Ref } from 'react'
@@ -33,7 +33,15 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
+import {
+  applyDnsConfig,
+  getDnsConfigContent,
+  saveDnsConfig,
+  validateDnsConfig,
+} from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
@@ -171,11 +179,7 @@ const DEFAULT_DNS_CONFIG = {
   ],
   fallback: [],
   'nameserver-policy': {},
-  'proxy-server-nameserver': [
-    'https://doh.pub/dns-query',
-    'https://dns.alidns.com/dns-query',
-    'tls://223.5.5.5',
-  ],
+  'proxy-server-nameserver': [],
   'direct-nameserver': [],
   'direct-nameserver-follow-policy': false,
   'fallback-filter': {
@@ -190,6 +194,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
   const { mutateClash } = useClash()
   const { verge } = useVerge()
+  const { current: currentProfile } = useProfiles()
+  const dnsEnabled = currentProfile
+    ? (verge?.profile_dns_settings?.[currentProfile.uid]?.enabled ??
+      verge?.enable_dns_settings ??
+      false)
+    : false
   const themeMode = useThemeMode()
 
   const [open, setOpen] = useState(false)
@@ -340,8 +350,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: values.listen,
       'enhanced-mode': values.enhancedMode,
       'fake-ip-range': values.fakeIpRange,
-      'fake-ip-range6':
-        values.fakeIpRange6 || DEFAULT_DNS_CONFIG['fake-ip-range6'],
+      'fake-ip-range6': values.fakeIpRange6,
       'fake-ip-filter-mode': values.fakeIpFilterMode,
       'prefer-h3': values.preferH3,
       'respect-rules': values.respectRules,
@@ -351,6 +360,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'fake-ip-filter': parseList(values.fakeIpFilter),
       'default-nameserver': parseList(values.defaultNameserver),
       nameserver: parseList(values.nameserver),
+      'nameserver-policy': parseNameserverPolicy(values.nameserverPolicy),
       'direct-nameserver-follow-policy': values.directNameserverFollowPolicy,
       'fallback-filter': {
         geoip: values.fallbackGeoip,
@@ -364,11 +374,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       'direct-nameserver': parseList(values.directNameserver),
     }
 
-    const policy = parseNameserverPolicy(values.nameserverPolicy)
-    if (Object.keys(policy).length > 0) {
-      dnsConfig['nameserver-policy'] = policy
-    }
-
     return dnsConfig
   }, [values])
 
@@ -380,10 +385,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       config.dns = dnsConfig
     }
 
-    const hosts = parseHosts(values.hosts)
-    if (Object.keys(hosts).length > 0) {
-      config.hosts = hosts
-    }
+    config.hosts = parseHosts(values.hosts)
 
     setYamlContent(yaml.dump(config, { forceQuotes: true }))
   }, [generateDnsConfig, values.hosts])
@@ -469,10 +471,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const initDnsConfig = useCallback(async () => {
     try {
-      const dnsConfig = await invoke<string | null>(
-        'get_dns_config_content',
-        {},
-      )
+      const dnsConfig = await getDnsConfigContent()
 
       if (dnsConfig !== null) {
         const config = yaml.load(dnsConfig) as any
@@ -512,10 +511,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           config.dns = dnsConfig
         }
 
-        const hosts = parseHosts(values.hosts)
-        if (Object.keys(hosts).length > 0) {
-          config.hosts = hosts
-        }
+        config.hosts = parseHosts(values.hosts)
       } else {
         const parsedConfig = yaml.load(yamlContent)
         if (typeof parsedConfig !== 'object' || parsedConfig === null) {
@@ -524,12 +520,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         config = parsedConfig as Record<string, any>
       }
 
-      await invoke('save_dns_config', { dnsConfig: config })
+      await mutate(() => saveDnsConfig(config), {
+        id: 'save-dns-config',
+        errorNotice: false,
+      })
 
-      const validation = await invoke<ValidationOutcome>(
-        'validate_dns_config',
-        {},
-      )
+      const validation = await validateDnsConfig()
 
       if (validation.status !== 'valid') {
         const errorMsg =
@@ -565,8 +561,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      if (verge?.enable_dns_settings) {
-        await invoke('apply_dns_config', { apply: true })
+      if (dnsEnabled) {
+        await mutate(() => applyDnsConfig(true), {
+          id: 'apply-dns-config',
+          errorNotice: false,
+        })
         mutateClash()
       }
 
@@ -653,6 +652,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
+      <Alert severity="info" sx={{ mb: 2 }}>
+        {t('settings.modals.dns.dialog.profileScope')}
+      </Alert>
       <Typography
         variant="body2"
         color="warning.main"

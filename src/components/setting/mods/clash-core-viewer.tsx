@@ -21,6 +21,7 @@ import { BaseDialog, DialogRef } from '@/components/base'
 import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { changeClashCore, restartCore, upgradeClashCore } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 const VALID_CORE = [
@@ -60,8 +61,16 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
     try {
       setChangingCore(core)
-      closeAllConnections()
-      const errorMsg = await changeClashCore(core)
+      void mutate(() => closeAllConnections(), {
+        id: 'close-all-connections',
+        errorNotice: false,
+      })
+      const result = await mutate(() => changeClashCore(core), {
+        id: 'change-clash-core',
+        errorNotice: false,
+      })
+      if (!result.ok) return
+      const errorMsg = result.value
 
       if (errorMsg) {
         showNotice.error(errorMsg)
@@ -83,28 +92,33 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const onRestart = useLockFn(async () => {
     try {
       setRestarting(true)
-      await restartCore()
-      showNotice.success(
-        t('settings.feedback.notifications.clash.restartSuccess'),
-      )
+      await mutate(() => restartCore(), {
+        id: 'restart-core',
+        successNotice: t(
+          'settings.feedback.notifications.clash.restartSuccess',
+        ),
+      })
       setRestarting(false)
-    } catch (err) {
+    } catch {
       setRestarting(false)
-      showNotice.error(err)
     }
   })
 
   const onUpgrade = useLockFn(async () => {
     try {
       setUpgrading(true)
-      const report = await upgradeClashCore()
-      showNotice.success(
-        report.upgraded
-          ? t('settings.feedback.notifications.clash.versionUpdated')
-          : t('settings.feedback.notifications.clash.alreadyLatestVersion'),
-      )
-    } catch (err) {
-      showNotice.error(err)
+      await mutate(() => upgradeClashCore(), {
+        id: 'upgrade-clash-core',
+        onFulfilled: (report) => {
+          showNotice.success(
+            report.upgraded
+              ? t('settings.feedback.notifications.clash.versionUpdated')
+              : t('settings.feedback.notifications.clash.alreadyLatestVersion'),
+          )
+        },
+      })
+    } catch {
+      // the funnel already notified
     } finally {
       setUpgrading(false)
     }

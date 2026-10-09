@@ -29,9 +29,6 @@ notifications:
   appQuit:
     title: Чыгар алдыннан
     body: Clash Verge чыгарга җыена.
-  appHidden:
-    title: Кушымта яшерелде
-    body: Clash Verge фон режимында эшли.
   updateReady:
     title: Clash Verge Update
     body: A new version (v{version}) has been downloaded and is ready to install.
@@ -40,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
   adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
+core:
+  alreadyRunning: 'Төшне башлап булмый: төш процессы инде эшли. Тиешле кушымтаны ябыгыз яки калган процессны тәмамлагыз һәм яңадан сынап карагыз. Проблема хәл ителмәсә, санакны яңадан кабызыгыз.'
 launchGuard:
   currentExeError: 'Кушымтаның урнашу урынын билгеләп булмады: {error}'
   homeDirError: 'Хәзерге кулланучының өй каталогын билгеләп булмады. Кушымта ябылачак: {error}'
@@ -71,6 +70,8 @@ tray:
   global: Глобаль
   profiles: Профильләр
   proxies: Проксилар
+  testLatency: Кичектерүне тикшерү
+  testingLatency: Кичектерү тикшерелә…
   systemProxy: Системалы прокси
   tunMode: TUN режимы
   closeAllConnections: Барлык тоташуларны ябу

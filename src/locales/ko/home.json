@@ -63,6 +63,7 @@
         "settings": "설정"
       },
       "badges": {
+        "notRunning": "코어 실행 중이 아님",
         "adminMode": "관리자 모드",
         "serviceMode": "서비스 모드",
         "sidecarMode": "사용자 모드",

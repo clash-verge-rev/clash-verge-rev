@@ -1,3 +1,4 @@
+use crate::core::notify::NoticeStatus;
 use crate::utils::dirs;
 use crate::{
     config::{Config, runtime::IRuntime},
@@ -5,12 +6,12 @@ use crate::{
     core::{
         CoreManager,
         handle::Handle,
-        manager::RunningMode,
+        manager::{CoreFailure, RunningMode},
         owner_identity::current_owner_credentials,
         proxy_control,
         runstate::{
-            OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE, ReadyWaitError,
-            RunState, RunStateEnv, RunStateStore, ServiceHealth,
+            CORE_REJECTED_PREFIX, OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE,
+            ReadyWaitError, RunState, RunStateEnv, RunStateStore, ServiceHealth,
         },
         runtime_bundle::{RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
         tray::Tray,
@@ -21,13 +22,12 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerCredentials, OwnerSessionProof, ProtocolInfo, ProxyApplyOutcome, RuntimeBundle,
-    RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, StageRuntimeOutcome, StartClashRequest, WriterConfig,
+    MacosProxyConfig, OwnerCredentials, OwnerIdentity, OwnerSessionProof, ProtocolInfo, ProxyApplyOutcome,
+    RuntimeBundle, RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, ServiceStatusSnapshot,
+    StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use std::{
-    borrow::Cow,
     collections::HashMap,
     env::current_exe,
     future::Future,
@@ -38,7 +38,61 @@ use std::{
 };
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
-static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
+static ACTIVE_SERVICE_SESSION: Mutex<Option<ActiveServiceSession>> = Mutex::new(None);
+static PENDING_SERVICE_FALLBACK_NOTICE: Mutex<Option<String>> = Mutex::new(None);
+static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
+static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
+
+/// Why the Service was unavailable when the core fell back to Sidecar.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[serde(tag = "kind", content = "reason", rename_all = "camelCase")]
+pub enum ServiceFallbackNotice {
+    Unavailable,
+    CoreRejected(String),
+    NotAutoStarted,
+}
+
+/// The release installer registers AutoStart.
+const SERVICE_NOT_AUTO_STARTED: &str = "the Windows service is stopped and no longer starts with Windows";
+
+pub(crate) fn is_not_auto_started(reason: &str) -> bool {
+    // Detection prefixes its own context to the reason.
+    reason.contains(SERVICE_NOT_AUTO_STARTED)
+}
+
+#[cfg(target_os = "windows")]
+pub(crate) fn notify_service_fallback(reason: &str) {
+    *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(reason.to_owned());
+    Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
+}
+
+pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
+    let reason = PENDING_SERVICE_FALLBACK_NOTICE.lock().take()?;
+    Some(if reason.starts_with(CORE_REJECTED_PREFIX) {
+        ServiceFallbackNotice::CoreRejected(reason)
+    } else if is_not_auto_started(&reason) {
+        ServiceFallbackNotice::NotAutoStarted
+    } else {
+        ServiceFallbackNotice::Unavailable
+    })
+}
+
+pub(crate) fn take_service_repair_notice() -> bool {
+    PENDING_SERVICE_REPAIR_NOTICE.swap(false, Ordering::Relaxed)
+}
+
+/// Returns the command that gives the app data root back to this account.
+pub(crate) fn take_service_owner_notice() -> Option<String> {
+    PENDING_SERVICE_OWNER_NOTICE.lock().take()
+}
+
+fn app_data_owner_command(credentials: &OwnerCredentials) -> Option<String> {
+    let OwnerIdentity::Unix { uid, gid } = credentials.identity else {
+        return None;
+    };
+    let path = credentials.app_data_dir.replace('\'', r"'\''");
+    Some(format!("sudo chown -R {uid}:{gid} '{path}'"))
+}
 
 /// Capabilities of the service session that owns the running Core.
 /// They are discarded with that session rather than cached across service upgrades.
@@ -212,7 +266,7 @@ fn macos_service_install_marker_exists() -> std::io::Result<bool> {
 }
 
 #[cfg(windows)]
-pub(crate) fn trusted_service_evidence() -> Result<bool> {
+fn open_registered_service() -> Result<Option<windows_service::service::Service>> {
     use windows_service::{
         Error as WindowsServiceError,
         service::ServiceAccess,
@@ -223,17 +277,49 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
     let manager = WindowsServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
     match manager.open_service(
         clash_verge_service_ipc::WINDOWS_SERVICE_NAME,
-        ServiceAccess::QUERY_STATUS,
+        ServiceAccess::QUERY_STATUS | ServiceAccess::QUERY_CONFIG,
     ) {
-        Ok(service) => {
-            drop(service);
-            Ok(true)
-        }
+        Ok(service) => Ok(Some(service)),
         Err(WindowsServiceError::Winapi(error)) if error.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) => {
-            Ok(false)
+            Ok(None)
         }
         Err(error) => Err(error).context("failed to inspect Windows service registration"),
     }
+}
+
+#[cfg(windows)]
+pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    Ok(open_registered_service()?.is_some())
+}
+
+/// Why IPC cannot succeed until the service is started again, if it cannot. A starting service,
+/// or an AutoStart one the SCM has yet to start this boot, is left to the IPC retries.
+#[cfg(windows)]
+pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
+    use windows_service::service::{ServiceExitCode, ServiceStartType, ServiceState};
+
+    const ERROR_SERVICE_NEVER_STARTED: u32 = 1077;
+    const NOT_RUNNING: &str = "the Windows service is not running";
+    let Some(service) = open_registered_service()? else {
+        return Ok(Some(NOT_RUNNING));
+    };
+    let status = service
+        .query_status()
+        .context("failed to query Windows service status")?;
+    if status.current_state != ServiceState::Stopped {
+        return Ok(None);
+    }
+    // The development channel registers an on-demand start.
+    if !cfg!(feature = "verge-dev")
+        && service
+            .query_config()
+            .context("failed to query Windows service configuration")?
+            .start_type
+            != ServiceStartType::AutoStart
+    {
+        return Ok(Some(SERVICE_NOT_AUTO_STARTED));
+    }
+    Ok((status.exit_code != ServiceExitCode::Win32(ERROR_SERVICE_NEVER_STARTED)).then_some(NOT_RUNNING))
 }
 
 #[cfg(target_os = "linux")]
@@ -265,35 +351,40 @@ static SERVICE_CORE_STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
 fn create_service_core_staging_file(directory: &Path, core_name: &std::ffi::OsStr) -> Result<(PathBuf, std::fs::File)> {
-    for _ in 0..32 {
-        let generation = SERVICE_CORE_STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
-        let temporary_name = format!(
-            ".{}.{}.{generation}.tmp",
-            core_name.to_string_lossy(),
-            std::process::id()
-        );
-        let temporary_path = directory.join(temporary_name);
-        match std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temporary_path)
-        {
-            Ok(file) => return Ok((temporary_path, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                return Err(error).with_context(|| {
+    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+    retry_sync(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(31),
+            std::time::Duration::ZERO,
+        ),
+        |_| {
+            let generation = SERVICE_CORE_STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
+            let temporary_name = format!(
+                ".{}.{}.{generation}.tmp",
+                core_name.to_string_lossy(),
+                std::process::id()
+            );
+            let temporary_path = directory.join(temporary_name);
+            match std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temporary_path)
+            {
+                Ok(file) => Ok((temporary_path, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+                    Err(RetryError::Retry(anyhow::anyhow!(
+                        "failed to create a unique temporary development Service core in {}",
+                        directory.display()
+                    )))
+                }
+                Err(error) => Err(RetryError::Stop(anyhow::Error::from(error).context({
                     format!(
                         "failed to create temporary development Service core {}",
                         temporary_path.display()
                     )
-                });
+                }))),
             }
-        }
-    }
-
-    bail!(
-        "failed to create a unique temporary development Service core in {}",
-        directory.display()
+        },
     )
 }
 
@@ -471,42 +562,14 @@ fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
     Ok(sibling)
 }
 
-/// 卸载服务前以 root 清理残留 core 和 IPC 套接字。
-#[cfg(target_os = "macos")]
-fn macos_force_stop_core_shell() -> String {
-    use crate::config::IVerge;
-
-    // 只清理 root 拥有的服务内核。
-    let mut parts: Vec<String> = IVerge::VALID_CLASH_CORES
-        .iter()
-        .map(|core| format!("/usr/bin/pkill -U root -x {core} 2>/dev/null || true"))
-        .collect();
-
-    if let Ok(ipc) = dirs::ipc_path()
-        && let Ok(ipc_str) = dirs::path_to_str(&ipc)
-    {
-        // 转义单引号,避免破坏 shell 参数。
-        let escaped = ipc_str.replace('\'', r"'\''");
-        parts.push(format!("/bin/rm -f '{escaped}' 2>/dev/null || true"));
-    }
-
-    parts.join("; ")
-}
-
 #[cfg(target_os = "macos")]
 fn escape_osascript_double_quoted_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-#[cfg(any(target_os = "macos", test))]
+#[cfg(target_os = "macos")]
 fn shell_single_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', r"'\''"))
-}
-
-#[cfg(any(target_os = "macos", test))]
-fn macos_install_shell(install_path: &Path, gid: u32) -> String {
-    let install_quoted = shell_single_quote(&install_path.to_string_lossy());
-    format!("cd /; CLASH_VERGE_SERVICE_GID={gid} {install_quoted}")
 }
 
 fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
@@ -557,54 +620,6 @@ fn uninstall_service() -> Result<()> {
             "failed to uninstall service with status {}",
             status.code().unwrap_or(-1)
         );
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn install_service() -> Result<()> {
-    use std::process::Output;
-    logging!(info, Type::Service, "install service");
-
-    use deelevate::{PrivilegeLevel, Token};
-    use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt as _;
-
-    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
-    })?;
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-
-    let token = Token::with_current_process()?;
-    let level = token.privilege_level()?;
-    let output = match level {
-        PrivilegeLevel::NotPrivileged => {
-            let status = RunasCommand::new(&install_path).show(false).status()?;
-            Output {
-                status,
-                stdout: Vec::new(),
-                stderr: Vec::new(),
-            }
-        }
-        _ => {
-            // StdCommand returns Output directly
-            StdCommand::new(&install_path).creation_flags(0x08000000).output()?
-        }
-    };
-
-    if let Some((code, err)) = check_output_error(&output) {
-        logging!(
-            error,
-            Type::Service,
-            "failed to install service code: {}, details: {}",
-            code,
-            err
-        );
-        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
@@ -662,55 +677,6 @@ fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn install_service() -> Result<()> {
-    logging!(info, Type::Service, "install service");
-
-    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
-        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
-    })?;
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-
-    let elevator = crate::utils::help::linux_elevator();
-    let output = if linux_running_as_root() {
-        StdCommand::new(&install_path).output()?
-    } else {
-        let result = StdCommand::new(&elevator)
-            .arg("--disable-internal-agent")
-            .arg(&install_path)
-            .output()?;
-
-        // 如果 pkexec 执行失败，回退到 sudo
-        if !result.status.success() && elevator.contains("pkexec") {
-            logging!(
-                warn,
-                Type::Service,
-                "pkexec failed with code {}, falling back to sudo",
-                result.status.code().unwrap_or(-1)
-            );
-            StdCommand::new("sudo").arg(&install_path).output()?
-        } else {
-            result
-        }
-    };
-
-    if let Some((code, err)) = check_output_error(&output) {
-        logging!(
-            error,
-            Type::Service,
-            "failed to install service code: {}, details: {}",
-            code,
-            err
-        );
-        bail!("failed to install service code: {}, details: {}", code, err);
-    }
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
 fn linux_running_as_root() -> bool {
     use crate::core::handle;
     use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
@@ -736,9 +702,8 @@ fn uninstall_service() -> Result<()> {
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
     let prompt = clash_verge_i18n::t!("service.adminUninstallPrompt");
-    // 先清理服务残留,再执行卸载器。
     let uninstall_quoted = shell_single_quote(&uninstall_shell);
-    let shell = format!("cd /; {}; {uninstall_quoted}", macos_force_stop_core_shell());
+    let shell = format!("cd /; {uninstall_quoted}");
     let shell = escape_osascript_double_quoted_string(&shell);
     let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
 
@@ -756,63 +721,46 @@ fn uninstall_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
 fn install_service() -> Result<()> {
-    logging!(info, Type::Service, "install service");
-
-    let binary_path = packaged_service_tool_path("clash-verge-service", dirs::service_path)?;
-    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
-    })?;
-
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-
-    macos_service_tool_path(&binary_path)?;
-    let install_path = macos_service_tool_path(&install_path)?;
-
-    // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
-
-    let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
-    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
-    let shell = macos_install_shell(&install_path, gid);
-    let shell = escape_osascript_double_quoted_string(&shell);
-    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
-
-    let output = StdCommand::new("osascript").args(vec!["-e", &command]).output()?;
-    if let Some((code, err)) = check_output_error(&output) {
-        logging!(
-            error,
-            Type::Service,
-            "failed to install service code: {}, details: {}",
-            code,
-            err
-        );
-        bail!("failed to install service code: {}, details: {}", code, err);
-    }
-
-    Ok(())
+    let executable = current_exe()?;
+    let cores = crate::config::IVerge::VALID_CLASH_CORES
+        .iter()
+        .map(|core| {
+            let name = format!("{core}{}", std::env::consts::EXE_SUFFIX);
+            clash_verge_service_ipc::management::CoreSource {
+                path: executable.with_file_name(&name),
+                name,
+            }
+        })
+        .collect::<Vec<_>>();
+    invoke_service_install(&cores, false)
 }
 
-fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str>)> {
-    if output.status.success() {
-        return None;
-    }
-    let code = output.status.code().unwrap_or(-1);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if !stderr.is_empty() {
-        return Some((code, stderr));
-    }
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    if !stdout.is_empty() {
-        return Some((code, stdout));
-    }
-    Some((code, Cow::Borrowed("Unknown error")))
+fn invoke_service_install(cores: &[clash_verge_service_ipc::management::CoreSource], core_only: bool) -> Result<()> {
+    let name = format!("clash-verge-service-install{}", std::env::consts::EXE_SUFFIX);
+    let installer = packaged_service_tool_path(&name, || {
+        #[cfg(target_os = "linux")]
+        let executable = tauri::utils::platform::current_exe()?;
+        #[cfg(not(target_os = "linux"))]
+        let executable = dirs::service_path()?;
+        Ok(executable.with_file_name(&name))
+    })?;
+    #[cfg(unix)]
+    let gid = Some(tauri_plugin_clash_verge_sysinfo::current_gid());
+    #[cfg(windows)]
+    let gid = None;
+    clash_verge_service_ipc::management::install(
+        &installer,
+        cores,
+        core_only,
+        gid,
+        &clash_verge_i18n::t!("service.adminInstallPrompt"),
+    )
 }
 
 fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
+    // The installer replaces an existing registration and its cores in one elevation.
     install_service()
 }
 
@@ -834,156 +782,18 @@ fn force_reinstall_service() -> Result<()> {
 /// hash was computed is refused by the installer instead of published.
 pub fn stage_approved_core(core_path: &Path) -> Result<()> {
     tokio::task::block_in_place(|| {
-        let digest = sha256_hex(core_path)?;
-        run_core_install(core_path, &digest)
+        invoke_service_install(
+            &[clash_verge_service_ipc::management::CoreSource {
+                name: core_path
+                    .file_name()
+                    .context("core has no filename")?
+                    .to_string_lossy()
+                    .into_owned(),
+                path: core_path.to_path_buf(),
+            }],
+            true,
+        )
     })
-}
-
-fn sha256_hex(path: &Path) -> Result<String> {
-    use sha2::{Digest as _, Sha256};
-    use std::io::Read as _;
-
-    let mut file = std::fs::File::open(path).with_context(|| format!("failed to open {path:?} for hashing"))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = vec![0_u8; 64 * 1024].into_boxed_slice();
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("failed to read {path:?}"))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hasher.finalize().iter().map(|byte| format!("{byte:02x}")).collect())
-}
-
-#[cfg(target_os = "windows")]
-fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
-    use deelevate::{PrivilegeLevel, Token};
-    use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt as _;
-    use std::process::Output;
-
-    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
-    })?;
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-
-    let token = Token::with_current_process()?;
-    let output = match token.privilege_level()? {
-        PrivilegeLevel::NotPrivileged => {
-            let status = RunasCommand::new(&install_path)
-                .arg("--install-core")
-                .arg(core_path)
-                .arg("--sha256")
-                .arg(sha256_hex)
-                .show(false)
-                .status()?;
-            Output {
-                status,
-                stdout: Vec::new(),
-                stderr: Vec::new(),
-            }
-        }
-        _ => StdCommand::new(&install_path)
-            .creation_flags(0x08000000)
-            .arg("--install-core")
-            .arg(core_path)
-            .arg("--sha256")
-            .arg(sha256_hex)
-            .output()?,
-    };
-
-    if let Some((code, err)) = check_output_error(&output) {
-        bail!("failed to stage the core for the service, code {code}: {err}");
-    }
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
-    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
-        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
-    })?;
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-
-    let core_argument = core_path.as_os_str();
-    let output = if linux_running_as_root() {
-        StdCommand::new(&install_path)
-            .arg("--install-core")
-            .arg(core_argument)
-            .arg("--sha256")
-            .arg(sha256_hex)
-            .output()?
-    } else {
-        let elevator = crate::utils::help::linux_elevator();
-        let mut elevated = StdCommand::new(&elevator);
-        // pkexec-only option; other elevators such as sudo reject unknown flags outright.
-        if elevator.contains("pkexec") {
-            elevated.arg("--disable-internal-agent");
-        }
-        let result = elevated
-            .arg(&install_path)
-            .arg("--install-core")
-            .arg(core_argument)
-            .arg("--sha256")
-            .arg(sha256_hex)
-            .output()?;
-        if !result.status.success() && elevator.contains("pkexec") {
-            logging!(
-                warn,
-                Type::Service,
-                "pkexec failed with code {}, falling back to sudo",
-                result.status.code().unwrap_or(-1)
-            );
-            StdCommand::new("sudo")
-                .arg(&install_path)
-                .arg("--install-core")
-                .arg(core_argument)
-                .arg("--sha256")
-                .arg(sha256_hex)
-                .output()?
-        } else {
-            result
-        }
-    };
-
-    if let Some((code, err)) = check_output_error(&output) {
-        bail!("failed to stage the core for the service, code {code}: {err}");
-    }
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-fn run_core_install(core_path: &Path, sha256_hex: &str) -> Result<()> {
-    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
-    })?;
-    if !install_path.exists() {
-        bail!(format!("installer not found: {install_path:?}"));
-    }
-    let install_path = macos_service_tool_path(&install_path)?;
-
-    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
-    let shell = format!(
-        "cd /; {} --install-core {} --sha256 {}",
-        shell_single_quote(&install_path.to_string_lossy()),
-        shell_single_quote(&core_path.to_string_lossy()),
-        shell_single_quote(sha256_hex),
-    );
-    let shell = escape_osascript_double_quoted_string(&shell);
-    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
-
-    let output = StdCommand::new("osascript").args(["-e", &command]).output()?;
-    if let Some((code, err)) = check_output_error(&output) {
-        bail!("failed to stage the core for the service, code {code}: {err}");
-    }
-    Ok(())
 }
 
 /// Dispatches a privileged platform operation on a blocking thread.
@@ -1042,6 +852,45 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
         .context("Clash Verge Service 未返回运行时暂存结果")
 }
 
+#[derive(Debug)]
+pub(super) struct ServiceStartRefusal {
+    pub code: u16,
+    pub core_path: String,
+    pub message: String,
+}
+
+impl std::fmt::Display for ServiceStartRefusal {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "failed to start Service core at {} (code {}): {}",
+            self.core_path, self.code, self.message
+        )
+    }
+}
+
+impl std::error::Error for ServiceStartRefusal {}
+
+fn record_service_start_refusal<E: RunStateEnv>(
+    store: &RunStateStore<E>,
+    refusal: ServiceStartRefusal,
+) -> anyhow::Error {
+    // A proxy clear failure is about the system network settings; repairing the service cannot fix it.
+    if store.state().mode == crate::core::manager::RunningMode::NotRunning
+        && refusal.code != ServiceErrorCode::ProxyClearFailed as u16
+    {
+        store.observe(ServiceHealth::Unavailable(refusal.to_string()));
+    }
+    refusal.into()
+}
+
+/// Sidecar stays blocked until a reinstall replaces the residual helper, so ask for repair.
+pub(super) fn record_residual_service(error: &anyhow::Error) {
+    if let Some(residual) = error.downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>() {
+        RUN_STATE.observe(ServiceHealth::Unavailable(residual.to_string()));
+    }
+}
+
 /// 尝试使用服务启动core
 #[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
@@ -1076,11 +925,24 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             response.code,
             err_msg
         );
+        #[cfg(target_os = "windows")]
+        if response.code == ServiceErrorCode::InvalidInstallLocation as u16 {
+            PENDING_SERVICE_REPAIR_NOTICE.store(true, Ordering::Relaxed);
+            Handle::notice(NoticeStatus::ServiceCoreRepairRequired, "");
+        }
+        if response.code == ServiceErrorCode::AppDataRootNotOwned as u16 {
+            *PENDING_SERVICE_OWNER_NOTICE.lock() = app_data_owner_command(&credentials);
+            Handle::notice(NoticeStatus::ServiceCoreAppDataNotOwned, "");
+        }
         start_owner_monitor();
-        bail!(
-            "failed to start Service core at {}: {err_msg}",
-            request.runtime.core_path
-        );
+        return Err(record_service_start_refusal(
+            &RUN_STATE,
+            ServiceStartRefusal {
+                code: response.code,
+                core_path: request.runtime.core_path,
+                message: err_msg,
+            },
+        ));
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
@@ -1099,6 +961,9 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
     tracing::Span::current().record("outcome", "started");
+    PENDING_SERVICE_FALLBACK_NOTICE.lock().take();
+    PENDING_SERVICE_REPAIR_NOTICE.store(false, Ordering::Relaxed);
+    PENDING_SERVICE_OWNER_NOTICE.lock().take();
     logging!(
         info,
         Type::Service,
@@ -1141,7 +1006,7 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
 
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
+            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced, None).await;
         }
         let err_msg = response.message;
         bail!(err_msg);
@@ -1159,13 +1024,13 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
     let response = response.context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
+            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced, None).await;
         }
         bail!(response.message);
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
     let content = decode_hex(&encoded).context("服务返回了无效的核心日志快照")?;
-    Ok(String::from_utf8_lossy(&content).into_owned())
+    Ok(String::from_utf8_lossy_owned(content))
 }
 
 fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
@@ -1179,7 +1044,8 @@ fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
 }
 
 static PROVIDER_SYNC_QUEUED: AtomicBool = AtomicBool::new(false);
-static PROVIDER_SYNC_SERIAL: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
+// Serializing the whole read-and-publish pass prevents an older cache from replacing a newer one.
+static PROVIDER_SYNC_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 static SYNC_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 const RUNTIME_PROVIDER_SYNC_ATTEMPTS: u32 = 4;
 const CONTENT_COMPARE_CHUNK: usize = 64 * 1024;
@@ -1190,38 +1056,47 @@ pub(crate) fn request_runtime_provider_sync(delay: Duration) {
     }
     AsyncHandler::spawn(move || async move {
         tokio::time::sleep(delay).await;
-        for attempt in 1..=RUNTIME_PROVIDER_SYNC_ATTEMPTS {
-            let outcome = {
-                let _serial = PROVIDER_SYNC_SERIAL.lock().await;
-                if attempt == 1 {
-                    PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        let _ = retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add((RUNTIME_PROVIDER_SYNC_ATTEMPTS - 1) as usize),
+                constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY,
+            ),
+            |index| async move {
+                let attempt = index as u32 + 1;
+                let outcome = {
+                    let _serial = PROVIDER_SYNC_SERIAL.lock().await;
+                    if attempt == 1 {
+                        PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
+                    }
+                    sync_runtime_providers_by_service().await
+                };
+                match outcome {
+                    Ok(ProviderSync { pending: 0, .. }) => Ok(()),
+                    Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
+                        logging!(
+                            info,
+                            Type::Service,
+                            "{pending} provider caches are not ready yet; retrying"
+                        );
+                        Err(RetryError::Retry(()))
+                    }
+                    Ok(ProviderSync { pending, .. }) => {
+                        logging!(warn, Type::Service, "{pending} provider caches were not synced");
+                        Ok(())
+                    }
+                    Err(error) => {
+                        logging!(
+                            warn,
+                            Type::Service,
+                            "failed to sync provider caches from the service: {error:#}"
+                        );
+                        Ok(())
+                    }
                 }
-                sync_runtime_providers_by_service().await
-            };
-            match outcome {
-                Ok(ProviderSync { pending: 0, .. }) => return,
-                Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
-                    logging!(
-                        info,
-                        Type::Service,
-                        "{pending} provider caches are not ready yet; retrying"
-                    );
-                }
-                Ok(ProviderSync { pending, .. }) => {
-                    logging!(warn, Type::Service, "{pending} provider caches were not synced");
-                    return;
-                }
-                Err(error) => {
-                    logging!(
-                        warn,
-                        Type::Service,
-                        "failed to sync provider caches from the service: {error:#}"
-                    );
-                    return;
-                }
-            }
-            tokio::time::sleep(constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY).await;
-        }
+            },
+        )
+        .await;
     });
 }
 
@@ -1283,8 +1158,9 @@ async fn sync_runtime_providers_by_service() -> Result<ProviderSync> {
                 logging!(
                     warn,
                     Type::Service,
-                    "provider cache {} was not read: {error:#}",
-                    declared.provider.destination
+                    "failed to read provider cache {} into {}: {error:#}",
+                    declared.provider.destination,
+                    temp.display()
                 );
                 outcome.pending += 1;
                 remove_temp(&temp).await;
@@ -1374,8 +1250,9 @@ async fn publish_fetched(
                 logging!(
                     warn,
                     Type::Service,
-                    "provider cache {} was not published: {error}",
-                    cache.declared.provider.destination
+                    "failed to rename provider cache {} to {}: {error}",
+                    cache.temp.display(),
+                    target.display()
                 );
                 remove_temp(&cache.temp).await;
             }
@@ -1519,27 +1396,37 @@ fn has_settled(mtime_ns: Option<u64>) -> bool {
 // Exclusive creation protects existing files from truncation and cleanup.
 async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
     if let Some(parent) = target.parent() {
-        tokio::fs::create_dir_all(parent).await?;
+        tokio::fs::create_dir_all(parent)
+            .await
+            .with_context(|| format!("failed to create provider cache directory {}", parent.display()))?;
     }
     let name = target
         .file_name()
         .map(|name| name.to_string_lossy())
         .unwrap_or_default();
-    for _ in 0..8 {
-        let sequence = SYNC_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-        let temp = target.with_file_name(format!(".{name}.sync-{}-{sequence}.tmp", std::process::id()));
-        match tokio::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&temp)
-            .await
-        {
-            Ok(file) => return Ok((temp, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => return Err(error).with_context(|| format!("failed to create {}", temp.display())),
-        }
-    }
-    bail!("no free temporary name beside {}", target.display())
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    retry(
+        RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(7), std::time::Duration::ZERO),
+        |_| async {
+            let sequence = SYNC_TEMP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+            let temp = target.with_file_name(format!(".{name}.sync-{}-{sequence}.tmp", std::process::id()));
+            match tokio::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temp)
+                .await
+            {
+                Ok(file) => Ok((temp, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Err(RetryError::Retry(
+                    anyhow::anyhow!("no free temporary name beside {}", target.display()),
+                )),
+                Err(error) => Err(RetryError::Stop(
+                    anyhow::anyhow!(error).context(format!("failed to create {}", temp.display())),
+                )),
+            }
+        },
+    )
+    .await
 }
 
 async fn same_contents(temp: &Path, target: &Path) -> bool {
@@ -1688,9 +1575,11 @@ struct OwnerRecoveryPolicy {
     reset_system_proxy: bool,
 }
 
-const fn owner_recovery_policy(_reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
+/// The macOS proxy is machine-wide and only the helper may write it, for the session it still
+/// honours; a displaced or unreachable owner must leave it alone.
+const fn owner_recovery_policy(reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
     OwnerRecoveryPolicy {
-        reset_system_proxy: !is_macos,
+        reset_system_proxy: !is_macos || matches!(reason, OwnerRecoveryReason::SameOwnerFailure),
     }
 }
 
@@ -1712,6 +1601,7 @@ fn start_owner_monitor() {
     AsyncHandler::spawn(move || async move {
         logging!(debug, Type::Service, "owner monitor started (generation {generation})");
         let mut watch = OwnerWatch::new();
+        let mut core_restarts = None;
         loop {
             tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
             if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
@@ -1731,7 +1621,10 @@ fn start_owner_monitor() {
                 break;
             }
 
-            let sample = read_owner_sample().await;
+            let (sample, status) = read_owner_sample().await;
+            if let Some(status) = &status {
+                log_core_restarts(&mut core_restarts, status);
+            }
             let mut step = watch.observe(sample);
             if matches!(step, OwnerStep::VerifyTransport) {
                 if watch.just_became_sustained() {
@@ -1747,15 +1640,41 @@ fn start_owner_monitor() {
             }
 
             if let OwnerStep::Recover(reason) = step {
-                recover_after_owner_loss(generation, reason).await;
+                recover_after_owner_loss(generation, reason, status.as_ref()).await;
                 break;
             }
         }
     });
 }
 
+/// The Service logs its watchdog restarts where the app cannot read them.
+fn log_core_restarts(seen: &mut Option<u32>, status: &ServiceStatusSnapshot) {
+    if seen.is_some_and(|seen| status.restart_count > seen) {
+        logging!(
+            warn,
+            Type::Service,
+            "service restarted the core ({} restarts so far); last exit: {}",
+            status.restart_count,
+            status.last_core_exit_reason.as_deref().unwrap_or("unknown")
+        );
+    }
+    *seen = Some(status.restart_count);
+}
+
+fn report_service_core_stopped(status: &ServiceStatusSnapshot) {
+    let detail = format!(
+        "service state {:?}, {} restarts, last exit: {}",
+        status.service_state,
+        status.restart_count,
+        status.last_core_exit_reason.as_deref().unwrap_or("none reported")
+    );
+    logging!(error, Type::Service, "service core stopped: {detail}");
+    CoreManager::global().record_startup_error(CoreFailure::ServiceCoreStopped(detail));
+    Handle::notice(NoticeStatus::CoreStartError, "");
+}
+
 /// Samples ownership, treating every unusable reply as unreadable.
-async fn read_owner_sample() -> OwnerSample {
+async fn read_owner_sample() -> (OwnerSample, Option<ServiceStatusSnapshot>) {
     let response = match current_owner_credentials() {
         Ok(credentials) => clash_verge_service_ipc::get_status(&credentials).await,
         Err(error) => Err(error),
@@ -1765,12 +1684,12 @@ async fn read_owner_sample() -> OwnerSample {
         Ok(response) => response,
         Err(error) => {
             logging!(debug, Type::Service, "service owner status was unreadable: {error:#}");
-            return OwnerSample::Unreadable;
+            return (OwnerSample::Unreadable, None);
         }
     };
 
     if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-        return OwnerSample::NotActive;
+        return (OwnerSample::NotActive, None);
     }
     if response.code != 0 {
         logging!(
@@ -1780,24 +1699,25 @@ async fn read_owner_sample() -> OwnerSample {
             response.code,
             response.message
         );
-        return OwnerSample::Unreadable;
+        return (OwnerSample::Unreadable, None);
     }
     let Some(status) = response.data else {
         logging!(debug, Type::Service, "service owner status omitted data");
-        return OwnerSample::Unreadable;
+        return (OwnerSample::Unreadable, None);
     };
 
     // A session that no longer matches is another owner's, whatever the flags say.
     if !session_matches_active_status(status.is_active, status.active_generation) {
-        return OwnerSample::NotActive;
+        return (OwnerSample::NotActive, None);
     }
 
-    OwnerSample::Status {
+    let sample = OwnerSample::Status {
         is_active: status.is_active,
         desired_core_should_be_running: status.desired_core_should_be_running,
         service_state: status.service_state,
         core_pid: status.core_pid,
-    }
+    };
+    (sample, Some(status))
 }
 
 fn session_matches_active_status(is_active: bool, active_generation: Option<u64>) -> bool {
@@ -1815,7 +1735,12 @@ pub(crate) fn owner_monitor_generation() -> u64 {
     OWNER_MONITOR_GENERATION.load(Ordering::Acquire)
 }
 
-async fn recover_after_owner_loss(generation: u64, reason: OwnerRecoveryReason) {
+/// `status` is the sample that led to the recovery, if any; a failed core is reported from it.
+async fn recover_after_owner_loss(
+    generation: u64,
+    reason: OwnerRecoveryReason,
+    status: Option<&ServiceStatusSnapshot>,
+) {
     let manager = CoreManager::global();
     if !matches!(*manager.get_running_mode(), RunningMode::Service) {
         return;
@@ -1831,6 +1756,10 @@ async fn recover_after_owner_loss(generation: u64, reason: OwnerRecoveryReason) 
         return;
     }
     recover_after_owner_loss_while_locked(reason).await;
+    // Still under the lifecycle lock, so a later start is the one that clears it.
+    if let (OwnerRecoveryReason::SameOwnerFailure, Some(status)) = (reason, status) {
+        report_service_core_stopped(status);
+    }
 }
 
 fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: u64) -> Option<u64> {
@@ -1855,29 +1784,43 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     );
     mark_service_unavailable_after_owner_loss(&RUN_STATE, reason);
     proxy_control::stop_guard().await;
+    let policy = owner_recovery_policy(reason, cfg!(target_os = "macos"));
+    // Clear while still in Service mode with the session: on macOS it routes through the helper.
+    if policy.reset_system_proxy {
+        clear_proxy_after_owner_loss().await;
+    }
     clear_active_service_session();
     CoreManager::global().core_stopped();
-
-    if !owner_recovery_policy(reason, cfg!(target_os = "macos")).reset_system_proxy {
-        return;
+    // A displaced Service may still run TUN for its new owner, and DNS settings are system-wide.
+    #[cfg(target_os = "macos")]
+    if policy.reset_system_proxy {
+        crate::utils::resolve::dns::sync_public_dns().await;
     }
+}
 
-    let mut last_error = None;
-    for attempt in 1..=3 {
-        match proxy_control::clear().await {
-            Ok(()) => return,
-            Err(error) => {
+async fn clear_proxy_after_owner_loss() {
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    let result = retry(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(2),
+            Duration::from_millis(100),
+        ),
+        |index| async move {
+            let attempt = index + 1;
+            proxy_control::clear().await.map_err(|error| {
                 logging!(
                     warn,
                     Type::Service,
                     "proxy clear attempt {attempt}/3 after owner loss failed: {error:#}"
                 );
-                last_error = Some(error);
-                tokio::time::sleep(Duration::from_millis(100)).await;
-            }
-        }
-    }
-    if let Some(error) = last_error {
+                RetryError::Retry(error)
+            })
+        },
+    )
+    .await;
+    if let Err(error) = result {
+        // The existing recovery path also waits after its final failed clear.
+        tokio::time::sleep(Duration::from_millis(100)).await;
         logging!(
             error,
             Type::Service,
@@ -1891,12 +1834,13 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
 #[tracing::instrument(skip_all, level = "info", fields(attempts = tracing::field::Empty, interval_ms = tracing::field::Empty, outcome = tracing::field::Empty))]
 async fn wait_for_service_ipc() -> Result<()> {
     const CONTEXT: &str = "service IPC did not become available";
-    let config = ServiceManager::config();
+    const READY_ATTEMPTS: usize = 61;
+    const READY_INTERVAL: Duration = Duration::from_millis(500);
     let span = tracing::Span::current();
-    span.record("attempts", config.max_retries);
-    span.record("interval_ms", config.retry_delay.as_millis() as u64);
+    span.record("attempts", READY_ATTEMPTS);
+    span.record("interval_ms", READY_INTERVAL.as_millis() as u64);
 
-    match RUN_STATE.await_ready(config.max_retries, config.retry_delay).await {
+    match RUN_STATE.await_ready(READY_ATTEMPTS, READY_INTERVAL).await {
         Ok(_) => {
             tracing::Span::current().record("outcome", "ready");
             Ok(())
@@ -2112,8 +2056,8 @@ pub static SERVICE_MANAGER: ServiceManager = ServiceManager;
 mod tests {
     use super::{
         ServiceHealth, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
-        generate_service_session_token, macos_install_shell, mark_service_unavailable_after_owner_loss,
-        owner_recovery_policy, service_core_path_for, session_matches_status,
+        generate_service_session_token, mark_service_unavailable_after_owner_loss, owner_recovery_policy,
+        service_core_path_for, session_matches_status,
     };
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
@@ -2250,17 +2194,6 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn macos_install_shell_starts_from_root_without_nested_sudo() {
-        let shell = macos_install_shell(Path::new("/safe/service-tools/clash-verge-service-install"), 20);
-
-        assert_eq!(
-            shell,
-            "cd /; CLASH_VERGE_SERVICE_GID=20 '/safe/service-tools/clash-verge-service-install'"
-        );
-        assert!(!shell.contains("sudo"));
-    }
-
     #[cfg(unix)]
     #[test]
     fn development_service_core_refresh_atomically_replaces_bytes() -> anyhow::Result<()> {
@@ -2387,13 +2320,16 @@ mod tests {
     }
 
     #[test]
-    fn macos_recovery_never_resets_machine_wide_proxy() {
+    fn macos_recovery_resets_machine_wide_proxy_only_for_its_own_failed_core() {
         for reason in [
             OwnerRecoveryReason::Displaced,
             OwnerRecoveryReason::SameOwnerFailure,
             OwnerRecoveryReason::TransportFailure,
         ] {
-            assert!(!owner_recovery_policy(reason, true).reset_system_proxy);
+            assert_eq!(
+                owner_recovery_policy(reason, true).reset_system_proxy,
+                reason == OwnerRecoveryReason::SameOwnerFailure
+            );
             assert!(owner_recovery_policy(reason, false).reset_system_proxy);
         }
 
@@ -2417,6 +2353,55 @@ mod tests {
         assert!(!store.state().service_usable());
         assert_eq!(status_of(&store), ServiceStatus::NotInstalled);
         assert_eq!(store.generation_count(), generation + 1);
+    }
+
+    #[tokio::test]
+    async fn refused_core_start_can_continue_with_sidecar() -> anyhow::Result<()> {
+        use clash_verge_service_ipc::ServiceErrorCode;
+        for code in [
+            ServiceErrorCode::InvalidInstallLocation,
+            ServiceErrorCode::InvalidRuntimeAsset,
+            ServiceErrorCode::OwnerSwitchFailed,
+        ] {
+            let store = fake_store();
+            store.observe(ServiceHealth::Ready);
+            let error = super::record_service_start_refusal(
+                &store,
+                super::ServiceStartRefusal {
+                    code: code as u16,
+                    core_path: "/development/service-core/verge-mihomo".into(),
+                    message: "no administrator-approved copy is installed".into(),
+                },
+            );
+
+            assert!(error.downcast_ref::<super::ServiceStartRefusal>().is_some());
+            let state = store.settled().await;
+            assert_eq!(state.mode, crate::core::manager::RunningMode::NotRunning);
+            assert!(state.service_needs_attention());
+            assert!(!state.service_usable());
+            assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
+            store.allow_sidecar_for_session()?;
+            assert_eq!(status_of(&store), ServiceStatus::SidecarAllowed);
+            assert!(store.state().tun_should_be_disabled(true));
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn proxy_clear_refusal_does_not_ask_for_service_repair() {
+        let store = fake_store();
+        store.observe(ServiceHealth::Ready);
+        let _ = super::record_service_start_refusal(
+            &store,
+            super::ServiceStartRefusal {
+                code: clash_verge_service_ipc::ServiceErrorCode::ProxyClearFailed as u16,
+                core_path: "/development/service-core/verge-mihomo".into(),
+                message: "SystemConfiguration operation failed: lock preferences (status 3002)".into(),
+            },
+        );
+
+        assert!(store.state().service_usable());
+        assert!(!store.state().service_needs_attention());
     }
 
     #[test]
