@@ -1,0 +1,90 @@
+name: SignPath Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  CARGO_INCREMENTAL: 0
+  HUSKY: 0
+
+jobs:
+  sign-windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.99.0'
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.21.0'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare build resources
+        run: pnpm run prebuild x86_64-pc-windows-msvc
+
+      - name: Build test installer
+        shell: pwsh
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+        run: |
+          $configPath = Join-Path $env:RUNNER_TEMP 'signpath-test.json'
+          '{"bundle":{"createUpdaterArtifacts":false}}' |
+            Set-Content -LiteralPath $configPath -Encoding utf8
+          pnpm exec tauri build --target x86_64-pc-windows-msvc --bundles nsis --config $configPath
+
+      - name: Upload unsigned installer
+        id: unsigned
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-x64-unsigned
+          path: target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+
+      - name: Sign with SignPath test certificate
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: '5b298f4d-010d-4bae-b665-70551a58839c'
+          project-slug: 'clash-verge-rev'
+          signing-policy-slug: 'test-signing'
+          artifact-configuration-slug: 'initial'
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Inspect installer signature
+        shell: pwsh
+        run: |
+          Get-ChildItem -Path signed/*-setup.exe | ForEach-Object {
+            $signature = Get-AuthenticodeSignature -LiteralPath $_.FullName
+            if (-not $signature.SignerCertificate) {
+              throw "No Authenticode signer certificate found for $($_.Name)"
+            }
+            $signature | Format-List Path, Status, StatusMessage, SignerCertificate
+          }
+
+      - name: Upload signed test installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-x64-test-signed
+          path: signed/*-setup.exe
+          if-no-files-found: error
