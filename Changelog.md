@@ -4,7 +4,7 @@
 <summary><strong> 🐞 修复问题 </strong></summary>
 
 **🐧 Linux**
-修复 Linux 套件升級時服務被移除的問題。
+修复 Linux 套件升级时服务被移除的问题。
 
 </details>
 
@@ -15,7 +15,7 @@
 </details>
 
 <details>
-<summary><strong> 🚀 優化改進 </strong></summary>
+<summary><strong> 🚀 优化改进 </strong></summary>
 
 
 </details>
