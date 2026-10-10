@@ -29,8 +29,14 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
 
   const onDelay = useCallback(async () => {
     setDelay(-2)
-    const result = await cmdTestDelay(url)
-    setDelay(result)
+    try {
+      const result = await cmdTestDelay(url)
+      setDelay(result)
+    } catch (err) {
+      // A failed test must not leave the item stuck in the loading state.
+      setDelay(-1)
+      showNotice.error(err)
+    }
   }, [url])
 
   const onEditTest = () => {
