@@ -3,6 +3,8 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+**🐧 Linux**
+修复 Linux 套件升級時服務被移除的問題。
 
 </details>
 
@@ -13,7 +15,7 @@
 </details>
 
 <details>
-<summary><strong> 🚀 优化改进 </strong></summary>
+<summary><strong> 🚀 優化改進 </strong></summary>
 
 
 </details>
