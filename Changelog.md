@@ -3,6 +3,7 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+修复「首页」网站测速失败后卡片一直显示测试中的问题
 
 </details>
 
