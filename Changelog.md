@@ -3,6 +3,9 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+**🍎 macOS**
+
+- 修复 macOS 从托盘打开窗口时跳转到其他桌面的问题
 
 </details>
 
