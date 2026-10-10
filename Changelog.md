@@ -11,6 +11,8 @@
 **🐧 Linux**
 
 - Linux：修复 deb/rpm 安装包错误包含多余的 `frontend-contract` 可执行文件，导致下游重新打包失败的问题
+**🐧 Linux**
+修复 Linux 套件升級時服務被移除的問題。
 
 </details>
 
@@ -21,7 +23,7 @@
 </details>
 
 <details>
-<summary><strong> 🚀 优化改进 </strong></summary>
+<summary><strong> 🚀 優化改進 </strong></summary>
 
 - 优化「链式代理」：开启前需确认网速影响提示，空面板新增「关闭」按钮
 
