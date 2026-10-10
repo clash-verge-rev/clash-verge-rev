@@ -3,6 +3,8 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+**🐧 Linux**
+修复 Linux 套件升级时服务被移除的问题。
 
 </details>
 
