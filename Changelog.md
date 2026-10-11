@@ -3,6 +3,7 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复通过 URL 导入订阅时，即使导入的订阅并非当前使用的订阅，也会重新加载当前配置的问题
 
 </details>
 
