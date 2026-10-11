@@ -667,7 +667,7 @@
         "reinstallFailed": "Hizmet yeniden kurulamadı",
         "repairFailed": "Hizmet onarılamadı",
         "sidecarFailed": "Sidecar ile devam edilemedi",
-        "coreAlreadyRunning": "Sidecar modu başlatılamadı: başka bir çekirdek hâlâ çalışıyor (PID {{pid}}). Diğer Clash Verge örneklerini veya bu çekirdeği kullanan uygulamayı kapatıp yeniden deneyin."
+        "coreAlreadyRunning": "Çekirdek başlatılamıyor: bir çekirdek işlemi zaten çalışıyor. İlgili uygulamayı kapatın veya kalan işlemi sonlandırıp yeniden deneyin. Sorun devam ederse bilgisayarı yeniden başlatın."
       },
       "sysproxy": {
         "privilegeRequired": "Sistem vekil sunucusu ayarlanamıyor: macOS yetki yetersizliği nedeniyle değişikliği reddetti. Clash Verge hizmetini kurun; yöneticiyseniz Sistem Ayarları → Gizlilik ve Güvenlik bölümündeki gelişmiş seçeneklerden, sistem genelindeki ayarlar için yönetici parolası zorunluluğunu da kapatabilirsiniz.",

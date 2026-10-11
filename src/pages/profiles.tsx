@@ -212,10 +212,12 @@ const ProfilePage = () => {
     }
     setLoading(true)
 
+    const prevCurrent = profiles.current
+
     const handleImportSuccess = async (noticeKey: string) => {
       showNotice.success(noticeKey)
       setUrl('')
-      await performRobustRefresh()
+      await performRobustRefresh(prevCurrent)
     }
     try {
       await mutate(() => importProfile(url), {
@@ -261,7 +263,7 @@ const ProfilePage = () => {
   }
 
   // `useProfiles` already retries three times; add only one business-level retry.
-  const performRobustRefresh = async () => {
+  const performRobustRefresh = async (prevCurrent?: string | null) => {
     let retryCount = 0
     const maxRetries = 1
     const baseDelay = 200
@@ -270,13 +272,15 @@ const ProfilePage = () => {
       try {
         debugLog(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`)
 
-        await mutateProfiles()
+        const fresh = await fetchProfilesIntoCache()
 
         await new Promise((resolve) =>
           setTimeout(resolve, baseDelay * (retryCount + 1)),
         )
 
-        await onEnhance(false)
+        if (fresh?.current !== prevCurrent) {
+          await onEnhance(false)
+        }
         return
       } catch (error) {
         console.error(`[导入刷新] 第${retryCount + 1}次刷新失败:`, error)
@@ -289,8 +293,10 @@ const ProfilePage = () => {
 
     console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`)
     try {
-      await fetchProfilesIntoCache()
-      await onEnhance(false)
+      const fresh = await fetchProfilesIntoCache()
+      if (fresh?.current !== prevCurrent) {
+        await onEnhance(false)
+      }
       showNotice.error(
         'profiles.page.feedback.notifications.importNeedsRefresh',
         3000,
@@ -888,7 +894,9 @@ const ProfilePage = () => {
               mb: 1.5,
               display: 'grid',
               overflow: 'hidden',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              // Up to 4 columns until a column would pass 480px, then more; 24px is the 3 gaps from `gap: 1`.
+              gridTemplateColumns:
+                'repeat(auto-fill, minmax(clamp(260px, calc((100% - 24px) / 4), 480px), 1fr))',
               gap: 1,
               px: 0.5,
             }}

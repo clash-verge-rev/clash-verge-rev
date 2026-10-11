@@ -659,6 +659,7 @@ export type PrfItem_Deserialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -674,6 +675,7 @@ export type PrfItem_Serialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated: number | null
   option?: PrfOption_Serialize | null
@@ -768,6 +770,7 @@ export type ProfilePatch_Deserialize = {
   file?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -780,6 +783,7 @@ export type ProfilePatch_Serialize = {
   file: string | null
   url: string | null
   selected: PrfSelected[] | null
+  latency_test_urls: { [key in string]: string } | null
   extra: PrfExtra | null
   updated: number | null
   option: PrfOption_Serialize | null
@@ -801,6 +805,11 @@ export type ProxyCapabilities = {
   smux: boolean
 }
 
+export type ProxyExtra = {
+  alive: boolean
+  history: DelayHistory[]
+}
+
 export type ProxyGroupView =
   | ProxyGroupView_Serialize
   | ProxyGroupView_Deserialize
@@ -815,6 +824,7 @@ export type ProxyGroupView_Deserialize = {
   icon: string | null
   testUrl: string | null
   history: DelayHistory[]
+  extra: { [key in string]: ProxyExtra }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
 
@@ -828,6 +838,7 @@ export type ProxyGroupView_Serialize = {
   icon?: string | null
   testUrl?: string | null
   history: DelayHistory[]
+  extra: { [key in string]: ProxyExtra }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
 
@@ -853,6 +864,7 @@ export type ProxyNodeView_Deserialize = {
   type: string
   alive: boolean
   history: DelayHistory[]
+  extra: { [key in string]: ProxyExtra }
   id: string | null
   hidden: boolean | null
   icon: string | null
@@ -866,6 +878,7 @@ export type ProxyNodeView_Serialize = {
   type: string
   alive: boolean
   history: DelayHistory[]
+  extra: { [key in string]: ProxyExtra }
   id?: string | null
   hidden?: boolean | null
   icon?: string | null
