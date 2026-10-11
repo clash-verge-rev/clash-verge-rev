@@ -1166,7 +1166,7 @@ dependencies = [
  "windows-service",
  "windows-sys 0.61.2",
  "winreg 0.56.0",
- "zip 8.6.0",
+ "zip 9.0.1",
 ]
 
 [[package]]
@@ -4038,9 +4038,9 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
 name = "lzma-rust2"
-version = "0.16.5"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca93e534d1142d1d0dcca6d25fe302508a5dfb40b302802904577725ea0b695b"
+checksum = "fde178a3caf126c440fa15628147772d8ee590a39477d711353fbe2e58a73a5b"
 dependencies = [
  "sha2 0.11.0",
 ]
@@ -10055,9 +10055,9 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "8.6.0"
+version = "9.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+checksum = "e49ade69c4434c55dd651d36fe05f38e0578db948b773cbc01c48c4b5e560692"
 dependencies = [
  "aes",
  "bzip2",
@@ -10070,6 +10070,7 @@ dependencies = [
  "indexmap 2.14.0",
  "lzma-rust2",
  "memchr",
+ "nix",
  "pbkdf2",
  "ppmd-rust",
  "sha1 0.11.0",
