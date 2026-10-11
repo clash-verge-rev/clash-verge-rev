@@ -24,8 +24,8 @@
       },
       "notifications": {
         "tunMode": {
-          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          "autoDisabled": "TUN-Modus automatisch deaktiviert, weil der Dienst nicht verfügbar ist",
+          "autoDisableFailed": "TUN-Modus konnte nicht automatisch deaktiviert werden"
         }
       }
     },
@@ -53,7 +53,7 @@
     "externalController": {
       "title": "Adresse des externen Controllers",
       "fields": {
-        "enable": "Enable External Controller",
+        "enable": "Externen Controller aktivieren",
         "address": "Adresse des externen Controllers",
         "secret": "API-Zugangsschlüssel"
       },
@@ -65,8 +65,8 @@
         "copy": "In die Zwischenablage kopieren"
       },
       "messages": {
-        "addressRequired": "Controller address cannot be empty",
-        "secretRequired": "Secret cannot be empty",
+        "addressRequired": "Die Controller-Adresse darf nicht leer sein",
+        "secretRequired": "Der API-Zugangsschlüssel darf nicht leer sein",
         "copyFailed": "Kopieren fehlgeschlagen",
         "controllerCopied": "API-Port in die Zwischenablage kopiert",
         "secretCopied": "API-Schlüssel in die Zwischenablage kopiert"
@@ -92,8 +92,8 @@
       }
     },
     "appearance": {
-      "light": "Light",
-      "dark": "Dark",
+      "light": "Hell",
+      "dark": "Dunkel",
       "system": "System"
     },
     "clash": {
@@ -187,11 +187,11 @@
           "liteMode": "GUI-Oberfläche schließen, nur den Kern laufen lassen"
         },
         "actions": {
-          "copyVersion": "Copy Version"
+          "copyVersion": "Version kopieren"
         },
         "notifications": {
           "latestVersion": "Sie verwenden bereits die neueste Version",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "Version in die Zwischenablage kopiert"
         },
         "fields": {
           "backupSetting": "Sicherungseinstellungen",
@@ -222,27 +222,27 @@
           "cssInjection": "CSS-Einbindung"
         },
         "actions": {
-          "editCss": "Edit CSS"
+          "editCss": "CSS bearbeiten"
         },
         "dialogs": {
-          "editCssTitle": "Edit CSS"
+          "editCssTitle": "CSS bearbeiten"
         }
       },
       "layout": {
         "title": "Layout-Einstellungen",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "preferSystemTitlebar": "System-Titelleiste bevorzugen",
           "trafficGraph": "Verkehrsdiagramm",
           "memoryUsage": "Kern-Speichernutzung",
           "proxyGroupIcon": "Proxy-Gruppen-Symbol",
           "toastPosition": "Toast-Position",
-          "hoverNavigator": "Hover Jump Navigator",
-          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "hoverNavigator": "Buchstaben-Navigation beim Darüberfahren",
+          "hoverNavigatorDelay": "Verzögerung der Buchstaben-Navigation",
           "navIcon": "Navigationsleiste-Symbol",
           "collapseNavBar": "Navigationsleiste einklappen",
           "trayIcon": "Tray-Symbol",
-          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
-          "showOutboundModesInline": "Show Outbound Modes Inline",
+          "proxyGroupsDisplayMode": "Anzeigemodus der Proxy-Gruppen",
+          "showOutboundModesInline": "Ausgangsmodi direkt im Tray-Menü anzeigen",
           "commonTrayIcon": "Standard-Tray-Symbol",
           "systemProxyTrayIcon": "Systemproxy-Tray-Symbol",
           "tunTrayIcon": "TUN-Modus-Tray-Symbol",
@@ -251,8 +251,8 @@
           "pauseRenderTrafficStatsOnBlur": "Rendering der Verkehrsstatistiken bei Fokusverlust pausieren"
         },
         "tooltips": {
-          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigator": "Beim Darüberfahren mit der Maus über die Buchstaben automatisch zur passenden Proxy-Gruppe scrollen",
+          "hoverNavigatorDelay": "Wartezeit vor dem automatischen Scrollen beim Darüberfahren, in Millisekunden"
         },
         "options": {
           "icon": {
@@ -267,9 +267,9 @@
             "bottomRight": "Unten rechts"
           },
           "proxyGroupsDisplayMode": {
-            "default": "Default",
+            "default": "Standard",
             "inline": "Inline",
-            "disable": "Disable"
+            "disable": "Deaktiviert"
           }
         }
       }
@@ -289,9 +289,12 @@
         "random": "Zufälliger Port"
       },
       "messages": {
-        "portInUse": "Port {{port}} is already in use",
-        "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings",
+        "portInUse": "Port {{port}} wird bereits verwendet",
+        "runningPort": "Aktuell verwendeter Port: {{port}}",
+        "duplicatePort": "Aktivierte Listener müssen unterschiedliche Ports verwenden",
+        "invalidPort": "Geben Sie einen Port zwischen 1 und 65535 ein",
+        "saved": "Port-Einstellungen gespeichert",
+        "saveFailed": "Port-Einstellungen konnten nicht gespeichert werden",
         "automaticFallback": "Port {{oldPort}} ist belegt, daher läuft diese Sitzung auf {{newPort}}. Die Einstellung bleibt unverändert und {{oldPort}} wird beim nächsten Start erneut versucht.",
         "automaticFallbackFailed": "Der automatische Wechsel des gemischten Proxy-Ports ist fehlgeschlagen: {{error}}",
         "portTooLow": "Der Port muss mindestens 1000 sein",
@@ -325,24 +328,24 @@
     "backup": {
       "title": "Sicherungseinstellungen",
       "tabs": {
-        "local": "Local backup",
-        "webdav": "WebDAV backup"
+        "local": "Lokale Sicherung",
+        "webdav": "WebDAV-Sicherung"
       },
       "actions": {
-        "selectTarget": "Select backup target",
+        "selectTarget": "Sicherungsziel auswählen",
         "backup": "Sichern",
-        "export": "Export",
-        "exportBackup": "Export Backup",
-        "importBackup": "Import Backup",
+        "export": "Exportieren",
+        "exportBackup": "Sicherung exportieren",
+        "importBackup": "Sicherung importieren",
         "deleteBackup": "Sicherung löschen",
         "restore": "Wiederherstellen",
         "restoreBackup": "Sicherung wiederherstellen",
-        "viewHistory": "View history"
+        "viewHistory": "Verlauf anzeigen"
       },
       "fields": {
         "webdavUrl": "WebDAV-Serveradresse http(s)://",
         "username": "Benutzername",
-        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+        "info": "Sicherungen werden lokal im Datenverzeichnis der App gespeichert. Über die Liste unten können Sie sie wiederherstellen oder löschen."
       },
       "messages": {
         "webdavUrlRequired": "Die WebDAV-Serveradresse darf nicht leer sein",
@@ -353,60 +356,60 @@
         "webdavConfigSaveFailed": "Speichern der WebDAV-Konfiguration fehlgeschlagen: {{error}}",
         "backupCreated": "Sicherung erfolgreich erstellt",
         "backupFailed": "Sicherung fehlgeschlagen: {{error}}",
-        "localBackupCreated": "Local backup created successfully",
-        "localBackupFailed": "Local backup failed",
+        "localBackupCreated": "Lokale Sicherung erfolgreich erstellt",
+        "localBackupFailed": "Lokale Sicherung fehlgeschlagen",
         "restoreSuccess": "Wiederherstellung erfolgreich. Die App wird in 1 Sekunde neu starten.",
-        "localBackupExported": "Local backup exported successfully",
-        "localBackupExportFailed": "Failed to export local backup",
-        "localBackupImported": "Local backup imported successfully",
-        "localBackupImportFailed": "Failed to import local backup: {{error}}",
-        "webdavRefreshSuccess": "WebDAV refresh succeeded",
-        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
-        "confirmDelete": "Confirm to delete this backup file?",
-        "confirmRestore": "Confirm to restore this backup file?"
+        "localBackupExported": "Lokale Sicherung erfolgreich exportiert",
+        "localBackupExportFailed": "Lokale Sicherung konnte nicht exportiert werden",
+        "localBackupImported": "Lokale Sicherung erfolgreich importiert",
+        "localBackupImportFailed": "Lokale Sicherung konnte nicht importiert werden: {{error}}",
+        "webdavRefreshSuccess": "WebDAV erfolgreich aktualisiert",
+        "webdavRefreshFailed": "WebDAV-Aktualisierung fehlgeschlagen: {{error}}",
+        "confirmDelete": "Diese Sicherungsdatei wirklich löschen?",
+        "confirmRestore": "Diese Sicherungsdatei wirklich wiederherstellen?"
       },
       "auto": {
-        "title": "Automatic backup",
-        "scheduleLabel": "Enable scheduled backup",
-        "scheduleHelper": "Create local backups in the background at the configured interval.",
-        "intervalLabel": "Backup frequency",
-        "changeLabel": "Backup on critical changes",
-        "changeHelper": "Automatically backup when Global Extend Config/Script changes.",
+        "title": "Automatische Sicherung",
+        "scheduleLabel": "Geplante Sicherung aktivieren",
+        "scheduleHelper": "Erstellt im eingestellten Abstand lokale Sicherungen im Hintergrund.",
+        "intervalLabel": "Sicherungsintervall",
+        "changeLabel": "Bei wichtigen Änderungen sichern",
+        "changeHelper": "Sichert automatisch, wenn sich die globale Konfig-Erweiterung oder das globale Erweiterungsskript ändert.",
         "options": {
-          "hours": "Every {{n}} hours",
-          "days": "Every {{n}} days"
+          "hours": "Alle {{n}} Stunden",
+          "days": "Alle {{n}} Tage"
         }
       },
       "manual": {
-        "title": "Manual backup",
-        "local": "Creates a snapshot on this device, stored under the app data directory.",
-        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
-        "configureWebdav": "Configure WebDAV"
+        "title": "Manuelle Sicherung",
+        "local": "Erstellt einen Snapshot auf diesem Gerät, gespeichert im Datenverzeichnis der App.",
+        "webdav": "Lädt einen Snapshot auf Ihren WebDAV-Server hoch, sobald die Zugangsdaten eingetragen sind.",
+        "configureWebdav": "WebDAV einrichten"
       },
       "history": {
-        "title": "Backup history",
-        "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available",
-        "unknownPlatform": "unknown",
-        "unknownTime": "Unknown time"
+        "title": "Sicherungsverlauf",
+        "summary": "{{count}} Sicherungen • neueste {{recent}}",
+        "empty": "Keine Sicherungen vorhanden",
+        "unknownPlatform": "unbekannt",
+        "unknownTime": "Unbekannte Zeit"
       },
       "webdav": {
-        "title": "WebDAV settings"
+        "title": "WebDAV-Einstellungen"
       },
       "table": {
         "filename": "Dateiname",
         "backupTime": "Sicherungszeit",
         "actions": "Aktionen",
         "noBackups": "Keine Sicherungen vorhanden",
-        "rowsPerPage": "Rows per page"
+        "rowsPerPage": "Zeilen pro Seite"
       }
     },
     "misc": {
       "title": "Sonstige Einstellungen",
       "fields": {
         "appLogLevel": "Anwendungs-Protokolliergrad",
-        "appLogMaxSize": "App Log Max Size",
-        "appLogMaxCount": "App Log Max Count",
+        "appLogMaxSize": "Maximale Größe des Anwendungsprotokolls",
+        "appLogMaxCount": "Maximale Anzahl der Anwendungsprotokolle",
         "autoCloseConnections": "Verbindungen automatisch schließen",
         "autoCheckUpdate": "Automatisch auf Updates prüfen",
         "enableBuiltinEnhanced": "Eingebaute Verbesserungen aktivieren",
@@ -434,7 +437,7 @@
       }
     },
     "update": {
-      "title": "New Version v{{version}}",
+      "title": "Neue Version v{{version}}",
       "actions": {
         "goToRelease": "Zur Veröffentlichungsseite gehen",
         "update": "Aktualisieren"
@@ -486,18 +489,18 @@
       "title": "Virtual Network Interface-Modus",
       "fields": {
         "stack": "TUN-Modus-Stack",
-        "device": "Device Name",
+        "device": "Gerätename",
         "autoRoute": "Globale Routing automatisch einstellen",
         "routeExcludeAddress": "Routen-Ausnahmeadressen",
         "strictRoute": "Strenges Routing",
         "autoDetectInterface": "Netzwerkschnittstelle automatisch auswählen",
         "dnsHijack": "DNS-Hijacking",
         "mtu": "Maximale Übertragungseinheit",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Automatische Umleitung"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "dnsHijack": "Mehrere DNS-Server durch Kommas trennen",
+        "autoRedirect": "Richtet TCP-Umleitungen per nftables/iptables automatisch ein"
       },
       "messages": {
         "applied": "Einstellungen angewendet",
@@ -512,11 +515,11 @@
         "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung deaktiviert."
       },
       "protection": {
-        "title": "Enable DNS Overwrite?",
-        "message": "This subscription contains custom DNS settings. DNS Overwrite may replace them, preventing nodes from connecting or some websites from loading. Enable it anyway?",
-        "enableAnyway": "Enable anyway",
-        "keepDisabled": "Keep disabled",
-        "autoDisabled": "DNS Overwrite was disabled to preserve the custom DNS settings in the current subscription."
+        "title": "DNS-Überschreibung aktivieren?",
+        "message": "Dieses Abonnement enthält eigene DNS-Einstellungen. Die DNS-Überschreibung kann sie ersetzen, sodass Knoten keine Verbindung herstellen oder manche Websites nicht laden. Trotzdem aktivieren?",
+        "enableAnyway": "Trotzdem aktivieren",
+        "keepDisabled": "Deaktiviert lassen",
+        "autoDisabled": "Die DNS-Überschreibung wurde deaktiviert, damit die eigenen DNS-Einstellungen des aktuellen Abonnements erhalten bleiben."
       },
       "sections": {
         "general": "DNS-Einstellungen",
@@ -602,11 +605,11 @@
       },
       "messages": {
         "saved": "DNS-Einstellungen wurden gespeichert",
-        "configError": "DNS configuration error:"
+        "configError": "Fehler in der DNS-Konfiguration:"
       },
       "errors": {
-        "invalid": "Invalid configuration",
-        "invalidYaml": "Invalid YAML format"
+        "invalid": "Ungültige Konfiguration",
+        "invalidYaml": "Ungültiges YAML-Format"
       }
     },
     "webUI": {
@@ -663,7 +666,8 @@
         "uninstallFailed": "Dienst konnte nicht deinstalliert werden",
         "reinstallFailed": "Dienst konnte nicht neu installiert werden",
         "repairFailed": "Dienst konnte nicht repariert werden",
-        "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
+        "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen",
+        "coreAlreadyRunning": "Der Kern kann nicht gestartet werden: Ein Kernprozess läuft bereits. Beenden Sie die zugehörige App oder den verbliebenen Prozess und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, starten Sie den Computer neu."
       },
       "sysproxy": {
         "privilegeRequired": "Systemproxy kann nicht gesetzt werden: macOS hat die Änderung mangels Berechtigung abgelehnt. Installieren Sie den Clash-Verge-Dienst; als Administrator können Sie in den erweiterten Optionen unter Systemeinstellungen → Datenschutz & Sicherheit auch die Passwortpflicht für systemweite Einstellungen deaktivieren.",

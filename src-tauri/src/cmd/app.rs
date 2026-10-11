@@ -1,7 +1,12 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr as _, feat, utils::dirs};
+use crate::{
+    cmd::StringifyErr as _,
+    core::{SilentUpdater, updater::DownloadEvent},
+    feat,
+    utils::dirs,
+};
 use smartstring::alias::String;
-use tauri::{AppHandle, Manager as _};
+use tauri::{AppHandle, Manager as _, ipc::Channel};
 
 #[tauri::command]
 pub async fn open_app_dir() -> CmdResult<()> {
@@ -42,6 +47,25 @@ pub async fn exit_app() {
 pub async fn restart_app() -> CmdResult<()> {
     feat::restart_app().await;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn install_update(
+    app_handle: AppHandle,
+    version: String,
+    on_event: Channel<DownloadEvent>,
+) -> CmdResult<bool> {
+    SilentUpdater::global()
+        .install_update(&app_handle, &version, |event| {
+            let _ = on_event.send(event);
+        })
+        .await
+        .stringify_err()
+}
+
+#[tauri::command]
+pub fn cancel_update_download() {
+    SilentUpdater::global().cancel_download();
 }
 
 #[tauri::command]

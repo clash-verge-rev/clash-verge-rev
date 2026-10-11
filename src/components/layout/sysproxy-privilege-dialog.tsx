@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog } from '@/components/base'
 import { useDialogFailure } from '@/pages/_layout/hooks'
 import {
-  getRuntimeState,
   installService,
   patchVergeConfig,
   reinstallService,
@@ -14,6 +13,7 @@ import {
   type PendingFailure,
   type ServiceInstallOutcome,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import {
   clearServiceRequest,
@@ -22,12 +22,13 @@ import {
   type ServiceRequest,
   type ServiceRequestReason,
 } from '@/services/service-request'
+import { useAppReads } from '@/store/app-store-context'
 import getSystem from '@/utils/get-system'
 
 type Remedy = 'installAndRestart' | 'reinstallAndRestart' | 'restartOnly'
 
 const remedyFor = (reason: ServiceRequestReason): Remedy =>
-  reason === 'serviceLocationRefused'
+  reason === 'serviceLocationRefused' || reason === 'serviceNotAutoStarted'
     ? 'reinstallAndRestart'
     : reason === 'sysproxySidecarReady'
       ? 'restartOnly'
@@ -40,6 +41,8 @@ const EXPLANATION = {
   tunNeedsService: 'layout.components.sysproxyPrivilege.tunMessage',
   serviceLocationRefused:
     'layout.components.serviceMigration.locationRefusedMessage',
+  serviceNotAutoStarted:
+    'layout.components.serviceMigration.notAutoStartedMessage',
 } as const
 
 const TITLE = {
@@ -47,6 +50,7 @@ const TITLE = {
   sysproxySidecarReady: 'layout.components.sysproxyPrivilege.title',
   tunNeedsService: 'layout.components.sysproxyPrivilege.tunTitle',
   serviceLocationRefused: 'layout.components.serviceMigration.repair',
+  serviceNotAutoStarted: 'layout.components.serviceMigration.repair',
 } as const
 
 const stateToRestore = (
@@ -80,6 +84,7 @@ const STEP_MESSAGE = {
 } as const
 
 export const SysproxyPrivilegeDialog = () => {
+  const { readRunState } = useAppReads()
   const { t } = useTranslation()
   const { failure, dismiss } = useDialogFailure()
   const asked = useSyncExternalStore(subscribeServiceRequest, getServiceRequest)
@@ -103,10 +108,18 @@ export const SysproxyPrivilegeDialog = () => {
       let outcome: ServiceInstallOutcome | undefined
       if (remedy === 'reinstallAndRestart') {
         setStep('installing')
-        outcome = await reinstallService()
+        const result = await mutate(() => reinstallService(), {
+          id: 'reinstall-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       } else if (remedy === 'installAndRestart') {
         setStep('installing')
-        outcome = await installService()
+        const result = await mutate(() => installService(), {
+          id: 'install-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       }
       if (outcome?.status === 'sidecar') {
         showNotice.warning(
@@ -118,9 +131,12 @@ export const SysproxyPrivilegeDialog = () => {
         return
       }
       setStep('restarting')
-      await restartCore()
+      await mutate(() => restartCore(), {
+        id: 'restart-core',
+        errorNotice: false,
+      })
 
-      const runState = await getRuntimeState()
+      const runState = await readRunState()
       const usingAdminFallback =
         remedy !== 'reinstallAndRestart' &&
         getSystem() === 'windows' &&
@@ -131,7 +147,10 @@ export const SysproxyPrivilegeDialog = () => {
       if (runState.mode === 'Service' || usingAdminFallback) {
         if (restoring !== undefined) {
           setStep('applying')
-          await patchVergeConfig(restoring)
+          await mutate(() => patchVergeConfig(restoring), {
+            id: 'sysproxy-privilege-restore',
+            errorNotice: false,
+          })
         }
         if (!usingAdminFallback) {
           showNotice.success(

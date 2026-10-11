@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "현재 사용 중인 포트: {{port}}",
+        "duplicatePort": "활성화된 리스너는 서로 다른 포트를 사용해야 합니다",
+        "invalidPort": "1에서 65535 사이의 포트 번호를 입력하세요",
         "saved": "포트 설정이 저장되었습니다",
         "saveFailed": "포트 설정 저장에 실패했습니다",
         "automaticFallback": "포트 {{oldPort}}이(가) 사용 중이어서 이번 실행은 {{newPort}}을(를) 사용합니다. 설정은 변경되지 않았으며 다음 시작 시 {{oldPort}}을(를) 다시 시도합니다.",
@@ -663,7 +666,8 @@
         "uninstallFailed": "서비스를 제거하지 못했습니다",
         "reinstallFailed": "서비스를 다시 설치하지 못했습니다",
         "repairFailed": "서비스를 복구하지 못했습니다",
-        "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+        "sidecarFailed": "Sidecar로 계속하지 못했습니다",
+        "coreAlreadyRunning": "코어를 시작할 수 없습니다. 이미 실행 중인 코어 프로세스가 있습니다. 관련 앱이나 남아 있는 프로세스를 종료한 뒤 다시 시도하세요. 문제가 계속되면 컴퓨터를 다시 시작하세요."
       },
       "sysproxy": {
         "privilegeRequired": "시스템 프록시를 설정할 수 없습니다: 권한이 부족하여 macOS가 변경을 거부했습니다. Clash Verge 서비스를 설치하십시오. 관리자라면 시스템 설정 → 개인 정보 보호 및 보안의 고급 옵션에서, 시스템 전체 설정에 관리자 암호를 요구하는 설정을 끌 수도 있습니다.",

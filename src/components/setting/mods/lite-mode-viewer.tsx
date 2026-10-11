@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { entry_lightweight_mode } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
@@ -72,7 +73,12 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
               color: 'primary.main',
               '&:hover': { textDecoration: 'underline' },
             }}
-            onClick={async () => await entry_lightweight_mode()}
+            onClick={async () =>
+              await mutate(() => entry_lightweight_mode(), {
+                id: 'entry-lightweight-mode',
+                errorNotice: false,
+              })
+            }
           >
             {t('shared.actions.enable')}
           </Typography>

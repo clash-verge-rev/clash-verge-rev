@@ -477,7 +477,9 @@ impl Timer {
                 Ok(_) => {
                     logging!(debug, Type::Timer, "timer task completed for uid: {}", uid);
                 }
-                Err(e) => logging_error!(Type::Timer, "Failed to update profile uid {}: {e:#}", uid),
+                Err(e) => {
+                    logging_error!(Type::Timer, "Failed to update profile uid {}: {e:#}", uid);
+                }
             },
             || Self::emit_update_event(uid, false),
         )

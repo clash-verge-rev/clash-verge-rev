@@ -45,6 +45,7 @@ import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useRecordSelection } from '@/hooks/use-record-selection'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import {
   selectGlobalChainNodes,
   selectRuleChainMembers,
@@ -444,7 +445,10 @@ export const ProxyChain = ({
     if (isConnected) {
       setIsConnecting(true)
       try {
-        await updateProxyChainConfigInRuntime(null)
+        await mutate(() => updateProxyChainConfigInRuntime(null), {
+          id: 'update-proxy-chain-runtime',
+          errorNotice: false,
+        })
 
         const targetGroup =
           mode === 'global'
@@ -453,12 +457,22 @@ export const ProxyChain = ({
 
         if (targetGroup) {
           try {
-            await selectNodeForGroup(targetGroup, 'DIRECT')
+            await mutate(() => selectNodeForGroup(targetGroup, 'DIRECT'), {
+              id: `select-proxy-node:${targetGroup}`,
+              errorNotice: false,
+            })
             recordSelection(targetGroup, 'DIRECT')
           } catch {
             if (currentProxyChain.length >= 1) {
               try {
-                await selectNodeForGroup(targetGroup, currentProxyChain[0].name)
+                await mutate(
+                  () =>
+                    selectNodeForGroup(targetGroup, currentProxyChain[0].name),
+                  {
+                    id: `select-proxy-node:${targetGroup}`,
+                    errorNotice: false,
+                  },
+                )
                 recordSelection(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
@@ -471,7 +485,10 @@ export const ProxyChain = ({
         localStorage.removeItem('proxy-chain-exit-node')
         localStorage.removeItem('proxy-chain-items')
 
-        await closeAllConnections()
+        await mutate(() => closeAllConnections(), {
+          id: 'close-all-connections',
+          errorNotice: false,
+        })
         await refreshProxy()
 
         onUpdateChain([])
@@ -502,7 +519,10 @@ export const ProxyChain = ({
       // 第一步：保存链式代理配置
       const chainProxies = currentProxyChain.map((node) => node.name)
       debugLog('Saving chain config:', chainProxies)
-      await updateProxyChainConfigInRuntime(chainProxies)
+      await mutate(() => updateProxyChainConfigInRuntime(chainProxies), {
+        id: 'update-proxy-chain-runtime',
+        errorNotice: false,
+      })
       debugLog('Chain configuration saved successfully')
 
       // 第二步：连接到代理链的最后一个节点
@@ -516,7 +536,13 @@ export const ProxyChain = ({
 
       const targetGroup = mode === 'global' ? 'GLOBAL' : selectedGroup
 
-      await selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name)
+      await mutate(
+        () => selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name),
+        {
+          id: `select-proxy-node:${targetGroup || 'GLOBAL'}`,
+          errorNotice: false,
+        },
+      )
       // The chain moves the group like any other selection, so the profile has to learn about
       // it: what the profile holds is what gets re-applied the next time the core starts.
       recordSelection(targetGroup || 'GLOBAL', lastNode.name)
@@ -593,7 +619,10 @@ export const ProxyChain = ({
             <IconButton
               size="small"
               onClick={() => {
-                updateProxyChainConfigInRuntime(null)
+                mutate(() => updateProxyChainConfigInRuntime(null), {
+                  id: 'update-proxy-chain-runtime',
+                  errorNotice: false,
+                })
                 localStorage.removeItem('proxy-chain-group')
                 localStorage.removeItem('proxy-chain-exit-node')
                 localStorage.removeItem('proxy-chain-items')

@@ -522,25 +522,34 @@ pub async fn clear() -> Result<()> {
 
 /// A failed system call is usually a transient RPC hiccup, so give it a few tries.
 async fn clear_with_retry() -> Result<()> {
-    for attempt in 1..CLEAR_ATTEMPTS {
-        match clear_inner().await {
-            Err(error)
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    retry(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add((CLEAR_ATTEMPTS - 1) as usize),
+            CLEAR_RETRY_DELAY,
+        ),
+        |attempt| async move {
+            clear_inner().await.map_err(|error| {
                 if matches!(
                     SysproxyFailure::from_chain(&error),
                     Some(SysproxyFailure::SystemCallFailed)
-                ) =>
-            {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "clearing the system proxy failed (attempt {attempt}/{CLEAR_ATTEMPTS}); retrying: {error:#}"
-                );
-                tokio::time::sleep(CLEAR_RETRY_DELAY).await;
-            }
-            other => return other,
-        }
-    }
-    clear_inner().await
+                ) {
+                    if attempt + 1 < CLEAR_ATTEMPTS as usize {
+                        logging!(
+                            warn,
+                            Type::Core,
+                            "clearing the system proxy failed (attempt {}/{CLEAR_ATTEMPTS}); retrying: {error:#}",
+                            attempt + 1
+                        );
+                    }
+                    RetryError::Retry(error)
+                } else {
+                    RetryError::Stop(error)
+                }
+            })
+        },
+    )
+    .await
 }
 
 #[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]

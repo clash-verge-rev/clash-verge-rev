@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "{{port}} portu zaten kullanımda",
+        "runningPort": "Şu anda kullanılan port: {{port}}",
+        "duplicatePort": "Etkin dinleyiciler farklı portlar kullanmalıdır",
+        "invalidPort": "1 ile 65535 arasında bir port girin",
         "saved": "Port ayarları kaydedildi",
         "saveFailed": "Port ayarları kaydedilemedi",
         "automaticFallback": "{{oldPort}} portu kullanımda olduğu için bu oturum {{newPort}} portunu kullanıyor. Ayarınız değişmedi ve sonraki başlatmada {{oldPort}} yeniden denenecek.",
@@ -663,7 +666,8 @@
         "uninstallFailed": "Hizmet kaldırılamadı",
         "reinstallFailed": "Hizmet yeniden kurulamadı",
         "repairFailed": "Hizmet onarılamadı",
-        "sidecarFailed": "Sidecar ile devam edilemedi"
+        "sidecarFailed": "Sidecar ile devam edilemedi",
+        "coreAlreadyRunning": "Çekirdek başlatılamıyor: bir çekirdek işlemi zaten çalışıyor. İlgili uygulamayı kapatın veya kalan işlemi sonlandırıp yeniden deneyin. Sorun devam ederse bilgisayarı yeniden başlatın."
       },
       "sysproxy": {
         "privilegeRequired": "Sistem vekil sunucusu ayarlanamıyor: macOS yetki yetersizliği nedeniyle değişikliği reddetti. Clash Verge hizmetini kurun; yöneticiyseniz Sistem Ayarları → Gizlilik ve Güvenlik bölümündeki gelişmiş seçeneklerden, sistem genelindeki ayarlar için yönetici parolası zorunluluğunu da kapatabilirsiniz.",

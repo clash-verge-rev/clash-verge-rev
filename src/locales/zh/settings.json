@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "端口 {{port}} 已被占用",
+        "runningPort": "当前运行端口：{{port}}",
+        "duplicatePort": "已启用的监听端口不能重复",
+        "invalidPort": "请输入 1 至 65535 之间的端口号",
         "saved": "端口设置已保存",
         "saveFailed": "端口设置保存失败",
         "automaticFallback": "端口 {{oldPort}} 已被占用，本次运行改用 {{newPort}}。设置未更改，下次启动会重新尝试 {{oldPort}}。",
@@ -663,7 +666,8 @@
         "uninstallFailed": "卸载服务失败",
         "reinstallFailed": "重新安装服务失败",
         "repairFailed": "修复服务失败",
-        "sidecarFailed": "继续使用 Sidecar 失败"
+        "sidecarFailed": "继续使用 Sidecar 失败",
+        "coreAlreadyRunning": "无法启动内核：已有内核进程正在运行。请退出相关应用或清理残留进程后重试。若仍无法解决，请重启电脑。"
       },
       "sysproxy": {
         "privilegeRequired": "无法设置系统代理：macOS 以权限不足为由拒绝了这次修改。请安装 Clash Verge 服务；管理员也可以在系统设置 → 隐私与安全性的高级选项中，关闭访问系统范围设置需要管理员密码的要求。",

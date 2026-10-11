@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "目前執行中的連接埠：{{port}}",
+        "duplicatePort": "已啟用的監聽連接埠不能重複",
+        "invalidPort": "請輸入 1 至 65535 之間的連接埠號碼",
         "saved": "連結埠設定已儲存",
         "saveFailed": "連結埠設定儲存失敗",
         "automaticFallback": "連結埠 {{oldPort}} 已被佔用，本次執行改用 {{newPort}}。設定未變更，下次啟動會重新嘗試 {{oldPort}}。",
@@ -663,7 +666,8 @@
         "uninstallFailed": "解除安裝服務失敗",
         "reinstallFailed": "重新安裝服務失敗",
         "repairFailed": "修復服務失敗",
-        "sidecarFailed": "繼續使用 Sidecar 失敗"
+        "sidecarFailed": "繼續使用 Sidecar 失敗",
+        "coreAlreadyRunning": "無法啟動核心：已有核心程序正在執行。請結束相關應用程式或清理殘留程序後重試。若仍無法解決，請重新啟動電腦。"
       },
       "sysproxy": {
         "privilegeRequired": "無法設定系統代理：macOS 以權限不足為由拒絕了這次修改。請安裝 Clash Verge 服務；管理者也可以在系統設定 → 隱私權與安全性的進階選項中，關閉存取系統層級設定需要管理者密碼的要求。",

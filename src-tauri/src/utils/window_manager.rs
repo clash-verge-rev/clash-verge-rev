@@ -1,8 +1,8 @@
 use crate::{core::handle, utils::resolve::window::build_new_window};
 use clash_verge_limiter::Limiter;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use std::pin::Pin;
+use std::sync::LazyLock;
 use std::time::Duration;
 use tauri::{Manager as _, WebviewWindow, Wry};
 
@@ -26,7 +26,7 @@ pub enum WindowState {
 }
 
 const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 625;
-static WINDOW_OPERATION_LIMITER: Lazy<Limiter> = Lazy::new(|| {
+static WINDOW_OPERATION_LIMITER: LazyLock<Limiter> = LazyLock::new(|| {
     Limiter::new(
         Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS),
         clash_verge_limiter::SystemClock,

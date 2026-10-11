@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, Switch } from '@/components/base'
 import { useProfiles } from '@/hooks/use-profiles'
 import { createProfile, patchProfile } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { version } from '@root/package.json'
 
@@ -128,26 +129,38 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
         if (!isRemote) {
           if (openType === 'new') {
-            await createProfile(item, fileDataRef.current)
+            await mutate(() => createProfile(item, fileDataRef.current), {
+              id: 'create-profile',
+              errorNotice: false,
+            })
           } else {
             if (!form.uid) {
               throw new Error(
                 t('profiles.modals.profileForm.errors.uidMissing'),
               )
             }
-            await patchProfile(form.uid, item)
+            await mutate(() => patchProfile(form.uid, item), {
+              id: 'patch-profile',
+              errorNotice: false,
+            })
           }
         } else {
           try {
             if (openType === 'new') {
-              await createProfile(item, fileDataRef.current)
+              await mutate(() => createProfile(item, fileDataRef.current), {
+                id: 'create-profile',
+                errorNotice: false,
+              })
             } else {
               if (!form.uid) {
                 throw new Error(
                   t('profiles.modals.profileForm.errors.uidMissing'),
                 )
               }
-              await patchProfile(form.uid, item)
+              await mutate(() => patchProfile(form.uid, item), {
+                id: 'patch-profile',
+                errorNotice: false,
+              })
             }
           } catch {
             showNotice.info(
@@ -164,16 +177,31 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             }
 
             if (openType === 'new') {
-              await createProfile(retryItem, fileDataRef.current)
+              await mutate(
+                () => createProfile(retryItem, fileDataRef.current),
+                {
+                  id: 'create-profile',
+                  errorNotice: false,
+                },
+              )
             } else {
               if (!form.uid) {
                 throw new Error(
                   t('profiles.modals.profileForm.errors.uidMissing'),
                 )
               }
-              await patchProfile(form.uid, retryItem)
+              await mutate(() => patchProfile(form.uid, retryItem), {
+                id: 'patch-profile',
+                errorNotice: false,
+              })
 
-              await patchProfile(form.uid, { option: originalOptions })
+              await mutate(
+                () => patchProfile(form.uid, { option: originalOptions }),
+                {
+                  id: 'patch-profile',
+                  errorNotice: false,
+                },
+              )
             }
 
             showNotice.success(

@@ -14,7 +14,7 @@ serde = { workspace = true, features = ["derive"] }
 sysinfo = { version = "0.39.6", features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
-libc = "0.2.189"
+libc = "0.2.190"
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }

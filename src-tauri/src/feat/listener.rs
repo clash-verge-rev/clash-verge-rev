@@ -1,3 +1,4 @@
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{
         Config, MixedPort,
@@ -5,7 +6,6 @@ use crate::{
     },
     core::{
         CoreManager,
-        handle::Handle,
         listener::{
             ListenerProbe, ListenerProbeOutcome, ProxyPortSettings, SaveProxyPortsOutcome,
             probe_listener as probe_listener_sync, probe_proxy_port_change,
@@ -126,8 +126,8 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     transaction.commit();
     // The save landed, so the port the app had borrowed is now irrelevant.
     let _ = ScopeGuard::into_inner(borrowed_port);
-    Handle::refresh_clash();
-    Handle::refresh_verge();
+    announce(Refresh::Clash);
+    announce(Refresh::Verge);
     logging!(info, Type::Config, "Proxy port configuration applied and persisted");
     Ok(SaveProxyPortsOutcome::Saved)
 }

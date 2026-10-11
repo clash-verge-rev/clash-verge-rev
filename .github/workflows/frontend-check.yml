@@ -85,3 +85,82 @@ jobs:
       - name: Run Knip
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm knip:check
+
+      - name: Architecture gates (listen/emit only in the event bus, invoke only in services)
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: node scripts/check-architecture.mjs listen emit invoke
+
+  contract-parity:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check contract inputs
+        id: check_inputs
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            contract:
+              - 'src/services/contract.ts'
+              - 'scripts/gen-contract.mjs'
+              - 'src-tauri/src/core/notify/**'
+              - 'src-tauri/src/bin/**'
+              - 'src-tauri/src/lib.rs'
+              - '.github/workflows/frontend-check.yml'
+
+      - name: Skip if contract inputs unchanged
+        if: steps.check_inputs.outputs.contract != 'true'
+        run: echo "No contract inputs changed, skipping parity check."
+
+      - name: Install Rust Stable
+        if: steps.check_inputs.outputs.contract == 'true'
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Rust Cache
+        if: steps.check_inputs.outputs.contract == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-ubuntu-22.04-x86_64-unknown-linux-gnu-contract'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
+
+      - name: Install dependencies
+        if: steps.check_inputs.outputs.contract == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Install pnpm
+        if: steps.check_inputs.outputs.contract == 'true'
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v7
+        if: steps.check_inputs.outputs.contract == 'true'
+        with:
+          node-version: '24.21.0'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.check_inputs.outputs.contract == 'true'
+
+      - name: Provision sidecar placeholders for tauri-build
+        if: steps.check_inputs.outputs.contract == 'true'
+        run: |
+          mkdir -p src-tauri/sidecar src-tauri/resources dist
+          touch dist/index.html
+          for bin in clash-verge-service clash-verge-service-install clash-verge-service-uninstall verge-mihomo verge-mihomo-alpha; do
+            touch "src-tauri/sidecar/${bin}-x86_64-unknown-linux-gnu"
+          done
+
+      - name: Regenerate contract and require empty diff
+        if: steps.check_inputs.outputs.contract == 'true'
+        run: |
+          pnpm gen:contract
+          git diff --exit-code -- src/services/contract.ts

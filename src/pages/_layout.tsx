@@ -17,16 +17,16 @@ import {
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
+import { useEventBus } from '@/services/bus'
+import { handleNoticeMessage } from '@/services/notice-handlers'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
 
 import {
   useCustomTheme,
-  useLayoutEvents,
   useLoadingOverlay,
   usePendingFailures,
 } from './_layout/hooks'
-import { handleNoticeMessage } from './_layout/utils'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
@@ -77,7 +77,7 @@ const Layout = () => {
     [t, navigate],
   )
 
-  useLayoutEvents(handleNotice)
+  useEventBus(handleNotice)
   usePendingFailures()
 
   useEffect(() => {

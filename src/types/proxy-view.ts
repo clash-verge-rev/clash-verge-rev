@@ -33,6 +33,7 @@ export interface ProxyGroupView extends ProxyCapabilities {
   icon?: string
   testUrl?: string
   history: DelayHistory[]
+  extra?: Record<string, { alive: boolean; history: DelayHistory[] }>
   members: ProxyMemberRef[]
 }
 
@@ -42,6 +43,7 @@ export interface ProxyNodeView extends ProxyCapabilities {
   type: string
   alive: boolean
   history: DelayHistory[]
+  extra?: Record<string, { alive: boolean; history: DelayHistory[] }>
   id?: string
   hidden?: boolean
   icon?: string

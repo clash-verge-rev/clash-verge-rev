@@ -1,16 +1,16 @@
 {
   "page": {
     "modes": {
-      "rule": "Rule",
+      "rule": "Regel",
       "global": "Global",
-      "direct": "Direct"
+      "direct": "Direkt"
     },
     "actions": {
       "toggleChain": "Ketten-Proxy",
-      "connect": "Connect",
-      "disconnect": "Disconnect",
-      "connecting": "Connecting...",
-      "clearChainConfig": "Delete Chain Config"
+      "connect": "Verbinden",
+      "disconnect": "Trennen",
+      "connecting": "Wird verbunden...",
+      "clearChainConfig": "Kettenkonfiguration löschen"
     },
     "provider": {
       "title": "Proxy-Sammlung",
@@ -20,8 +20,8 @@
       }
     },
     "rules": {
-      "title": "Proxy Rules",
-      "select": "Select Rules"
+      "title": "Proxy-Regeln",
+      "select": "Regeln auswählen"
     },
     "labels": {
       "proxyCount": "Anzahl der Knoten",
@@ -68,15 +68,15 @@
       }
     },
     "chain": {
-      "header": "Chain Proxy Config",
-      "warning": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
-      "empty": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
-      "instruction": "Click nodes in order to add to proxy chain",
-      "minimumNodes": "Chain proxy requires at least 2 nodes",
-      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-      "connectFailed": "Failed to connect to proxy chain",
-      "disconnectFailed": "Failed to disconnect from proxy chain",
-      "duplicateNode": "Proxy node already exists in chain",
+      "header": "Proxy-Kette konfigurieren",
+      "warning": "Eine Proxy-Kette verringert die Netzwerkgeschwindigkeit deutlich. Wenn Sie keinen klaren Bedarf haben oder diese Konfiguration nicht verstehen, lassen Sie sie deaktiviert.",
+      "empty": "Eine Proxy-Kette verringert die Netzwerkgeschwindigkeit deutlich. Wenn Sie keinen klaren Bedarf haben oder diese Konfiguration nicht verstehen, lassen Sie sie deaktiviert.",
+      "instruction": "Klicken Sie die Knoten nacheinander an, um sie zur Proxy-Kette hinzuzufügen",
+      "minimumNodes": "Eine Proxy-Kette braucht mindestens 2 Knoten",
+      "minimumNodesHint": "Eine Proxy-Kette braucht mindestens 2 Knoten. Bitte fügen Sie einen weiteren Knoten hinzu.",
+      "connectFailed": "Verbindung mit der Proxy-Kette fehlgeschlagen",
+      "disconnectFailed": "Trennen der Proxy-Kette fehlgeschlagen",
+      "duplicateNode": "Der Proxy-Knoten ist bereits in der Kette",
       "entryNode": "Eingang",
       "exitNode": "Ausgang"
     },
@@ -85,20 +85,20 @@
     },
     "title": {
       "default": "Proxy-Gruppen",
-      "chainMode": "Proxy Chain Mode"
+      "chainMode": "Proxy-Ketten-Modus"
     }
   },
   "feedback": {
     "warnings": {
-      "invalidTestUrl": "Test URL must start with http:// or https://"
+      "invalidTestUrl": "Die Test-URL muss mit http:// oder https:// beginnen"
     },
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} erfolgreich aktualisiert",
+        "updateFailed": "Aktualisierung von {{name}} fehlgeschlagen: {{message}}",
+        "genericError": "Aktualisierung fehlgeschlagen: {{message}}",
+        "none": "Keine Proxy-Sammlungen zum Aktualisieren vorhanden",
+        "allUpdated": "Alle Proxy-Sammlungen erfolgreich aktualisiert"
       }
     }
   },

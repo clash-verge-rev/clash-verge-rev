@@ -1,24 +1,22 @@
+use super::NoticeStatus;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
-use std::{
-    collections::HashMap,
-    future::Future,
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::sync::Arc;
+use std::sync::LazyLock;
+use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FrontendEvent<'a> {
     RefreshClash,
     RefreshVerge,
     RefreshProfiles,
     RefreshProxyConfig,
     NoticeMessage {
-        status: &'a str,
-        message: String,
+        status: NoticeStatus,
+        message: Arc<str>,
     },
     ProfileChanged {
         current_profile_id: &'a String,
@@ -89,16 +87,23 @@ pub struct PendingFailure {
 /// Non-destructive pending state, indexed by stable code.
 #[derive(Debug, Default)]
 struct FailureTable {
-    entries: Mutex<HashMap<String, PendingFailure>>,
-    sequence: AtomicU64,
+    entries: Mutex<FailureEntries>,
+}
+
+#[derive(Debug, Default)]
+struct FailureEntries {
+    map: HashMap<String, PendingFailure>,
+    sequence: u64,
 }
 
 impl FailureTable {
     fn record(&self, operation: FailedOperation, code: &str, detail: String) {
         // Sequence assignment and replacement must share one ordering lock.
         let mut entries = self.entries.lock();
+        entries.sequence = entries.sequence.wrapping_add(1);
         // Preserve an unanswered request over a later restore.
         let operation = entries
+            .map
             .get(code)
             .filter(|existing| existing.operation.outranks(operation))
             .map_or(operation, |existing| existing.operation);
@@ -106,13 +111,13 @@ impl FailureTable {
             code: code.into(),
             detail,
             operation,
-            sequence: self.sequence.fetch_add(1, Ordering::AcqRel).wrapping_add(1),
+            sequence: entries.sequence,
         };
-        entries.insert(code.into(), failure);
+        entries.map.insert(code.into(), failure);
     }
 
     fn snapshot(&self) -> Vec<PendingFailure> {
-        let mut failures: Vec<PendingFailure> = self.entries.lock().values().cloned().collect();
+        let mut failures: Vec<PendingFailure> = self.entries.lock().map.values().cloned().collect();
         failures.sort_by_key(|failure| failure.sequence);
         failures
     }
@@ -120,17 +125,21 @@ impl FailureTable {
     /// Return whether a guard failure was retired.
     fn retire_guard(&self) -> bool {
         let mut entries = self.entries.lock();
-        let before = entries.len();
-        entries.retain(|_, failure| failure.operation != FailedOperation::SystemProxyGuard);
-        before != entries.len()
+        let before = entries.map.len();
+        entries
+            .map
+            .retain(|_, failure| failure.operation != FailedOperation::SystemProxyGuard);
+        before != entries.map.len()
     }
 
     /// Return whether any proxy failure was retired.
     fn retire_system_proxy(&self, asked: FailedOperation) -> bool {
         let mut entries = self.entries.lock();
-        let before = entries.len();
-        entries.retain(|_, failure| !failure.operation.retired_by_success_of(asked));
-        before != entries.len()
+        let before = entries.map.len();
+        entries
+            .map
+            .retain(|_, failure| !failure.operation.retired_by_success_of(asked));
+        before != entries.map.len()
     }
 }
 
@@ -229,7 +238,47 @@ pub fn what_was_asked() -> FailedOperation {
         .unwrap_or(FailedOperation::SystemProxyRestore)
 }
 
-static PENDING_FAILURES: Lazy<FailureTable> = Lazy::new(FailureTable::default);
+static PENDING_FAILURES: LazyLock<FailureTable> = LazyLock::new(FailureTable::default);
+
+/// A removal has a revision too, so a delayed read cannot restore a resolved failure.
+#[derive(Debug, Default, Clone, serde::Serialize)]
+pub struct SidecarFailureSnapshot {
+    pub revision: u64,
+    pub detail: Option<String>,
+}
+
+impl SidecarFailureSnapshot {
+    fn record(&mut self, detail: String) {
+        self.revision += 1;
+        self.detail = Some(detail);
+    }
+
+    fn recover(&mut self) -> bool {
+        if self.detail.take().is_none() {
+            return false;
+        }
+        self.revision += 1;
+        true
+    }
+}
+
+static SIDECAR_FAILURE: LazyLock<Mutex<SidecarFailureSnapshot>> = LazyLock::new(Mutex::default);
+
+pub fn sidecar_failure_snapshot() -> SidecarFailureSnapshot {
+    SIDECAR_FAILURE.lock().clone()
+}
+
+pub fn record_sidecar_failure(detail: String) {
+    SIDECAR_FAILURE.lock().record(detail);
+    notify_pending_failures_changed();
+}
+
+pub fn retire_sidecar_failure() {
+    let changed = SIDECAR_FAILURE.lock().recover();
+    if changed {
+        notify_pending_failures_changed();
+    }
+}
 
 pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<String>) {
     PENDING_FAILURES.record(operation, code, detail.into());
@@ -237,7 +286,7 @@ pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<
 }
 
 pub fn has_pending_failure(code: &str) -> bool {
-    PENDING_FAILURES.entries.lock().contains_key(code)
+    PENDING_FAILURES.entries.lock().map.contains_key(code)
 }
 
 /// Return unresolved failures oldest first without clearing them.
@@ -283,9 +332,10 @@ impl NotificationSystem {
             FrontendEvent::RefreshVerge => ("verge://refresh-verge-config", Ok(json!("yes"))),
             FrontendEvent::RefreshProfiles => ("verge://refresh-profiles", Ok(json!("yes"))),
             FrontendEvent::RefreshProxyConfig => ("verge://refresh-proxy-config", Ok(serde_json::Value::Null)),
-            FrontendEvent::NoticeMessage { status, message } => {
-                ("verge://notice-message", serde_json::to_value((status, message)))
-            }
+            FrontendEvent::NoticeMessage { status, message } => (
+                "verge://notice-message",
+                serde_json::to_value((status, message.as_ref())),
+            ),
             FrontendEvent::ProfileChanged { current_profile_id } => ("profile-changed", Ok(json!(current_profile_id))),
             FrontendEvent::TimerUpdated { profile_index } => ("verge://timer-updated", Ok(json!(profile_index))),
             FrontendEvent::ProfileUpdateStarted { uid } => ("profile-update-started", Ok(json!({ "uid": uid }))),
@@ -312,4 +362,107 @@ impl NotificationSystem {
             logging!(warn, Type::Frontend, "Failed to dispatch event on main thread: {err}");
         }
     }
+}
+
+#[cfg(test)]
+mod wire_tests {
+    use super::*;
+
+    #[test]
+    fn frontend_event_wire_contract() -> Result<(), serde_json::Error> {
+        let uid = String::from("profile");
+        for (event, name, payload) in super::sample_frontend_events(&uid) {
+            let (actual_name, actual_payload) = NotificationSystem::serialize_event(event);
+            assert_eq!(actual_name, name);
+            assert_eq!(actual_payload?, payload);
+        }
+        Ok(())
+    }
+}
+
+/// One sample per `FrontendEvent` variant, paired with its wire name and payload.
+/// Shared by the wire golden test and the contract export so the two cannot drift.
+fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str, serde_json::Value)> {
+    vec![
+        (
+            FrontendEvent::RefreshClash,
+            "verge://refresh-clash-config",
+            json!("yes"),
+        ),
+        (
+            FrontendEvent::RefreshVerge,
+            "verge://refresh-verge-config",
+            json!("yes"),
+        ),
+        (FrontendEvent::RefreshProfiles, "verge://refresh-profiles", json!("yes")),
+        (
+            FrontendEvent::RefreshProxyConfig,
+            "verge://refresh-proxy-config",
+            json!(null),
+        ),
+        (
+            FrontendEvent::NoticeMessage {
+                status: NoticeStatus::Info,
+                message: Arc::from("ok"),
+            },
+            "verge://notice-message",
+            json!(["info", "ok"]),
+        ),
+        (
+            FrontendEvent::TimerUpdated { profile_index: uid },
+            "verge://timer-updated",
+            json!("profile"),
+        ),
+        (
+            FrontendEvent::RunStateChanged {
+                state: json!({"running": true}),
+            },
+            "verge://run-state-changed",
+            json!({"running": true}),
+        ),
+        (
+            FrontendEvent::PendingFailuresChanged,
+            "verge://pending-failures-changed",
+            json!(null),
+        ),
+        (
+            FrontendEvent::ProfileChanged {
+                current_profile_id: uid,
+            },
+            "profile-changed",
+            json!("profile"),
+        ),
+        (
+            FrontendEvent::ProfileUpdateStarted { uid },
+            "profile-update-started",
+            json!({"uid": "profile"}),
+        ),
+        (
+            FrontendEvent::ProfileUpdateCompleted { uid },
+            "profile-update-completed",
+            json!({"uid": "profile"}),
+        ),
+    ]
+}
+
+/// Machine-readable form of the frontend wire contract: every event name with a
+/// serialized sample payload, plus every notice status string. The sample
+/// payload's JSON shape (string / null / array / object) is what the frontend
+/// generator maps to TypeScript types. `ThemeChanged` is a Tauri built-in
+/// linux-only window event, not part of this contract.
+pub fn frontend_wire_contract() -> serde_json::Value {
+    let uid = String::from("sample");
+    let events: Vec<_> = sample_frontend_events(&uid)
+        .into_iter()
+        .map(|(event, _, _)| {
+            let (name, payload) = NotificationSystem::serialize_event(event);
+            json!({ "name": name, "sample": payload.unwrap_or(serde_json::Value::Null) })
+        })
+        .collect();
+    let statuses: Vec<_> = NoticeStatus::ALL
+        .iter()
+        // A unit variant with a string rename cannot fail to serialize.
+        .filter_map(|status| serde_json::to_value(status).ok())
+        .collect();
+    json!({ "version": 1, "events": events, "noticeStatuses": statuses })
 }

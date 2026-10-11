@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge 서비스 설치에는 관리자 권한이 필요합니다.
   adminUninstallPrompt: Clash Verge 서비스 제거에는 관리자 권한이 필요합니다.
+core:
+  alreadyRunning: 코어를 시작할 수 없습니다. 이미 실행 중인 코어 프로세스가 있습니다. 관련 앱이나 남아 있는 프로세스를 종료한 뒤 다시 시도하세요. 문제가 계속되면 컴퓨터를 다시 시작하세요.
 launchGuard:
   currentExeError: '애플리케이션 위치를 확인할 수 없습니다: {error}'
   homeDirError: '현재 사용자의 홈 디렉터리를 확인할 수 없어 애플리케이션을 종료합니다: {error}'
@@ -68,6 +70,8 @@ tray:
   global: 글로벌
   profiles: 프로필
   proxies: 프록시
+  testLatency: 지연 테스트
+  testingLatency: 지연 테스트 중…
   systemProxy: 시스템 프록시
   tunMode: TUN 모드
   closeAllConnections: 모든 연결 닫기

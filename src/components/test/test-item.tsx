@@ -1,15 +1,15 @@
 import { LanguageRounded } from '@mui/icons-material'
 import { Box, Divider, MenuItem, Menu, styled, alpha } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useIconCache } from '@/hooks/use-icon-cache'
 import { cmdTestDelay } from '@/services/cmds'
 import delayManager from '@/services/delay'
-import { subscribeVergeEvents } from '@/services/events'
 import { showNotice } from '@/services/notice-service'
+import { useTestAllCounter } from '@/store/app-store-context'
 
 import { TestBox } from './test-box'
 
@@ -52,10 +52,19 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
     { label: t('shared.actions.delete'), handler: onDelete },
   ]
 
-  useEffect(
-    () => subscribeVergeEvents({ 'verge://test-all': () => onDelay() }),
-    [url, onDelay],
-  )
+  // Store bump replaces the per-item event subscription; skip the initial
+  // mount value and call through a ref so url changes do not re-trigger tests.
+  const testAllCounter = useTestAllCounter()
+  const onDelayRef = useRef(onDelay)
+  onDelayRef.current = onDelay
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    void onDelayRef.current()
+  }, [testAllCounter])
 
   return (
     <Box>

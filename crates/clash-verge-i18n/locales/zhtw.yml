@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
   adminUninstallPrompt: 解除安裝 Clash Verge 服務需要管理員權限
+core:
+  alreadyRunning: 無法啟動核心：已有核心程序正在執行。請結束相關應用程式或清理殘留程序後重試。若仍無法解決，請重新啟動電腦。
 launchGuard:
   currentExeError: 無法判斷應用程式位置：{error}
   homeDirError: 無法判斷目前使用者的個人目錄，應用程式將結束：{error}
@@ -68,6 +70,8 @@ tray:
   global: 全域
   profiles: 訂閱
   proxies: 代理
+  testLatency: 測試延遲
+  testingLatency: 正在測試延遲…
   systemProxy: 系統代理
   tunMode: 虛擬網路介面卡模式
   closeAllConnections: 關閉所有連線

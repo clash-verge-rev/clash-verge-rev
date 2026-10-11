@@ -39,9 +39,9 @@
       "completed": "Prüfung abgeschlossen",
       "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
       "originalsOnly": "Nur Original",
-      "noDisney": "No (IP Banned By Disney+)",
+      "noDisney": "Nein (IP von Disney+ gesperrt)",
       "unsupportedRegion": "Nicht unterstütztes Land/Region",
-      "failedNetwork": "Failed (Network Connection)"
+      "failedNetwork": "Fehlgeschlagen (Netzwerkverbindung)"
     }
   },
   "unlock": {
@@ -49,10 +49,10 @@
       "actions": {
         "testing": "Wird getestet..."
       },
-      "empty": "No unlock test items",
+      "empty": "Keine Entsperrungstests vorhanden",
       "messages": {
         "detectionFailedWithName": "Erkennung für {{name}} fehlgeschlagen",
-        "detectionTimeout": "Detection timeout or failed"
+        "detectionTimeout": "Erkennung fehlgeschlagen oder Zeitüberschreitung"
       },
       "title": "Entsperrungstest"
     }

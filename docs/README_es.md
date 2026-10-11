@@ -11,13 +11,14 @@ Una interfaz gráfica para Clash Meta construida con <a href="https://github.com
 
 <p align="center">
   Idiomas:
-  <a href="../README.md">简体中文</a> ·
   <a href="./README_en.md">English</a> ·
   <a href="./README_es.md">Español</a> ·
-  <a href="./README_ru.md">Русский</a> ·
+  <a href="./README_fa.md">فارسی</a> ·
   <a href="./README_ja.md">日本語</a> ·
   <a href="./README_ko.md">한국어</a> ·
-  <a href="./README_fa.md">فارسی</a>
+  <a href="./README_pt.md">Português</a> ·
+  <a href="./README_ru.md">Русский</a> ·
+  <a href="../README.md">简体中文</a>
 </p>
 
 ## Vista previa
@@ -51,17 +52,17 @@ Consulta la [documentación del proyecto](https://clash-verge-rev.github.io/) pa
 
 ## Promociones
 
-#### [Doggygo VPN — Acelerador global orientado al rendimiento](https://verge.dginv.click/#/register?code=oaxsAGo6)
+#### [Doggygo VPN — Acelerador global orientado al rendimiento](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 - Servicio internacional de alto rendimiento con prueba gratuita, planes con descuento, desbloqueo de streaming y soporte de protocolo Hysteria de primera clase.
-- Regístrate mediante el enlace exclusivo de Clash Verge y obtén una prueba de 3 días con 1 GB de tráfico diario: [Regístrate](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- Regístrate mediante el enlace exclusivo de Clash Verge y obtén una prueba de 3 días con 1 GB de tráfico diario: [Regístrate](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 - Cupón exclusivo de 20% de descuento para usuarios de Clash Verge: `verge20` (limitado a 500 usos)
 - Plan promocional desde ¥15.8 al mes con 160 GB, más 20% de descuento adicional por pago anual
 - Equipo ubicado en el extranjero para un servicio confiable, con hasta 50% de comisión compartida
 - Clústeres balanceados con rutas dedicadas de alta velocidad (compatibles con clientes antiguos), latencia extremadamente baja, reproducción 4K sin interrupciones
 - Primer proveedor global con **protocolo QUIC**, ahora con protocolos de la familia QUIC más rápidos (ideal para el cliente Clash Verge)
 - Desbloquea servicios de streaming y acceso a ChatGPT
-- Sitio oficial: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- Sitio oficial: [https://狗狗加速.com](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
 ### 🤖 [GPTKefu — Plataforma de atención al cliente con IA integrada con Crisp](https://gptkefu.com)
 
