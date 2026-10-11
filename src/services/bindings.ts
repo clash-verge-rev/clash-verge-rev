@@ -805,11 +805,6 @@ export type ProxyCapabilities = {
   smux: boolean
 }
 
-export type ProxyExtra = {
-  alive: boolean
-  history: DelayHistory[]
-}
-
 export type ProxyGroupView =
   | ProxyGroupView_Serialize
   | ProxyGroupView_Deserialize
@@ -817,30 +812,32 @@ export type ProxyGroupView =
 export type ProxyGroupView_Deserialize = {
   name: string
   type: string
-  alive: boolean
   now: string | null
   fixed: string | null
   hidden: boolean | null
   icon: string | null
   testUrl: string | null
   history: DelayHistory[]
-  extra: { [key in string]: ProxyExtra }
+  extra: { [key in string]: ProxyLatencyHistory }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
 
 export type ProxyGroupView_Serialize = {
   name: string
   type: string
-  alive: boolean
   now?: string | null
   fixed?: string | null
   hidden?: boolean | null
   icon?: string | null
   testUrl?: string | null
   history: DelayHistory[]
-  extra: { [key in string]: ProxyExtra }
+  extra: { [key in string]: ProxyLatencyHistory }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
+
+export type ProxyLatencyHistory = {
+  history: DelayHistory[]
+}
 
 export type ProxyMemberRef =
   | { kind: 'group'; name: string }
@@ -862,9 +859,8 @@ export type ProxyNodeView_Deserialize = {
   recordId: string
   name: string
   type: string
-  alive: boolean
   history: DelayHistory[]
-  extra: { [key in string]: ProxyExtra }
+  extra: { [key in string]: ProxyLatencyHistory }
   id: string | null
   hidden: boolean | null
   icon: string | null
@@ -876,9 +872,8 @@ export type ProxyNodeView_Serialize = {
   recordId: string
   name: string
   type: string
-  alive: boolean
   history: DelayHistory[]
-  extra: { [key in string]: ProxyExtra }
+  extra: { [key in string]: ProxyLatencyHistory }
   id?: string | null
   hidden?: boolean | null
   icon?: string | null

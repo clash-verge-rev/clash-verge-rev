@@ -172,12 +172,6 @@ pub struct DelayHistory {
     pub delay: u16,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, specta::Type)]
-pub struct ProxyExtra {
-    pub alive: bool,
-    pub history: Vec<DelayHistory>,
-}
-
 fn platform_types() -> specta::Types {
     use specta::datatype::{DataType, Fields};
     let mut types = specta::Types::default().register::<crate::config::IVerge>();

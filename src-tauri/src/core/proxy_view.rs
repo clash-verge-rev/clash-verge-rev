@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use serde::Serialize;
+use serde::{Serialize, Serializer, ser::SerializeMap as _};
 use tauri_plugin_mihomo::models::{
     DelayHistory, Extra, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
 };
@@ -57,6 +57,28 @@ pub struct ProxyCapabilities {
     pub smux: bool,
 }
 
+#[derive(Serialize, specta::Type)]
+struct ProxyLatencyHistory<'a> {
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
+    history: &'a [DelayHistory],
+}
+
+fn serialize_proxy_latency_history<S: Serializer>(
+    extra: &HashMap<String, Extra>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let mut map = serializer.serialize_map(Some(extra.len()))?;
+    for (url, extra) in extra {
+        map.serialize_entry(
+            url,
+            &ProxyLatencyHistory {
+                history: &extra.history,
+            },
+        )?;
+    }
+    map.end()
+}
+
 #[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyGroupView {
@@ -64,7 +86,6 @@ pub struct ProxyGroupView {
     #[serde(rename = "type")]
     #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub now: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -77,7 +98,8 @@ pub struct ProxyGroupView {
     pub test_url: Option<String>,
     #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
-    #[specta(type = HashMap<String, crate::ipc::ProxyExtra>)]
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
     pub extra: HashMap<String, Extra>,
     #[serde(flatten)]
     pub capabilities: ProxyCapabilities,
@@ -92,10 +114,10 @@ pub struct ProxyNodeView {
     #[serde(rename = "type")]
     #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
     #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
-    #[specta(type = HashMap<String, crate::ipc::ProxyExtra>)]
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
     pub extra: HashMap<String, Extra>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -408,7 +430,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         icon,
         now,
         test_url,
-        alive,
         history,
         extra,
         udp,
@@ -437,7 +458,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
     ProxyGroupView {
         name,
         proxy_type,
-        alive,
         now,
         fixed,
         hidden,
@@ -462,7 +482,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         hidden,
         icon,
         test_url,
-        alive,
         history,
         extra,
         udp,
@@ -478,7 +497,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         record_id,
         name,
         proxy_type,
-        alive,
         history,
         extra,
         id,

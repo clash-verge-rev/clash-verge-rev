@@ -110,7 +110,6 @@ const CHAIN_DELAY_GROUP = 'chain-mode'
 const virtualGroup = (members: ProxyGroupView['members']): ProxyGroupView => ({
   name: CHAIN_DELAY_GROUP,
   type: 'Selector',
-  alive: true,
   udp: false,
   xudp: false,
   tfo: false,
