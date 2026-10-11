@@ -1,3 +1,4 @@
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, IVerge, MixedPort},
     core::{
@@ -83,7 +84,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     .await
     {
         Ok(_) => {
-            handle::Handle::refresh_verge();
+            announce(Refresh::Verge);
             // Reconciliation may immediately disable unavailable TUN; report the resulting state.
             Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }

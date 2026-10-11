@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import {
   getBaseConfig,
   getRuleProviders,
@@ -6,11 +6,10 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
-import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
-import { getProxyView, getRuntimeState, getSystemProxy } from '@/services/cmds'
-import { subscribeVergeEvents } from '@/services/events'
+import { getProxyView, getSystemProxy } from '@/services/cmds'
 import { useQuery } from '@/services/query-client'
+import { useRunState } from '@/store/app-store-context'
 import { resolveDisplayedMixedPort } from '@/utils/mixed-port'
 
 import {
@@ -95,12 +94,9 @@ export const AppDataProvider = ({
     ...TQ_DEFAULTS,
   })
 
-  // Same key as `useSystemState`, so this is the one Run State cache entry, not a second one.
-  const { data: runState, isPending: isRunningModePending } = useQuery({
-    queryKey: runStateQueryKey,
-    queryFn: getRuntimeState,
-    ...TQ_DEFAULTS,
-  })
+  // Store-owned run state; the event bus and the store's safety net write it.
+  const runState = useRunState()
+  const isRunningModePending = runState == null
   const runningMode = runState?.mode
 
   const refreshProxy = useStableFn(_refetchProxyView)
@@ -108,22 +104,6 @@ export const AppDataProvider = ({
   const refreshRules = useStableFn(_refetchRules)
   const refreshSysproxy = useStableFn(_refetchSysproxy)
   const refreshRuleProviders = useStableFn(_refetchRuleProviders)
-
-  useEffect(() => {
-    let lastProxyUpdateTime = 0
-    const refreshThrottle = 800
-
-    const handleRefreshProxy = () => {
-      const now = Date.now()
-      if (now - lastProxyUpdateTime <= refreshThrottle) return
-      lastProxyUpdateTime = now
-      refreshProxy().catch(() => {})
-    }
-
-    return subscribeVergeEvents({
-      'verge://refresh-proxy-config': handleRefreshProxy,
-    })
-  }, [refreshProxy])
 
   const refreshAll = useCallback(async () => {
     await Promise.all([

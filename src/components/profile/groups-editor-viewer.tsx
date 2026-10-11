@@ -42,6 +42,7 @@ import {
   readProfileFile,
   saveProfileFile,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
@@ -472,7 +473,11 @@ export const GroupsEditorViewer = (props: Props) => {
         setCurrData(nextData)
       }
 
-      if (!(await saveProfileFile(property, nextData))) {
+      const result = await mutate(() => saveProfileFile(property, nextData), {
+        id: `save-profile-file:${property}`,
+        errorNotice: false,
+      })
+      if (!(result.ok && result.value === true)) {
         await fetchContent()
         onClose()
         return

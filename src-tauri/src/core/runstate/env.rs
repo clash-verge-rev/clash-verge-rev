@@ -29,11 +29,11 @@ impl RunStateEnv for RealEnv {
     async fn probe_service_version(&self) -> Result<ServiceVersionReply> {
         // The IPC client would otherwise back off for about two minutes before failing.
         #[cfg(windows)]
-        if tokio::task::spawn_blocking(crate::core::service::service_stopped)
+        if let Some(reason) = tokio::task::spawn_blocking(crate::core::service::service_stop_reason)
             .await
             .context("service status probe did not finish")??
         {
-            anyhow::bail!("the Windows service is not running");
+            anyhow::bail!(reason);
         }
         let response = clash_verge_service_ipc::get_version().await?;
         let core = if response.code == 0

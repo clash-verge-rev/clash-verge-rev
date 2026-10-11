@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
   adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+core:
+  alreadyRunning: 'Cannot start the core: a core process is already running. Close the related app or stop the leftover process, then retry. If the problem persists, restart your computer.'
 launchGuard:
   currentExeError: 'Unable to determine the application location: {error}'
   homeDirError: 'Unable to determine the current user''s home directory. The application will exit: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Global
   profiles: Profiles
   proxies: Proxies
+  testLatency: Test Latency
+  testingLatency: Testing latency…
   systemProxy: System Proxy
   tunMode: TUN Mode
   closeAllConnections: Close All Connections

@@ -290,6 +290,9 @@
       },
       "messages": {
         "portInUse": "Port {{port}} is already in use",
+        "runningPort": "現在使用中のポート：{{port}}",
+        "duplicatePort": "有効なリスナーには異なるポートを指定してください",
+        "invalidPort": "1〜65535のポート番号を入力してください",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
         "automaticFallback": "ポート {{oldPort}} が使用中のため、今回は {{newPort}} で動作します。設定は変更されておらず、次回起動時に {{oldPort}} を再試行します。",
@@ -663,7 +666,8 @@
         "uninstallFailed": "サービスのアンインストールに失敗しました",
         "reinstallFailed": "サービスの再インストールに失敗しました",
         "repairFailed": "サービスの修復に失敗しました",
-        "sidecarFailed": "Sidecar での続行に失敗しました"
+        "sidecarFailed": "Sidecar での続行に失敗しました",
+        "coreAlreadyRunning": "コアを起動できません：コアプロセスが実行中です。関連アプリまたは残存プロセスを終了して再試行してください。解決しない場合は、コンピューターを再起動してください。"
       },
       "sysproxy": {
         "privilegeRequired": "システムプロキシを設定できません: 権限が不足しているため macOS が変更を拒否しました。Clash Verge サービスをインストールしてください。管理者であれば、システム設定 → プライバシーとセキュリティの詳細オプションで、システム全体の設定に管理者パスワードを要求する設定をオフにすることもできます。",

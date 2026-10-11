@@ -1,13 +1,34 @@
 use crate::config::Config;
+use crate::core::lightweight;
+use crate::core::notify::NoticeStatus;
 use crate::core::{CoreManager, handle};
-use crate::module::lightweight;
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
+use anyhow::{Context as _, anyhow};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
+use std::sync::mpsc::RecvTimeoutError;
 use tokio::time::Duration;
 #[cfg(target_os = "macos")]
 use tokio::time::timeout;
+
+#[cfg(target_os = "windows")]
+const SESSION_ENDING_STOP_TIMEOUT: Duration = Duration::from_secs(2);
+// TODO(macOS): a DNS script already running can outlast this and write after exit.
+#[cfg(not(target_os = "windows"))]
+const SESSION_ENDING_STOP_TIMEOUT: Duration = Duration::from_secs(3);
+
+// Outlasts the script's own kill deadline.
+#[cfg(target_os = "macos")]
+const DNS_RESTORE_TIMEOUT: Duration =
+    crate::utils::resolve::dns::DNS_SCRIPT_TIMEOUT.saturating_add(Duration::from_secs(1));
+#[cfg(not(target_os = "macos"))]
+const DNS_RESTORE_TIMEOUT: Duration = Duration::ZERO;
+
+// Backstop for when the cleanup's own deadlines cannot fire.
+const SESSION_ENDING_HARD_DEADLINE: Duration = SESSION_ENDING_STOP_TIMEOUT
+    .saturating_add(DNS_RESTORE_TIMEOUT)
+    .saturating_add(Duration::from_secs(1));
 
 #[derive(Debug, Clone, Default)]
 pub struct CleanupResult {
@@ -81,15 +102,14 @@ where
 
 async fn restore_dns_after_core_stop() -> bool {
     #[cfg(target_os = "macos")]
-    match timeout(
-        Duration::from_millis(1000),
-        crate::utils::resolve::dns::restore_public_dns(),
-    )
-    .await
-    {
-        Ok(_) => {
+    match timeout(DNS_RESTORE_TIMEOUT, crate::utils::resolve::dns::restore_public_dns()).await {
+        Ok(Ok(())) => {
             logging!(debug, Type::Window, "DNS设置已恢复");
             true
+        }
+        Ok(Err(err)) => {
+            logging!(warn, Type::Window, "恢复DNS设置失败: {err:#}");
+            false
         }
         Err(_) => {
             logging!(warn, Type::Window, "恢复DNS设置超时");
@@ -128,8 +148,21 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 
     if should_abort_exit_after_cleanup(cleanup_result.core_stopped) {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "app_quit::core_stop_failed",
+        // A failed stop may still have marked the core stopped, and exit cleanup skipped the DNS restore.
+        // A core that kept running keeps its DNS, whatever an unapplied config draft says.
+        #[cfg(target_os = "macos")]
+        {
+            let manager = CoreManager::global();
+            let _lifecycle = manager.lifecycle_lock.lock().await;
+            if matches!(
+                *manager.get_running_mode(),
+                crate::core::manager::RunningMode::NotRunning
+            ) {
+                crate::utils::resolve::dns::sync_public_dns().await;
+            }
+        }
+        handle::Handle::notice(
+            NoticeStatus::AppQuitCoreStopFailed,
             cleanup_result.stop_error.unwrap_or_default(),
         );
         return clash_verge_signal::ShutdownOutcome::Canceled;
@@ -175,12 +208,50 @@ pub async fn clean_async() -> CleanupResult {
     result
 }
 
-pub async fn clean_session_ending_best_effort() -> CleanupResult {
-    #[cfg(target_os = "windows")]
-    let stop_timeout = Duration::from_secs(2);
-    #[cfg(not(target_os = "windows"))]
-    let stop_timeout = Duration::from_secs(3);
+pub fn clean_session_ending_with_hard_deadline() -> Option<CleanupResult> {
+    match run_with_hard_deadline(clean_session_ending_best_effort, SESSION_ENDING_HARD_DEADLINE) {
+        Ok(result) => Some(result),
+        Err(error) => {
+            logging!(
+                warn,
+                Type::System,
+                "Session-ending cleanup abandoned; exiting without it: {error:#}"
+            );
+            None
+        }
+    }
+}
 
+/// Avoids the app runtime, whose workers may wait on the blocked main thread.
+fn run_with_hard_deadline<F, Fut, T>(cleanup: F, deadline: Duration) -> anyhow::Result<T>
+where
+    F: FnOnce() -> Fut + Send + 'static,
+    Fut: std::future::Future<Output = T>,
+    T: Send + 'static,
+{
+    let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+    std::thread::Builder::new()
+        .name("clash-verge-session-ending".into())
+        .spawn(move || {
+            let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+                Ok(runtime) => runtime,
+                Err(error) => {
+                    let _ = sender.send(Err(error));
+                    return;
+                }
+            };
+            // Send first: dropping the runtime waits for blocking tasks.
+            let _ = sender.send(Ok(runtime.block_on(cleanup())));
+        })
+        .context("failed to spawn the cleanup thread")?;
+    match receiver.recv_timeout(deadline) {
+        Ok(result) => result.context("failed to build the cleanup runtime"),
+        Err(RecvTimeoutError::Timeout) => Err(anyhow!("still running after {} ms", deadline.as_millis())),
+        Err(RecvTimeoutError::Disconnected) => Err(anyhow!("cleanup thread ended without a result")),
+    }
+}
+
+async fn clean_session_ending_best_effort() -> CleanupResult {
     logging!(
         info,
         Type::System,
@@ -205,12 +276,12 @@ pub async fn clean_session_ending_best_effort() -> CleanupResult {
             }
         },
         async move {
-            tokio::time::sleep(stop_timeout).await;
+            tokio::time::sleep(SESSION_ENDING_STOP_TIMEOUT).await;
             logging!(
                 warn,
                 Type::Window,
                 "Session-ending best-effort core stop timed out after {} seconds; OS or session exit is already in progress",
-                stop_timeout.as_secs()
+                SESSION_ENDING_STOP_TIMEOUT.as_secs()
             );
         },
         restore_dns_after_core_stop,
@@ -230,7 +301,7 @@ pub async fn clean_session_ending_best_effort() -> CleanupResult {
 
 #[cfg(target_os = "macos")]
 pub async fn hide() {
-    use crate::module::lightweight::add_light_weight_timer;
+    use crate::core::lightweight::add_light_weight_timer;
 
     let enable_auto_light_weight_mode = Config::verge()
         .await
@@ -253,7 +324,8 @@ pub async fn hide() {
 #[cfg(test)]
 mod tests {
     use super::{
-        run_interactive_cleanup_transition, run_session_ending_cleanup_transition, should_abort_exit_after_cleanup,
+        run_interactive_cleanup_transition, run_session_ending_cleanup_transition, run_with_hard_deadline,
+        should_abort_exit_after_cleanup,
     };
     use parking_lot::Mutex;
     use std::{
@@ -261,8 +333,10 @@ mod tests {
         sync::{
             Arc,
             atomic::{AtomicBool, Ordering},
+            mpsc,
         },
         task::Poll,
+        time::Duration,
     };
     use tokio::sync::Barrier;
 
@@ -283,6 +357,34 @@ mod tests {
     fn exit_aborts_when_controlled_core_stop_fails() {
         assert!(should_abort_exit_after_cleanup(false));
         assert!(!should_abort_exit_after_cleanup(true));
+    }
+
+    #[test]
+    fn hard_deadline_returns_while_cleanup_blocks_its_thread() {
+        let (release, blocked) = mpsc::channel::<()>();
+
+        let result = run_with_hard_deadline(
+            move || async move {
+                let _ = blocked.recv();
+            },
+            Duration::from_millis(50),
+        );
+
+        assert!(matches!(result, Err(error) if error.to_string().starts_with("still running")));
+        drop(release);
+    }
+
+    #[test]
+    fn hard_deadline_cleanup_runs_its_own_timers() {
+        let result = run_with_hard_deadline(
+            || async {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                true
+            },
+            Duration::from_secs(5),
+        );
+
+        assert!(result.is_ok_and(|done| done));
     }
 
     #[tokio::test]

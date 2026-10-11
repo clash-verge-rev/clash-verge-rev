@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
   adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。
+core:
+  alreadyRunning: コアを起動できません：コアプロセスが実行中です。関連アプリまたは残存プロセスを終了して再試行してください。解決しない場合は、コンピューターを再起動してください。
 launchGuard:
   currentExeError: アプリケーションの場所を確認できませんでした：{error}
   homeDirError: 現在のユーザーのホームディレクトリを確認できないため、アプリケーションを終了します：{error}
@@ -68,6 +70,8 @@ tray:
   global: グローバル
   profiles: プロファイル
   proxies: プロキシ
+  testLatency: 遅延テスト
+  testingLatency: 遅延をテスト中…
   systemProxy: システムプロキシ
   tunMode: TUN モード
   closeAllConnections: すべての接続を閉じる

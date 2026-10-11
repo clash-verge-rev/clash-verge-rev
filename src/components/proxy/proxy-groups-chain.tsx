@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import {
   isInteractableMember,
   type ProxyGroupView,
@@ -404,7 +405,10 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     handleGroupMenuClose()
 
     if (mode === 'rule') {
-      updateProxyChainConfigInRuntime(null)
+      mutate(() => updateProxyChainConfigInRuntime(null), {
+        id: 'update-proxy-chain-runtime',
+        errorNotice: false,
+      })
       localStorage.removeItem('proxy-chain-group')
       localStorage.removeItem('proxy-chain-exit-node')
       localStorage.removeItem('proxy-chain-items')

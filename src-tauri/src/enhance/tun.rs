@@ -1,8 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
 
-#[cfg(target_os = "macos")]
-use crate::process::AsyncHandler;
-
 macro_rules! revise {
     ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
@@ -46,22 +43,9 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             if ipv6_val && !dns_val.contains_key(Value::from("fake-ip-range6")) {
                 revise!(dns_val, "fake-ip-range6", "2001:2::0/64");
             }
-
-            #[cfg(target_os = "macos")]
-            {
-                AsyncHandler::spawn(move || async move {
-                    crate::utils::resolve::dns::restore_public_dns().await;
-                    crate::utils::resolve::dns::set_public_dns("114.114.114.114".to_string()).await;
-                });
-            }
         }
 
         revise!(config, "dns", dns_val);
-    } else {
-        #[cfg(target_os = "macos")]
-        AsyncHandler::spawn(move || async move {
-            crate::utils::resolve::dns::restore_public_dns().await;
-        });
     }
 
     revise!(tun_val, "enable", enable);

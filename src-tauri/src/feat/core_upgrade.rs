@@ -359,24 +359,31 @@ fn stage_core(target: &Path, package: &[u8], version: &str) -> Result<StagedCore
 }
 
 fn create_staging_file(directory: &Path, core_name: &OsStr) -> Result<(PathBuf, File)> {
-    for _ in 0..32 {
-        let generation = STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
-        let path = directory.join(format!(
-            ".{}.{}.{generation}.tmp",
-            core_name.to_string_lossy(),
-            std::process::id()
-        ));
+    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+    retry_sync(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(31),
+            std::time::Duration::ZERO,
+        ),
+        |_| {
+            let generation = STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
+            let path = directory.join(format!(
+                ".{}.{}.{generation}.tmp",
+                core_name.to_string_lossy(),
+                std::process::id()
+            ));
 
-        match File::options().write(true).create_new(true).open(&path) {
-            Ok(file) => return Ok((path, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                return Err(error).with_context(|| format!("failed to create {}", path.display()));
+            match File::options().write(true).create_new(true).open(&path) {
+                Ok(file) => Ok((path, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Err(RetryError::Retry(
+                    anyhow::anyhow!("failed to create a unique staging file in {}", directory.display()),
+                )),
+                Err(error) => Err(RetryError::Stop(
+                    anyhow::Error::from(error).context(format!("failed to create {}", path.display())),
+                )),
             }
-        }
-    }
-
-    bail!("failed to create a unique staging file in {}", directory.display())
+        },
+    )
 }
 
 #[cfg(windows)]

@@ -1,0 +1,221 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Atualizar todos os perfis",
+      "viewRuntimeConfig": "Ver configuração em execução",
+      "reactivate": "Reativar perfis",
+      "import": "Importar"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Excluir perfis selecionados",
+        "selectAll": "Selecionar tudo",
+        "deselectAll": "Desmarcar tudo",
+        "done": "Concluído"
+      },
+      "summary": {
+        "selected": "Selecionados",
+        "items": "itens"
+      },
+      "title": "Operações em lote"
+    },
+    "importForm": {
+      "placeholder": "URL do perfil",
+      "actions": {
+        "paste": "Colar"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "URL de perfil inválida. Insira uma URL começando com http:// ou https://",
+        "onlyYaml": "Somente arquivos YAML são suportados",
+        "createFailed": "Falha ao criar o perfil",
+        "deleteFailed": "Falha ao excluir o perfil",
+        "enhanceFailed": "Falha ao reativar os perfis",
+        "importFailed": "Falha ao importar o perfil",
+        "openFailed": "Falha ao abrir o perfil",
+        "readFailed": "Falha ao ler o perfil",
+        "reorderFailed": "Falha ao reordenar os perfis",
+        "switchFailed": "Falha ao trocar de perfil",
+        "updateFailed": "Falha ao atualizar o perfil"
+      },
+      "notifications": {
+        "importRetry": "Falha na importação, tentando novamente com o proxy Clash...",
+        "importFail": "Falha na importação mesmo com o proxy Clash",
+        "importNeedsRefresh": "Perfil importado, mas pode precisar de atualização manual",
+        "importSuccess": "Perfil importado com sucesso, reinicie se não aparecer",
+        "profileSwitched": "Perfil trocado",
+        "profileReactivated": "Perfil reativado",
+        "switchBusy": "A troca de perfil já está em andamento",
+        "batchDeleted": "Perfis selecionados excluídos com sucesso"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Atualização forçada concluída",
+        "discardedKeys": "As extensões gravaram {{keys}}, que são gerenciados pelas Configurações, então esses valores foram descartados",
+        "emergencyRefreshFailed": "Falha na atualização de emergência: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Os dados do perfil estão indisponíveis; clique para forçar a atualização"
+      }
+    },
+    "title": "Perfis"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Clique para importar a assinatura"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Escolher arquivo"
+    },
+    "menu": {
+      "home": "Início",
+      "select": "Selecionar",
+      "shareQrCode": "Compartilhar QR Code",
+      "editInfo": "Editar informações",
+      "editFile": "Editar arquivo",
+      "editRules": "Editar regras",
+      "editProxies": "Editar proxies",
+      "editGroups": "Editar grupos de proxy",
+      "extendConfig": "Configuração de extensão",
+      "extendScript": "Script de extensão",
+      "openFile": "Abrir arquivo",
+      "update": "Atualizar",
+      "updateViaProxy": "Atualizar via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Extensão global",
+        "script": "Script de extensão global"
+      },
+      "chips": {
+        "merge": "Mesclar",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Clique para mostrar a última atualização",
+        "showNext": "Clique para mostrar a próxima atualização"
+      },
+      "status": {
+        "lastUpdateFailed": "Falha na última atualização",
+        "nextUp": "Próxima",
+        "noSchedule": "Sem agendamento",
+        "unknown": "Desconhecido",
+        "autoUpdateDisabled": "Atualização automática desativada"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Criar perfil",
+        "edit": "Editar perfil"
+      },
+      "fields": {
+        "type": "Tipo",
+        "description": "Descrição",
+        "subscriptionUrl": "URL da assinatura",
+        "userAgent": "User Agent",
+        "httpTimeout": "Tempo limite HTTP",
+        "updateInterval": "Intervalo de atualização",
+        "useSystemProxy": "Usar proxy do sistema",
+        "useClashProxy": "Usar proxy Clash",
+        "acceptInvalidCerts": "Permitir certificados inválidos (perigoso)",
+        "allowAutoUpdate": "Permitir atualização automática"
+      },
+      "types": {
+        "remote": "Remoto",
+        "local": "Local"
+      },
+      "errors": {
+        "typeRequired": "Selecione um tipo de perfil",
+        "urlRequired": "Insira a URL da assinatura",
+        "uidMissing": "O identificador do perfil está ausente",
+        "saveFailed": "Falha ao salvar o perfil"
+      },
+      "warnings": {
+        "frequentUpdate": "Um intervalo curto recarrega o núcleo com essa frequência e derruba as conexões existentes. Recomendados: {{minutes}} minutos (24 horas)."
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Falha ao criar o perfil, tentando novamente com o proxy Clash...",
+          "creationSuccess": "Perfil criado com sucesso com o proxy Clash"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Editar proxies",
+      "placeholders": {
+        "multiUri": "Use quebras de linha para várias URIs (Base64 suportado)"
+      },
+      "actions": {
+        "prepend": "Adicionar proxy no início",
+        "append": "Adicionar proxy no fim"
+      }
+    },
+    "groupsEditor": {
+      "title": "Editar grupos de proxy",
+      "errors": {
+        "nameRequired": "Nome do grupo obrigatório",
+        "nameExists": "O nome do grupo já existe"
+      },
+      "fields": {
+        "type": "Tipo de grupo",
+        "name": "Nome do grupo",
+        "icon": "Ícone do grupo de proxy",
+        "proxies": "Usar proxies",
+        "provider": "Usar provedor",
+        "healthCheckUrl": "URL de verificação de saúde",
+        "expectedStatus": "Status esperado",
+        "interval": "Intervalo",
+        "maxFailedTimes": "Máximo de falhas",
+        "interfaceName": "Nome da interface",
+        "routingMark": "Marca de roteamento",
+        "filter": "Filtro",
+        "excludeFilter": "Filtro de exclusão",
+        "excludeType": "Tipo de exclusão",
+        "includeAll": "Incluir todos os proxies e provedores",
+        "includeAllProxies": "Incluir todos os proxies",
+        "includeAllProviders": "Incluir todos os provedores"
+      },
+      "toggles": {
+        "lazy": "Lazy",
+        "disableUdp": "Desativar UDP",
+        "hidden": "Oculto"
+      },
+      "actions": {
+        "prepend": "Adicionar grupo no início",
+        "append": "Adicionar grupo no fim"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Formatar documento"
+      },
+      "messages": {
+        "readOnly": "Não é possível editar em um editor somente leitura"
+      },
+      "enhance": {
+        "globalMerge": "Aplica-se a todos os perfis, após as configurações do app. O script global, a configuração do perfil e o script do perfil ainda podem alterar o resultado.",
+        "globalScript": "Aplica-se a todos os perfis, usando o resultado da mesclagem da configuração global. A configuração do perfil e o script do perfil ainda podem alterar o resultado.",
+        "profileMerge": "Aplica-se somente a este perfil, após a configuração global e o script global. O script do perfil ainda pode alterar o resultado.",
+        "profileScript": "Aplica-se somente a este perfil, usando o resultado da mesclagem da configuração do perfil. Esta é a última etapa de extensão antes de as configurações do app serem reaplicadas.",
+        "order": "Ordem: Perfil original → Configurações do app → <globalMerge>Configuração de extensão global</globalMerge> → <globalScript>Script de extensão global</globalScript> → <profileMerge>Configuração de extensão do perfil</profileMerge> → <profileScript>Script de extensão do perfil</profileScript> → Configurações do app reaplicadas",
+        "settingsPriority": "Nota: os campos gerenciados pelas configurações do app sempre usam essas configurações na configuração final. Alterar esses campos nas extensões não tem efeito."
+      }
+    },
+    "confirmDelete": {
+      "title": "Confirmar exclusão",
+      "message": "Esta operação não é reversível"
+    },
+    "logViewer": {
+      "title": "Console de scripts"
+    },
+    "qrViewer": {
+      "title": "QR Code da assinatura"
+    }
+  }
+}

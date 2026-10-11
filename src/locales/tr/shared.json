@@ -108,7 +108,6 @@
       "config": {
         "failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
         "bootFailed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
-        "coreChangeFailed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
         "processTerminated": "Doğrulama işlemi sonlandırıldı. Güvenlik yazılımının çekirdeğin çalışmasını engelleyip engellemediğini veya bilgisayarınızın CPU ve çalışma ortamının çekirdek programını destekleyip desteklemediğini kontrol edin."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML sözdizimi hatası, değişiklikler geri alındı",
         "readError": "YAML okuma hatası, değişiklikler geri alındı",
-        "mappingError": "YAML eşleme hatası, değişiklikler geri alındı",
-        "keyError": "YAML anahtar hatası, değişiklikler geri alındı",
-        "generalError": "YAML hatası, değişiklikler geri alındı"
+        "mappingError": "YAML eşleme hatası, değişiklikler geri alındı"
       },
       "merge": {
         "syntaxError": "Birleştirme dosyası sözdizimi hatası, değişiklikler geri alındı",
-        "mappingError": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı",
-        "keyError": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
-        "generalError": "Birleştirme dosyası hatası, değişiklikler geri alındı"
+        "mappingError": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı"
       }
     }
   },

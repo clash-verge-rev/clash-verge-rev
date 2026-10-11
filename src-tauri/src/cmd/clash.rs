@@ -1,4 +1,5 @@
 use super::{CmdResult, CommandFailure, WithErrorCode as _, proxy_aware_coded_error, proxy_aware_error};
+use crate::core::notify::NoticeStatus;
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -56,14 +57,14 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
 
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
-                    handle::Handle::notice_message("config_core::change_success", clash_core);
+                    handle::Handle::notice(NoticeStatus::ConfigCoreChangeSuccess, clash_core.as_str());
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }
                 Err(err) => {
                     let failed = err.context("core changed but failed to restart");
                     let error_msg: String = format!("{failed:#}").into();
-                    handle::Handle::notice_message("config_core::change_error", error_msg.clone());
+                    handle::Handle::notice(NoticeStatus::ConfigCoreChangeError, error_msg.as_str());
                     logging!(error, Type::Core, "core changed but failed to restart: {error_msg}");
                     Ok(Some(proxy_aware_coded_error(&failed, "CORE_CHANGE_FAILED")))
                 }
@@ -72,7 +73,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
         Err(err) => {
             let error_msg: String = format!("{err:#}").into();
             logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", error_msg);
+            handle::Handle::notice(NoticeStatus::ConfigCoreChangeError, error_msg.as_str());
             Ok(Some(proxy_aware_coded_error(&err, "CORE_CHANGE_FAILED")))
         }
     }

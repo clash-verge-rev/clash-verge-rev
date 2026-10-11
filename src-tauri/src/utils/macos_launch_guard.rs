@@ -109,44 +109,61 @@ fn current_user_home() -> anyhow::Result<PathBuf> {
     }
     .max(1024);
 
-    loop {
-        if buffer_size > MAX_BUFFER_SIZE {
-            anyhow::bail!("effective-user home lookup exceeded the maximum buffer size");
-        }
+    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+    retry_sync(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(11),
+            std::time::Duration::ZERO,
+        ),
+        |_| {
+            if buffer_size > MAX_BUFFER_SIZE {
+                return Err(RetryError::Stop(anyhow::anyhow!(
+                    "effective-user home lookup exceeded the maximum buffer size"
+                )));
+            }
 
-        let mut passwd = std::mem::MaybeUninit::<libc::passwd>::zeroed();
-        let mut result = std::ptr::null_mut();
-        let mut buffer = vec![0_u8; buffer_size];
-        let code = unsafe {
-            libc::getpwuid_r(
-                uid,
-                passwd.as_mut_ptr(),
-                buffer.as_mut_ptr().cast(),
-                buffer.len(),
-                &mut result,
-            )
-        };
-        if code == libc::ERANGE {
-            buffer_size = buffer_size.saturating_mul(2);
-            continue;
-        }
-        if code != 0 {
-            return Err(std::io::Error::from_raw_os_error(code).into());
-        }
-        if result.is_null() {
-            anyhow::bail!("effective user {uid} has no password database entry");
-        }
+            let mut passwd = std::mem::MaybeUninit::<libc::passwd>::zeroed();
+            let mut result = std::ptr::null_mut();
+            let mut buffer = vec![0_u8; buffer_size];
+            let code = unsafe {
+                libc::getpwuid_r(
+                    uid,
+                    passwd.as_mut_ptr(),
+                    buffer.as_mut_ptr().cast(),
+                    buffer.len(),
+                    &mut result,
+                )
+            };
+            if code == libc::ERANGE {
+                buffer_size = buffer_size.saturating_mul(2);
+                return Err(RetryError::Retry(anyhow::anyhow!(
+                    "effective-user home lookup exceeded the maximum buffer size"
+                )));
+            }
+            if code != 0 {
+                return Err(RetryError::Stop(std::io::Error::from_raw_os_error(code).into()));
+            }
+            if result.is_null() {
+                return Err(RetryError::Stop(anyhow::anyhow!(
+                    "effective user {uid} has no password database entry"
+                )));
+            }
 
-        let passwd = unsafe { passwd.assume_init() };
-        if passwd.pw_dir.is_null() {
-            anyhow::bail!("effective user {uid} has no home directory");
-        }
-        let home = unsafe { CStr::from_ptr(passwd.pw_dir) };
-        if home.to_bytes().is_empty() {
-            anyhow::bail!("effective user {uid} has an empty home directory");
-        }
-        return Ok(PathBuf::from(std::ffi::OsStr::from_bytes(home.to_bytes())));
-    }
+            let passwd = unsafe { passwd.assume_init() };
+            if passwd.pw_dir.is_null() {
+                return Err(RetryError::Stop(anyhow::anyhow!(
+                    "effective user {uid} has no home directory"
+                )));
+            }
+            let home = unsafe { CStr::from_ptr(passwd.pw_dir) };
+            if home.to_bytes().is_empty() {
+                return Err(RetryError::Stop(anyhow::anyhow!(
+                    "effective user {uid} has an empty home directory"
+                )));
+            }
+            Ok(PathBuf::from(std::ffi::OsStr::from_bytes(home.to_bytes())))
+        },
+    )
 }
 
 pub const fn move_decision(
@@ -395,14 +412,14 @@ mod tests {
         let system_exe = executable(&system.join("Tools/Clash Verge.app"))?;
         let user_exe = executable(&user.join("Network/Clash Verge.app"))?;
 
-        assert!(matches!(
+        std::assert_matches!(
             evaluate_install_location_with_roots(&system_exe, &home, &system),
             LaunchLocation::Allowed { .. }
-        ));
-        assert!(matches!(
+        );
+        std::assert_matches!(
             evaluate_install_location_with_roots(&user_exe, &home, &system),
             LaunchLocation::Allowed { .. }
-        ));
+        );
         std::fs::remove_dir_all(root)?;
         Ok(())
     }

@@ -8,8 +8,8 @@ notifications:
     body: Auf {mode} umgeschaltet.
   systemProxyToggled:
     title: Systemproxy
-    'on': System proxy has been enabled.
-    'off': System proxy has been disabled.
+    'on': Der Systemproxy wurde aktiviert.
+    'off': Der Systemproxy wurde deaktiviert.
   systemProxyFailed:
     title: Systemproxy
     body: Der Systemproxy konnte nicht gesetzt werden. Öffnen Sie Clash Verge, um zu sehen, warum.
@@ -18,8 +18,8 @@ notifications:
     body: Nach mehreren Fehlversuchen in Folge gestoppt. Öffnen Sie Clash Verge, um zu sehen, warum.
   tunModeToggled:
     title: TUN-Modus
-    'on': TUN mode has been enabled.
-    'off': TUN mode has been disabled.
+    'on': Der TUN-Modus wurde aktiviert.
+    'off': Der TUN-Modus wurde deaktiviert.
   lightweightModeEntered:
     title: Leichtmodus
     body: Leichtmodus aktiviert.
@@ -30,13 +30,15 @@ notifications:
     title: Beenden steht bevor
     body: Clash Verge wird gleich beendet.
   updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
+    title: Clash-Verge-Update
+    body: Eine neue Version (v{version}) wurde heruntergeladen und kann installiert werden.
+    installNow: Jetzt installieren
+    later: Später
 service:
   adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
   adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
+core:
+  alreadyRunning: 'Der Kern kann nicht gestartet werden: Ein Kernprozess läuft bereits. Beenden Sie die zugehörige App oder den verbliebenen Prozess und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, starten Sie den Computer neu.'
 launchGuard:
   currentExeError: 'Der Speicherort der Anwendung konnte nicht ermittelt werden: {error}'
   homeDirError: 'Das Benutzerverzeichnis des aktuellen Benutzers konnte nicht ermittelt werden. Die Anwendung wird beendet: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Global
   profiles: Profile
   proxies: Proxy
+  testLatency: Latenz testen
+  testingLatency: Latenz wird getestet…
   systemProxy: Systemproxy
   tunMode: TUN-Modus
   closeAllConnections: Alle Verbindungen schließen

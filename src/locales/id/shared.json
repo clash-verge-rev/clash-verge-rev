@@ -108,7 +108,6 @@
       "config": {
         "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
         "bootFailed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-        "coreChangeFailed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
         "processTerminated": "Proses validasi dihentikan. Periksa apakah perangkat lunak keamanan mencegah inti berjalan, atau apakah CPU dan lingkungan runtime komputer mendukung program inti."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML syntax error, changes reverted",
         "readError": "YAML read error, changes reverted",
-        "mappingError": "YAML mapping error, changes reverted",
-        "keyError": "YAML key error, changes reverted",
-        "generalError": "YAML error, changes reverted"
+        "mappingError": "YAML mapping error, changes reverted"
       },
       "merge": {
         "syntaxError": "Merge file syntax error, changes reverted",
-        "mappingError": "Merge file mapping error, changes reverted",
-        "keyError": "Merge file key error, changes reverted",
-        "generalError": "Merge file error, changes reverted"
+        "mappingError": "Merge file mapping error, changes reverted"
       }
     }
   },

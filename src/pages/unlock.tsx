@@ -19,20 +19,19 @@ import {
   alpha,
   useTheme,
 } from '@mui/material'
-import { Channel, invoke } from '@tauri-apps/api/core'
+import { Channel } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseEmpty, BasePage } from '@/components/base'
+import {
+  checkMediaUnlock,
+  checkMediaUnlockItem,
+  getUnlockItems,
+  type UnlockItem,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
-
-interface UnlockItem {
-  name: string
-  status: string
-  region?: string | null
-  check_time?: string | null
-}
 
 const UNLOCK_RESULTS_STORAGE_KEY = 'clash_verge_unlock_results'
 
@@ -119,7 +118,7 @@ const UnlockPage = () => {
 
     void (async () => {
       try {
-        const defaultItems = await invoke<UnlockItem[]>('get_unlock_items')
+        const defaultItems = await getUnlockItems()
         const existingMap = new Map(
           storedItems.map((item) => [normalizeUnlockName(item.name), item]),
         )
@@ -153,9 +152,7 @@ const UnlockPage = () => {
     try {
       setIsCheckingAll(true)
       setLoadingItems(unlockItems.map((item) => item.name))
-      const result = await invoke<UnlockItem[]>('check_media_unlock', {
-        onComplete,
-      })
+      const result = await checkMediaUnlock(onComplete)
       const sortedItems = result.sort((a, b) => a.name.localeCompare(b.name))
 
       unlockItemsRef.current = sortedItems
@@ -174,9 +171,7 @@ const UnlockPage = () => {
   const checkSingleMedia = async (name: string) => {
     setLoadingItems((items) => [...items, name])
     try {
-      const result = await invoke<UnlockItem>('check_media_unlock_item', {
-        name,
-      })
+      const result = await checkMediaUnlockItem(name)
       const updatedItems = unlockItemsRef.current.map((item) =>
         item.name === name ? result : item,
       )

@@ -1,6 +1,7 @@
 #[cfg(test)]
 use super::claim_core_readiness_generation;
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
+use crate::utils::retry::{RetryError, RetryPolicy, retry};
 use crate::{
     AsyncHandler,
     config::Config,
@@ -11,9 +12,19 @@ use crate::{
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use log::Level;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
+
+pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
+    let detail = error.to_string();
+    if detail.starts_with("process verge-mihomo") && detail.ends_with("; refusing a second core") {
+        error.context(clash_verge_i18n::t!("core.alreadyRunning").into_owned())
+    } else {
+        error
+    }
+}
 
 #[cfg(target_os = "windows")]
 fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
@@ -41,14 +52,15 @@ async fn retry_service_start<Start, StartFuture>(
     mut start: Start,
 ) -> Result<()>
 where
-    Start: FnMut() -> StartFuture,
-    StartFuture: std::future::Future<Output = Result<()>>,
+    Start: FnMut() -> StartFuture + Send,
+    StartFuture: std::future::Future<Output = Result<()>> + Send,
 {
-    let mut last_error = None;
-    for attempt in 0..attempts {
-        match start().await {
-            Ok(()) => return Ok(()),
-            Err(error) => {
+    let attempts = NonZeroUsize::new(attempts).ok_or_else(|| anyhow::anyhow!("service start failed"))?;
+    retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
+        // The Windows Service IPC future would otherwise inflate every enclosing lifecycle future.
+        let future = Box::pin(start());
+        async move {
+            future.await.map_err(|error| {
                 logging!(
                     warn,
                     Type::Core,
@@ -60,16 +72,14 @@ where
                     .downcast_ref::<service::ServiceStartRefusal>()
                     .is_some_and(|refusal| service::StageRequest::is_about_the_bundle(refusal.code))
                 {
-                    return Err(error);
+                    RetryError::Stop(error)
+                } else {
+                    RetryError::Retry(error)
                 }
-                last_error = Some(error);
-                if attempt + 1 < attempts {
-                    tokio::time::sleep(retry_delay).await;
-                }
-            }
+            })
         }
-    }
-    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+    })
+    .await
 }
 
 impl CoreManager {
@@ -95,14 +105,16 @@ async fn poll_sidecar_readiness<F, Fut>(
     mut probe: F,
 ) -> Result<()>
 where
-    F: FnMut() -> Fut,
-    Fut: std::future::Future<Output = Result<()>>,
+    F: FnMut() -> Fut + Send,
+    Fut: std::future::Future<Output = Result<()>> + Send,
 {
-    let mut last_error = None;
-    for attempt in 0..max_attempts {
-        match probe().await {
-            Ok(()) => return Ok(()),
-            Err(error) => {
+    let attempts = NonZeroUsize::new(max_attempts)
+        .context("sidecar readiness was configured with no attempts")
+        .context("Mihomo API did not become ready")?;
+    retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
+        let future = probe();
+        async move {
+            future.await.map_err(|error| {
                 logging!(
                     debug,
                     Type::Core,
@@ -110,16 +122,12 @@ where
                     attempt + 1,
                     max_attempts
                 );
-                last_error = Some(error);
-            }
+                RetryError::Retry(error)
+            })
         }
-        if attempt + 1 < max_attempts {
-            tokio::time::sleep(retry_delay).await;
-        }
-    }
-    Err(last_error
-        .unwrap_or_else(|| anyhow::anyhow!("sidecar readiness was configured with no attempts"))
-        .context("Mihomo API did not become ready"))
+    })
+    .await
+    .context("Mihomo API did not become ready")
 }
 
 fn should_clear_terminated_sidecar(running_mode: &RunningMode, current_pid: Option<u32>, terminated_pid: u32) -> bool {
@@ -155,7 +163,8 @@ impl CoreManager {
         self.wait_for_sidecar_exit().await?;
         let execution = clash_verge_service_ipc::execution::reserve_sidecar()
             .await
-            .inspect_err(service::record_residual_service)?;
+            .inspect_err(service::record_residual_service)
+            .map_err(explain_core_occupancy)?;
         self.core_stopped();
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
@@ -248,7 +257,7 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = String::from_utf8_lossy(&line).into_owned();
+                        let message = String::from_utf8_lossy_owned(line);
                         Logger::global().writer_sidecar_log(Level::Error, &message);
                         CLASH_LOGGER.append_log(message);
                     }
@@ -394,6 +403,8 @@ impl CoreManager {
         self.set_job_handle(None);
         proxy_control::stop_guard().await;
         self.core_stopped();
+        #[cfg(target_os = "macos")]
+        crate::utils::resolve::dns::sync_public_dns().await;
     }
 }
 
@@ -509,6 +520,20 @@ mod readiness_tests {
         },
         time::Duration,
     };
+
+    #[test]
+    fn core_occupancy_explanation_preserves_the_original_error() {
+        for detail in [
+            "process verge-mihomo remains after IPC failure; refusing a second core",
+            "process verge-mihomo-alpha.exe (PID 123) is still running; refusing a second core",
+        ] {
+            let error = super::explain_core_occupancy(anyhow::anyhow!(detail));
+            assert_eq!(error.to_string(), clash_verge_i18n::t!("core.alreadyRunning"));
+            assert_eq!(error.root_cause().to_string(), detail);
+        }
+        let error = super::explain_core_occupancy(anyhow::anyhow!("could not inspect remaining cores"));
+        assert_eq!(error.to_string(), "could not inspect remaining cores");
+    }
 
     #[tokio::test]
     async fn sidecar_readiness_poll_is_bounded_and_accepts_a_real_api_response() -> anyhow::Result<()> {

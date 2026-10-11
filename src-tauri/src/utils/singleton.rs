@@ -1,4 +1,4 @@
-/// Implements `global()` using the supplied `OnceCell` static.
+/// Implements `global()` using the supplied `OnceLock` static.
 #[macro_export]
 macro_rules! singleton {
     ($struct_name:ty, $instance_name:ident) => {
