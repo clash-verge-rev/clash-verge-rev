@@ -64,6 +64,9 @@ pub struct IVerge {
 
     pub collapse_navbar: Option<bool>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enable_system_titlebar: Option<bool>,
+
     pub sysproxy_tray_icon: Option<bool>,
 
     pub tun_tray_icon: Option<bool>,
@@ -343,6 +346,7 @@ impl IVerge {
             menu_icon: Some("monochrome".into()),
             notice_position: Some("top-right".into()),
             collapse_navbar: Some(false),
+            enable_system_titlebar: Some(true),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
             tun_tray_icon: Some(false),
@@ -430,6 +434,7 @@ impl IVerge {
         patch!(proxy_group_tools_position);
         patch!(notice_position);
         patch!(collapse_navbar);
+        patch!(enable_system_titlebar);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);

@@ -1,7 +1,7 @@
 import { Paper, ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router'
 
@@ -16,7 +16,7 @@ import {
 } from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
-import { useWindowDecorations } from '@/hooks/use-window'
+import { useWindowMaximized } from '@/hooks/use-window-maximized'
 import { useEventBus } from '@/services/bus'
 import { handleNoticeMessage } from '@/services/notice-handlers'
 import { useThemeMode } from '@/services/states'
@@ -46,21 +46,17 @@ const Layout = () => {
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
   const themeReady = useMemo(() => Boolean(theme), [theme])
-  const windowControlsRef = useRef<any>(null)
-  const { decorated } = useWindowDecorations()
+  const showCustomTitlebar = verge?.enable_system_titlebar === false
+  const { maximized, setMaximized } = useWindowMaximized(showCustomTitlebar)
 
   const customTitlebar = useMemo(
     () =>
-      decorated === false ? (
+      showCustomTitlebar ? (
         <div className="the_titlebar">
-          <div
-            className="the_titlebar-drag-region"
-            data-tauri-drag-region="true"
-          />
-          <WindowControls ref={windowControlsRef} />
+          <WindowControls maximized={maximized} setMaximized={setMaximized} />
         </div>
       ) : null,
-    [decorated],
+    [showCustomTitlebar, maximized, setMaximized],
   )
 
   useLoadingOverlay(themeReady)
@@ -154,9 +150,9 @@ const Layout = () => {
             : {},
         ]}
       >
-        {decorated === false && <WindowResizeHandles />}
+        {showCustomTitlebar && <WindowResizeHandles maximized={maximized} />}
 
-        {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
+        {/* Custom titlebar - rendered only when the system titlebar is not preferred, memoized for performance */}
         {customTitlebar}
 
         <div className="layout-content">

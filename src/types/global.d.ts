@@ -876,6 +876,7 @@ interface IVergeConfig {
   proxy_group_tools_position?: 'left' | 'right'
   notice_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   collapse_navbar?: boolean
+  enable_system_titlebar?: boolean
   tray_icon?: 'monochrome' | 'colorful'
   common_tray_icon?: boolean
   sysproxy_tray_icon?: boolean

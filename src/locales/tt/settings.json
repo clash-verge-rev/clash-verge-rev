@@ -231,7 +231,7 @@
       "layout": {
         "title": "Расположение көйләүләре",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "Enable System Titlebar",
           "trafficGraph": "Трафик графигы",
           "memoryUsage": "Хәтер куллану",
           "proxyGroupIcon": "Прокси төркеме иконкасы",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Фокус югалганда трафик статистикасын сызуны туктатып тору"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Use the system's native title bar instead of the built-in custom title bar (restart required on Linux).",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

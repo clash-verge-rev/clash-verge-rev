@@ -746,6 +746,7 @@ export interface TranslationResources {
             fields: {
               collapseNavBar: string
               commonTrayIcon: string
+              enableSystemTitlebar: string
               enableTrayIcon: string
               enableTraySpeed: string
               hoverNavigator: string
@@ -753,7 +754,6 @@ export interface TranslationResources {
               memoryUsage: string
               navIcon: string
               pauseRenderTrafficStatsOnBlur: string
-              preferSystemTitlebar: string
               proxyGroupIcon: string
               proxyGroupsDisplayMode: string
               showOutboundModesInline: string
@@ -783,6 +783,7 @@ export interface TranslationResources {
             }
             title: string
             tooltips: {
+              enableSystemTitlebar: string
               hoverNavigator: string
               hoverNavigatorDelay: string
             }

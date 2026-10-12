@@ -231,7 +231,7 @@
       "layout": {
         "title": "介面設定",
         "fields": {
-          "preferSystemTitlebar": "優先使用系統標題欄",
+          "enableSystemTitlebar": "啟用系統標題欄",
           "trafficGraph": "流量圖表",
           "memoryUsage": "內核佔用",
           "proxyGroupIcon": "代理組圖示",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "失去焦點時暫停渲染流量統計"
         },
         "tooltips": {
+          "enableSystemTitlebar": "使用系統原生標題欄取代內建的自訂標題欄（Linux 需重新啟動生效）",
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
           "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數"
         },

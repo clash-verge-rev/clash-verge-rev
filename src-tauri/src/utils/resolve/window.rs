@@ -19,11 +19,6 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
 
-#[cfg(target_os = "linux")]
-const DEFAULT_DECORATIONS: bool = false;
-#[cfg(not(target_os = "linux"))]
-const DEFAULT_DECORATIONS: bool = true;
-
 const fn restored_window_size_is_too_small(width: u32, height: u32) -> bool {
     width < MINIMAL_WIDTH as u32 || height < MINIMAL_HEIGHT as u32
 }
@@ -49,6 +44,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
     let config = Config::verge().await;
     let latest = config.latest_arc();
+    let decorations = latest.enable_system_titlebar.unwrap_or(true);
     let start_page = latest.start_page.as_deref().unwrap_or("/");
     let initial_theme_mode = match latest.theme_mode.as_deref() {
         Some("dark") => "dark",
@@ -83,7 +79,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     )
     .title("Clash Verge")
     .center()
-    .decorations(DEFAULT_DECORATIONS)
+    .decorations(decorations)
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)

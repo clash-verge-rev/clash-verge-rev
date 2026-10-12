@@ -118,9 +118,13 @@ mod app_init {
     /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         logging!(debug, Type::Setup, "初始化窗口状态管理...");
+        // Decorations are config-driven (`enable_system_titlebar`); restoring a stale
+        // value here would override the builder's `.decorations(...)` on window recreate.
+        let state_flags =
+            tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::DECORATIONS;
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
             .with_filename(files::WINDOW_STATE)
-            .with_state_flags(tauri_plugin_window_state::StateFlags::default())
+            .with_state_flags(state_flags)
             .build();
         app.handle().plugin(window_state_plugin)?;
         Ok(())
