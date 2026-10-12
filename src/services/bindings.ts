@@ -375,6 +375,7 @@ export type IVerge_Deserialize = {
   proxy_group_tools_position?: string | null
   notice_position?: string | null
   collapse_navbar?: boolean | null
+  enable_system_titlebar?: boolean | null
   sysproxy_tray_icon?: boolean | null
   tun_tray_icon?: boolean | null
   enable_tun_mode?: boolean | null
@@ -465,6 +466,7 @@ export type IVerge_Serialize = {
   proxy_group_tools_position?: string | null
   notice_position?: string | null
   collapse_navbar: boolean | null
+  enable_system_titlebar?: boolean | null
   sysproxy_tray_icon: boolean | null
   tun_tray_icon: boolean | null
   enable_tun_mode: boolean | null
