@@ -81,6 +81,12 @@ impl Config {
 
         let verge = Self::verge().await.latest_arc();
         clash_verge_i18n::sync_locale(verge.language.as_deref());
+        let tunnelmesh_enabled = verge.enable_tunnelmesh.unwrap_or(false);
+        drop(verge);
+
+        if tunnelmesh_enabled && let Err(error) = crate::cmd::start_tunnelmesh_if_enabled().await {
+            logging!(warn, Type::Config, "TunnelMesh startup failed: {error:#}");
+        }
 
         Ok(())
     }

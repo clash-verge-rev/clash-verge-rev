@@ -712,5 +712,35 @@
       "installing": "Instalando servicio...",
       "uninstalling": "Desinstalando servicio..."
     }
+  },
+  "tunnelmesh": {
+    "title": "TunnelMesh",
+    "status": "Status: {{state}}",
+    "loading": "Loading TunnelMesh configuration…",
+    "fields": {
+      "enabled": "Enable embedded client",
+      "serverUrl": "Server URL",
+      "token": "Access token",
+      "tunnels": "Tunnels",
+      "tunnel": "Tunnel",
+      "name": "Name",
+      "protocol": "Protocol",
+      "listen": "Listen address",
+      "agentId": "Agent ID",
+      "targetHost": "Target host",
+      "targetPort": "Target port",
+      "allowRemote": "Allow remote access"
+    },
+    "actions": {
+      "reload": "Reload",
+      "save": "Save",
+      "validate": "Validate",
+      "add": "Add tunnel",
+      "apply": "Apply"
+    },
+    "messages": {
+      "saved": "TunnelMesh configuration saved",
+      "valid": "TunnelMesh configuration is valid"
+    }
   }
 }

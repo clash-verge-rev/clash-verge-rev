@@ -5,6 +5,7 @@ mod merge;
 mod script;
 pub mod seq;
 mod tun;
+mod tunnelmesh;
 
 use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
@@ -42,6 +43,7 @@ struct ConfigValues {
     enable_dns_settings: bool,
     dns_override_confirmation: Option<String>,
     enable_external_controller: bool,
+    enable_tunnelmesh: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -117,14 +119,16 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
 
     let verge_arc = verge.latest_arc();
     let IVerge {
-        ref enable_tun_mode,
-        ref enable_builtin_enhanced,
-        ref verge_socks_enabled,
-        ref verge_http_enabled,
-        ref enable_external_controller,
+        enable_tun_mode,
+        enable_builtin_enhanced,
+        verge_socks_enabled,
+        verge_http_enabled,
+        enable_external_controller,
+        enable_tunnelmesh,
         ..
-    } = **verge_arc;
+    } = &**verge_arc;
     let enable_external_controller = enable_external_controller.unwrap_or(false);
+    let enable_tunnelmesh = enable_tunnelmesh.unwrap_or(false);
     let dns_settings = verge_arc.dns_settings_for(profile_uid);
     let dns_override_confirmation = dns_settings.confirmation;
 
@@ -156,6 +160,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
         enable_dns_settings,
         dns_override_confirmation,
         enable_external_controller,
+        enable_tunnelmesh,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -887,6 +892,7 @@ pub async fn enhance(
         enable_dns_settings,
         dns_override_confirmation,
         enable_external_controller,
+        enable_tunnelmesh,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -960,6 +966,16 @@ pub async fn enhance(
     notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
+
+    let mut config = config;
+    if enable_tunnelmesh {
+        let tunnelmesh_path = dirs::tunnelmesh_config_path()?;
+        if tunnelmesh_path.exists() {
+            let tunnelmesh_config = crate::tunnelmesh::config::TunnelMeshConfig::load(&tunnelmesh_path).await?;
+            tunnelmesh_config.validate()?;
+            tunnelmesh::inject_proxies(&mut config, &tunnelmesh_config)?;
+        }
+    }
 
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);

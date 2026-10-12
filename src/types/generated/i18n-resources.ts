@@ -212,6 +212,7 @@ export interface TranslationResources {
             proxies: string
             rules: string
             settings: string
+            tunnelmesh: string
             unlock: string
           }
         }
@@ -1402,6 +1403,36 @@ export interface TranslationResources {
           installing: string
           uninstalling: string
         }
+      }
+      tunnelmesh: {
+        actions: {
+          add: string
+          apply: string
+          reload: string
+          save: string
+          validate: string
+        }
+        fields: {
+          agentId: string
+          allowRemote: string
+          enabled: string
+          listen: string
+          name: string
+          protocol: string
+          serverUrl: string
+          targetHost: string
+          targetPort: string
+          token: string
+          tunnel: string
+          tunnels: string
+        }
+        loading: string
+        messages: {
+          saved: string
+          valid: string
+        }
+        status: string
+        title: string
       }
     }
     shared: {

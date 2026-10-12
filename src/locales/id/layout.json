@@ -9,7 +9,8 @@
         "rules": "Aturan",
         "logs": "Log",
         "unlock": "Test",
-        "settings": "Pengaturan"
+        "settings": "Pengaturan",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

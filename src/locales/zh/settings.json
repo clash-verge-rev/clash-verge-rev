@@ -712,5 +712,35 @@
       "installing": "安装服务中...",
       "uninstalling": "卸载服务中..."
     }
+  },
+  "tunnelmesh": {
+    "title": "TunnelMesh",
+    "status": "状态：{{state}}",
+    "loading": "正在加载 TunnelMesh 配置…",
+    "fields": {
+      "enabled": "启用内置客户端",
+      "serverUrl": "服务器地址",
+      "token": "访问令牌",
+      "tunnels": "隧道",
+      "tunnel": "隧道",
+      "name": "名称",
+      "protocol": "协议",
+      "listen": "监听地址",
+      "agentId": "Agent ID",
+      "targetHost": "目标主机",
+      "targetPort": "目标端口",
+      "allowRemote": "允许远程访问"
+    },
+    "actions": {
+      "reload": "重新加载",
+      "save": "保存",
+      "validate": "校验",
+      "add": "添加隧道",
+      "apply": "应用"
+    },
+    "messages": {
+      "saved": "TunnelMesh 配置已保存",
+      "valid": "TunnelMesh 配置有效"
+    }
   }
 }

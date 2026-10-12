@@ -1,6 +1,7 @@
 import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined'
 import ForkRightOutlinedIcon from '@mui/icons-material/ForkRightOutlined'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import HubOutlinedIcon from '@mui/icons-material/HubOutlined'
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
@@ -25,6 +26,7 @@ import ProfilePage from './profiles'
 import ProxyPage from './proxies'
 import RulesPage from './rules'
 import SettingPage from './settings'
+import TunnelMeshPage from './tunnelmesh'
 import UnlockPage from './unlock'
 
 type NavigationItem = {
@@ -74,5 +76,10 @@ export const navItems: NavigationItem[] = [
     ...navigationItems.settings,
     icon: [<SettingsOutlinedIcon key="mui" />, <SettingsSvg key="svg" />],
     Component: SettingPage,
+  },
+  {
+    ...navigationItems.tunnelmesh,
+    icon: [<HubOutlinedIcon key="mui" />],
+    Component: TunnelMeshPage,
   },
 ]

@@ -58,6 +58,8 @@ pub mod files {
     pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
     pub const DNS_CONFIG: &str = "dns_config.yaml";
     pub const WINDOW_STATE: &str = "window_state.json";
+    /// Native TunnelMesh client configuration owned by Clash Verge.
+    pub const TUNNELMESH_CONFIG: &str = "tunnelmesh.yaml";
 }
 
 pub mod tun {

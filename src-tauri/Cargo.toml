@@ -109,6 +109,8 @@ webpki-roots = "1.0.9"
 dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
+tokio-tungstenite = { version = "0.28.0", features = ["rustls-tls-webpki-roots"] }
+url = "2.5.7"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.190"

@@ -8,6 +8,7 @@ mod core;
 mod enhance;
 mod feat;
 mod process;
+pub mod tunnelmesh;
 pub mod utils;
 
 use crate::constants::files;
@@ -220,6 +221,11 @@ mod app_init {
             cmd::get_unlock_items,
             cmd::check_media_unlock,
             cmd::check_media_unlock_item,
+            cmd::get_tunnelmesh_config,
+            cmd::save_tunnelmesh_config,
+            cmd::validate_tunnelmesh_config,
+            cmd::get_tunnelmesh_status,
+            cmd::set_tunnelmesh_enabled,
         ]
     }
 }

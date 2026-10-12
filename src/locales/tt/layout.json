@@ -9,7 +9,8 @@
         "rules": "Кагыйдәләр",
         "logs": "Логлар",
         "unlock": "Test",
-        "settings": "Көйләүләр"
+        "settings": "Көйләүләр",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

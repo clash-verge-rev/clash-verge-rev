@@ -9,7 +9,8 @@
         "rules": "Regeln",
         "logs": "Protokolle",
         "unlock": "Testen",
-        "settings": "Einstellungen"
+        "settings": "Einstellungen",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Menü neu anordnen",

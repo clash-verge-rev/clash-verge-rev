@@ -169,6 +169,61 @@ export async function getVergeConfig() {
   return invoke<IVergeConfig>('get_verge_config')
 }
 
+export interface TunnelMeshTunnelConfig {
+  name: string
+  protocol: string
+  listen: string
+  agent_id: string
+  auth_mode: string
+  allow_remote: boolean
+  auth_url?: string
+  target_host?: string
+  target_port?: number
+}
+
+export interface TunnelMeshConfigView {
+  mode: string
+  client: {
+    server_url: string
+    token_configured: boolean
+    tunnels: TunnelMeshTunnelConfig[]
+  }
+}
+
+export interface TunnelMeshSaveRequest {
+  config: {
+    mode: string
+    client: {
+      server_url: string
+      token?: string
+      tunnels: TunnelMeshTunnelConfig[]
+    }
+  }
+  token?: string | null
+}
+
+export async function getTunnelmeshConfig() {
+  return invoke<TunnelMeshConfigView>('get_tunnelmesh_config')
+}
+
+export async function saveTunnelmeshConfig(request: TunnelMeshSaveRequest) {
+  return invoke<TunnelMeshConfigView>('save_tunnelmesh_config', { request })
+}
+
+export async function validateTunnelmeshConfig(request: TunnelMeshSaveRequest) {
+  return invoke<TunnelMeshConfigView>('validate_tunnelmesh_config', { request })
+}
+
+export async function getTunnelmeshStatus() {
+  return invoke<{ state: string; generation: number; last_error?: string }>(
+    'get_tunnelmesh_status',
+  )
+}
+
+export async function setTunnelmeshEnabled(enabled: boolean) {
+  return invoke('set_tunnelmesh_enabled', { enabled })
+}
+
 export async function patchVergeConfig(payload: IVergeConfig) {
   return invoke<void>('patch_verge_config', { payload })
 }

@@ -9,7 +9,8 @@
         "rules": "Kurallar",
         "logs": "Günlükler",
         "unlock": "Test",
-        "settings": "Ayarlar"
+        "settings": "Ayarlar",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Menü sıralama modu",

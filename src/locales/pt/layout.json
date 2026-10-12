@@ -9,7 +9,8 @@
         "rules": "Regras",
         "logs": "Logs",
         "unlock": "Teste",
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Modo de reordenação do menu",

@@ -22,4 +22,8 @@ export const navigationItems = {
     label: 'layout.components.navigation.tabs.settings',
     path: '/settings',
   },
+  tunnelmesh: {
+    label: 'layout.components.navigation.tabs.tunnelmesh',
+    path: '/tunnelmesh',
+  },
 } as const

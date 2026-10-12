@@ -9,7 +9,8 @@
         "rules": "規 則",
         "logs": "日 誌",
         "unlock": "解 鎖",
-        "settings": "設 定"
+        "settings": "設 定",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "選單排序模式",

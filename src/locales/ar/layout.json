@@ -9,7 +9,8 @@
         "rules": "القواعد",
         "logs": "السجلات",
         "unlock": "Test",
-        "settings": "الإعدادات"
+        "settings": "الإعدادات",
+        "tunnelmesh": "TunnelMesh"
       },
       "menu": {
         "reorderMode": "Menu reorder mode",

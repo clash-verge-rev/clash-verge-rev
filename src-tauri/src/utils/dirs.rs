@@ -106,6 +106,11 @@ pub fn verge_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(VERGE_CONFIG))
 }
 
+/// Path to the user-owned TunnelMesh client configuration.
+pub fn tunnelmesh_config_path() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join(crate::constants::files::TUNNELMESH_CONFIG))
+}
+
 pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
 }

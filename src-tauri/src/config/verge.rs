@@ -207,6 +207,9 @@ pub struct IVerge {
     pub hover_jump_navigator_delay: Option<u64>,
 
     pub enable_external_controller: Option<bool>,
+
+    /// Whether Clash Verge owns and runs the embedded TunnelMesh client.
+    pub enable_tunnelmesh: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -391,6 +394,7 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            enable_tunnelmesh: Some(false),
             ..Self::default()
         }
     }
@@ -493,6 +497,7 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(enable_tunnelmesh);
     }
 
     pub fn get_log_level(&self) -> LevelFilter {
