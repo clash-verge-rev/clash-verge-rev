@@ -4,6 +4,7 @@ members = [
   "crates/clash-verge-draft",
   "crates/clash-verge-media-unlock",
   "crates/clash-verge-logging",
+  "crates/clash-verge-signal",
   "crates/tauri-plugin-clash-verge-sysinfo",
   "crates/clash-verge-i18n",
   "crates/clash-verge-limiter",
@@ -53,6 +54,7 @@ muda = { git = "https://github.com/wonfen/muda.git", rev = "547de49352791653fbdf
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
+clash-verge-signal = { path = "crates/clash-verge-signal" }
 clash-verge-i18n = { path = "crates/clash-verge-i18n" }
 clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tracing-estuary = { git = "https://github.com/Tunglies/tracing-estuary.git", branch = "main" }

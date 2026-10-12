@@ -188,6 +188,13 @@ async fn init_silent_updater() {
     logging!(info, Type::Setup, "Silent updater initialized");
 }
 
+// Upstream has no session-end signal support on Linux; see crates/clash-verge-signal.
+#[cfg(target_os = "linux")]
+pub(crate) fn init_signal() {
+    logging!(debug, Type::Setup, "Initializing signal handlers...");
+    clash_verge_signal::register(feat::quit);
+}
+
 async fn init_work_config() {
     logging_error!(Type::Setup, init::init_config().await);
 }

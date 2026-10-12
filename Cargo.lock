@@ -1106,6 +1106,7 @@ dependencies = [
  "clash-verge-limiter",
  "clash-verge-logging",
  "clash-verge-media-unlock",
+ "clash-verge-signal",
  "clash_verge_service_ipc",
  "criterion",
  "dark-light",
@@ -1222,6 +1223,15 @@ dependencies = [
  "serde",
  "serde_json",
  "specta",
+ "tokio",
+]
+
+[[package]]
+name = "clash-verge-signal"
+version = "0.1.0"
+dependencies = [
+ "clash-verge-logging",
+ "log",
  "tokio",
 ]
 
