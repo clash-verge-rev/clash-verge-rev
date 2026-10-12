@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use serde::Serialize;
+use serde::{Serialize, Serializer, ser::SerializeMap as _};
 use tauri_plugin_mihomo::models::{
     DelayHistory, Extra, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
 };
@@ -20,7 +20,7 @@ pub struct GroupScope {
 
 pub struct ProxyViewBuilder;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyViewV1 {
     pub schema_version: u8,
@@ -34,21 +34,21 @@ pub struct ProxyViewV1 {
     pub providers: Vec<ProxyProviderView>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewOrderSource {
     Runtime,
     Fallback,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewProviderState {
     Ready,
     Unavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxyCapabilities {
     pub udp: bool,
     pub xudp: bool,
@@ -57,13 +57,35 @@ pub struct ProxyCapabilities {
     pub smux: bool,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Serialize, specta::Type)]
+struct ProxyLatencyHistory<'a> {
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
+    history: &'a [DelayHistory],
+}
+
+fn serialize_proxy_latency_history<S: Serializer>(
+    extra: &HashMap<String, Extra>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let mut map = serializer.serialize_map(Some(extra.len()))?;
+    for (url, extra) in extra {
+        map.serialize_entry(
+            url,
+            &ProxyLatencyHistory {
+                history: &extra.history,
+            },
+        )?;
+    }
+    map.end()
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyGroupView {
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub now: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,22 +96,28 @@ pub struct ProxyGroupView {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test_url: Option<String>,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
     pub extra: HashMap<String, Extra>,
     #[serde(flatten)]
     pub capabilities: ProxyCapabilities,
     pub members: Vec<ProxyMemberRef>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyNodeView {
     pub record_id: String,
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
     pub extra: HashMap<String, Extra>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
@@ -104,7 +132,7 @@ pub struct ProxyNodeView {
     pub source: ProxyNodeSource,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyNodeSource {
     Core {
@@ -119,7 +147,7 @@ pub enum ProxyNodeSource {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyMemberRef {
     Group {
@@ -136,7 +164,7 @@ pub enum ProxyMemberRef {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyMemberUnresolvedReason {
     #[serde(rename = "missing")]
     Missing,
@@ -146,7 +174,7 @@ pub enum ProxyMemberUnresolvedReason {
     ProviderUnavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyProviderView {
     pub name: String,
@@ -158,7 +186,7 @@ pub struct ProxyProviderView {
     pub proxy_record_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyProviderVehicleType {
     #[serde(rename = "HTTP")]
     Http,
@@ -168,7 +196,7 @@ pub enum ProxyProviderVehicleType {
     Inline,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxySubscriptionInfo {
     pub upload: i64,
     pub download: i64,
@@ -402,7 +430,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         icon,
         now,
         test_url,
-        alive,
         history,
         extra,
         udp,
@@ -431,7 +458,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
     ProxyGroupView {
         name,
         proxy_type,
-        alive,
         now,
         fixed,
         hidden,
@@ -456,7 +482,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         hidden,
         icon,
         test_url,
-        alive,
         history,
         extra,
         udp,
@@ -472,7 +497,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         record_id,
         name,
         proxy_type,
-        alive,
         history,
         extra,
         id,

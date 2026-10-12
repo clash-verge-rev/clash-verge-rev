@@ -117,7 +117,7 @@ const ProfilePage = () => {
   } = useProfiles()
 
   useEffect(() => {
-    currentProfileRef.current = profiles.current
+    currentProfileRef.current = profiles.current!
   }, [profiles])
 
   useEffect(() => {
@@ -212,10 +212,12 @@ const ProfilePage = () => {
     }
     setLoading(true)
 
+    const prevCurrent = profiles.current
+
     const handleImportSuccess = async (noticeKey: string) => {
       showNotice.success(noticeKey)
       setUrl('')
-      await performRobustRefresh()
+      await performRobustRefresh(prevCurrent)
     }
     try {
       await mutate(() => importProfile(url), {
@@ -261,7 +263,7 @@ const ProfilePage = () => {
   }
 
   // `useProfiles` already retries three times; add only one business-level retry.
-  const performRobustRefresh = async () => {
+  const performRobustRefresh = async (prevCurrent?: string | null) => {
     let retryCount = 0
     const maxRetries = 1
     const baseDelay = 200
@@ -270,13 +272,15 @@ const ProfilePage = () => {
       try {
         debugLog(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`)
 
-        await mutateProfiles()
+        const fresh = await fetchProfilesIntoCache()
 
         await new Promise((resolve) =>
           setTimeout(resolve, baseDelay * (retryCount + 1)),
         )
 
-        await onEnhance(false)
+        if (fresh?.current !== prevCurrent) {
+          await onEnhance(false)
+        }
         return
       } catch (error) {
         console.error(`[导入刷新] 第${retryCount + 1}次刷新失败:`, error)
@@ -289,8 +293,10 @@ const ProfilePage = () => {
 
     console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`)
     try {
-      await fetchProfilesIntoCache()
-      await onEnhance(false)
+      const fresh = await fetchProfilesIntoCache()
+      if (fresh?.current !== prevCurrent) {
+        await onEnhance(false)
+      }
       showNotice.error(
         'profiles.page.feedback.notifications.importNeedsRefresh',
         3000,
@@ -574,7 +580,7 @@ const ProfilePage = () => {
   const onUpdateAll = useLockFn(async () => {
     const items = profileItems.filter((e) => e.type === 'remote')
     const target = items
-      .map((item) => item.uid)
+      .map((item) => item.uid!)
       .filter((uid) => !loadingCache.has(uid))
 
     setLoadingProfiles(target, true)
@@ -606,7 +612,7 @@ const ProfilePage = () => {
   }
 
   const selectAllProfiles = () => {
-    setSelectedProfiles(new Set(profileItems.map((item) => item.uid)))
+    setSelectedProfiles(new Set(profileItems.map((item) => item.uid!)))
   }
 
   const clearAllSelections = () => {
@@ -898,20 +904,20 @@ const ProfilePage = () => {
             {profileItems.map((item, index) => (
               <ProfileItem
                 key={item.uid}
-                id={item.uid}
+                id={item.uid!}
                 index={index}
                 selected={(switchTarget ?? profiles.current) === item.uid}
                 activating={
-                  activatings.includes(item.uid) ||
+                  activatings.includes(item.uid!) ||
                   visibleSwitchingProfile === item.uid
                 }
                 itemData={item}
-                timerUpdateRevision={timerRevisions.get(item.uid) ?? 0}
+                timerUpdateRevision={timerRevisions.get(item.uid!) ?? 0}
                 completedUpdateRevision={
-                  completedUpdateRevisions.get(item.uid) ?? 0
+                  completedUpdateRevisions.get(item.uid!) ?? 0
                 }
                 mutateProfiles={mutateProfiles}
-                onSelect={(f) => onSelect(item.uid, f)}
+                onSelect={(f) => onSelect(item.uid!, f)}
                 onEdit={() => viewerRef.current?.edit(item)}
                 onSave={async (prev, curr) => {
                   if (prev !== curr && profiles.current === item.uid) {
@@ -920,14 +926,14 @@ const ProfilePage = () => {
                 }}
                 onDelete={() => {
                   if (batchMode) {
-                    toggleProfileSelection(item.uid)
+                    toggleProfileSelection(item.uid!)
                   } else {
-                    onDelete(item.uid)
+                    onDelete(item.uid!)
                   }
                 }}
                 batchMode={batchMode}
-                isSelected={selectedProfiles.has(item.uid)}
-                onSelectionChange={() => toggleProfileSelection(item.uid)}
+                isSelected={selectedProfiles.has(item.uid!)}
+                onSelectionChange={() => toggleProfileSelection(item.uid!)}
               />
             ))}
           </Box>

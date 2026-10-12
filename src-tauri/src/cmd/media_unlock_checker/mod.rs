@@ -4,6 +4,7 @@ use std::time::Duration;
 use tauri::{command, ipc::Channel};
 
 #[command]
+#[specta::specta]
 pub fn get_unlock_items() -> Vec<UnlockItem> {
     clash_verge_media_unlock::default_unlock_items()
 }
@@ -26,6 +27,7 @@ async fn create_client() -> Result<Client, String> {
 }
 
 #[command]
+#[specta::specta]
 pub async fn check_media_unlock(on_complete: Channel<UnlockItem>) -> Result<Vec<UnlockItem>, String> {
     let client = create_client().await?;
     Ok(clash_verge_media_unlock::check_media_unlock(&client, |item| {
@@ -35,6 +37,7 @@ pub async fn check_media_unlock(on_complete: Channel<UnlockItem>) -> Result<Vec<
 }
 
 #[command]
+#[specta::specta]
 pub async fn check_media_unlock_item(name: String) -> Result<UnlockItem, String> {
     let client = create_client().await?;
     clash_verge_media_unlock::check_media_unlock_item(&client, &name).await

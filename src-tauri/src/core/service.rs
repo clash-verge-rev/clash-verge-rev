@@ -44,7 +44,7 @@ static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 
 /// Why the Service was unavailable when the core fell back to Sidecar.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, specta::Type)]
 #[serde(tag = "kind", content = "reason", rename_all = "camelCase")]
 pub enum ServiceFallbackNotice {
     Unavailable,

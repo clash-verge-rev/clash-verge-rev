@@ -66,7 +66,6 @@ test('uses newer core history after a tray test without hiding an active page te
   const cached = delayManager.setDelay(member, 'tray-group', 50)
   member.node.extra = {
     [delayManager.getUrl('tray-group')]: {
-      alive: true,
       history: [
         { time: new Date(cached.updatedAt + 1000).toISOString(), delay: 300 },
       ],
@@ -107,13 +106,11 @@ test('another URL cannot replace a group measurement, but a newer matching URL c
     history: [{ time: newer, delay: 126 }],
     extra: {
       'http://localhost/a': {
-        alive: true,
         history: [
           { time: new Date(cached.updatedAt - 1000).toISOString(), delay: 49 },
         ],
       },
       'http://localhost/b': {
-        alive: true,
         history: [{ time: newer, delay: 126 }],
       },
     },
@@ -122,7 +119,6 @@ test('another URL cannot replace a group measurement, but a newer matching URL c
   Object.assign(member.node, {
     extra: {
       'http://localhost/a': {
-        alive: true,
         history: [{ time: newer, delay: 75 }],
       },
     },
@@ -190,7 +186,7 @@ test('unmeasured selectors show automatic history without replacing a manual URL
     { time: new Date(Date.now() + 1000).toISOString(), delay: 126 },
   ]
   member.node.extra = {
-    'http://localhost/automatic': { alive: true, history: member.node.history },
+    'http://localhost/automatic': { history: member.node.history },
   }
   expect(delayManager.getDelayFix(member, 'selector')).toBe(126)
   delayManager.setDelay(member, 'selector', 50)

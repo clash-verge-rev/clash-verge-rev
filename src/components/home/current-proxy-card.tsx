@@ -423,7 +423,7 @@ interface PersistentProxySelectProps
   value: string
   selectedName: string
   groupName: string
-  fixed?: string
+  fixed?: string | null
   selectedDelay: number
   options: ProxyOption[]
   onChange: (value: string) => void
@@ -785,8 +785,8 @@ export const CurrentProxyCard = () => {
       // The profile selection is the durable source across core restarts and run modes.
       handleSelectChange(
         selectedGroup.name,
-        previousProxy,
-        selectedGroup.fixed,
+        previousProxy!,
+        selectedGroup.fixed!,
       )({
         target: { value: nextName },
       })
@@ -940,7 +940,7 @@ export const CurrentProxyCard = () => {
             unsortedProxyOptions,
             sortType,
             delays.of,
-            defaultLatencyTimeout,
+            defaultLatencyTimeout!,
           ),
     [
       delays,

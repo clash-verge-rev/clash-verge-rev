@@ -5,6 +5,7 @@ edition = "2024"
 rust-version = "1.91"
 
 [dependencies]
+specta = { version = "=2.0.0-rc.25", features = ["derive", "function"] }
 tauri = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
 parking_lot = { workspace = true }
