@@ -4,22 +4,54 @@ use serde::Serialize;
 use smartstring::alias::String;
 use std::{
     fmt,
+    hash::{DefaultHasher, Hash as _, Hasher as _},
+    sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
 };
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 
-use crate::config::{Config, ConfigType};
+use crate::config::Config;
 use crate::core::handle;
 use crate::singleton;
-use crate::utils::dirs;
+use crate::utils::{dirs, help};
 use clash_verge_logging::{Type, logging};
+
+const SYNTAX_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+
+static LAST_VALIDATED: LazyLock<parking_lot::Mutex<Option<u64>>> = LazyLock::new(|| parking_lot::Mutex::new(None));
+
+async fn validation_fingerprint(yaml: &str) -> u64 {
+    let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    let mut hasher = DefaultHasher::new();
+    yaml.hash(&mut hasher);
+    core.as_str().hash(&mut hasher);
+    let binary = std::env::current_exe()
+        .into_iter()
+        .map(|exe| exe.with_file_name(format!("{}{}", core.as_str(), std::env::consts::EXE_SUFFIX)));
+    // The test run reads geo databases from the app dir; a geo update must revalidate.
+    let geo = dirs::app_home_dir().into_iter().flat_map(|dir| {
+        super::runtime_bundle::GEO_ASSETS
+            .iter()
+            .map(move |asset| dir.join(asset))
+    });
+    for path in binary.chain(geo) {
+        match std::fs::metadata(&path) {
+            Ok(meta) => {
+                meta.len().hash(&mut hasher);
+                meta.modified().ok().hash(&mut hasher);
+            }
+            Err(_) => 0u8.hash(&mut hasher),
+        }
+    }
+    hasher.finish()
+}
 
 pub struct CoreConfigValidator {
     is_processing: AtomicBool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum ValidationErrorKind {
     FileMissing,
@@ -62,7 +94,7 @@ impl ValidationErrorKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum ValidationSkipReason {
     Exiting,
@@ -78,12 +110,18 @@ impl fmt::Display for ValidationSkipReason {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ValidationOutcome {
     Valid,
-    Invalid { kind: ValidationErrorKind, message: String },
-    Skipped { reason: ValidationSkipReason },
+    Invalid {
+        kind: ValidationErrorKind,
+        #[specta(type = std::string::String)]
+        message: String,
+    },
+    Skipped {
+        reason: ValidationSkipReason,
+    },
     Busy,
 }
 
@@ -194,7 +232,7 @@ impl CoreConfigValidator {
             Ok(content) => content,
             Err(err) => {
                 let error_msg: String = format!("Failed to read file: {err}").into();
-                logging!(error, Type::Validate, "无法读取文件: {}", error_msg);
+                logging!(error, Type::Validate, "Failed to read file {config_path}: {err}");
                 return Ok(ValidationOutcome::invalid_from_message(error_msg));
             }
         };
@@ -206,7 +244,7 @@ impl CoreConfigValidator {
             }
             Err(err) => {
                 let error_msg: String = format!("YAML syntax error: {err}").into();
-                logging!(error, Type::Validate, "YAML语法错误: {}", error_msg);
+                logging!(error, Type::Validate, "YAML syntax error in {config_path}: {err}");
                 Ok(ValidationOutcome::invalid_from_message(error_msg))
             }
         }
@@ -217,34 +255,39 @@ impl CoreConfigValidator {
             Ok(content) => content,
             Err(err) => {
                 let error_msg: String = format!("Failed to read script file: {err}").into();
-                logging!(warn, Type::Validate, "脚本语法错误: {}", err);
+                logging!(warn, Type::Validate, "Failed to read script file {path}: {err}");
                 return Ok(ValidationOutcome::invalid_from_message(error_msg));
             }
         };
 
         logging!(debug, Type::Validate, "验证脚本文件: {}", path);
+        let has_main =
+            content.contains("function main") || content.contains("const main") || content.contains("let main");
 
-        use boa_engine::{Context, Source};
+        // Boa parsing is pure CPU; keep it off the async worker, with a timeout.
+        let syntax = crate::process::AsyncHandler::spawn_blocking(move || {
+            use boa_engine::{Context, Source};
 
-        let mut context = Context::default();
-        let _ = context.eval(Source::from_bytes(
-            "var console = Object.freeze({
-              log(...data){},
-              info(...data){},
-              error(...data){},
-              debug(...data){},
-            });",
-        ));
-        let result = context.eval(Source::from_bytes(&content));
+            let mut context = Context::default();
+            let _ = context.eval(Source::from_bytes(
+                "var console = Object.freeze({log(...data){},info(...data){},error(...data){},debug(...data){}});",
+            ));
+            context
+                .eval(Source::from_bytes(&content))
+                .map(|_| ())
+                .map_err(|err| err.to_string())
+        });
+        let result = match tokio::time::timeout(SYNTAX_CHECK_TIMEOUT, syntax).await {
+            Ok(Ok(evaluated)) => evaluated,
+            Ok(Err(join_err)) => Err(format!("syntax check task failed: {join_err}")),
+            Err(_) => Err("syntax check timed out".to_owned()),
+        };
 
         match result {
-            Ok(_) => {
+            Ok(()) => {
                 logging!(debug, Type::Validate, "脚本语法验证通过: {}", path);
 
-                if !content.contains("function main")
-                    && !content.contains("const main")
-                    && !content.contains("let main")
-                {
+                if !has_main {
                     let error_msg = "Script must contain a main function";
                     logging!(warn, Type::Validate, "脚本缺少main函数: {}", path);
                     return Ok(ValidationOutcome::invalid_from_message(error_msg));
@@ -254,7 +297,7 @@ impl CoreConfigValidator {
             }
             Err(err) => {
                 let error_msg: String = format!("Script syntax error: {err}").into();
-                logging!(warn, Type::Validate, "脚本语法错误: {}", err);
+                logging!(warn, Type::Validate, "Script syntax error in {path}: {err}");
                 Ok(ValidationOutcome::invalid_from_message(error_msg))
             }
         }
@@ -371,7 +414,8 @@ impl CoreConfigValidator {
         }
     }
 
-    pub async fn validate_config_outcome(&self) -> Result<ValidationOutcome> {
+    /// Skips the subprocess when these bytes were already accepted by the same core build.
+    pub async fn validate_config_outcome_with(&self, yaml: &str) -> Result<ValidationOutcome> {
         if !self.try_start() {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok(ValidationOutcome::Busy);
@@ -381,9 +425,20 @@ impl CoreConfigValidator {
         }
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
-        let config_path = Config::generate_file(ConfigType::Check).await?;
-        let config_path = dirs::path_to_str(&config_path)?;
-        Self::validate_config_internal_outcome(config_path).await
+        let fingerprint = validation_fingerprint(yaml).await;
+        if *LAST_VALIDATED.lock() == Some(fingerprint) {
+            logging!(info, Type::Validate, "配置与上次通过验证的字节一致，跳过内核检查");
+            return Ok(ValidationOutcome::Valid);
+        }
+
+        let check_path = dirs::app_home_dir()?.join(crate::constants::files::CHECK_CONFIG);
+        help::save_yaml_str(&check_path, yaml).await?;
+        let outcome = Self::validate_config_internal_outcome(dirs::path_to_str(&check_path)?).await?;
+        if outcome.is_valid() {
+            *LAST_VALIDATED.lock() = Some(fingerprint);
+            let _ = fs::remove_file(&check_path).await;
+        }
+        Ok(outcome)
     }
 }
 

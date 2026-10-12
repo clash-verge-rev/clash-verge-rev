@@ -1,13 +1,8 @@
-import {
-  getRuntimeState,
-  type RunState,
-  type RunningMode,
-} from '@/services/cmds'
+import { getAppUptime, type RunState, type RunningMode } from '@/services/cmds'
 import { useQuery } from '@/services/query-client'
+import { useAppReads, useRunState } from '@/store/app-store-context'
 
-import { useVisibility } from './use-visibility'
-
-export const runStateQueryKey = ['getRuntimeState'] as const
+const appUptimeQueryKey = ['appUptime'] as const
 
 /** Fail closed until the first snapshot so TUN never flashes as available. */
 const unknownRunState: RunState = {
@@ -25,20 +20,9 @@ const unknownRunState: RunState = {
 
 /** Event-driven run state; Rust owns all derived availability decisions. */
 export function useSystemState() {
-  const pageVisible = useVisibility()
-
-  const {
-    data: runState = unknownRunState,
-    refetch: mutateSystemState,
-    isLoading,
-  } = useQuery({
-    queryKey: runStateQueryKey,
-    queryFn: getRuntimeState,
-    // A safety net only; transitions normally arrive by event.
-    refetchInterval: pageVisible ? 30000 : false,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-  })
+  const { readRunState } = useAppReads()
+  const snapshot = useRunState()
+  const runState = snapshot ?? unknownRunState
 
   return {
     runState,
@@ -48,7 +32,21 @@ export function useSystemState() {
     isServiceMode: runState.mode === 'Service',
     isTunModeAvailable: runState.tunCapable,
     serviceNeedsAttention: runState.serviceNeedsAttention,
-    mutateSystemState,
-    isLoading,
+    mutateSystemState: readRunState,
+    isLoading: snapshot == null,
   }
+}
+
+export function useAppUptime() {
+  const { data: uptime = 0 } = useQuery({
+    queryKey: appUptimeQueryKey,
+    queryFn: getAppUptime,
+    staleTime: 5000,
+    refetchInterval: 3000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+  })
+
+  return uptime
 }

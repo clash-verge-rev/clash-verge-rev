@@ -43,35 +43,26 @@ export const GroupItem = (props: Props) => {
     >
       {group?.icon?.trim().startsWith('http') && (
         <img
-          alt="group icon"
+          alt={group.name}
           src={iconCachePath === '' ? group.icon : iconCachePath}
           width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: '6px',
-          }}
+          style={{ marginRight: '12px', borderRadius: '6px' }}
         />
       )}
       {group?.icon?.trim().startsWith('data') && (
         <img
-          alt="group icon"
+          alt={group.name}
           src={group.icon}
           width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: '6px',
-          }}
+          style={{ marginRight: '12px', borderRadius: '6px' }}
         />
       )}
       {group?.icon?.trim().startsWith('<svg') && (
         <img
-          alt="group icon"
-          src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
+          alt={group.name}
+          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
           width="32px"
-          style={{
-            marginRight: '12px',
-            borderRadius: '6px',
-          }}
+          style={{ marginRight: '12px', borderRadius: '6px' }}
         />
       )}
       <ListItemText

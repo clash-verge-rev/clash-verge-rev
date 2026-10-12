@@ -14,13 +14,13 @@ pub enum ServiceHealth {
 }
 
 impl ServiceHealth {
-    const fn kind(&self) -> &'static str {
+    const fn kind(&self) -> ServiceHealthKind {
         match self {
-            Self::Unknown => "unknown",
-            Self::Ready => "ready",
-            Self::NotInstalled => "notInstalled",
-            Self::VersionMismatch => "versionMismatch",
-            Self::Unavailable(_) => "unavailable",
+            Self::Unknown => ServiceHealthKind::Unknown,
+            Self::Ready => ServiceHealthKind::Ready,
+            Self::NotInstalled => ServiceHealthKind::NotInstalled,
+            Self::VersionMismatch => ServiceHealthKind::VersionMismatch,
+            Self::Unavailable(_) => ServiceHealthKind::Unavailable,
         }
     }
 
@@ -32,7 +32,7 @@ impl ServiceHealth {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum PendingAction {
     Install,
@@ -95,7 +95,7 @@ impl RunState {
         !matches!(self.health, ServiceHealth::Unknown) && !self.op_in_flight && !self.service_needs_attention()
     }
 
-    /// Present-but-broken services remain in the repair flow rather than suppressing TUN.
+    /// Present-but-broken services remain in the repair flow rather than being disabled here.
     #[must_use]
     pub const fn startup_tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
         matches!(self.health, ServiceHealth::NotInstalled) && self.tun_should_be_disabled(tun_enabled)
@@ -118,11 +118,11 @@ impl RunState {
     }
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct RunStateView {
     pub mode: RunningMode,
-    pub service: &'static str,
+    pub service: ServiceHealthKind,
     pub service_unavailable_reason: Option<String>,
     pub pending_action: Option<PendingAction>,
     pub sidecar_allowed: bool,
@@ -232,7 +232,7 @@ mod tests {
 
         let view = run_state.to_view();
 
-        assert_eq!(view.service, "unavailable");
+        assert_eq!(view.service, ServiceHealthKind::Unavailable);
         assert_eq!(view.service_unavailable_reason.as_deref(), Some("socket refused"));
         assert_eq!(view.pending_action, Some(PendingAction::Reinstall));
         assert!(view.tun_capable, "elevation alone makes TUN possible");
@@ -244,7 +244,7 @@ mod tests {
     fn a_healthy_view_reports_no_unavailable_reason() {
         let view = state(ServiceHealth::Ready, false, false).to_view();
 
-        assert_eq!(view.service, "ready");
+        assert_eq!(view.service, ServiceHealthKind::Ready);
         assert_eq!(view.service_unavailable_reason, None);
         assert!(view.service_usable);
         assert!(!view.service_needs_attention);
@@ -349,4 +349,14 @@ mod tests {
 
         assert!(settled.tun_should_be_disabled(true));
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub enum ServiceHealthKind {
+    Unknown,
+    Ready,
+    NotInstalled,
+    VersionMismatch,
+    Unavailable,
 }

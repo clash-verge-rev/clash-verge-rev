@@ -21,8 +21,10 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "سرویس نمی‌تواند هسته را اجرا کند، زیرا مسیر نصب یا مجوزهای پوشه در بررسی امنیتی تأیید نشده‌اند. برای بازیابی فایل‌ها و مجوزها، سرویس را دوباره نصب و سپس مجدداً تلاش کنید. ممکن است ویندوز تأیید مدیر را درخواست کند.",
+      "notAutoStartedMessage": "نوع راه‌اندازی سرویس Clash Verge به «دستی» یا «غیرفعال» تغییر کرده است (اغلب توسط ابزارهای بهینه‌ساز)، بنابراین دیگر همراه ویندوز اجرا نمی‌شود؛ این نشست از Sidecar استفاده می‌کند. برای بازگرداندن راه‌اندازی خودکار، سرویس را دوباره نصب کنید. ممکن است ویندوز تأیید مدیر را درخواست کند.",
       "title": "Service update required",
-      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",
       "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
       "reinstall": "Reinstall service",

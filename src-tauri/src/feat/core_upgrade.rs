@@ -34,17 +34,16 @@ static STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 /// `.rollback` and `.old` are fixed paths, so two upgrades must not overlap.
 static UPGRADE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, specta::Type)]
 pub struct CoreUpgradeReport {
     /// False when the managed core was already at the latest version.
     pub upgraded: bool,
-    pub from: std::string::String,
-    pub to: std::string::String,
 }
 
 pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let _serialized = UPGRADE_LOCK.lock().await;
     let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    tracing::Span::current().record("core", tracing::field::display(&core));
     let alpha = core.ends_with("-alpha");
     let target = managed_core_path(&core)?;
 
@@ -55,18 +54,13 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     });
 
     let (proxy, latest) = resolve_latest_version(alpha).await?;
-    logging!(
-        info,
-        Type::Core,
-        "core upgrade: {core} installed={installed:?} latest={latest:?} via {proxy:?}"
-    );
+    let span = tracing::Span::current();
+    span.record("from", tracing::field::display(&installed));
+    span.record("to", tracing::field::display(&latest));
+    logging!(debug, Type::Core, "core upgrade: latest version resolved via {proxy:?}");
 
     if !force && installed == latest {
-        return Ok(CoreUpgradeReport {
-            upgraded: false,
-            from: installed,
-            to: latest,
-        });
+        return Ok(CoreUpgradeReport { upgraded: false });
     }
 
     let package = download_package(proxy, alpha, &latest).await?;
@@ -79,7 +73,26 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     // Nothing to roll back to when the core we are replacing could not report a version.
     let restorable = !installed.is_empty() && std::fs::hard_link(&target, &rollback).is_ok();
 
+    // Decided before anything can crash: after a failed restart the mode reads NotRunning, which
+    // says nothing about whether this upgrade went through the Service.
+    let service_mode = matches!(*CoreManager::global().get_running_mode(), RunningMode::Service);
+
     let mut result = staged.publish(&target);
+    // The Service executes its own administrator-approved copy, never this file; hand the new
+    // bytes over before the restart below asks for them, or a service-mode restart would keep
+    // running the previous core while the app reports the new version. Sidecar mode runs the
+    // file directly and gets no elevation prompt.
+    let service_staging = if result.is_ok() && service_mode {
+        result =
+            crate::core::service::stage_approved_core(&target).context("core replaced but not accepted by the service");
+        if result.is_ok() {
+            ServiceStaging::Succeeded
+        } else {
+            ServiceStaging::Refused
+        }
+    } else {
+        ServiceStaging::NotAttempted
+    };
     if result.is_ok() {
         result = CoreManager::global()
             .restart_core()
@@ -89,10 +102,30 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
 
     if let Err(error) = result {
         // Put the previous core back when its file is gone or its process is down. A failure
-        // after the new core started must keep the new file instead.
+        // after the new core started must keep the new file instead. A service that refused the
+        // new core also restores: leaving the new file would make a retry read the new version
+        // and report nothing to do while the service keeps running the old core.
         let core_is_down = matches!(*CoreManager::global().get_running_mode(), RunningMode::NotRunning);
-        if restorable && (core_is_down || !target.exists()) && std::fs::rename(&rollback, &target).is_ok() {
+        if restorable
+            && (matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists())
+            && std::fs::rename(&rollback, &target).is_ok()
+        {
             logging!(warn, Type::Core, "core upgrade: rolled back to {installed:?}");
+            // Only a staging that SUCCEEDED left the failing bytes in the approved copy, and only
+            // then must the restore reach it too — otherwise the restart below would spawn the
+            // very core that just failed. Refused or never-attempted staging left the approved
+            // copy untouched, and re-staging would raise an elevation prompt for a no-op. This is
+            // deliberately not gated on the current running mode, which reads NotRunning after
+            // the very crash being rolled back.
+            if matches!(service_staging, ServiceStaging::Succeeded)
+                && let Err(stage_error) = crate::core::service::stage_approved_core(&target)
+            {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "core upgrade: could not restore the service copy: {stage_error:#}"
+                );
+            }
             if core_is_down {
                 let _ = CoreManager::global().restart_core().await;
             }
@@ -111,12 +144,21 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     #[cfg(windows)]
     let _ = std::fs::remove_file(target.with_extension("old"));
 
-    logging!(info, Type::Core, "core upgrade: {core} now at {latest}");
-    Ok(CoreUpgradeReport {
-        upgraded: true,
-        from: installed,
-        to: latest,
-    })
+    Ok(CoreUpgradeReport { upgraded: true })
+}
+
+/// Whether this upgrade handed bytes to the Service's approved core directory.
+///
+/// Three states matter, not two: a staging that never ran (publish failed, or sidecar mode) left
+/// the approved copy alone just like a refused one, but only a SUCCEEDED staging obliges the
+/// rollback path to restore that copy as well. A user who upgrades in sidecar mode and later
+/// switches to service mode runs the previously approved core until the next elevated
+/// (re)install or upgrade; the Service logs that drift on every spawn.
+#[derive(Clone, Copy)]
+enum ServiceStaging {
+    NotAttempted,
+    Succeeded,
+    Refused,
 }
 
 /// The sidecar next to the app executable. On macOS development builds the Service runs a
@@ -175,6 +217,7 @@ fn asset_base_name(alpha: bool) -> Result<&'static str> {
 }
 
 /// Returns the proxy that reached GitHub so the package download reuses it.
+#[tracing::instrument(skip_all, level = "debug", fields(alpha))]
 async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::String)> {
     let url = if alpha {
         format!("{ALPHA_BASE_URL}/version.txt")
@@ -193,13 +236,33 @@ async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::
                 // An error page answered with 200 must not become a version, nor reach the URL.
                 let version = response.text().trim().to_owned();
                 if !is_usable_version(&version) {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "core upgrade: {url} returned an unusable version: {version:?}"
+                    );
                     last_error = Some(anyhow!("{url} returned an unusable version"));
                     continue;
                 }
                 return Ok((proxy, version));
             }
-            Ok(response) => last_error = Some(anyhow!("{url} returned status {}", response.status())),
-            Err(error) => last_error = Some(error.context(format!("{proxy:?} could not reach {url}"))),
+            Ok(response) => {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "core upgrade: version probe via {proxy:?}: status {}",
+                    response.status()
+                );
+                last_error = Some(anyhow!("{url} returned status {}", response.status()));
+            }
+            Err(error) => {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "core upgrade: version probe via {proxy:?} failed: {error:#}"
+                );
+                last_error = Some(error.context(format!("{proxy:?} could not reach {url}")));
+            }
         }
     }
 
@@ -286,24 +349,31 @@ fn stage_core(target: &Path, package: &[u8], version: &str) -> Result<StagedCore
 }
 
 fn create_staging_file(directory: &Path, core_name: &OsStr) -> Result<(PathBuf, File)> {
-    for _ in 0..32 {
-        let generation = STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
-        let path = directory.join(format!(
-            ".{}.{}.{generation}.tmp",
-            core_name.to_string_lossy(),
-            std::process::id()
-        ));
+    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+    retry_sync(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add(31),
+            std::time::Duration::ZERO,
+        ),
+        |_| {
+            let generation = STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
+            let path = directory.join(format!(
+                ".{}.{}.{generation}.tmp",
+                core_name.to_string_lossy(),
+                std::process::id()
+            ));
 
-        match File::options().write(true).create_new(true).open(&path) {
-            Ok(file) => return Ok((path, file)),
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(error) => {
-                return Err(error).with_context(|| format!("failed to create {}", path.display()));
+            match File::options().write(true).create_new(true).open(&path) {
+                Ok(file) => Ok((path, file)),
+                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Err(RetryError::Retry(
+                    anyhow::anyhow!("failed to create a unique staging file in {}", directory.display()),
+                )),
+                Err(error) => Err(RetryError::Stop(
+                    anyhow::Error::from(error).context(format!("failed to create {}", path.display())),
+                )),
             }
-        }
-    }
-
-    bail!("failed to create a unique staging file in {}", directory.display())
+        },
+    )
 }
 
 #[cfg(windows)]

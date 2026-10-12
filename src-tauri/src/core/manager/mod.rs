@@ -1,16 +1,15 @@
 mod config;
+pub(crate) use config::ConfigUpdateGuard;
 mod lifecycle;
 mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
-use clash_verge_logger::AsyncLogger;
-use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
+use clash_verge_logging::{LogRing, Type, logging};
 use std::{
     fmt,
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Instant,
@@ -22,7 +21,7 @@ use crate::singleton;
 #[cfg(target_os = "windows")]
 use std::os::windows::io::OwnedHandle;
 
-pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
+pub(crate) static CLASH_LOGGER: LazyLock<Arc<LogRing>> = LazyLock::new(|| Arc::new(LogRing::new()));
 
 tokio::task_local! {
     static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
@@ -58,7 +57,7 @@ fn claim_core_readiness_generation(state: &AtomicU64, captured_generation: u64) 
         .is_ok()
 }
 
-#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
 pub enum RunningMode {
     Service,
     Sidecar,
@@ -75,6 +74,14 @@ impl fmt::Display for RunningMode {
     }
 }
 
+/// Why the Core is not running, kept until a Core starts again.
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
+#[serde(tag = "kind", content = "detail", rename_all = "camelCase")]
+pub enum CoreFailure {
+    StartFailed(String),
+    ServiceCoreStopped(String),
+}
+
 #[derive(Debug)]
 pub struct CoreManager {
     /// The Run State this manager reports transitions to.
@@ -88,6 +95,8 @@ pub struct CoreManager {
     job_handle: ArcSwapOption<OwnedHandle>,
     config_update_in_progress: AtomicBool,
     core_readiness_state: AtomicU64,
+    startup_error: parking_lot::Mutex<Option<CoreFailure>>,
+    sidecar_exit: tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
     pub(crate) lifecycle_lock: tokio::sync::Mutex<()>,
@@ -115,6 +124,8 @@ impl Default for CoreManager {
             job_handle: ArcSwapOption::new(None),
             config_update_in_progress: AtomicBool::new(false),
             core_readiness_state: AtomicU64::new(0),
+            startup_error: parking_lot::Mutex::new(None),
+            sidecar_exit: tokio::sync::Mutex::new(None),
             lifecycle_lock: tokio::sync::Mutex::new(()),
             #[cfg(target_os = "windows")]
             handoff_watcher_running: AtomicBool::new(false),
@@ -140,6 +151,17 @@ impl CoreManager {
         self.run_state.mode_arc()
     }
 
+    pub(crate) fn record_startup_error(&self, failure: CoreFailure) {
+        let mut startup_error = self.startup_error.lock();
+        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+            *startup_error = Some(failure);
+        }
+    }
+
+    pub(crate) fn get_startup_error(&self) -> Option<CoreFailure> {
+        self.startup_error.lock().clone()
+    }
+
     pub fn take_child_sidecar(&self) -> Option<CommandChild> {
         self.state
             .load()
@@ -161,7 +183,13 @@ impl CoreManager {
     /// Run State derives PAC availability and the outward mode mirror from this; callers must
     /// not set those alongside.
     pub fn core_started(&self, mode: RunningMode) {
+        let previous = *self.get_running_mode();
+        if previous != mode {
+            logging!(info, Type::Core, "Core running mode changed: {previous} -> {mode}");
+        }
+        let mut startup_error = self.startup_error.lock();
         self.run_state.core_started(mode);
+        *startup_error = None;
     }
 
     /// The Core is no longer running, for any reason.
@@ -169,6 +197,10 @@ impl CoreManager {
     /// Core readiness is invalidated here rather than inside Run State because readiness
     /// belongs to the process this manager supervises.
     pub fn core_stopped(&self) {
+        let previous = *self.get_running_mode();
+        if !matches!(previous, RunningMode::NotRunning) {
+            logging!(info, Type::Core, "Core running mode changed: {previous} -> NotRunning");
+        }
         self.invalidate_core_readiness();
         self.run_state.core_stopped();
     }
@@ -205,14 +237,14 @@ impl CoreManager {
         }
     }
 
-    fn current_core_readiness_generation(&self) -> Option<u64> {
+    pub(crate) fn current_core_readiness_generation(&self) -> Option<u64> {
         active_core_readiness_generation(self.core_readiness_state.load(Ordering::Acquire))
     }
 
     pub(crate) fn invalidate_core_readiness(&self) {
         let _ = self
             .core_readiness_state
-            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |current| {
+            .try_update(Ordering::AcqRel, Ordering::Acquire, |current| {
                 active_core_readiness_generation(current).map(inactive_core_readiness_state)
             });
     }
@@ -244,6 +276,7 @@ impl CoreManager {
         self.config_update_in_progress.store(false, Ordering::Release);
     }
 
+    #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]
     pub async fn init(&self) -> Result<bool> {
         const MAX_PORT_FALLBACK_RETRIES: usize = 3;
 
@@ -251,48 +284,83 @@ impl CoreManager {
             anyhow::bail!("core startup blocked after mixed proxy port fallback failure: {reason}");
         }
 
-        let mut retries = 0;
-        loop {
-            match self.start_core().await {
-                Ok(()) => {
-                    crate::config::Config::notify_startup_mixed_port_fallback();
-                    return Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning));
-                }
-                Err(start_error) if retries < MAX_PORT_FALLBACK_RETRIES => {
-                    if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+        use crate::utils::retry::{RetryError, RetryPolicy, retry};
+        retry(
+            RetryPolicy::fixed(
+                std::num::NonZeroUsize::MIN.saturating_add(MAX_PORT_FALLBACK_RETRIES),
+                std::time::Duration::ZERO,
+            ),
+            |retries| async move {
+                match self.start_core().await {
+                    Ok(()) => {
                         crate::config::Config::notify_startup_mixed_port_fallback();
-                        return Err(start_error);
+                        Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning))
                     }
-                    match crate::config::Config::resolve_startup_mixed_port().await {
-                        Ok(true) => {
-                            retries += 1;
-                            logging!(
-                                warn,
-                                Type::Core,
-                                "Retrying core startup after mixed proxy port fallback ({}/{})",
-                                retries,
-                                MAX_PORT_FALLBACK_RETRIES
-                            );
-                        }
-                        Ok(false) => {
+                    Err(start_error) if retries < MAX_PORT_FALLBACK_RETRIES => {
+                        if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
                             crate::config::Config::notify_startup_mixed_port_fallback();
-                            return Err(start_error);
+                            return Err(RetryError::Stop(start_error));
                         }
-                        Err(fallback_error) => {
-                            crate::config::Config::block_startup_core(&fallback_error);
-                            return Err(start_error.context(format!(
-                                "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
-                            )));
+                        match crate::config::Config::resolve_startup_mixed_port().await {
+                            Ok(true) => {
+                                let retries = retries + 1;
+                                tracing::Span::current().record("retries", retries);
+                                logging!(
+                                    warn,
+                                    Type::Core,
+                                    "Retrying core startup after mixed proxy port fallback ({}/{}): {start_error:#}",
+                                    retries,
+                                    MAX_PORT_FALLBACK_RETRIES
+                                );
+                                Err(RetryError::Retry(start_error))
+                            }
+                            Ok(false) => {
+                                crate::config::Config::notify_startup_mixed_port_fallback();
+                                Err(RetryError::Stop(start_error))
+                            }
+                            Err(fallback_error) => {
+                                crate::config::Config::block_startup_core(&fallback_error);
+                                Err(RetryError::Stop(start_error.context(format!(
+                                    "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
+                                ))))
+                            }
                         }
                     }
+                    Err(error) => {
+                        crate::config::Config::notify_startup_mixed_port_fallback();
+                        Err(RetryError::Stop(error))
+                    }
                 }
-                Err(error) => {
-                    crate::config::Config::notify_startup_mixed_port_fallback();
-                    return Err(error);
-                }
-            }
-        }
+            },
+        )
+        .await
     }
 }
 
 singleton!(CoreManager, CORE_MANAGER);
+
+#[cfg(test)]
+mod startup_error_tests {
+    use super::{CoreFailure, CoreManager, RunningMode};
+
+    #[test]
+    fn recovery_invalidates_an_unread_startup_error_even_after_a_later_exit() {
+        for mode in [RunningMode::Sidecar, RunningMode::Service] {
+            let manager = CoreManager::isolated();
+            manager.record_startup_error(CoreFailure::StartFailed("startup failed".into()));
+            manager.core_started(mode);
+            manager.core_stopped();
+            assert_eq!(manager.get_startup_error(), None);
+        }
+    }
+
+    #[test]
+    fn unresolved_startup_error_survives_repeated_reads() {
+        let manager = CoreManager::isolated();
+        let failure = CoreFailure::StartFailed("startup failed".into());
+        manager.record_startup_error(failure.clone());
+        for _ in 0..2 {
+            assert_eq!(manager.get_startup_error().as_ref(), Some(&failure));
+        }
+    }
+}

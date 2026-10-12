@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "拡張設定またはスクリプトが、アプリ設定で管理される {{keys}} を書き込んだため、その値は破棄されました",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "読み取り専用モードでは編集できません。"
+      },
+      "enhance": {
+        "globalMerge": "すべてのプロファイルに適用され、アプリ設定の後にマージされます。後続のグローバルスクリプト、プロファイル拡張設定・スクリプトで結果を変更できます。",
+        "globalScript": "すべてのプロファイルに適用され、グローバル拡張設定のマージ結果を受け取ります。後続のプロファイル拡張設定・スクリプトで結果を変更できます。",
+        "profileMerge": "このプロファイルのみに適用され、グローバル拡張設定・スクリプトの後にマージされます。後続のプロファイルスクリプトで結果を変更できます。",
+        "profileScript": "このプロファイルのみに適用され、プロファイル拡張設定のマージ結果を受け取ります。アプリ設定が再適用される前の最後の拡張ステップです。",
+        "order": "実行順序：元のプロファイル → アプリ設定 → <globalMerge>グローバル拡張設定</globalMerge> → <globalScript>グローバル拡張スクリプト</globalScript> → <profileMerge>プロファイル拡張設定</profileMerge> → <profileScript>プロファイル拡張スクリプト</profileScript> → アプリ設定の再適用",
+        "settingsPriority": "注意：アプリ設定が管理するフィールドは、最終的にアプリ設定の値が優先されます。拡張設定やスクリプトでこれらのフィールドを変更しても反映されません。"
       }
     },
     "confirmDelete": {

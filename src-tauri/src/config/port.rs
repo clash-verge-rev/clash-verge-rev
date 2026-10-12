@@ -1,4 +1,5 @@
-use super::{Config, ConfigType, IClashTemp, IVerge, MixedPort};
+use super::{Config, IClashTemp, IVerge, MixedPort};
+use crate::core::notify::NoticeStatus;
 use crate::{
     constants::timing,
     core::{
@@ -14,15 +15,9 @@ use crate::{
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use serde_yaml_ng::Value;
-use std::{
-    collections::HashSet,
-    net::SocketAddr,
-    str::FromStr as _,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::{collections::HashSet, net::SocketAddr, str::FromStr as _};
 
 #[derive(Clone, Copy)]
 struct MixedPortFallback {
@@ -30,9 +25,8 @@ struct MixedPortFallback {
     current: u16,
 }
 
-static PENDING_FALLBACK_NOTICE: Lazy<Mutex<Option<MixedPortFallback>>> = Lazy::new(|| Mutex::new(None));
-static STARTUP_CORE_BLOCKED: AtomicBool = AtomicBool::new(false);
-static STARTUP_CORE_BLOCK_REASON: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
+static PENDING_FALLBACK_NOTICE: Mutex<Option<MixedPortFallback>> = Mutex::new(None);
+static STARTUP_CORE_BLOCK_REASON: Mutex<Option<String>> = Mutex::new(None);
 
 impl Config {
     pub(crate) async fn resolve_startup_mixed_port() -> Result<bool> {
@@ -129,32 +123,30 @@ impl Config {
             .await
             .context("failed to materialize runtime configuration with fallback port")?;
 
+        let yaml = Self::runtime_config_yaml()
+            .await
+            .context("failed to validate runtime configuration with fallback port")?;
         let validation = CoreConfigValidator::global()
-            .validate_config_outcome()
+            .validate_config_outcome_with(&yaml)
             .await
             .context("failed to validate runtime configuration with fallback port")?;
         if !validation.is_valid() {
             bail!("runtime configuration with fallback port is invalid: {validation}");
         }
 
-        Self::generate_file(ConfigType::Run)
+        Self::generate_file()
             .await
             .context("failed to write Runtime Configuration")?;
         Ok(())
     }
 
     pub(crate) fn block_startup_core(error: &anyhow::Error) {
-        STARTUP_CORE_BLOCKED.store(true, Ordering::Release);
         *STARTUP_CORE_BLOCK_REASON.lock() = Some(error.to_string());
         report_fallback_error(error.to_string());
     }
 
     pub(crate) fn startup_core_block_reason() -> Option<String> {
-        if STARTUP_CORE_BLOCKED.load(Ordering::Acquire) {
-            STARTUP_CORE_BLOCK_REASON.lock().clone()
-        } else {
-            None
-        }
+        STARTUP_CORE_BLOCK_REASON.lock().clone()
     }
 
     pub(crate) fn notify_startup_mixed_port_fallback() {
@@ -163,8 +155,8 @@ impl Config {
         };
         AsyncHandler::spawn(move || async move {
             tokio::time::sleep(timing::STARTUP_ERROR_DELAY).await;
-            Handle::notice_message(
-                "mixed_port::fallback",
+            Handle::notice(
+                NoticeStatus::MixedPortFallback,
                 format!("{},{}", change.original, change.current),
             );
         });
@@ -193,7 +185,7 @@ fn report_fallback_error(message: String) {
     );
     AsyncHandler::spawn(move || async move {
         tokio::time::sleep(timing::STARTUP_ERROR_DELAY).await;
-        Handle::notice_message("mixed_port::fallback_error", message);
+        Handle::notice(NoticeStatus::MixedPortFallbackError, message);
     });
 }
 
@@ -262,7 +254,7 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
             logging!(
                 warn,
                 Type::Service,
-                "Current user's service core is active but its mixed proxy port is unavailable: {error}; \
+                "Current user's service core is active but its mixed proxy port is unavailable: {error:#}; \
                  preserving the selected port until core replacement resolves ownership"
             );
             true

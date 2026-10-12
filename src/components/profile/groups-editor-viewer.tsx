@@ -1,13 +1,5 @@
 import { arrayMove } from '@dnd-kit/helpers'
 import {
-  DragDropProvider,
-  type DragOverEvent,
-  KeyboardSensor,
-  PointerSensor,
-  type DragEndEvent,
-} from '@dnd-kit/react'
-import { isSortable, isSortableOperation } from '@dnd-kit/react/sortable'
-import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
@@ -43,25 +35,26 @@ import {
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import {
-  BaseSearchBox,
-  MonacoEditor,
-  SortableItem,
-  Switch,
-  VirtualList,
-} from '@/components/base'
+import { BaseSearchBox, MonacoEditor, Switch } from '@/components/base'
 import { GroupItem } from '@/components/profile/group-item'
 import {
   getNetworkInterfaces,
   readProfileFile,
   saveProfileFile,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
-import getSystem from '@/utils/get-system'
+import { MONACO_FONT_FAMILY } from '@/utils/font-family'
 import { parseYamlSafe } from '@/utils/yaml'
+
+import {
+  buildGroupedItems,
+  type GroupedVirtualItem,
+  GroupedVirtualList,
+} from './grouped-virtual-list'
 
 interface Props {
   proxiesUid: string
@@ -203,106 +196,71 @@ export const GroupsEditorViewer = (props: Props) => {
     [appendSeq, match],
   )
 
-  const renderItem = (index: number): React.ReactNode => {
-    const shift = filteredPrependSeq.length > 0 ? 1 : 0
-    if (filteredPrependSeq.length > 0 && index === 0) {
+  const items = useMemo(
+    () =>
+      buildGroupedItems(
+        filteredPrependSeq,
+        filteredGroupList,
+        filteredAppendSeq,
+        (group) => group.name,
+      ),
+    [filteredPrependSeq, filteredGroupList, filteredAppendSeq],
+  )
+
+  const renderItem = (entry: GroupedVirtualItem<IProxyGroupConfig>) => {
+    const { category, item } = entry
+
+    if (category === 'original') {
+      const isDeleted = deleteSeq.includes(item.name)
       return (
-        <>
-          {filteredPrependSeq.map((item, itemIndex) => {
-            return (
-              <SortableItem
-                key={item.name}
-                id={`prepend:${item.name}`}
-                index={itemIndex}
-                group="prepend"
-                style={{ margin: '8px 0' }}
-              >
-                <GroupItem
-                  type="prepend"
-                  group={item}
-                  onDelete={() => {
-                    setPrependSeq(
-                      prependSeq.filter((v) => v.name !== item.name),
-                    )
-                  }}
-                />
-              </SortableItem>
-            )
-          })}
-        </>
-      )
-    } else if (index < filteredGroupList.length + shift) {
-      const newIndex = index - shift
-      return (
-        <Box sx={{ margin: '8px 0' }}>
-          <GroupItem
-            key={filteredGroupList[newIndex].name}
-            type={
-              deleteSeq.includes(filteredGroupList[newIndex].name)
-                ? 'delete'
-                : 'original'
+        <GroupItem
+          type={isDeleted ? 'delete' : 'original'}
+          group={item}
+          onDelete={() => {
+            if (isDeleted) {
+              setDeleteSeq(deleteSeq.filter((v) => v !== item.name))
+            } else {
+              setDeleteSeq((prev) => [...prev, item.name])
             }
-            group={filteredGroupList[newIndex]}
-            onDelete={() => {
-              if (deleteSeq.includes(filteredGroupList[newIndex].name)) {
-                setDeleteSeq(
-                  deleteSeq.filter(
-                    (v) => v !== filteredGroupList[newIndex].name,
-                  ),
-                )
-              } else {
-                setDeleteSeq((prev) => [
-                  ...prev,
-                  filteredGroupList[newIndex].name,
-                ])
-              }
-            }}
-          />
-        </Box>
+          }}
+        />
       )
-    } else {
+    }
+
+    if (category === 'prepend') {
       return (
-        <>
-          {filteredAppendSeq.map((item, itemIndex) => {
-            return (
-              <SortableItem
-                key={item.name}
-                id={`append:${item.name}`}
-                index={itemIndex}
-                group="append"
-                style={{ margin: '8px 0' }}
-              >
-                <GroupItem
-                  type="append"
-                  group={item}
-                  onDelete={() => {
-                    setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
-                  }}
-                />
-              </SortableItem>
-            )
-          })}
-        </>
+        <GroupItem
+          type="prepend"
+          group={item}
+          onDelete={() => {
+            setPrependSeq(prependSeq.filter((v) => v.name !== item.name))
+          }}
+        />
       )
     }
+
+    return (
+      <GroupItem
+        type="append"
+        group={item}
+        onDelete={() => {
+          setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+        }}
+      />
+    )
   }
 
-  const onPrependDragEnd = async (event: DragEndEvent) => {
-    const { operation, canceled } = event
-    const { source, target } = operation
-    if (canceled || !target || !isSortable(source)) return
-
-    const { index: overIndex, initialIndex: activeIndex } = source.sortable
-    const activeRealIndex = findRealIndex(
-      prependSeq,
-      filteredPrependSeq,
-      activeIndex,
-    )
-    const overRealIndex = findRealIndex(
-      prependSeq,
-      filteredPrependSeq,
-      overIndex,
-    )
+  const onReorder = (
+    category: 'prepend' | 'append',
+    activeIndex: number,
+    overIndex: number,
+  ) => {
+    const list = category === 'prepend' ? prependSeq : appendSeq
+    const filtered =
+      category === 'prepend' ? filteredPrependSeq : filteredAppendSeq
+    const setList = category === 'prepend' ? setPrependSeq : setAppendSeq
+    const activeRealIndex = findRealIndex(list, filtered, activeIndex)
+    const overRealIndex = findRealIndex(list, filtered, overIndex)
     if (
       activeRealIndex < 0 ||
       overRealIndex < 0 ||
@@ -311,55 +269,9 @@ export const GroupsEditorViewer = (props: Props) => {
       return
     }
 
-    setPrependSeq(arrayMove(prependSeq, activeRealIndex, overRealIndex))
-  }
-  const onAppendDragEnd = async (event: DragEndEvent) => {
-    const { operation, canceled } = event
-    const { source, target } = operation
-    if (canceled || !target || !isSortable(source)) return
-
-    const { index: overIndex, initialIndex: activeIndex } = source.sortable
-    const activeRealIndex = findRealIndex(
-      appendSeq,
-      filteredAppendSeq,
-      activeIndex,
-    )
-    const overRealIndex = findRealIndex(appendSeq, filteredAppendSeq, overIndex)
-    if (
-      activeRealIndex < 0 ||
-      overRealIndex < 0 ||
-      activeRealIndex === overRealIndex
-    ) {
-      return
-    }
-
-    setAppendSeq(arrayMove(appendSeq, activeRealIndex, overRealIndex))
+    setList(arrayMove(list, activeRealIndex, overRealIndex))
   }
 
-  // prevent drag over if source and target are in different groups
-  const onDragOver = (event: DragOverEvent) => {
-    const { operation } = event
-    if (!isSortableOperation(operation)) return
-
-    const { source, target } = operation
-    if (source?.group !== target?.group) {
-      event.preventDefault()
-    }
-  }
-
-  const onDragEnd = async (event: DragEndEvent) => {
-    const source = event.operation.source
-    if (!isSortable(source)) return
-
-    const { initialGroup, group } = source.sortable
-    if (initialGroup !== group) return
-
-    if (group === 'prepend') {
-      await onPrependDragEnd(event)
-    } else if (group === 'append') {
-      await onAppendDragEnd(event)
-    }
-  }
   const fetchContent = useCallback(async () => {
     hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
@@ -561,7 +473,11 @@ export const GroupsEditorViewer = (props: Props) => {
         setCurrData(nextData)
       }
 
-      if (!(await saveProfileFile(property, nextData))) {
+      const result = await mutate(() => saveProfileFile(property, nextData), {
+        id: `save-profile-file:${property}`,
+        errorNotice: false,
+      })
+      if (!(result.ok && result.value === true)) {
         await fetchContent()
         onClose()
         return
@@ -1152,22 +1068,12 @@ export const GroupsEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <DragDropProvider
-                sensors={[PointerSensor, KeyboardSensor]}
-                onDragOver={onDragOver}
-                onDragEnd={onDragEnd}
-              >
-                <VirtualList
-                  count={
-                    filteredGroupList.length +
-                    (filteredPrependSeq.length > 0 ? 1 : 0) +
-                    (filteredAppendSeq.length > 0 ? 1 : 0)
-                  }
-                  estimateSize={56}
-                  renderItem={renderItem}
-                  style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-                />
-              </DragDropProvider>
+              <GroupedVirtualList
+                items={items}
+                renderItem={renderItem}
+                onReorder={onReorder}
+                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+              />
             </List>
           </>
         ) : (
@@ -1193,9 +1099,7 @@ export const GroupsEditorViewer = (props: Props) => {
               padding: {
                 top: 33, // 顶部padding防止遮挡snippets
               },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === 'windows' ? ', twemoji mozilla' : ''
-              }`,
+              fontFamily: MONACO_FONT_FAMILY,
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}

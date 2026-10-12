@@ -27,8 +27,42 @@ pub struct RealEnv;
 
 impl RunStateEnv for RealEnv {
     async fn probe_service_version(&self) -> Result<ServiceVersionReply> {
+        // The IPC client would otherwise back off for about two minutes before failing.
+        #[cfg(windows)]
+        if let Some(reason) = tokio::task::spawn_blocking(crate::core::service::service_stop_reason)
+            .await
+            .context("service status probe did not finish")??
+        {
+            anyhow::bail!(reason);
+        }
         let response = clash_verge_service_ipc::get_version().await?;
+        let core = if response.code == 0
+            && response.data.as_ref().is_some_and(|info| {
+                info.supports_client(
+                    clash_verge_service_ipc::ProtocolVersion::current(),
+                    clash_verge_service_ipc::MIN_REQUIRED_SERVICE_REVISION,
+                )
+            }) {
+            let name = format!(
+                "{}{}",
+                crate::config::Config::verge().await.latest_arc().get_valid_clash_core(),
+                std::env::consts::EXE_SUFFIX
+            );
+            let status = clash_verge_service_ipc::inspect_installation(&[clash_verge_service_ipc::CoreRequirement {
+                name: name.clone(),
+                sha256: None,
+            }])
+            .await?;
+            status
+                .cores
+                .into_iter()
+                .find(|core| core.name == name)
+                .map(|core| core.availability)
+        } else {
+            None
+        };
         Ok(ServiceVersionReply {
+            core,
             code: response.code,
             message: response.message,
             protocol: response.data,
@@ -36,9 +70,17 @@ impl RunStateEnv for RealEnv {
     }
 
     async fn trusted_install_evidence(&self) -> Result<bool> {
-        tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
+        let registered = tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
             .await
-            .context("service registration probe did not finish")?
+            .context("service registration probe did not finish")??;
+        // A helper that outlived its registration is a broken Service, not an absent one.
+        #[cfg(unix)]
+        if !registered && let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available().await {
+            return Ok(error
+                .downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>()
+                .is_some());
+        }
+        Ok(registered)
     }
 
     fn is_elevated(&self) -> bool {
@@ -119,6 +161,7 @@ mod fake {
         #[must_use]
         pub fn service_ready(self) -> Self {
             self.with_evidence(true).always_replying(Ok(ServiceVersionReply {
+                core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
                 code: 0,
                 message: "ok".to_owned(),
                 protocol: Some(ProtocolInfo::current()),
@@ -128,6 +171,7 @@ mod fake {
         #[must_use]
         pub fn service_version_mismatch(self) -> Self {
             self.with_evidence(true).always_replying(Ok(ServiceVersionReply {
+                core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
                 code: 0,
                 message: "ok".to_owned(),
                 protocol: None,

@@ -8,16 +8,16 @@
     },
     "batch": {
       "actions": {
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done"
+        "delete": "Ausgewählte Abonnements löschen",
+        "selectAll": "Alle auswählen",
+        "deselectAll": "Auswahl aufheben",
+        "done": "Fertig"
       },
       "summary": {
-        "selected": "Selected",
-        "items": "items"
+        "selected": "Ausgewählt",
+        "items": "Einträge"
       },
-      "title": "Batch Operations"
+      "title": "Stapelverarbeitung"
     },
     "importForm": {
       "placeholder": "Abonnement-Datei-Link",
@@ -27,7 +27,7 @@
     },
     "feedback": {
       "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "invalidUrl": "Ungültige Abonnement-URL. Bitte geben Sie eine URL ein, die mit http:// oder https:// beginnt.",
         "onlyYaml": "Nur YAML-Dateien werden unterstützt",
         "createFailed": "Abonnement konnte nicht erstellt werden",
         "deleteFailed": "Abonnement konnte nicht gelöscht werden",
@@ -42,16 +42,17 @@
       "notifications": {
         "importRetry": "Import des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
         "importFail": "Import des Abonnements auch mit Clash-Proxy fehlgeschlagen",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "importNeedsRefresh": "Abonnement importiert, muss aber eventuell manuell aktualisiert werden",
+        "importSuccess": "Abonnement erfolgreich importiert. Falls es nicht angezeigt wird, starten Sie die App bitte neu",
         "profileSwitched": "Abonnement gewechselt",
         "profileReactivated": "Abonnement erneut aktiviert",
-        "switchBusy": "Profile switch is already in progress",
-        "batchDeleted": "Selected profiles deleted successfully"
+        "switchBusy": "Ein Abonnementwechsel läuft bereits",
+        "batchDeleted": "Ausgewählte Abonnements erfolgreich gelöscht"
       },
       "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        "forceRefreshCompleted": "Erzwungene Aktualisierung abgeschlossen",
+        "discardedKeys": "Erweiterungen haben {{keys}} gesetzt, die von den Einstellungen verwaltet werden, daher wurden diese Werte verworfen",
+        "emergencyRefreshFailed": "Erzwungene Aktualisierung fehlgeschlagen: {{message}}"
       },
       "tooltips": {
         "forceRefreshStaleData": "Abonnementdaten sind nicht verfügbar; zum erzwungenen Aktualisieren klicken"
@@ -71,7 +72,7 @@
     "menu": {
       "home": "Startseite",
       "select": "Verwenden",
-      "shareQrCode": "Share QR Code",
+      "shareQrCode": "QR-Code teilen",
       "editInfo": "Informationen bearbeiten",
       "editFile": "Datei bearbeiten",
       "editRules": "Regeln bearbeiten",
@@ -81,22 +82,22 @@
       "extendScript": "Erweitertes Skript",
       "openFile": "Datei öffnen",
       "update": "Aktualisieren",
-      "updateViaProxy": "Update via proxy"
+      "updateViaProxy": "Über Proxy aktualisieren"
     },
     "more": {
       "global": {
-        "merge": "Global Extend Config",
-        "script": "Global Extend Script"
+        "merge": "Globale Konfig-Erweiterung",
+        "script": "Globales Erweiterungsskript"
       },
       "chips": {
         "merge": "Merge",
-        "script": "Script"
+        "script": "Skript"
       }
     },
     "profileItem": {
       "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
+        "showLast": "Klicken, um die Zeit der letzten Aktualisierung anzuzeigen",
+        "showNext": "Klicken, um die nächste Aktualisierung anzuzeigen"
       },
       "status": {
         "lastUpdateFailed": "Letzte Aktualisierung fehlgeschlagen",
@@ -118,12 +119,12 @@
         "description": "Beschreibung",
         "subscriptionUrl": "Abonnement-Link",
         "userAgent": "User Agent",
-        "httpTimeout": "HTTP Request Timeout",
+        "httpTimeout": "Zeitlimit für HTTP-Anfragen",
         "updateInterval": "Aktualisierungsintervall",
         "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
         "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
-        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "acceptInvalidCerts": "Ungültige Zertifikate erlauben (gefährlich)",
+        "allowAutoUpdate": "Automatische Aktualisierung erlauben"
       },
       "types": {
         "remote": "Remote",
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "Bearbeitung im schreibgeschützten Modus nicht möglich"
+      },
+      "enhance": {
+        "globalMerge": "Gilt für alle Profile, nach den App-Einstellungen. Das globale Skript, die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "globalScript": "Gilt für alle Profile und verwendet das Ergebnis der globalen Konfiguration. Die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "profileMerge": "Gilt nur für dieses Profil, nach der globalen Konfiguration und dem globalen Skript. Das Profilskript kann das Ergebnis noch ändern.",
+        "profileScript": "Gilt nur für dieses Profil und verwendet das Ergebnis der Profilkonfiguration. Dies ist der letzte Erweiterungsschritt vor dem erneuten Anwenden der App-Einstellungen.",
+        "order": "Reihenfolge: Originalprofil → App-Einstellungen → <globalMerge>Globale Erweiterungskonfiguration</globalMerge> → <globalScript>Globales Erweiterungsskript</globalScript> → <profileMerge>Profilerweiterungskonfiguration</profileMerge> → <profileScript>Profilerweiterungsskript</profileScript> → App-Einstellungen erneut anwenden",
+        "settingsPriority": "Hinweis: Von den App-Einstellungen verwaltete Felder übernehmen in der endgültigen Konfiguration immer deren Werte. Änderungen dieser Felder in Erweiterungen haben keine Wirkung."
       }
     },
     "confirmDelete": {
@@ -206,7 +215,7 @@
       "title": "Skript-Konsole-Ausgabe"
     },
     "qrViewer": {
-      "title": "Subscription QR Code"
+      "title": "Abonnement-QR-Code"
     }
   }
 }

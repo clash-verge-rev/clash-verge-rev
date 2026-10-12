@@ -34,7 +34,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -90,7 +90,7 @@ jobs:
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
 
           ### 稳定机场VPN推荐
-          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+          - [狗狗加速](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
           Created at ${{ env.BUILDTIME }}.
           EOF

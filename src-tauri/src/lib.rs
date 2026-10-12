@@ -7,7 +7,7 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
-mod module;
+pub mod ipc;
 mod process;
 pub mod utils;
 
@@ -19,13 +19,14 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
 use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
 
-pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
+pub static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
+
 /// Application initialization helper functions
 mod app_init {
     use super::*;
@@ -33,7 +34,7 @@ mod app_init {
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() -> Result<server::SingletonDisposition> {
         AsyncHandler::block_on(async move {
-            logging!(info, Type::Setup, "开始检查单例实例...");
+            logging!(debug, Type::Setup, "开始检查单例实例...");
             server::check_singleton().await
         })
     }
@@ -44,7 +45,14 @@ mod app_init {
         let mut builder = builder
             .plugin(tauri_plugin_clash_verge_sysinfo::init())
             .plugin(tauri_plugin_notification::init())
-            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(
+                tauri_plugin_updater::Builder::new()
+                    .default_version_comparator(|current, release| {
+                        release.version > current
+                            || core::updater::is_build_to_stable(&current.to_string(), &release.version.to_string())
+                    })
+                    .build(),
+            )
             .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_process::init())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -74,7 +82,7 @@ mod app_init {
     pub fn setup_deep_links(app: &tauri::App) {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
-            logging!(info, Type::Setup, "注册深层链接...");
+            logging!(debug, Type::Setup, "注册深层链接...");
             let _ = app.deep_link().register_all();
         }
 
@@ -107,7 +115,7 @@ mod app_init {
 
     /// Setup window state management
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
-        logging!(info, Type::Setup, "初始化窗口状态管理...");
+        logging!(debug, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
             .with_filename(files::WINDOW_STATE)
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
@@ -117,98 +125,10 @@ mod app_init {
     }
 
     pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
-        tauri::generate_handler![
-            tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
-            tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
-            tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
-            tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
-            cmd::probe_listener,
-            cmd::save_proxy_ports,
-            cmd::get_sys_proxy,
-            cmd::get_auto_proxy,
-            cmd::get_embedded_server_port,
-            cmd::open_app_dir,
-            cmd::open_logs_dir,
-            cmd::open_core_dir,
-            cmd::get_portable_flag,
-            cmd::get_network_interfaces,
-            cmd::get_system_hostname,
-            cmd::restart_app,
-            cmd::start_core,
-            cmd::stop_core,
-            cmd::restart_core,
-            cmd::upgrade_clash_core,
-            cmd::get_runtime_state,
-            cmd::get_pending_failures,
-            cmd::get_auto_launch_status,
-            cmd::entry_lightweight_mode,
-            cmd::exit_lightweight_mode,
-            cmd::install_service,
-            cmd::uninstall_service,
-            cmd::reinstall_service,
-            cmd::repair_service,
-            cmd::continue_with_sidecar,
-            cmd::get_clash_info,
-            cmd::patch_clash_config,
-            cmd::patch_clash_mode,
-            cmd::get_clash_mode,
-            cmd::change_clash_core,
-            cmd::get_runtime_config,
-            cmd::get_proxy_view,
-            cmd::get_runtime_yaml,
-            cmd::get_runtime_exists,
-            cmd::get_runtime_logs,
-            cmd::get_runtime_proxy_chain_config,
-            cmd::update_proxy_chain_config_in_runtime,
-            cmd::invoke_uwp_tool,
-            cmd::copy_clash_env,
-            cmd::sync_tray_proxy_selection,
-            cmd::record_selected_node,
-            cmd::forget_selected_node,
-            cmd::save_dns_config,
-            cmd::apply_dns_config,
-            cmd::get_dns_config_content,
-            cmd::validate_dns_config,
-            cmd::get_clash_logs,
-            cmd::get_verge_config,
-            cmd::patch_verge_config,
-            cmd::test_delay,
-            cmd::get_app_dir,
-            cmd::copy_icon_file,
-            cmd::download_icon_cache,
-            cmd::open_devtools,
-            cmd::exit_app,
-            cmd::get_network_interfaces_info,
-            cmd::get_profiles,
-            cmd::enhance_profiles,
-            cmd::patch_profiles_config,
-            cmd::view_profile,
-            cmd::patch_profile,
-            cmd::create_profile,
-            cmd::import_profile,
-            cmd::reorder_profile,
-            cmd::update_profile,
-            cmd::delete_profile,
-            cmd::read_profile_file,
-            cmd::save_profile_file,
-            cmd::get_next_update_time,
-            cmd::script_validate_notice,
-            cmd::validate_script_file,
-            cmd::create_local_backup,
-            cmd::list_local_backup,
-            cmd::delete_local_backup,
-            cmd::restore_local_backup,
-            cmd::import_local_backup,
-            cmd::export_local_backup,
-            cmd::create_webdav_backup,
-            cmd::save_webdav_config,
-            cmd::list_webdav_backup,
-            cmd::delete_webdav_backup,
-            cmd::restore_webdav_backup,
-            cmd::get_unlock_items,
-            cmd::check_media_unlock,
-            cmd::check_media_unlock_item,
-        ]
+        {
+            let builder = crate::ipc::builder();
+            move |invoke| builder.invoke_handler()(invoke)
+        }
     }
 }
 
@@ -240,7 +160,15 @@ pub fn run() -> std::process::ExitCode {
         return std::process::ExitCode::SUCCESS;
     }
 
-    let _ = utils::dirs::init_portable_flag();
+    // Runs before the singleton check, which is the first thing to open a file in that directory.
+    #[cfg(windows)]
+    if let Err(error) =
+        utils::dirs::preinit_app_data_dir().and_then(|root| core::owner_identity::repair_app_data_root_owner(&root))
+    {
+        // The logger is installed later in setup(), so this would otherwise be lost.
+        eprintln!("[clash-verge] 应用数据目录所有权修复失败: {error:#}");
+        logging!(error, Type::Setup, "应用数据目录所有权修复失败: {error:#}");
+    }
 
     match handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error) {
         StartupAction::Continue => {}
@@ -281,10 +209,10 @@ pub fn run() -> std::process::ExitCode {
                     .expect("failed to set global app handle");
 
                 if let Err(e) = resolve::init_work_dir_and_logger() {
-                    logging!(error, Type::Setup, "Failed to init work dir/logger: {}", e);
+                    logging!(error, Type::Setup, "Failed to init work dir/logger: {e:#}");
                 }
 
-                logging!(info, Type::Setup, "开始应用初始化...");
+                logging!(debug, Type::Setup, "开始应用初始化...");
                 if let Err(e) = app_init::setup_autostart(app) {
                     logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
                 }
@@ -302,7 +230,6 @@ pub fn run() -> std::process::ExitCode {
             if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 resolve::resolve_setup_async();
                 resolve::resolve_setup_sync();
-                logging!(info, Type::Setup, "初始化已启动");
             })) {
                 log_setup_panic("window-core", panic);
             }
@@ -319,7 +246,7 @@ pub fn run() -> std::process::ExitCode {
 
     mod event_handlers {
         #[cfg(target_os = "macos")]
-        use crate::module::lightweight;
+        use crate::core::lightweight;
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
@@ -455,25 +382,27 @@ pub fn run() -> std::process::ExitCode {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+        tauri::RunEvent::Exit => {
             // Windows session ending currently reaches Tao as WM_ENDSESSION and
             // destroys the loop without a preventable ExitRequested event.
             if !handle::Handle::global().is_exiting() {
                 handle::Handle::global().set_is_exiting();
-                let cleanup_result = feat::clean_session_ending_best_effort().await;
-                logging!(
-                    info,
-                    Type::System,
-                    "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
-                    cleanup_result.core_stopped,
-                    cleanup_result.all_success
-                );
+                if let Some(cleanup_result) = feat::clean_session_ending_with_hard_deadline() {
+                    logging!(
+                        info,
+                        Type::System,
+                        "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
+                        cleanup_result.core_stopped,
+                        cleanup_result.all_success
+                    );
+                }
             }
             logging!(info, Type::System, "Application exited");
-        }),
+            crate::core::logger::Logger::global().flush_logs();
+        }
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
+            if core::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
                 api.prevent_exit();
             } else if code.is_none() {
                 api.prevent_exit();

@@ -23,6 +23,8 @@ import { useTranslation } from 'react-i18next'
 import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
+import { syncRuntimeProviders } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -56,9 +58,16 @@ export const ProviderButton = () => {
     try {
       setUpdating((prev) => ({ ...prev, [name]: true }))
 
-      await updateProxyProvider(name)
+      await mutate(() => updateProxyProvider(name), {
+        id: `update-proxy-provider-${name}`,
+        errorNotice: false,
+      })
 
       await refreshProxy()
+      void mutate(() => syncRuntimeProviders(), {
+        id: 'sync-runtime-providers',
+        errorNotice: false,
+      })
 
       showNotice.success(
         'proxies.feedback.notifications.provider.updateSuccess',
@@ -95,7 +104,10 @@ export const ProviderButton = () => {
 
       for (const name of allProviders) {
         try {
-          await updateProxyProvider(name)
+          await mutate(() => updateProxyProvider(name), {
+            id: `update-proxy-provider-${name}`,
+            errorNotice: false,
+          })
           setUpdating((prev) => ({ ...prev, [name]: false }))
         } catch (err) {
           console.error(`更新 ${name} 失败`, err)
@@ -103,6 +115,10 @@ export const ProviderButton = () => {
       }
 
       await refreshProxy()
+      void mutate(() => syncRuntimeProviders(), {
+        id: 'sync-runtime-providers',
+        errorNotice: false,
+      })
 
       showNotice.success('proxies.feedback.notifications.provider.allUpdated')
     } catch (err) {

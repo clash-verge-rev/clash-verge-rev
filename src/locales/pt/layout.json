@@ -1,0 +1,61 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Início",
+        "proxies": "Proxies",
+        "profiles": "Perfis",
+        "connections": "Conexões",
+        "rules": "Regras",
+        "logs": "Logs",
+        "unlock": "Teste",
+        "settings": "Ajustes"
+      },
+      "menu": {
+        "reorderMode": "Modo de reordenação do menu",
+        "restoreDefaultOrder": "Restaurar ordem padrão",
+        "unlock": "Desbloquear ordem do menu",
+        "lock": "Bloquear ordem do menu",
+        "collapseNavBar": "Recolher barra de navegação",
+        "expandNavBar": "Expandir barra de navegação"
+      }
+    },
+    "serviceMigration": {
+      "locationRefusedMessage": "O serviço não pode iniciar o núcleo porque o caminho de instalação ou as permissões do diretório falharam em uma verificação de segurança. Reinstale o serviço para restaurar seus arquivos e permissões e tente novamente. O Windows pode solicitar aprovação de administrador.",
+      "notAutoStartedMessage": "O tipo de inicialização do serviço Clash Verge foi alterado para Manual ou Desativado (geralmente por ferramentas de otimização do sistema), então ele não inicia mais com o Windows; esta sessão está usando Sidecar. Reinstale o serviço para restaurar a inicialização automática. O Windows pode solicitar aprovação de administrador.",
+      "title": "Atualização do serviço necessária",
+      "message": "A versão do serviço Clash Verge não corresponde à versão exigida por este app. Escolha Reinstalar serviço para desinstalar o serviço existente e instalar a versão exigida, ou continue com o Sidecar nesta sessão.",
+      "checkingMessage": "Verificando o status do serviço do sistema e o modo de execução atual. Aguarde…",
+      "unavailableMessage": "O serviço Clash Verge necessário não está disponível. Instale ou repare-o, ou continue com o Sidecar nesta sessão.",
+      "reinstall": "Reinstalar serviço",
+      "repair": "Reparar serviço",
+      "continueSidecar": "Continuar com Sidecar",
+      "success": "O serviço Clash Verge foi atualizado com sucesso",
+      "errors": {
+        "actionFailed": "A operação do serviço falhou",
+        "stateRefreshFailed": "Falha ao atualizar o estado do serviço",
+        "restartFailed": "Falha ao reiniciar o núcleo",
+        "revalidationFailed": "Falha ao atualizar o estado de execução",
+        "sidecarFailed": "Falha ao continuar com o Sidecar"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Não foi possível definir o proxy do sistema",
+      "message": "O macOS recusou a alteração por falta de privilégios. Instalar o serviço Clash Verge permite que ele faça alterações de proxy como administrador, e este aviso não voltará.",
+      "serviceReadyMessage": "O serviço Clash Verge está pronto, mas o núcleo ainda está em execução como sidecar, por isso a definição do proxy do sistema foi recusada. Mudar para o modo serviço resolve — sem precisar reinstalar.",
+      "alternative": "Como alternativa, desative “exigir senha de administrador para acessar as configurações do sistema” em Ajustes do Sistema → Privacidade e Segurança → Avançado.",
+      "later": "Depois",
+      "installing": "Instalando o serviço do sistema. Pode ser solicitada a senha de administrador.",
+      "restarting": "Serviço instalado. Reiniciando o núcleo por meio dele…",
+      "applying": "Aplicando a alteração do proxy do sistema…",
+      "tunTitle": "O modo TUN precisa do serviço do sistema",
+      "tunMessage": "O modo TUN precisa do serviço do sistema Clash Verge para assumir o tráfego de rede. Depois de instalado, o modo TUN será ativado para você."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Não foi possível parar o núcleo com segurança, então a reinicialização foi cancelada",
+      "quitCoreStopFailed": "Não foi possível parar o núcleo com segurança, então a saída foi cancelada"
+    }
+  }
+}

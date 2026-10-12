@@ -26,7 +26,9 @@ import { useNavigate } from 'react-router'
 
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { updateProfile } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
+import { isValidUrl } from '@/utils/network'
 import { openExternalUrl } from '@/utils/open-external-url'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -41,7 +43,7 @@ const round = keyframes`
 // 辅助函数解析URL和过期时间
 const parseUrl = (url?: string) => {
   if (!url) return '-'
-  if (url.startsWith('http')) return new URL(url).host
+  if (isValidUrl(url)) return new URL(url).host
   return 'local'
 }
 
@@ -54,26 +56,7 @@ const openProfileHome = (url: string) => {
   void openExternalUrl(url).catch(showNotice.error)
 }
 
-// 使用类型定义，而不是导入
-interface ProfileExtra {
-  upload: number
-  download: number
-  total: number
-  expire: number
-}
-
-interface ProfileItem {
-  uid: string
-  type?: 'local' | 'remote' | 'merge' | 'script'
-  name?: string
-  desc?: string
-  file?: string
-  url?: string
-  updated?: number
-  extra?: ProfileExtra
-  home?: string
-  option?: any
-}
+type ProfileItem = IProfileItem
 
 interface HomeProfileCardProps {
   current: ProfileItem | null | undefined
@@ -296,7 +279,13 @@ export const HomeProfileCard = ({
 
     setUpdating(true)
     try {
-      await updateProfile(current.uid, current.option)
+      await mutate(
+        () => updateProfile(current.uid!, current.option ?? undefined),
+        {
+          id: `update-profile:${current.uid}`,
+          errorNotice: false,
+        },
+      )
       onProfileUpdated?.()
 
       // 刷新首页数据
@@ -340,7 +329,7 @@ export const HomeProfileCard = ({
             flex: 1,
           },
         }}
-        title={current.name}
+        title={current.name!}
       >
         <span>{current.name}</span>
         <LaunchOutlined

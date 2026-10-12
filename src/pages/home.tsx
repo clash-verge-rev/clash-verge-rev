@@ -35,6 +35,7 @@ import { ProxyTunCard } from '@/components/home/proxy-tun-card'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { entry_lightweight_mode } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { openExternalUrl } from '@/utils/open-external-url'
 
@@ -327,7 +328,12 @@ const HomePage = () => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Tooltip title={t('home.page.tooltips.lightweightMode')} arrow>
             <IconButton
-              onClick={async () => await entry_lightweight_mode()}
+              onClick={async () =>
+                await mutate(() => entry_lightweight_mode(), {
+                  id: 'entry-lightweight-mode',
+                  errorNotice: false,
+                })
+              }
               size="small"
               color="inherit"
             >

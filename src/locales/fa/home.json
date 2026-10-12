@@ -63,6 +63,7 @@
         "settings": "تنظیمات"
       },
       "badges": {
+        "notRunning": "هسته در حال اجرا نیست",
         "adminMode": "Administrator Mode",
         "serviceMode": "حالت سرویس",
         "sidecarMode": "User Mode",

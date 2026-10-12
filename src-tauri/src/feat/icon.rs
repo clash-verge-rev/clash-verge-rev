@@ -8,10 +8,13 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 use tokio::io::AsyncWriteExt as _;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct IconInfo {
+    #[specta(type = std::string::String)]
     name: String,
+    #[specta(type = std::string::String)]
     previous_t: String,
+    #[specta(type = std::string::String)]
     current_t: String,
 }
 
@@ -157,13 +160,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
             previous_ico.remove_if_exists().await.unwrap_or_default();
         }
 
-        logging!(
-            info,
-            Type::Cmd,
-            "Copying icon file path: {:?} -> file dist: {:?}",
-            path,
-            dest_path
-        );
+        logging!(debug, Type::Cmd, "copying icon file: {path} -> {}", dest_path.display());
 
         match fs::copy(file_path, &dest_path).await {
             Ok(_) => Ok(dest_path.to_string_lossy().into()),

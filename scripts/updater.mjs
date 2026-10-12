@@ -40,10 +40,11 @@ async function resolveUpdater() {
   const tags = allTags
   console.log(`Retrieved ${tags.length} tags in total`)
 
-  const stableTagRegex = /^v\d+\.\d+\.\d+$/
   const preReleaseRegex = /^(alpha|beta|rc|pre)$/i
 
-  const stableTag = tags.find((t) => stableTagRegex.test(t.name))
+  const { data: latestRelease } =
+    await github.rest.repos.getLatestRelease(options)
+  const stableTag = { name: latestRelease.tag_name }
   const preReleaseTag = tags.find((t) => preReleaseRegex.test(t.name))
 
   console.log('All tags:', tags.map((t) => t.name).join(', '))
@@ -72,11 +73,14 @@ async function processRelease(github, options, tag, isAlpha) {
       tag: tag.name,
     })
 
+    const notes = await resolveUpdateLog(tag.name).catch(() =>
+      resolveUpdateLogDefault().catch(() => 'No changelog available'),
+    )
+    const releaseUrl = `https://github.com/${options.owner}/${options.repo}/releases/tag/${tag.name}`
+
     const updateData = {
       name: tag.name,
-      notes: await resolveUpdateLog(tag.name).catch(() =>
-        resolveUpdateLogDefault().catch(() => 'No changelog available'),
-      ),
+      notes: `${notes}\n\n**[See More](${releaseUrl})**`,
       pub_date: new Date().toISOString(),
       platforms: {
         // platform format:

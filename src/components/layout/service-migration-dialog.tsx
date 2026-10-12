@@ -3,33 +3,25 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { runStateQueryKey } from '@/hooks/use-system-state'
-import { useVisibility } from '@/hooks/use-visibility'
 import {
   continueWithSidecar,
-  getRuntimeState,
   installService,
   reinstallService,
   repairService,
   restartCore,
-  type RunState,
+  type ServiceInstallOutcome,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
-import { setCacheDataAsync, useQuery } from '@/services/query-client'
+import { useAppReads, useRunState } from '@/store/app-store-context'
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
-  const pageVisible = useVisibility()
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
-  const { data: runState } = useQuery({
-    queryKey: runStateQueryKey,
-    queryFn: getRuntimeState,
-    enabled: true,
-    retry: 1,
-    refetchInterval: pageVisible ? 30000 : false,
-  })
+  const { readRunState } = useAppReads()
+  const runState = useRunState()
   // Whether the service needs a decision is derived once, in Rust, and travels with the
   // snapshot; a failed refresh is treated as needing one, since we cannot tell otherwise.
   const needsDecision =
@@ -44,13 +36,29 @@ export const ServiceMigrationDialog = () => {
           ? 'install'
           : 'reinstall'
   const open = loading || workflowIncomplete || needsDecision
-  const showCheckingMessage = loading || !needsDecision
+  const checking =
+    loading ||
+    !runState ||
+    runState.opInFlight ||
+    runState.service === 'unknown'
+  const showCheckingMessage = checking || !needsDecision
+  const canContinue = Boolean(
+    runState &&
+      !stateRefreshFailed &&
+      (runState.pendingAction === 'install'
+        ? runState.mode === 'NotRunning' || runState.mode === 'Sidecar'
+        : !runState.pendingAction &&
+          !runState.sidecarAllowed &&
+          runState.mode === 'NotRunning' &&
+          (runState.service === 'notInstalled' ||
+            runState.service === 'versionMismatch' ||
+            runState.service === 'unavailable')),
+  )
 
-  // One cache entry to refresh, so there is nothing left to keep coherent by hand.
+  // One store entry to refresh, so there is nothing left to keep coherent by hand.
   const refreshRunState = async () => {
     try {
-      const data = await getRuntimeState()
-      await setCacheDataAsync<RunState>(runStateQueryKey, data)
+      const data = await readRunState()
       setStateRefreshFailed(false)
       return data
     } catch (error) {
@@ -62,16 +70,27 @@ export const ServiceMigrationDialog = () => {
   const handleServiceAction = async () => {
     setLoading(true)
     setWorkflowIncomplete(true)
-    let actionSucceeded = false
+    let outcome: ServiceInstallOutcome | undefined
     try {
       if (remedy === 'install') {
-        await installService()
+        const result = await mutate(() => installService(), {
+          id: 'install-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       } else if (remedy === 'repair') {
-        await repairService()
+        const result = await mutate(() => repairService(), {
+          id: 'repair-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       } else {
-        await reinstallService()
+        const result = await mutate(() => reinstallService(), {
+          id: 'reinstall-service',
+          errorNotice: false,
+        })
+        if (result.ok) outcome = result.value
       }
-      actionSucceeded = true
     } catch (error) {
       showNotice.error(
         'layout.components.serviceMigration.errors.actionFailed',
@@ -89,15 +108,28 @@ export const ServiceMigrationDialog = () => {
         error,
       )
     }
-    if (!actionSucceeded || !initialRefreshSucceeded) {
+    if (!outcome || !initialRefreshSucceeded) {
       setLoading(false)
+      return
+    }
+    if (outcome.status === 'sidecar') {
+      setWorkflowIncomplete(false)
+      setLoading(false)
+      showNotice.warning(
+        'settings.feedback.notifications.clashService.permissionFallback',
+        { reason: outcome.reason },
+        0,
+      )
       return
     }
 
     let restartSucceeded = false
     try {
-      await restartCore()
-      restartSucceeded = true
+      const result = await mutate(() => restartCore(), {
+        id: 'restart-core',
+        errorNotice: false,
+      })
+      restartSucceeded = result.ok
     } catch (error) {
       showNotice.error(
         'layout.components.serviceMigration.errors.restartFailed',
@@ -127,7 +159,10 @@ export const ServiceMigrationDialog = () => {
     setWorkflowIncomplete(true)
     let startupError: unknown
     try {
-      await continueWithSidecar()
+      await mutate(() => continueWithSidecar(), {
+        id: 'continue-with-sidecar',
+        errorNotice: false,
+      })
     } catch (error) {
       startupError = error
     }
@@ -165,8 +200,8 @@ export const ServiceMigrationDialog = () => {
             : 'layout.components.serviceMigration.reinstall',
       )}
       cancelBtn={t('layout.components.serviceMigration.continueSidecar')}
-      disableOk={loading}
-      disableCancel={loading}
+      disableOk={checking}
+      disableCancel={checking || !canContinue}
       loading={loading}
       onOk={() => void handleServiceAction()}
       onCancel={() => void handleContinue()}

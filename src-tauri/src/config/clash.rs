@@ -43,7 +43,11 @@ impl IClashTemp {
                 Self(Self::guard(map))
             }
             Err(err) => {
-                logging!(error, Type::Config, "{err}");
+                logging!(
+                    error,
+                    Type::Config,
+                    "failed to load clash config, using template: {err:#}"
+                );
                 Self::template()
             }
         }
@@ -304,7 +308,7 @@ impl IClashTemp {
     }
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 pub struct ClashInfo {
     /// clash core port
     pub mixed_port: u16,
@@ -360,14 +364,14 @@ fn test_clash_info() {
     assert_eq!(get_case(8888, "192.168.1.1:80800"), get_result(8888, "127.0.0.1:9097"));
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashExternalControllerCors {
     pub allow_origins: Option<Vec<String>>,
     pub allow_private_network: Option<bool>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClash {
     pub mixed_port: Option<u16>,
@@ -383,7 +387,7 @@ pub struct IClash {
     pub external_controller_cors: Option<IClashExternalControllerCors>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashTUN {
     pub enable: Option<bool>,
@@ -393,7 +397,7 @@ pub struct IClashTUN {
     pub dns_hijack: Option<Vec<String>>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashDNS {
     pub enable: Option<bool>,
@@ -410,7 +414,7 @@ pub struct IClashDNS {
     pub nameserver_policy: Option<Vec<String>>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(rename_all = "kebab-case")]
 pub struct IClashFallbackFilter {
     pub geoip: Option<bool>,

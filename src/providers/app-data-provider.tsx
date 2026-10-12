@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import {
   getBaseConfig,
   getRuleProviders,
@@ -6,16 +6,10 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
-import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
-import {
-  getAppUptime,
-  getProxyView,
-  getRuntimeState,
-  getSystemProxy,
-} from '@/services/cmds'
-import { subscribeVergeEvents } from '@/services/events'
-import { revalidateQueries, useQuery } from '@/services/query-client'
+import { getProxyView, getSystemProxy } from '@/services/cmds'
+import { useQuery } from '@/services/query-client'
+import { useRunState } from '@/store/app-store-context'
 import { resolveDisplayedMixedPort } from '@/utils/mixed-port'
 
 import {
@@ -25,7 +19,6 @@ import {
   RefreshersContext,
   RulesContext,
   SystemContext,
-  UptimeContext,
 } from './app-data-context'
 
 const TQ_MIHOMO = {
@@ -101,63 +94,16 @@ export const AppDataProvider = ({
     ...TQ_DEFAULTS,
   })
 
-  // Same key as `useSystemState`, so this is the one Run State cache entry, not a second one.
-  const { data: runState, isPending: isRunningModePending } = useQuery({
-    queryKey: runStateQueryKey,
-    queryFn: getRuntimeState,
-    ...TQ_DEFAULTS,
-  })
+  // Store-owned run state; the event bus and the store's safety net write it.
+  const runState = useRunState()
+  const isRunningModePending = runState == null
   const runningMode = runState?.mode
-
-  const { data: uptimeData } = useQuery({
-    queryKey: ['appUptime'],
-    queryFn: getAppUptime,
-    ...TQ_DEFAULTS,
-    refetchInterval: 3000,
-    retry: 1,
-  })
 
   const refreshProxy = useStableFn(_refetchProxyView)
   const refreshClashConfig = useStableFn(_refetchClashConfig)
   const refreshRules = useStableFn(_refetchRules)
   const refreshSysproxy = useStableFn(_refetchSysproxy)
   const refreshRuleProviders = useStableFn(_refetchRuleProviders)
-
-  useEffect(() => {
-    let lastProfileId: string | null = null
-    let lastProfileUpdateTime = 0
-    let lastProxyUpdateTime = 0
-    const refreshThrottle = 800
-    const handleProfileChanged = (newProfileId: string) => {
-      const now = Date.now()
-      if (
-        lastProfileId === newProfileId &&
-        now - lastProfileUpdateTime < refreshThrottle
-      ) {
-        return
-      }
-      lastProfileId = newProfileId
-      lastProfileUpdateTime = now
-      void revalidateQueries([['getProfiles']])
-    }
-
-    const handleRefreshProxy = () => {
-      const now = Date.now()
-      if (now - lastProxyUpdateTime <= refreshThrottle) return
-      lastProxyUpdateTime = now
-      refreshProxy().catch(() => {})
-    }
-
-    const handleRefreshProfiles = () => {
-      void revalidateQueries([['getProfiles']])
-    }
-
-    return subscribeVergeEvents({
-      'profile-changed': handleProfileChanged,
-      'verge://refresh-profiles': handleRefreshProfiles,
-      'verge://refresh-proxy-config': handleRefreshProxy,
-    })
-  }, [refreshProxy])
 
   const refreshAll = useCallback(async () => {
     await Promise.all([
@@ -244,8 +190,6 @@ export const AppDataProvider = ({
     }
   }, [sysproxy, runningMode, isRunningModePending, verge, displayedMixedPort])
 
-  const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
-
   const coreDataStatusValue = useMemo(
     () => ({
       isCoreDataPending: isProxyViewPending || isClashConfigPending,
@@ -277,13 +221,11 @@ export const AppDataProvider = ({
       <RulesContext value={rulesValue}>
         <ClashConfigContext value={clashConfigValue}>
           <SystemContext value={systemValue}>
-            <UptimeContext value={uptimeValue}>
-              <CoreDataStatusContext value={coreDataStatusValue}>
-                <RefreshersContext value={refreshersValue}>
-                  {children}
-                </RefreshersContext>
-              </CoreDataStatusContext>
-            </UptimeContext>
+            <CoreDataStatusContext value={coreDataStatusValue}>
+              <RefreshersContext value={refreshersValue}>
+                {children}
+              </RefreshersContext>
+            </CoreDataStatusContext>
           </SystemContext>
         </ClashConfigContext>
       </RulesContext>

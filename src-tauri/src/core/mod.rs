@@ -1,16 +1,19 @@
+pub mod auto_backup;
 pub mod autostart;
 pub mod backup;
-pub mod handle;
 pub mod hotkey;
+pub mod lightweight;
 pub mod listener;
 pub mod logger;
 pub mod manager;
-pub mod notification;
+#[cfg(target_os = "macos")]
+pub mod network_watch;
+pub mod notify;
 pub(crate) mod owner_identity;
 pub mod proxy_control;
 pub mod proxy_view;
 pub mod runstate;
-mod runtime_bundle;
+pub(crate) mod runtime_bundle;
 pub mod service;
 pub mod sysopt;
 pub mod timer;
@@ -20,3 +23,4 @@ pub mod validate;
 pub mod win_uwp;
 
 pub use self::{manager::CoreManager, timer::Timer, updater::SilentUpdater};
+pub use notify::{handle, notification};

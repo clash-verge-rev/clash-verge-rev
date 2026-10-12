@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "数据已强制刷新",
+        "discardedKeys": "扩展配置或脚本写入了由应用设置接管的字段 {{keys}}，这些值已被丢弃",
         "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "无法在只读模式下编辑"
+      },
+      "enhance": {
+        "globalMerge": "对所有订阅生效，在应用设置之后合并；后续的全局脚本、订阅扩展配置和订阅脚本仍可修改结果。",
+        "globalScript": "对所有订阅生效，接收全局扩展配置合并后的结果；后续的订阅扩展配置和订阅脚本仍可修改结果。",
+        "profileMerge": "仅对当前订阅生效，在全局扩展配置和全局脚本之后合并；后续的订阅脚本仍可修改结果。",
+        "profileScript": "仅对当前订阅生效，接收订阅扩展配置合并后的结果，是应用设置回写前的最后一个扩展步骤。",
+        "order": "执行顺序：订阅原文 → 应用设置 → <globalMerge>全局扩展配置</globalMerge> → <globalScript>全局扩展脚本</globalScript> → <profileMerge>订阅扩展配置</profileMerge> → <profileScript>订阅扩展脚本</profileScript> → 应用设置回写",
+        "settingsPriority": "注意：由应用设置接管的字段最终以应用设置为准，在扩展配置或脚本中修改这些字段不会生效。"
       }
     },
     "confirmDelete": {

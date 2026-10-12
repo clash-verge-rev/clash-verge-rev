@@ -3,7 +3,6 @@ import { useEffect, useRef } from 'react'
 import { MihomoWebSocket, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { getClashLogs } from '@/services/cmds'
-import { setCacheData } from '@/services/query-client'
 
 import { useClashLog } from './use-clash-log'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
@@ -54,9 +53,7 @@ export const useLogData = () => {
   const allowedTypes = LOG_LEVEL_FILTERS[logLevel] ?? DEFAULT_LOG_TYPES
   const hasLoadedInitialLogsRef = useRef(false)
 
-  const { response, refresh, subscriptionCacheKey } = useMihomoWsSubscription<
-    ILogItem[]
-  >({
+  const { response, refresh, setData } = useMihomoWsSubscription<ILogItem[]>({
     storageKey: 'mihomo_logs_date',
     buildSubscriptKey: (date) => (enableLog ? `getClashLog-${date}` : null),
     fallbackData: [],
@@ -154,9 +151,7 @@ export const useLogData = () => {
 
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
-      if (subscriptionCacheKey) {
-        setCacheData<ILogItem[]>([subscriptionCacheKey], [])
-      }
+      setData([])
     } else {
       hasLoadedInitialLogsRef.current = false
       refresh()

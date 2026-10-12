@@ -1,8 +1,9 @@
+use crate::core::notify::NoticeStatus;
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
 use crate::utils::window_manager::WindowManager;
-use crate::{config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode};
+use crate::{config::Config, core::handle, core::lightweight::entry_lightweight_mode, feat};
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
@@ -177,7 +178,7 @@ impl Hotkey {
                             "Hotkey profile reactivation failed validation: {}",
                             message.as_str()
                         );
-                        handle::Handle::notice_message("reactivate_profiles::error", message);
+                        handle::Handle::notice(NoticeStatus::ReactivateProfilesError, message);
                     }
                     Err(err) => {
                         logging!(
@@ -186,7 +187,7 @@ impl Hotkey {
                             "Failed to reactivate subscriptions via hotkey: {}",
                             err
                         );
-                        handle::Handle::notice_message("reactivate_profiles::error", err.to_string());
+                        handle::Handle::notice(NoticeStatus::ReactivateProfilesError, err.to_string());
                     }
                 });
             }
@@ -200,7 +201,6 @@ impl Hotkey {
             HotkeyFunction::Hide => {
                 AsyncHandler::spawn(async move || {
                     feat::hide().await;
-                    notify_event(NotificationEvent::AppHidden).await;
                 });
             }
         }

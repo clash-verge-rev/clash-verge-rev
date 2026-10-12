@@ -1,3 +1,5 @@
+use crate::core::notify::NoticeStatus;
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, MixedPort},
     core::{CoreManager, handle, tray},
@@ -7,13 +9,12 @@ use crate::{
 };
 use bytes::BytesMut;
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::Lazy;
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 
 #[allow(clippy::expect_used)]
-static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
+static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> = LazyLock::new(|| {
     let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
     let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
         .with_safe_default_protocol_versions()
@@ -26,12 +27,11 @@ static TLS_CONFIG: Lazy<Arc<rustls::ClientConfig>> = Lazy::new(|| {
 pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
         Ok(_) => {
-            handle::Handle::refresh_clash();
-            handle::Handle::notice_message("set_config::ok", "ok");
+            announce(Refresh::Clash);
         }
         Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err:#}"));
-            logging!(error, Type::Core, "{err:#}");
+            handle::Handle::notice(NoticeStatus::SetConfigError, format!("{err:#}"));
+            logging!(error, Type::Core, "restart core failed: {err:#}");
         }
     }
 }
@@ -42,7 +42,6 @@ pub async fn restart_app() {
 
     Config::apply_all_and_save_file().await;
 
-    logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
 
     logging!(
@@ -54,8 +53,21 @@ pub async fn restart_app() {
 
     if !cleanup_result.core_stopped {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "app_restart::core_stop_failed",
+        // A failed stop may still have marked the core stopped, and exit cleanup skipped the DNS restore.
+        // A core that kept running keeps its DNS, whatever an unapplied config draft says.
+        #[cfg(target_os = "macos")]
+        {
+            let manager = CoreManager::global();
+            let _lifecycle = manager.lifecycle_lock.lock().await;
+            if matches!(
+                *manager.get_running_mode(),
+                crate::core::manager::RunningMode::NotRunning
+            ) {
+                crate::utils::resolve::dns::sync_public_dns().await;
+            }
+        }
+        handle::Handle::notice(
+            NoticeStatus::AppRestartCoreStopFailed,
             cleanup_result.stop_error.unwrap_or_default(),
         );
         return;
@@ -68,18 +80,12 @@ pub async fn restart_app() {
 
 fn after_change_clash_mode() {
     AsyncHandler::spawn(move || async {
-        let mihomo = handle::Handle::mihomo();
-        match mihomo.get_connections().await {
-            Ok(connections) => {
-                if let Some(connections_array) = connections.connections {
-                    for connection in connections_array {
-                        let _ = mihomo.close_connection(&connection.id).await;
-                    }
-                }
-            }
-            Err(err) => {
-                logging!(error, Type::Core, "Failed to get connections: {err}");
-            }
+        if let Err(err) = handle::Handle::mihomo().close_all_connections().await {
+            logging!(
+                error,
+                Type::Core,
+                "Failed to close all connections after changing clash mode: {err}"
+            );
         }
     });
 }
@@ -91,9 +97,8 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
     let json_value = serde_json::json!({
         "mode": mode
     });
-    logging!(debug, Type::Core, "change clash mode to {mode}");
     if let Err(err) = handle::Handle::mihomo().patch_base_config(&json_value).await {
-        logging!(error, Type::Core, "{err}");
+        logging!(error, Type::Core, "change clash mode failed: {err}");
         return Err(err.to_string().into());
     }
 
@@ -103,7 +108,7 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
     let clash_data = clash.data_arc();
     if clash_data.save_config().await.is_ok() {
-        handle::Handle::refresh_clash();
+        announce(Refresh::Clash);
         tray::Tray::global().update_menu_and_icon().await;
     }
 
@@ -117,6 +122,7 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
 
 /// Test delay to a URL through proxy.
 /// HTTPS: measures TLS handshake time. HTTP: measures HEAD round-trip time.
+#[tracing::instrument(skip_all, level = "trace", fields(url = %url))]
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use std::sync::Arc;
     use std::time::Duration;

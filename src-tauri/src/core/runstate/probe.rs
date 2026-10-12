@@ -4,7 +4,9 @@
 //! on [`super::env::RunStateEnv`], so these classifications are testable without IPC,
 //! systemd, SCM or launchd.
 
-use clash_verge_service_ipc::{MIN_REQUIRED_SERVICE_REVISION, ProtocolInfo, ProtocolVersion};
+use clash_verge_service_ipc::{
+    MIN_REQUIRED_SERVICE_REVISION, ProtocolInfo, ProtocolVersion, VERSION as SERVICE_VERSION,
+};
 
 use super::health::ServiceHealth;
 
@@ -14,6 +16,7 @@ pub struct ServiceVersionReply {
     pub code: u16,
     pub message: String,
     pub protocol: Option<ProtocolInfo>,
+    pub core: Option<clash_verge_service_ipc::CoreAvailability>,
 }
 
 /// The verdict on a [`ServiceVersionReply`].
@@ -21,7 +24,11 @@ pub struct ServiceVersionReply {
 pub enum ServiceVersionCheck {
     Ready,
     NeedsReinstall(String),
+    CoreUnavailable(String),
 }
+
+/// Leads the Unavailable reason when the Service refused the approved core itself.
+pub const CORE_REJECTED_PREFIX: &str = "approved core was rejected: ";
 
 /// What a live probe of the currently-installed Service told us.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,22 +39,30 @@ pub enum CurrentServiceProbe {
     Unavailable,
 }
 
-/// Decide whether the Service we reached speaks a protocol this client can use.
+/// Require the bundled Service version as well as a usable protocol.
 pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersionCheck {
     let client = ProtocolVersion::current();
     if reply.code == 0
-        && reply
-            .protocol
-            .as_ref()
-            .is_some_and(|info| info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION))
+        && reply.protocol.as_ref().is_some_and(|info| {
+            info.build_version == SERVICE_VERSION && info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION)
+        })
     {
-        return ServiceVersionCheck::Ready;
+        return match &reply.core {
+            Some(clash_verge_service_ipc::CoreAvailability::Ready) => ServiceVersionCheck::Ready,
+            Some(clash_verge_service_ipc::CoreAvailability::Rejected { reason }) => {
+                ServiceVersionCheck::CoreUnavailable(format!("{CORE_REJECTED_PREFIX}{reason}"))
+            }
+            _ => ServiceVersionCheck::CoreUnavailable(
+                "the selected approved core is missing or does not match; reinstall the service to repair it".into(),
+            ),
+        };
     }
 
     let detail = if reply.code == 0 {
         match reply.protocol.as_ref() {
             Some(info) => format!(
-                "client requires epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                "client requires service version {} with epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                SERVICE_VERSION,
                 client.epoch,
                 MIN_REQUIRED_SERVICE_REVISION,
                 info.protocol.epoch,
@@ -63,16 +78,16 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
         )
     };
     ServiceVersionCheck::NeedsReinstall(format!(
-        "Service helper protocol mismatch: {detail}. Choose Reinstall or Repair to continue"
+        "Service helper version or protocol mismatch: {detail}. Choose Reinstall to uninstall the existing service and install the required version"
     ))
 }
 
 /// Classify a version reply into the probe outcome used by [`classify_service_health`].
 pub fn probe_outcome(reply: &ServiceVersionReply) -> CurrentServiceProbe {
-    if classify_service_version_reply(reply) == ServiceVersionCheck::Ready {
-        CurrentServiceProbe::Ready
-    } else {
-        CurrentServiceProbe::VersionMismatch
+    match classify_service_version_reply(reply) {
+        ServiceVersionCheck::Ready => CurrentServiceProbe::Ready,
+        ServiceVersionCheck::NeedsReinstall(_) => CurrentServiceProbe::VersionMismatch,
+        ServiceVersionCheck::CoreUnavailable(_) => CurrentServiceProbe::Unavailable,
     }
 }
 
@@ -102,6 +117,7 @@ mod tests {
 
     fn ready_reply() -> ServiceVersionReply {
         ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: Some(ProtocolInfo::current()),
@@ -118,8 +134,25 @@ mod tests {
     }
 
     #[test]
+    fn compatible_service_with_missing_core_is_unavailable() {
+        for core in [
+            None,
+            Some(clash_verge_service_ipc::CoreAvailability::Missing),
+            Some(clash_verge_service_ipc::CoreAvailability::DigestMismatch),
+        ] {
+            let reply = ServiceVersionReply { core, ..ready_reply() };
+            assert!(matches!(
+                classify_service_version_reply(&reply),
+                ServiceVersionCheck::CoreUnavailable(_)
+            ));
+            assert_eq!(probe_outcome(&reply), CurrentServiceProbe::Unavailable);
+        }
+    }
+
+    #[test]
     fn a_reply_without_protocol_information_needs_reinstall() {
         let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: None,
@@ -137,6 +170,7 @@ mod tests {
     #[test]
     fn a_nonzero_code_needs_reinstall() {
         let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 7,
             message: "nope".to_owned(),
             protocol: Some(ProtocolInfo::current()),
@@ -152,6 +186,7 @@ mod tests {
         let mut info = ProtocolInfo::current();
         info.protocol.epoch = info.protocol.epoch.wrapping_add(1);
         let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: Some(info),
@@ -172,6 +207,7 @@ mod tests {
         let mut info = ProtocolInfo::current();
         info.protocol.revision = revision;
         let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
             message: "ok".to_owned(),
             protocol: Some(info),
@@ -190,6 +226,7 @@ mod tests {
         for protocol in [None, Some(old_epoch)] {
             for code in [0, 1] {
                 let reply = ServiceVersionReply {
+                    core: None,
                     code,
                     message: "unsupported command".to_owned(),
                     protocol: protocol.clone(),

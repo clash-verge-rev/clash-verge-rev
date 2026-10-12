@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "Las extensiones escribieron {{keys}}, campos gestionados por los ajustes, por lo que esos valores se descartaron",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "No se puede editar en modo de solo lectura"
+      },
+      "enhance": {
+        "globalMerge": "Se aplica a todos los perfiles, después de los ajustes de la aplicación. El script global, la configuración del perfil y el script del perfil aún pueden modificar el resultado.",
+        "globalScript": "Se aplica a todos los perfiles sobre el resultado de combinar la configuración global. La configuración y el script del perfil aún pueden modificar el resultado.",
+        "profileMerge": "Se aplica solo a este perfil, después de la configuración y el script globales. El script del perfil aún puede modificar el resultado.",
+        "profileScript": "Se aplica solo a este perfil sobre el resultado de combinar su configuración. Es el último paso de extensión antes de volver a aplicar los ajustes de la aplicación.",
+        "order": "Orden: Perfil original → Ajustes de la aplicación → <globalMerge>Configuración de extensión global</globalMerge> → <globalScript>Script de extensión global</globalScript> → <profileMerge>Configuración de extensión del perfil</profileMerge> → <profileScript>Script de extensión del perfil</profileScript> → Reaplicar ajustes de la aplicación",
+        "settingsPriority": "Nota: Los campos gestionados por los ajustes de la aplicación siempre conservan esos valores en la configuración final. Modificarlos en las extensiones no tiene efecto."
       }
     },
     "confirmDelete": {

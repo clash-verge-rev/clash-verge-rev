@@ -45,7 +45,7 @@
       "fields": {
         "coreVersion": "Kernversion",
         "systemProxyAddress": "Systemproxy-Adresse",
-        "mixedPort": "Mixed Port",
+        "mixedPort": "Gemischter Port",
         "uptime": "Laufzeit",
         "rulesCount": "Anzahl der Regeln"
       }
@@ -63,10 +63,11 @@
         "settings": "Einstellungen"
       },
       "badges": {
+        "notRunning": "Kern läuft nicht",
         "adminMode": "Administrator-Modus",
         "serviceMode": "Service-Modus",
         "sidecarMode": "Benutzermodus",
-        "adminServiceMode": "Admin + Service Mode"
+        "adminServiceMode": "Administrator + Dienstmodus"
       }
     },
     "ipInfo": {
@@ -93,8 +94,8 @@
         "refreshDelay": "Latenztest"
       },
       "labels": {
-        "globalMode": "Global Mode",
-        "directMode": "Direct Mode",
+        "globalMode": "Globaler Modus",
+        "directMode": "Direktmodus",
         "group": "Proxy-Gruppe",
         "proxy": "Knoten",
         "noActiveNode": "Kein aktiver Proxy-Knoten"
@@ -127,7 +128,7 @@
         "download": "Herunterladen"
       },
       "patterns": {
-        "minutes": "{{time}} Minutes"
+        "minutes": "{{time}} Minuten"
       },
       "unknownTime": "Unbekannte Zeit",
       "chartStyles": {
@@ -146,9 +147,9 @@
         "direct": "Direktverbindungs-Modus"
       },
       "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+        "rule": "Wählt Proxys automatisch anhand der Regeln aus.",
+        "global": "Leitet alle Netzwerkanfragen über den ausgewählten Proxy.",
+        "direct": "Umgeht den Proxy und verbindet sich direkt mit dem Internet."
       }
     }
   }

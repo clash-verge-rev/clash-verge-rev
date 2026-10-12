@@ -51,6 +51,7 @@
       },
       "notices": {
         "forceRefreshCompleted": "강제 새로고침 완료",
+        "discardedKeys": "확장 설정 또는 스크립트가 앱 설정이 관리하는 {{keys}} 필드를 작성하여 해당 값은 무시되었습니다",
         "emergencyRefreshFailed": "긴급 새로고침 실패: {{message}}"
       },
       "tooltips": {
@@ -196,6 +197,14 @@
       },
       "messages": {
         "readOnly": "읽기 전용 편집기에서는 편집할 수 없습니다"
+      },
+      "enhance": {
+        "globalMerge": "모든 프로필에 적용되며 앱 설정 이후에 병합됩니다. 이후의 전역 스크립트, 프로필 확장 설정 및 스크립트가 결과를 변경할 수 있습니다.",
+        "globalScript": "모든 프로필에 적용되며 전역 확장 설정이 병합된 결과를 받습니다. 이후의 프로필 확장 설정 및 스크립트가 결과를 변경할 수 있습니다.",
+        "profileMerge": "이 프로필에만 적용되며 전역 확장 설정 및 스크립트 이후에 병합됩니다. 이후의 프로필 스크립트가 결과를 변경할 수 있습니다.",
+        "profileScript": "이 프로필에만 적용되며 프로필 확장 설정이 병합된 결과를 받습니다. 앱 설정이 다시 적용되기 전의 마지막 확장 단계입니다.",
+        "order": "실행 순서: 원본 프로필 → 앱 설정 → <globalMerge>전역 확장 설정</globalMerge> → <globalScript>전역 확장 스크립트</globalScript> → <profileMerge>프로필 확장 설정</profileMerge> → <profileScript>프로필 확장 스크립트</profileScript> → 앱 설정 재적용",
+        "settingsPriority": "참고: 앱 설정이 관리하는 필드는 최종 구성에서 항상 앱 설정의 값을 사용합니다. 확장 설정이나 스크립트에서 이 필드를 변경해도 반영되지 않습니다."
       }
     },
     "confirmDelete": {

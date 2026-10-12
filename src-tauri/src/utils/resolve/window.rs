@@ -159,7 +159,7 @@ pub fn on_web_content_process_terminated(webview: &tauri::Webview) {
     // Clean before reload so cleanup cannot remove subscriptions created by the new page.
     let webview = webview.clone();
     crate::process::AsyncHandler::spawn(move || async move {
-        if let Err(err) = handle::Handle::mihomo().clear_all_ws_connections().await {
+        if let Err(err) = handle::Handle::mihomo().clear_all_ws_connections() {
             logging!(warn, Type::Window, "清理 Mihomo WebSocket 连接失败: {err}");
         } else {
             logging!(info, Type::Window, "已清理全部 Mihomo WebSocket 连接");

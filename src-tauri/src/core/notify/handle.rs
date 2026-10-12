@@ -1,0 +1,120 @@
+use super::NoticeStatus;
+use crate::{APP_HANDLE, singleton};
+use smartstring::alias::String;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
+use tauri::AppHandle;
+use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
+
+use super::notification::{FrontendEvent, NotificationSystem};
+
+#[derive(Debug)]
+pub struct Handle {
+    is_exiting: AtomicBool,
+}
+
+impl Default for Handle {
+    fn default() -> Self {
+        Self {
+            is_exiting: AtomicBool::new(false),
+        }
+    }
+}
+
+singleton!(Handle, HANDLE);
+
+impl Handle {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn app_handle() -> &'static AppHandle {
+        #[allow(clippy::expect_used)]
+        APP_HANDLE.get().expect("App handle not initialized")
+    }
+
+    pub fn mihomo() -> &'static Mihomo {
+        Self::app_handle().mihomo()
+    }
+
+    pub fn refresh_clash() {
+        super::announce(super::Refresh::Clash);
+    }
+
+    pub fn refresh_verge() {
+        super::announce(super::Refresh::Verge);
+    }
+
+    /// Push a Run State snapshot to the frontend.
+    ///
+    /// Sent on every transition, so the frontend does not have to poll to notice that the Core
+    /// stopped or that the Service came back.
+    pub fn notify_run_state(state: &crate::core::runstate::RunStateView) {
+        Self::send_event(FrontendEvent::RunStateChanged { state: state.clone() });
+    }
+
+    pub fn notify_profile_changed(profile_id: &String) {
+        Self::send_event(FrontendEvent::ProfileChanged {
+            current_profile_id: profile_id,
+        });
+    }
+
+    pub fn notify_timer_updated(profile_index: &String) {
+        Self::send_event(FrontendEvent::TimerUpdated { profile_index });
+    }
+
+    pub fn notify_profile_update_started(uid: &String) {
+        Self::send_event(FrontendEvent::ProfileUpdateStarted { uid });
+    }
+
+    pub fn notify_profile_update_completed(uid: &String) {
+        Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
+    }
+
+    pub fn notice(status: NoticeStatus, message: impl Into<Arc<str>>) {
+        Self::send_event(FrontendEvent::NoticeMessage {
+            status,
+            message: message.into(),
+        });
+    }
+
+    pub fn set_is_exiting(&self) {
+        self.is_exiting.store(true, Ordering::Release);
+    }
+
+    pub fn clear_is_exiting(&self) {
+        self.is_exiting.store(false, Ordering::Release);
+    }
+
+    pub fn is_exiting(&self) -> bool {
+        self.is_exiting.load(Ordering::Acquire)
+    }
+
+    pub(super) fn send_event(event: FrontendEvent) {
+        let handle = Self::global();
+        if handle.is_exiting() {
+            return;
+        }
+
+        NotificationSystem::send_event(Self::app_handle().clone(), event);
+    }
+}
+
+#[cfg(target_os = "macos")]
+impl Handle {
+    pub fn set_activation_policy(&self, policy: tauri::ActivationPolicy) -> Result<(), String> {
+        Self::app_handle()
+            .set_activation_policy(policy)
+            .map_err(|e| e.to_string().into())
+    }
+
+    pub fn set_activation_policy_regular(&self) {
+        let _ = self.set_activation_policy(tauri::ActivationPolicy::Regular);
+    }
+
+    pub fn set_activation_policy_accessory(&self) {
+        let _ = self.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    }
+}

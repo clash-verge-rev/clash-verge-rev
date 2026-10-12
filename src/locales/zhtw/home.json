@@ -63,6 +63,7 @@
         "settings": "設定"
       },
       "badges": {
+        "notRunning": "核心未執行",
         "adminMode": "管理員模式",
         "serviceMode": "服務模式",
         "sidecarMode": "使用者模式",

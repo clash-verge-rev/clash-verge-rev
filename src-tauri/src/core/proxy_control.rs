@@ -162,6 +162,24 @@ fn was_refused_locally(error: &anyhow::Error) -> bool {
         })
 }
 
+/// Whether macOS has no network service to write the proxy on.
+///
+/// Offline, mid network switch, or the primary interface is not a configured service. A read
+/// reports "no proxy" and a disable has nothing left to do; an enable still fails, since a proxy
+/// the OS never received must not be recorded as applied.
+#[cfg(target_os = "macos")]
+pub const fn is_missing_network_service(error: &sysproxy::Error) -> bool {
+    matches!(
+        error,
+        sysproxy::Error::NoActiveNetworkService | sysproxy::Error::NetworkInterface
+    )
+}
+
+#[cfg(not(target_os = "macos"))]
+pub const fn is_missing_network_service(_error: &sysproxy::Error) -> bool {
+    false
+}
+
 /// Distinguish a misplaced sidecar from a missing privileged service.
 async fn classify_local_apply_failure(error: anyhow::Error) -> anyhow::Error {
     if SysproxyFailure::from_chain(&error).is_some() || !was_refused_locally(&error) {
@@ -340,6 +358,10 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
     }
 }
 
+/// Judge the outcome the service reported.
+///
+/// A write it could not roll back arrives as a plain error whose cause is the rollback's, not
+/// the write's, so it stays a failure.
 fn service_apply_result(requested: &MacosProxyConfig, outcome: ProxyApplyOutcome) -> Result<()> {
     match outcome {
         ProxyApplyOutcome::Applied | ProxyApplyOutcome::NotRequested => Ok(()),
@@ -360,6 +382,14 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     }
     let mixed_port = MixedPort::desired().await;
     service_proxy_config(verge, mixed_port, 0)
+}
+
+/// Whether macOS has a network service to write the proxy on right now.
+#[cfg(target_os = "macos")]
+pub async fn has_network_service() -> bool {
+    tokio::task::spawn_blocking(|| sysproxy::Sysproxy::has_network_service().unwrap_or(true))
+        .await
+        .unwrap_or(true)
 }
 
 pub fn is_reportable(error: &anyhow::Error) -> bool {
@@ -389,16 +419,21 @@ where
     Write: FnOnce() -> WriteFuture,
     WriteFuture: Future<Output = Result<()>>,
 {
-    ensure!(
-        drain_local_guard().await,
-        "the system proxy guard did not stop in time; not writing the system proxy through the service"
-    );
+    if !drain_local_guard().await {
+        // Its `networksetup` calls are separate from the service's one privileged transaction,
+        // so a stale guard write may still land after ours.
+        logging!(
+            warn,
+            Type::Core,
+            "the system proxy guard did not stop in time; writing through the service anyway"
+        );
+    }
     write().await
 }
 
 #[derive(Debug)]
 enum TableEffect<'a> {
-    Retire { enabled: bool },
+    Retire(FailedOperation),
     File(FailedOperation, &'a anyhow::Error),
     Nothing,
 }
@@ -415,19 +450,19 @@ fn clear_table_effect(result: &Result<()>) -> TableEffect<'_> {
 
 fn settle_table<Retire, File>(effect: TableEffect<'_>, retire: Retire, file: File)
 where
-    Retire: FnOnce(bool),
+    Retire: FnOnce(FailedOperation),
     File: FnOnce(FailedOperation, &anyhow::Error),
 {
     match effect {
-        TableEffect::Retire { enabled } => retire(enabled),
+        TableEffect::Retire(asked) => retire(asked),
         TableEffect::File(operation, error) => file(operation, error),
         TableEffect::Nothing => {}
     }
 }
 
-fn table_effect(result: &Result<()>, enabled: bool) -> TableEffect<'_> {
+fn table_effect(result: &Result<()>) -> TableEffect<'_> {
     match result {
-        Ok(()) => TableEffect::Retire { enabled },
+        Ok(()) => TableEffect::Retire(notification::what_was_asked()),
         Err(error) if SysproxyFailure::from_chain(error).is_some() => {
             TableEffect::File(notification::what_was_asked(), error)
         }
@@ -435,12 +470,13 @@ fn table_effect(result: &Result<()>, enabled: bool) -> TableEffect<'_> {
     }
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
-    // Use the pre-apply snapshot when retiring matching failures.
     let verge = Config::verge().await.latest_arc();
-    let enabled = verge.enable_system_proxy.unwrap_or_default();
-    let result = match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
+    let route = proxy_backend_route(cfg!(target_os = "macos"), &running_mode);
+    tracing::Span::current().record("route", tracing::field::debug(&route));
+    let result = match route {
         ProxyBackendRoute::Local => match Sysopt::global().update_sysproxy().await {
             Ok(()) => Ok(()),
             Err(error) => Err(classify_local_apply_failure(error).await),
@@ -462,7 +498,7 @@ pub async fn apply() -> Result<()> {
     };
     // Settle failures where every proxy-apply path converges.
     settle_table(
-        table_effect(&result, enabled),
+        table_effect(&result),
         notification::retire_system_proxy_failures,
         |operation, error| {
             report_failure(operation, error);
@@ -486,30 +522,42 @@ pub async fn clear() -> Result<()> {
 
 /// A failed system call is usually a transient RPC hiccup, so give it a few tries.
 async fn clear_with_retry() -> Result<()> {
-    for _ in 1..CLEAR_ATTEMPTS {
-        match clear_inner().await {
-            Err(error)
+    use crate::utils::retry::{RetryError, RetryPolicy, retry};
+    retry(
+        RetryPolicy::fixed(
+            std::num::NonZeroUsize::MIN.saturating_add((CLEAR_ATTEMPTS - 1) as usize),
+            CLEAR_RETRY_DELAY,
+        ),
+        |attempt| async move {
+            clear_inner().await.map_err(|error| {
                 if matches!(
                     SysproxyFailure::from_chain(&error),
                     Some(SysproxyFailure::SystemCallFailed)
-                ) =>
-            {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "clearing the system proxy failed; retrying: {error:#}"
-                );
-                tokio::time::sleep(CLEAR_RETRY_DELAY).await;
-            }
-            other => return other,
-        }
-    }
-    clear_inner().await
+                ) {
+                    if attempt + 1 < CLEAR_ATTEMPTS as usize {
+                        logging!(
+                            warn,
+                            Type::Core,
+                            "clearing the system proxy failed (attempt {}/{CLEAR_ATTEMPTS}); retrying: {error:#}",
+                            attempt + 1
+                        );
+                    }
+                    RetryError::Retry(error)
+                } else {
+                    RetryError::Stop(error)
+                }
+            })
+        },
+    )
+    .await
 }
 
+#[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]
 async fn clear_inner() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
-    match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
+    let route = proxy_backend_route(cfg!(target_os = "macos"), &running_mode);
+    tracing::Span::current().record("route", tracing::field::debug(&route));
+    match route {
         ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
             SERVICE_PROXY_OPERATIONS
@@ -565,13 +613,16 @@ pub async fn refresh_guard() -> Result<()> {
                 .await
             {
                 Ok(true) => consecutive_failures = 0,
-                Ok(false) => break,
+                Ok(false) => {
+                    logging!(debug, Type::Core, "proxy guard superseded (generation {generation})");
+                    break;
+                }
                 Err(error) => {
                     consecutive_failures += 1;
                     logging!(
                         warn,
                         Type::Core,
-                        "failed to refresh system proxy through Service ({}/{}): {:#}",
+                        "failed to refresh system proxy through Service (generation {generation}, {}/{}): {:#}",
                         consecutive_failures,
                         GUARD_FAILURES_BEFORE_STOPPING,
                         error
@@ -906,8 +957,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_local_guard_that_would_not_stop_keeps_root_from_writing() {
-        assert_eq!(record_service_apply(false, true).await, (vec!["drain"], false));
+    async fn a_local_guard_that_would_not_stop_does_not_block_the_service_write() {
+        assert_eq!(record_service_apply(false, true).await, (vec!["drain", "write"], true));
     }
 
     #[test]
@@ -1046,6 +1097,47 @@ mod tests {
 
     use super::{SystemProxyStateUnknown, is_reportable_given, rollback_failure};
 
+    #[cfg(target_os = "macos")]
+    use super::service_apply_result;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_enable_the_os_never_received_is_never_reported_as_applied() {
+        let requested = MacosProxyConfig::Global {
+            host: "127.0.0.1".to_owned(),
+            port: 7890,
+            bypass: String::new(),
+        };
+
+        let error = service_apply_result(
+            &requested,
+            ProxyApplyOutcome::DirectFallback {
+                message: sysproxy::Error::NoActiveNetworkService.to_string(),
+            },
+        )
+        .err()
+        .unwrap_or_else(|| anyhow::anyhow!("an enable that never reached the OS must fail"));
+
+        assert_eq!(
+            SysproxyFailure::from_chain(&error).map(SysproxyFailure::code),
+            Some("SYSPROXY_DIRECT_FALLBACK")
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_disable_is_satisfied_by_the_os_ending_up_direct() {
+        assert!(
+            service_apply_result(
+                &MacosProxyConfig::Disabled,
+                ProxyApplyOutcome::DirectFallback {
+                    message: sysproxy::Error::NoActiveNetworkService.to_string(),
+                },
+            )
+            .is_ok()
+        );
+    }
+
     fn mappable() -> anyhow::Error {
         anyhow::anyhow!("networksetup refused").context(SysproxyFailure::PrivilegeRequired)
     }
@@ -1054,7 +1146,7 @@ mod tests {
         let events = Mutex::new(Vec::new());
         super::settle_table(
             effect,
-            |enabled| events.lock().push(format!("retire:{enabled}")),
+            |asked| events.lock().push(format!("retire:{asked:?}")),
             |operation, _| events.lock().push(format!("file:{operation:?}")),
         );
         events.into_inner()
@@ -1063,8 +1155,8 @@ mod tests {
     #[test]
     fn each_effect_reaches_the_table_it_names() {
         assert_eq!(
-            record_settlement(super::TableEffect::Retire { enabled: true }),
-            vec!["retire:true"]
+            record_settlement(super::TableEffect::Retire(FailedOperation::SystemProxyEnable)),
+            vec!["retire:SystemProxyEnable"]
         );
         assert_eq!(
             record_settlement(super::TableEffect::File(
@@ -1092,16 +1184,20 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn a_clean_apply_retires_in_the_direction_it_reached() {
+    #[tokio::test]
+    async fn a_clean_apply_retires_in_the_direction_that_was_asked_for() {
         assert!(matches!(
-            super::table_effect(&Ok(()), true),
-            super::TableEffect::Retire { enabled: true }
+            super::table_effect(&Ok(())),
+            super::TableEffect::Retire(FailedOperation::SystemProxyRestore)
         ));
-        assert!(matches!(
-            super::table_effect(&Ok(()), false),
-            super::TableEffect::Retire { enabled: false }
-        ));
+        let asked = super::notification::asking_for(FailedOperation::SystemProxyEnable, async {
+            matches!(
+                super::table_effect(&Ok(())),
+                super::TableEffect::Retire(FailedOperation::SystemProxyEnable)
+            )
+        })
+        .await;
+        assert!(asked);
     }
 
     #[tokio::test]
@@ -1109,7 +1205,7 @@ mod tests {
         let (applied, cleared) = super::notification::asking_for(FailedOperation::SystemProxyEnable, async {
             let (apply_error, clear_error) = (mappable(), mappable());
             (
-                format!("{:?}", super::table_effect(&Err(apply_error), true)),
+                format!("{:?}", super::table_effect(&Err(apply_error))),
                 format!("{:?}", super::clear_table_effect(&Err(clear_error))),
             )
         })
@@ -1129,7 +1225,7 @@ mod tests {
     #[test]
     fn a_failure_with_nothing_to_say_is_not_filed() {
         assert!(matches!(
-            super::table_effect(&Err(anyhow::anyhow!("the core exited immediately")), true),
+            super::table_effect(&Err(anyhow::anyhow!("the core exited immediately"))),
             super::TableEffect::Nothing
         ));
     }

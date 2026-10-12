@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 
 import { getVergeConfig, patchVergeConfig } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { getPreloadConfig, setPreloadConfig } from '@/services/preload'
-import { getCacheData, setCacheData, useQuery } from '@/services/query-client'
+import { setCacheData, useQuery } from '@/services/query-client'
 
 export const useVerge = () => {
   const initialVergeConfig = getPreloadConfig()
@@ -30,22 +31,23 @@ export const useVerge = () => {
       void refetch()
       return
     }
-    if (typeof updaterOrData === 'function') {
-      const prev = getCacheData<IVergeConfig>(['getVergeConfig'])
-      const next = updaterOrData(prev)
-      setCacheData(['getVergeConfig'], next)
-    } else {
-      setCacheData(['getVergeConfig'], updaterOrData)
-    }
+    void setCacheData<IVergeConfig>(
+      ['getVergeConfig'],
+      typeof updaterOrData === 'function'
+        ? (current) => updaterOrData(current ?? verge)
+        : updaterOrData,
+    )
   }
 
-  const patchVerge = useCallback(
-    async (value: Partial<IVergeConfig>) => {
-      await patchVergeConfig(value)
-      await refetch()
-    },
-    [refetch],
-  )
+  // Callers own the error toast (GuardState onCatch / page onError), so the
+  // funnel must not add a second one.
+  const patchVerge = useCallback(async (value: Partial<IVergeConfig>) => {
+    await mutate(() => patchVergeConfig(value), {
+      id: 'patch-verge-config',
+      revalidate: [['getVergeConfig']],
+      errorNotice: false,
+    })
+  }, [])
 
   return {
     verge,

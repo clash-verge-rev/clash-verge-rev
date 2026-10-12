@@ -1,17 +1,18 @@
 import { LanRounded, SettingsRounded } from '@mui/icons-material'
 import { MenuItem, Select, TextField, Typography } from '@mui/material'
-import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 
-import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
-import { invoke_uwp_tool } from '@/services/cmds'
+import { invoke_uwp_tool, setDnsOverride } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -36,7 +37,13 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
 
   const { clash, version, mutateClash, patchClash } = useClash()
-  const { verge, patchVerge } = useVerge()
+  const { verge, mutateVerge } = useVerge()
+  const { current: currentProfile } = useProfiles()
+  const dnsEnabled = currentProfile
+    ? (verge?.profile_dns_settings?.[currentProfile.uid!]?.enabled ??
+      verge?.enable_dns_settings ??
+      false)
+    : false
   const displayedMixedPort = useDisplayedMixedPort()
   const [, setClashLog] = useClashLog()
 
@@ -47,10 +54,11 @@ const SettingClash = ({ onError }: Props) => {
     'unified-delay': unifiedDelay,
   } = clash ?? {}
 
-  // 独立跟踪DNS设置开关状态
-  const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
-    return verge?.enable_dns_settings ?? false
-  })
+  const [dnsConfirmation, setDnsConfirmation] = useState<{
+    profileUid: string
+    source: string
+  } | null>(null)
+  const [dnsUpdating, setDnsUpdating] = useState(false)
 
   const webRef = useRef<DialogRef>(null)
   const portRef = useRef<DialogRef>(null)
@@ -67,29 +75,52 @@ const SettingClash = ({ onError }: Props) => {
   }
   const onUpdateGeo = async () => {
     try {
-      await updateGeo()
+      await mutate(() => updateGeo(), {
+        id: 'update-geo',
+        errorNotice: false,
+      })
       showNotice.success('settings.feedback.notifications.clash.geoDataUpdated')
     } catch (err: any) {
       showNotice.error(err)
     }
   }
 
-  // 实现DNS设置开关处理函数
-  const handleDnsToggle = useLockFn(async (enable: boolean) => {
-    try {
-      setDnsSettingsEnabled(enable)
-      await patchVerge({ enable_dns_settings: enable })
-      await invoke('apply_dns_config', { apply: enable })
-      setTimeout(() => {
+  const handleDnsToggle = useLockFn(
+    async (
+      enable: boolean,
+      confirmation?: string,
+      profileUid = currentProfile?.uid,
+    ) => {
+      if (!profileUid) return
+      setDnsUpdating(true)
+      try {
+        const result = await mutate(
+          () => setDnsOverride(profileUid, enable, confirmation),
+          {
+            id: 'set-dns-override',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
+        const outcome = result.value
+        if (outcome.status === 'confirmation_required') {
+          setDnsConfirmation({ profileUid, source: outcome.source })
+        } else {
+          setDnsConfirmation(null)
+        }
+        mutateVerge()
         mutateClash()
-      }, 500)
-    } catch (err: any) {
-      setDnsSettingsEnabled(!enable)
-      showNotice.error(err)
-      await patchVerge({ enable_dns_settings: !enable }).catch(() => {})
-      throw err
-    }
-  })
+      } catch (err: any) {
+        showNotice.error(err)
+      } finally {
+        setDnsUpdating(false)
+      }
+    },
+  )
+
+  const closeDnsConfirmation = () => {
+    if (!dnsUpdating) setDnsConfirmation(null)
+  }
 
   return (
     <SettingList title={t('settings.sections.clash.title')}>
@@ -99,6 +130,29 @@ const SettingClash = ({ onError }: Props) => {
       <ClashCoreViewer ref={coreRef} />
       <NetworkInterfaceViewer ref={networkRef} />
       <DnsViewer ref={dnsRef} />
+      <BaseDialog
+        open={dnsConfirmation !== null}
+        title={t('settings.modals.dns.protection.title')}
+        okBtn={t('settings.modals.dns.protection.enableAnyway')}
+        cancelBtn={t('settings.modals.dns.protection.keepDisabled')}
+        contentSx={{ width: { xs: 320, sm: 420 } }}
+        loading={dnsUpdating}
+        disableCancel={dnsUpdating}
+        onCancel={closeDnsConfirmation}
+        onClose={closeDnsConfirmation}
+        onOk={() => {
+          if (dnsConfirmation)
+            void handleDnsToggle(
+              true,
+              dnsConfirmation.source,
+              dnsConfirmation.profileUid,
+            )
+        }}
+      >
+        <Typography variant="body2">
+          {t('settings.modals.dns.protection.message')}
+        </Typography>
+      </BaseDialog>
       <HeaderConfiguration ref={corsRef} />
       <TunnelsViewer ref={tunnelRef} />
       <SettingItem
@@ -129,15 +183,22 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t('settings.sections.clash.form.fields.dnsOverwrite')}
         extra={
-          <TooltipIcon
-            icon={SettingsRounded}
-            onClick={() => dnsRef.current?.open()}
-          />
+          <>
+            <TooltipIcon
+              icon={SettingsRounded}
+              onClick={() => dnsRef.current?.open()}
+            />
+            <TooltipIcon
+              title={t('settings.modals.dns.dialog.profileScope')}
+              sx={{ opacity: '0.7' }}
+            />
+          </>
         }
       >
         <Switch
           edge="end"
-          checked={dnsSettingsEnabled}
+          checked={dnsEnabled}
+          disabled={!currentProfile || dnsUpdating || dnsConfirmation !== null}
           onChange={(_, checked) => handleDnsToggle(checked)}
         />
       </SettingItem>

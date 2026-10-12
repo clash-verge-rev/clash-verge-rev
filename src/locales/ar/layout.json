@@ -21,8 +21,10 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "لا يمكن للخدمة تشغيل النواة لأن مسار التثبيت أو أذونات المجلد لم تجتز فحص الأمان. أعد تثبيت الخدمة لاستعادة ملفاتها وأذوناتها، ثم حاول مجددًا. قد يطلب Windows موافقة المسؤول.",
+      "notAutoStartedMessage": "تم تغيير نوع بدء تشغيل خدمة Clash Verge إلى «يدوي» أو «معطّل» (غالبًا بواسطة أدوات التحسين)، لذلك لم تعد تبدأ مع Windows؛ تستخدم هذه الجلسة Sidecar. أعد تثبيت الخدمة لاستعادة التشغيل التلقائي. قد يطلب Windows موافقة المسؤول.",
       "title": "Service update required",
-      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
       "checkingMessage": "Checking the system service status and current running mode. Please wait…",
       "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
       "reinstall": "Reinstall service",

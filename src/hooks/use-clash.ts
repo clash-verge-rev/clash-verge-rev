@@ -8,8 +8,8 @@ import {
   getRuntimeConfig,
   patchClashConfig,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import {
-  getCacheData,
   revalidateQuery,
   setCacheData,
   useQuery,
@@ -97,11 +97,7 @@ export const useClash = () => {
     if (updater === undefined) {
       return refetch()
     }
-    const next =
-      typeof updater === 'function'
-        ? updater(getCacheData<IConfigData>(['getRuntimeConfig']))
-        : updater
-    setCacheData(['getRuntimeConfig'], next)
+    void setCacheData<IConfigData>(['getRuntimeConfig'], updater)
     if (revalidate !== false) {
       return refetch()
     }
@@ -109,8 +105,11 @@ export const useClash = () => {
   }
 
   const patchClash = useLockFn(async (patch: Partial<IConfigData>) => {
-    await patchClashConfig(patch)
-    mutateClash()
+    await mutate(() => patchClashConfig(patch), {
+      id: 'patch-clash-config',
+      revalidate: [['getRuntimeConfig']],
+      errorNotice: false,
+    })
   })
 
   const version = versionData?.meta
@@ -137,9 +136,11 @@ export const useClashInfo = () => {
 
     validatePorts(patch)
 
-    await patchClashConfig(patch)
-    mutateInfo()
-    revalidateQuery(['getClashConfig'])
+    await mutate(() => patchClashConfig(patch), {
+      id: 'patch-clash-info',
+      revalidate: [['getClashInfo'], ['getClashConfig']],
+      errorNotice: false,
+    })
   })
 
   const invalidateClashConfig = () => revalidateQuery(['getClashConfig'])

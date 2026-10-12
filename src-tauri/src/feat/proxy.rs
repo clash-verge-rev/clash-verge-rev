@@ -1,3 +1,4 @@
+use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, IVerge, MixedPort},
     core::{
@@ -10,6 +11,7 @@ use crate::{
         window_manager::WindowManager,
     },
 };
+use anyhow::Context as _;
 use clash_verge_logging::{Type, logging};
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
@@ -23,7 +25,11 @@ pub async fn toggle_system_proxy() -> Option<bool> {
         && auto_close_connection
         && let Err(err) = handle::Handle::mihomo().close_all_connections().await
     {
-        logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
+        logging!(
+            error,
+            Type::ProxyMode,
+            "toggle system proxy: failed to close all connections: {err}"
+        );
     }
 
     let requested = !current;
@@ -42,7 +48,7 @@ pub async fn toggle_system_proxy() -> Option<bool> {
     match patch_result {
         Ok(_) => Some(requested),
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err:#}");
+            logging!(error, Type::ProxyMode, "toggle system proxy failed: {err:#}");
             report_toggle_failure(&err).await;
             None
         }
@@ -79,18 +85,18 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     .await
     {
         Ok(_) => {
-            handle::Handle::refresh_verge();
+            announce(Refresh::Verge);
             // Reconciliation may immediately disable unavailable TUN; report the resulting state.
             Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err:#}");
+            logging!(error, Type::ProxyMode, "toggle tun mode failed: {err:#}");
             current
         }
     }
 }
 
-pub async fn copy_clash_env() {
+pub async fn copy_clash_env() -> anyhow::Result<()> {
     let env_ip = env::var("CLASH_VERGE_REV_IP").ok();
     let verge_cfg = Config::verge().await.latest_arc();
     let ip = env_ip
@@ -128,12 +134,11 @@ pub async fn copy_clash_env() {
         }
         "fish" => format!("set -x http_proxy {http_proxy}; set -x https_proxy {http_proxy}"),
         _ => {
-            logging!(error, Type::ProxyMode, "copy_clash_env: Invalid env type! {env_type}");
-            return;
+            anyhow::bail!("Invalid environment variable format: {env_type}");
         }
     };
 
-    if clipboard.write_text(&export_text).is_err() {
-        logging!(error, Type::ProxyMode, "Failed to write to clipboard");
-    }
+    clipboard
+        .write_text(export_text)
+        .context("Failed to write proxy environment variables to clipboard")
 }

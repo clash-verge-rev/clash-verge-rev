@@ -5,12 +5,13 @@ import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useVerge } from '@/hooks/use-verge'
 import { useSystemData } from '@/providers/app-data-context'
 import {
-  getAutotemProxy,
+  getAutoProxy,
   getEmbeddedServerPort,
   patchVergeConfig,
 } from '@/services/cmds'
+import { mutate } from '@/services/mutate'
 import {
-  getCacheData,
+  removeCacheData,
   revalidateQueries,
   useQuery,
 } from '@/services/query-client'
@@ -20,8 +21,8 @@ export const useSystemProxyState = () => {
   const { sysproxy } = useSystemData()
   const displayedMixedPort = useDisplayedMixedPort()
   const { data: autoproxy } = useQuery({
-    queryKey: ['getAutotemProxy'],
-    queryFn: getAutotemProxy,
+    queryKey: ['getAutoProxy'],
+    queryFn: getAutoProxy,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
@@ -50,9 +51,7 @@ export const useSystemProxyState = () => {
 
   const toggleSystemProxy = async (enabled: boolean) => {
     // Roll failed optimistic writes back to the latest confirmed state.
-    let confirmed =
-      getCacheData<IVergeConfig>(['getVergeConfig'])?.enable_system_proxy ??
-      false
+    let confirmed = verge?.enable_system_proxy ?? false
     mutateVerge(
       (prev) => (prev ? { ...prev, enable_system_proxy: enabled } : prev),
       false,
@@ -62,20 +61,23 @@ export const useSystemProxyState = () => {
     if (busyRef.current) return
     busyRef.current = true
 
-    let failed = false
     try {
       while (pendingRef.current !== null) {
         const target = pendingRef.current
         pendingRef.current = null
-        // Revalidate once below so a refetch failure cannot look like a patch failure.
-        await patchVergeConfig({ enable_system_proxy: target })
+        await mutate(() => patchVergeConfig({ enable_system_proxy: target }), {
+          id: 'toggle-system-proxy',
+          errorNotice: false,
+        })
         confirmed = target
         if (!target && verge?.auto_close_connection) {
-          await closeAllConnections().catch(() => {})
+          await mutate(() => closeAllConnections(), {
+            id: 'close-all-connections',
+            errorNotice: false,
+          }).catch(() => {})
         }
       }
     } catch (error) {
-      failed = true
       mutateVerge(
         (prev) => (prev ? { ...prev, enable_system_proxy: confirmed } : prev),
         false,
@@ -85,29 +87,36 @@ export const useSystemProxyState = () => {
       throw error
     } finally {
       busyRef.current = false
-      const revalidated = revalidateQueries([
-        ['getVergeConfig'],
-        ['getSystemProxy'],
-        ['getAutotemProxy'],
-      ])
-      if (failed) {
-        // Preserve the classified toggle failure.
-        try {
-          await revalidated
-        } catch (error) {
-          console.warn(
-            '[system-proxy] revalidating after a failed toggle failed too:',
-            error,
-          )
-        }
-      } else {
-        await revalidated
+      // Refreshing cached state is not part of the toggle's result: a failed read must not
+      // turn a write that landed into a reported failure.
+      try {
+        await revalidateQueries([['getVergeConfig']])
+      } catch (error) {
+        console.warn(
+          '[system-proxy] rereading the config after a toggle failed:',
+          error,
+        )
+      }
+      // Kept separate so an unreadable config cannot discard OS state that did read.
+      try {
+        await revalidateQueries([['getSystemProxy'], ['getAutoProxy']])
+      } catch (error) {
+        console.warn(
+          '[system-proxy] rereading the OS proxy after a toggle failed:',
+          error,
+        )
+        // The indicator reports observed OS state, so an unreadable one must read as inactive
+        // rather than stay live from a stale cache.
+        await Promise.all([
+          removeCacheData(['getSystemProxy']),
+          removeCacheData(['getAutoProxy']),
+        ])
       }
     }
   }
 
   const invalidateProxyState = () =>
-    revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
+    revalidateQueries([['getSystemProxy'], ['getAutoProxy']])
 
   return {
     indicator,

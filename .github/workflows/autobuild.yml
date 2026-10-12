@@ -3,8 +3,8 @@ name: Auto Build
 on:
   workflow_dispatch:
   schedule:
-    # UTC+8 12:00, 18:00 -> UTC 4:00, 10:00
-    - cron: '0 4,10 * * *'
+    # UTC+8 06:00, 18:00 -> UTC 22:00, 10:00
+    - cron: '0 10,22 * * *'
 permissions: write-all
 env:
   TAG_NAME: autobuild
@@ -35,12 +35,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
+
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -48,7 +51,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -98,7 +101,7 @@ jobs:
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
 
           ### 稳定机场VPN推荐
-          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+          - [狗狗加速](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
           Created at ${{ env.BUILDTIME }}.
           EOF
@@ -151,7 +154,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.99.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -174,7 +177,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -182,7 +185,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -203,7 +206,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.99.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -254,7 +257,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.99.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -272,14 +275,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -344,7 +347,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.99.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -416,14 +419,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.0
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -451,7 +454,7 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.99.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -496,11 +499,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
-      - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
@@ -515,6 +513,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Group changelog platforms
+        run: bash ./scripts-workflow/group_platforms.sh
+
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: bash ./scripts/extract_update_logs.sh
@@ -523,9 +524,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.19.0'
+          node-version: '24.21.0'
 
-      - uses: pnpm/action-setup@v6.0.10
+      - uses: pnpm/action-setup@v6.1.0
         name: Install pnpm
         with:
           run_install: false
@@ -579,7 +580,7 @@ jobs:
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
 
           ### 稳定机场VPN推荐
-          - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+          - [狗狗加速](https://cvr.dginv.click/#/register?code=oaxsAGo6)
 
           Created at ${{ env.BUILDTIME }}.
           EOF

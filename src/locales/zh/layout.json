@@ -21,8 +21,10 @@
       }
     },
     "serviceMigration": {
+      "locationRefusedMessage": "系统服务的安装路径或目录权限未通过安全检查，无法启动内核。请重新安装服务以恢复服务文件和权限，随后重试。Windows 可能会请求管理员授权。",
+      "notAutoStartedMessage": "Clash Verge 系统服务的启动类型已被改为手动或禁用（常见于优化软件的开机加速功能），开机后不会自动运行，本次已改用 Sidecar。请重新安装服务以恢复自动启动。Windows 可能会请求管理员授权。",
       "title": "需要更新系统服务",
-      "message": "检测到旧版 Clash Verge 系统服务。重新安装后可使用当前安全 IPC 协议，也可以仅在本次会话继续使用 Sidecar。",
+      "message": "Clash Verge 系统服务版本与当前应用要求不符。请选择「重新安装服务」卸载现有服务并安装所需版本，也可以仅在本次会话继续使用 Sidecar。",
       "checkingMessage": "正在确认系统服务状态及当前运行模式，请稍候……",
       "unavailableMessage": "所需的 Clash Verge 系统服务当前不可用。你可以安装或修复服务，或仅在本次会话继续使用 Sidecar。",
       "reinstall": "重新安装服务",

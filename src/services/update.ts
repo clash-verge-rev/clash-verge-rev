@@ -72,13 +72,17 @@ const localVersionNormalized = normalizeVersion(appVersion)
 export const checkUpdateSafe = async (
   options?: CheckOptions,
 ): Promise<Update | null> => {
-  const result = await check({ ...(options ?? {}), allowDowngrades: false })
+  const result = await check(options ?? {})
   if (!result) return null
 
   const remoteVersion = resolveRemoteVersion(result)
   const comparison = compareVersions(remoteVersion, localVersionNormalized)
 
-  if (comparison !== null && comparison <= 0) {
+  const isBuildToStable =
+    /^\d+\.\d+\.\d+\+[0-9A-Za-z.-]+$/.test(localVersionNormalized ?? '') &&
+    remoteVersion === localVersionNormalized?.split('+')[0]
+
+  if (comparison !== null && comparison <= 0 && !isBuildToStable) {
     try {
       await result.close()
     } catch (err) {

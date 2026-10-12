@@ -1,5 +1,5 @@
 use crate::utils::dirs::{self, PathBufExec as _};
-use anyhow::{Result, anyhow};
+use anyhow::{Context as _, Result, anyhow};
 use clash_verge_logging::{Type, logging};
 use std::fs;
 use std::os::windows::process::CommandExt as _;
@@ -100,8 +100,14 @@ async fn cleanup_legacy_shortcuts() -> Result<()> {
     let old_shortcut = startup_dir.join("Clash-Verge.lnk");
     let new_shortcut = startup_dir.join("Clash Verge.lnk");
 
-    old_shortcut.remove_if_exists().await?;
-    new_shortcut.remove_if_exists().await?;
+    old_shortcut
+        .remove_if_exists()
+        .await
+        .with_context(|| format!("failed to remove startup shortcut {}", old_shortcut.display()))?;
+    new_shortcut
+        .remove_if_exists()
+        .await
+        .with_context(|| format!("failed to remove startup shortcut {}", new_shortcut.display()))?;
     Ok(())
 }
 
@@ -327,7 +333,7 @@ pub async fn set_auto_launch(is_enable: bool, is_admin: bool) -> Result<()> {
     let other = if is_admin { TaskMode::User } else { TaskMode::Admin };
 
     if let Err(err) = cleanup_legacy_shortcuts().await {
-        logging!(warn, Type::Setup, "Failed to cleanup legacy startup shortcuts: {}", err);
+        logging!(warn, Type::Setup, "Failed to cleanup legacy startup shortcuts: {err:#}");
     }
 
     if is_enable {
@@ -372,12 +378,4 @@ pub async fn set_auto_launch(is_enable: bool, is_admin: bool) -> Result<()> {
     }
 
     Ok(())
-}
-
-pub fn is_auto_launch_enabled() -> Result<bool> {
-    if is_task_enabled(TaskMode::Admin)? {
-        return Ok(true);
-    }
-
-    is_task_enabled(TaskMode::User)
 }

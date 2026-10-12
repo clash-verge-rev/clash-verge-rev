@@ -18,7 +18,6 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useRef,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -27,7 +26,7 @@ import {
   BaseDialog,
   BaseFieldset,
   BaseSplitChipEditor,
-  DialogRef,
+  type DialogRef,
   Switch,
   TooltipIcon,
 } from '@/components/base'
@@ -35,23 +34,15 @@ import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
-import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
+import { useSystemData } from '@/providers/app-data-context'
 import {
-  getAutotemProxy,
   getEmbeddedServerPort,
   getNetworkInterfacesInfo,
   getSystemHostname,
-  getSystemProxy,
-  patchVergeConfig,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
-
-const sleep = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
-  })
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
@@ -110,7 +101,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge, mutateVerge } = useVerge()
   const [hostOptions, setHostOptions] = useState<string[]>([])
 
-  const { clashConfig } = useClashConfigData()
   const { indicator: isProxyReallyEnabled, invalidateProxyState } =
     useSystemProxyState()
 
@@ -148,45 +138,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const defaultBypass = () => {
     if (isWindows) {
-      return 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>'
+      return 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;*.local;<local>'
     }
     if (systemName === 'linux') {
       return 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1'
     }
     return '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
   }
-
-  const prevMixedPortRef = useRef(clashConfig?.mixedPort)
-
-  useEffect(() => {
-    const mixedPort = clashConfig?.mixedPort
-    if (!mixedPort || mixedPort === prevMixedPortRef.current) {
-      return
-    }
-
-    prevMixedPortRef.current = mixedPort
-    if (!enabled) {
-      return
-    }
-
-    const updateProxy = async () => {
-      try {
-        const currentSysProxy = await getSystemProxy()
-        const currentAutoProxy = await getAutotemProxy()
-
-        if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-          await patchVergeConfig({ enable_system_proxy: false })
-          await sleep(200)
-          await patchVergeConfig({ enable_system_proxy: true })
-          await invalidateProxyState()
-        }
-      } catch (err) {
-        showNotice.error(err)
-      }
-    }
-
-    updateProxy()
-  }, [clashConfig?.mixedPort, enabled, value.pac, invalidateProxyState])
 
   const { systemProxyAddress } = useSystemData()
   const displayedMixedPort = useDisplayedMixedPort()
@@ -256,10 +214,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
       interfaces.forEach((iface) => {
         iface.addr.forEach((address) => {
-          if (address.V4 && address.V4.ip) {
+          if (address.V4?.ip) {
             ipAddresses.push(address.V4.ip)
           }
-          if (address.V6 && address.V6.ip) {
+          if (address.V6?.ip) {
             ipAddresses.push(address.V6.ip)
           }
         })
@@ -277,7 +235,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
       if (hostname) {
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-          hostname = hostname + '.local'
+          hostname = `${hostname}.local`
           options.push(hostname)
           debugLog('主机名已添加到选项中:', hostname)
         } else {
@@ -378,13 +336,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       patch.proxy_host = proxyHost
     }
 
-    const needResetProxy =
-      value.pac !== proxy_auto_config ||
-      proxyHost !== proxy_host ||
-      pacContent !== pac_file_content ||
-      value.bypass !== system_proxy_bypass ||
-      value.use_default !== use_default_bypass
-
     Promise.resolve().then(async () => {
       try {
         if (Object.keys(patch).length > 0) {
@@ -393,31 +344,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         if (Object.keys(patch).length > 0) {
           await patchVerge(patch)
         }
-        setTimeout(async () => {
-          try {
-            await invalidateProxyState()
-
-            if (needResetProxy && enabled) {
-              const [currentSysProxy, currentAutoProxy] = await Promise.all([
-                getSystemProxy(),
-                getAutotemProxy(),
-              ])
-
-              const isProxyActive = value.pac
-                ? currentAutoProxy?.enable
-                : currentSysProxy?.enable
-
-              if (isProxyActive) {
-                await patchVergeConfig({ enable_system_proxy: false })
-                await new Promise((resolve) => setTimeout(resolve, 50))
-                await patchVergeConfig({ enable_system_proxy: true })
-                await invalidateProxyState()
-              }
-            }
-          } catch (err) {
-            console.warn('代理状态更新失败:', err)
-          }
-        }, 50)
+        try {
+          await invalidateProxyState()
+        } catch (err) {
+          console.warn('代理状态更新失败:', err)
+        }
       } catch (err) {
         console.error('配置保存失败:', err)
         mutateVerge()
@@ -507,7 +438,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           <Switch
             edge="end"
             disabled={!enabled}
-            checked={value.pac}
+            checked={value.pac!}
             onChange={(_, e) => setValue((v) => ({ ...v, pac: e }))}
           />
         </ListItem>
@@ -524,7 +455,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           <Switch
             edge="end"
             disabled={!enabled}
-            checked={value.guard}
+            checked={value.guard!}
             onChange={(_, e) => setValue((v) => ({ ...v, guard: e }))}
             sx={{ marginLeft: 'auto' }}
           />

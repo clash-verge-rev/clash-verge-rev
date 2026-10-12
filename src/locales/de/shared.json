@@ -12,23 +12,23 @@
     "restart": "Kern neustarten",
     "resetToDefault": "Auf Standardwerte zurücksetzen",
     "refresh": "Aktualisieren",
-    "retry": "Retry",
-    "refreshPage": "Refresh Page",
-    "showDetails": "Show Details",
-    "hideDetails": "Hide Details",
+    "retry": "Erneut versuchen",
+    "refreshPage": "Seite neu laden",
+    "showDetails": "Details anzeigen",
+    "hideDetails": "Details ausblenden",
     "listView": "Listenansicht",
     "tableView": "Tabellenansicht",
     "pause": "Pausieren",
     "resume": "Fortsetzen",
     "closeAll": "Alle schließen",
     "clear": "Löschen",
-    "previous": "Previous",
-    "next": "Next",
+    "previous": "Zurück",
+    "next": "Weiter",
     "check": "Prüfen"
   },
   "labels": {
     "updateAt": "Aktualisiert am",
-    "timeout": "Timeout",
+    "timeout": "Zeitlimit",
     "icon": "Symbol",
     "name": "Name",
     "readOnly": "Schreibgeschützt",
@@ -37,14 +37,14 @@
     "usedTotal": "Verwendet / Gesamt",
     "from": "Von",
     "password": "Passwort",
-    "retryAttempts": "Retry attempts",
+    "retryAttempts": "Wiederholungsversuche",
     "downloaded": "Heruntergeladen",
     "uploaded": "Hochgeladen"
   },
   "statuses": {
     "enabled": "Aktiviert",
     "disabled": "Deaktiviert",
-    "saving": "Saving...",
+    "saving": "Wird gespeichert...",
     "empty": "Leer",
     "loading": "Wird geladen..."
   },
@@ -54,7 +54,7 @@
     "minutes": "Minuten",
     "hours": "Stunden",
     "kilobytes": "KB",
-    "files": "Files"
+    "files": "Dateien"
   },
   "placeholders": {
     "resetInput": "Eingabefeld leeren",
@@ -64,7 +64,7 @@
     "useRegex": "Regulären Ausdruck verwenden"
   },
   "validation": {
-    "invalidRegex": "Invalid regular expression"
+    "invalidRegex": "Ungültiger regulärer Ausdruck"
   },
   "window": {
     "maximize": "Maximieren",
@@ -84,8 +84,8 @@
       "componentStack": "Komponenten-Stack",
       "trafficUnavailable": "Traffic-Daten nicht verfügbar",
       "operationFailed": "Der Vorgang ist fehlgeschlagen",
-      "trafficStats": "Traffic Statistics Error",
-      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      "trafficStats": "Fehler in der Datenverkehrsstatistik",
+      "trafficStatsDescription": "In der Datenverkehrsstatistik ist ein Fehler aufgetreten; sie wurde deaktiviert, um Abstürze zu vermeiden."
     },
     "notices": {
       "raw": "{{message}}",
@@ -95,12 +95,12 @@
       "importSuccess": "Abonnement erfolgreich importiert",
       "importSubscriptionSuccess": "Abonnement erfolgreich importiert",
       "importWithClashProxy": "Abonnement mit Clash-Proxy importiert",
-      "updateAvailable": "Update Available",
-      "saved": "Saved successfully",
+      "updateAvailable": "Update verfügbar",
+      "saved": "Erfolgreich gespeichert",
       "common": {
         "copySuccess": "Kopieren erfolgreich",
-        "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
-        "saveFailed": "Failed to save configuration",
+        "saveSuccess": "Konfiguration erfolgreich gespeichert",
+        "saveFailed": "Konfiguration konnte nicht gespeichert werden",
         "refreshFailed": "Aktualisierung fehlgeschlagen"
       }
     },
@@ -108,7 +108,6 @@
       "config": {
         "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
         "bootFailed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
-        "coreChangeFailed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
         "processTerminated": "Der Validierungsprozess wurde beendet. Bitte prüfen Sie, ob eine Sicherheitssoftware die Ausführung des Kerns verhindert oder ob die CPU und Laufzeitumgebung Ihres Computers das Kernprogramm unterstützen."
       },
       "script": {
@@ -120,15 +119,11 @@
       "yaml": {
         "syntaxError": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
         "readError": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
-        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht.",
-        "keyError": "YAML-Schlüsselfehler. Die Änderungen wurden rückgängig gemacht.",
-        "generalError": "YAML-Fehler. Die Änderungen wurden rückgängig gemacht."
+        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht."
       },
       "merge": {
         "syntaxError": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
-        "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
+        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
       }
     }
   },

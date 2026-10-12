@@ -1,3 +1,4 @@
+import { DragDropProvider } from '@dnd-kit/react'
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import { throttle } from 'lodash-es'
@@ -22,7 +23,9 @@ import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData, useSystemData } from '@/providers/app-data-context'
+import { syncTrayProxySelection } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { mutate } from '@/services/mutate'
 import {
   isInteractableMember,
   resolveMember,
@@ -41,6 +44,10 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import {
+  PROXY_GROUP_HEADER_SENSORS,
+  useProxyGroupHeaderLayout,
+} from './use-proxy-group-header-layout'
 import {
   hasRenderableItems,
   type IRenderItem,
@@ -128,6 +135,12 @@ function useProxyRenderState(
         console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error)
       } finally {
         onProxies()
+        mutate(() => syncTrayProxySelection(), {
+          id: 'sync-tray-selection',
+          errorNotice: false,
+        }).catch((error) => {
+          console.error('[ProxyGroups] Failed to sync tray latency:', error)
+        })
       }
     }),
   )
@@ -365,6 +378,7 @@ function NormalProxyGroups(props: { mode: string }) {
     saveScrollPosition,
   } = useProxyRenderState(mode, false, null)
   const emptyList = useEmptyRenderList()
+  const { onDragEnd: onHeaderDragEnd } = useProxyGroupHeaderLayout()
   const renderFirstRef = useRef(true)
   // Do not persist intermediate positions produced while restoring virtual scroll.
   const isRestoringRef = useRef(false)
@@ -574,16 +588,21 @@ function NormalProxyGroups(props: { mode: string }) {
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>
-      <StickyVirtualList
-        ref={stickyListRef}
-        items={renderList}
-        isGroupItem={(item) => item.type === 0}
-        getItemKey={(item) => item.key}
-        estimateGroupItemHeight={76}
-        estimateItemHeight={64}
-        renderGroupItem={renderGroupItem}
-        renderItem={renderProxyItem}
-      />
+      <DragDropProvider
+        sensors={PROXY_GROUP_HEADER_SENSORS}
+        onDragEnd={onHeaderDragEnd}
+      >
+        <StickyVirtualList
+          ref={stickyListRef}
+          items={renderList}
+          isGroupItem={(item) => item.type === 0}
+          getItemKey={(item) => item.key}
+          estimateGroupItemHeight={76}
+          estimateItemHeight={64}
+          renderGroupItem={renderGroupItem}
+          renderItem={renderProxyItem}
+        />
+      </DragDropProvider>
 
       {mode === 'rule' && (
         <ProxyGroupNavigator

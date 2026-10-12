@@ -1,10 +1,10 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
-import type { FailedOperation } from '@/services/cmds'
+import type { FailedOperation, SidecarFailureSnapshot } from '@/services/cmds'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 
-type NoticeType = 'success' | 'error' | 'info'
+type NoticeType = 'success' | 'error' | 'info' | 'warning'
 
 interface NoticeTranslationDescriptor {
   key: string
@@ -47,6 +47,7 @@ type ShowNotice = ((
   success: NoticeShortcut
   error: NoticeShortcut
   info: NoticeShortcut
+  warning: NoticeShortcut
 }
 
 type NoticeSubscriber = () => void
@@ -54,6 +55,7 @@ type NoticeSubscriber = () => void
 const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
   success: 3000,
   info: 5000,
+  warning: 6000,
   error: 8000,
 }
 
@@ -95,6 +97,7 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
 
 let nextId = 0
 let notices: NoticeItem[] = []
+let sidecarFailureRevision = -1
 const subscribers: Set<NoticeSubscriber> = new Set()
 
 function notifySubscribers() {
@@ -302,11 +305,7 @@ function extractDisplayText(input: unknown): string | undefined {
   }
 }
 
-export interface CommandFailure {
-  code?: string
-  operation?: FailedOperation
-  detail: string
-}
+import type { CommandFailure_Serialize as CommandFailure } from './bindings'
 
 function isCommandFailure(input: unknown): input is CommandFailure {
   if (typeof input !== 'object' || input === null) return false
@@ -459,7 +458,8 @@ const baseShowNotice = (
   const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
   const operation = failureOperation(raw) ?? failureOperation(message)
   // Suppress duplicate toasts while preserving the caller's id contract.
-  if (isReportedByDialog(code)) return id
+  // Sidecar failures come only from versioned backend state, never delayed command rejections.
+  if (isReportedByDialog(code) || code === 'SERVICE_SIDECAR_FAILED') return id
   const effectiveDuration = resolveDuration(type, duration)
   const timerId =
     effectiveDuration > 0
@@ -491,11 +491,11 @@ const baseShowNotice = (
 }
 
 function failureCode(input: unknown): string | undefined {
-  return isCommandFailure(input) ? input.code : undefined
+  return isCommandFailure(input) ? input.code! : undefined
 }
 
 function failureOperation(input: unknown): FailedOperation | undefined {
-  return isCommandFailure(input) ? input.operation : undefined
+  return isCommandFailure(input) ? input.operation! : undefined
 }
 
 /**
@@ -509,6 +509,8 @@ export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
     baseShowNotice('error', message, ...extras),
   info: (message: NoticeContent, ...extras: NoticeExtra[]) =>
     baseShowNotice('info', message, ...extras),
+  warning: (message: NoticeContent, ...extras: NoticeExtra[]) =>
+    baseShowNotice('warning', message, ...extras),
 })
 
 export function hideNotice(id: number) {
@@ -517,6 +519,29 @@ export function hideNotice(id: number) {
     clearTimeout(notice.timerId)
   }
   notices = notices.filter((candidate) => candidate.id !== id)
+  notifySubscribers()
+}
+
+function hideNoticesByCode(code: string) {
+  notices
+    .filter((notice) => notice.code === code)
+    .forEach(({ id }) => hideNotice(id))
+}
+
+export function syncSidecarFailure(snapshot: SidecarFailureSnapshot) {
+  if (snapshot.revision <= sidecarFailureRevision) return
+  sidecarFailureRevision = snapshot.revision
+  hideNoticesByCode('SERVICE_SIDECAR_FAILED')
+  if (snapshot.detail === null) return
+
+  const failure = { code: 'SERVICE_SIDECAR_FAILED', detail: snapshot.detail }
+  notices = [
+    ...notices,
+    buildNotice(nextId++, 'error', 0, {
+      ...normalizeNoticeMessage(failure),
+      code: failure.code,
+    }),
+  ]
   notifySubscribers()
 }
 
