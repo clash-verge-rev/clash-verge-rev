@@ -11,26 +11,30 @@ use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 
 /// ### `verge.yaml` schema
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVerge {
     /// silent | error | warn | info | debug | trace
+    #[specta(type = Option<std::string::String>)]
     pub app_log_level: Option<String>,
 
     /// Maximum app log size in KiB.
     pub app_log_max_size: Option<u64>,
 
     pub app_log_max_count: Option<usize>,
-
+    #[specta(type = Option<std::string::String>)]
     pub language: Option<String>,
 
     /// `light` or `dark` or `system`
+    #[specta(type = Option<std::string::String>)]
     pub theme_mode: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub tray_event: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub env_type: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub start_page: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub startup_script: Option<String>,
 
     pub traffic_graph: Option<bool>,
@@ -48,18 +52,23 @@ pub struct IVerge {
 
     #[cfg(target_os = "macos")]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub tray_icon: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub menu_icon: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub menu_order: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub proxy_group_tools_position: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub notice_position: Option<String>,
 
     pub collapse_navbar: Option<bool>,
@@ -84,39 +93,43 @@ pub struct IVerge {
     pub enable_dns_settings: Option<bool>,
 
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[specta(type = std::collections::BTreeMap<std::string::String, super::dns::ProfileDnsSettings>)]
     pub profile_dns_settings: std::collections::BTreeMap<String, super::dns::ProfileDnsSettings>,
 
     pub use_default_bypass: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub system_proxy_bypass: Option<String>,
 
     pub proxy_guard_duration: Option<u64>,
 
     pub proxy_auto_config: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub pac_file_content: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub proxy_host: Option<String>,
 
     pub theme_setting: Option<IVergeTheme>,
-
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub web_ui_list: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub clash_core: Option<String>,
 
     /// format: {func},{key}
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub hotkeys: Option<Vec<String>>,
 
     pub enable_global_hotkey: Option<bool>,
 
+    #[specta(type = Option<crate::ipc::JsonValue>)]
     pub home_cards: Option<serde_json::Value>,
 
     pub auto_close_connection: Option<bool>,
 
     pub auto_check_update: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub default_latency_test: Option<String>,
 
     pub default_latency_timeout: Option<i16>,
@@ -171,6 +184,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_url: Option<String>,
 
     #[serde(
@@ -179,6 +193,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_username: Option<String>,
 
     #[serde(
@@ -187,12 +202,14 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_password: Option<String>,
 
     #[cfg(target_os = "macos")]
     pub enable_tray_speed: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub tray_proxy_groups_display_mode: Option<String>,
     pub tray_inline_outbound_modes: Option<bool>,
 
@@ -209,27 +226,41 @@ pub struct IVerge {
     pub enable_external_controller: Option<bool>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVergeTestItem {
+    #[specta(type = Option<std::string::String>)]
     pub uid: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub icon: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVergeTheme {
+    #[specta(type = Option<std::string::String>)]
     pub primary_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub secondary_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub primary_text: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub secondary_text: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub info_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub error_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub warning_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub success_color: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub font_family: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub css_injection: Option<String>,
 }
 

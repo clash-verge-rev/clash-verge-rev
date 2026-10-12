@@ -32,6 +32,10 @@ test('committed edits retain their profile and merge with fresh saved URLs', asy
     items: [
       {
         uid: 'old-profile',
+        type: null,
+        name: null,
+        file: null,
+        updated: null,
         latency_test_urls: { untouched: 'https://example.com/' },
       },
     ],
@@ -49,7 +53,16 @@ test('committed edits retain their profile and merge with fresh saved URLs', asy
 
 test('migration cannot overwrite a previously saved or cleared override', async () => {
   vi.mocked(getProfiles).mockResolvedValue({
-    items: [{ uid: 'p', latency_test_urls: { A: '' } }],
+    items: [
+      {
+        uid: 'p',
+        type: null,
+        name: null,
+        file: null,
+        updated: null,
+        latency_test_urls: { A: '' },
+      },
+    ],
   })
   await saveProfileTestUrls('p', { A: 'http://localhost/stale' }, true)
   expect(patchProfile).not.toHaveBeenCalled()
@@ -59,14 +72,18 @@ test('pending edits survive a reload and older save acknowledgements', async () 
   vi.useFakeTimers()
   const profile = {
     uid: 'pending-profile',
+    type: null,
+    name: null,
+    file: null,
+    updated: null,
     latency_test_urls: { A: 'http://localhost/old' },
   }
   vi.mocked(getProfiles).mockResolvedValue({ items: [profile] })
   let finish!: () => void
   vi.mocked(patchProfile).mockImplementationOnce(
     () =>
-      new Promise<void>((resolve) => {
-        finish = resolve
+      new Promise<null>((resolve) => {
+        finish = () => resolve(null)
       }),
   )
   const first = commitProfileTestUrl(profile.uid, 'A', 'http://localhost/new')
@@ -90,6 +107,10 @@ test('pending edits survive a reload and older save acknowledgements', async () 
 test('a failed save preserves the committed input across profile refreshes', async () => {
   const profile = {
     uid: 'failed-profile',
+    type: null,
+    name: null,
+    file: null,
+    updated: null,
     latency_test_urls: { A: 'http://localhost/old' },
   }
   vi.mocked(getProfiles).mockResolvedValue({ items: [profile] })

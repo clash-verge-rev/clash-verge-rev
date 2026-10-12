@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use super::utils::{country_code_to_emoji, get_local_date_string};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct UnlockItem {
     pub name: String,
     pub status: String,
