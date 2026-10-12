@@ -40,7 +40,7 @@ mod app_init {
     }
 
     /// Setup plugins for the Tauri builder
-    pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    pub fn setup_plugins(builder: tauri::Builder) -> tauri::Builder {
         #[allow(unused_mut)]
         let mut builder = builder
             .plugin(tauri_plugin_clash_verge_sysinfo::init())
@@ -124,7 +124,7 @@ mod app_init {
         Ok(())
     }
 
-    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke) -> bool + Send + Sync + 'static {
         {
             let builder = crate::ipc::builder();
             move |invoke| builder.invoke_handler()(invoke)
@@ -181,7 +181,7 @@ pub fn run() -> std::process::ExitCode {
     #[cfg(target_os = "linux")]
     utils::linux::workarounds::apply_wayland_webkit_fix();
 
-    let builder = app_init::setup_plugins(tauri::Builder::default())
+    let builder = app_init::setup_plugins(tauri::Builder::default().runtime(tauri_runtime_wry::Wry::default()))
         .setup(|app| {
             // Logger may not be ready yet, so mirror setup panics to stderr.
             fn log_setup_panic(stage: &str, panic: Box<dyn std::any::Any + Send>) {

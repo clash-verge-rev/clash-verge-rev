@@ -1,12 +1,12 @@
 use crate::cmd;
 
-pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
+pub fn builder() -> tauri_specta::Builder<tauri::DynRuntime> {
     tauri_specta::Builder::new()
         .types(&platform_types())
         .commands(tauri_specta::collect_commands![
             tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
             tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
-            tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info::<tauri::Wry>,
+            tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info::<tauri::DynRuntime>,
             cmd::probe_listener,
             cmd::save_proxy_ports,
             cmd::get_sys_proxy,

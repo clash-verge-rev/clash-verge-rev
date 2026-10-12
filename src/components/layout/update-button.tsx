@@ -16,7 +16,7 @@ export const UpdateButton = (props: Props) => {
 
   const { updateInfo } = useUpdate()
 
-  if (!updateInfo?.available) return null
+  if (!updateInfo) return null
 
   return (
     <>

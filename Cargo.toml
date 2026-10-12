@@ -49,7 +49,15 @@ split-debuginfo = "unpacked"
 [patch.crates-io]
 # Backport Windows menu command ID recycling on the muda 0.20 compatibility branch.
 muda = { git = "https://github.com/wonfen/muda.git", rev = "547de49352791653fbdfa785f20f3c7ece8468e2" }
-
+# tauri-specta has no tauri 3 release yet; ride the tauri team's port and the
+# unpublished specta rc.26 line it pins. Drop all six entries once both ship
+# on crates.io.
+tauri-specta = { git = "https://github.com/tauri-apps/tauri-specta", branch = "tauri-v3" }
+specta = { git = "https://github.com/specta-rs/specta.git", rev = "2757fa8899926dce7da999780c7edf2dc08a732a" }
+specta-macros = { git = "https://github.com/specta-rs/specta.git", rev = "2757fa8899926dce7da999780c7edf2dc08a732a" }
+specta-serde = { git = "https://github.com/specta-rs/specta.git", rev = "2757fa8899926dce7da999780c7edf2dc08a732a" }
+specta-typescript = { git = "https://github.com/specta-rs/specta.git", rev = "2757fa8899926dce7da999780c7edf2dc08a732a" }
+specta-util = { git = "https://github.com/specta-rs/specta.git", rev = "2757fa8899926dce7da999780c7edf2dc08a732a" }
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
@@ -61,8 +69,9 @@ tracing-estuary = { git = "https://github.com/Tunglies/tracing-estuary.git", bra
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 tracing = "0.1.44"
 
-tauri = { version = "2.12.1" }
-tauri-plugin-clipboard-manager = "2.4.1"
+tauri = { version = "3.0.0-alpha.4" }
+tauri-runtime-wry = "3.0.0-alpha.4"
+tauri-plugin-clipboard-manager = "3.0.0-alpha.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
