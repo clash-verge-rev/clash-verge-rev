@@ -29,6 +29,7 @@ pub fn toggle_for(app: &AppHandle, tray_id: &str, page: &str) -> Result<()> {
         WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App(page.into()))
             .title("Clash Verge")
             .inner_size(440.0, 640.0)
+            .background_color(tauri::window::Color(32, 34, 37, 255))
             .decorations(false)
             .resizable(false)
             .skip_taskbar(true)

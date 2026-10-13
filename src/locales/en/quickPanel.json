@@ -31,7 +31,6 @@
   "upload": "Upload",
   "profile": "Subscription",
   "dashboard": "Dashboard",
-  "loading": "Reading proxy status…",
   "applying": "Applying changes…",
   "retry": "Retry",
   "tunUnavailable": "Requires an available service",
@@ -40,5 +39,10 @@
   "coreNotRunning": "The proxy core is not running. Open the dashboard to check it.",
   "contextChanged": "The subscription or mode changed. Please select the node again.",
   "nodeUnavailable": "This node is unavailable. Please select another.",
-  "node": "Node"
+  "node": "Node",
+  "notConnected": "Not connected",
+  "connecting": "Connecting…",
+  "coreUnavailable": "Core unavailable",
+  "stateUnavailable": "Status unavailable. Retry or open the dashboard.",
+  "nodePending": "Connect to choose a node"
 }

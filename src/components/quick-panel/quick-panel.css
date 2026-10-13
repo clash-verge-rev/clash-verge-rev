@@ -402,12 +402,6 @@ body {
   align-items: stretch;
   background: var(--qp-bg);
 }
-.qp-operation {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
 .qp-live .quick-panel {
   width: 100%;
   box-shadow: none;
@@ -508,4 +502,20 @@ body {
 }
 .qp-traffic > div:last-child svg {
   color: #be8aff;
+}
+
+html {
+  background: #202225;
+}
+
+.qp-status {
+  display: block;
+  margin-top: 4px;
+  color: var(--qp-muted);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.qp-modes:not(:has(button[aria-pressed="true"]))::before {
+  opacity: 0;
 }

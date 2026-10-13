@@ -31,7 +31,6 @@
   "upload": "上传",
   "profile": "当前订阅",
   "dashboard": "完整仪表盘",
-  "loading": "正在读取代理状态…",
   "applying": "正在应用更改…",
   "retry": "重试",
   "tunUnavailable": "需要可用的服务模式",
@@ -40,5 +39,10 @@
   "coreNotRunning": "代理内核未运行，请打开仪表盘检查。",
   "contextChanged": "订阅或模式已改变，请重新选择节点。",
   "nodeUnavailable": "节点已失效，请选择其他节点。",
-  "node": "节点"
+  "node": "节点",
+  "notConnected": "未连接",
+  "connecting": "正在连接…",
+  "coreUnavailable": "内核暂不可用",
+  "stateUnavailable": "暂时无法读取状态，请重试或打开仪表盘。",
+  "nodePending": "连接后选择节点"
 }

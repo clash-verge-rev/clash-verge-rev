@@ -612,8 +612,10 @@ export interface TranslationResources {
       applying: string
       chooseFavorites: string
       collapse: string
+      connecting: string
       contextChanged: string
       coreNotRunning: string
+      coreUnavailable: string
       current: string
       dashboard: string
       direct: string
@@ -625,13 +627,14 @@ export interface TranslationResources {
       favorites: string
       global: string
       group: string
-      loading: string
       mode: string
       node: string
+      nodePending: string
       nodeUnavailable: string
       noGroups: string
       noMatch: string
       noNode: string
+      notConnected: string
       panel: string
       profile: string
       replaceHint: string
@@ -640,6 +643,7 @@ export interface TranslationResources {
       search: string
       selected: string
       settings: string
+      stateUnavailable: string
       storageError: string
       systemHint: string
       systemProxy: string

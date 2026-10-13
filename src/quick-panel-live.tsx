@@ -8,7 +8,6 @@ import {
 import {
   QuickPanel,
   type QuickGroup,
-  type QuickMode,
 } from './components/quick-panel/quick-panel'
 import {
   buildQuickGroups,
@@ -16,20 +15,12 @@ import {
   favoriteScope,
   type Favorites,
 } from './components/quick-panel/quick-panel-data'
+import { readQuickPanelSnapshot as readSnapshot } from './components/quick-panel/quick-panel-snapshot'
 import { cleanupConnections } from './hooks/use-proxy-selection'
 import { useTrafficData } from './hooks/use-traffic-data'
 import enLabels from './locales/en/quickPanel.json'
 import zhLabels from './locales/zh/quickPanel.json'
 import {
-  getVergeConfig,
-  getProfiles,
-  getProxyView,
-  getClashMode,
-  getSystemProxy,
-  getAutoProxy,
-  getClashInfo,
-  getRuntimeState,
-  getEmbeddedServerPort,
   patchVergeConfig,
   patchClashMode,
   recordSelectedNode,
@@ -38,33 +29,6 @@ import {
   openQuickPanelDashboard,
   quickPanelState,
 } from './services/cmds'
-
-async function readSnapshot() {
-  const [verge, profiles, view, mode, system, auto, info, runtime, pacPort] =
-    await Promise.all([
-      getVergeConfig(),
-      getProfiles(),
-      getProxyView(),
-      getClashMode(),
-      getSystemProxy(),
-      getAutoProxy(),
-      getClashInfo(),
-      getRuntimeState(),
-      getEmbeddedServerPort(),
-    ])
-  const host = verge.proxy_host || '127.0.0.1'
-  const systemProxy = verge.proxy_auto_config
-    ? auto.enable && auto.url === `http://${host}:${pacPort}/commands/pac`
-    : system.enable && system.server === `${host}:${info.mixed_port}`
-  return {
-    verge,
-    profiles,
-    view,
-    mode: mode as QuickMode,
-    systemProxy,
-    runtime,
-  }
-}
 
 const errorMessage = (error: unknown) =>
   error instanceof Error
@@ -113,21 +77,23 @@ export function LivePanel() {
   const favorites = favoriteState.data
   const [groupId, setGroupId] = useState('')
   const [error, setError] = useState(favoriteState.error)
-  const [readError, setReadError] = useState('')
+  const [readError, setReadError] = useState(false)
   const [busy, setBusy] = useState(false)
   const [visible, setVisible] = useState(true)
   const operationRef = useRef(false)
   const refreshRef = useRef<Promise<void> | null>(null)
-  const { response } = useTrafficData({ enabled: visible })
+  const { response } = useTrafficData({
+    enabled: visible && snapshot?.connection === 'ready' && !readError,
+  })
 
   const refresh = async () => {
     if (refreshRef.current) return refreshRef.current
     const pending = readSnapshot()
       .then((data) => {
         setSnapshot(data)
-        setReadError('')
+        setReadError(false)
       })
-      .catch((err: unknown) => setReadError(errorMessage(err)))
+      .catch(() => setReadError(true))
       .finally(() => {
         refreshRef.current = null
       })
@@ -178,18 +144,19 @@ export function LivePanel() {
   const labels =
     (snapshot?.verge.language ?? 'zh') === 'zh' ? zhLabels : enLabels
   const profile = snapshot?.profiles.current ?? ''
-  const groups = snapshot
+  const groups = snapshot?.view
     ? buildQuickGroups(snapshot.view, profile, favorites)
     : []
-  const mode = snapshot?.mode ?? 'rule'
+  const mode = snapshot?.mode ?? null
+  const ready = snapshot?.connection === 'ready' && !readError
   const group =
     (mode === 'global'
-      ? groups.find((item) => item.id === snapshot?.view.global?.name)
+      ? groups.find((item) => item.id === snapshot?.view?.global?.name)
       : (groups.find((item) => item.id === groupId) ??
-        groups.find((item) => item.id !== snapshot?.view.global?.name))) ??
+        groups.find((item) => item.id !== snapshot?.view?.global?.name))) ??
     ({
       id: '',
-      name: labels.noGroups,
+      name: ready ? labels.noGroups : labels.notConnected,
       nodes: [],
       selected: '',
       favorites: [],
@@ -204,7 +171,7 @@ export function LivePanel() {
     <main className="qp-preview qp-live" data-theme="dark">
       {(error || readError) && (
         <p className="qp-message" role="alert">
-          {error || readError}
+          {error || labels.stateUnavailable}
           <button
             onClick={() => {
               setError('')
@@ -216,127 +183,133 @@ export function LivePanel() {
           <button onClick={() => openDashboard('/')}>{labels.dashboard}</button>
         </p>
       )}
-      {!snapshot ? (
-        <p role="status">{labels.loading}</p>
-      ) : (
-        <>
-          {busy && (
-            <p className="qp-message" role="status">
-              {labels.applying}
-            </p>
-          )}
-          <fieldset className="qp-operation" disabled={busy || !!readError}>
-            <QuickPanel
-              language={snapshot.verge.language ?? 'zh'}
-              systemProxy={snapshot.systemProxy}
-              tun={
-                !!snapshot.verge.enable_tun_mode && snapshot.runtime.tunCapable
-              }
-              tunUnavailable={
-                snapshot.runtime.tunCapable ? undefined : labels.tunUnavailable
-              }
-              mode={mode}
-              group={group}
-              groups={
-                mode === 'global'
-                  ? [group]
-                  : groups.filter(
-                      (item) => item.id !== snapshot.view.global?.name,
-                    )
-              }
-              profile={profile}
-              profiles={(snapshot.profiles.items ?? [])
-                .filter(
-                  (item) =>
-                    item.uid &&
-                    (item.type === 'remote' || item.type === 'local'),
-                )
-                .map((item) => ({
-                  id: item.uid!,
-                  name: item.name || item.uid!,
-                }))}
-              download={rate(response.data?.down ?? 0)}
-              upload={rate(response.data?.up ?? 0)}
-              onSystemProxy={() =>
-                void act(async () => {
-                  if (
-                    !snapshot.systemProxy &&
-                    snapshot.runtime.mode === 'NotRunning'
-                  )
-                    throw new Error(labels.coreNotRunning)
-                  await patchVergeConfig({
-                    enable_system_proxy: !snapshot.systemProxy,
-                  })
-                  if (
-                    snapshot.systemProxy &&
-                    snapshot.verge.auto_close_connection
-                  )
-                    await closeAllConnections()
-                })
-              }
-              onTun={() =>
-                void act(() =>
-                  patchVergeConfig({
-                    enable_tun_mode: !snapshot.verge.enable_tun_mode,
-                  }),
-                )
-              }
-              onMode={(next) => void act(() => patchClashMode(next))}
-              onGroup={setGroupId}
-              onNode={(id) =>
-                void act(async () => {
-                  const latest = await readSnapshot()
-                  if (
-                    latest.profiles.current !== profile ||
-                    latest.mode !== mode
-                  )
-                    throw new Error(labels.contextChanged)
-                  const node = buildQuickGroups(latest.view, profile, favorites)
-                    .find((item) => item.id === group.id)
-                    ?.nodes.find((item) => item.id === id)
-                  if (!node || !node.available)
-                    throw new Error(labels.nodeUnavailable)
-                  await selectNodeForGroup(group.id, node.name)
-                  await recordSelectedNode(group.id, node.name)
-                  await syncTrayProxySelection()
-                  const previous = (
-                    latest.view.groups.find((item) => item.name === group.id) ??
-                    (latest.view.global?.name === group.id
-                      ? latest.view.global
-                      : undefined)
-                  )?.now
-                  if (
-                    latest.verge.auto_close_connection &&
-                    previous &&
-                    previous !== node.name
-                  ) {
-                    await cleanupConnections(previous)
-                  }
-                })
-              }
-              onFavorites={(ids) => {
-                const next = {
-                  ...favorites,
-                  [favoriteScope(profile, group.id)]: ids
-                    .map((id) => group.nodes.find((node) => node.id === id)!)
-                    .map(({ id, name, region }) => ({ id, name, region })),
-                }
-                try {
-                  localStorage.setItem(FAVORITES_KEY, JSON.stringify(next))
-                  setFavoriteState({ data: next, error: '' })
-                } catch (err) {
-                  setError(errorMessage(err))
-                }
-              }}
-              onProfile={(current) =>
-                void act(() => patchProfilesConfig({ current }))
-              }
-              onDashboard={() => openDashboard('/')}
-              onSettings={() => openDashboard('/settings')}
-            />
-          </fieldset>
-        </>
+      {busy && (
+        <p className="qp-message" role="status">
+          {labels.applying}
+        </p>
       )}
+      <QuickPanel
+        language={snapshot?.verge.language ?? 'zh'}
+        systemProxy={snapshot?.systemProxy ?? false}
+        disabled={busy || !ready}
+        systemProxyDisabled={
+          busy || !!readError || !snapshot || (!ready && !snapshot.systemProxy)
+        }
+        status={
+          readError
+            ? labels.stateUnavailable
+            : !snapshot
+              ? labels.connecting
+              : snapshot.connection === 'offline'
+                ? labels.notConnected
+                : snapshot.connection === 'unavailable'
+                  ? labels.coreUnavailable
+                  : undefined
+        }
+        tun={
+          ready &&
+          !!snapshot?.verge.enable_tun_mode &&
+          !!snapshot?.runtime.tunCapable
+        }
+        tunUnavailable={
+          ready && snapshot?.runtime.tunCapable
+            ? undefined
+            : labels.tunUnavailable
+        }
+        mode={mode}
+        group={group}
+        groups={
+          mode === 'global'
+            ? [group]
+            : groups.filter((item) => item.id !== snapshot?.view?.global?.name)
+        }
+        profile={profile}
+        profiles={(snapshot?.profiles.items ?? [])
+          .filter(
+            (item) =>
+              item.uid && (item.type === 'remote' || item.type === 'local'),
+          )
+          .map((item) => ({
+            id: item.uid!,
+            name: item.name || item.uid!,
+          }))}
+        download={ready ? rate(response.data?.down ?? 0) : '—'}
+        upload={ready ? rate(response.data?.up ?? 0) : '—'}
+        onSystemProxy={() =>
+          void act(async () => {
+            if (!snapshot) return
+            if (!snapshot.systemProxy && snapshot.runtime.mode === 'NotRunning')
+              throw new Error(labels.coreNotRunning)
+            await patchVergeConfig({
+              enable_system_proxy: !snapshot.systemProxy,
+            })
+            if (
+              ready &&
+              snapshot.systemProxy &&
+              snapshot.verge.auto_close_connection
+            )
+              await closeAllConnections()
+          })
+        }
+        onTun={() =>
+          void act(() =>
+            patchVergeConfig({
+              enable_tun_mode: !snapshot?.verge.enable_tun_mode,
+            }),
+          )
+        }
+        onMode={(next) => void act(() => patchClashMode(next))}
+        onGroup={setGroupId}
+        onNode={(id) =>
+          void act(async () => {
+            const latest = await readSnapshot()
+            if (latest.profiles.current !== profile || latest.mode !== mode)
+              throw new Error(labels.contextChanged)
+            if (!latest.view || latest.connection !== 'ready')
+              throw new Error(labels.coreUnavailable)
+            const node = buildQuickGroups(latest.view, profile, favorites)
+              .find((item) => item.id === group.id)
+              ?.nodes.find((item) => item.id === id)
+            if (!node || !node.available)
+              throw new Error(labels.nodeUnavailable)
+            await selectNodeForGroup(group.id, node.name)
+            await recordSelectedNode(group.id, node.name)
+            await syncTrayProxySelection()
+            const previous = (
+              latest.view.groups.find((item) => item.name === group.id) ??
+              (latest.view.global?.name === group.id
+                ? latest.view.global
+                : undefined)
+            )?.now
+            if (
+              latest.verge.auto_close_connection &&
+              previous &&
+              previous !== node.name
+            ) {
+              await cleanupConnections(previous)
+            }
+          })
+        }
+        onFavorites={(ids) => {
+          const next = {
+            ...favorites,
+            [favoriteScope(profile, group.id)]: ids
+              .map((id) => group.nodes.find((node) => node.id === id)!)
+              .map(({ id, name, region }) => ({ id, name, region })),
+          }
+          try {
+            localStorage.setItem(FAVORITES_KEY, JSON.stringify(next))
+            setFavoriteState({ data: next, error: '' })
+          } catch (err) {
+            setError(errorMessage(err))
+          }
+        }}
+        onProfile={(current) =>
+          void act(() => patchProfilesConfig({ current }))
+        }
+        onDashboard={() => openDashboard('/')}
+        onSettings={() => openDashboard('/settings')}
+      />
     </main>
   )
 }

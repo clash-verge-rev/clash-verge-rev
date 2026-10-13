@@ -35,7 +35,10 @@ interface Props {
   language?: string
   systemProxy: boolean
   tun: boolean
-  mode: QuickMode
+  mode: QuickMode | null
+  disabled?: boolean
+  systemProxyDisabled?: boolean
+  status?: string
   group: QuickGroup
   groups: QuickGroup[]
   profile: string
@@ -56,6 +59,9 @@ interface Props {
 
 export function QuickPanel({
   language = 'zh',
+  disabled = false,
+  systemProxyDisabled = disabled,
+  status,
   systemProxy,
   tun,
   mode,
@@ -98,7 +104,14 @@ export function QuickPanel({
       <header className="qp-header">
         <div className="qp-brand">
           <img src={logo} alt="" />
-          <strong>Clash Verge</strong>
+          <div>
+            <strong>Clash Verge</strong>
+            {status && (
+              <span className="qp-status" role="status">
+                {status}
+              </span>
+            )}
+          </div>
         </div>
         <button
           className="qp-icon"
@@ -119,6 +132,7 @@ export function QuickPanel({
             className="qp-switch"
             role="switch"
             aria-label={labels.systemProxy}
+            disabled={systemProxyDisabled}
             aria-checked={systemProxy}
             onClick={onSystemProxy}
           >
@@ -135,7 +149,7 @@ export function QuickPanel({
             role="switch"
             aria-label={labels.tun}
             aria-checked={tun}
-            disabled={!!tunUnavailable && !tun}
+            disabled={disabled || (!!tunUnavailable && !tun)}
             onClick={onTun}
           >
             <span />
@@ -147,6 +161,7 @@ export function QuickPanel({
         {(['rule', 'global', 'direct'] as const).map((optionMode, index) => (
           <button
             key={optionMode}
+            disabled={disabled}
             aria-pressed={mode === optionMode}
             onClick={() => onMode(optionMode)}
           >
@@ -159,6 +174,7 @@ export function QuickPanel({
         <h2>{labels.favorites}</h2>
         <button
           className="qp-text"
+          disabled={disabled}
           aria-expanded={editing}
           onClick={() => {
             setEditing(!editing)
@@ -177,7 +193,7 @@ export function QuickPanel({
               className="qp-tile"
               key={node.id}
               aria-pressed={active}
-              disabled={direct || node.available === false}
+              disabled={disabled || direct || node.available === false}
               title={node.name}
               onClick={() => onNode(node.id)}
             >
@@ -207,11 +223,12 @@ export function QuickPanel({
           ) : (
             <button
               className="qp-tile qp-empty"
+              disabled={disabled}
               key={`empty-${index}`}
               onClick={() => setEditing(true)}
             >
               <span>＋</span>
-              {labels.addFavorite}
+              {disabled ? labels.nodePending : labels.addFavorite}
             </button>
           )
         })}
@@ -228,12 +245,13 @@ export function QuickPanel({
           <select
             aria-label={labels.group}
             value={group.id}
-            disabled={mode !== 'rule'}
+            disabled={disabled || mode !== 'rule'}
             onChange={(event) => {
               onGroup(event.target.value)
               setSearch('')
             }}
           >
+            {!groups.length && <option value="">{group.name}</option>}
             {groups.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -243,6 +261,7 @@ export function QuickPanel({
         </label>
         <button
           className="qp-text"
+          disabled={disabled}
           aria-expanded={showAll}
           onClick={() => {
             setShowAll(!showAll)
@@ -291,11 +310,12 @@ export function QuickPanel({
                 <button
                   key={node.id}
                   disabled={
-                    editing
+                    disabled ||
+                    (editing
                       ? !group.favorites.includes(node.id) &&
                         (group.favorites.length === 3 ||
                           node.available === false)
-                      : direct || node.available === false
+                      : direct || node.available === false)
                   }
                   aria-pressed={
                     editing
@@ -346,9 +366,11 @@ export function QuickPanel({
       <footer className="qp-footer">
         <select
           aria-label={labels.profile}
+          disabled={disabled}
           value={profile}
           onChange={(event) => onProfile(event.target.value)}
         >
+          {!profiles.length && <option value="">{labels.profile}</option>}
           {profiles.map((profile) => (
             <option key={profile.id} value={profile.id}>
               {profile.name}
