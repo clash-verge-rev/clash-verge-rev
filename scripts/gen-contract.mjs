@@ -22,7 +22,7 @@ try {
       'run',
       '-p',
       'clash-verge',
-      '--bin',
+      '--example',
       'frontend-contract',
       '--locked',
       '-q',
