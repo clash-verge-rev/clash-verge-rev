@@ -30,6 +30,8 @@ import {
   quickPanelState,
   exitApp,
 } from './services/cmds'
+import delayManager from './services/delay'
+import { isInteractableMember, resolveMember } from './types/proxy-view'
 
 const errorMessage = (error: unknown) =>
   error instanceof Error
@@ -81,6 +83,12 @@ export function LivePanel() {
   const [readError, setReadError] = useState(false)
   const [busy, setBusy] = useState(false)
   const [visible, setVisible] = useState(true)
+  const [testing, setTesting] = useState(false)
+  const testRef = useRef(false)
+  const [testResults, setTestResults] = useState<{
+    scope: string
+    values: Record<string, number>
+  }>({ scope: '', values: {} })
   const operationRef = useRef(false)
   const refreshRef = useRef<Promise<void> | null>(null)
   const { response } = useTrafficData({
@@ -162,6 +170,86 @@ export function LivePanel() {
       selected: '',
       favorites: [],
     } satisfies QuickGroup)
+  const scope = favoriteScope(profile, group.id)
+  const displayGroup = {
+    ...group,
+    nodes: group.nodes.map((node) => ({
+      ...node,
+      delay:
+        testResults.scope === scope
+          ? (testResults.values[node.id] ?? node.delay)
+          : node.delay,
+    })),
+  }
+  const testFavorites = async () => {
+    if (testRef.current || operationRef.current || !ready) return
+    testRef.current = true
+    setTesting(true)
+    try {
+      const latest = await readSnapshot()
+      if (latest.profiles.current !== profile || latest.mode !== mode)
+        throw new Error(labels.contextChanged)
+      if (!latest.view || latest.connection !== 'ready')
+        throw new Error(labels.coreUnavailable)
+      const view = latest.view
+      const freshGroup = buildQuickGroups(view, profile, favorites).find(
+        (item) => item.id === group.id,
+      )
+      const source =
+        view.global?.name === group.id
+          ? view.global
+          : view.groups.find((item) => item.name === group.id)
+      if (!freshGroup || !source) throw new Error(labels.contextChanged)
+      const targets = source.members.flatMap((member, index) => {
+        const node = freshGroup.nodes[index]
+        if (
+          !freshGroup.favorites.includes(node.id) ||
+          !node.available ||
+          !node.testable
+        )
+          return []
+        const resolved = resolveMember(view, member)
+        return isInteractableMember(resolved)
+          ? [{ id: node.id, member: resolved }]
+          : []
+      })
+      const urls = latest.profiles.items?.find(
+        (item) => item.uid === profile,
+      )?.latency_test_urls
+      delayManager.setUrl(
+        group.id,
+        urls?.[group.id]?.trim() ||
+          latest.verge.default_latency_test?.trim() ||
+          '',
+      )
+      setTestResults({
+        scope,
+        values: Object.fromEntries(targets.map(({ id }) => [id, -2])),
+      })
+      await Promise.all(
+        targets.map(async ({ id, member }) => {
+          const result = await delayManager.checkDelay(
+            member,
+            group.id,
+            latest.verge.default_latency_timeout || 10000,
+          )
+          setTestResults((current) =>
+            current.scope === scope
+              ? {
+                  ...current,
+                  values: { ...current.values, [id]: result.delay },
+                }
+              : current,
+          )
+        }),
+      )
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setTesting(false)
+      testRef.current = false
+    }
+  }
   const openDashboard = (route: string) =>
     void act(async () => {
       await openQuickPanelDashboard(route)
@@ -189,6 +277,9 @@ export function LivePanel() {
         systemProxy={snapshot?.systemProxy ?? false}
         disabled={!ready}
         busy={busy}
+        testing={testing}
+        delayTimeout={snapshot?.verge.default_latency_timeout || 10000}
+        onTest={() => void testFavorites()}
         systemProxyDisabled={
           !!readError || !snapshot || (!ready && !snapshot.systemProxy)
         }
@@ -214,7 +305,7 @@ export function LivePanel() {
             : labels.tunUnavailable
         }
         mode={mode}
-        group={group}
+        group={displayGroup}
         groups={
           mode === 'global'
             ? [group]

@@ -46,5 +46,10 @@
   "stateUnavailable": "Status unavailable. Retry or open the dashboard.",
   "nodePending": "Connect to choose a node",
   "quit": "Quit",
-  "quitApp": "Quit Clash Verge"
+  "quitApp": "Quit Clash Verge",
+  "test": "Test",
+  "testing": "Testing…",
+  "timeout": "Timed out",
+  "testFailed": "Test failed",
+  "testHint": "Test favorite node connectivity and latency"
 }

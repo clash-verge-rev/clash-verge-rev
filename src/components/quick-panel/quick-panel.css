@@ -579,3 +579,21 @@ html {
     animation: none;
   }
 }
+
+.qp-node-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.qp-test {
+  min-width: 64px;
+  text-align: center;
+}
+.qp-delay[data-state="timeout"],
+.qp-delay[data-state="error"] {
+  color: #f3a6a6 !important;
+}
+.qp-preview[data-theme="light"] .qp-delay[data-state="timeout"],
+.qp-preview[data-theme="light"] .qp-delay[data-state="error"] {
+  color: #a52d37 !important;
+}

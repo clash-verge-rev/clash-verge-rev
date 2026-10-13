@@ -46,5 +46,10 @@
   "stateUnavailable": "暂时无法读取状态，请重试或打开仪表盘。",
   "nodePending": "连接后选择节点",
   "quit": "退出",
-  "quitApp": "退出 Clash Verge"
+  "quitApp": "退出 Clash Verge",
+  "test": "测速",
+  "testing": "测速中…",
+  "timeout": "超时",
+  "testFailed": "检测失败",
+  "testHint": "检测常用节点的连通性与延迟"
 }

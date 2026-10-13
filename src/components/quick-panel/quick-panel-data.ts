@@ -44,7 +44,14 @@ export function buildQuickGroups(
           ]),
           name: member.name,
           region: '',
-          delay: delay && delay > 0 ? delay : null,
+          delay: delay ?? null,
+          testable: ![
+            'DIRECT',
+            'REJECT',
+            'REJECT-DROP',
+            'PASS',
+            'COMPATIBLE',
+          ].includes(member.name),
           available:
             member.kind !== 'unresolved' &&
             (member.kind !== 'node' || !!record),

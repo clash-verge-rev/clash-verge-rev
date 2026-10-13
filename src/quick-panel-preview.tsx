@@ -71,6 +71,7 @@ export function Preview() {
   const [profile, setProfile] = useState('我的订阅')
   const [theme, setTheme] = useState('dark')
   const [notice, setNotice] = useState('')
+  const [testing, setTesting] = useState(false)
   const group = groups.find(
     (item) => item.id === (mode === 'global' ? 'global' : groupId),
   )!
@@ -95,6 +96,44 @@ export function Preview() {
         </div>
       )}
       <QuickPanel
+        testing={testing}
+        onTest={() => {
+          if (testing) return
+          setTesting(true)
+          const testedGroup = group
+          updateGroup({
+            nodes: group.nodes.map((node) =>
+              group.favorites.includes(node.id) ? { ...node, delay: -2 } : node,
+            ),
+          })
+          setTimeout(() => {
+            setGroups((current) =>
+              current.map((item) =>
+                item.id === testedGroup.id
+                  ? {
+                      ...item,
+                      nodes: item.nodes.map((node) =>
+                        testedGroup.favorites.includes(node.id)
+                          ? {
+                              ...node,
+                              delay: node.id.startsWith('sg')
+                                ? 0
+                                : node.id.startsWith('jp')
+                                  ? 76
+                                  : 38,
+                            }
+                          : node,
+                      ),
+                    }
+                  : item,
+              ),
+            )
+            setTesting(false)
+            setNotice(
+              '模拟测速完成：新加坡节点演示超时；正式版使用真实检测结果。',
+            )
+          }, 1200)
+        }}
         systemProxy={systemProxy}
         tun={tun}
         mode={mode}

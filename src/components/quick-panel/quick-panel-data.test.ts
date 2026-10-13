@@ -48,6 +48,14 @@ const view: ProxyViewV1_Serialize = {
 }
 
 describe('quick panel favorite identity', () => {
+  it('preserves a failed health check instead of treating it as untested', () => {
+    const failed = structuredClone(view)
+    failed.records['record-1'].history = [{ time: '2026-10-13', delay: 0 }]
+    expect(
+      buildQuickGroups(failed, 'subscription-a', {})[0].nodes[0].delay,
+    ).toBe(0)
+  })
+
   it('leaves favorites empty until the user chooses them', () => {
     expect(buildQuickGroups(view, 'subscription-a', {})[0].favorites).toEqual(
       [],

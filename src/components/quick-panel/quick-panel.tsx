@@ -8,9 +8,11 @@ import LogoutRounded from '@mui/icons-material/LogoutRounded'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import { useState } from 'react'
 
+
 import logo from '@/assets/image/icon_light.svg'
 import enLabels from '@/locales/en/quickPanel.json'
 import zhLabels from '@/locales/zh/quickPanel.json'
+import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
 import './quick-panel.css'
 
@@ -19,6 +21,7 @@ export interface QuickNode {
   name: string
   region: string
   delay: number | null
+  testable?: boolean
   available?: boolean
 }
 
@@ -39,6 +42,8 @@ interface Props {
   mode: QuickMode | null
   disabled?: boolean
   busy?: boolean
+  testing?: boolean
+  delayTimeout?: number
   systemProxyDisabled?: boolean
   status?: string
   group: QuickGroup
@@ -58,12 +63,15 @@ interface Props {
   onDashboard: () => void
   onSettings: () => void
   onQuit: () => void
+  onTest: () => void
 }
 
 export function QuickPanel({
   language = 'zh',
   disabled = false,
   busy = false,
+  testing = false,
+  delayTimeout = DEFAULT_DELAY_TIMEOUT,
   systemProxyDisabled = disabled,
   status,
   systemProxy,
@@ -86,6 +94,7 @@ export function QuickPanel({
   onDashboard,
   onSettings,
   onQuit,
+  onTest,
 }: Props) {
   const labels = language === 'zh' ? zhLabels : enLabels
   const [editing, setEditing] = useState(false)
@@ -96,6 +105,21 @@ export function QuickPanel({
     group.nodes.find((node) => node.id === id),
   )
   const direct = mode === 'direct'
+  const delayText = (node: QuickNode) => {
+    if (node.available === false) return labels.unavailable
+    switch (classifyDelay(node.delay ?? -1, delayTimeout)) {
+      case 'untested':
+        return labels.untested
+      case 'testing':
+        return labels.testing
+      case 'timeout':
+        return labels.timeout
+      case 'error':
+        return labels.testFailed
+      case 'measured':
+        return `${node.delay} ms`
+    }
+  }
 
   const toggleFavorite = (id: string) => {
     const ids = group.favorites.includes(id)
@@ -185,18 +209,45 @@ export function QuickPanel({
 
       <div className="qp-section-heading">
         <h2>{labels.favorites}</h2>
-        <button
-          className="qp-text"
-          data-unavailable={disabled}
-          disabled={busy || disabled}
-          aria-expanded={editing}
-          onClick={() => {
-            setEditing(!editing)
-            setShowAll(false)
-          }}
-        >
-          {editing ? labels.done : labels.edit}
-        </button>
+        <div className="qp-node-actions">
+          <button
+            className="qp-text qp-test"
+            title={labels.testHint}
+            aria-label={labels.testHint}
+            aria-busy={testing}
+            data-unavailable={
+              disabled ||
+              !nodes.some(
+                (node) =>
+                  node && node.available !== false && node.testable !== false,
+              )
+            }
+            disabled={
+              busy ||
+              disabled ||
+              testing ||
+              !nodes.some(
+                (node) =>
+                  node && node.available !== false && node.testable !== false,
+              )
+            }
+            onClick={onTest}
+          >
+            {testing ? labels.testing : labels.test}
+          </button>
+          <button
+            className="qp-text"
+            data-unavailable={disabled}
+            disabled={busy || disabled}
+            aria-expanded={editing}
+            onClick={() => {
+              setEditing(!editing)
+              setShowAll(false)
+            }}
+          >
+            {editing ? labels.done : labels.edit}
+          </button>
+        </div>
       </div>
       <div className="qp-tiles">
         {[0, 1, 2].map((index) => {
@@ -217,12 +268,12 @@ export function QuickPanel({
                 {node.region || labels.node}
               </span>
               <strong>{node.name}</strong>
-              <span className="qp-delay">
-                {node.available === false
-                  ? labels.unavailable
-                  : node.delay === null
-                    ? labels.untested
-                    : `${node.delay} ms`}
+              <span
+                className="qp-delay"
+                data-state={classifyDelay(node.delay ?? -1, delayTimeout)}
+                aria-live="polite"
+              >
+                {delayText(node)}
               </span>
               <span className="qp-selected">
                 {active ? (
@@ -350,13 +401,7 @@ export function QuickPanel({
                   }
                 >
                   <span>{node.name}</span>
-                  <span>
-                    {node.available === false
-                      ? labels.unavailable
-                      : node.delay === null
-                        ? labels.untested
-                        : `${node.delay} ms`}
-                  </span>
+                  <span>{delayText(node)}</span>
                   {(editing
                     ? group.favorites.includes(node.id)
                     : group.selected === node.id) && <CheckRounded />}
