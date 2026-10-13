@@ -118,6 +118,7 @@ mod app_init {
         logging!(debug, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
             .with_filename(files::WINDOW_STATE)
+            .with_denylist(&["quick-panel"])
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
             .build();
         app.handle().plugin(window_state_plugin)?;

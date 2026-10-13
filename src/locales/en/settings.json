@@ -164,6 +164,7 @@
         "trayOptions": {
           "showMainWindow": "Show Main Window",
           "showTrayMenu": "Show Tray Menu",
+          "showQuickPanel": "Show Quick Panel",
           "disable": "Disable"
         },
         "fields": {

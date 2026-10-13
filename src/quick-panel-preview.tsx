@@ -82,7 +82,7 @@ export function Preview() {
             : groups.filter((item) => item.id !== 'global')
         }
         profile={profile}
-        profiles={['我的订阅', '备用订阅']}
+        profiles={['我的订阅', '备用订阅'].map((name) => ({ id: name, name }))}
         download="2.4 MB/s"
         upload="128 KB/s"
         onSystemProxy={() => setSystemProxy(!systemProxy)}

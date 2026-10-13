@@ -8,6 +8,8 @@ import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import { useState } from 'react'
 
 import logo from '@/assets/image/logo.ico'
+import enLabels from '@/locales/en/quickPanel.json'
+import zhLabels from '@/locales/zh/quickPanel.json'
 
 import './quick-panel.css'
 
@@ -16,6 +18,7 @@ export interface QuickNode {
   name: string
   region: string
   delay: number | null
+  available?: boolean
 }
 
 export interface QuickGroup {
@@ -29,13 +32,15 @@ export interface QuickGroup {
 export type QuickMode = 'rule' | 'global' | 'direct'
 
 interface Props {
+  language?: string
   systemProxy: boolean
   tun: boolean
   mode: QuickMode
   group: QuickGroup
   groups: QuickGroup[]
   profile: string
-  profiles: string[]
+  profiles: { id: string; name: string }[]
+  tunUnavailable?: string
   download: string
   upload: string
   onSystemProxy: () => void
@@ -50,6 +55,7 @@ interface Props {
 }
 
 export function QuickPanel({
+  language = 'zh',
   systemProxy,
   tun,
   mode,
@@ -57,6 +63,7 @@ export function QuickPanel({
   groups,
   profile,
   profiles,
+  tunUnavailable,
   download,
   upload,
   onSystemProxy,
@@ -69,6 +76,7 @@ export function QuickPanel({
   onDashboard,
   onSettings,
 }: Props) {
+  const labels = language === 'zh' ? zhLabels : enLabels
   const [editing, setEditing] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [search, setSearch] = useState('')
@@ -86,13 +94,17 @@ export function QuickPanel({
   }
 
   return (
-    <section className="quick-panel" aria-label="Clash Verge 快捷面板">
+    <section className="quick-panel" aria-label={labels.panel}>
       <header className="qp-header">
         <div className="qp-brand">
           <img src={logo} alt="" />
           <strong>Clash Verge</strong>
         </div>
-        <button className="qp-icon" aria-label="打开设置" onClick={onSettings}>
+        <button
+          className="qp-icon"
+          aria-label={labels.settings}
+          onClick={onSettings}
+        >
           <SettingsOutlined />
         </button>
       </header>
@@ -100,13 +112,13 @@ export function QuickPanel({
       <div className="qp-controls">
         <div className="qp-control">
           <div>
-            <strong>系统代理</strong>
-            <span>接管系统网络</span>
+            <strong>{labels.systemProxy}</strong>
+            <span>{labels.systemHint}</span>
           </div>
           <button
             className="qp-switch"
             role="switch"
-            aria-label="系统代理"
+            aria-label={labels.systemProxy}
             aria-checked={systemProxy}
             onClick={onSystemProxy}
           >
@@ -115,14 +127,15 @@ export function QuickPanel({
         </div>
         <div className="qp-control">
           <div>
-            <strong>TUN 模式</strong>
-            <span>接管更多应用流量</span>
+            <strong>{labels.tun}</strong>
+            <span>{tunUnavailable || labels.tunHint}</span>
           </div>
           <button
             className="qp-switch"
             role="switch"
-            aria-label="TUN 模式"
+            aria-label={labels.tun}
             aria-checked={tun}
+            disabled={!!tunUnavailable && !tun}
             onClick={onTun}
           >
             <span />
@@ -130,20 +143,20 @@ export function QuickPanel({
         </div>
       </div>
 
-      <div className="qp-modes" role="group" aria-label="出站模式">
+      <div className="qp-modes" role="group" aria-label={labels.mode}>
         {(['rule', 'global', 'direct'] as const).map((optionMode, index) => (
           <button
             key={optionMode}
             aria-pressed={mode === optionMode}
             onClick={() => onMode(optionMode)}
           >
-            {['规则', '全局', '直连'][index]}
+            {[labels.rule, labels.global, labels.direct][index]}
           </button>
         ))}
       </div>
 
       <div className="qp-section-heading">
-        <h2>常用节点</h2>
+        <h2>{labels.favorites}</h2>
         <button
           className="qp-text"
           aria-expanded={editing}
@@ -152,7 +165,7 @@ export function QuickPanel({
             setShowAll(false)
           }}
         >
-          {editing ? '完成' : '编辑'}
+          {editing ? labels.done : labels.edit}
         </button>
       </div>
       <div className="qp-tiles">
@@ -164,7 +177,7 @@ export function QuickPanel({
               className="qp-tile"
               key={node.id}
               aria-pressed={active}
-              disabled={direct}
+              disabled={direct || node.available === false}
               title={node.name}
               onClick={() => onNode(node.id)}
             >
@@ -174,13 +187,17 @@ export function QuickPanel({
               </span>
               <strong>{node.name}</strong>
               <span className="qp-delay">
-                {node.delay === null ? '未测速' : `${node.delay} ms`}
+                {node.available === false
+                  ? labels.unavailable
+                  : node.delay === null
+                    ? labels.untested
+                    : `${node.delay} ms`}
               </span>
               <span className="qp-selected">
                 {active ? (
                   <>
                     <CheckRounded />
-                    使用中
+                    {labels.selected}
                   </>
                 ) : (
                   '\u00a0'
@@ -193,7 +210,8 @@ export function QuickPanel({
               key={`empty-${index}`}
               onClick={() => setEditing(true)}
             >
-              <span>＋</span>添加常用节点
+              <span>＋</span>
+              {labels.addFavorite}
             </button>
           )
         })}
@@ -201,14 +219,14 @@ export function QuickPanel({
 
       <div className="qp-current" aria-live="polite">
         {direct
-          ? '直连模式 · 流量直接访问网络'
-          : `当前：${selected?.name ?? '未选择节点'}`}
+          ? labels.directHint
+          : `${labels.current}${selected?.name ?? labels.noNode}`}
       </div>
       <div className="qp-group-row">
         <label>
-          代理组：
+          {labels.group}：
           <select
-            aria-label="代理组"
+            aria-label={labels.group}
             value={group.id}
             disabled={mode !== 'rule'}
             onChange={(event) => {
@@ -231,24 +249,24 @@ export function QuickPanel({
             setEditing(false)
           }}
         >
-          全部节点 <ArrowOutwardRounded />
+          {labels.allNodes} <ArrowOutwardRounded />
         </button>
       </div>
 
       {(editing || showAll) && (
         <section
           className="qp-picker"
-          aria-label={editing ? '编辑常用节点' : '全部节点'}
+          aria-label={editing ? labels.editFavorites : labels.allNodes}
         >
           <div className="qp-picker-heading">
             <strong>
               {editing
-                ? `选择常用节点（${group.favorites.length}/3）`
-                : '全部节点'}
+                ? `${labels.chooseFavorites} (${group.favorites.length}/3)`
+                : labels.allNodes}
             </strong>
             <button
               className="qp-icon"
-              aria-label="收起节点选择"
+              aria-label={labels.collapse}
               onClick={() => {
                 setEditing(false)
                 setShowAll(false)
@@ -259,8 +277,8 @@ export function QuickPanel({
           </div>
           <input
             type="search"
-            placeholder="搜索节点"
-            aria-label="搜索节点"
+            placeholder={labels.search}
+            aria-label={labels.search}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -275,8 +293,9 @@ export function QuickPanel({
                   disabled={
                     editing
                       ? !group.favorites.includes(node.id) &&
-                        group.favorites.length === 3
-                      : direct
+                        (group.favorites.length === 3 ||
+                          node.available === false)
+                      : direct || node.available === false
                   }
                   aria-pressed={
                     editing
@@ -289,7 +308,11 @@ export function QuickPanel({
                 >
                   <span>{node.name}</span>
                   <span>
-                    {node.delay === null ? '未测速' : `${node.delay} ms`}
+                    {node.available === false
+                      ? labels.unavailable
+                      : node.delay === null
+                        ? labels.untested
+                        : `${node.delay} ms`}
                   </span>
                   {(editing
                     ? group.favorites.includes(node.id)
@@ -298,11 +321,9 @@ export function QuickPanel({
               ))}
             {!group.nodes.some((node) =>
               node.name.toLowerCase().includes(search.toLowerCase()),
-            ) && <p>没有匹配的节点</p>}
+            ) && <p>{labels.noMatch}</p>}
           </div>
-          {editing && (
-            <p className="qp-hint">先取消一个常用节点，再添加新节点。</p>
-          )}
+          {editing && <p className="qp-hint">{labels.replaceHint}</p>}
         </section>
       )}
 
@@ -311,29 +332,31 @@ export function QuickPanel({
           <ArrowDownwardRounded />
           <span>
             <strong>{download}</strong>
-            <small>下载</small>
+            <small>{labels.download}</small>
           </span>
         </div>
         <div>
           <ArrowUpwardRounded />
           <span>
             <strong>{upload}</strong>
-            <small>上传</small>
+            <small>{labels.upload}</small>
           </span>
         </div>
       </div>
       <footer className="qp-footer">
         <select
-          aria-label="当前订阅"
+          aria-label={labels.profile}
           value={profile}
           onChange={(event) => onProfile(event.target.value)}
         >
           {profiles.map((profile) => (
-            <option key={profile}>{profile}</option>
+            <option key={profile.id} value={profile.id}>
+              {profile.name}
+            </option>
           ))}
         </select>
         <button className="qp-text" onClick={onDashboard}>
-          完整仪表盘 <ArrowOutwardRounded />
+          {labels.dashboard} <ArrowOutwardRounded />
         </button>
       </footer>
     </section>

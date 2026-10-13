@@ -11,7 +11,9 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+**🍎 macOS**
 
+- 新增可选菜单栏快捷面板，可直接开关代理、切换模式和常用节点
 </details>
 
 <details>

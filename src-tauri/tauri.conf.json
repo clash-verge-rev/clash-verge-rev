@@ -49,7 +49,11 @@
   },
   "app": {
     "security": {
-      "capabilities": ["desktop-capability", "migrated"],
+      "capabilities": [
+        "desktop-capability",
+        "migrated",
+        "quick-panel-capability"
+      ],
       "assetProtocol": {
         "enable": true,
         "scope": {

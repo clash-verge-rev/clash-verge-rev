@@ -151,6 +151,13 @@ const SettingVergeBasic = ({ onError }: Props) => {
               <MenuItem value="tray_menu">
                 {t('settings.components.verge.basic.trayOptions.showTrayMenu')}
               </MenuItem>
+              {OS === 'macos' && (
+                <MenuItem value="quick_panel">
+                  {t(
+                    'settings.components.verge.basic.trayOptions.showQuickPanel',
+                  )}
+                </MenuItem>
+              )}
               <MenuItem value="system_proxy">
                 {t('settings.sections.system.toggles.systemProxy')}
               </MenuItem>

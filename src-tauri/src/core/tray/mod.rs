@@ -1092,6 +1092,7 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
     if let TrayIconEvent::Click {
         button: MouseButton::Left,
         button_state: MouseButtonState::Down,
+        position,
         ..
     } = tray_event
     {
@@ -1100,7 +1101,9 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
             return;
         }
 
-        AsyncHandler::spawn(|| async move {
+        #[cfg(not(target_os = "macos"))]
+        let _ = position;
+        AsyncHandler::spawn(move || async move {
             let verge = Config::verge().await.data_arc();
             let verge_tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
             let verge_tray_action = TrayAction::from(verge_tray_event.as_str());
@@ -1120,6 +1123,10 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
                 // tray_menu 模式下菜单由系统原生展示（见 set_show_menu_on_left_click），
                 // 左键点击事件无需额外处理
                 TrayAction::TrayMenu => {}
+                #[cfg(target_os = "macos")]
+                TrayAction::QuickPanel => {
+                    logging_error!(Type::Tray, crate::utils::quick_panel::toggle(position));
+                }
                 TrayAction::Unknown => {
                     logging!(warn, Type::Tray, "invalid tray event: {}", verge_tray_event);
                 }

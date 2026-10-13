@@ -396,6 +396,37 @@ body {
   line-height: 1.6;
   text-align: center;
 }
+.qp-live {
+  padding: 0;
+  align-items: stretch;
+  background: var(--qp-bg);
+}
+.qp-operation {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.qp-live .quick-panel {
+  width: 100%;
+  box-shadow: none;
+}
+.qp-message {
+  margin: 0;
+  padding: 12px 22px;
+  color: var(--qp-ink);
+  background: var(--qp-surface);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.qp-message button {
+  margin-left: 8px;
+  color: var(--qp-accent);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
 @media (max-width: 380px) {
   .quick-panel {
     padding: 16px;

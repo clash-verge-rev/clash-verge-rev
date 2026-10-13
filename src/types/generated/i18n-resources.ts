@@ -606,6 +606,49 @@ export interface TranslationResources {
         }
       }
     }
+    quickPanel: {
+      addFavorite: string
+      allNodes: string
+      applying: string
+      chooseFavorites: string
+      collapse: string
+      contextChanged: string
+      coreNotRunning: string
+      current: string
+      dashboard: string
+      direct: string
+      directHint: string
+      done: string
+      download: string
+      edit: string
+      editFavorites: string
+      favorites: string
+      global: string
+      group: string
+      loading: string
+      mode: string
+      nodeUnavailable: string
+      noGroups: string
+      noMatch: string
+      noNode: string
+      panel: string
+      profile: string
+      replaceHint: string
+      retry: string
+      rule: string
+      search: string
+      selected: string
+      settings: string
+      storageError: string
+      systemHint: string
+      systemProxy: string
+      tun: string
+      tunHint: string
+      tunUnavailable: string
+      unavailable: string
+      untested: string
+      upload: string
+    }
     rules: {
       feedback: {
         notifications: {
@@ -739,6 +782,7 @@ export interface TranslationResources {
             trayOptions: {
               disable: string
               showMainWindow: string
+              showQuickPanel: string
               showTrayMenu: string
             }
           }
