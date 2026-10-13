@@ -35,7 +35,6 @@ tauri-build = { version = "2.7.1", features = [] }
 clash-verge-draft = { workspace = true }
 clash-verge-media-unlock = { workspace = true }
 clash-verge-logging = { workspace = true }
-clash-verge-signal = { workspace = true }
 clash-verge-i18n = { workspace = true }
 clash-verge-limiter = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
@@ -115,6 +114,10 @@ specta-typescript = "=0.0.12"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2.190"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Upstream has no session-end signal support on Linux; see crates/clash-verge-signal.
+clash-verge-signal = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-plugin-wdio-webdriver = { version = "=1.4.0", optional = true }
