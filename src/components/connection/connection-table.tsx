@@ -389,7 +389,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'download',
         headerName: t('shared.labels.downloaded'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.downloadText,
@@ -397,7 +397,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'upload',
         headerName: t('shared.labels.uploaded'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.uploadText,
@@ -405,7 +405,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'dlSpeed',
         headerName: t('connections.components.fields.dlSpeed'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.downloadSpeedText,
@@ -413,7 +413,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'ulSpeed',
         headerName: t('connections.components.fields.ulSpeed'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.uploadSpeedText,
@@ -813,6 +813,7 @@ export const ConnectionTable = (props: Props) => {
                       onClick={() => toggleSorting(column.field)}
                       style={{
                         flex: 1,
+                        minWidth: 0,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent:
@@ -824,15 +825,24 @@ export const ConnectionTable = (props: Props) => {
                         color: 'inherit',
                         font: 'inherit',
                         textAlign: column.align === 'right' ? 'right' : 'left',
+                        whiteSpace: 'nowrap',
                         cursor: 'pointer',
                       }}
                     >
-                      {column.headerName}
-                      {sorting?.id === column.field
-                        ? sorting.desc
-                          ? '▼'
-                          : '▲'
-                        : null}
+                      <span
+                        style={{
+                          minWidth: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {column.headerName}
+                      </span>
+                      {sorting?.id === column.field ? (
+                        <span style={{ flexShrink: 0 }}>
+                          {sorting.desc ? '▼' : '▲'}
+                        </span>
+                      ) : null}
                     </button>
                     <div
                       onMouseDown={(event) =>
