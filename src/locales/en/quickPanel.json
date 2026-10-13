@@ -39,5 +39,6 @@
   "storageError": "Unable to read favorites. Please edit them again.",
   "coreNotRunning": "The proxy core is not running. Open the dashboard to check it.",
   "contextChanged": "The subscription or mode changed. Please select the node again.",
-  "nodeUnavailable": "This node is unavailable. Please select another."
+  "nodeUnavailable": "This node is unavailable. Please select another.",
+  "node": "Node"
 }

@@ -390,6 +390,7 @@ export const translationKeys = [
   'quickPanel.coreNotRunning',
   'quickPanel.contextChanged',
   'quickPanel.nodeUnavailable',
+  'quickPanel.node',
   'rules.page.provider.trigger',
   'rules.page.provider.dialogTitle',
   'rules.page.provider.actions.updateAll',

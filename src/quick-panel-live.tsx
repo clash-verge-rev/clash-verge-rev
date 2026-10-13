@@ -1,4 +1,3 @@
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
@@ -37,9 +36,8 @@ import {
   syncTrayProxySelection,
   patchProfilesConfig,
   openQuickPanelDashboard,
+  quickPanelState,
 } from './services/cmds'
-
-const nativeWindow = getCurrentWindow()
 
 async function readSnapshot() {
   const [verge, profiles, view, mode, system, auto, info, runtime, pacPort] =
@@ -118,9 +116,6 @@ export function LivePanel() {
   const [readError, setReadError] = useState('')
   const [busy, setBusy] = useState(false)
   const [visible, setVisible] = useState(true)
-  const [systemDark, setSystemDark] = useState(
-    () => matchMedia('(prefers-color-scheme: dark)').matches,
-  )
   const operationRef = useRef(false)
   const refreshRef = useRef<Promise<void> | null>(null)
   const { response } = useTrafficData({ enabled: visible })
@@ -141,29 +136,25 @@ export function LivePanel() {
   }
 
   useEffect(() => {
-    const media = matchMedia('(prefers-color-scheme: dark)')
-    const onTheme = (event: MediaQueryListEvent) => setSystemDark(event.matches)
-    media.addEventListener('change', onTheme)
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') void nativeWindow.hide()
+      if (event.key === 'Escape') void quickPanelState(null, true)
     }
     document.addEventListener('keydown', onKey)
-    const unlisten = nativeWindow.onFocusChanged(({ payload }) => {
-      setVisible(payload)
-      if (payload) void refresh()
+    const observer = new ResizeObserver(() => {
+      void quickPanelState(document.querySelector('main')!.scrollHeight)
     })
+    observer.observe(document.querySelector('main')!)
     void refresh()
     const timer = setInterval(() => {
-      void nativeWindow.isVisible().then((value) => {
+      void quickPanelState().then((value) => {
         setVisible(value)
         if (value && !operationRef.current) void refresh()
       })
     }, 2000)
     return () => {
       clearInterval(timer)
-      media.removeEventListener('change', onTheme)
+      observer.disconnect()
       document.removeEventListener('keydown', onKey)
-      void unlisten.then((stop) => stop())
     }
   }, [])
 
@@ -203,16 +194,14 @@ export function LivePanel() {
       selected: '',
       favorites: [],
     } satisfies QuickGroup)
-  const themeMode = snapshot?.verge.theme_mode
-  const dark = themeMode === 'dark' || (themeMode !== 'light' && systemDark)
   const openDashboard = (route: string) =>
     void act(async () => {
       await openQuickPanelDashboard(route)
-      await nativeWindow.hide()
+      await quickPanelState(null, true)
     })
 
   return (
-    <main className="qp-preview qp-live" data-theme={dark ? 'dark' : 'light'}>
+    <main className="qp-preview qp-live" data-theme="dark">
       {(error || readError) && (
         <p className="qp-message" role="alert">
           {error || readError}

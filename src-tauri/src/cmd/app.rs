@@ -10,6 +10,18 @@ use tauri::{AppHandle, Manager as _, ipc::Channel};
 
 #[tauri::command]
 #[specta::specta]
+pub async fn quick_panel_state(app: AppHandle, height: Option<f64>, close: bool) -> CmdResult<bool> {
+    #[cfg(target_os = "macos")]
+    return crate::utils::quick_panel::state(&app, crate::core::tray::TRAY_ID, height, close).stringify_err();
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, height, close);
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn open_quick_panel_dashboard(route: std::string::String) -> CmdResult<()> {
     if !matches!(route.as_str(), "/" | "/proxies" | "/settings") {
         return Err("Unsupported dashboard route".into());

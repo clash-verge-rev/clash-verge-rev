@@ -48,6 +48,12 @@ const view: ProxyViewV1_Serialize = {
 }
 
 describe('quick panel favorite identity', () => {
+  it('leaves favorites empty until the user chooses them', () => {
+    expect(buildQuickGroups(view, 'subscription-a', {})[0].favorites).toEqual(
+      [],
+    )
+  })
+
   it('keeps a missing favorite unavailable instead of choosing a same-name node from another provider', () => {
     const original = buildQuickGroups(view, 'subscription-a', {})[0].nodes[0]
     const changed: ProxyViewV1_Serialize = {

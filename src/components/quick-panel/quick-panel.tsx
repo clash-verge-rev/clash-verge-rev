@@ -7,7 +7,7 @@ import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import { useState } from 'react'
 
-import logo from '@/assets/image/logo.ico'
+import logo from '@/assets/image/icon_light.svg'
 import enLabels from '@/locales/en/quickPanel.json'
 import zhLabels from '@/locales/zh/quickPanel.json'
 
@@ -183,7 +183,7 @@ export function QuickPanel({
             >
               <span className="qp-region">
                 <LocationOnOutlined />
-                {node.region}
+                {node.region || labels.node}
               </span>
               <strong>{node.name}</strong>
               <span className="qp-delay">

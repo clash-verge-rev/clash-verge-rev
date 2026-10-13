@@ -43,7 +43,7 @@ export function buildQuickGroups(
             record?.source ?? null,
           ]),
           name: member.name,
-          region: record?.type ?? (member.kind === 'group' ? 'GROUP' : 'NODE'),
+          region: '',
           delay: delay && delay > 0 ? delay : null,
           available:
             member.kind !== 'unresolved' &&
@@ -51,8 +51,7 @@ export function buildQuickGroups(
         }
       })
       const saved = favorites[favoriteScope(profile, group.name)]
-      const preferred =
-        saved ?? nodes.filter((node) => node.available).slice(0, 3)
+      const preferred = saved ?? []
       for (const favorite of preferred) {
         if (!nodes.some((node) => node.id === favorite.id))
           nodes.push({ ...favorite, delay: null, available: false })

@@ -627,6 +627,7 @@ export interface TranslationResources {
       group: string
       loading: string
       mode: string
+      node: string
       nodeUnavailable: string
       noGroups: string
       noMatch: string

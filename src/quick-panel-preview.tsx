@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import {
@@ -6,6 +6,9 @@ import {
   type QuickGroup,
   type QuickMode,
 } from './components/quick-panel/quick-panel'
+import { quickPanelState } from './services/cmds'
+
+const nativePreview = new URLSearchParams(location.search).has('native')
 
 const initialGroups: QuickGroup[] = [
   {
@@ -45,6 +48,21 @@ const initialGroups: QuickGroup[] = [
 ]
 
 export function Preview() {
+  useEffect(() => {
+    if (!nativePreview) return
+    const observer = new ResizeObserver(() => {
+      void quickPanelState(document.querySelector('main')!.scrollHeight)
+    })
+    observer.observe(document.querySelector('main')!)
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') void quickPanelState(null, true)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [])
   const [groups, setGroups] = useState(initialGroups)
   const [groupId, setGroupId] = useState('main')
   const [mode, setMode] = useState<QuickMode>('rule')
@@ -64,13 +82,18 @@ export function Preview() {
     )
 
   return (
-    <main className="qp-preview" data-theme={theme}>
-      <div className="qp-preview-toolbar">
-        <span>交互预览 · 模拟数据</span>
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-          {theme === 'dark' ? '浅色外观' : '深色外观'}
-        </button>
-      </div>
+    <main
+      className={`qp-preview${nativePreview ? ' qp-live' : ''}`}
+      data-theme={theme}
+    >
+      {!nativePreview && (
+        <div className="qp-preview-toolbar">
+          <span>交互预览 · 模拟数据</span>
+          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+            {theme === 'dark' ? '浅色外观' : '深色外观'}
+          </button>
+        </div>
+      )}
       <QuickPanel
         systemProxy={systemProxy}
         tun={tun}
@@ -98,9 +121,11 @@ export function Preview() {
         onDashboard={() => setNotice('正式版本将在这里打开完整仪表盘。')}
         onSettings={() => setNotice('正式版本将在这里打开应用设置。')}
       />
-      <p className="qp-preview-note" role="status">
-        {notice || '可以试试切换节点、编辑常用项、切换模式与外观。'}
-      </p>
+      {!nativePreview && (
+        <p className="qp-preview-note" role="status">
+          {notice || '可以试试切换节点、编辑常用项、切换模式与外观。'}
+        </p>
+      )}
     </main>
   )
 }

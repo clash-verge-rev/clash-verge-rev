@@ -1070,12 +1070,12 @@ async fn create_tray_menu(
 
 fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
     #[cfg(target_os = "macos")]
-    if let Some(position) = quick_panel_click_position(&tray_event) {
+    if quick_panel_click_position(&tray_event).is_some() {
         if !Tray::global().should_handle_tray_click() {
             return;
         }
         AsyncHandler::spawn(move || async move {
-            logging_error!(Type::Tray, crate::utils::quick_panel::toggle(position));
+            logging_error!(Type::Tray, crate::utils::quick_panel::toggle());
         });
         return;
     }

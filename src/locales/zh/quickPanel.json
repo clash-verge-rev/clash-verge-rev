@@ -39,5 +39,6 @@
   "storageError": "无法读取常用节点配置，请重新编辑。",
   "coreNotRunning": "代理内核未运行，请打开仪表盘检查。",
   "contextChanged": "订阅或模式已改变，请重新选择节点。",
-  "nodeUnavailable": "节点已失效，请选择其他节点。"
+  "nodeUnavailable": "节点已失效，请选择其他节点。",
+  "node": "节点"
 }

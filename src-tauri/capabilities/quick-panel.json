@@ -1,10 +1,12 @@
 {
   "identifier": "quick-panel-capability",
-  "platforms": ["macOS"],
-  "windows": ["quick-panel"],
+  "platforms": [
+    "macOS"
+  ],
+  "windows": [
+    "quick-panel"
+  ],
   "permissions": [
-    "core:window:allow-hide",
-    "core:window:allow-is-visible",
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "mihomo:default"

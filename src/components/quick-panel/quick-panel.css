@@ -93,8 +93,9 @@ body {
   letter-spacing: -0.02em;
 }
 .qp-brand img {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
+  filter: invert(1);
 }
 .qp-icon {
   display: flex;
@@ -447,4 +448,64 @@ body {
   .quick-panel *::after {
     transition: none !important;
   }
+}
+
+/* AppKit supplies the outer shape, arrow, shadow, and presentation animation. */
+.qp-live {
+  min-height: 0;
+  height: auto;
+  background: #202225;
+}
+.qp-live .quick-panel {
+  border-radius: 0;
+  background: linear-gradient(135deg, #272a2d, #202225 65%);
+}
+.qp-preview[data-theme="light"] .qp-brand img {
+  filter: none;
+}
+.qp-tile {
+  min-height: 126px;
+}
+.qp-tile:disabled {
+  opacity: 0.8 !important;
+}
+.qp-tile > strong {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 36px;
+  margin-top: 10px;
+}
+.qp-switch[aria-checked="true"] {
+  background: #60ca9a;
+}
+.qp-modes {
+  position: relative;
+  isolation: isolate;
+}
+.qp-modes::before {
+  content: "";
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc((100% - 14px) / 3);
+  background: #55595e;
+  border-radius: 7px;
+  z-index: -1;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.qp-modes:has(button:nth-child(2)[aria-pressed="true"])::before {
+  transform: translateX(calc(100% + 3px));
+}
+.qp-modes:has(button:nth-child(3)[aria-pressed="true"])::before {
+  transform: translateX(calc(200% + 6px));
+}
+.qp-modes button[aria-pressed="true"] {
+  background: transparent;
+}
+.qp-traffic > div:first-child svg {
+  color: var(--qp-accent);
+}
+.qp-traffic > div:last-child svg {
+  color: #be8aff;
 }

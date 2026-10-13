@@ -1,51 +1,105 @@
 use crate::core::handle;
-use anyhow::Result;
-use tauri::{Manager as _, PhysicalPosition, WebviewUrl, WebviewWindowBuilder, WindowEvent};
+use anyhow::{Result, anyhow};
+use objc2::{MainThreadMarker, rc::Retained};
+use objc2_app_kit::{
+    NSAppearance, NSAppearanceNameDarkAqua, NSApplication, NSPopover, NSPopoverBehavior, NSView, NSViewController,
+};
+use objc2_foundation::{NSRectEdge, NSSize, ns_string};
+use std::cell::RefCell;
+use tauri::{AppHandle, Manager as _, WebviewUrl, WebviewWindowBuilder};
 
 const LABEL: &str = "quick-panel";
+thread_local! {
+    static POPOVER: RefCell<Option<Retained<NSPopover>>> = const { RefCell::new(None) };
+}
 
-pub fn toggle(position: PhysicalPosition<f64>) -> Result<()> {
-    let app = handle::Handle::app_handle();
+pub fn toggle() -> Result<()> {
+    toggle_for(
+        handle::Handle::app_handle(),
+        crate::core::tray::TRAY_ID,
+        "quick-panel-live.html",
+    )
+}
+
+/// The hidden Tauri window owns IPC and the webview; AppKit presents its view.
+pub fn toggle_for(app: &AppHandle, tray_id: &str, page: &str) -> Result<()> {
     let window = if let Some(window) = app.get_webview_window(LABEL) {
-        if window.is_visible()? {
-            window.hide()?;
-            return Ok(());
-        }
         window
     } else {
-        let window = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("quick-panel-live.html".into()))
+        WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App(page.into()))
             .title("Clash Verge")
-            .inner_size(440.0, 720.0)
+            .inner_size(440.0, 640.0)
             .decorations(false)
             .resizable(false)
-            .maximizable(false)
-            .minimizable(false)
-            .always_on_top(true)
             .skip_taskbar(true)
             .visible(false)
-            .build()?;
-        let hide_window = window.clone();
-        window.on_window_event(move |event| {
-            if matches!(event, WindowEvent::Focused(false)) {
-                let _ = hide_window.hide();
+            .build()?
+    };
+    // Move only WKWebView. Tao must retain its own content view for window events.
+    let (sender, receiver) = std::sync::mpsc::channel();
+    window.with_webview(move |webview| {
+        let _ = sender.send(webview.inner() as usize);
+    })?;
+    let view_address = receiver.recv()?;
+    let tray = app.tray_by_id(tray_id).ok_or_else(|| anyhow!("Tray is unavailable"))?;
+    tray.with_inner_tray_icon(move |inner| -> Result<()> {
+        let mtm = MainThreadMarker::new().ok_or_else(|| anyhow!("Popover requires the main thread"))?;
+        let item = inner
+            .ns_status_item()
+            .ok_or_else(|| anyhow!("Status item is unavailable"))?;
+        let button = item
+            .button(mtm)
+            .ok_or_else(|| anyhow!("Status button is unavailable"))?;
+        POPOVER.with(|slot| {
+            let mut slot = slot.borrow_mut();
+            let popover = slot.get_or_insert_with(|| {
+                let popover = NSPopover::new(mtm);
+                let controller = NSViewController::new(mtm);
+                // Wry retains WKWebView for the lifetime of the hidden host window.
+                let view = unsafe { &*(view_address as *const NSView) };
+                view.removeFromSuperview();
+                controller.setView(view);
+                popover.setContentViewController(Some(&controller));
+                popover.setContentSize(NSSize::new(440.0, 640.0));
+                popover.setBehavior(NSPopoverBehavior::Transient);
+                popover.setAnimates(true);
+                let appearance = NSAppearance::appearanceNamed(unsafe { NSAppearanceNameDarkAqua });
+                popover.setAppearance(appearance.as_deref());
+                popover
+            });
+            if popover.isShown() {
+                popover.close();
+            } else {
+                // Compatible with macOS versions predating cooperative activation.
+                #[allow(deprecated)]
+                NSApplication::sharedApplication(mtm).activateIgnoringOtherApps(true);
+                popover.showRelativeToRect_ofView_preferredEdge(button.bounds(), &button, NSRectEdge::MinY);
+                if let Some(view) = popover.contentViewController().map(|controller| controller.view())
+                    && let Some(window) = view.window()
+                {
+                    window.setTitle(ns_string!("Clash Verge"));
+                    window.makeKeyWindow();
+                    window.makeFirstResponder(Some(&view));
+                }
             }
         });
-        window
-    };
-
-    if let Some(monitor) = window.monitor_from_point(position.x, position.y)? {
-        let scale = monitor.scale_factor();
-        let area = monitor.work_area();
-        let width = (440.0 * scale).min(f64::from(area.size.width));
-        let height = (720.0 * scale).min(f64::from(area.size.height));
-        window.set_size(tauri::PhysicalSize::new(width as u32, height as u32))?;
-        let left = f64::from(area.position.x);
-        let top = f64::from(area.position.y);
-        let x = (position.x - width / 2.0).clamp(left, left + f64::from(area.size.width) - width);
-        let y = (position.y + 16.0 * scale).clamp(top, top + f64::from(area.size.height) - height);
-        window.set_position(PhysicalPosition::new(x, y))?;
-    }
-    window.show()?;
-    window.set_focus()?;
+        Ok(())
+    })??;
     Ok(())
+}
+
+pub fn state(app: &AppHandle, tray_id: &str, height: Option<f64>, close: bool) -> Result<bool> {
+    let tray = app.tray_by_id(tray_id).ok_or_else(|| anyhow!("Tray is unavailable"))?;
+    Ok(tray.with_inner_tray_icon(move |_| {
+        POPOVER.with(|slot| {
+            let slot = slot.borrow();
+            let Some(popover) = slot.as_ref() else { return false };
+            if close {
+                popover.close();
+            } else if let Some(height) = height.filter(|height| height.is_finite()) {
+                popover.setContentSize(NSSize::new(440.0, height.clamp(200.0, 760.0)));
+            }
+            popover.isShown()
+        })
+    })?)
 }
