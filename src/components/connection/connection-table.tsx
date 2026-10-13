@@ -842,6 +842,15 @@ export const ConnectionTable = (props: Props) => {
                         <span style={{ flexShrink: 0 }}>
                           {sorting.desc ? '▼' : '▲'}
                         </span>
+                      ) : column.align === 'right' ? (
+                        // Reserve the indicator's space so right-aligned labels
+                        // don't shift when sorting is toggled.
+                        <span
+                          aria-hidden
+                          style={{ flexShrink: 0, visibility: 'hidden' }}
+                        >
+                          ▲
+                        </span>
                       ) : null}
                     </button>
                     <div
