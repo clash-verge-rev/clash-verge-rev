@@ -18,6 +18,7 @@ export const isValidUrl = (value: string) =>
     require_valid_protocol: true,
     require_host: true,
     require_tld: false,
+    validate_length: false,
   })
 
 export const isValidLatencyTestUrl = (value: string) => {
