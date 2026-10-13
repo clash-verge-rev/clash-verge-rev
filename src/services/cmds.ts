@@ -489,6 +489,10 @@ export const entry_lightweight_mode = async () => {
   return commands.entryLightweightMode()
 }
 
+export const setNativeWindowTheme = async (theme: string) => {
+  return commands.setNativeWindowTheme(theme)
+}
+
 export async function getNextUpdateTime(uid: string) {
   return commands.getNextUpdateTime(uid)
 }
