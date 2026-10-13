@@ -17,7 +17,7 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
-- 记住「使用系统标题栏」设置，Windows/macOS 即时生效，Linux 重启后生效
+- 记住「启用系统标题栏」设置，Windows/macOS 即时生效，Linux 重启后生效
 
 **🖥️ Windows**
 
