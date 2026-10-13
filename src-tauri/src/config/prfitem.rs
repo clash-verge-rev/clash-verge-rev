@@ -54,6 +54,9 @@ pub struct PrfItem {
     pub selected: Option<Vec<PrfSelected>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxy_chain: Option<Vec<std::string::String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[specta(type = Option<std::collections::BTreeMap<std::string::String, std::string::String>>)]
     pub latency_test_urls: Option<std::collections::BTreeMap<String, String>>,
 
@@ -235,6 +238,7 @@ impl PrfItem {
             url: None,
             latency_test_urls: None,
             selected: None,
+            proxy_chain: None,
             extra: None,
             option: Some(PrfOption {
                 update_interval,
@@ -415,6 +419,7 @@ impl PrfItem {
             url: Some(url.as_str().into()),
             latency_test_urls: None,
             selected: None,
+            proxy_chain: None,
             extra,
             option: Some(PrfOption {
                 update_interval,
