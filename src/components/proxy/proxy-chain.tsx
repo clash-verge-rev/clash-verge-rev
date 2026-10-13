@@ -52,7 +52,11 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
+import {
+  isProxyChainConnected,
+  rebindProxyChainItems,
+  type ProxyChainItem,
+} from './proxy-chain-model'
 
 const chainPointerSensor = PointerSensor.configure({
   activationConstraints: () => undefined,
@@ -371,30 +375,17 @@ export const ProxyChain = ({
   )
 
   const isConnected = useMemo(() => {
-    if (!proxyView || currentProxyChain.length === 0) {
-      return false
-    }
+    const selectedExit =
+      mode === 'global'
+        ? proxyView?.global?.now
+        : proxyView?.groups.find((group) => group.name === selectedGroup)?.now
 
-    const lastNode = currentProxyChain[currentProxyChain.length - 1]
-    if (localStorage.getItem('proxy-chain-exit-node') === lastNode.name) {
-      return true
-    }
-    if (currentProxyChain.length < 2) return false
-
-    if (mode === 'global') {
-      return proxyView.global?.now === lastNode.name
-    }
-
-    if (!selectedGroup) {
-      return false
-    }
-
-    const proxyChainGroup = proxyView.groups.find(
-      (group) => group.name === selectedGroup,
+    return isProxyChainConnected(
+      currentProxyChain,
+      selectedExit,
+      (runtimeConfig as RuntimeConfigWithProxySequence | null)?.proxies,
     )
-
-    return proxyChainGroup?.now === lastNode.name
-  }, [proxyView, currentProxyChain, mode, selectedGroup])
+  }, [proxyView, currentProxyChain, mode, selectedGroup, runtimeConfig])
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(currentProxyChain.length)
@@ -449,6 +440,7 @@ export const ProxyChain = ({
           () => updateProxyChainConfigInRuntime(null),
           {
             id: 'update-proxy-chain-runtime',
+            revalidate: [['getRuntimeConfig']],
             errorNotice: false,
           },
         )
@@ -527,6 +519,7 @@ export const ProxyChain = ({
         () => updateProxyChainConfigInRuntime(chainProxies),
         {
           id: 'update-proxy-chain-runtime',
+          revalidate: [['getRuntimeConfig']],
           errorNotice: false,
         },
       )
@@ -629,6 +622,7 @@ export const ProxyChain = ({
               onClick={() => {
                 void mutate(() => updateProxyChainConfigInRuntime(null), {
                   id: 'update-proxy-chain-runtime',
+                  revalidate: [['getRuntimeConfig']],
                   onFulfilled: () => {
                     localStorage.removeItem('proxy-chain-group')
                     localStorage.removeItem('proxy-chain-exit-node')
