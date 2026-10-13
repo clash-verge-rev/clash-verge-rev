@@ -164,7 +164,6 @@
         "trayOptions": {
           "showMainWindow": "显示主窗口",
           "showTrayMenu": "显示托盘菜单",
-          "showQuickPanel": "显示快捷面板",
           "disable": "禁用"
         },
         "fields": {

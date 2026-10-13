@@ -531,7 +531,6 @@ export const translationKeys = [
   'settings.components.verge.basic.actions.browse',
   'settings.components.verge.basic.trayOptions.showMainWindow',
   'settings.components.verge.basic.trayOptions.showTrayMenu',
-  'settings.components.verge.basic.trayOptions.showQuickPanel',
   'settings.components.verge.basic.trayOptions.disable',
   'settings.components.verge.basic.fields.language',
   'settings.components.verge.basic.fields.themeMode',

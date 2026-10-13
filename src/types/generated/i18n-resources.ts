@@ -782,7 +782,6 @@ export interface TranslationResources {
             trayOptions: {
               disable: string
               showMainWindow: string
-              showQuickPanel: string
               showTrayMenu: string
             }
           }

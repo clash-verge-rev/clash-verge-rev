@@ -136,7 +136,11 @@ const SettingVergeBasic = ({ onError }: Props) => {
           label={t('settings.components.verge.basic.fields.trayClickEvent')}
         >
           <GuardState
-            value={tray_event ?? 'main_window'}
+            value={
+              tray_event === 'quick_panel'
+                ? 'main_window'
+                : (tray_event ?? 'main_window')
+            }
             onCatch={onError}
             onFormat={(e: any) => e.target.value}
             onChange={(e) => onChangeData({ tray_event: e })}
@@ -151,13 +155,6 @@ const SettingVergeBasic = ({ onError }: Props) => {
               <MenuItem value="tray_menu">
                 {t('settings.components.verge.basic.trayOptions.showTrayMenu')}
               </MenuItem>
-              {OS === 'macos' && (
-                <MenuItem value="quick_panel">
-                  {t(
-                    'settings.components.verge.basic.trayOptions.showQuickPanel',
-                  )}
-                </MenuItem>
-              )}
               <MenuItem value="system_proxy">
                 {t('settings.sections.system.toggles.systemProxy')}
               </MenuItem>
