@@ -207,6 +207,8 @@ export const useCustomTheme = () => {
       const dividerColor =
         mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
       rootEle.style.setProperty('--divider-color', dividerColor)
+      // macOS 26+ derives the native titlebar appearance from the document background.
+      rootEle.style.setProperty('background-color', backgroundColor)
       rootEle.style.setProperty('--background-color', backgroundColor)
       rootEle.style.setProperty('--selection-color', selectColor)
       rootEle.style.setProperty('--scroller-color', scrollColor)
