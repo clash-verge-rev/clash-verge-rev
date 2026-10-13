@@ -395,6 +395,8 @@ export const translationKeys = [
   'quickPanel.coreUnavailable',
   'quickPanel.stateUnavailable',
   'quickPanel.nodePending',
+  'quickPanel.quit',
+  'quickPanel.quitApp',
   'rules.page.provider.trigger',
   'rules.page.provider.dialogTitle',
   'rules.page.provider.actions.updateAll',

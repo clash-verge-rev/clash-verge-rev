@@ -637,6 +637,8 @@ export interface TranslationResources {
       notConnected: string
       panel: string
       profile: string
+      quit: string
+      quitApp: string
       replaceHint: string
       retry: string
       rule: string

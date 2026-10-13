@@ -44,5 +44,7 @@
   "connecting": "Connecting…",
   "coreUnavailable": "Core unavailable",
   "stateUnavailable": "Status unavailable. Retry or open the dashboard.",
-  "nodePending": "Connect to choose a node"
+  "nodePending": "Connect to choose a node",
+  "quit": "Quit",
+  "quitApp": "Quit Clash Verge"
 }

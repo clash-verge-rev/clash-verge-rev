@@ -44,5 +44,7 @@
   "connecting": "正在连接…",
   "coreUnavailable": "内核暂不可用",
   "stateUnavailable": "暂时无法读取状态，请重试或打开仪表盘。",
-  "nodePending": "连接后选择节点"
+  "nodePending": "连接后选择节点",
+  "quit": "退出",
+  "quitApp": "退出 Clash Verge"
 }

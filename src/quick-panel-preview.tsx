@@ -71,6 +71,15 @@ export function Preview() {
   const [profile, setProfile] = useState('我的订阅')
   const [theme, setTheme] = useState('dark')
   const [notice, setNotice] = useState('')
+  const [busy, setBusy] = useState(false)
+  const applyChange = (action: () => void) => {
+    if (busy) return
+    setBusy(true)
+    setTimeout(() => {
+      action()
+      setBusy(false)
+    }, 700)
+  }
   const group = groups.find(
     (item) => item.id === (mode === 'global' ? 'global' : groupId),
   )!
@@ -95,6 +104,7 @@ export function Preview() {
         </div>
       )}
       <QuickPanel
+        busy={busy}
         systemProxy={systemProxy}
         tun={tun}
         mode={mode}
@@ -108,11 +118,11 @@ export function Preview() {
         profiles={['我的订阅', '备用订阅'].map((name) => ({ id: name, name }))}
         download="2.4 MB/s"
         upload="128 KB/s"
-        onSystemProxy={() => setSystemProxy(!systemProxy)}
-        onTun={() => setTun(!tun)}
-        onMode={setMode}
+        onSystemProxy={() => applyChange(() => setSystemProxy(!systemProxy))}
+        onTun={() => applyChange(() => setTun(!tun))}
+        onMode={(mode) => applyChange(() => setMode(mode))}
         onGroup={setGroupId}
-        onNode={(id) => updateGroup({ selected: id })}
+        onNode={(id) => applyChange(() => updateGroup({ selected: id }))}
         onFavorites={(favorites) => updateGroup({ favorites })}
         onProfile={(value) => {
           setProfile(value)
@@ -120,6 +130,7 @@ export function Preview() {
         }}
         onDashboard={() => setNotice('正式版本将在这里打开完整仪表盘。')}
         onSettings={() => setNotice('正式版本将在这里打开应用设置。')}
+        onQuit={() => setNotice('这里只是模拟预览；正式版会退出 Clash Verge。')}
       />
       {!nativePreview && (
         <p className="qp-preview-note" role="status">

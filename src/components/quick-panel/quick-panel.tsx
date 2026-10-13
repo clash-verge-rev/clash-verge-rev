@@ -4,6 +4,7 @@ import ArrowUpwardRounded from '@mui/icons-material/ArrowUpwardRounded'
 import CheckRounded from '@mui/icons-material/CheckRounded'
 import CloseRounded from '@mui/icons-material/CloseRounded'
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined'
+import LogoutRounded from '@mui/icons-material/LogoutRounded'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
 import { useState } from 'react'
 
@@ -37,6 +38,7 @@ interface Props {
   tun: boolean
   mode: QuickMode | null
   disabled?: boolean
+  busy?: boolean
   systemProxyDisabled?: boolean
   status?: string
   group: QuickGroup
@@ -55,11 +57,13 @@ interface Props {
   onProfile: (profile: string) => void
   onDashboard: () => void
   onSettings: () => void
+  onQuit: () => void
 }
 
 export function QuickPanel({
   language = 'zh',
   disabled = false,
+  busy = false,
   systemProxyDisabled = disabled,
   status,
   systemProxy,
@@ -81,6 +85,7 @@ export function QuickPanel({
   onProfile,
   onDashboard,
   onSettings,
+  onQuit,
 }: Props) {
   const labels = language === 'zh' ? zhLabels : enLabels
   const [editing, setEditing] = useState(false)
@@ -100,7 +105,7 @@ export function QuickPanel({
   }
 
   return (
-    <section className="quick-panel" aria-label={labels.panel}>
+    <section className="quick-panel" aria-label={labels.panel} aria-busy={busy}>
       <header className="qp-header">
         <div className="qp-brand">
           <img src={logo} alt="" />
@@ -113,6 +118,11 @@ export function QuickPanel({
             )}
           </div>
         </div>
+        {busy && (
+          <span className="qp-progress" role="status">
+            <span className="qp-sr-only">{labels.applying}</span>
+          </span>
+        )}
         <button
           className="qp-icon"
           aria-label={labels.settings}
@@ -132,7 +142,8 @@ export function QuickPanel({
             className="qp-switch"
             role="switch"
             aria-label={labels.systemProxy}
-            disabled={systemProxyDisabled}
+            data-unavailable={systemProxyDisabled}
+            disabled={busy || systemProxyDisabled}
             aria-checked={systemProxy}
             onClick={onSystemProxy}
           >
@@ -149,7 +160,8 @@ export function QuickPanel({
             role="switch"
             aria-label={labels.tun}
             aria-checked={tun}
-            disabled={disabled || (!!tunUnavailable && !tun)}
+            data-unavailable={disabled || (!!tunUnavailable && !tun)}
+            disabled={busy || disabled || (!!tunUnavailable && !tun)}
             onClick={onTun}
           >
             <span />
@@ -161,7 +173,8 @@ export function QuickPanel({
         {(['rule', 'global', 'direct'] as const).map((optionMode, index) => (
           <button
             key={optionMode}
-            disabled={disabled}
+            data-unavailable={disabled}
+            disabled={busy || disabled}
             aria-pressed={mode === optionMode}
             onClick={() => onMode(optionMode)}
           >
@@ -174,7 +187,8 @@ export function QuickPanel({
         <h2>{labels.favorites}</h2>
         <button
           className="qp-text"
-          disabled={disabled}
+          data-unavailable={disabled}
+          disabled={busy || disabled}
           aria-expanded={editing}
           onClick={() => {
             setEditing(!editing)
@@ -193,7 +207,8 @@ export function QuickPanel({
               className="qp-tile"
               key={node.id}
               aria-pressed={active}
-              disabled={disabled || direct || node.available === false}
+              data-unavailable={disabled || direct || node.available === false}
+              disabled={busy || disabled || direct || node.available === false}
               title={node.name}
               onClick={() => onNode(node.id)}
             >
@@ -223,7 +238,8 @@ export function QuickPanel({
           ) : (
             <button
               className="qp-tile qp-empty"
-              disabled={disabled}
+              data-unavailable={disabled}
+              disabled={busy || disabled}
               key={`empty-${index}`}
               onClick={() => setEditing(true)}
             >
@@ -234,7 +250,11 @@ export function QuickPanel({
         })}
       </div>
 
-      <div className="qp-current" aria-live="polite">
+      <div
+        className="qp-current"
+        aria-live="polite"
+        title={direct ? labels.directHint : selected?.name}
+      >
         {direct
           ? labels.directHint
           : `${labels.current}${selected?.name ?? labels.noNode}`}
@@ -245,7 +265,8 @@ export function QuickPanel({
           <select
             aria-label={labels.group}
             value={group.id}
-            disabled={disabled || mode !== 'rule'}
+            data-unavailable={disabled || mode !== 'rule'}
+            disabled={busy || disabled || mode !== 'rule'}
             onChange={(event) => {
               onGroup(event.target.value)
               setSearch('')
@@ -261,7 +282,8 @@ export function QuickPanel({
         </label>
         <button
           className="qp-text"
-          disabled={disabled}
+          data-unavailable={disabled}
+          disabled={busy || disabled}
           aria-expanded={showAll}
           onClick={() => {
             setShowAll(!showAll)
@@ -310,6 +332,7 @@ export function QuickPanel({
                 <button
                   key={node.id}
                   disabled={
+                    busy ||
                     disabled ||
                     (editing
                       ? !group.favorites.includes(node.id) &&
@@ -366,7 +389,8 @@ export function QuickPanel({
       <footer className="qp-footer">
         <select
           aria-label={labels.profile}
-          disabled={disabled}
+          data-unavailable={disabled}
+          disabled={busy || disabled}
           value={profile}
           onChange={(event) => onProfile(event.target.value)}
         >
@@ -377,9 +401,19 @@ export function QuickPanel({
             </option>
           ))}
         </select>
-        <button className="qp-text" onClick={onDashboard}>
-          {labels.dashboard} <ArrowOutwardRounded />
-        </button>
+        <div className="qp-footer-actions">
+          <button className="qp-text" onClick={onDashboard}>
+            {labels.dashboard} <ArrowOutwardRounded />
+          </button>
+          <button
+            className="qp-text"
+            aria-label={labels.quitApp}
+            title={labels.quitApp}
+            onClick={onQuit}
+          >
+            <LogoutRounded /> {labels.quit}
+          </button>
+        </div>
       </footer>
     </section>
   )

@@ -28,6 +28,7 @@ import {
   patchProfilesConfig,
   openQuickPanelDashboard,
   quickPanelState,
+  exitApp,
 } from './services/cmds'
 
 const errorMessage = (error: unknown) =>
@@ -183,17 +184,13 @@ export function LivePanel() {
           <button onClick={() => openDashboard('/')}>{labels.dashboard}</button>
         </p>
       )}
-      {busy && (
-        <p className="qp-message" role="status">
-          {labels.applying}
-        </p>
-      )}
       <QuickPanel
         language={snapshot?.verge.language ?? 'zh'}
         systemProxy={snapshot?.systemProxy ?? false}
-        disabled={busy || !ready}
+        disabled={!ready}
+        busy={busy}
         systemProxyDisabled={
-          busy || !!readError || !snapshot || (!ready && !snapshot.systemProxy)
+          !!readError || !snapshot || (!ready && !snapshot.systemProxy)
         }
         status={
           readError
@@ -309,6 +306,9 @@ export function LivePanel() {
         }
         onDashboard={() => openDashboard('/')}
         onSettings={() => openDashboard('/settings')}
+        onQuit={() =>
+          void exitApp().catch((err: unknown) => setError(errorMessage(err)))
+        }
       />
     </main>
   )

@@ -84,6 +84,7 @@ body {
   justify-content: space-between;
 }
 .qp-header {
+  position: relative;
   padding-bottom: 18px;
   border-bottom: 1px solid var(--qp-line);
 }
@@ -272,6 +273,9 @@ body {
   font-size: 24px;
 }
 .qp-current {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 12px;
   color: var(--qp-muted);
   margin-top: 12px;
@@ -518,4 +522,59 @@ html {
 }
 .qp-modes:not(:has(button[aria-pressed="true"]))::before {
   opacity: 0;
+}
+
+.qp-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qp-progress {
+  position: absolute;
+  right: 40px;
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  animation: qp-progress-show 120ms ease-out 150ms forwards;
+}
+.qp-progress::before {
+  content: "";
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--qp-line);
+  border-top-color: var(--qp-accent);
+  border-radius: 50%;
+  animation: qp-spin 800ms linear infinite;
+}
+.qp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.quick-panel[aria-busy="true"] [data-unavailable="false"]:disabled {
+  opacity: 1 !important;
+}
+@keyframes qp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes qp-progress-show {
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qp-progress {
+    opacity: 1;
+    animation: none;
+  }
+  .qp-progress::before {
+    animation: none;
+  }
 }
