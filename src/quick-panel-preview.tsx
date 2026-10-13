@@ -71,15 +71,6 @@ export function Preview() {
   const [profile, setProfile] = useState('我的订阅')
   const [theme, setTheme] = useState('dark')
   const [notice, setNotice] = useState('')
-  const [busy, setBusy] = useState(false)
-  const applyChange = (action: () => void) => {
-    if (busy) return
-    setBusy(true)
-    setTimeout(() => {
-      action()
-      setBusy(false)
-    }, 700)
-  }
   const group = groups.find(
     (item) => item.id === (mode === 'global' ? 'global' : groupId),
   )!
@@ -104,7 +95,6 @@ export function Preview() {
         </div>
       )}
       <QuickPanel
-        busy={busy}
         systemProxy={systemProxy}
         tun={tun}
         mode={mode}
@@ -118,11 +108,11 @@ export function Preview() {
         profiles={['我的订阅', '备用订阅'].map((name) => ({ id: name, name }))}
         download="2.4 MB/s"
         upload="128 KB/s"
-        onSystemProxy={() => applyChange(() => setSystemProxy(!systemProxy))}
-        onTun={() => applyChange(() => setTun(!tun))}
-        onMode={(mode) => applyChange(() => setMode(mode))}
+        onSystemProxy={() => setSystemProxy(!systemProxy)}
+        onTun={() => setTun(!tun)}
+        onMode={setMode}
         onGroup={setGroupId}
-        onNode={(id) => applyChange(() => updateGroup({ selected: id }))}
+        onNode={(id) => updateGroup({ selected: id })}
         onFavorites={(favorites) => updateGroup({ favorites })}
         onProfile={(value) => {
           setProfile(value)

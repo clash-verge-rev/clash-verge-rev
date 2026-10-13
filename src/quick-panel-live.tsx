@@ -270,6 +270,20 @@ export function LivePanel() {
             if (!node || !node.available)
               throw new Error(labels.nodeUnavailable)
             await selectNodeForGroup(group.id, node.name)
+            // Reflect the acknowledged selection before persistence and refresh.
+            setSnapshot({
+              ...latest,
+              view: {
+                ...latest.view,
+                groups: latest.view.groups.map((item) =>
+                  item.name === group.id ? { ...item, now: node.name } : item,
+                ),
+                global:
+                  latest.view.global?.name === group.id
+                    ? { ...latest.view.global, now: node.name }
+                    : latest.view.global,
+              },
+            })
             await recordSelectedNode(group.id, node.name)
             await syncTrayProxySelection()
             const previous = (
@@ -283,7 +297,7 @@ export function LivePanel() {
               previous &&
               previous !== node.name
             ) {
-              await cleanupConnections(previous)
+              void cleanupConnections(previous)
             }
           })
         }

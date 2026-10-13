@@ -9,6 +9,8 @@ use std::cell::RefCell;
 use tauri::{AppHandle, Manager as _, WebviewUrl, WebviewWindowBuilder};
 
 const LABEL: &str = "quick-panel";
+const WIDTH: f64 = 520.0;
+const INITIAL_HEIGHT: f64 = 620.0;
 thread_local! {
     static POPOVER: RefCell<Option<Retained<NSPopover>>> = const { RefCell::new(None) };
 }
@@ -28,7 +30,7 @@ pub fn toggle_for(app: &AppHandle, tray_id: &str, page: &str) -> Result<()> {
     } else {
         WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App(page.into()))
             .title("Clash Verge")
-            .inner_size(440.0, 640.0)
+            .inner_size(WIDTH, INITIAL_HEIGHT)
             .background_color(tauri::window::Color(32, 34, 37, 255))
             .decorations(false)
             .resizable(false)
@@ -61,7 +63,7 @@ pub fn toggle_for(app: &AppHandle, tray_id: &str, page: &str) -> Result<()> {
                 view.removeFromSuperview();
                 controller.setView(view);
                 popover.setContentViewController(Some(&controller));
-                popover.setContentSize(NSSize::new(440.0, 640.0));
+                popover.setContentSize(NSSize::new(WIDTH, INITIAL_HEIGHT));
                 popover.setBehavior(NSPopoverBehavior::Transient);
                 popover.setAnimates(true);
                 let appearance = NSAppearance::appearanceNamed(unsafe { NSAppearanceNameDarkAqua });
@@ -98,7 +100,7 @@ pub fn state(app: &AppHandle, tray_id: &str, height: Option<f64>, close: bool) -
             if close {
                 popover.close();
             } else if let Some(height) = height.filter(|height| height.is_finite()) {
-                popover.setContentSize(NSSize::new(440.0, height.clamp(200.0, 760.0)));
+                popover.setContentSize(NSSize::new(WIDTH, height.clamp(200.0, 760.0)));
             }
             popover.isShown()
         })
