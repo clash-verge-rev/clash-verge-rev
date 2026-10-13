@@ -649,6 +649,11 @@ export interface TranslationResources {
       storageError: string
       systemHint: string
       systemProxy: string
+      test: string
+      testFailed: string
+      testHint: string
+      testing: string
+      timeout: string
       tun: string
       tunHint: string
       tunUnavailable: string
