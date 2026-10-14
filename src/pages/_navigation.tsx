@@ -6,7 +6,12 @@ import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined'
 import WifiOutlinedIcon from '@mui/icons-material/WifiOutlined'
-import { type ComponentType, type ReactNode } from 'react'
+import {
+  type ComponentType,
+  type LazyExoticComponent,
+  lazy,
+  type ReactNode,
+} from 'react'
 
 import ConnectionsSvg from '@/assets/image/itemicon/connections.svg?react'
 import HomeSvg from '@/assets/image/itemicon/home.svg?react'
@@ -18,20 +23,24 @@ import SettingsSvg from '@/assets/image/itemicon/settings.svg?react'
 import UnlockSvg from '@/assets/image/itemicon/unlock.svg?react'
 
 import { navigationItems } from './_navigation-meta'
-import ConnectionsPage from './connections'
+
+// 首屏首页保持同步加载，避免路由切换前的首帧白屏；
+// 其余页面路由级懒加载，按需加载对应 chunk（含 monaco-editor 等重依赖）。
 import HomePage from './home'
-import LogsPage from './logs'
-import ProfilePage from './profiles'
-import ProxyPage from './proxies'
-import RulesPage from './rules'
-import SettingPage from './settings'
-import UnlockPage from './unlock'
+
+const ConnectionsPage = lazy(() => import('./connections'))
+const LogsPage = lazy(() => import('./logs'))
+const ProfilePage = lazy(() => import('./profiles'))
+const ProxyPage = lazy(() => import('./proxies'))
+const RulesPage = lazy(() => import('./rules'))
+const SettingPage = lazy(() => import('./settings'))
+const UnlockPage = lazy(() => import('./unlock'))
 
 type NavigationItem = {
   label: (typeof navigationItems)[keyof typeof navigationItems]['label']
   path: string
   icon: ReactNode[]
-  Component: ComponentType
+  Component: ComponentType | LazyExoticComponent<ComponentType>
 }
 
 export const navItems: NavigationItem[] = [
