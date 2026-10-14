@@ -8,11 +8,13 @@ describe('subscription URLs', () => {
     (protocol) => {
       const prefix = `${protocol}://example.com/sub?token=`
 
-      for (const length of [2084, 2085, 2525]) {
+      for (const length of [2084, 2085, 2525, 4096]) {
         const url = prefix + 'a'.repeat(length - prefix.length)
 
         expect(isValidUrl(url)).toBe(true)
       }
+
+      expect(isValidUrl(prefix + 'a'.repeat(4097 - prefix.length))).toBe(false)
     },
   )
 
