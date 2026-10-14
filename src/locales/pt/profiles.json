@@ -81,6 +81,7 @@
       "extendConfig": "Configuração de extensão",
       "extendScript": "Script de extensão",
       "openFile": "Abrir arquivo",
+      "revealFile": "Show in Folder",
       "update": "Atualizar",
       "updateViaProxy": "Atualizar via proxy"
     },

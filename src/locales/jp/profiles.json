@@ -81,6 +81,7 @@
       "extendConfig": "拡張上書き設定",
       "extendScript": "拡張スクリプト",
       "openFile": "ファイルを開く",
+      "revealFile": "Show in Folder",
       "update": "更新",
       "updateViaProxy": "Update via proxy"
     },

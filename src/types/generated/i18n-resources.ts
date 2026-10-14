@@ -283,6 +283,7 @@ export interface TranslationResources {
           extendScript: string
           home: string
           openFile: string
+          revealFile: string
           select: string
           shareQrCode: string
           update: string

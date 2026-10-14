@@ -81,6 +81,7 @@
       "extendConfig": "擴充覆寫設定",
       "extendScript": "擴充指令碼",
       "openFile": "開啟檔案",
+      "revealFile": "在資料夾中顯示",
       "update": "更新",
       "updateViaProxy": "更新（代理）"
     },

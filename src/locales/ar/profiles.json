@@ -81,6 +81,7 @@
       "extendConfig": "توسيع الإعدادات",
       "extendScript": "توسيع السكربت",
       "openFile": "فتح الملف",
+      "revealFile": "Show in Folder",
       "update": "تحديث",
       "updateViaProxy": "Update via proxy"
     },

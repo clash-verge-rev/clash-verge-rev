@@ -81,6 +81,7 @@
       "extendConfig": "توسعه پیکربندی",
       "extendScript": "ادغام اسکریپت",
       "openFile": "باز کردن فایل",
+      "revealFile": "Show in Folder",
       "update": "به‌روزرسانی",
       "updateViaProxy": "Update via proxy"
     },

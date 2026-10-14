@@ -81,6 +81,7 @@
       "extendConfig": "Yapılandırma Genişletme",
       "extendScript": "Betik Genişletme",
       "openFile": "Dosyayı Aç",
+      "revealFile": "Show in Folder",
       "update": "Güncelle",
       "updateViaProxy": "Vekil üzerinden güncelle"
     },

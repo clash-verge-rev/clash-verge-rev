@@ -5,6 +5,7 @@
   "windows": ["main"],
   "permissions": [
     "global-shortcut:default",
+    "opener:allow-reveal-item-in-dir",
     "updater:default",
     "dialog:default",
     "dialog:allow-ask",

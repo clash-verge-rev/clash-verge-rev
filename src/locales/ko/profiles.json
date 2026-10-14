@@ -81,6 +81,7 @@
       "extendConfig": "설정 확장",
       "extendScript": "스크립트 확장",
       "openFile": "파일 열기",
+      "revealFile": "Show in Folder",
       "update": "업데이트",
       "updateViaProxy": "프록시를 통해 업데이트"
     },

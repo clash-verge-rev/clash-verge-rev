@@ -81,6 +81,7 @@
       "extendConfig": "Erweiterte Überdeckungskonfiguration",
       "extendScript": "Erweitertes Skript",
       "openFile": "Datei öffnen",
+      "revealFile": "Show in Folder",
       "update": "Aktualisieren",
       "updateViaProxy": "Über Proxy aktualisieren"
     },

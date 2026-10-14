@@ -81,6 +81,7 @@
       "extendConfig": "Merge-ны үзгәртергә",
       "extendScript": "Script-ны үзгәртергә",
       "openFile": "Файлны ачу",
+      "revealFile": "Show in Folder",
       "update": "Яңарту",
       "updateViaProxy": "Update via proxy"
     },

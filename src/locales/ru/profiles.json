@@ -81,6 +81,7 @@
       "extendConfig": "Изменить Merge-конфигурацию",
       "extendScript": "Изменить Script",
       "openFile": "Открыть файл",
+      "revealFile": "Show in Folder",
       "update": "Обновить",
       "updateViaProxy": "Обновить через прокси"
     },

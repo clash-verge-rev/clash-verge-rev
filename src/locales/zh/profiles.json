@@ -81,6 +81,7 @@
       "extendConfig": "扩展覆写配置",
       "extendScript": "扩展脚本",
       "openFile": "打开文件",
+      "revealFile": "在文件夹中显示",
       "update": "更新",
       "updateViaProxy": "更新（代理）"
     },

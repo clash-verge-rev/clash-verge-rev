@@ -206,6 +206,7 @@ export const translationKeys = [
   'profiles.components.menu.extendConfig',
   'profiles.components.menu.extendScript',
   'profiles.components.menu.openFile',
+  'profiles.components.menu.revealFile',
   'profiles.components.menu.update',
   'profiles.components.menu.updateViaProxy',
   'profiles.components.more.global.merge',

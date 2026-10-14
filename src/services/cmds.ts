@@ -1,4 +1,6 @@
 import { Channel } from '@tauri-apps/api/core'
+import { join } from '@tauri-apps/api/path'
+import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import dayjs from 'dayjs'
 
 import { showNotice } from '@/services/notice-service'
@@ -64,6 +66,11 @@ export async function createProfile(
 
 export async function viewProfile(index: string) {
   return commands.viewProfile(index)
+}
+
+export async function revealProfileFile(file: string) {
+  const path = await join(await getAppDir(), 'profiles', file)
+  return revealItemInDir(path)
 }
 
 export async function readProfileFile(index: string) {

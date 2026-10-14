@@ -81,6 +81,7 @@
       "extendConfig": "Perluas Konfigurasi",
       "extendScript": "Perluas Skrip",
       "openFile": "Buka Berkas",
+      "revealFile": "Show in Folder",
       "update": "Perbarui",
       "updateViaProxy": "Update via proxy"
     },

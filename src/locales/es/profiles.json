@@ -81,6 +81,7 @@
       "extendConfig": "Configurar sobrescritura extendida",
       "extendScript": "Script extendido",
       "openFile": "Abrir archivo",
+      "revealFile": "Show in Folder",
       "update": "Actualizar",
       "updateViaProxy": "Update via proxy"
     },

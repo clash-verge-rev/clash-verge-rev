@@ -15,6 +15,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 订阅卡片右键菜单新增「在文件夹中显示」，便于定位配置文件
 
 </details>
 

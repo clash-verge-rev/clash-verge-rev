@@ -35,6 +35,7 @@ import { useEditorDocument } from '@/hooks/use-editor-document'
 import {
   getNextUpdateTime,
   readProfileFile,
+  revealProfileFile,
   saveProfileFile,
   updateProfile,
   viewProfile,
@@ -379,6 +380,18 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     }
   })
 
+  const onRevealFile = useLockFn(async () => {
+    setAnchorEl(null)
+    try {
+      await mutate(() => revealProfileFile(itemData.file!), {
+        id: `reveal-profile:${itemData.uid}`,
+        errorNotice: false,
+      })
+    } catch (err) {
+      showNotice.error(err)
+    }
+  })
+
   /// 0 不使用任何代理
   /// 1 使用订阅好的代理
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
@@ -432,6 +445,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     extendConfig: 'profiles.components.menu.extendConfig',
     extendScript: 'profiles.components.menu.extendScript',
     openFile: 'profiles.components.menu.openFile',
+    revealFile: 'profiles.components.menu.revealFile',
     update: 'profiles.components.menu.update',
     updateViaProxy: 'profiles.components.menu.updateViaProxy',
     delete: 'shared.actions.delete',
@@ -496,6 +510,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       label: menuLabels.openFile,
       handler: onOpenFile,
       disabled: false,
+    },
+    {
+      label: menuLabels.revealFile,
+      handler: onRevealFile,
+      disabled: !itemData.file,
     },
     {
       label: menuLabels.update,
@@ -567,6 +586,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       label: menuLabels.openFile,
       handler: onOpenFile,
       disabled: false,
+    },
+    {
+      label: menuLabels.revealFile,
+      handler: onRevealFile,
+      disabled: !itemData.file,
     },
     {
       label: menuLabels.delete,
