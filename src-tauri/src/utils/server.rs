@@ -39,8 +39,6 @@ static INSTANCE_LOCK: OnceLock<std::fs::File> = OnceLock::new();
 const PAC_INITIAL_AVAILABLE: bool = false;
 static PAC_AVAILABLE: AtomicBool = AtomicBool::new(PAC_INITIAL_AVAILABLE);
 static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
-#[cfg(feature = "verge-dev")]
-static DEV_QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SingletonDisposition {
@@ -164,55 +162,12 @@ fn instance_auth(token: String) -> impl warp::Filter<Extract = (), Error = warp:
         .untuple_one()
 }
 
-#[cfg(feature = "verge-dev")]
-fn dev_quit_route<F>(
-    token: String,
-    commands_ready: &'static AtomicBool,
-    quit_requested: &'static AtomicBool,
-    trigger: F,
-) -> impl warp::Filter<Extract = (impl warp::Reply,), Error = warp::Rejection> + Clone
-where
-    F: Fn() + Clone + Send + Sync + 'static,
-{
-    instance_auth(token)
-        .and(warp::path!("commands" / "dev" / "quit"))
-        .and(warp::post())
-        .and_then(move || {
-            let trigger = trigger.clone();
-            async move {
-                if !commands_ready.load(Ordering::Acquire) {
-                    return Ok::<_, warp::Rejection>(warp::reply::with_status(
-                        String::from("starting"),
-                        warp::http::StatusCode::SERVICE_UNAVAILABLE,
-                    ));
-                }
-                if quit_requested
-                    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                    .is_ok()
-                {
-                    trigger();
-                }
-                Ok(warp::reply::with_status(
-                    String::from("accepted"),
-                    warp::http::StatusCode::ACCEPTED,
-                ))
-            }
-        })
-}
-
-#[cfg(feature = "verge-dev")]
-fn release_dev_quit_latch(quit_requested: &AtomicBool, outcome: clash_verge_signal::ShutdownOutcome) {
-    if matches!(outcome, clash_verge_signal::ShutdownOutcome::Canceled) {
-        quit_requested.store(false, Ordering::Release);
-    }
-}
-
 fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
 
     #[cfg(feature = "verge-dev")]
-    let auth = instance_auth(token.clone());
+    let auth = instance_auth(token);
     #[cfg(not(feature = "verge-dev"))]
     let auth = instance_auth(token);
 
@@ -278,12 +233,6 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
         });
 
     let commands = auth.clone().and(visible).or(auth.and(scheme)).or(pac);
-    #[cfg(feature = "verge-dev")]
-    let commands = commands.or(dev_quit_route(token, &COMMANDS_READY, &DEV_QUIT_REQUESTED, || {
-        AsyncHandler::spawn(|| async {
-            release_dev_quit_latch(&DEV_QUIT_REQUESTED, crate::feat::quit().await);
-        });
-    }));
     AsyncHandler::spawn(move || async move {
         warp::serve(commands)
             .incoming(listener)
