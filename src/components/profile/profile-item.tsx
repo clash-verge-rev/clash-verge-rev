@@ -120,7 +120,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   )
   const setLoading = useCallback(
     (loading: boolean) => {
-      setProfileLoading([itemData.uid], loading)
+      setProfileLoading([itemData.uid!], loading)
     },
     [itemData.uid, setProfileLoading],
   )
@@ -140,7 +140,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             debugLog(`强制刷新定时器任务`)
           }
 
-          const nextUpdate = await getNextUpdateTime(itemData.uid)
+          const nextUpdate = await getNextUpdateTime(itemData.uid!)
           debugLog(`获取到下次更新时间结果:`, nextUpdate)
 
           if (nextUpdate) {
@@ -245,7 +245,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const hasHome = !!itemData.home // only subscription url has home page
 
   const { upload = 0, download = 0, total = 0 } = extra ?? {}
-  const from = parseUrl(itemData.url)
+  const from = parseUrl(itemData.url!)
   const description = itemData.desc
   const expire = parseExpire(extra?.expire)
   const progress = Math.min(
@@ -253,7 +253,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     100,
   )
 
-  const loading = loadingCache.has(itemData.uid)
+  const loading = loadingCache.has(itemData.uid!)
 
   const [, forceRefresh] = useReducer((value: number) => value + 1, 0)
   useEffect(() => {
@@ -263,7 +263,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
     const handler = () => {
       const now = Date.now()
-      const lastUpdate = updated * 1000
+      const lastUpdate = updated! * 1000
       if (now - lastUpdate >= 24 * 36e5) return
 
       const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4
@@ -293,7 +293,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
 
-  const loadProfileDocument = useCallback(() => readProfileFile(uid), [uid])
+  const loadProfileDocument = useCallback(() => readProfileFile(uid!), [uid])
   const loadMergeDocument = useCallback(
     () => readProfileFile(option?.merge ?? ''),
     [option?.merge],
@@ -370,7 +370,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const onOpenFile = useLockFn(async () => {
     setAnchorEl(null)
     try {
-      await mutate(() => viewProfile(itemData.uid), {
+      await mutate(() => viewProfile(itemData.uid!), {
         id: 'view-profile',
         errorNotice: false,
       })
@@ -402,7 +402,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
     try {
       const payload = Object.keys(option).length > 0 ? option : undefined
-      await mutate(() => updateProfile(itemData.uid, payload), {
+      await mutate(() => updateProfile(itemData.uid!, payload), {
         id: `update-profile:${itemData.uid}`,
         errorNotice: false,
       })
@@ -593,7 +593,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value
-    const result = await mutate(() => saveProfileFile(uid, currentValue), {
+    const result = await mutate(() => saveProfileFile(uid!, currentValue), {
       id: `save-profile-file:${uid}`,
       errorNotice: false,
     })
@@ -728,7 +728,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
               variant="h6"
               component="h2"
               noWrap
-              title={name}
+              title={name!}
             >
               {name}
             </Typography>
@@ -794,7 +794,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
                     title={
                       showNextUpdate
                         ? t('profiles.components.profileItem.tooltips.showLast')
-                        : `${t('shared.labels.updateTime')}: ${parseExpire(updated)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
+                        : `${t('shared.labels.updateTime')}: ${parseExpire(updated!)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
                     }
                     sx={{
                       fontSize: 14,
@@ -812,8 +812,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
                   >
                     {showNextUpdate
                       ? nextUpdateTime
-                      : updated > 0
-                        ? dayjs(updated * 1000).fromNow()
+                      : updated! > 0
+                        ? dayjs(updated! * 1000).fromNow()
                         : ''}
                   </Typography>
                 </Box>
@@ -831,7 +831,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
         ) : (
           <Box sx={{ ...boxStyle, fontSize: 12, justifyContent: 'flex-end' }}>
             <span title={t('shared.labels.updateTime')}>
-              {parseExpire(updated)}
+              {parseExpire(updated!)}
             </span>
           </Box>
         )}
@@ -896,7 +896,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
         <RulesEditorViewer
           groupsUid={option?.groups ?? ''}
           mergeUid={option?.merge ?? ''}
-          profileUid={uid}
+          profileUid={uid!}
           property={option?.rules ?? ''}
           open={true}
           onSave={onSave}
@@ -905,7 +905,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       )}
       {proxiesOpen && (
         <ProxiesEditorViewer
-          profileUid={uid}
+          profileUid={uid!}
           property={option?.proxies ?? ''}
           open={true}
           onSave={onSave}
@@ -916,7 +916,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
         <GroupsEditorViewer
           mergeUid={option?.merge ?? ''}
           proxiesUid={option?.proxies ?? ''}
-          profileUid={uid}
+          profileUid={uid!}
           property={option?.groups ?? ''}
           open={true}
           onSave={onSave}
@@ -976,7 +976,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       {qrOpen && itemData.url && (
         <QrViewer
           open={true}
-          value={`${itemData.url}${itemData.url.includes('?') ? '&' : '?'}name=${encodeURIComponent(name)}`}
+          value={`${itemData.url}${itemData.url.includes('?') ? '&' : '?'}name=${encodeURIComponent(name!)}`}
           onClose={() => setQrOpen(false)}
         />
       )}

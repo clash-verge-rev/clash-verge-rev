@@ -1,5 +1,5 @@
 import { LanguageRounded } from '@mui/icons-material'
-import { Box, Divider, MenuItem, Menu, styled, alpha } from '@mui/material'
+import { alpha, Box, Divider, Menu, MenuItem, styled } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,12 +25,18 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const [delay, setDelay] = useState(-1)
   const { uid, name, icon, url } = itemData
-  const iconCachePath = useIconCache({ icon, cacheKey: uid })
+  const iconCachePath = useIconCache({ icon: icon!, cacheKey: uid! })
 
   const onDelay = useCallback(async () => {
     setDelay(-2)
-    const result = await cmdTestDelay(url)
-    setDelay(result)
+    try {
+      const result = await cmdTestDelay(url!)
+      setDelay(result)
+    } catch (err) {
+      // A failed test must not leave the item stuck in the loading state.
+      setDelay(-1)
+      showNotice.error(err)
+    }
   }, [url])
 
   const onEditTest = () => {
@@ -41,7 +47,7 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
   const onDelete = useLockFn(async () => {
     setAnchorEl(null)
     try {
-      removeTest(uid)
+      removeTest(uid!)
     } catch (err: any) {
       showNotice.error(err)
     }
@@ -81,17 +87,17 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               {icon.trim().startsWith('http') && (
                 <img
-                  alt={name}
+                  alt={name!}
                   src={iconCachePath === '' ? icon : iconCachePath}
                   height="40px"
                 />
               )}
               {icon.trim().startsWith('data') && (
-                <img alt={name} src={icon} height="40px" />
+                <img alt={name!} src={icon!} height="40px" />
               )}
               {icon.trim().startsWith('<svg') && (
                 <img
-                  alt={name}
+                  alt={name!}
                   src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon)}`}
                   height="40px"
                 />

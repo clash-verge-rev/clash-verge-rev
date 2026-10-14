@@ -110,13 +110,13 @@ const CHAIN_DELAY_GROUP = 'chain-mode'
 const virtualGroup = (members: ProxyGroupView['members']): ProxyGroupView => ({
   name: CHAIN_DELAY_GROUP,
   type: 'Selector',
-  alive: true,
   udp: false,
   xudp: false,
   tfo: false,
   mptcp: false,
   smux: false,
   history: [],
+  extra: {},
   members,
 })
 
@@ -237,7 +237,7 @@ export const useRenderList = (
         selected?.name ?? CHAIN_DELAY_GROUP,
         '',
         0,
-        latencyTimeout,
+        latencyTimeout!,
       )
       if (col > 1) {
         return groupOccurrences(occurrences, col).map((memberCol) => ({
@@ -289,8 +289,8 @@ export const useRenderList = (
           key: group.name,
           group,
           headState,
-          icon: group.icon,
-          testUrl: group.testUrl,
+          icon: group.icon!,
+          testUrl: group.testUrl!,
         },
       ]
 
@@ -300,7 +300,7 @@ export const useRenderList = (
           group.name,
           headState.filterText,
           headState.sortType,
-          latencyTimeout,
+          latencyTimeout!,
           {
             matchCase: headState.filterMatchCase,
             matchWholeWord: headState.filterMatchWholeWord,
@@ -337,11 +337,11 @@ export const useRenderList = (
       }
 
       cache.set(group.name, {
-        now: group.now,
+        now: group.now!,
         members: group.members,
         headState,
         col,
-        latencyTimeout,
+        latencyTimeout: latencyTimeout!,
         delays: groupDelays.get(group.name),
         items: ret,
       })

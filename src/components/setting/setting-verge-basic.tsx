@@ -9,6 +9,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { navigationItems } from '@/pages/_navigation-meta'
 import { copyClashEnv } from '@/services/cmds'
 import { supportedLanguages } from '@/services/i18n'
+import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -75,8 +76,18 @@ const SettingVergeBasic = ({ onError }: Props) => {
   }
 
   const onCopyClashEnv = useCallback(async () => {
-    await copyClashEnv()
-    showNotice.success('shared.feedback.notifications.common.copySuccess', 1000)
+    try {
+      await mutate(copyClashEnv, {
+        id: 'copy-clash-env',
+        onFulfilled: () =>
+          showNotice.success(
+            'shared.feedback.notifications.common.copySuccess',
+            1000,
+          ),
+      })
+    } catch {
+      // The shared mutation boundary reports the failure.
+    }
   }, [])
 
   return (

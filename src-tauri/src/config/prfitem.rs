@@ -27,28 +27,34 @@ pub(super) fn normalize_profile_home_url(raw: &str) -> Option<String> {
     Some(url.to_string().into())
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default, specta::Type)]
+#[serde(default)]
 pub struct PrfItem {
+    #[specta(type = Option<std::string::String>)]
     pub uid: Option<String>,
 
     /// enum value: remote | local | script | merge
     #[serde(rename = "type")]
+    #[specta(type = Option<std::string::String>)]
     pub itype: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub file: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub desc: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<Vec<PrfSelected>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::collections::BTreeMap<std::string::String, std::string::String>>)]
     pub latency_test_urls: Option<std::collections::BTreeMap<String, String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -60,19 +66,24 @@ pub struct PrfItem {
     pub option: Option<PrfOption>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub home: Option<String>,
 
     #[serde(skip)]
+    #[specta(type = Option<std::string::String>)]
     pub file_data: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
+#[serde(default)]
 pub struct PrfSelected {
+    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub now: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Copy, Deserialize, Serialize, specta::Type)]
 pub struct PrfExtra {
     pub upload: u64,
     pub download: u64,
@@ -80,9 +91,11 @@ pub struct PrfExtra {
     pub expire: u64,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
+#[serde(default)]
 pub struct PrfOption {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub user_agent: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -105,15 +118,15 @@ pub struct PrfOption {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_auto_update: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub merge: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub script: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub rules: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub proxies: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub groups: Option<String>,
 }
 

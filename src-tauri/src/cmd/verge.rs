@@ -9,12 +9,14 @@ use clash_verge_draft::SharedDraft;
 
 /// 获取Verge配置
 #[tauri::command]
+#[specta::specta]
 pub async fn get_verge_config() -> CmdResult<SharedDraft<IVerge>> {
     feat::fetch_verge_config().await.stringify_err()
 }
 
 /// 修改Verge配置
 #[tauri::command]
+#[specta::specta]
 pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
     let operation = system_proxy_operation(&payload);
     let result = match operation {

@@ -3,9 +3,8 @@ pub use announce::{Refresh, announce};
 pub mod desktop;
 pub mod handle;
 pub mod notification;
-pub use notification::frontend_wire_contract;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, specta::Type)]
 pub enum NoticeStatus {
     #[serde(rename = "info")]
     Info,
@@ -83,6 +82,7 @@ impl NoticeStatus {
     /// Every variant in golden order. The wire-contract export and the golden
     /// test both derive their variant list from here; expected strings stay
     /// hand-written in the test so renames cannot slip through.
+    #[cfg(test)]
     pub const ALL: [Self; 34] = [
         Self::Info,
         Self::ImportSubUrlOk,

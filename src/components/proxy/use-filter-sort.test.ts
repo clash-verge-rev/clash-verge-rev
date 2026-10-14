@@ -17,7 +17,6 @@ const node = (memberIndex: number, delay: number, name = `${memberIndex}`) =>
         history: [{ delay }],
         extra: {
           'http://cp.cloudflare.com/generate_204': {
-            alive: true,
             history: [{ time: new Date(0).toISOString(), delay }],
           },
         },

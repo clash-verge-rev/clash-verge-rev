@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+specta = { version = "=2.0.0-rc.25", features = ["derive", "function"] }
 clash-verge-logging = { workspace = true }
 chrono = { workspace = true }
 log = { workspace = true }
