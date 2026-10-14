@@ -3,6 +3,7 @@
     "title": "连接"
   },
   "components": {
+    "confirmClose": "确定要关闭此连接吗？",
     "fields": {
       "host": "主机",
       "dlSpeed": "下载速度",

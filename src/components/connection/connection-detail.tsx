@@ -1,10 +1,19 @@
 import { Box, Button, Snackbar, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useCallback, useImperativeHandle, useState, type Ref } from 'react'
+import {
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
+import { BaseDialog } from '@/components/base'
+import { mutate } from '@/services/mutate'
+import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
 export interface ConnectionDetailRef {
@@ -13,12 +22,18 @@ export interface ConnectionDetailRef {
 }
 
 export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<IConnectionsItem | null>(null)
   const [closed, setClosed] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const activeDetailRef = useRef<IConnectionsItem | null>(null)
   const theme = useTheme()
 
   const onClose = useCallback(() => {
+    activeDetailRef.current = null
+    setConfirmOpen(false)
     setOpen(false)
     setDetail(null)
     setClosed(false)
@@ -27,6 +42,7 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   useImperativeHandle(ref, () => ({
     open: (detail: IConnectionsItem, closed: boolean) => {
       if (open) return
+      activeDetailRef.current = detail
       setOpen(true)
       setDetail(detail)
       setClosed(closed)
@@ -34,12 +50,36 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
     close: onClose,
   }))
 
+  const onCancelClose = () => {
+    if (!closing) setConfirmOpen(false)
+  }
+
+  const onConfirmClose = useLockFn(async () => {
+    if (!detail) return
+    const connection = detail
+    setClosing(true)
+    try {
+      const result = await mutate(() => closeConnection(connection.id), {
+        id: `close-connection:${connection.id}`,
+        errorNotice: false,
+      })
+      if (result.ok && activeDetailRef.current === connection) onClose()
+    } catch (error) {
+      showNotice.error(error)
+    } finally {
+      setClosing(false)
+    }
+  })
+
   return (
     <Snackbar
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        if (!confirmOpen && !closing) onClose()
+      }}
       sx={{
+        zIndex: confirmOpen ? theme.zIndex.modal - 1 : undefined,
         '.MuiSnackbarContent-root': {
           maxWidth: '520px',
           maxHeight: '480px',
@@ -50,11 +90,26 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
       }}
       message={
         detail ? (
-          <InnerConnectionDetail
-            data={detail}
-            closed={closed}
-            onClose={onClose}
-          />
+          <>
+            <InnerConnectionDetail
+              data={detail}
+              closed={closed}
+              onRequestClose={() => setConfirmOpen(true)}
+            />
+            <BaseDialog
+              open={confirmOpen}
+              title={t('connections.components.actions.closeConnection')}
+              okBtn={t('shared.actions.confirm')}
+              cancelBtn={t('shared.actions.cancel')}
+              loading={closing}
+              disableCancel={closing}
+              onOk={() => void onConfirmClose()}
+              onCancel={onCancelClose}
+              onClose={onCancelClose}
+            >
+              {t('connections.components.confirmClose')}
+            </BaseDialog>
+          </>
         ) : null
       }
     />
@@ -64,10 +119,14 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
 interface InnerProps {
   data: IConnectionsItem
   closed: boolean
-  onClose?: () => void
+  onRequestClose: () => void
 }
 
-const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
+const InnerConnectionDetail = ({
+  data,
+  closed,
+  onRequestClose,
+}: InnerProps) => {
   const { t } = useTranslation()
   const { metadata, rulePayload } = data
   const theme = useTheme()
@@ -129,8 +188,6 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
     },
   ]
 
-  const onDelete = useLockFn(async () => closeConnection(data.id))
-
   return (
     <Box sx={{ userSelect: 'text', color: theme.palette.text.secondary }}>
       {information.map((each) => (
@@ -152,10 +209,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
           <Button
             variant="contained"
             title={t('connections.components.actions.closeConnection')}
-            onClick={() => {
-              onDelete()
-              onClose?.()
-            }}
+            onClick={onRequestClose}
           >
             {t('connections.components.actions.closeConnection')}
           </Button>

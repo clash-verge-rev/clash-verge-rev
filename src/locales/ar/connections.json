@@ -3,6 +3,7 @@
     "title": "الاتصالات"
   },
   "components": {
+    "confirmClose": "Are you sure you want to close this connection?",
     "fields": {
       "host": "المضيف",
       "dlSpeed": "سرعة التنزيل",

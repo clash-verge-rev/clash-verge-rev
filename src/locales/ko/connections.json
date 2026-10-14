@@ -3,6 +3,7 @@
     "title": "연결"
   },
   "components": {
+    "confirmClose": "Are you sure you want to close this connection?",
     "fields": {
       "host": "호스트",
       "dlSpeed": "다운로드 속도",

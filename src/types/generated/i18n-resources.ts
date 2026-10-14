@@ -14,6 +14,7 @@ export interface TranslationResources {
           dragHandle: string
           title: string
         }
+        confirmClose: string
         fields: {
           chains: string
           destination: string

@@ -3,6 +3,7 @@
     "title": "連線"
   },
   "components": {
+    "confirmClose": "確定要關閉此連線嗎？",
     "fields": {
       "host": "主機",
       "dlSpeed": "下載速度",

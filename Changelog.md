@@ -15,6 +15,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增关闭连接前的确认弹窗，减少误触造成的连接中断
 
 </details>
 

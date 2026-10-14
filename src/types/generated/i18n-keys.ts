@@ -3,6 +3,7 @@
 
 export const translationKeys = [
   'connections.page.title',
+  'connections.components.confirmClose',
   'connections.components.fields.host',
   'connections.components.fields.dlSpeed',
   'connections.components.fields.ulSpeed',
