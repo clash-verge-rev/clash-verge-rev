@@ -37,16 +37,10 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         delete,
     } = seq;
 
-    let added_proxy_names = if field == "proxies" {
-        let mut names = collect_proxy_names(&prepend);
-        names.extend(collect_proxy_names(&append));
-        let mut seen = HashSet::new();
-        names
-            .into_iter()
-            .filter(|name| seen.insert(name.clone()))
-            .collect::<Vec<String>>()
+    let (prepend_proxy_names, append_proxy_names) = if field == "proxies" {
+        (collect_proxy_names(&prepend), collect_proxy_names(&append))
     } else {
-        Vec::new()
+        (Vec::new(), Vec::new())
     };
 
     let mut updated_items = Sequence::new();
@@ -113,16 +107,20 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 None => None,
             };
 
-            if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
+            if !appended_to_selector
+                && (!prepend_proxy_names.is_empty() || !append_proxy_names.is_empty())
+                && is_selector_group(&group_map)
+            {
                 let base_group_proxies = group_proxies.unwrap_or_else(Sequence::new);
                 let mut merged_proxies = Sequence::new();
                 let mut seen_proxy_names = HashSet::new();
-                for name in &added_proxy_names {
-                    if seen_proxy_names.insert(name.clone()) {
-                        merged_proxies.push(Value::String(name.clone()));
-                    }
-                }
-                for value in base_group_proxies {
+                let ordered_proxies = prepend_proxy_names
+                    .iter()
+                    .cloned()
+                    .map(Value::String)
+                    .chain(base_group_proxies)
+                    .chain(append_proxy_names.iter().cloned().map(Value::String));
+                for value in ordered_proxies {
                     if let Value::String(name) = &value
                         && !seen_proxy_names.insert(name.to_owned())
                     {
@@ -289,7 +287,7 @@ proxy-groups:
             .as_sequence()
             .expect("group proxies should be a sequence");
         let names: Vec<&str> = group1_proxies.iter().filter_map(Value::as_str).collect();
-        assert_eq!(names, vec!["proxy3", "proxy4", "proxy1"]);
+        assert_eq!(names, vec!["proxy3", "proxy1", "proxy4"]);
 
         let group2_proxies = groups[1]
             .as_mapping()
@@ -300,6 +298,39 @@ proxy-groups:
             .expect("group proxies should be a sequence");
         let names: Vec<&str> = group2_proxies.iter().filter_map(Value::as_str).collect();
         assert_eq!(names, vec!["proxy1"]);
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn test_proxy_insertion_preserves_order_and_deduplicates() {
+        for (prepend, append, expected) in [
+            (
+                "[]",
+                "[{name: after1}, {name: after2}]",
+                vec!["original", "after1", "after2"],
+            ),
+            (
+                "[{name: before1}, {name: before2}]",
+                "[{name: before1}, {name: original}, {name: after1}, {name: after1}, {name: after2}]",
+                vec!["before1", "before2", "original", "after1", "after2"],
+            ),
+        ] {
+            let config = serde_yaml_ng::from_str("proxy-groups: [{name: main, type: select, proxies: [original]}]")
+                .expect("valid profile");
+            let seq = SeqMap {
+                prepend: serde_yaml_ng::from_str(prepend).expect("valid prepend proxies"),
+                append: serde_yaml_ng::from_str(append).expect("valid append proxies"),
+                delete: Vec::new(),
+            };
+            let result = use_seq(seq, config, "proxies");
+            let names: Vec<&str> = result["proxy-groups"][0]["proxies"]
+                .as_sequence()
+                .expect("group proxies should be a sequence")
+                .iter()
+                .filter_map(Value::as_str)
+                .collect();
+            assert_eq!(names, expected);
+        }
     }
 
     #[test]
