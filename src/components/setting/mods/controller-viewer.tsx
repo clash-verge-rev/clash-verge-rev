@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
+import { getRuntimeConfig } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
@@ -37,10 +38,17 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   // 对话框打开时初始化配置
   useImperativeHandle(ref, () => ({
     open: async () => {
-      setOpen(true)
-      setController(clashInfo?.server || '')
-      setSecret(clashInfo?.secret || '')
-      setEnableController(verge?.enable_external_controller ?? false)
+      try {
+        const runtimeConfig = await getRuntimeConfig()
+        setController(
+          runtimeConfig?.['external-controller'] || clashInfo?.server || '',
+        )
+        setSecret(clashInfo?.secret || '')
+        setEnableController(verge?.enable_external_controller ?? false)
+        setOpen(true)
+      } catch (err) {
+        showNotice.error(err)
+      }
     },
     close: () => setOpen(false),
   }))
