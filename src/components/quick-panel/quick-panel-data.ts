@@ -60,7 +60,7 @@ export function buildQuickGroups(
       const saved = favorites[favoriteScope(profile, group.name)]
       const preferred = saved ?? []
       for (const favorite of preferred) {
-        if (!nodes.some((node) => node.id === favorite.id))
+        if (favorite.id && !nodes.some((node) => node.id === favorite.id))
           nodes.push({ ...favorite, delay: null, available: false })
       }
       return {

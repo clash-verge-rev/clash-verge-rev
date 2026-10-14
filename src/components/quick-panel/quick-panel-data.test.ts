@@ -48,6 +48,18 @@ const view: ProxyViewV1_Serialize = {
 }
 
 describe('quick panel favorite identity', () => {
+  it('retains an empty card slot without adding an unavailable node', () => {
+    const original = buildQuickGroups(view, 'subscription-a', {})[0].nodes[0]
+    const group = buildQuickGroups(view, 'subscription-a', {
+      [favoriteScope('subscription-a', 'Proxy')]: [
+        { id: '', name: '', region: '' },
+        original,
+      ],
+    })[0]
+    expect(group.favorites).toEqual(['', original.id])
+    expect(group.nodes).toHaveLength(1)
+  })
+
   it('preserves a failed health check instead of treating it as untested', () => {
     const failed = structuredClone(view)
     failed.records['record-1'].history = [{ time: '2026-10-13', delay: 0 }]

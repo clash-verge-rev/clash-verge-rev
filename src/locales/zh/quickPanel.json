@@ -51,5 +51,8 @@
   "testing": "测速中…",
   "timeout": "超时",
   "testFailed": "检测失败",
-  "testHint": "检测常用节点的连通性与延迟"
+  "testHint": "检测常用节点的连通性与延迟",
+  "favoriteActions": "常用节点操作",
+  "replaceFavorite": "更换常用节点",
+  "removeFavorite": "移除常用节点"
 }

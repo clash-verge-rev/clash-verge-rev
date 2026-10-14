@@ -96,6 +96,7 @@ export function Preview() {
         </div>
       )}
       <QuickPanel
+        key={`${profile}:${group.id}`}
         testing={testing}
         onTest={() => {
           if (testing) return

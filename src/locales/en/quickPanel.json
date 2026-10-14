@@ -51,5 +51,8 @@
   "testing": "Testing…",
   "timeout": "Timed out",
   "testFailed": "Test failed",
-  "testHint": "Test favorite node connectivity and latency"
+  "testHint": "Test favorite node connectivity and latency",
+  "favoriteActions": "Favorite node actions",
+  "replaceFavorite": "Replace favorite",
+  "removeFavorite": "Remove favorite"
 }

@@ -624,6 +624,7 @@ export interface TranslationResources {
       download: string
       edit: string
       editFavorites: string
+      favoriteActions: string
       favorites: string
       global: string
       group: string
@@ -639,6 +640,8 @@ export interface TranslationResources {
       profile: string
       quit: string
       quitApp: string
+      removeFavorite: string
+      replaceFavorite: string
       replaceHint: string
       retry: string
       rule: string

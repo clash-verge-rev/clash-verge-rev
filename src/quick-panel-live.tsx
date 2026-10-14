@@ -273,6 +273,7 @@ export function LivePanel() {
         </p>
       )}
       <QuickPanel
+        key={scope}
         language={snapshot?.verge.language ?? 'zh'}
         systemProxy={snapshot?.systemProxy ?? false}
         disabled={!ready}
@@ -396,7 +397,14 @@ export function LivePanel() {
           const next = {
             ...favorites,
             [favoriteScope(profile, group.id)]: ids
-              .map((id) => group.nodes.find((node) => node.id === id)!)
+              .map(
+                (id) =>
+                  group.nodes.find((node) => node.id === id) ?? {
+                    id: '',
+                    name: '',
+                    region: '',
+                  },
+              )
               .map(({ id, name, region }) => ({ id, name, region })),
           }
           try {

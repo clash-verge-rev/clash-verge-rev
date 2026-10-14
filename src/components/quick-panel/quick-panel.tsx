@@ -3,11 +3,11 @@ import ArrowOutwardRounded from '@mui/icons-material/ArrowOutwardRounded'
 import ArrowUpwardRounded from '@mui/icons-material/ArrowUpwardRounded'
 import CheckRounded from '@mui/icons-material/CheckRounded'
 import CloseRounded from '@mui/icons-material/CloseRounded'
+import EditOutlined from '@mui/icons-material/EditOutlined'
 import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined'
 import LogoutRounded from '@mui/icons-material/LogoutRounded'
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined'
-import { useState } from 'react'
-
+import { useEffect, useRef, useState } from 'react'
 
 import logo from '@/assets/image/icon_light.svg'
 import enLabels from '@/locales/en/quickPanel.json'
@@ -99,6 +99,24 @@ export function QuickPanel({
   const labels = language === 'zh' ? zhLabels : enLabels
   const [editing, setEditing] = useState(false)
   const [showAll, setShowAll] = useState(false)
+  const [popup, setPopup] = useState<
+    | { kind: 'picker'; slot: number }
+    | { kind: 'menu'; slot: number; x: number; y: number }
+    | null
+  >(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  useEffect(() => {
+    const suppressMenu = (event: MouseEvent) => event.preventDefault()
+    document.addEventListener('contextmenu', suppressMenu)
+    return () => document.removeEventListener('contextmenu', suppressMenu)
+  }, [])
+  useEffect(() => {
+    if (popup) {
+      dialogRef.current?.showModal()
+      if (popup.kind === 'picker')
+        dialogRef.current?.querySelector<HTMLInputElement>('input')?.focus()
+    } else dialogRef.current?.close()
+  }, [popup])
   const [search, setSearch] = useState('')
   const selected = group.nodes.find((node) => node.id === group.selected)
   const nodes = group.favorites.map((id) =>
@@ -121,11 +139,16 @@ export function QuickPanel({
     }
   }
 
-  const toggleFavorite = (id: string) => {
-    const ids = group.favorites.includes(id)
-      ? group.favorites.filter((favorite) => favorite !== id)
-      : [...group.favorites, id]
-    if (ids.length <= 3) onFavorites(ids)
+  const chooseSlot = (slot: number) => {
+    setSearch('')
+    setPopup({ kind: 'picker', slot })
+  }
+  const replaceSlot = (slot: number, id: string) => {
+    const ids = [...group.favorites]
+    while (ids.length <= slot) ids.push('')
+    ids[slot] = id
+    onFavorites(ids)
+    setPopup(null)
   }
 
   return (
@@ -211,7 +234,7 @@ export function QuickPanel({
         <h2>{labels.favorites}</h2>
         <div className="qp-node-actions">
           <button
-            className="qp-text qp-test"
+            className="qp-action qp-test"
             title={labels.testHint}
             aria-label={labels.testHint}
             aria-busy={testing}
@@ -236,10 +259,9 @@ export function QuickPanel({
             {testing ? labels.testing : labels.test}
           </button>
           <button
-            className="qp-text"
-            data-unavailable={disabled}
-            disabled={busy || disabled}
-            aria-expanded={editing}
+            className="qp-action"
+            disabled={busy}
+            aria-pressed={editing}
             onClick={() => {
               setEditing(!editing)
               setShowAll(false)
@@ -253,50 +275,86 @@ export function QuickPanel({
         {[0, 1, 2].map((index) => {
           const node = nodes[index]
           const active = !direct && node?.id === group.selected
-          return node ? (
-            <button
-              className="qp-tile"
-              key={node.id}
-              aria-pressed={active}
-              data-unavailable={disabled || direct || node.available === false}
-              disabled={busy || disabled || direct || node.available === false}
-              title={node.name}
-              onClick={() => onNode(node.id)}
+          return (
+            <div
+              className="qp-tile-wrap"
+              key={index}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                if (!node || busy) return
+                setPopup({
+                  kind: 'menu',
+                  slot: index,
+                  x: Math.max(
+                    8,
+                    Math.min(event.clientX, window.innerWidth - 188),
+                  ),
+                  y: Math.max(
+                    8,
+                    Math.min(event.clientY, window.innerHeight - 104),
+                  ),
+                })
+              }}
             >
-              <span className="qp-region">
-                <LocationOnOutlined />
-                {node.region || labels.node}
-              </span>
-              <strong>{node.name}</strong>
-              <span
-                className="qp-delay"
-                data-state={classifyDelay(node.delay ?? -1, delayTimeout)}
-                aria-live="polite"
-              >
-                {delayText(node)}
-              </span>
-              <span className="qp-selected">
-                {active ? (
-                  <>
-                    <CheckRounded />
-                    {labels.selected}
-                  </>
-                ) : (
-                  '\u00a0'
-                )}
-              </span>
-            </button>
-          ) : (
-            <button
-              className="qp-tile qp-empty"
-              data-unavailable={disabled}
-              disabled={busy || disabled}
-              key={`empty-${index}`}
-              onClick={() => setEditing(true)}
-            >
-              <span>＋</span>
-              {disabled ? labels.nodePending : labels.addFavorite}
-            </button>
+              {node ? (
+                <button
+                  className="qp-tile"
+                  key={node.id}
+                  aria-pressed={active}
+                  data-unavailable={
+                    disabled || direct || node.available === false
+                  }
+                  disabled={
+                    busy ||
+                    (!editing &&
+                      (disabled || direct || node.available === false))
+                  }
+                  title={node.name}
+                  onClick={() =>
+                    editing ? chooseSlot(index) : onNode(node.id)
+                  }
+                >
+                  {editing && (
+                    <span className="qp-card-edit">
+                      <EditOutlined />
+                    </span>
+                  )}
+                  <span className="qp-region">
+                    <LocationOnOutlined />
+                    {node.region || labels.node}
+                  </span>
+                  <strong>{node.name}</strong>
+                  <span
+                    className="qp-delay"
+                    data-state={classifyDelay(node.delay ?? -1, delayTimeout)}
+                    aria-live="polite"
+                  >
+                    {delayText(node)}
+                  </span>
+                  <span className="qp-selected">
+                    {active ? (
+                      <>
+                        <CheckRounded />
+                        {labels.selected}
+                      </>
+                    ) : (
+                      '\u00a0'
+                    )}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  className="qp-tile qp-empty"
+                  data-unavailable={disabled}
+                  disabled={busy || disabled}
+                  key={`empty-${index}`}
+                  onClick={() => chooseSlot(index)}
+                >
+                  <span>＋</span>
+                  {disabled ? labels.nodePending : labels.addFavorite}
+                </button>
+              )}
+            </div>
           )
         })}
       </div>
@@ -345,17 +403,10 @@ export function QuickPanel({
         </button>
       </div>
 
-      {(editing || showAll) && (
-        <section
-          className="qp-picker"
-          aria-label={editing ? labels.editFavorites : labels.allNodes}
-        >
+      {showAll && (
+        <section className="qp-picker" aria-label={labels.allNodes}>
           <div className="qp-picker-heading">
-            <strong>
-              {editing
-                ? `${labels.chooseFavorites} (${group.favorites.length}/3)`
-                : labels.allNodes}
-            </strong>
+            <strong>{labels.allNodes}</strong>
             <button
               className="qp-icon"
               aria-label={labels.collapse}
@@ -383,37 +434,108 @@ export function QuickPanel({
                 <button
                   key={node.id}
                   disabled={
-                    busy ||
-                    disabled ||
-                    (editing
-                      ? !group.favorites.includes(node.id) &&
-                        (group.favorites.length === 3 ||
-                          node.available === false)
-                      : direct || node.available === false)
+                    busy || disabled || direct || node.available === false
                   }
-                  aria-pressed={
-                    editing
-                      ? group.favorites.includes(node.id)
-                      : group.selected === node.id
-                  }
-                  onClick={() =>
-                    editing ? toggleFavorite(node.id) : onNode(node.id)
-                  }
+                  aria-pressed={group.selected === node.id}
+                  onClick={() => onNode(node.id)}
                 >
                   <span>{node.name}</span>
                   <span>{delayText(node)}</span>
-                  {(editing
-                    ? group.favorites.includes(node.id)
-                    : group.selected === node.id) && <CheckRounded />}
+                  {group.selected === node.id && <CheckRounded />}
                 </button>
               ))}
             {!group.nodes.some((node) =>
               node.name.toLowerCase().includes(search.toLowerCase()),
             ) && <p>{labels.noMatch}</p>}
           </div>
-          {editing && <p className="qp-hint">{labels.replaceHint}</p>}
         </section>
       )}
+
+      <dialog
+        ref={dialogRef}
+        className={`qp-dialog ${popup?.kind === 'menu' ? 'qp-context-menu' : 'qp-slot-picker'}`}
+        aria-label={
+          popup?.kind === 'menu'
+            ? labels.favoriteActions
+            : labels.chooseFavorites
+        }
+        style={
+          popup?.kind === 'menu' ? { left: popup.x, top: popup.y } : undefined
+        }
+        onCancel={() => setPopup(null)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') event.stopPropagation()
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setPopup(null)
+        }}
+      >
+        {popup?.kind === 'menu' ? (
+          <div role="menu" aria-label={labels.favoriteActions}>
+            <button
+              role="menuitem"
+              disabled={disabled}
+              onClick={() => chooseSlot(popup.slot)}
+            >
+              {labels.replaceFavorite}
+            </button>
+            <button role="menuitem" onClick={() => replaceSlot(popup.slot, '')}>
+              {labels.removeFavorite}
+            </button>
+          </div>
+        ) : popup?.kind === 'picker' ? (
+          <>
+            <div className="qp-picker-heading">
+              <strong>{labels.chooseFavorites}</strong>
+              <button
+                className="qp-icon"
+                aria-label={labels.collapse}
+                onClick={() => setPopup(null)}
+              >
+                <CloseRounded />
+              </button>
+            </div>
+            <input
+              type="search"
+              placeholder={labels.search}
+              aria-label={labels.search}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <div className="qp-node-options">
+              {group.nodes
+                .filter(
+                  (node) =>
+                    node.available !== false &&
+                    (!group.favorites.includes(node.id) ||
+                      group.favorites[popup.slot] === node.id) &&
+                    node.name.toLowerCase().includes(search.toLowerCase()),
+                )
+                .map((node) => (
+                  <button
+                    key={node.id}
+                    disabled={busy || disabled}
+                    aria-pressed={group.favorites[popup.slot] === node.id}
+                    onClick={() => replaceSlot(popup.slot, node.id)}
+                  >
+                    <span>{node.name}</span>
+                    <span>{delayText(node)}</span>
+                    {group.favorites[popup.slot] === node.id && (
+                      <CheckRounded />
+                    )}
+                  </button>
+                ))}
+              {!group.nodes.some(
+                (node) =>
+                  node.available !== false &&
+                  (!group.favorites.includes(node.id) ||
+                    group.favorites[popup.slot] === node.id) &&
+                  node.name.toLowerCase().includes(search.toLowerCase()),
+              ) && <p>{labels.noMatch}</p>}
+            </div>
+          </>
+        ) : null}
+      </dialog>
 
       <div className="qp-traffic">
         <div>

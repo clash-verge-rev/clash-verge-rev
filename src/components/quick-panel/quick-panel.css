@@ -583,7 +583,7 @@ html {
 .qp-node-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 .qp-test {
   min-width: 64px;
@@ -596,4 +596,97 @@ html {
 .qp-preview[data-theme="light"] .qp-delay[data-state="timeout"],
 .qp-preview[data-theme="light"] .qp-delay[data-state="error"] {
   color: #a52d37 !important;
+}
+
+.quick-panel .qp-action {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 54px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--qp-line);
+  border-radius: 8px;
+  background: var(--qp-surface);
+  color: var(--qp-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.qp-action:hover {
+  background: var(--qp-hover);
+}
+.qp-action[aria-pressed="true"] {
+  border-color: var(--qp-accent);
+  color: var(--qp-accent);
+}
+.qp-tile-wrap {
+  position: relative;
+  min-width: 0;
+}
+.qp-tile-wrap .qp-tile {
+  width: 100%;
+}
+.qp-card-edit {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  color: var(--qp-accent);
+}
+.qp-card-edit svg {
+  width: 16px;
+  height: 16px;
+}
+.qp-dialog {
+  color: var(--qp-ink);
+  background: var(--qp-bg);
+  border: 1px solid var(--qp-line);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px #0006;
+  padding: 16px;
+}
+.qp-dialog::backdrop {
+  background: #0006;
+}
+.qp-slot-picker {
+  width: min(448px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+}
+.qp-slot-picker input {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0;
+  padding: 10px;
+  border: 1px solid var(--qp-line);
+  border-radius: 8px;
+  color: var(--qp-ink);
+  background: var(--qp-surface);
+}
+.qp-slot-picker .qp-node-options {
+  max-height: 290px;
+  overflow-y: auto;
+}
+.qp-context-menu {
+  position: fixed;
+  margin: 0;
+  width: 180px;
+  padding: 5px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.qp-context-menu::backdrop {
+  background: transparent;
+}
+.qp-context-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--qp-ink);
+  text-align: left;
+  font-size: 12px;
+}
+.qp-context-menu button:hover {
+  background: var(--qp-hover);
 }
