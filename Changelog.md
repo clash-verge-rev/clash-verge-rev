@@ -15,6 +15,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增在主窗口按 `Esc` 关闭界面的功能，保留编辑、弹窗和全局快捷键的按键行为
 
 </details>
 

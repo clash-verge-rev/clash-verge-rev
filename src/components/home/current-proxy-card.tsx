@@ -281,6 +281,7 @@ const PersistentSelect = ({
       if (event.key === 'Tab') {
         onOpenChange(false)
       } else if (event.key === 'Escape') {
+        event.preventDefault()
         onOpenChange(false)
         anchorRef.current?.focus({ preventScroll: true })
       }

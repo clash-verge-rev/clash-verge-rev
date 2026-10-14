@@ -1,6 +1,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useVerge } from '@/hooks/use-verge'
 import debounce from '@/utils/debounce'
 
 import { WindowContext } from './window-context'
@@ -8,6 +9,10 @@ import { WindowContext } from './window-context'
 export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { verge } = useVerge()
+  const hasEscapeHotkey = verge?.hotkeys?.some((hotkey) =>
+    ['ESC', 'ESCAPE'].includes(hotkey.split(',')[1]?.trim().toUpperCase()),
+  )
   const currentWindow = useMemo(() => getCurrentWindow(), [])
   const [decorated, setDecorated] = useState<boolean | null>(null)
   const [maximized, setMaximized] = useState<boolean | null>(null)
@@ -22,6 +27,43 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
     await new Promise((resolve) => setTimeout(resolve, 10))
     await currentWindow.minimize()
   }, [currentWindow])
+
+  useEffect(() => {
+    if (!verge || hasEscapeHotkey) return
+
+    const closeFromEscape = (event: KeyboardEvent) => {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        event.repeat ||
+        event.isComposing ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.shiftKey ||
+        event.metaKey ||
+        !document.hasFocus()
+      ) {
+        return
+      }
+
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="dialog"], [role="menu"], [role="listbox"], .monaco-editor',
+        )
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      void close().catch((error) =>
+        console.warn('[WindowProvider] Failed to close window:', error),
+      )
+    }
+
+    window.addEventListener('keydown', closeFromEscape)
+    return () => window.removeEventListener('keydown', closeFromEscape)
+  }, [close, hasEscapeHotkey, verge])
 
   useEffect(() => {
     let isUnmounted = false
