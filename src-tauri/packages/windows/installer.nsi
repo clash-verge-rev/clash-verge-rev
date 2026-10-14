@@ -899,7 +899,13 @@ Section Install
     !insertmacro NSIS_HOOK_PREINSTALL
   !endif
 
-  nsExec::Exec 'netsh int tcp res'
+  ; `netsh int tcp res` restores the default TCP settings, which is what made BBR2 work again
+  ; on Windows 11 24H2 (see "fix: bbr2 not working in windows 11(24H2)"). It is a machine-wide
+  ; change though, so only do it on a fresh install - an auto-update should not rewrite the
+  ; user's TCP parameters on every release.
+  ${If} $UpdateMode <> 1
+    nsExec::Exec 'netsh int tcp res'
+  ${EndIf}
 
   !include "Win\RestartManager.nsh"
   !insertmacro CheckIfAppIsRunning "${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
