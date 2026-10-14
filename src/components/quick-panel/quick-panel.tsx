@@ -112,9 +112,11 @@ export function QuickPanel({
   }, [])
   useEffect(() => {
     if (popup) {
+      if (dialogRef.current) dialogRef.current.dataset.keyboard = 'false'
       dialogRef.current?.showModal()
       if (popup.kind === 'picker')
         dialogRef.current?.querySelector<HTMLInputElement>('input')?.focus()
+      else dialogRef.current?.focus()
     } else dialogRef.current?.close()
   }, [popup])
   const [search, setSearch] = useState('')
@@ -453,6 +455,7 @@ export function QuickPanel({
 
       <dialog
         ref={dialogRef}
+        tabIndex={-1}
         className={`qp-dialog ${popup?.kind === 'menu' ? 'qp-context-menu' : 'qp-slot-picker'}`}
         aria-label={
           popup?.kind === 'menu'
@@ -463,7 +466,11 @@ export function QuickPanel({
           popup?.kind === 'menu' ? { left: popup.x, top: popup.y } : undefined
         }
         onCancel={() => setPopup(null)}
+        onPointerDown={(event) => {
+          event.currentTarget.dataset.keyboard = 'false'
+        }}
         onKeyDown={(event) => {
+          if (event.key === 'Tab') event.currentTarget.dataset.keyboard = 'true'
           if (event.key === 'Escape') event.stopPropagation()
         }}
         onClick={(event) => {
