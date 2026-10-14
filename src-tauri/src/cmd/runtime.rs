@@ -103,9 +103,12 @@ pub async fn get_runtime_proxy_chain_config(
 pub async fn update_proxy_chain_config_in_runtime(
     proxy_chain_config: Option<crate::ipc::YamlValue>,
 ) -> CmdResult<crate::core::validate::ValidationOutcome> {
-    let proxy_chain_config = proxy_chain_config.map(|value| value.0);
+    let proxy_chain_config = proxy_chain_config
+        .map(|value| serde_yaml_ng::from_value::<Vec<std::string::String>>(value.0))
+        .transpose()
+        .stringify_err()?;
     CoreManager::global()
-        .update_runtime_config(|d| d.update_proxy_chain_config(proxy_chain_config))
+        .update_proxy_chain_config(proxy_chain_config)
         .await
         .stringify_err()
 }

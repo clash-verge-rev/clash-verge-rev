@@ -659,6 +659,7 @@ export type PrfItem_Deserialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  proxy_chain?: string[] | null
   latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated?: number | null
@@ -675,6 +676,7 @@ export type PrfItem_Serialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  proxy_chain?: string[] | null
   latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated: number | null

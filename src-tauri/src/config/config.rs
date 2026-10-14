@@ -236,6 +236,12 @@ impl Config {
     pub(crate) async fn generate_with_profiles(profiles: &IProfiles) -> Result<()> {
         let (mut config, exists_keys, logs, dns_override) = enhance::enhance(profiles).await?;
 
+        if let Some(current) = profiles.current.as_ref()
+            && let Some(chain) = profiles.get_item(current)?.proxy_chain.as_deref()
+        {
+            super::proxy_chain::apply_proxy_chain(&mut config, chain)?;
+        }
+
         resolve_provider_path_conflicts(&mut config, &dirs::app_home_dir()?)?;
         sanitize_tunnels_proxy(&mut config);
         // Apply only to generated core config so the saved choice survives the next launch.

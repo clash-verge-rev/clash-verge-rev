@@ -1072,6 +1072,27 @@ mod tests {
     use super::*;
     use tauri_plugin_mihomo::models::Proxy;
 
+    #[test]
+    fn manual_proxy_chain_survives_profile_reload_and_stays_profile_scoped() -> Result<()> {
+        let mut profiles: IProfiles = serde_yaml_ng::from_str(
+            "current: one\nitems:\n  - {uid: one, type: local}\n  - {uid: two, type: local}\n",
+        )?;
+        assert!(profiles.get_item("one")?.proxy_chain.is_none());
+        let chain = vec!["entry".to_owned(), "exit".to_owned()];
+        profiles.items.as_mut().context("profile items")?[0].proxy_chain = Some(chain.clone());
+        let saved = serde_yaml_ng::to_string(&profiles)?;
+        let mut restored: IProfiles = serde_yaml_ng::from_str(&saved)?;
+        assert_eq!(restored.get_item("one")?.proxy_chain.as_ref(), Some(&chain));
+        restored.current = Some("two".into());
+        assert!(restored.get_item("two")?.proxy_chain.is_none());
+        restored.current = Some("one".into());
+        assert_eq!(restored.get_item("one")?.proxy_chain.as_ref(), Some(&chain));
+        restored.items.as_mut().context("profile items")?[0].proxy_chain = None;
+        let disconnected: IProfiles = serde_yaml_ng::from_str(&serde_yaml_ng::to_string(&restored)?)?;
+        assert!(disconnected.get_item("one")?.proxy_chain.is_none());
+        Ok(())
+    }
+
     fn deletion_item(uid: &str, kind: &str, file: &str, merge: Option<&str>) -> PrfItem {
         PrfItem {
             uid: Some(uid.into()),
