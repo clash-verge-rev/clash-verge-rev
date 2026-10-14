@@ -10,6 +10,12 @@ use std::{sync::Arc, time::Duration};
 use sysproxy::Sysproxy;
 use tauri::Url;
 
+/// Upper bound for text bodies fetched through [`NetworkManager::get`].
+///
+/// Subscription endpoints are user-controlled and can be arbitrarily large, so the body is read as a
+/// stream and rejected once it grows past this limit instead of being buffered without bound.
+const MAX_TEXT_RESPONSE_BYTES: usize = 16 * 1024 * 1024;
+
 #[derive(Debug)]
 pub struct HttpResponse {
     status: StatusCode,
@@ -199,7 +205,7 @@ impl NetworkManager {
             request_builder = request_builder.header(key, value);
         }
 
-        let response = match request_builder.send().await {
+        let mut response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
                 return Err(Self::context_reqwest_error(e, "Request failed"));
@@ -208,11 +214,9 @@ impl NetworkManager {
 
         let status = response.status();
         let headers = response.headers().to_owned();
-        let body = match response.text().await {
-            Ok(text) => text.into(),
-            Err(e) => {
-                return Err(Self::context_reqwest_error(e, "Failed to read response body"));
-            }
+        let body = match Self::read_text_body(&mut response, MAX_TEXT_RESPONSE_BYTES).await {
+            Ok(text) => text,
+            Err(e) => return Err(e),
         };
 
         Ok(HttpResponse::new(status, headers, body))
@@ -292,6 +296,25 @@ impl NetworkManager {
                 }),
             Err(err) => Err(err),
         }
+    }
+
+    /// Reads a text body while enforcing a hard upper bound on its size.
+    ///
+    /// The body is consumed through [`reqwest::Response::chunk`], so the limit applies to the bytes we
+    /// actually buffer (including decompressed ones), and a compressed response cannot expand without bound.
+    async fn read_text_body(response: &mut reqwest::Response, max_bytes: usize) -> Result<String> {
+        let mut body = Vec::new();
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
+        {
+            if body.len() + chunk.len() > max_bytes {
+                anyhow::bail!("response exceeded the {max_bytes} byte limit");
+            }
+            body.extend_from_slice(&chunk);
+        }
+        Ok(std::string::String::from_utf8_lossy(&body).into())
     }
 
     async fn get_bytes_with_tls_mode(
