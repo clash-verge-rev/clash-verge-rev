@@ -32,6 +32,12 @@ impl IClashTemp {
                     }
                 }
 
+                if let Some(Value::Mapping(tun)) = map.get_mut("tun")
+                    && matches!(tun.get("mtu"), None | Some(Value::Null))
+                {
+                    tun.insert("mtu".into(), 1500.into());
+                }
+
                 // 确保 secret 字段存在且不为空
                 if let Some(val) = map.get_mut("secret")
                     && let Value::String(s) = val
