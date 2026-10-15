@@ -60,7 +60,13 @@ export const SettingItem: React.FC<ItemProps> = ({
       </ListItemButton>
     </ListItem>
   ) : (
-    <ListItem sx={{ pt: '5px', pb: '5px' }}>
+    <ListItem
+      sx={{
+        pt: '5px',
+        pb: '5px',
+        '&:hover': { bgcolor: 'action.hover' },
+      }}
+    >
       <ListItemText primary={primary} secondary={secondary} />
       {children}
     </ListItem>
