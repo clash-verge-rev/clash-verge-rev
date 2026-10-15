@@ -10,6 +10,34 @@ use tauri::{AppHandle, Manager as _, ipc::Channel};
 
 #[tauri::command]
 #[specta::specta]
+pub async fn quick_panel_state(app: AppHandle, height: Option<f64>, close: bool) -> CmdResult<bool> {
+    #[cfg(target_os = "macos")]
+    return crate::utils::quick_panel::state(&app, crate::core::tray::TRAY_ID, height, close).stringify_err();
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = (app, height, close);
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn open_quick_panel_dashboard(route: std::string::String) -> CmdResult<()> {
+    if !matches!(route.as_str(), "/" | "/proxies" | "/settings") {
+        return Err("Unsupported dashboard route".into());
+    }
+    if !crate::core::lightweight::exit_lightweight_mode().await {
+        crate::utils::window_manager::WindowManager::show_main_window().await;
+    }
+    let window = crate::utils::window_manager::WindowManager::get_main_window().ok_or("Main window is unavailable")?;
+    let url = window.url().stringify_err()?.join(&route).stringify_err()?;
+    window.navigate(url).stringify_err()?;
+    window.show().stringify_err()?;
+    window.set_focus().stringify_err()
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn open_app_dir() -> CmdResult<()> {
     let app_dir = dirs::app_home_dir().stringify_err()?;
     open::that(app_dir).stringify_err()

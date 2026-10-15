@@ -1,0 +1,14 @@
+{
+  "identifier": "quick-panel-capability",
+  "platforms": [
+    "macOS"
+  ],
+  "windows": [
+    "quick-panel"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "mihomo:default"
+  ]
+}

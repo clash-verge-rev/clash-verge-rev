@@ -16,7 +16,7 @@ import { mutate } from '@/services/mutate'
 import { debugLog } from '@/utils/debug'
 
 // 缓存连接清理
-const cleanupConnections = async (previousProxy: string) => {
+export const cleanupConnections = async (previousProxy: string) => {
   try {
     const { connections } = await getConnections()
     const cleanupPromises = (connections ?? [])

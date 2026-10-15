@@ -65,7 +65,7 @@ impl From<&str> for TrayAction {
         match s {
             "system_proxy" => Self::SystemProxy,
             "tun_mode" => Self::TunMode,
-            "main_window" => Self::MainWindow,
+            "main_window" | "quick_panel" => Self::MainWindow,
             "tray_menu" => Self::TrayMenu,
             _ => Self::Unknown,
         }

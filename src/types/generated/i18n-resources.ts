@@ -606,6 +606,64 @@ export interface TranslationResources {
         }
       }
     }
+    quickPanel: {
+      addFavorite: string
+      allNodes: string
+      applying: string
+      chooseFavorites: string
+      collapse: string
+      connecting: string
+      contextChanged: string
+      coreNotRunning: string
+      coreUnavailable: string
+      current: string
+      dashboard: string
+      direct: string
+      directHint: string
+      done: string
+      download: string
+      edit: string
+      editFavorites: string
+      favoriteActions: string
+      favorites: string
+      global: string
+      group: string
+      mode: string
+      node: string
+      nodePending: string
+      nodeUnavailable: string
+      noGroups: string
+      noMatch: string
+      noNode: string
+      notConnected: string
+      panel: string
+      profile: string
+      quit: string
+      quitApp: string
+      removeFavorite: string
+      replaceFavorite: string
+      replaceHint: string
+      retry: string
+      rule: string
+      search: string
+      selected: string
+      settings: string
+      stateUnavailable: string
+      storageError: string
+      systemHint: string
+      systemProxy: string
+      test: string
+      testFailed: string
+      testHint: string
+      testing: string
+      timeout: string
+      tun: string
+      tunHint: string
+      tunUnavailable: string
+      unavailable: string
+      untested: string
+      upload: string
+    }
     rules: {
       feedback: {
         notifications: {

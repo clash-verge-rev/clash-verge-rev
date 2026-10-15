@@ -520,6 +520,8 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
+        #[cfg(target_os = "macos")]
+        tray.with_inner_tray_icon(|inner| inner.set_show_menu_on_right_click(false))?;
         tray.on_tray_icon_event(on_tray_icon_event);
         tray.on_menu_event(on_menu_event);
         Ok(())
@@ -1067,6 +1069,17 @@ async fn create_tray_menu(
 }
 
 fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
+    #[cfg(target_os = "macos")]
+    if quick_panel_click_position(&tray_event).is_some() {
+        if !Tray::global().should_handle_tray_click() {
+            return;
+        }
+        AsyncHandler::spawn(move || async move {
+            logging_error!(Type::Tray, crate::utils::quick_panel::toggle());
+        });
+        return;
+    }
+
     let refresh_proxies = match tray_event {
         TrayIconEvent::Enter { .. } => Tray::global().proxy_hover_limiter.check(),
         TrayIconEvent::Click {
@@ -1125,6 +1138,46 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
                 }
             };
         });
+    }
+}
+
+#[cfg(target_os = "macos")]
+const fn quick_panel_click_position(event: &TrayIconEvent) -> Option<tauri::PhysicalPosition<f64>> {
+    match event {
+        TrayIconEvent::Click {
+            button: MouseButton::Right,
+            button_state: MouseButtonState::Down,
+            position,
+            ..
+        } => Some(*position),
+        _ => None,
+    }
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod quick_panel_click_tests {
+    use super::*;
+
+    #[test]
+    fn only_right_button_down_opens_the_panel() {
+        for (button, state, opens) in [
+            (MouseButton::Right, MouseButtonState::Down, true),
+            (MouseButton::Right, MouseButtonState::Up, false),
+            (MouseButton::Left, MouseButtonState::Down, false),
+            (MouseButton::Left, MouseButtonState::Up, false),
+        ] {
+            let event = TrayIconEvent::Click {
+                id: TRAY_ID.into(),
+                position: tauri::PhysicalPosition::new(300.0, 12.0),
+                rect: tauri::Rect {
+                    position: tauri::PhysicalPosition::new(280, 0).into(),
+                    size: tauri::PhysicalSize::new(24, 24).into(),
+                },
+                button,
+                button_state: state,
+            };
+            assert_eq!(quick_panel_click_position(&event).is_some(), opens);
+        }
     }
 }
 

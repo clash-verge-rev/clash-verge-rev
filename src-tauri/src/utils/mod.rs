@@ -10,6 +10,8 @@ pub mod macos_launch_guard;
 pub(crate) mod network;
 pub use crate::core::notify::desktop as notification;
 pub mod port;
+#[cfg(target_os = "macos")]
+pub mod quick_panel;
 pub mod resolve;
 pub mod retry;
 #[cfg(target_os = "windows")]

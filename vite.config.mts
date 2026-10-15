@@ -26,6 +26,12 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     chunkSizeWarningLimit: 4000,
+    rollupOptions: {
+      input: {
+        main: path.resolve('src/index.html'),
+        quickPanel: path.resolve('src/quick-panel-live.html'),
+      },
+    },
   },
   resolve: {
     alias: {
