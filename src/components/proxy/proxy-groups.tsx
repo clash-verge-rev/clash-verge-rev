@@ -44,6 +44,7 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import type { HeadState } from './use-head-state'
 import {
   PROXY_GROUP_HEADER_SENSORS,
   useProxyGroupHeaderLayout,
@@ -90,17 +91,25 @@ function useProxyRenderState(
 ) {
   const { verge } = useVerge()
   const { proxyView } = useProxiesData()
-  const { renderList, onProxies, onHeadState } = useRenderList(
-    mode,
-    isChainMode,
-    activeSelectedGroup,
-  )
+  const {
+    renderList,
+    onProxies,
+    onHeadState: setListHeadState,
+  } = useRenderList(mode, isChainMode, activeSelectedGroup)
   const scrollPositionKey = useMemo(
     () =>
       isChainMode
         ? `${mode}:chain:${activeSelectedGroup ?? 'all'}`
         : `${mode}:normal`,
     [activeSelectedGroup, isChainMode, mode],
+  )
+
+  const onHeadState = useCallback(
+    (groupName: string, patch: Partial<HeadState>) => {
+      if (patch.open) onProxies()
+      setListHeadState(groupName, patch)
+    },
+    [onProxies, setListHeadState],
   )
 
   const timeout = verge?.default_latency_timeout || 10000
