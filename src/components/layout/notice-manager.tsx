@@ -128,6 +128,7 @@ const resolveNoticeMessage = (
   }
 
   if (i18n.key === SERVICE_PERMISSION_NOTICE) {
+    const reason = i18n.params?.reason
     return (
       <>
         {t(SERVICE_PERMISSION_NOTICE, {
@@ -152,6 +153,28 @@ const resolveNoticeMessage = (
             )}
           </Link>
         </Box>
+        {typeof reason === 'string' && reason !== '' && (
+          <Box component="details" sx={{ mt: 1 }}>
+            <Box component="summary" sx={{ cursor: 'pointer' }}>
+              {t('shared.feedback.errors.details')}
+            </Box>
+            <Box
+              component="pre"
+              sx={{
+                m: 0,
+                mt: 1,
+                maxHeight: 160,
+                overflow: 'auto',
+                whiteSpace: 'pre-wrap',
+                overflowWrap: 'anywhere',
+                userSelect: 'text',
+                fontSize: 'inherit',
+              }}
+            >
+              {reason}
+            </Box>
+          </Box>
+        )}
       </>
     )
   }
