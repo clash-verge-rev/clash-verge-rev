@@ -242,8 +242,7 @@ export const getIpInfo = async (): Promise<
         : extractErrorMessage(error)
     throw new Error(
       i18n.t(($) => $.home.components.ipInfo.errors.loadWithDetails, {
-        message:
-          reasons || i18n.t(($) => $.shared.feedback.errors.unknown),
+        message: reasons || i18n.t(($) => $.shared.feedback.errors.unknown),
       }),
     )
   }
