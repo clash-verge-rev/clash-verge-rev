@@ -238,12 +238,16 @@ export const getIpInfo = async (): Promise<
     console.error('[IP Info] All detection services failed:', error)
     const reasons =
       error instanceof AggregateError
-        ? error.errors.map(extractErrorMessage).filter(Boolean).join('; ')
+        ? error.errors
+            .map((e) => extractErrorMessage(e))
+            .filter(Boolean)
+            .join('; ')
         : extractErrorMessage(error)
     throw new Error(
       i18n.t(($) => $.home.components.ipInfo.errors.loadWithDetails, {
         message: reasons || i18n.t(($) => $.shared.feedback.errors.unknown),
       }),
+      { cause: error },
     )
   }
 }
