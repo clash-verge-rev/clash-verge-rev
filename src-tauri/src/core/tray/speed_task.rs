@@ -10,6 +10,9 @@ use tauri_plugin_mihomo::models::WsConnectionId;
 
 const TRAY_SPEED_RETRY_DELAY: Duration = Duration::from_secs(1);
 const TRAY_SPEED_STALE_TIMEOUT: Duration = Duration::from_secs(5);
+// 托盘速率渲染合并窗口：traffic 事件频率远高于肉眼可感知的更新频率，
+// 固定间隔内只渲染一次，避免每次事件都触发 setAttributedTitle 等系统调用。
+const TRAY_SPEED_UPDATE_INTERVAL: Duration = Duration::from_millis(500);
 
 #[derive(Clone)]
 pub struct TraySpeedController {
@@ -79,6 +82,10 @@ impl TraySpeedController {
 
                 Self::set_speed_connection_id(&speed_connection_id, Some(speed_stream.connection_id));
 
+                let mut last_render = tokio::time::Instant::now();
+                let mut latest_up = 0u64;
+                let mut latest_down = 0u64;
+
                 loop {
                     let next_state = speed_stream
                         .next_event(TRAY_SPEED_STALE_TIMEOUT, || handle::Handle::global().is_exiting())
@@ -86,7 +93,13 @@ impl TraySpeedController {
 
                     match next_state {
                         connections_stream::StreamConsumeState::Event(speed_event) => {
-                            Self::apply_tray_speed(speed_event.up, speed_event.down);
+                            // 合并高频事件：只保留最新速率，按固定间隔渲染
+                            latest_up = speed_event.up;
+                            latest_down = speed_event.down;
+                            if last_render.elapsed() >= TRAY_SPEED_UPDATE_INTERVAL {
+                                Self::apply_tray_speed(latest_up, latest_down);
+                                last_render = tokio::time::Instant::now();
+                            }
                         }
                         connections_stream::StreamConsumeState::Stale => {
                             logging!(debug, Type::Tray, "托盘速率流长时间未收到有效数据，触发重连");

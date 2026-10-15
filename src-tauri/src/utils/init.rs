@@ -14,7 +14,7 @@ use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 use std::path::Path;
-use std::{path::PathBuf, str::FromStr as _};
+use std::{path::PathBuf, str::FromStr as _, time::Duration};
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
@@ -624,15 +624,27 @@ pub async fn startup_script() -> Result<()> {
     let parent_dir = script_dir.parent();
     let working_dir = parent_dir.unwrap_or_else(|| script_dir.as_ref());
 
-    app_handle
-        .shell()
-        .command(shell_type)
-        .current_dir(working_dir)
-        .args([script_path.as_str()])
-        .output()
-        .await?;
+    // 用户启动脚本可能挂起（如等待输入的网络命令），加超时防止拖死应用启动。
+    const STARTUP_SCRIPT_TIMEOUT: Duration = Duration::from_secs(15);
+    let output = tokio::time::timeout(
+        STARTUP_SCRIPT_TIMEOUT,
+        app_handle
+            .shell()
+            .command(shell_type)
+            .current_dir(working_dir)
+            .args([script_path.as_str()])
+            .output(),
+    )
+    .await;
 
-    Ok(())
+    match output {
+        Ok(Ok(_)) => Ok(()),
+        Ok(Err(err)) => Err(anyhow::anyhow!("startup script failed: {err}")),
+        Err(_) => Err(anyhow::anyhow!(
+            "startup script timed out after {}s",
+            STARTUP_SCRIPT_TIMEOUT.as_secs()
+        )),
+    }
 }
 
 async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
