@@ -65,7 +65,7 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
       region: data.region || '',
       city: data.city || '',
       organization: data.org || '',
-      asn: data.asn ? parseInt(data.asn.replace('AS', '')) : 0,
+      asn: data.asn ? parseInt(data.asn.replace('AS', ''), 10) : 0,
       asn_organization: data.org || '',
       longitude: data.longitude || 0,
       latitude: data.latitude || 0,
@@ -205,7 +205,7 @@ export const getIpInfo = async (): Promise<
             return bail(new Error(`无法解析 JSON 响应 from ${service.url}`))
           }
 
-          if (data && data.ip) {
+          if (data?.ip) {
             debugLog(`IP检测成功，使用服务: ${service.url}`)
             return Object.assign(service.mapping(data), {
               // use last fetch success timestamp
