@@ -138,10 +138,21 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
   },
 ]
 
+// 结果缓存：10 分钟内不重复发起 IP 检测请求（并发后请求量更大，缓存兜底限流）
+const IP_INFO_CACHE_TTL_MS = 10 * 60 * 1000
+let ipInfoCache: (IpInfo & { lastFetchTs: number }) | null = null
+
 // 获取当前IP和地理位置信息
 export const getIpInfo = async (): Promise<
   IpInfo & { lastFetchTs: number }
 > => {
+  if (
+    ipInfoCache &&
+    Date.now() - ipInfoCache.lastFetchTs < IP_INFO_CACHE_TTL_MS
+  ) {
+    return ipInfoCache
+  }
+
   // 配置参数
   const maxRetries = 2
   const serviceTimeout = 5000
@@ -149,11 +160,15 @@ export const getIpInfo = async (): Promise<
   const shuffledServices = IP_CHECK_SERVICES.slice().sort(
     () => Math.random() - 0.5,
   )
-  let lastError: unknown | null = null
+  if (shuffledServices.length === 0) {
+    throw new Error(i18n.t(($) => $.home.components.ipInfo.errors.noServices))
+  }
   const userAgent = await getUserAgentPromise()
   console.debug('User-Agent for IP detection:', userAgent)
 
-  for (const service of shuffledServices) {
+  // 所有服务并发发起（各自带重试），首个成功即返回；
+  // 相比串行逐个尝试，最坏耗时从 sum(6×(1+2)×5s) 收敛到单服务上限
+  const attempts = shuffledServices.map(async (service) => {
     debugLog(`尝试IP检测服务: ${service.url}`)
 
     const timeoutController = new AbortController()
@@ -209,22 +224,27 @@ export const getIpInfo = async (): Promise<
       )
     } catch (error) {
       debugLog(`IP检测服务失败: ${service.url}`, error)
-      lastError = error
+      throw error
     } finally {
       clearTimeout(timeoutId)
     }
-  }
+  })
 
-  if (lastError) {
-    console.error('[IP Info] All detection services failed:', lastError)
+  try {
+    const result = await Promise.any(attempts)
+    ipInfoCache = result
+    return result
+  } catch (error) {
+    console.error('[IP Info] All detection services failed:', error)
+    const reasons =
+      error instanceof AggregateError
+        ? error.errors.map(extractErrorMessage).filter(Boolean).join('; ')
+        : extractErrorMessage(error)
     throw new Error(
       i18n.t(($) => $.home.components.ipInfo.errors.loadWithDetails, {
         message:
-          extractErrorMessage(lastError) ||
-          i18n.t(($) => $.shared.feedback.errors.unknown),
+          reasons || i18n.t(($) => $.shared.feedback.errors.unknown),
       }),
     )
-  } else {
-    throw new Error(i18n.t(($) => $.home.components.ipInfo.errors.noServices))
   }
 }
