@@ -83,8 +83,8 @@ impl TraySpeedController {
                 Self::set_speed_connection_id(&speed_connection_id, Some(speed_stream.connection_id));
 
                 let mut last_render = tokio::time::Instant::now();
-                let mut latest_up = 0u64;
-                let mut latest_down = 0u64;
+                let mut latest_up: u64;
+                let mut latest_down: u64;
 
                 loop {
                     let next_state = speed_stream
