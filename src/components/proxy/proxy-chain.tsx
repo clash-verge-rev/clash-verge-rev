@@ -487,15 +487,12 @@ export const ProxyChain = ({
 
         localStorage.removeItem('proxy-chain-group')
         localStorage.removeItem('proxy-chain-exit-node')
-        localStorage.removeItem('proxy-chain-items')
 
         await mutate(() => closeAllConnections(), {
           id: 'close-all-connections',
           errorNotice: false,
         })
         await refreshProxy()
-
-        onUpdateChain([])
       } catch (error) {
         console.error('Failed to disconnect from proxy chain:', error)
         alert(t('proxies.page.chain.disconnectFailed'))
@@ -574,7 +571,6 @@ export const ProxyChain = ({
     mode,
     proxyView,
     selectedGroup,
-    onUpdateChain,
     recordSelection,
   ])
 
