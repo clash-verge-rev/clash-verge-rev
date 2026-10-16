@@ -54,6 +54,7 @@ log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
+granit-parser = "1.2.1"
 smartstring = { workspace = true, features = ["serde"] }
 bitflags = { workspace = true }
 socket2 = { workspace = true }
