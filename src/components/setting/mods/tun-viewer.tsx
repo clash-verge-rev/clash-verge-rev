@@ -22,7 +22,11 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
-import { getNetworkInterfacesInfo, patchTunSettings } from '@/services/cmds'
+import {
+  getNetworkInterfacesInfo,
+  patchTunSettings,
+  type TunInterfacePatch,
+} from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import { revalidateQueries } from '@/services/query-client'
@@ -50,6 +54,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   >(null)
   const [interfacesLoading, setInterfacesLoading] = useState(false)
   const [interfacesError, setInterfacesError] = useState(false)
+  const [interfaceChanged, setInterfaceChanged] = useState(false)
   const [values, setValues] = useState({
     stack: 'mips',
     device: OS === 'macos' ? 'utun1024' : 'Mihomo',
@@ -106,10 +111,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const applySettings = async (
     tun: IConfigData['tun'],
-    interfaceName: string | null,
+    interfacePatch: TunInterfacePatch,
   ) => {
     try {
-      await mutate(() => patchTunSettings(tun, interfaceName), {
+      await mutate(() => patchTunSettings(tun, interfacePatch), {
         id: 'patch-tun-settings',
         errorNotice: false,
       })
@@ -124,6 +129,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true)
+      setInterfaceChanged(false)
       void fetchNetworkInterfaces()
       const nextAutoRoute = clash?.tun['auto-route'] ?? true
       const rawAutoRedirect = clash?.tun['auto-redirect'] ?? false
@@ -166,9 +172,11 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         return
       }
 
-      const interfaceName = values.lockOutboundInterface
-        ? values.interfaceName
-        : null
+      const interfacePatch: TunInterfacePatch = !interfaceChanged
+        ? { action: 'unchanged' }
+        : values.lockOutboundInterface
+          ? { action: 'set', name: values.interfaceName }
+          : { action: 'clear' }
       const tun: IConfigData['tun'] = {
         stack: values.stack,
         device:
@@ -191,7 +199,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         'strict-route': values.strictRoute,
         mtu: values.mtu ?? 1500,
       }
-      await applySettings(tun, interfaceName)
+      await applySettings(tun, interfacePatch)
       setOpen(false)
       showNotice.success('settings.modals.tun.messages.applied')
     } catch (err: any) {
@@ -224,6 +232,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 'strict-route': false,
                 mtu: 1500,
               }
+              setInterfaceChanged(true)
               setValues({
                 stack: 'mips',
                 device: OS === 'macos' ? 'utun1024' : 'Mihomo',
@@ -238,7 +247,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 mtu: 1500,
               })
               try {
-                await applySettings(tun, null)
+                await applySettings(tun, { action: 'clear' })
               } catch (err: any) {
                 showNotice.error(err)
               }
@@ -387,6 +396,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   },
                 }}
                 onChange={(e) => {
+                  setInterfaceChanged(true)
                   setValues((v) => ({ ...v, interfaceName: e.target.value }))
                 }}
               >
@@ -425,6 +435,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               edge="end"
               checked={values.lockOutboundInterface}
               onChange={(_, c) => {
+                setInterfaceChanged(true)
                 setValues((v) => ({
                   ...v,
                   lockOutboundInterface: c,

@@ -118,6 +118,33 @@ pub(crate) fn active_service_session() -> Result<OwnerSessionProof> {
         .context("service owner session is not active")
 }
 
+#[cfg(target_os = "windows")]
+pub(crate) async fn retained_service_core_is_running(session: &OwnerSessionProof) -> bool {
+    if !active_service_session().is_ok_and(|active| active == *session) {
+        return false;
+    }
+    let Ok(credentials) = current_owner_credentials() else {
+        return false;
+    };
+    let Ok(response) = clash_verge_service_ipc::get_status(&credentials).await else {
+        return false;
+    };
+    response.code == 0
+        && response
+            .data
+            .is_some_and(|status| service_session_has_running_core(session, &status))
+        && active_service_session().is_ok_and(|active| active == *session)
+}
+
+#[cfg(any(target_os = "windows", test))]
+fn service_session_has_running_core(session: &OwnerSessionProof, status: &ServiceStatusSnapshot) -> bool {
+    session_matches_status(session, status.is_active, status.active_generation)
+        && status.desired_core_should_be_running
+        && status.service_state == clash_verge_service_ipc::ServiceLifecycleState::Running
+        && status.core_pid.is_some()
+        && status.tun_guard_error.is_none()
+}
+
 /// Returns false unless the active service session explicitly supports in-place staging.
 pub(crate) fn active_service_supports_runtime_staging() -> bool {
     ACTIVE_SERVICE_SESSION
@@ -911,6 +938,49 @@ impl std::fmt::Display for ServiceStartRefusal {
 
 impl std::error::Error for ServiceStartRefusal {}
 
+#[derive(Debug)]
+pub(super) enum ServiceStartOutcome {
+    NotSent,
+    Uncertain,
+}
+
+impl std::fmt::Display for ServiceStartOutcome {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(match self {
+            Self::NotSent => "the service start request was not sent",
+            Self::Uncertain => "a service start request has an unconfirmed outcome",
+        })
+    }
+}
+
+impl std::error::Error for ServiceStartOutcome {}
+
+fn service_start_request_error(error: anyhow::Error, guard_requested: bool) -> anyhow::Error {
+    let outcome = if error
+        .downcast_ref::<clash_verge_service_ipc::StartClashNotSent>()
+        .is_some()
+    {
+        ServiceStartOutcome::NotSent
+    } else {
+        ServiceStartOutcome::Uncertain
+    };
+    let error = if guard_requested {
+        error.context(crate::core::tun_guard::GuardFailure::Preparation)
+    } else {
+        error
+    };
+    error.context(outcome).context("无法连接到Clash Verge Service")
+}
+
+#[cfg(any(target_os = "windows", test))]
+pub(super) fn service_start_outcome_is_uncertain(error: &anyhow::Error) -> bool {
+    match error.downcast_ref::<ServiceStartOutcome>() {
+        Some(ServiceStartOutcome::NotSent) => false,
+        Some(ServiceStartOutcome::Uncertain) => true,
+        None => error.downcast_ref::<ServiceStartRefusal>().is_none(),
+    }
+}
+
 fn record_service_start_refusal<E: RunStateEnv>(
     store: &RunStateStore<E>,
     refusal: ServiceStartRefusal,
@@ -934,38 +1004,40 @@ pub(super) fn record_residual_service(error: &anyhow::Error) {
 /// 尝试使用服务启动core
 #[tracing::instrument(skip_all, level = "info", fields(generation = tracing::field::Empty, staging = tracing::field::Empty, code = tracing::field::Empty, outcome = tracing::field::Empty))]
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
-    let credentials = current_owner_credentials()?;
-    let runtime = collect_service_runtime_bundle(config_file).await?;
-    #[cfg(target_os = "windows")]
-    let tun_guard = CoreManager::global()
-        .tun_guard_selection(&runtime.yaml)
-        .await
-        .map_err(|error| error.context(crate::core::tun_guard::GuardFailure::Preparation))?
-        .map(|interface_name| clash_verge_service_ipc::TunGuardConfig {
-            interface_name: interface_name.into(),
-        });
-    #[cfg(not(target_os = "windows"))]
-    let tun_guard = None;
-    let guard_requested = tun_guard.is_some();
-    let proposed_session_token = generate_service_session_token()?;
-    let request = StartClashRequest {
-        runtime,
-        proposed_session_token: proposed_session_token.clone(),
-        macos_proxy: None,
-        tun_guard,
-    };
+    let (credentials, request) = async {
+        let credentials = current_owner_credentials()?;
+        let runtime = collect_service_runtime_bundle(config_file).await?;
+        #[cfg(target_os = "windows")]
+        let tun_guard = CoreManager::global()
+            .tun_guard_selection(&runtime.yaml)
+            .await
+            .map_err(|error| error.context(crate::core::tun_guard::GuardFailure::Preparation))?
+            .map(|interface_name| clash_verge_service_ipc::TunGuardConfig {
+                interface_name: interface_name.into(),
+            });
+        #[cfg(not(target_os = "windows"))]
+        let tun_guard = None;
+        let proposed_session_token = generate_service_session_token()?;
+        Ok::<_, anyhow::Error>((
+            credentials,
+            StartClashRequest {
+                runtime,
+                proposed_session_token,
+                macos_proxy: None,
+                tun_guard,
+            },
+        ))
+    }
+    .await
+    .context(ServiceStartOutcome::NotSent)?;
+    let guard_requested = request.tun_guard.is_some();
 
     let response = match clash_verge_service_ipc::start_clash(&credentials, &request).await {
         Ok(response) => response,
         Err(error) => {
             tracing::Span::current().record("outcome", "ipc-unreachable");
             start_owner_monitor();
-            return Err(if guard_requested {
-                error.context(crate::core::tun_guard::GuardFailure::Preparation)
-            } else {
-                error
-            })
-            .context("无法连接到Clash Verge Service");
+            return Err(service_start_request_error(error, guard_requested));
         }
     };
 
@@ -990,39 +1062,43 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             Handle::notice(NoticeStatus::ServiceCoreAppDataNotOwned, "");
         }
         start_owner_monitor();
-        if response.code == ServiceErrorCode::TunGuardInterfaceUnavailable as u16 {
-            let name = request
-                .tun_guard
-                .as_ref()
-                .map_or("", |guard| guard.interface_name.as_str());
-            return Err(anyhow::Error::new(crate::core::tun_guard::InterfaceUnavailable {
-                name: name.to_owned(),
-                reason: crate::core::tun_guard::InterfaceUnavailableReason::Disconnected,
-            })
-            .context(err_msg)
-            .context(crate::core::tun_guard::GuardFailure::Preparation));
-        }
-        if response.code == ServiceErrorCode::TunGuardFailed as u16 {
-            return Err(anyhow!("{err_msg}").context(crate::core::tun_guard::GuardFailure::Preparation));
-        }
-        return Err(record_service_start_refusal(
+        let refusal = record_service_start_refusal(
             &RUN_STATE,
             ServiceStartRefusal {
                 code: response.code,
                 core_path: request.runtime.core_path,
                 message: err_msg,
             },
-        ));
+        );
+        if response.code == ServiceErrorCode::TunGuardInterfaceUnavailable as u16 {
+            let name = request
+                .tun_guard
+                .as_ref()
+                .map_or("", |guard| guard.interface_name.as_str());
+            return Err(refusal
+                .context(crate::core::tun_guard::InterfaceUnavailable {
+                    name: name.to_owned(),
+                    reason: crate::core::tun_guard::InterfaceUnavailableReason::Disconnected,
+                })
+                .context(crate::core::tun_guard::GuardFailure::Preparation));
+        }
+        if response.code == ServiceErrorCode::TunGuardFailed as u16 {
+            return Err(refusal.context(crate::core::tun_guard::GuardFailure::Preparation));
+        }
+        return Err(refusal);
     }
 
-    let result = response.data.context("Clash Verge Service 未返回会话信息")?;
+    let result = response
+        .data
+        .context("Clash Verge Service 未返回会话信息")
+        .context(ServiceStartOutcome::Uncertain)?;
     tracing::Span::current().record("generation", result.session.generation);
     let capabilities = probe_service_capabilities().await;
     tracing::Span::current().record("staging", capabilities.runtime_staging);
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
         proof: OwnerSessionProof {
             generation: result.session.generation,
-            token: proposed_session_token,
+            token: request.proposed_session_token,
         },
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
@@ -1046,11 +1122,11 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
 
 // 以服务启动core
 pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
-    SERVICE_MANAGER.refresh().await?;
+    SERVICE_MANAGER.refresh().await.context(ServiceStartOutcome::NotSent)?;
 
     let status = SERVICE_MANAGER.current().await;
     if !matches!(status, ServiceStatus::Ready) {
-        bail!("service is not ready after refresh: {status:?}");
+        return Err(anyhow!("service is not ready after refresh: {status:?}").context(ServiceStartOutcome::NotSent));
     }
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
@@ -2380,6 +2456,79 @@ mod tests {
         assert!(session_matches_status(&proof, true, Some(7)));
         assert!(!session_matches_status(&proof, true, Some(8)));
         assert!(!session_matches_status(&proof, false, Some(7)));
+    }
+
+    #[test]
+    fn retained_service_proxy_requires_the_same_healthy_generation() {
+        use clash_verge_service_ipc::{ServiceLifecycleState, ServiceStatusSnapshot};
+
+        let proof = OwnerSessionProof {
+            generation: 7,
+            token: "11".repeat(32),
+        };
+        let mut status = ServiceStatusSnapshot {
+            is_active: true,
+            active_generation: Some(7),
+            service_state: ServiceLifecycleState::Running,
+            core_pid: Some(42),
+            core_started_at: None,
+            last_core_exit_reason: None,
+            restart_count: 0,
+            last_recovery_at: None,
+            desired_core_should_be_running: true,
+            desired_generation: 7,
+            desired_updated_at: 0,
+            tun_guard_error: None,
+        };
+        assert!(super::service_session_has_running_core(&proof, &status));
+        for (active, generation, state, pid, desired_running) in [
+            (false, Some(7), ServiceLifecycleState::Running, Some(42), true),
+            (true, Some(8), ServiceLifecycleState::Running, Some(42), true),
+            (true, None, ServiceLifecycleState::Running, Some(42), true),
+            (true, Some(7), ServiceLifecycleState::RecoveringCore, Some(42), true),
+            (true, Some(7), ServiceLifecycleState::Running, None, true),
+            (true, Some(7), ServiceLifecycleState::Running, Some(42), false),
+        ] {
+            status.is_active = active;
+            status.active_generation = generation;
+            status.service_state = state;
+            status.core_pid = pid;
+            status.desired_core_should_be_running = desired_running;
+            assert!(!super::service_session_has_running_core(&proof, &status));
+        }
+    }
+
+    #[test]
+    fn a_confirmed_refusal_cannot_hide_an_uncertain_start_attempt() {
+        let refusal = super::ServiceStartRefusal {
+            code: clash_verge_service_ipc::ServiceErrorCode::TunGuardInterfaceUnavailable as u16,
+            core_path: "verge-mihomo.exe".into(),
+            message: "selected adapter is disconnected".into(),
+        };
+        let error = anyhow::Error::new(refusal).context(crate::core::tun_guard::GuardFailure::Preparation);
+        assert!(!super::service_start_outcome_is_uncertain(&error));
+        assert!(super::service_start_outcome_is_uncertain(
+            &error.context(super::ServiceStartOutcome::Uncertain)
+        ));
+        assert!(!super::service_start_outcome_is_uncertain(
+            &anyhow::anyhow!("invalid runtime bundle").context(super::ServiceStartOutcome::NotSent)
+        ));
+        assert!(super::service_start_outcome_is_uncertain(&anyhow::anyhow!(
+            "IPC timeout"
+        )));
+        let before_send = super::service_start_request_error(
+            anyhow::anyhow!("service capability check failed").context(clash_verge_service_ipc::StartClashNotSent),
+            true,
+        );
+        assert!(!super::service_start_outcome_is_uncertain(&before_send));
+        assert!(
+            before_send
+                .downcast_ref::<crate::core::tun_guard::GuardFailure>()
+                .is_some()
+        );
+        assert!(super::service_start_outcome_is_uncertain(
+            &super::service_start_request_error(anyhow::anyhow!("IPC timeout"), true)
+        ));
     }
 
     #[test]

@@ -344,6 +344,26 @@ where
     run_ready_core_start_transition(start_core, core_is_ready, restore_proxy).await
 }
 
+#[cfg(any(target_os = "windows", test))]
+async fn restore_proxy_after_retained_service_failure<Confirm, ConfirmFuture, Restore, RestoreFuture>(
+    error: anyhow::Error,
+    confirm_retained_core: Confirm,
+    restore_proxy: Restore,
+) -> Result<()>
+where
+    Confirm: FnOnce() -> ConfirmFuture,
+    ConfirmFuture: std::future::Future<Output = bool>,
+    Restore: FnOnce() -> RestoreFuture,
+    RestoreFuture: std::future::Future<Output = Result<()>>,
+{
+    if confirm_retained_core().await
+        && let Err(rollback) = restore_proxy().await
+    {
+        return Err(proxy_control::rollback_failure(error, rollback));
+    }
+    Err(error)
+}
+
 pub(super) async fn run_core_replacement_transition<Stop, StopFuture, Start, StartFuture, Restore, RestoreFuture>(
     stop_core: Stop,
     start_core: Start,
@@ -400,6 +420,7 @@ fn report_sidecar_failure(error: anyhow::Error, service_rejection: Option<&str>)
 }
 
 impl CoreManager {
+    #[cfg(target_os = "windows")]
     pub(crate) async fn tun_guard_selection(&self, yaml: &str) -> Result<Option<String>> {
         #[cfg(target_os = "windows")]
         {
@@ -421,11 +442,11 @@ impl CoreManager {
             }
             Ok(interface.map(String::from))
         }
-        #[cfg(not(target_os = "windows"))]
-        {
-            let _ = yaml;
-            Ok(None)
-        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn tun_guard_selection(&self, _yaml: &str) -> std::future::Ready<Result<Option<String>>> {
+        std::future::ready(Ok(None))
     }
 
     pub(super) async fn prepare_tun_guard(&self, yaml: &str) -> Result<tun_guard::GuardTransaction> {
@@ -452,6 +473,7 @@ impl CoreManager {
         }
     }
 
+    #[cfg(target_os = "windows")]
     pub(super) async fn rollback_tun_guard(&self, transaction: tun_guard::GuardTransaction) {
         #[cfg(target_os = "windows")]
         let _execution = match clash_verge_service_ipc::execution::reserve_sidecar().await {
@@ -467,6 +489,14 @@ impl CoreManager {
         }
     }
 
+    #[cfg(not(target_os = "windows"))]
+    pub(super) fn rollback_tun_guard(&self, transaction: tun_guard::GuardTransaction) -> std::future::Ready<()> {
+        if let Err(error) = transaction.rollback() {
+            Self::report_tun_guard_restore_failure(error);
+        }
+        std::future::ready(())
+    }
+
     pub(crate) fn defer_tun_guard_restore(&self) {
         self.tun_guard_restore_deferred.store(true, Ordering::Release);
     }
@@ -475,6 +505,7 @@ impl CoreManager {
         self.tun_guard_restore_deferred.store(false, Ordering::Release);
     }
 
+    #[cfg(target_os = "windows")]
     pub(crate) async fn restore_tun_guard(&self, stop_confirmed: bool) {
         if !can_restore_tun_guard(
             stop_confirmed,
@@ -498,6 +529,20 @@ impl CoreManager {
         if let Err(error) = tun_guard::restore() {
             Self::report_tun_guard_restore_failure(error);
         }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub(crate) fn restore_tun_guard(&self, stop_confirmed: bool) -> std::future::Ready<()> {
+        if can_restore_tun_guard(
+            stop_confirmed,
+            *self.get_running_mode(),
+            self.tun_guard_restore_deferred.load(Ordering::Acquire),
+        ) && tun_guard::has_owned_guard()
+            && let Err(error) = tun_guard::restore()
+        {
+            Self::report_tun_guard_restore_failure(error);
+        }
+        std::future::ready(())
     }
 
     fn report_tun_guard_restore_failure(error: anyhow::Error) {
@@ -770,8 +815,24 @@ impl CoreManager {
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
         #[cfg(target_os = "windows")]
         {
+            let previous_session = crate::core::service::active_service_session().ok();
             proxy_control::clear().await?;
-            self.start_core_by_service_with_config(config_file).await?;
+            if let Err(error) = self.start_core_by_service_with_config(config_file).await {
+                let outcome_confirmed = !crate::core::service::service_start_outcome_is_uncertain(&error);
+                return restore_proxy_after_retained_service_failure(
+                    error,
+                    || async {
+                        // Any unresolved attempt may still be replacing the authenticated old core.
+                        if outcome_confirmed && let Some(session) = previous_session {
+                            crate::core::service::retained_service_core_is_running(&session).await
+                        } else {
+                            false
+                        }
+                    },
+                    || self.apply_proxy_after_start(),
+                )
+                .await;
+            }
             return self.apply_proxy_after_start().await;
         }
         #[cfg(not(target_os = "windows"))]
@@ -1751,6 +1812,39 @@ mod tests {
         assert!(guard_stopped.load(Ordering::Acquire));
         assert!(!pac_available.load(Ordering::Acquire));
         assert!(!restored_new_core.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn rejected_service_replacement_restores_proxy_only_for_a_confirmed_retained_core() -> anyhow::Result<()> {
+        for retained in [false, true] {
+            let restored = AtomicBool::new(false);
+            let error = super::restore_proxy_after_retained_service_failure(
+                anyhow::anyhow!("selected adapter is disconnected"),
+                || async { retained },
+                || async {
+                    restored.store(true, Ordering::Release);
+                    Ok(())
+                },
+            )
+            .await
+            .err()
+            .ok_or_else(|| anyhow::anyhow!("the rejected replacement was not reported"))?;
+
+            assert_eq!(restored.load(Ordering::Acquire), retained);
+            assert!(format!("{error:#}").contains("selected adapter is disconnected"));
+        }
+        let error = super::restore_proxy_after_retained_service_failure(
+            anyhow::anyhow!("selected adapter is disconnected"),
+            || async { true },
+            || async { anyhow::bail!("proxy restore failed") },
+        )
+        .await
+        .err()
+        .ok_or_else(|| anyhow::anyhow!("the failed proxy restoration was not reported"))?;
+        let detail = format!("{error:#}");
+        assert!(detail.contains("selected adapter is disconnected"));
+        assert!(detail.contains("proxy restore failed"));
+        Ok(())
     }
 
     #[tokio::test]

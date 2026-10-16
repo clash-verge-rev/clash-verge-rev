@@ -1,6 +1,7 @@
 use crate::config::{Config, IVerge};
 use anyhow::{Result, bail};
 use clash_verge_draft::SharedDraft;
+use serde::Deserialize;
 use serde_yaml_ng::{Mapping, Value};
 use tokio::sync::MutexGuard;
 
@@ -14,25 +15,38 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
     .await
 }
 
-fn tun_settings_patch(mut tun: Mapping, interface_name: Option<&str>) -> Result<(Mapping, IVerge)> {
-    if let Some(name) = interface_name {
-        if name.trim().is_empty() {
-            bail!("a manual outbound interface must have a name");
-        }
-        tun.insert("auto-detect-interface".into(), false.into());
-    }
+#[derive(Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case")]
+pub enum TunInterfacePatch {
+    Unchanged,
+    Set { name: String },
+    Clear,
+}
+
+fn tun_settings_patch(mut tun: Mapping, interface_patch: TunInterfacePatch) -> Result<(Mapping, IVerge)> {
     let mut clash = Mapping::new();
+    let mut verge = IVerge::default();
+    match interface_patch {
+        TunInterfacePatch::Unchanged => {}
+        TunInterfacePatch::Set { name } => {
+            if name.trim().is_empty() {
+                bail!("a manual outbound interface must have a name");
+            }
+            tun.insert("auto-detect-interface".into(), false.into());
+            clash.insert("interface-name".into(), name.into());
+            verge.enable_tun_compatibility_guard = Some(cfg!(target_os = "windows"));
+        }
+        TunInterfacePatch::Clear => {
+            clash.insert("interface-name".into(), "".into());
+            verge.enable_tun_compatibility_guard = Some(false);
+        }
+    }
     clash.insert("tun".into(), Value::Mapping(tun));
-    clash.insert("interface-name".into(), interface_name.unwrap_or_default().into());
-    let verge = IVerge {
-        enable_tun_compatibility_guard: Some(cfg!(target_os = "windows") && interface_name.is_some()),
-        ..IVerge::default()
-    };
     Ok((clash, verge))
 }
 
-pub async fn patch_tun_settings(tun: Mapping, interface_name: Option<&str>) -> Result<()> {
-    let (clash, verge) = tun_settings_patch(tun, interface_name)?;
+pub async fn patch_tun_settings(tun: Mapping, interface_patch: TunInterfacePatch) -> Result<()> {
+    let (clash, verge) = tun_settings_patch(tun, interface_patch)?;
     let config_write = Config::try_lock_config_write()?;
     let mut effects = super::effects::clash_effects(&clash);
     effects.extend(super::effects::verge_effects(&verge));
@@ -96,14 +110,27 @@ mod tests {
     fn manual_interface_and_guard_are_one_settings_patch() -> Result<()> {
         let mut tun = Mapping::new();
         tun.insert("auto-detect-interface".into(), true.into());
-        let (clash, verge) = tun_settings_patch(tun, Some("WLAN"))?;
+        let (clash, verge) = tun_settings_patch(tun, TunInterfacePatch::Set { name: "WLAN".into() })?;
         assert_eq!(clash.get("interface-name").and_then(Value::as_str), Some("WLAN"));
         assert_eq!(clash["tun"]["auto-detect-interface"].as_bool(), Some(false));
         assert_eq!(verge.enable_tun_compatibility_guard, Some(cfg!(target_os = "windows")));
-        let (clash, verge) = tun_settings_patch(Mapping::new(), None)?;
+        let (clash, verge) = tun_settings_patch(Mapping::new(), TunInterfacePatch::Clear)?;
         assert_eq!(clash.get("interface-name").and_then(Value::as_str), Some(""));
         assert_eq!(verge.enable_tun_compatibility_guard, Some(false));
-        assert!(tun_settings_patch(Mapping::new(), Some(" ")).is_err());
+        assert!(tun_settings_patch(Mapping::new(), TunInterfacePatch::Set { name: " ".into() }).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn mtu_only_save_leaves_interface_and_guard_unpatched() -> Result<()> {
+        let mut tun = Mapping::new();
+        tun.insert("auto-detect-interface".into(), true.into());
+        tun.insert("mtu".into(), 1400.into());
+        let (clash, verge) = tun_settings_patch(tun, TunInterfacePatch::Unchanged)?;
+        assert!(!clash.contains_key("interface-name"));
+        assert_eq!(clash["tun"]["auto-detect-interface"].as_bool(), Some(true));
+        assert_eq!(clash["tun"]["mtu"].as_u64(), Some(1400));
+        assert_eq!(verge.enable_tun_compatibility_guard, None);
         Ok(())
     }
 }

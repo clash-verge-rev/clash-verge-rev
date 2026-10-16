@@ -43,8 +43,7 @@ fn clear_restore_notice() {
     *PENDING_RESTORE_NOTICE.lock() = None;
 }
 
-#[cfg(windows)]
-mod native {
+mod runtime {
     use anyhow::Result;
     use clash_verge_service_ipc::forwarding_guard::GuardRuntime;
     use parking_lot::Mutex;
@@ -54,7 +53,11 @@ mod native {
     pub(super) fn with_runtime<T>(operation: impl FnOnce(&mut GuardRuntime) -> Result<T>) -> Result<T> {
         let mut runtime = RUNTIME.lock();
         if runtime.is_none() {
-            *runtime = Some(GuardRuntime::new(crate::utils::dirs::app_home_dir()?));
+            #[cfg(windows)]
+            let root = crate::utils::dirs::app_home_dir()?;
+            #[cfg(not(windows))]
+            let root = std::path::PathBuf::new();
+            *runtime = Some(GuardRuntime::new(root));
         }
         operation(
             runtime
@@ -67,6 +70,7 @@ mod native {
         RUNTIME.lock().as_ref().is_some_and(GuardRuntime::has_owned_guard)
     }
 
+    #[cfg(windows)]
     pub(super) fn check() -> Result<()> {
         match RUNTIME.lock().as_mut() {
             Some(runtime) => runtime.check(),
@@ -76,59 +80,47 @@ mod native {
 }
 
 pub struct GuardTransaction {
-    #[cfg(windows)]
     id: Option<u64>,
 }
 
 pub fn prepare(interface_name: Option<&str>) -> Result<GuardTransaction> {
-    #[cfg(windows)]
-    {
-        Ok(GuardTransaction {
-            id: native::with_runtime(|runtime| runtime.prepare(interface_name))
-                .map_err(|error| error.context(GuardFailure::Preparation))?,
-        })
-    }
     #[cfg(not(windows))]
-    {
+    let interface_name = {
         let _ = interface_name;
-        Ok(GuardTransaction {})
-    }
+        None
+    };
+    Ok(GuardTransaction {
+        id: runtime::with_runtime(|runtime| runtime.prepare(interface_name))
+            .map_err(|error| error.context(GuardFailure::Preparation))?,
+    })
 }
 
 impl GuardTransaction {
     pub fn rollback(self) -> Result<()> {
-        #[cfg(windows)]
-        {
-            let mut transaction = self;
-            if let Some(id) = transaction.id.take() {
-                return native::with_runtime(|runtime| runtime.finish(id, false));
-            }
+        let mut transaction = self;
+        if let Some(id) = transaction.id.take() {
+            return runtime::with_runtime(|runtime| runtime.finish(id, false));
         }
         Ok(())
     }
 
     pub fn commit(self) -> Result<()> {
-        #[cfg(windows)]
-        {
-            let mut transaction = self;
-            if let Some(id) = transaction.id.take() {
-                let result = native::with_runtime(|runtime| runtime.finish(id, true));
-                if result.is_ok() {
-                    clear_restore_notice();
-                }
-                return result;
+        let mut transaction = self;
+        if let Some(id) = transaction.id.take() {
+            let result = runtime::with_runtime(|runtime| runtime.finish(id, true));
+            #[cfg(windows)]
+            if result.is_ok() {
+                clear_restore_notice();
             }
+            return result;
         }
         Ok(())
     }
 
     pub fn retain(self) -> Result<()> {
-        #[cfg(windows)]
-        {
-            let mut transaction = self;
-            if let Some(id) = transaction.id.take() {
-                return native::with_runtime(|runtime| runtime.retain(id));
-            }
+        let mut transaction = self;
+        if let Some(id) = transaction.id.take() {
+            return runtime::with_runtime(|runtime| runtime.retain(id));
         }
         Ok(())
     }
@@ -138,7 +130,7 @@ impl Drop for GuardTransaction {
     fn drop(&mut self) {
         #[cfg(windows)]
         if let Some(id) = self.id.take() {
-            let result = native::with_runtime(|runtime| runtime.retain(id));
+            let result = runtime::with_runtime(|runtime| runtime.retain(id));
             let detail = match result {
                 Ok(()) => {
                     "TUN compatibility restoration requires confirming that the cancelled core has exited".to_owned()
@@ -152,70 +144,39 @@ impl Drop for GuardTransaction {
 }
 
 pub fn recover() -> Result<()> {
+    let result = runtime::with_runtime(|runtime| runtime.recover());
     #[cfg(windows)]
-    {
-        let result = native::with_runtime(|runtime| runtime.recover());
-        if result.is_ok() {
-            clear_restore_notice();
-        }
-        result
+    if result.is_ok() {
+        clear_restore_notice();
     }
-    #[cfg(not(windows))]
-    {
-        Ok(())
-    }
+    result
 }
 
 pub fn prepare_recovery() -> Result<bool> {
+    let result = runtime::with_runtime(|runtime| runtime.prepare_recovery());
     #[cfg(windows)]
-    {
-        let result = native::with_runtime(|runtime| runtime.prepare_recovery());
-        if matches!(result, Ok(false)) {
-            clear_restore_notice();
-        }
-        result
+    if matches!(result, Ok(false)) {
+        clear_restore_notice();
     }
-    #[cfg(not(windows))]
-    {
-        Ok(false)
-    }
+    result
 }
 
 pub fn has_owned_guard() -> bool {
-    #[cfg(windows)]
-    {
-        native::has_owned_guard()
-    }
-    #[cfg(not(windows))]
-    {
-        false
-    }
+    runtime::has_owned_guard()
 }
 
 pub fn restore() -> Result<()> {
+    let result = runtime::with_runtime(|runtime| runtime.restore());
     #[cfg(windows)]
-    {
-        let result = native::with_runtime(|runtime| runtime.restore());
-        if result.is_ok() {
-            clear_restore_notice();
-        }
-        result
+    if result.is_ok() {
+        clear_restore_notice();
     }
-    #[cfg(not(windows))]
-    {
-        Ok(())
-    }
+    result
 }
 
+#[cfg(windows)]
 pub fn check() -> Result<()> {
-    #[cfg(windows)]
-    {
-        native::check()
-    }
-    #[cfg(not(windows))]
-    {
-        Ok(())
-    }
+    runtime::check()
 }
 
 #[cfg(test)]

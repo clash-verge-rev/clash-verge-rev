@@ -47,11 +47,16 @@ where
     StartFuture: std::future::Future<Output = Result<()>> + Send,
 {
     let attempts = NonZeroUsize::new(attempts).ok_or_else(|| anyhow::anyhow!("service start failed"))?;
-    retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
+    let outcome_uncertain = std::sync::atomic::AtomicBool::new(false);
+    let result = retry(RetryPolicy::fixed(attempts, retry_delay), |attempt| {
         // The Windows Service IPC future would otherwise inflate every enclosing lifecycle future.
         let future = Box::pin(start());
+        let outcome_uncertain = &outcome_uncertain;
         async move {
             future.await.map_err(|error| {
+                if service::service_start_outcome_is_uncertain(&error) {
+                    outcome_uncertain.store(true, std::sync::atomic::Ordering::Release);
+                }
                 logging!(
                     warn,
                     Type::Core,
@@ -71,7 +76,14 @@ where
             })
         }
     })
-    .await
+    .await;
+    result.map_err(|error| {
+        if outcome_uncertain.load(std::sync::atomic::Ordering::Acquire) {
+            error.context(service::ServiceStartOutcome::Uncertain)
+        } else {
+            error
+        }
+    })
 }
 
 impl CoreManager {
@@ -596,6 +608,43 @@ mod readiness_tests {
 
         assert_eq!(*manager.get_running_mode(), RunningMode::Service);
         assert_eq!(manager.current_core_readiness_generation(), None);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[tokio::test]
+    async fn a_later_refusal_cannot_erase_an_earlier_uncertain_service_start() -> anyhow::Result<()> {
+        use crate::core::service::{ServiceStartOutcome, ServiceStartRefusal, service_start_outcome_is_uncertain};
+
+        for uncertain in [false, true] {
+            let attempts = AtomicUsize::new(0);
+            let error = super::retry_service_start(2, Duration::ZERO, || {
+                let attempt = attempts.fetch_add(1, Ordering::Relaxed);
+                async move {
+                    if attempt == 0 {
+                        let outcome = if uncertain {
+                            ServiceStartOutcome::Uncertain
+                        } else {
+                            ServiceStartOutcome::NotSent
+                        };
+                        return Err(anyhow::anyhow!("first attempt failed").context(outcome));
+                    }
+                    Err(ServiceStartRefusal {
+                        code: clash_verge_service_ipc::ServiceErrorCode::TunGuardInterfaceUnavailable as u16,
+                        core_path: "verge-mihomo.exe".into(),
+                        message: "selected adapter is disconnected".into(),
+                    }
+                    .into())
+                }
+            })
+            .await
+            .err()
+            .ok_or_else(|| anyhow::anyhow!("the failed service start was not reported"))?;
+
+            assert_eq!(attempts.load(Ordering::Relaxed), 2);
+            assert_eq!(service_start_outcome_is_uncertain(&error), uncertain);
+            assert!(error.downcast_ref::<ServiceStartRefusal>().is_some());
+        }
+        Ok(())
     }
 }
 
