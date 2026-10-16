@@ -1,6 +1,6 @@
 ---
 name: agentic-workflows
-description: Route gh-aw workflow design/create/debug/upgrade requests to the right prompts.
+description: Route gh-aw design, creation, diagnosis, patching, active debugging, and upgrade requests to the right strategies.
 ---
 
 # Agentic Workflows Router
@@ -19,6 +19,7 @@ Load these files from `github/gh-aw` (they are not available locally).
 - `.github/aw/agent-runtime-instructions.md`
 - `.github/aw/agentic-chat.md`
 - `.github/aw/agentic-workflows-mcp.md`
+- `.github/aw/analyzing-runs.md`
 - `.github/aw/asciicharts.md`
 - `.github/aw/campaign.md`
 - `.github/aw/charts-trending.md`
@@ -31,6 +32,8 @@ Load these files from `github/gh-aw` (they are not available locally).
 - `.github/aw/create-agentic-workflow.md`
 - `.github/aw/create-shared-agentic-workflow.md`
 - `.github/aw/debug-agentic-workflow.md`
+- `.github/aw/debug-model-engine-misconfiguration.md`
+- `.github/aw/debug-security-review.md`
 - `.github/aw/dependabot.md`
 - `.github/aw/deployment-status.md`
 - `.github/aw/designer-mappings.md`
@@ -46,6 +49,7 @@ Load these files from `github/gh-aw` (they are not available locally).
 - `.github/aw/instructions.md`
 - `.github/aw/intent.md`
 - `.github/aw/jobs.md`
+- `.github/aw/ledger.md`
 - `.github/aw/linter-workflows.md`
 - `.github/aw/llms.md`
 - `.github/aw/loop.md`
@@ -87,6 +91,7 @@ Load these files from `github/gh-aw` (they are not available locally).
 - `.github/aw/update-agentic-workflow.md`
 - `.github/aw/upgrade-agentic-workflows.md`
 - `.github/aw/visual-regression.md`
+- `.github/aw/work-queue.md`
 - `.github/aw/workflow-constraints.md`
 - `.github/aw/workflow-editing.md`
 - `.github/aw/workflow-patterns.md`
@@ -96,7 +101,8 @@ After loading the matching workflow prompt or skill, follow it directly:
 - Create new workflows: `.github/aw/create-agentic-workflow.md`
 - Configure or add declarative engines: `.github/aw/configure-agentic-engine.md`
 - Update existing workflows: `.github/aw/update-agentic-workflow.md`
-- Debug, audit, or investigate workflows: `.github/aw/debug-agentic-workflow.md`
+- Diagnose, patch, audit, or actively debug workflows: `.github/aw/debug-agentic-workflow.md` (local-first strategy, evidence triage and live gates)
+- AWF model/endpoint 400s, silent cross-family sub-agent failures, `model: auto` failures, install-step 404s after a version pin, or questions about version fields: go directly to [Model and engine misconfiguration](../../aw/debug-agentic-workflow.md#model-and-engine-misconfiguration) before suggesting model changes.
 - Upgrade workflows and fix deprecations: `.github/aw/upgrade-agentic-workflows.md`
 - Create shared components or MCP wrappers: `.github/aw/create-shared-agentic-workflow.md`
 - Create report-generating workflows: `.github/aw/report.md`
@@ -105,8 +111,11 @@ After loading the matching workflow prompt or skill, follow it directly:
 - Render compact markdown charts: `.github/aw/asciicharts.md`
 - Map CLI commands to MCP usage: `.github/aw/cli-commands.md`
 - Choose workflow architecture and patterns: `.github/aw/patterns.md`
+- Design, deploy, inspect or recover a Git-backed work queue: `.github/aw/work-queue.md`
 - Optimize token usage and cost: `.github/aw/token-optimization.md`
 - Design long-running multi-agent research workflows: `.github/aw/multi-agent-research.md`
 - Add skills or agent plugins requested by the user (`skills:` / `plugins:` frontmatter, never on-the-fly installs): `.github/aw/skills.md`
 
 When the task involves OTEL, OTLP, traces, observability backends, or telemetry-driven analysis, also read and follow `skills/otel-queries/SKILL.md` after loading the matching workflow prompt or skill.
+
+When creating, updating, diagnosing or upgrading a workflow that uses `tools.work-queue`, also load `.github/aw/work-queue.md` after the primary prompt. Load deployment docs, operator reference or specification only when that task needs them.
