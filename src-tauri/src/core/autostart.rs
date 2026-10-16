@@ -24,7 +24,7 @@ pub async fn update_launch() -> Result<()> {
     #[cfg(not(target_os = "windows"))]
     {
         let app_handle = Handle::app_handle();
-        let autostart_manager = app_handle.autolaunch();
+        let autostart_manager = app_handle.autostart();
         if is_enable {
             logging_error!(Type::System, "{:?}", autostart_manager.enable());
         } else {

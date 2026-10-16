@@ -132,7 +132,7 @@ impl TraySpeedController {
 
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id(super::TRAY_ID) {
-            let result = tray.with_inner_tray_icon(|inner| {
+            let result = tray.with_inner_blocking(|inner| {
                 if let Some(status_item) = inner.ns_status_item() {
                     tray_speed::clear_speed_attributed_title(&status_item);
                 }
@@ -167,7 +167,7 @@ impl TraySpeedController {
     fn apply_tray_speed(up: u64, down: u64) {
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id(super::TRAY_ID) {
-            let result = tray.with_inner_tray_icon(move |inner| {
+            let result = tray.with_inner_blocking(move |inner| {
                 if let Some(status_item) = inner.ns_status_item() {
                     tray_speed::set_speed_attributed_title(&status_item, up, down);
                 }
