@@ -282,7 +282,9 @@ async fn handle_validation_failure(
 ) -> CmdResult<ValidationOutcome> {
     logging!(warn, Type::Cmd, "配置验证失败: {}", outcome);
     discard_and_restore(current_profile).await?;
-    handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+    if !matches!(outcome, ValidationOutcome::Busy) {
+        handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+    }
     Ok(outcome)
 }
 
@@ -311,9 +313,6 @@ async fn perform_config_update(
     current_value: Option<&String>,
     current_profile: Option<&String>,
 ) -> CmdResult<ValidationOutcome> {
-    defer! {
-        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
-    }
     let update_result = run_profile_config_update_transition(|| CoreManager::global().update_config_forced()).await;
 
     match update_result {
@@ -408,6 +407,9 @@ pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<Vali
     {
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
         return Ok(ValidationOutcome::Busy);
+    }
+    defer! {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
     }
     let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
