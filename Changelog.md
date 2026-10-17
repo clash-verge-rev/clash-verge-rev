@@ -22,6 +22,7 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化设置页开关和选项所在行的鼠标悬停高亮，便于对应说明与控件
 
 **🖥️ Windows**
 
