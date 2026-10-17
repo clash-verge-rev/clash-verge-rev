@@ -22,7 +22,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.99.0'
+          toolchain: '1.99.1'
           targets: x86_64-pc-windows-msvc
 
       - name: Install Node
