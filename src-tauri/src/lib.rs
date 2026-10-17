@@ -304,8 +304,16 @@ pub fn run() -> std::process::ExitCode {
             }
         }
 
+        // Focus tasks can run out of order; serializing them and skipping stale ones keeps a late
+        // `Focused(true)` from re-registering CMD+Q/CMD+W after the window has lost focus.
+        static WINDOW_FOCUS_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
         pub fn handle_window_focus(focused: bool) {
             AsyncHandler::spawn(move || async move {
+                let _serial = WINDOW_FOCUS_SERIAL.lock().await;
+                if focused != WindowManager::is_main_window_focused(WindowManager::get_main_window().as_ref()) {
+                    return;
+                }
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
 
                 if focused {
@@ -342,6 +350,7 @@ pub fn run() -> std::process::ExitCode {
         pub fn handle_window_destroyed() {
             use crate::core::hotkey::SystemHotkey;
             AsyncHandler::spawn(move || async move {
+                let _serial = WINDOW_FOCUS_SERIAL.lock().await;
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
