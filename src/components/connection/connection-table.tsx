@@ -503,7 +503,22 @@ export const ConnectionTable = (props: Props) => {
       }))
   }, [columnVisibilityModel, columnWidths, orderedColumns])
 
-  const [sorting, setSorting] = useState<SortingState | null>(null)
+  const [sorting, setSorting] = useLocalStorage<SortingState | null>(
+    'connection-table-sorting',
+    null,
+    {
+      serializer: JSON.stringify,
+      deserializer: (value) => {
+        try {
+          const parsed = JSON.parse(value)
+          if (parsed && typeof parsed === 'object') return parsed
+        } catch (err) {
+          console.warn('Failed to parse connection-table-sorting', err)
+        }
+        return null
+      },
+    },
+  )
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 })
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
   const rowSnapshotCacheRef = useRef(new Map<string, TableRowSnapshot>())
@@ -615,13 +630,16 @@ export const ConnectionTable = (props: Props) => {
   )
   const totalRowsHeight = sortedConnections.length * ROW_HEIGHT
 
-  const toggleSorting = useCallback((field: ColumnField) => {
-    setSorting((current) => {
-      if (!current || current.id !== field) return { id: field, desc: false }
-      if (!current.desc) return { id: field, desc: true }
-      return null
-    })
-  }, [])
+  const toggleSorting = useCallback(
+    (field: ColumnField) => {
+      setSorting((current) => {
+        if (!current || current.id !== field) return { id: field, desc: false }
+        if (!current.desc) return { id: field, desc: true }
+        return null
+      })
+    },
+    [setSorting],
+  )
 
   const setColumnVisibility = useCallback(
     (field: ColumnField, visible: boolean) => {
@@ -660,7 +678,13 @@ export const ConnectionTable = (props: Props) => {
     setColumnOrder(baseColumns.map((column) => column.field))
     setColumnWidths({})
     setSorting(null)
-  }, [baseColumns, setColumnOrder, setColumnVisibilityModel, setColumnWidths])
+  }, [
+    baseColumns,
+    setColumnOrder,
+    setColumnVisibilityModel,
+    setColumnWidths,
+    setSorting,
+  ])
 
   const managerColumns = useMemo<ConnectionColumnOption[]>(() => {
     return orderedColumns.map((column) => ({
