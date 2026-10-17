@@ -562,6 +562,71 @@ fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
     Ok(sibling)
 }
 
+/// The Service reads the core it is handed, and a type-2 AppImage is FUSE-mounted for the launching
+/// uid only, so the in-image path is unreadable for root and the Service refuses it with
+/// `failed to canonicalize core: Permission denied`. Stage a copy outside the image for that case.
+fn service_readable_core_path(core: &Path) -> Result<PathBuf> {
+    if !is_fuse_mounted(core) {
+        return Ok(core.to_path_buf());
+    }
+
+    let directory = std::env::temp_dir().join("clash-verge-service-core");
+    #[cfg(unix)]
+    let builder = {
+        use std::os::unix::fs::DirBuilderExt as _;
+
+        let mut builder = std::fs::DirBuilder::new();
+        builder.mode(0o700);
+        builder
+    };
+    #[cfg(not(unix))]
+    let builder = std::fs::DirBuilder::new();
+    match builder.create(&directory) {
+        Ok(()) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {}
+        Err(error) => return Err(error).with_context(|| format!("failed to create {}", directory.display())),
+    }
+
+    let staged = directory.join(core.file_name().context("core has no file name")?);
+    let source = std::fs::metadata(core).with_context(|| format!("failed to inspect {}", core.display()))?;
+    let reusable = std::fs::metadata(&staged)
+        .is_ok_and(|meta| meta.len() == source.len() && meta.modified().ok() == source.modified().ok());
+    if !reusable {
+        std::fs::copy(core, &staged).with_context(|| format!("failed to stage {}", staged.display()))?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt as _;
+            std::fs::set_permissions(&staged, std::fs::Permissions::from_mode(0o755))?;
+        }
+        logging!(
+            info,
+            Type::Service,
+            "staged core {} for the Service at {}",
+            core.display(),
+            staged.display()
+        );
+    }
+
+    Ok(staged)
+}
+
+/// FUSE mounts are created for a single uid unless mounted with `allow_other`, and the mounting
+/// userspace daemon enforces that even for root; `/proc/self/mounts` reports the filesystem type
+/// without needing privileges. Mount points with spaces would have to be unescaped from `\040` —
+/// no AppImage mount point contains one.
+fn is_fuse_mounted(path: &Path) -> bool {
+    let Ok(mounts) = std::fs::read_to_string("/proc/self/mounts") else {
+        return false;
+    };
+    mounts.lines().any(|line| {
+        let mut fields = line.split(' ');
+        let mount_point = fields.nth(1);
+        let fs_type = fields.next();
+        matches!((mount_point, fs_type), (Some(mount_point), Some(fs_type))
+            if fs_type.starts_with("fuse") && path.starts_with(mount_point))
+    })
+}
+
 #[cfg(target_os = "macos")]
 fn escape_osascript_double_quoted_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
@@ -814,7 +879,7 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
     drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
-    let bin_path = service_core_path(&clash_core, bin_ext)?;
+    let bin_path = service_readable_core_path(&service_core_path(&clash_core, bin_ext)?)?;
     collect_runtime_bundle(config_file, &bin_path).await
 }
 
