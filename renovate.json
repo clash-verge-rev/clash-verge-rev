@@ -53,7 +53,8 @@
         "tauri",
         "tauri-*"
       ],
-      "groupName": "tauri"
+      "groupName": "tauri",
+      "addLabels": ["tauri"]
     },
     {
       "description": "Group all GitHub Actions updates into a single PR",
