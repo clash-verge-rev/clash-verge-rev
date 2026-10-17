@@ -231,7 +231,7 @@
       "layout": {
         "title": "Configuración de la interfaz",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "Activar barra de título del sistema",
           "trafficGraph": "Gráfico de tráfico",
           "memoryUsage": "Uso de memoria del núcleo",
           "proxyGroupIcon": "Icono del grupo de proxy",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Pausar el renderizado de estadísticas de tráfico al perder el foco"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Usar la barra de título nativa del sistema en lugar de la barra de título personalizada integrada (se requiere reiniciar en Linux).",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

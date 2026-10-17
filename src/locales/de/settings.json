@@ -231,7 +231,7 @@
       "layout": {
         "title": "Layout-Einstellungen",
         "fields": {
-          "preferSystemTitlebar": "System-Titelleiste bevorzugen",
+          "enableSystemTitlebar": "System-Titelleiste aktivieren",
           "trafficGraph": "Verkehrsdiagramm",
           "memoryUsage": "Kern-Speichernutzung",
           "proxyGroupIcon": "Proxy-Gruppen-Symbol",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Rendering der Verkehrsstatistiken bei Fokusverlust pausieren"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Die native Titelleiste des Systems anstelle der integrierten benutzerdefinierten Titelleiste verwenden (unter Linux ist ein Neustart erforderlich).",
           "hoverNavigator": "Beim Darüberfahren mit der Maus über die Buchstaben automatisch zur passenden Proxy-Gruppe scrollen",
           "hoverNavigatorDelay": "Wartezeit vor dem automatischen Scrollen beim Darüberfahren, in Millisekunden"
         },

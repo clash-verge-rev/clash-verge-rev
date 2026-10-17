@@ -231,7 +231,7 @@
       "layout": {
         "title": "تنظیمات چیدمان",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "فعالسازی نوار عنوان سیستم",
           "trafficGraph": "نمودار ترافیک",
           "memoryUsage": "استفاده از حافظه",
           "proxyGroupIcon": "آیکون گروه پراکسی",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "توقف رندر آمار ترافیک هنگام از دست رفتن فوکوس"
         },
         "tooltips": {
+          "enableSystemTitlebar": "استفاده از نوار عنوان بومی سیستم بهجای نوار عنوان سفارشی داخلی (در لینوکس نیاز به راهاندازی مجدد است).",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

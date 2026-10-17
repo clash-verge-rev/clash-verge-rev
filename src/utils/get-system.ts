@@ -8,7 +8,7 @@ export default function getSystem() {
 
   if (/win64|win32/i.test(ua) || platform === 'win32') return 'windows'
 
-  if (/linux/i.test(ua)) return 'linux'
+  if (/linux/i.test(ua) || platform === 'linux') return 'linux'
 
   return 'unknown'
 }

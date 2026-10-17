@@ -231,7 +231,7 @@
       "layout": {
         "title": "Pengaturan Tata Letak",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "Aktifkan bilah judul sistem",
           "trafficGraph": "Grafik Lalu Lintas",
           "memoryUsage": "Penggunaan Memori",
           "proxyGroupIcon": "Ikon Grup Proksi",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Jeda render statistik lalu lintas saat jendela tidak fokus"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Gunakan bilah judul asli sistem sebagai ganti bilah judul kustom bawaan (perlu mulai ulang di Linux).",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

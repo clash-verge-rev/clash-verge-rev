@@ -231,7 +231,7 @@
       "layout": {
         "title": "Düzen Ayarı",
         "fields": {
-          "preferSystemTitlebar": "Sistem Başlık Çubuğunu Tercih Et",
+          "enableSystemTitlebar": "Sistem başlık çubuğunu etkinleştir",
           "trafficGraph": "Trafik Grafiği",
           "memoryUsage": "Çekirdek Kullanımı",
           "proxyGroupIcon": "Vekil Grup Simgesi",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Odak kaybolduğunda trafik istatistiklerinin işlenmesini duraklat"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Yerleşik özel başlık çubuğu yerine sistemin yerel başlık çubuğunu kullan (Linux'ta yeniden başlatma gerekir).",
           "hoverNavigator": "Alfabe harflerinin üzerine gelindiğinde ilgili vekil grubuna otomatik olarak kaydırır",
           "hoverNavigatorDelay": "Üzerine gelindiğinde otomatik kaydırmadan önceki gecikme, milisaniye cinsinden"
         },

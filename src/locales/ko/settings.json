@@ -231,7 +231,7 @@
       "layout": {
         "title": "레이아웃 설정",
         "fields": {
-          "preferSystemTitlebar": "시스템 제목 표시줄 사용",
+          "enableSystemTitlebar": "시스템 제목 표시줄 활성화",
           "trafficGraph": "트래픽 그래프",
           "memoryUsage": "메모리 사용량",
           "proxyGroupIcon": "프록시 그룹 아이콘",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "포커스를 잃으면 트래픽 통계 렌더링 일시 중지"
         },
         "tooltips": {
+          "enableSystemTitlebar": "내장 사용자 지정 제목 표시줄 대신 시스템 기본 제목 표시줄을 사용합니다(Linux에서는 다시 시작해야 함).",
           "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",
           "hoverNavigatorDelay": "호버 시 자동 스크롤까지의 지연(밀리초)"
         },
