@@ -361,7 +361,9 @@ jobs:
             export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig/:$PKG_CONFIG_PATH
             export PKG_CONFIG_SYSROOT_DIR=/usr/arm-linux-gnueabihf/
           fi
-          pnpm build --target ${{ matrix.target }}
+          # AppImage is built for x86_64 only: bundling it for these targets would run an
+          # aarch64/armhf linuxdeploy under emulation on this x86_64 runner.
+          pnpm build --target ${{ matrix.target }} --bundles deb,rpm
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
