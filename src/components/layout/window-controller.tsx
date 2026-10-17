@@ -97,6 +97,9 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
   // 通过前端对 tauri 窗口进行翻转全屏时会短暂地与系统图标重叠渲染。
   // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准。
 
+  // macOS: the overlay title bar provides native traffic lights
+  // (close / minimize / zoom), so no custom buttons are rendered.
+
   return (
     <Box
       sx={{
@@ -108,29 +111,6 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
         },
       }}
     >
-      {OS === 'macos' && (
-        <>
-          {/* macOS 风格：关闭 → 最小化 → 全屏 */}
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={close}>
-            <Close fontSize="inherit" color="inherit" />
-          </IconButton>
-          <IconButton size="small" sx={{ fontSize: 14 }} onClick={minimize}>
-            <Minimize fontSize="inherit" color="inherit" />
-          </IconButton>
-          <IconButton
-            size="small"
-            sx={{ fontSize: 14 }}
-            onClick={toggleMaximize}
-          >
-            {maximized ? (
-              <FilterNone fontSize="inherit" color="inherit" />
-            ) : (
-              <CropSquare fontSize="inherit" color="inherit" />
-            )}
-          </IconButton>
-        </>
-      )}
-
       {OS === 'windows' && (
         <>
           {/* Windows 风格：最小化 → 最大化 → 关闭 */}

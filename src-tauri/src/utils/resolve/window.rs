@@ -99,6 +99,15 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         logging_error!(Type::Window, window.set_focus());
     });
 
+    #[cfg(target_os = "macos")]
+    {
+        // macOS draws its native traffic lights over an overlay title bar,
+        // so the webview fills the whole window without a separate title strip.
+        builder = builder
+            .title_bar_style(tauri::TitleBarStyle::Overlay)
+            .hidden_title(true);
+    }
+
     if let Some(theme) = resolved_theme {
         builder = builder.theme(Some(theme));
     }

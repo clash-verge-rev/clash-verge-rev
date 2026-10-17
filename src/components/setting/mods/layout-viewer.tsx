@@ -121,24 +121,26 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
       onCancel={() => setOpen(false)}
     >
       <List>
-        <Item>
-          <ListItemText
-            primary={t(
-              'settings.components.verge.layout.fields.preferSystemTitlebar',
-            )}
-          />
-          <GuardState
-            value={decorated}
-            valueProps="checked"
-            onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={async () => {
-              await toggleDecorations()
-            }}
-          >
-            <Switch edge="end" />
-          </GuardState>
-        </Item>
+        {OS !== 'macos' && (
+          <Item>
+            <ListItemText
+              primary={t(
+                'settings.components.verge.layout.fields.preferSystemTitlebar',
+              )}
+            />
+            <GuardState
+              value={decorated}
+              valueProps="checked"
+              onCatch={onError}
+              onFormat={onSwitchFormat}
+              onChange={async () => {
+                await toggleDecorations()
+              }}
+            >
+              <Switch edge="end" />
+            </GuardState>
+          </Item>
+        )}
 
         <Item>
           <ListItemText
