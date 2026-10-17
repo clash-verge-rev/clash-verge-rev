@@ -1,3 +1,4 @@
+use crate::utils::yaml_emitter;
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
@@ -40,7 +41,8 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
         .ok_or_else(|| anyhow::anyhow!("runtime config has no parent directory"))?;
     let parts = collect_runtime_parts(config, config_root)?;
     Ok(RuntimeBundle {
-        yaml: serde_yaml_ng::to_string(&parts.config).context("failed to serialize service runtime config")?,
+        yaml: yaml_emitter::to_runtime_config_string(&parts.config)
+            .context("failed to serialize service runtime config")?,
         assets: parts.assets,
         remote_providers: parts
             .remote_providers

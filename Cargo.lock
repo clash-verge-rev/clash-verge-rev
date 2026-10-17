@@ -1117,6 +1117,7 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.4.3",
+ "granit-parser",
  "libc",
  "log",
  "minisign-verify 0.3.0",
