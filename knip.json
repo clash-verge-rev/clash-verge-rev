@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/polyfills/*.js!"],
+  "entry": ["src/polyfills/*.js!", "scripts/check-contract-changes.mjs!"],
   "project": ["src/**/*.{js,jsx,ts,tsx,sass,scss}!", "scripts/**/*.{js,mjs}!"],
   "include": [
     "files",
@@ -18,7 +18,7 @@
   "ignoreDependencies": ["lint-staged"],
   "ignoreIssues": {
     "src/types/generated/**": ["exports", "types"],
-    "src/services/contract.ts": ["exports", "types"]
+    "src/services/bindings.ts": ["types"]
   },
   "cycles": {
     "dynamicImports": true

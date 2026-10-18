@@ -412,14 +412,14 @@ mod tests {
         let system_exe = executable(&system.join("Tools/Clash Verge.app"))?;
         let user_exe = executable(&user.join("Network/Clash Verge.app"))?;
 
-        assert!(matches!(
+        std::assert_matches!(
             evaluate_install_location_with_roots(&system_exe, &home, &system),
             LaunchLocation::Allowed { .. }
-        ));
-        assert!(matches!(
+        );
+        std::assert_matches!(
             evaluate_install_location_with_roots(&user_exe, &home, &system),
             LaunchLocation::Allowed { .. }
-        ));
+        );
         std::fs::remove_dir_all(root)?;
         Ok(())
     }

@@ -1,20 +1,11 @@
-import Visibility from '@mui/icons-material/Visibility'
-import VisibilityOff from '@mui/icons-material/VisibilityOff'
-import {
-  TextField,
-  Button,
-  Grid,
-  Stack,
-  IconButton,
-  InputAdornment,
-} from '@mui/material'
+import { Button, Grid, Stack, TextField } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useState, useRef, memo, useEffect } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
-import { saveWebdavConfig, createWebdavBackup } from '@/services/cmds'
+import { createWebdavBackup, saveWebdavConfig } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { errorDetail, showNotice } from '@/services/notice-service'
 import {
@@ -43,16 +34,15 @@ export const BackupConfigViewer = memo(
     const { t } = useTranslation()
     const { verge, mutateVerge } = useVerge()
     const { webdav_url, webdav_username, webdav_password } = verge || {}
-    const [showPassword, setShowPassword] = useState(false)
     const usernameRef = useRef<HTMLInputElement>(null)
     const passwordRef = useRef<HTMLInputElement>(null)
     const urlRef = useRef<HTMLInputElement>(null)
 
     const { register, handleSubmit, watch } = useForm<IWebDavConfig>({
       defaultValues: {
-        url: webdav_url,
-        username: webdav_username,
-        password: webdav_password,
+        url: webdav_url!,
+        username: webdav_username!,
+        password: webdav_password!,
       },
     })
     const url = watch('url')
@@ -67,10 +57,6 @@ export const BackupConfigViewer = memo(
     const webdavSignature = buildWebdavSignature(verge)
     const webdavStatus = getWebdavStatus(webdavSignature)
     const shouldAutoInit = webdavStatus !== 'failed'
-
-    const handleClickShowPassword = () => {
-      setShowPassword((prev) => !prev)
-    }
 
     useEffect(() => {
       if (!webdav_url || !webdav_username || !webdav_password) {
@@ -215,7 +201,7 @@ export const BackupConfigViewer = memo(
               <Grid size={{ xs: 6 }}>
                 <TextField
                   label={t('shared.labels.password')}
-                  type={showPassword ? 'text' : 'password'}
+                  type="password"
                   variant="outlined"
                   size="small"
                   autoCorrect="off"
@@ -223,20 +209,6 @@ export const BackupConfigViewer = memo(
                   spellCheck="false"
                   inputRef={passwordRef}
                   {...register('password')}
-                  slotProps={{
-                    input: {
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={handleClickShowPassword}
-                            edge="end"
-                          >
-                            {showPassword ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    },
-                  }}
                 />
               </Grid>
             </Grid>

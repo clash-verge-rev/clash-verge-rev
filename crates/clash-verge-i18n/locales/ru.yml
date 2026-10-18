@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
+core:
+  alreadyRunning: 'Не удалось запустить ядро: процесс ядра уже работает. Закройте соответствующее приложение или завершите оставшийся процесс и повторите попытку. Если проблема сохраняется, перезагрузите компьютер.'
 launchGuard:
   currentExeError: 'Не удалось определить расположение приложения: {error}'
   homeDirError: 'Не удалось определить домашний каталог текущего пользователя. Приложение будет закрыто: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Глобальный
   profiles: Профили
   proxies: Прокси
+  testLatency: Проверить задержку
+  testingLatency: Проверка задержки…
   systemProxy: Системный прокси
   tunMode: Режим TUN
   closeAllConnections: Закрыть все соединения

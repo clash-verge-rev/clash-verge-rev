@@ -40,7 +40,7 @@ const SettingClash = ({ onError }: Props) => {
   const { verge, mutateVerge } = useVerge()
   const { current: currentProfile } = useProfiles()
   const dnsEnabled = currentProfile
-    ? (verge?.profile_dns_settings?.[currentProfile.uid]?.enabled ??
+    ? (verge?.profile_dns_settings?.[currentProfile.uid!]?.enabled ??
       verge?.enable_dns_settings ??
       false)
     : false

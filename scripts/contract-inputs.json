@@ -1,0 +1,23 @@
+{
+  "contract": [
+    "src-tauri/**/*.rs",
+    "crates/**/*.rs",
+    "Cargo.toml",
+    "Cargo.lock",
+    "src-tauri/Cargo.toml",
+    "crates/**/Cargo.toml",
+    "rust-toolchain.toml",
+    "src-tauri/tauri.conf*.json",
+    "src/services/bindings.ts",
+    "scripts/gen-contract.mjs",
+    "scripts/check-contract-changes.mjs",
+    "biome.json",
+    "biome.jsonc",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "scripts/contract-inputs.json",
+    ".github/workflows/frontend-check.yml",
+    ".husky/pre-push"
+  ]
+}

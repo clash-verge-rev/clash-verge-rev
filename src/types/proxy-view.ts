@@ -1,84 +1,15 @@
-export interface ProxyViewV1 {
-  schemaVersion: 1
-  orderSource: 'runtime' | 'fallback'
-  providerState: 'ready' | 'unavailable'
-  global: ProxyGroupView | null
-  direct: string | null
-  groups: ProxyGroupView[]
-  records: Record<string, ProxyNodeView>
-  standalone: string[]
-  providers: ProxyProviderView[]
-}
-
-interface ProxyCapabilities {
-  udp: boolean
-  xudp: boolean
-  tfo: boolean
-  mptcp: boolean
-  smux: boolean
-}
-
-interface DelayHistory {
-  time: string
-  delay: number
-}
-
-export interface ProxyGroupView extends ProxyCapabilities {
-  name: string
-  type: string
-  alive: boolean
-  now?: string
-  fixed?: string
-  hidden?: boolean
-  icon?: string
-  testUrl?: string
-  history: DelayHistory[]
-  members: ProxyMemberRef[]
-}
-
-export interface ProxyNodeView extends ProxyCapabilities {
-  recordId: string
-  name: string
-  type: string
-  alive: boolean
-  history: DelayHistory[]
-  id?: string
-  hidden?: boolean
-  icon?: string
-  testUrl?: string
-  source:
-    | { kind: 'core'; proxyName: string }
-    | { kind: 'provider'; providerName: string; proxyName: string }
-}
-
-type ProxyMemberUnresolvedReason =
-  | 'missing'
-  | 'ambiguous'
-  | 'provider-unavailable'
-
-export type ProxyMemberRef =
-  | { kind: 'group'; name: string }
-  | { kind: 'node'; name: string; recordId: string }
-  | {
-      kind: 'unresolved'
-      name: string
-      reason: ProxyMemberUnresolvedReason
-    }
-
-interface ProxyProviderView {
-  name: string
-  vehicleType: 'HTTP' | 'File' | 'Inline'
-  updatedAt?: string
-  subscriptionInfo?: ProxySubscriptionInfo
-  proxyRecordIds: string[]
-}
-
-interface ProxySubscriptionInfo {
-  upload: number
-  download: number
-  total: number
-  expire: number
-}
+import type {
+  ProxyViewV1_Serialize as ProxyViewV1,
+  ProxyGroupView_Serialize as ProxyGroupView,
+  ProxyNodeView_Serialize as ProxyNodeView,
+  ProxyMemberRef,
+} from '@/services/bindings'
+export type {
+  ProxyViewV1_Serialize as ProxyViewV1,
+  ProxyGroupView_Serialize as ProxyGroupView,
+  ProxyNodeView_Serialize as ProxyNodeView,
+  ProxyMemberRef,
+} from '@/services/bindings'
 
 export type ResolvedProxyMember =
   | {

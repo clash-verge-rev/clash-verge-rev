@@ -9,6 +9,7 @@ pub(crate) fn interface_unavailable(error: &anyhow::Error) -> Option<&InterfaceU
 
 #[derive(Debug)]
 pub(crate) enum GuardFailure {
+    #[cfg(windows)]
     Recovery,
     Preparation,
 }
@@ -16,6 +17,7 @@ pub(crate) enum GuardFailure {
 impl std::fmt::Display for GuardFailure {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(match self {
+            #[cfg(windows)]
             Self::Recovery => "TUN compatibility restoration is pending",
             Self::Preparation => "TUN compatibility protection could not be prepared",
         })
@@ -143,6 +145,7 @@ impl Drop for GuardTransaction {
     }
 }
 
+#[cfg(windows)]
 pub fn recover() -> Result<()> {
     let result = runtime::with_runtime(|runtime| runtime.recover());
     #[cfg(windows)]
@@ -152,6 +155,7 @@ pub fn recover() -> Result<()> {
     result
 }
 
+#[cfg(windows)]
 pub fn prepare_recovery() -> Result<bool> {
     let result = runtime::with_runtime(|runtime| runtime.prepare_recovery());
     #[cfg(windows)]

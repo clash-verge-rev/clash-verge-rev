@@ -38,7 +38,7 @@ pub(crate) fn proxy_listener_keys() -> impl Iterator<Item = &'static str> {
     PROXY_LISTENERS.iter().map(|(key, _, _)| *key)
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyPortSettings {
     pub mixed_port: u16,
@@ -48,27 +48,27 @@ pub struct ProxyPortSettings {
     pub tproxy: ToggleableProxyPort,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize, specta::Type)]
 pub struct ToggleableProxyPort {
     pub enabled: bool,
     pub port: u16,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ListenerProbe {
     pub address: String,
     pub transports: Vec<ListenerTransport>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, Serialize)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Hash, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ListenerTransport {
     Tcp,
     Udp,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ListenerProbeOutcome {
     Available,
@@ -77,7 +77,7 @@ pub enum ListenerProbeOutcome {
     Indeterminate { message: String },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum SaveProxyPortsOutcome {
     Saved,
@@ -271,10 +271,7 @@ fn proxy_bind_addresses(config: &Mapping) -> Result<Vec<IpAddr>> {
         return Ok(vec![IpAddr::V4(Ipv4Addr::LOCALHOST)]);
     }
 
-    let normalized = bind_address
-        .strip_prefix('[')
-        .and_then(|address| address.strip_suffix(']'))
-        .unwrap_or(bind_address);
+    let normalized = bind_address.strip_circumfix('[', ']').unwrap_or(bind_address);
     Ok(vec![
         IpAddr::from_str(normalized).with_context(|| format!("invalid bind-address {bind_address:?}"))?,
     ])
@@ -298,11 +295,7 @@ fn parse_listener_address(address: &str) -> Result<(Vec<IpAddr>, u16)> {
     if port == 0 {
         bail!("listener port must be between 1 and 65535");
     }
-    let host = host
-        .trim()
-        .strip_prefix('[')
-        .and_then(|host| host.strip_suffix(']'))
-        .unwrap_or_else(|| host.trim());
+    let host = host.trim().strip_circumfix('[', ']').unwrap_or_else(|| host.trim());
     if host.eq_ignore_ascii_case("localhost") {
         return Ok((vec![IpAddr::V4(Ipv4Addr::LOCALHOST)], port));
     }

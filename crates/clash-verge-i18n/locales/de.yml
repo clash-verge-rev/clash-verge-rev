@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
   adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
+core:
+  alreadyRunning: 'Der Kern kann nicht gestartet werden: Ein Kernprozess läuft bereits. Beenden Sie die zugehörige App oder den verbliebenen Prozess und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, starten Sie den Computer neu.'
 launchGuard:
   currentExeError: 'Der Speicherort der Anwendung konnte nicht ermittelt werden: {error}'
   homeDirError: 'Das Benutzerverzeichnis des aktuellen Benutzers konnte nicht ermittelt werden. Die Anwendung wird beendet: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Global
   profiles: Profile
   proxies: Proxy
+  testLatency: Latenz testen
+  testingLatency: Latenz wird getestet…
   systemProxy: Systemproxy
   tunMode: TUN-Modus
   closeAllConnections: Alle Verbindungen schließen

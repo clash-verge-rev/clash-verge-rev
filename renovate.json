@@ -46,6 +46,17 @@
       "groupName": "npm dependencies"
     },
     {
+      "description": "Update Tauri npm packages and Cargo crates together so frontend and backend stay in sync",
+      "matchPackageNames": [
+        "@tauri-apps/**",
+        "@wdio/tauri-service",
+        "tauri",
+        "tauri-*"
+      ],
+      "groupName": "tauri",
+      "addLabels": ["tauri"]
+    },
+    {
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"

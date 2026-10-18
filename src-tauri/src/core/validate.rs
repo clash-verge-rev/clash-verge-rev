@@ -51,7 +51,7 @@ pub struct CoreConfigValidator {
     is_processing: AtomicBool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum ValidationErrorKind {
     FileMissing,
@@ -94,7 +94,7 @@ impl ValidationErrorKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub enum ValidationSkipReason {
     Exiting,
@@ -110,12 +110,18 @@ impl fmt::Display for ValidationSkipReason {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ValidationOutcome {
     Valid,
-    Invalid { kind: ValidationErrorKind, message: String },
-    Skipped { reason: ValidationSkipReason },
+    Invalid {
+        kind: ValidationErrorKind,
+        #[specta(type = std::string::String)]
+        message: String,
+    },
+    Skipped {
+        reason: ValidationSkipReason,
+    },
     Busy,
 }
 

@@ -298,6 +298,7 @@ where
     terminate_sidecar().await
 }
 
+#[cfg(any(not(target_os = "windows"), test))]
 async fn run_service_config_replacement_transition<
     StopGuard,
     StopGuardFuture,
@@ -556,6 +557,7 @@ impl CoreManager {
         Handle::notice(NoticeStatus::TunCompatibilityGuardRestoreFailed, detail);
     }
 
+    #[cfg(target_os = "windows")]
     pub(super) async fn recover_tun_guard(&self, require_restored: bool) -> Result<()> {
         let recover = async {
             if !tun_guard::prepare_recovery()? && !tun_guard::has_owned_guard() {
@@ -688,7 +690,9 @@ impl CoreManager {
             }
             #[cfg(target_os = "windows")]
             if matches!(*mode, RunningMode::NotRunning) {
-                clash_verge_service_ipc::execution::check_sidecar_available().await?;
+                clash_verge_service_ipc::execution::check_sidecar_available()
+                    .await
+                    .map_err(super::state::explain_core_occupancy)?;
             }
             if !matches!(status, ServiceStatus::SidecarAllowed) {
                 SERVICE_MANAGER.allow_sidecar_for_session()?;
@@ -982,7 +986,11 @@ impl CoreManager {
                 {
                     run_service_start_with_sidecar_fallback(
                         || self.start_core_by_service(),
-                        clash_verge_service_ipc::execution::check_sidecar_available,
+                        || async {
+                            clash_verge_service_ipc::execution::check_sidecar_available()
+                                .await
+                                .map_err(super::state::explain_core_occupancy)
+                        },
                         |error| self.start_sidecar_after_service_failure(error),
                         |reason| {
                             crate::core::runstate::RUN_STATE
@@ -1027,7 +1035,10 @@ impl CoreManager {
             ServiceHealth::VersionMismatch => "registered service is unavailable or incompatible".to_owned(),
             _ => return Ok(()),
         };
-        if let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available().await {
+        if let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available()
+            .await
+            .map_err(super::state::explain_core_occupancy)
+        {
             logging!(
                 warn,
                 Type::Core,

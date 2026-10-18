@@ -70,8 +70,8 @@ const resolveNoticeMessage = (
 
   const detail = i18n.params?.message
   const existingCore =
-    notice.code === 'SERVICE_SIDECAR_FAILED' && typeof detail === 'string'
-      ? /process verge-mihomo(?:-alpha)?(?:\.exe)? \(PID (\d+)\) is still running; refusing a second core\s*$/.exec(
+    typeof detail === 'string'
+      ? /process verge-mihomo(?:-alpha|-al)?(?:\.exe)? (?:\(PID (\d+)\) is still running|remains after IPC failure); refusing a second core\s*$/.exec(
           detail,
         )
       : null
@@ -101,9 +101,8 @@ const resolveNoticeMessage = (
             </Link>
           </Box>
         )}
-        {t('settings.feedback.errors.clashService.coreAlreadyRunning', {
-          pid: existingCore[1],
-        })}
+        {t('settings.feedback.errors.clashService.coreAlreadyRunning')}
+        {existingCore[1] && <Box sx={{ mt: 1 }}>PID {existingCore[1]}</Box>}
         <Box component="details" sx={{ mt: 1 }}>
           <Box component="summary" sx={{ cursor: 'pointer' }}>
             {t('shared.feedback.errors.details')}

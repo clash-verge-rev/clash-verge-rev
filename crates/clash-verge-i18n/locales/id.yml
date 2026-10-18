@@ -37,6 +37,8 @@ notifications:
 service:
   adminInstallPrompt: Menginstal layanan Clash Verge memerlukan hak administrator.
   adminUninstallPrompt: Menghapus instalasi layanan Clash Verge memerlukan hak administrator.
+core:
+  alreadyRunning: 'Tidak dapat memulai inti: proses inti sudah berjalan. Tutup aplikasi terkait atau hentikan proses yang tersisa, lalu coba lagi. Jika masalah berlanjut, mulai ulang komputer.'
 launchGuard:
   currentExeError: 'Lokasi aplikasi tidak dapat ditentukan: {error}'
   homeDirError: 'Direktori beranda pengguna saat ini tidak dapat ditentukan. Aplikasi akan ditutup: {error}'
@@ -68,6 +70,8 @@ tray:
   global: Global
   profiles: Profil
   proxies: Proksi
+  testLatency: Uji Latensi
+  testingLatency: Menguji latensi…
   systemProxy: Proksi Sistem
   tunMode: Mode TUN
   closeAllConnections: Tutup Semua Koneksi

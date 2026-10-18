@@ -164,7 +164,7 @@ export const TestCard = () => {
         }}
       >
         {testList.map((item, index) => (
-          <SortableItem key={item.uid} id={item.uid} index={index}>
+          <SortableItem key={item.uid} id={item.uid!} index={index}>
             <TestItem
               itemData={item}
               onEdit={() => viewerRef.current?.edit(item)}

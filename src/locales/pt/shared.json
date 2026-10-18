@@ -1,0 +1,139 @@
+{
+  "actions": {
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "new": "Novo",
+    "enable": "Ativar",
+    "upgrade": "Atualizar versão",
+    "restart": "Reiniciar",
+    "resetToDefault": "Restaurar padrão",
+    "refresh": "Atualizar",
+    "retry": "Tentar novamente",
+    "refreshPage": "Recarregar página",
+    "showDetails": "Mostrar detalhes",
+    "hideDetails": "Ocultar detalhes",
+    "listView": "Visualização em lista",
+    "tableView": "Visualização em tabela",
+    "pause": "Pausar",
+    "resume": "Retomar",
+    "closeAll": "Fechar tudo",
+    "clear": "Limpar",
+    "previous": "Anterior",
+    "next": "Próximo",
+    "check": "Verificar"
+  },
+  "labels": {
+    "updateAt": "Atualizado em",
+    "timeout": "Tempo limite",
+    "icon": "Ícone",
+    "name": "Nome",
+    "readOnly": "Somente leitura",
+    "expireTime": "Expira em",
+    "updateTime": "Hora da atualização",
+    "usedTotal": "Usado / Total",
+    "from": "De",
+    "password": "Senha",
+    "retryAttempts": "Tentativas",
+    "downloaded": "Baixado",
+    "uploaded": "Enviado"
+  },
+  "statuses": {
+    "enabled": "Ativado",
+    "disabled": "Desativado",
+    "saving": "Salvando...",
+    "empty": "Vazio",
+    "loading": "Carregando..."
+  },
+  "units": {
+    "milliseconds": "ms",
+    "seconds": "segundos",
+    "minutes": "min",
+    "hours": "h",
+    "kilobytes": "KB",
+    "files": "Arquivos"
+  },
+  "placeholders": {
+    "resetInput": "Limpar entrada",
+    "filter": "Condições do filtro",
+    "matchCase": "Diferenciar maiúsculas",
+    "matchWholeWord": "Palavra inteira",
+    "useRegex": "Usar expressão regular"
+  },
+  "validation": {
+    "invalidRegex": "Expressão regular inválida"
+  },
+  "window": {
+    "maximize": "Maximizar",
+    "minimize": "Minimizar"
+  },
+  "editorModes": {
+    "visualization": "Visualização",
+    "advanced": "Avançado"
+  },
+  "feedback": {
+    "errors": {
+      "unexpected": "Algo deu errado",
+      "label": "Erro",
+      "unknown": "Erro desconhecido",
+      "details": "Detalhes do erro",
+      "stack": "Pilha de erros",
+      "componentStack": "Pilha de componentes",
+      "trafficUnavailable": "Dados de tráfego indisponíveis",
+      "operationFailed": "A operação falhou",
+      "trafficStats": "Erro nas estatísticas de tráfego",
+      "trafficStatsDescription": "O componente de estatísticas de tráfego encontrou um erro e foi desativado para evitar falhas."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Perfil importado com sucesso",
+      "importSubscriptionSuccess": "Assinatura importada com sucesso",
+      "importWithClashProxy": "Perfil importado com o proxy do Clash",
+      "updateAvailable": "Atualização disponível",
+      "saved": "Salvo com sucesso",
+      "common": {
+        "copySuccess": "Copiado com sucesso",
+        "saveSuccess": "Configuração salva com sucesso",
+        "saveFailed": "Falha ao salvar a configuração",
+        "refreshFailed": "Falha ao atualizar; exibindo o último valor carregado"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "A validação da configuração da assinatura falhou. Verifique o arquivo de configuração da assinatura; as modificações foram revertidas.",
+        "bootFailed": "A validação da configuração da assinatura na inicialização falhou. Iniciado com a configuração padrão; verifique o arquivo de configuração da assinatura.",
+        "processTerminated": "O processo de validação foi encerrado. Verifique se algum software de segurança está impedindo a execução do núcleo ou se a CPU e o ambiente de execução do seu computador são compatíveis com o executável do núcleo."
+      },
+      "script": {
+        "syntaxError": "Erro de sintaxe no script, alterações revertidas",
+        "missingMain": "Erro no script, alterações revertidas",
+        "fileNotFound": "Arquivo ausente, alterações revertidas",
+        "fileError": "Erro no arquivo de script, alterações revertidas"
+      },
+      "yaml": {
+        "syntaxError": "Erro de sintaxe YAML, alterações revertidas",
+        "readError": "Erro de leitura YAML, alterações revertidas",
+        "mappingError": "Erro de mapeamento YAML, alterações revertidas"
+      },
+      "merge": {
+        "syntaxError": "Erro de sintaxe no arquivo de mesclagem, alterações revertidas",
+        "mappingError": "Erro de mapeamento no arquivo de mesclagem, alterações revertidas"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

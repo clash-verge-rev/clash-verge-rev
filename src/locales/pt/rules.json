@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Provedor de regras",
+      "dialogTitle": "Provedores de regras",
+      "actions": {
+        "updateAll": "Atualizar tudo",
+        "update": "Atualizar"
+      }
+    },
+    "title": "Regras"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} atualizado com sucesso",
+        "updateFailed": "Falha ao atualizar {{name}}: {{message}}",
+        "genericError": "Falha na atualização: {{message}}",
+        "none": "Nenhum provedor disponível para atualizar",
+        "allUpdated": "Todos os provedores foram atualizados com sucesso"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Tipo de regra",
+          "content": "Conteúdo da regra",
+          "proxyPolicy": "Política de proxy"
+        },
+        "toggles": {
+          "noResolve": "Sem resolução"
+        },
+        "actions": {
+          "prependRule": "Adicionar regra no início",
+          "appendRule": "Adicionar regra no fim"
+        },
+        "validation": {
+          "conditionRequired": "Condição da regra obrigatória",
+          "invalidRule": "Regra inválida"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Corresponder ao domínio completo (DOMAIN)",
+        "DOMAIN-SUFFIX": "Corresponder ao sufixo de domínio (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "Corresponder à palavra-chave do domínio (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "Corresponder ao domínio por regex (DOMAIN-REGEX)",
+        "GEOSITE": "Corresponder a domínios do GeoSite (GEOSITE)",
+        "GEOIP": "Corresponder ao código de país do IP (GEOIP)",
+        "SRC-GEOIP": "Corresponder ao código de país do IP de origem (SRC-GEOIP)",
+        "IP-ASN": "Corresponder ao ASN do IP (IP-ASN)",
+        "SRC-IP-ASN": "Corresponder ao ASN do IP de origem (SRC-IP-ASN)",
+        "IP-CIDR": "Corresponder à faixa de endereços IP (IP-CIDR)",
+        "IP-CIDR6": "Corresponder à faixa de endereços IPv6 (IP-CIDR6)",
+        "SRC-IP-CIDR": "Corresponder à faixa de endereços IP de origem (SRC-IP-CIDR)",
+        "IP-SUFFIX": "Corresponder à faixa de sufixo de IP (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "Corresponder à faixa de sufixo de IP de origem (SRC-IP-SUFFIX)",
+        "SRC-PORT": "Corresponder à faixa de portas de origem (SRC-PORT)",
+        "DST-PORT": "Corresponder à faixa de portas de destino (DST-PORT)",
+        "IN-PORT": "Corresponder à porta de entrada (IN-PORT)",
+        "DSCP": "Tag DSCP (apenas entrada TPROXY UDP) (DSCP)",
+        "PROCESS-NAME": "Corresponder ao nome do processo (PROCESS-NAME)",
+        "PROCESS-PATH": "Corresponder ao caminho completo do processo (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "Corresponder ao nome do processo por regex (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "Corresponder ao caminho completo do processo por regex (PROCESS-PATH-REGEX)",
+        "NETWORK": "Corresponder ao protocolo de rede (TCP/UDP) (NETWORK)",
+        "UID": "Corresponder ao ID de usuário Linux (UID)",
+        "IN-TYPE": "Corresponder ao tipo de entrada (IN-TYPE)",
+        "IN-USER": "Corresponder ao usuário de entrada (IN-USER)",
+        "IN-NAME": "Corresponder ao nome da entrada (IN-NAME)",
+        "SUB-RULE": "Sub-regra (SUB-RULE)",
+        "RULE-SET": "Corresponder ao conjunto de regras (RULE-SET)",
+        "AND": "E lógico (AND)",
+        "OR": "OU lógico (OR)",
+        "NOT": "NÃO lógico (NOT)",
+        "MATCH": "Corresponder a todas as requisições (MATCH)"
+      },
+      "title": "Editar regras"
+    }
+  }
+}

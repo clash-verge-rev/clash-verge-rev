@@ -44,7 +44,7 @@ static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 
 /// Why the Service was unavailable when the core fell back to Sidecar.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, specta::Type)]
 #[serde(tag = "kind", content = "reason", rename_all = "camelCase")]
 pub enum ServiceFallbackNotice {
     Unavailable,
@@ -101,6 +101,7 @@ struct ActiveServiceSession {
     proof: OwnerSessionProof,
     supports_runtime_staging: bool,
     supports_runtime_file_read: bool,
+    #[cfg(target_os = "windows")]
     tun_guard: bool,
 }
 
@@ -160,6 +161,7 @@ pub(crate) fn active_service_supports_runtime_file_read() -> bool {
         .is_some_and(|session| session.supports_runtime_file_read)
 }
 
+#[cfg(target_os = "windows")]
 pub(crate) fn active_service_has_tun_guard() -> bool {
     ACTIVE_SERVICE_SESSION
         .lock()
@@ -981,13 +983,19 @@ pub(super) fn service_start_outcome_is_uncertain(error: &anyhow::Error) -> bool 
     }
 }
 
+const fn service_start_refusal_requires_repair(code: u16) -> bool {
+    code != ServiceErrorCode::ProxyClearFailed as u16
+        && code != ServiceErrorCode::TunGuardInterfaceUnavailable as u16
+        && code != ServiceErrorCode::TunGuardFailed as u16
+}
+
 fn record_service_start_refusal<E: RunStateEnv>(
     store: &RunStateStore<E>,
     refusal: ServiceStartRefusal,
 ) -> anyhow::Error {
-    // A proxy clear failure is about the system network settings; repairing the service cannot fix it.
+    // Network configuration refusals do not supersede independently observed daemon health.
     if store.state().mode == crate::core::manager::RunningMode::NotRunning
-        && refusal.code != ServiceErrorCode::ProxyClearFailed as u16
+        && service_start_refusal_requires_repair(refusal.code)
     {
         store.observe(ServiceHealth::Unavailable(refusal.to_string()));
     }
@@ -1102,6 +1110,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         },
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
+        #[cfg(target_os = "windows")]
         tun_guard: guard_requested,
     });
 
@@ -1177,7 +1186,7 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
     let content = decode_hex(&encoded).context("服务返回了无效的核心日志快照")?;
-    Ok(String::from_utf8_lossy(&content).into_owned())
+    Ok(String::from_utf8_lossy_owned(content))
 }
 
 fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
@@ -2603,16 +2612,21 @@ mod tests {
     async fn refused_core_start_can_continue_with_sidecar() -> anyhow::Result<()> {
         use clash_verge_service_ipc::ServiceErrorCode;
         for code in [
-            ServiceErrorCode::InvalidInstallLocation,
-            ServiceErrorCode::InvalidRuntimeAsset,
-            ServiceErrorCode::OwnerSwitchFailed,
+            ServiceErrorCode::InvalidInstallLocation as u16,
+            ServiceErrorCode::InvalidRuntimeAsset as u16,
+            ServiceErrorCode::OwnerSwitchFailed as u16,
+            ServiceErrorCode::UnauthorizedOwner as u16,
+            ServiceErrorCode::StaleOwnerSession as u16,
+            ServiceErrorCode::AppDataRootNotOwned as u16,
+            ServiceErrorCode::ProtocolMismatch as u16,
+            u16::MAX,
         ] {
             let store = fake_store();
             store.observe(ServiceHealth::Ready);
             let error = super::record_service_start_refusal(
                 &store,
                 super::ServiceStartRefusal {
-                    code: code as u16,
+                    code,
                     core_path: "/development/service-core/verge-mihomo".into(),
                     message: "no administrator-approved copy is installed".into(),
                 },
@@ -2646,6 +2660,47 @@ mod tests {
 
         assert!(store.state().service_usable());
         assert!(!store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn guard_refusals_preserve_independently_observed_service_health() {
+        use clash_verge_service_ipc::ServiceErrorCode;
+
+        for code in [
+            ServiceErrorCode::TunGuardInterfaceUnavailable,
+            ServiceErrorCode::TunGuardFailed,
+        ] {
+            for health in [
+                ServiceHealth::Ready,
+                ServiceHealth::Unknown,
+                ServiceHealth::NotInstalled,
+                ServiceHealth::VersionMismatch,
+                ServiceHealth::Unavailable("service transport failed".into()),
+            ] {
+                let store = fake_store();
+                store.observe(health);
+                let observed = store.state();
+                let generation = store.generation_count();
+                let error = super::record_service_start_refusal(
+                    &store,
+                    super::ServiceStartRefusal {
+                        code: code as u16,
+                        core_path: "/development/service-core/verge-mihomo".into(),
+                        message: "selected adapter cannot be protected".into(),
+                    },
+                );
+
+                assert_eq!(store.state(), observed);
+                assert_eq!(store.generation_count(), generation);
+                assert_eq!(
+                    error
+                        .downcast_ref::<super::ServiceStartRefusal>()
+                        .expect("refusal provenance must survive")
+                        .code,
+                    code as u16
+                );
+            }
+        }
     }
 
     #[test]

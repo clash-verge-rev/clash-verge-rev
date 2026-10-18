@@ -22,6 +22,7 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
+import { useVerge } from '@/hooks/use-verge'
 import {
   getNetworkInterfacesInfo,
   patchTunSettings,
@@ -47,6 +48,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { clash } = useClash()
+  const { verge } = useVerge()
+  const interfacePreferenceLoading = OS === 'windows' && verge === undefined
+  const tunCompatibilityGuardEnabled =
+    verge?.enable_tun_compatibility_guard === true
 
   const [open, setOpen] = useState(false)
   const [networkInterfaces, setNetworkInterfaces] = useState<
@@ -69,6 +74,13 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     mtu: 1500,
   })
 
+  const lockOutboundInterface =
+    OS === 'windows' && !interfaceChanged
+      ? values.interfaceName !== '' &&
+        !values.autoDetectInterface &&
+        tunCompatibilityGuardEnabled
+      : values.lockOutboundInterface
+
   const routeExcludeAddressItems = splitRouteExcludeAddress(
     values.routeExcludeAddress,
   )
@@ -80,7 +92,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     ? t('settings.modals.tun.messages.invalidRouteExcludeAddress')
     : t('settings.modals.tun.messages.routeExcludeAddressHint')
   const interfaceNameError =
-    values.lockOutboundInterface && values.interfaceName.trim() === ''
+    lockOutboundInterface && values.interfaceName.trim() === ''
   const interfaceNameMissing =
     values.interfaceName !== '' &&
     !networkInterfaces?.some((iface) => iface.name === values.interfaceName)
@@ -174,7 +186,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       const interfacePatch: TunInterfacePatch = !interfaceChanged
         ? { action: 'unchanged' }
-        : values.lockOutboundInterface
+        : lockOutboundInterface
           ? { action: 'set', name: values.interfaceName }
           : { action: 'clear' }
       const tun: IConfigData['tun'] = {
@@ -192,7 +204,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               'auto-redirect': values.autoRedirect,
             }
           : {}),
-        'auto-detect-interface': values.lockOutboundInterface
+        'auto-detect-interface': lockOutboundInterface
           ? false
           : values.autoDetectInterface,
         'dns-hijack': values.dnsHijack[0] === '' ? [] : values.dnsHijack,
@@ -374,7 +386,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 fullWidth
                 size="small"
                 value={values.interfaceName}
-                disabled={!values.lockOutboundInterface || interfacesLoading}
+                disabled={!lockOutboundInterface || interfacesLoading}
                 error={interfaceNameError}
                 slotProps={{
                   select: {
@@ -433,7 +445,8 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             </Box>
             <Switch
               edge="end"
-              checked={values.lockOutboundInterface}
+              checked={lockOutboundInterface}
+              disabled={interfacePreferenceLoading}
               onChange={(_, c) => {
                 setInterfaceChanged(true)
                 setValues((v) => ({
@@ -457,7 +470,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoDetectInterface: c }))
             }
-            disabled={values.lockOutboundInterface}
+            disabled={lockOutboundInterface || interfacePreferenceLoading}
           />
         </ListItem>
 

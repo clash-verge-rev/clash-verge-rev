@@ -16,7 +16,7 @@ fn main() -> ExitCode {
 #[cfg(not(all(feature = "perf-harness", target_os = "macos")))]
 fn main() -> ExitCode {
     let default_parallelism = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
-    let worker_limit = std::cmp::min(default_parallelism, 8);
+    let worker_limit = std::cmp::min(default_parallelism, 4);
     let blocking_limit = 2 * worker_limit;
 
     #[allow(clippy::unwrap_used)]

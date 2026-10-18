@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use serde::Serialize;
+use serde::{Serialize, Serializer, ser::SerializeMap as _};
 use tauri_plugin_mihomo::models::{
-    DelayHistory, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
+    DelayHistory, Extra, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
 };
 
 pub struct ProxyViewInput {
@@ -20,7 +20,7 @@ pub struct GroupScope {
 
 pub struct ProxyViewBuilder;
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyViewV1 {
     pub schema_version: u8,
@@ -34,21 +34,21 @@ pub struct ProxyViewV1 {
     pub providers: Vec<ProxyProviderView>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewOrderSource {
     Runtime,
     Fallback,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "lowercase")]
 pub enum ProxyViewProviderState {
     Ready,
     Unavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxyCapabilities {
     pub udp: bool,
     pub xudp: bool,
@@ -57,13 +57,35 @@ pub struct ProxyCapabilities {
     pub smux: bool,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Serialize, specta::Type)]
+struct ProxyLatencyHistory<'a> {
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
+    history: &'a [DelayHistory],
+}
+
+fn serialize_proxy_latency_history<S: Serializer>(
+    extra: &HashMap<String, Extra>,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let mut map = serializer.serialize_map(Some(extra.len()))?;
+    for (url, extra) in extra {
+        map.serialize_entry(
+            url,
+            &ProxyLatencyHistory {
+                history: &extra.history,
+            },
+        )?;
+    }
+    map.end()
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyGroupView {
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub now: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -74,21 +96,29 @@ pub struct ProxyGroupView {
     pub icon: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub test_url: Option<String>,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
+    pub extra: HashMap<String, Extra>,
     #[serde(flatten)]
     pub capabilities: ProxyCapabilities,
     pub members: Vec<ProxyMemberRef>,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyNodeView {
     pub record_id: String,
     pub name: String,
     #[serde(rename = "type")]
+    #[specta(type = String)]
     pub proxy_type: ProxyType,
-    pub alive: bool,
+    #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
+    #[serde(serialize_with = "serialize_proxy_latency_history")]
+    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
+    pub extra: HashMap<String, Extra>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -102,7 +132,7 @@ pub struct ProxyNodeView {
     pub source: ProxyNodeSource,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyNodeSource {
     Core {
@@ -117,7 +147,7 @@ pub enum ProxyNodeSource {
     },
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProxyMemberRef {
     Group {
@@ -134,7 +164,7 @@ pub enum ProxyMemberRef {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyMemberUnresolvedReason {
     #[serde(rename = "missing")]
     Missing,
@@ -144,7 +174,7 @@ pub enum ProxyMemberUnresolvedReason {
     ProviderUnavailable,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyProviderView {
     pub name: String,
@@ -156,7 +186,7 @@ pub struct ProxyProviderView {
     pub proxy_record_ids: Vec<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub enum ProxyProviderVehicleType {
     #[serde(rename = "HTTP")]
     Http,
@@ -166,7 +196,7 @@ pub enum ProxyProviderVehicleType {
     Inline,
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 pub struct ProxySubscriptionInfo {
     pub upload: i64,
     pub download: i64,
@@ -254,7 +284,7 @@ impl ProxyViewBuilder {
         } else {
             ProxyViewProviderState::Unavailable
         };
-        let (mut core_groups, core_nodes) = partition_core(proxies);
+        let (mut core_groups, core_nodes) = partition_core(proxies, providers.is_some());
         let (mut records, core_node_ids) = build_core_records(core_nodes);
         let (providers, provider_candidates) = build_provider_records(providers, &mut records);
         let resolver = MemberResolver {
@@ -287,14 +317,14 @@ impl ProxyViewBuilder {
     }
 }
 
-fn partition_core(proxies: Proxies) -> (BTreeMap<String, Proxy>, BTreeMap<String, Proxy>) {
+fn partition_core(proxies: Proxies, providers_available: bool) -> (BTreeMap<String, Proxy>, BTreeMap<String, Proxy>) {
     let mut groups = BTreeMap::new();
     let mut nodes = BTreeMap::new();
 
     for (name, proxy) in proxies.proxies {
         if proxy.all.is_some() {
             groups.insert(name, proxy);
-        } else {
+        } else if !providers_available || proxy.provider_name.is_empty() {
             nodes.insert(name, proxy);
         }
     }
@@ -400,8 +430,8 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         icon,
         now,
         test_url,
-        alive,
         history,
+        extra,
         udp,
         xudp,
         tfo,
@@ -428,13 +458,13 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
     ProxyGroupView {
         name,
         proxy_type,
-        alive,
         now,
         fixed,
         hidden,
         icon,
         test_url,
         history,
+        extra,
         capabilities: ProxyCapabilities {
             udp,
             xudp,
@@ -452,8 +482,8 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         hidden,
         icon,
         test_url,
-        alive,
         history,
+        extra,
         udp,
         xudp,
         tfo,
@@ -467,8 +497,8 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         record_id,
         name,
         proxy_type,
-        alive,
         history,
+        extra,
         id,
         hidden,
         icon,
@@ -521,4 +551,63 @@ fn build_standalone(core_node_ids: &BTreeMap<String, String>) -> Vec<String> {
             .map(|(_, record_id)| record_id.clone()),
     );
     standalone
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn provider_echo_in_proxies_does_not_override_group_membership() -> anyhow::Result<()> {
+        let view = ProxyViewBuilder::build(ProxyViewInput {
+            runtime_group_order: vec!["A".into(), "B".into()],
+            group_scopes: ["A", "B"]
+                .into_iter()
+                .map(|name| {
+                    (
+                        name.into(),
+                        GroupScope {
+                            providers: vec![name.into()],
+                            exclude_types: vec![],
+                        },
+                    )
+                })
+                .collect(),
+            proxies: serde_json::from_value(json!({"proxies": {
+                "A": {"all": ["node"], "type": "Selector"},
+                "B": {"all": ["node"], "type": "Selector"},
+                "node": {"name": "node", "provider-name": "A", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}
+            }}))?,
+            providers: Some(serde_json::from_value(json!({"providers": {
+                "A": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}]},
+                "B": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 123}]}]}
+            }}))?),
+        });
+        for (group, expected) in view.groups.iter().zip([32, 123]) {
+            let ProxyMemberRef::Node { record_id, .. } = &group.members[0] else {
+                anyhow::bail!("Expected node")
+            };
+            let record = &view.records[record_id];
+            assert_eq!(record.history.last().map(|entry| entry.delay), Some(expected));
+            assert!(
+                matches!(&record.source, ProxyNodeSource::Provider { provider_name, .. } if provider_name == &group.name)
+            );
+        }
+        Ok(())
+    }
+    #[test]
+    fn unavailable_provider_keeps_core_echo_interactable() -> anyhow::Result<()> {
+        let view = ProxyViewBuilder::build(ProxyViewInput {
+            runtime_group_order: vec!["A".into()],
+            group_scopes: BTreeMap::new(),
+            proxies: serde_json::from_value(json!({"proxies": {
+                "A": {"all": ["node"], "type": "Selector"},
+                "node": {"name": "node", "provider-name": "provider"}
+            }}))?,
+            providers: None,
+        });
+        assert!(matches!(&view.groups[0].members[0], ProxyMemberRef::Node { .. }));
+        Ok(())
+    }
 }

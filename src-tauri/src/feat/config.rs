@@ -15,7 +15,7 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
     .await
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, specta::Type)]
 #[serde(tag = "action", rename_all = "snake_case")]
 pub enum TunInterfacePatch {
     Unchanged,
