@@ -262,6 +262,20 @@
   }
 }
 
+// macOS overlay title bar: the OS draws its native traffic lights in the
+// top-left corner over the sidebar, so reserve the row they occupy and
+// keep it draggable like the rest of the title bar area.
+.the-traffic-light-space {
+  display: none;
+}
+
+.macos.layout--native-frame {
+  .the-traffic-light-space {
+    display: block;
+    flex: 0 0 32px;
+  }
+}
+
 .layout.layout--nav-collapsed {
   --layout-nav-collapsed-width: 72px;
   --layout-nav-item-size: 52px;
