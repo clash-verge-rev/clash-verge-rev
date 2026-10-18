@@ -4,6 +4,7 @@ import { asyncRetry } from 'foxts/async-retry'
 import { extractErrorMessage } from 'foxts/extract-error-message'
 import { once } from 'foxts/once'
 import i18n from 'i18next'
+import { getBaseConfig } from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
 
@@ -151,6 +152,8 @@ export const getIpInfo = async (): Promise<
   )
   let lastError: unknown | null = null
   const userAgent = await getUserAgentPromise()
+  const { mixedPort } = await getBaseConfig()
+  const proxy = { all: `http://127.0.0.1:${mixedPort}` }
   console.debug('User-Agent for IP detection:', userAgent)
 
   for (const service of shuffledServices) {
@@ -168,6 +171,7 @@ export const getIpInfo = async (): Promise<
 
           const response = await fetch(service.url, {
             method: 'GET',
+            proxy,
             signal: timeoutController.signal, // AbortSignal.timeout(service.timeout || serviceTimeout),
             connectTimeout: service.timeout || serviceTimeout,
             headers: {
