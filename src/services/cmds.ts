@@ -30,8 +30,6 @@ export type {
   ListenerProbe,
   UnlockItem,
   TunInterfacePatch,
-  CoreFailure,
-  ServiceFallbackNotice,
 } from './bindings'
 
 export async function copyClashEnv() {
