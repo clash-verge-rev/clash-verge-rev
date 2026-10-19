@@ -294,6 +294,7 @@ impl IProfiles {
                     each.extra = item.extra;
                     each.updated = item.updated;
                     each.home = item.home.to_owned();
+                    each.name = item.name.clone();
                     each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
