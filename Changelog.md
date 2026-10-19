@@ -22,6 +22,7 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化「链式代理」：开启前需确认网速影响提示，空面板新增「关闭」按钮
 
 **🖥️ Windows**
 
