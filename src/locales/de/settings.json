@@ -248,9 +248,11 @@
           "tunTrayIcon": "TUN-Modus-Tray-Symbol",
           "enableTrayIcon": "Tray-Symbol aktivieren",
           "enableTraySpeed": "Tray-Geschwindigkeit aktivieren",
+          "trayIconPreset": "Tray Icon Theme",
           "pauseRenderTrafficStatsOnBlur": "Rendering der Verkehrsstatistiken bei Fokusverlust pausieren"
         },
         "tooltips": {
+          "enableTrayIcon": "When disabled, the tray icon will be hidden. You can reopen the window via shortcut or by launching the app.",
           "hoverNavigator": "Beim Darüberfahren mit der Maus über die Buchstaben automatisch zur passenden Proxy-Gruppe scrollen",
           "hoverNavigatorDelay": "Wartezeit vor dem automatischen Scrollen beim Darüberfahren, in Millisekunden"
         },
@@ -259,6 +261,20 @@
             "monochrome": "Monochromes Symbol",
             "colorful": "Farbiges Symbol",
             "disable": "Deaktivieren"
+          },
+          "trayIconPreset": {
+            "default": "Classic Cat",
+            "minimal": "Minimalist Dot",
+            "paperPlane": "Paper Plane",
+            "rocket": "Rocket",
+            "shield": "Shield",
+            "lightning": "Lightning",
+            "globe": "Globe",
+            "radar": "Radar",
+            "ghost": "Stealth Ghost",
+            "cloud": "Cloud",
+            "compass": "Compass",
+            "terminal": "Terminal"
           },
           "toastPosition": {
             "topLeft": "Oben links",

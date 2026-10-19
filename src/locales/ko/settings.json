@@ -248,9 +248,11 @@
           "tunTrayIcon": "TUN 트레이 아이콘",
           "enableTrayIcon": "트레이 아이콘 사용",
           "enableTraySpeed": "트레이 속도 표시 사용",
+          "trayIconPreset": "Tray Icon Theme",
           "pauseRenderTrafficStatsOnBlur": "포커스를 잃으면 트래픽 통계 렌더링 일시 중지"
         },
         "tooltips": {
+          "enableTrayIcon": "When disabled, the tray icon will be hidden. You can reopen the window via shortcut or by launching the app.",
           "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",
           "hoverNavigatorDelay": "호버 시 자동 스크롤까지의 지연(밀리초)"
         },
@@ -259,6 +261,20 @@
             "monochrome": "단색",
             "colorful": "컬러",
             "disable": "비활성화"
+          },
+          "trayIconPreset": {
+            "default": "Classic Cat",
+            "minimal": "Minimalist Dot",
+            "paperPlane": "Paper Plane",
+            "rocket": "Rocket",
+            "shield": "Shield",
+            "lightning": "Lightning",
+            "globe": "Globe",
+            "radar": "Radar",
+            "ghost": "Stealth Ghost",
+            "cloud": "Cloud",
+            "compass": "Compass",
+            "terminal": "Terminal"
           },
           "toastPosition": {
             "topLeft": "왼쪽 상단",

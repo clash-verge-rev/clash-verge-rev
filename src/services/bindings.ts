@@ -432,6 +432,8 @@ export type IVerge_Deserialize = {
   /**  代理页面自动滚动延迟（毫秒） */
   hover_jump_navigator_delay?: number | null
   enable_external_controller?: boolean | null
+  enable_tray_icon?: boolean | null
+  tray_icon_preset?: string | null
   tray_icon?: string | null
   verge_redir_port?: number | null
   verge_redir_enabled?: boolean | null
@@ -522,6 +524,8 @@ export type IVerge_Serialize = {
   /**  代理页面自动滚动延迟（毫秒） */
   hover_jump_navigator_delay: number | null
   enable_external_controller: boolean | null
+  enable_tray_icon: boolean | null
+  tray_icon_preset?: string | null
   tray_icon?: string | null
   verge_redir_port?: number | null
   verge_redir_enabled?: boolean | null

@@ -248,9 +248,11 @@
           "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
           "enableTrayIcon": "啟用系統匣圖示",
           "enableTraySpeed": "啟用系統匣速率",
+          "trayIconPreset": "系統匣圖示風格",
           "pauseRenderTrafficStatsOnBlur": "失去焦點時暫停渲染流量統計"
         },
         "tooltips": {
+          "enableTrayIcon": "關閉後系統匣與功能表列圖示將被隱藏。可透過快速鍵或重新打開應用程式呼出視窗。",
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
           "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數"
         },
@@ -259,6 +261,20 @@
             "monochrome": "單色圖示",
             "colorful": "彩色圖示",
             "disable": "停用"
+          },
+          "trayIconPreset": {
+            "default": "預設經典 (Cat)",
+            "minimal": "極簡圓點 (Minimal)",
+            "paperPlane": "紙飛機 (Plane)",
+            "rocket": "穿梭火箭 (Rocket)",
+            "shield": "安全盾牌 (Shield)",
+            "lightning": "極速閃电 (Lightning)",
+            "globe": "寰宇網路 (Globe)",
+            "radar": "信號雷達 (Radar)",
+            "ghost": "隱匿幽靈 (Ghost)",
+            "cloud": "輕量雲朵 (Cloud)",
+            "compass": "探索羅盤 (Compass)",
+            "terminal": "極客終端 (Terminal)"
           },
           "toastPosition": {
             "topLeft": "左上角",

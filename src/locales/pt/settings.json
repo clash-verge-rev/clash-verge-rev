@@ -248,9 +248,11 @@
           "tunTrayIcon": "Ícone da Bandeja do Tun",
           "enableTrayIcon": "Ativar Ícone da Bandeja",
           "enableTraySpeed": "Ativar Velocidade na Bandeja",
+          "trayIconPreset": "Tray Icon Theme",
           "pauseRenderTrafficStatsOnBlur": "Pausar a renderização das estatísticas de tráfego quando sem foco"
         },
         "tooltips": {
+          "enableTrayIcon": "When disabled, the tray icon will be hidden. You can reopen the window via shortcut or by launching the app.",
           "hoverNavigator": "Rola automaticamente até o grupo de proxy correspondente ao passar o mouse sobre as letras do alfabeto",
           "hoverNavigatorDelay": "Atraso antes da rolagem automática ao passar o mouse, em milissegundos"
         },
@@ -259,6 +261,20 @@
             "monochrome": "Monocromático",
             "colorful": "Colorido",
             "disable": "Desativar"
+          },
+          "trayIconPreset": {
+            "default": "Classic Cat",
+            "minimal": "Minimalist Dot",
+            "paperPlane": "Paper Plane",
+            "rocket": "Rocket",
+            "shield": "Shield",
+            "lightning": "Lightning",
+            "globe": "Globe",
+            "radar": "Radar",
+            "ghost": "Stealth Ghost",
+            "cloud": "Cloud",
+            "compass": "Compass",
+            "terminal": "Terminal"
           },
           "toastPosition": {
             "topLeft": "Superior Esquerdo",

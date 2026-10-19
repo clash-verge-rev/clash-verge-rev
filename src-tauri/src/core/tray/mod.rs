@@ -50,6 +50,7 @@ struct TrayMenuOptions {
 #[derive(Clone)]
 struct TrayState {}
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum IconKind {
     Common,
     SysProxy,
@@ -107,7 +108,49 @@ impl TrayState {
             return (true, Cow::Owned(data));
         }
 
+        if let Some(preset) = verge.tray_icon_preset.as_deref()
+            && preset != "default"
+            && let Some(preset_bytes) = Self::preset_icon(preset, kind)
+        {
+            return (false, preset_bytes);
+        }
+
         Self::default_icon(verge, kind)
+    }
+
+    fn preset_icon(preset: &str, kind: IconKind) -> Option<Cow<'static, [u8]>> {
+        macro_rules! preset_arms {
+            ($p:expr, $k:expr, { $( $name:literal => $folder:literal ),* $(,)? }) => {
+                match ($p, $k) {
+                    $(
+                        ($name, IconKind::Common) => {
+                            Some(Cow::Borrowed(include_bytes!(concat!("../../../icons/presets/", $folder, "/common.ico"))))
+                        }
+                        ($name, IconKind::SysProxy) => {
+                            Some(Cow::Borrowed(include_bytes!(concat!("../../../icons/presets/", $folder, "/sysproxy.ico"))))
+                        }
+                        ($name, IconKind::Tun) => {
+                            Some(Cow::Borrowed(include_bytes!(concat!("../../../icons/presets/", $folder, "/tun.ico"))))
+                        }
+                    )*
+                    _ => None,
+                }
+            };
+        }
+
+        preset_arms!(preset, kind, {
+            "minimal" => "minimal",
+            "paper-plane" => "paper-plane",
+            "rocket" => "rocket",
+            "shield" => "shield",
+            "lightning" => "lightning",
+            "globe" => "globe",
+            "radar" => "radar",
+            "ghost" => "ghost",
+            "cloud" => "cloud",
+            "compass" => "compass",
+            "terminal" => "terminal",
+        })
     }
 
     #[allow(clippy::missing_const_for_fn)]
@@ -381,6 +424,9 @@ impl Tray {
             return Ok(());
         };
 
+        let is_visible = verge.enable_tray_icon.unwrap_or(true);
+        logging_error!(Type::Tray, tray.set_visible(is_visible));
+
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
         let template = {
@@ -520,6 +566,8 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
+        let is_visible = verge.enable_tray_icon.unwrap_or(true);
+        logging_error!(Type::Tray, tray.set_visible(is_visible));
         tray.on_tray_icon_event(on_tray_icon_event);
         tray.on_menu_event(on_menu_event);
         Ok(())

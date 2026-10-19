@@ -8,6 +8,7 @@ import {
   MenuItem,
   Select,
   TextField,
+  Typography,
   styled,
 } from '@mui/material'
 import { convertFileSrc } from '@tauri-apps/api/core'
@@ -17,6 +18,18 @@ import { exists } from '@tauri-apps/plugin-fs'
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import cloudPresetImg from '@/assets/tray-presets/cloud.png'
+import compassPresetImg from '@/assets/tray-presets/compass.png'
+import defaultPresetImg from '@/assets/tray-presets/default.png'
+import ghostPresetImg from '@/assets/tray-presets/ghost.png'
+import globePresetImg from '@/assets/tray-presets/globe.png'
+import lightningPresetImg from '@/assets/tray-presets/lightning.png'
+import minimalPresetImg from '@/assets/tray-presets/minimal.png'
+import paperPlanePresetImg from '@/assets/tray-presets/paper-plane.png'
+import radarPresetImg from '@/assets/tray-presets/radar.png'
+import rocketPresetImg from '@/assets/tray-presets/rocket.png'
+import shieldPresetImg from '@/assets/tray-presets/shield.png'
+import terminalPresetImg from '@/assets/tray-presets/terminal.png'
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { DEFAULT_HOVER_DELAY } from '@/components/proxy/proxy-group-navigator'
 import { useVerge } from '@/hooks/use-verge'
@@ -29,6 +42,69 @@ import getSystem from '@/utils/get-system'
 import { GuardState } from './guard-state'
 
 const OS = getSystem()
+
+const TRAY_PRESETS = [
+  {
+    id: 'default',
+    label: 'Default',
+    img: defaultPresetImg,
+  },
+  {
+    id: 'minimal',
+    label: 'Minimal',
+    img: minimalPresetImg,
+  },
+  {
+    id: 'paper-plane',
+    label: 'Paper Plane',
+    img: paperPlanePresetImg,
+  },
+  {
+    id: 'rocket',
+    label: 'Rocket',
+    img: rocketPresetImg,
+  },
+  {
+    id: 'shield',
+    label: 'Shield',
+    img: shieldPresetImg,
+  },
+  {
+    id: 'lightning',
+    label: 'Lightning',
+    img: lightningPresetImg,
+  },
+  {
+    id: 'globe',
+    label: 'Globe',
+    img: globePresetImg,
+  },
+  {
+    id: 'radar',
+    label: 'Radar',
+    img: radarPresetImg,
+  },
+  {
+    id: 'ghost',
+    label: 'Ghost',
+    img: ghostPresetImg,
+  },
+  {
+    id: 'cloud',
+    label: 'Cloud',
+    img: cloudPresetImg,
+  },
+  {
+    id: 'compass',
+    label: 'Compass',
+    img: compassPresetImg,
+  },
+  {
+    id: 'terminal',
+    label: 'Terminal',
+    img: terminalPresetImg,
+  },
+] as const
 
 const clampHoverDelay = (value: number) => {
   if (!Number.isFinite(value)) {
@@ -425,26 +501,108 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             </GuardState>
           </Item>
         )}
-        {/* {OS === "macos" && (
-          <Item>
-            <ListItemText primary={t("settings.components.verge.layout.fields.enableTrayIcon")} />
-            <GuardState
-              value={
-                verge?.enable_tray_icon === false &&
-                verge?.enable_tray_speed === false
-                  ? true
-                  : (verge?.enable_tray_icon ?? true)
-              }
-              valueProps="checked"
-              onCatch={onError}
-              onFormat={onSwitchFormat}
-              onChange={(e) => onChangeData({ enable_tray_icon: e })}
-              onGuard={(e) => patchVerge({ enable_tray_icon: e })}
+        <Item>
+          <ListItemText
+            primary={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <span>
+                  {t('settings.components.verge.layout.fields.enableTrayIcon')}
+                </span>
+                <TooltipIcon
+                  title={t(
+                    'settings.components.verge.layout.tooltips.enableTrayIcon',
+                  )}
+                  sx={{ opacity: '0.7' }}
+                />
+              </Box>
+            }
+          />
+          <GuardState
+            value={verge?.enable_tray_icon ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_tray_icon: e })}
+            onGuard={(e) => patchVerge({ enable_tray_icon: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
+          <ListItemText
+            primary={t(
+              'settings.components.verge.layout.fields.trayIconPreset',
+            )}
+          />
+          <GuardState
+            value={verge?.tray_icon_preset ?? 'default'}
+            onCatch={onError}
+            onFormat={(e: any) => e.target.value}
+            onChange={(value) => onChangeData({ tray_icon_preset: value })}
+            onGuard={(value) => patchVerge({ tray_icon_preset: value })}
+          >
+            <Select
+              size="small"
+              sx={{ width: 140, '> div': { py: '7.5px' } }}
+              renderValue={(val) => {
+                const item = TRAY_PRESETS.find((p) => p.id === val)
+                return (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <img
+                      src={item?.img}
+                      alt=""
+                      style={{
+                        width: 16,
+                        height: 16,
+                        objectFit: 'contain',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      noWrap
+                      sx={{ fontSize: '13px' }}
+                    >
+                      {item?.label ?? String(val)}
+                    </Typography>
+                  </Box>
+                )
+              }}
             >
-              <Switch edge="end" />
-            </GuardState>
-          </Item>
-        )} */}
+              {TRAY_PRESETS.map((p) => (
+                <MenuItem key={p.id} value={p.id}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.25,
+                    }}
+                  >
+                    <img
+                      src={p.img}
+                      alt=""
+                      style={{
+                        width: 18,
+                        height: 18,
+                        objectFit: 'contain',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography variant="body2">{p.label}</Typography>
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </GuardState>
+        </Item>
         <Item>
           <ListItemText
             primary={t(

@@ -224,6 +224,12 @@ pub struct IVerge {
     pub hover_jump_navigator_delay: Option<u64>,
 
     pub enable_external_controller: Option<bool>,
+
+    pub enable_tray_icon: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
+    pub tray_icon_preset: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
@@ -422,6 +428,8 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            enable_tray_icon: Some(true),
+            tray_icon_preset: Some("default".into()),
             ..Self::default()
         }
     }
@@ -524,6 +532,8 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(enable_tray_icon);
+        patch!(tray_icon_preset);
     }
 
     pub fn get_log_level(&self) -> LevelFilter {

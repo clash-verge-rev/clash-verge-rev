@@ -248,9 +248,11 @@
           "tunTrayIcon": "TUN 模式托盘图标",
           "enableTrayIcon": "启用托盘图标",
           "enableTraySpeed": "启用托盘速率",
+          "trayIconPreset": "托盘图标风格",
           "pauseRenderTrafficStatsOnBlur": "失去焦点时暂停渲染流量统计"
         },
         "tooltips": {
+          "enableTrayIcon": "关闭后托盘与菜单栏图标将被隐藏。可通过快捷键或重新打开应用呼出窗口。",
           "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
           "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
         },
@@ -259,6 +261,20 @@
             "monochrome": "单色图标",
             "colorful": "彩色图标",
             "disable": "禁用"
+          },
+          "trayIconPreset": {
+            "default": "默认经典 (Cat)",
+            "minimal": "极简圆点 (Minimal)",
+            "paperPlane": "纸飞机 (Plane)",
+            "rocket": "穿梭火箭 (Rocket)",
+            "shield": "安全盾牌 (Shield)",
+            "lightning": "极速闪电 (Lightning)",
+            "globe": "寰宇网络 (Globe)",
+            "radar": "信号雷达 (Radar)",
+            "ghost": "隐匿幽灵 (Ghost)",
+            "cloud": "轻量云朵 (Cloud)",
+            "compass": "探索罗盘 (Compass)",
+            "terminal": "极客终端 (Terminal)"
           },
           "toastPosition": {
             "topLeft": "左上角",

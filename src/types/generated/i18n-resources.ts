@@ -763,6 +763,7 @@ export interface TranslationResources {
               toastPosition: string
               trafficGraph: string
               trayIcon: string
+              trayIconPreset: string
               tunTrayIcon: string
             }
             options: {
@@ -782,9 +783,24 @@ export interface TranslationResources {
                 topLeft: string
                 topRight: string
               }
+              trayIconPreset: {
+                cloud: string
+                compass: string
+                default: string
+                ghost: string
+                globe: string
+                lightning: string
+                minimal: string
+                paperPlane: string
+                radar: string
+                rocket: string
+                shield: string
+                terminal: string
+              }
             }
             title: string
             tooltips: {
+              enableTrayIcon: string
               hoverNavigator: string
               hoverNavigatorDelay: string
             }

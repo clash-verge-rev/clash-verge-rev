@@ -248,9 +248,11 @@
           "tunTrayIcon": "Ikon Tray Tun",
           "enableTrayIcon": "Enable Tray Icon",
           "enableTraySpeed": "Aktifkan Tray Speed",
+          "trayIconPreset": "Tray Icon Theme",
           "pauseRenderTrafficStatsOnBlur": "Jeda render statistik lalu lintas saat jendela tidak fokus"
         },
         "tooltips": {
+          "enableTrayIcon": "When disabled, the tray icon will be hidden. You can reopen the window via shortcut or by launching the app.",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },
@@ -259,6 +261,20 @@
             "monochrome": "Monokrom",
             "colorful": "Berwarna",
             "disable": "Nonaktifkan"
+          },
+          "trayIconPreset": {
+            "default": "Classic Cat",
+            "minimal": "Minimalist Dot",
+            "paperPlane": "Paper Plane",
+            "rocket": "Rocket",
+            "shield": "Shield",
+            "lightning": "Lightning",
+            "globe": "Globe",
+            "radar": "Radar",
+            "ghost": "Stealth Ghost",
+            "cloud": "Cloud",
+            "compass": "Compass",
+            "terminal": "Terminal"
           },
           "toastPosition": {
             "topLeft": "Kiri atas",

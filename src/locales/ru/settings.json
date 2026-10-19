@@ -248,9 +248,11 @@
           "tunTrayIcon": "Значок TUN в трее",
           "enableTrayIcon": "Показывать значок в трее",
           "enableTraySpeed": "Показывать скорость в трее",
+          "trayIconPreset": "Tray Icon Theme",
           "pauseRenderTrafficStatsOnBlur": "При потере фокуса приостанавливать отрисовку статистики трафика"
         },
         "tooltips": {
+          "enableTrayIcon": "When disabled, the tray icon will be hidden. You can reopen the window via shortcut or by launching the app.",
           "hoverNavigator": "Автоматически прокручивает к группе прокси при наведении на буквы",
           "hoverNavigatorDelay": "Задержка перед прокруткой при наведении (в миллисекундах)"
         },
@@ -259,6 +261,20 @@
             "monochrome": "Монохромные",
             "colorful": "Цветные",
             "disable": "Отключить"
+          },
+          "trayIconPreset": {
+            "default": "Classic Cat",
+            "minimal": "Minimalist Dot",
+            "paperPlane": "Paper Plane",
+            "rocket": "Rocket",
+            "shield": "Shield",
+            "lightning": "Lightning",
+            "globe": "Globe",
+            "radar": "Radar",
+            "ghost": "Stealth Ghost",
+            "cloud": "Cloud",
+            "compass": "Compass",
+            "terminal": "Terminal"
           },
           "toastPosition": {
             "topLeft": "Сверху слева",
