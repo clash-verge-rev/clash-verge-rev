@@ -372,8 +372,6 @@ pub struct ProfilePatch {
     #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
     pub selected: Option<Vec<crate::config::PrfSelected>>,
-    #[specta(type = Option<std::collections::BTreeMap<std::string::String, std::string::String>>)]
-    pub latency_test_urls: Option<std::collections::BTreeMap<String, String>>,
     pub extra: Option<crate::config::PrfExtra>,
     pub updated: Option<usize>,
     pub option: Option<PrfOption>,
@@ -388,7 +386,6 @@ impl From<ProfilePatch> for PrfItem {
             file: patch.file,
             url: patch.url,
             selected: patch.selected,
-            latency_test_urls: patch.latency_test_urls,
             extra: patch.extra,
             updated: patch.updated,
             option: patch.option,

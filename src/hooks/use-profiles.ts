@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 
 import type { ProfilePatch, ProfileSelection } from '@/services/bindings'
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
-import { migrateProfileTestUrls } from '@/services/proxy-test-url'
 import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
@@ -35,10 +34,6 @@ export const useProfiles = () => {
     retryDelay: 1000,
     refetchInterval: false,
   })
-
-  useEffect(() => {
-    if (profiles) migrateProfileTestUrls(profiles)
-  }, [profiles])
 
   const refetchRef = useRef(refetch)
   refetchRef.current = refetch

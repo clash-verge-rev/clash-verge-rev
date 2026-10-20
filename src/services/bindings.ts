@@ -659,7 +659,6 @@ export type PrfItem_Deserialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
-  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -675,7 +674,6 @@ export type PrfItem_Serialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
-  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated: number | null
   option?: PrfOption_Serialize | null
@@ -770,7 +768,6 @@ export type ProfilePatch_Deserialize = {
   file?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
-  latency_test_urls?: { [key in string]: string } | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -783,7 +780,6 @@ export type ProfilePatch_Serialize = {
   file: string | null
   url: string | null
   selected: PrfSelected[] | null
-  latency_test_urls: { [key in string]: string } | null
   extra: PrfExtra | null
   updated: number | null
   option: PrfOption_Serialize | null
@@ -818,7 +814,6 @@ export type ProxyGroupView_Deserialize = {
   icon: string | null
   testUrl: string | null
   history: DelayHistory[]
-  extra: { [key in string]: ProxyLatencyHistory }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
 
@@ -831,13 +826,8 @@ export type ProxyGroupView_Serialize = {
   icon?: string | null
   testUrl?: string | null
   history: DelayHistory[]
-  extra: { [key in string]: ProxyLatencyHistory }
   members: ProxyMemberRef[]
 } & ProxyCapabilities
-
-export type ProxyLatencyHistory = {
-  history: DelayHistory[]
-}
 
 export type ProxyMemberRef =
   | { kind: 'group'; name: string }
@@ -860,7 +850,6 @@ export type ProxyNodeView_Deserialize = {
   name: string
   type: string
   history: DelayHistory[]
-  extra: { [key in string]: ProxyLatencyHistory }
   id: string | null
   hidden: boolean | null
   icon: string | null
@@ -873,7 +862,6 @@ export type ProxyNodeView_Serialize = {
   name: string
   type: string
   history: DelayHistory[]
-  extra: { [key in string]: ProxyLatencyHistory }
   id?: string | null
   hidden?: boolean | null
   icon?: string | null
