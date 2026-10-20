@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
+import { ProxyQuickUnlock } from '@/components/proxy/proxy-quick-unlock'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
 import {
@@ -134,11 +135,21 @@ export const ProxyItem = (props: Props) => {
 
         <ListItemIcon
           sx={{
+            minWidth: 'auto',
+            alignItems: 'center',
             justifyContent: 'flex-end',
             color: 'primary.main',
             display: isPreset ? 'none' : '',
           }}
         >
+          {!unresolved && type !== 'Direct' && (
+            <ProxyQuickUnlock
+              groupName={group.name}
+              proxyName={name}
+              selected={selected}
+            />
+          )}
+
           {!unresolved && delayValue === -2 && (
             <Widget>
               <BaseLoading />

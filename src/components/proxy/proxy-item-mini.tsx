@@ -3,6 +3,7 @@ import { alpha, Box, ListItemButton, styled, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
+import { ProxyQuickUnlock } from '@/components/proxy/proxy-quick-unlock'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
 import {
@@ -155,8 +156,20 @@ export const ProxyItemMini = (props: Props) => {
         )}
       </Box>
       <Box
-        sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
+        sx={{
+          ml: 0.5,
+          color: 'primary.main',
+          display: isPreset ? 'none' : 'flex',
+          alignItems: 'center',
+        }}
       >
+        {!unresolved && type !== 'Direct' && (
+          <ProxyQuickUnlock
+            groupName={group.name}
+            proxyName={name}
+            selected={selected}
+          />
+        )}
         {!unresolved && delayValue === -2 && (
           <Widget>
             <BaseLoading />

@@ -5,6 +5,8 @@ import {
   HelpOutlined,
   PendingOutlined,
   RefreshRounded,
+  StarBorderRounded,
+  StarRounded,
 } from '@mui/icons-material'
 import {
   Box,
@@ -14,6 +16,7 @@ import {
   CircularProgress,
   Divider,
   Grid,
+  IconButton,
   Tooltip,
   Typography,
   alpha,
@@ -25,6 +28,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseEmpty, BasePage } from '@/components/base'
+import { useQuickUnlock } from '@/hooks/use-quick-unlock'
 import {
   checkMediaUnlock,
   checkMediaUnlockItem,
@@ -91,6 +95,7 @@ const dedupeUnlockItems = (items: UnlockItem[]) => {
 const UnlockPage = () => {
   const { t } = useTranslation()
   const theme = useTheme()
+  const { isPinned, toggleTarget } = useQuickUnlock()
 
   const [unlockItems, setUnlockItems] = useState<UnlockItem[]>([])
   const unlockItemsRef = useRef<UnlockItem[]>([])
@@ -100,6 +105,7 @@ const UnlockPage = () => {
   const saveResultsToStorage = (items: UnlockItem[]) => {
     try {
       localStorage.setItem(UNLOCK_RESULTS_STORAGE_KEY, JSON.stringify(items))
+      window.dispatchEvent(new CustomEvent('quick-unlock-results-change'))
     } catch (err) {
       console.error('Failed to save results to storage:', err)
     }
@@ -310,37 +316,64 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t('tests.components.item.actions.test')}>
-                      <span>
-                        <Button
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
+                      <Tooltip
+                        title={
+                          isPinned(item.name)
+                            ? '取消在代理页快捷测试'
+                            : '设为代理页快捷测试'
+                        }
+                      >
+                        <IconButton
                           size="small"
-                          variant="outlined"
-                          color="primary"
-                          disabled={
-                            loadingItems.includes(item.name) || isCheckingAll
-                          }
+                          onClick={() => toggleTarget(item.name)}
                           sx={{
-                            minWidth: '32px',
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
+                            color: isPinned(item.name)
+                              ? 'warning.main'
+                              : 'text.secondary',
                           }}
-                          onClick={() => checkSingleMedia(item.name)}
                         >
-                          <RefreshRounded
+                          {isPinned(item.name) ? (
+                            <StarRounded sx={{ fontSize: 20 }} />
+                          ) : (
+                            <StarBorderRounded sx={{ fontSize: 20 }} />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title={t('tests.components.item.actions.test')}>
+                        <span>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            disabled={
+                              loadingItems.includes(item.name) || isCheckingAll
+                            }
                             sx={{
-                              animation: loadingItems.includes(item.name)
-                                ? 'spin 1s linear infinite'
-                                : 'none',
-                              '@keyframes spin': {
-                                '0%': { transform: 'rotate(0deg)' },
-                                '100%': { transform: 'rotate(360deg)' },
-                              },
+                              minWidth: '32px',
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
                             }}
-                          />
-                        </Button>
-                      </span>
-                    </Tooltip>
+                            onClick={() => checkSingleMedia(item.name)}
+                          >
+                            <RefreshRounded
+                              sx={{
+                                animation: loadingItems.includes(item.name)
+                                  ? 'spin 1s linear infinite'
+                                  : 'none',
+                                '@keyframes spin': {
+                                  '0%': { transform: 'rotate(0deg)' },
+                                  '100%': { transform: 'rotate(360deg)' },
+                                },
+                              }}
+                            />
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    </Box>
                   </Box>
 
                   <Box
