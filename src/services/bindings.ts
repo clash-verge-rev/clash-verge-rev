@@ -383,6 +383,8 @@ export type IVerge_Deserialize = {
   enable_system_proxy?: boolean | null
   enable_proxy_guard?: boolean | null
   enable_bypass_check?: boolean | null
+  /**  off | on | auto; absent means the saved `ipv6` switch decides. */
+  ipv6_mode?: string | null
   /**  Initial DNS override preference for profiles without a saved setting. */
   enable_dns_settings?: boolean | null
   profile_dns_settings?: { [key in string]: ProfileDnsSettings_Deserialize }
@@ -473,6 +475,8 @@ export type IVerge_Serialize = {
   enable_system_proxy: boolean | null
   enable_proxy_guard: boolean | null
   enable_bypass_check: boolean | null
+  /**  off | on | auto; absent means the saved `ipv6` switch decides. */
+  ipv6_mode: string | null
   /**  Initial DNS override preference for profiles without a saved setting. */
   enable_dns_settings: boolean | null
   profile_dns_settings?: { [key in string]: ProfileDnsSettings_Serialize }

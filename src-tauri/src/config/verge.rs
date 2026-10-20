@@ -89,6 +89,10 @@ pub struct IVerge {
 
     pub enable_bypass_check: Option<bool>,
 
+    /// off | on | auto; absent means the saved `ipv6` switch decides.
+    #[specta(type = Option<std::string::String>)]
+    pub ipv6_mode: Option<String>,
+
     /// Initial DNS override preference for profiles without a saved setting.
     pub enable_dns_settings: Option<bool>,
 
@@ -486,6 +490,7 @@ impl IVerge {
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
         patch!(enable_bypass_check);
+        patch!(ipv6_mode);
         patch!(use_default_bypass);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);

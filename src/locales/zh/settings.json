@@ -140,7 +140,8 @@
           "networkInterface": "网络接口",
           "unifiedDelay": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
           "logLevel": "仅对日志目录 Service 文件夹下的内核日志文件生效",
-          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制"
+          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
+          "ipv6Auto": "仅在物理网络提供 IPv6 时启用，网络变化时自动重新检测"
         },
         "options": {
           "logLevel": {
@@ -149,6 +150,17 @@
             "warning": "Warn",
             "error": "Error",
             "silent": "Silent"
+          },
+          "ipv6Mode": {
+            "off": "关闭",
+            "on": "开启",
+            "auto": "自动"
+          }
+        },
+        "status": {
+          "ipv6Auto": {
+            "available": "可用",
+            "ipv4Only": "仅 IPv4"
           }
         }
       }

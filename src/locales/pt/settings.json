@@ -140,7 +140,8 @@
           "networkInterface": "Interface de Rede",
           "unifiedDelay": "Com o atraso unificado ativado, dois testes de atraso são realizados para eliminar as diferenças de atraso entre diferentes tipos de nós causadas por handshakes de conexão, etc.",
           "logLevel": "Este parâmetro é válido apenas para os arquivos de log do núcleo na pasta Service do diretório de logs",
-          "openUwpTool": "Desde o Windows 8, os aplicativos UWP (como a Microsoft Store) são impedidos de acessar diretamente os serviços de rede do host local, e esta ferramenta pode ser usada para contornar essa restrição"
+          "openUwpTool": "Desde o Windows 8, os aplicativos UWP (como a Microsoft Store) são impedidos de acessar diretamente os serviços de rede do host local, e esta ferramenta pode ser usada para contornar essa restrição",
+          "ipv6Auto": "Enable IPv6 only while the physical network provides it; re-checked automatically when the network changes"
         },
         "options": {
           "logLevel": {
@@ -149,6 +150,17 @@
             "warning": "Aviso",
             "error": "Erro",
             "silent": "Silencioso"
+          },
+          "ipv6Mode": {
+            "off": "Off",
+            "on": "On",
+            "auto": "Auto"
+          }
+        },
+        "status": {
+          "ipv6Auto": {
+            "available": "IPv6 available",
+            "ipv4Only": "IPv4-only network"
           }
         }
       }

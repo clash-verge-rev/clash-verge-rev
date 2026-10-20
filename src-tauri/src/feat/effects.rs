@@ -75,6 +75,7 @@ verge_registry! {
     enable_system_proxy => [SystemProxy, TrayMenu, TrayTooltip, TrayIcon];
     enable_proxy_guard => [SystemProxy];
     enable_bypass_check => NoEffect;
+    ipv6_mode => [ClashConfig];
     enable_dns_settings => NoEffect;
     profile_dns_settings => NoEffect;
     use_default_bypass => [SystemProxy];

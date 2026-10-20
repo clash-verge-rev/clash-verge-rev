@@ -79,6 +79,10 @@ impl Config {
     pub async fn init_config_before_window() -> Result<()> {
         Self::ensure_default_profile_items().await?;
 
+        // Before the first runtime config generation: `ipv6_mode: auto` must not start from an
+        // undetected underlay state.
+        crate::core::ipv6::initialize();
+
         let verge = Self::verge().await.latest_arc();
         clash_verge_i18n::sync_locale(verge.language.as_deref());
 

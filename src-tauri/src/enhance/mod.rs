@@ -42,6 +42,8 @@ struct ConfigValues {
     enable_dns_settings: bool,
     dns_override_confirmation: Option<String>,
     enable_external_controller: bool,
+    /// `ipv6_mode: auto` detected no usable physical IPv6; DNS must not advertise it either.
+    ipv6_auto_ipv4_only: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -109,7 +111,7 @@ async fn chain_item_or_default(item: Option<&PrfItem>, default_item: impl FnOnce
 async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let clash = Config::clash().await;
     let clash_arc = clash.latest_arc();
-    let clash_config = clash_arc.0.clone();
+    let mut clash_config = clash_arc.0.clone();
     drop(clash_arc);
     drop(clash);
 
@@ -127,6 +129,12 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let enable_external_controller = enable_external_controller.unwrap_or(false);
     let dns_settings = verge_arc.dns_settings_for(profile_uid);
     let dns_override_confirmation = dns_settings.confirmation;
+    // The GUI owns the effective top-level switch; profiles cannot see the persisted mode.
+    let ipv6_mode = verge_arc.ipv6_mode.clone();
+    let legacy_ipv6 = clash_config.get("ipv6").and_then(Value::as_bool).unwrap_or(true);
+    let effective_ipv6 = crate::core::ipv6::effective_ipv6(ipv6_mode.as_deref(), legacy_ipv6);
+    let ipv6_auto_ipv4_only = crate::core::ipv6::is_auto(ipv6_mode.as_deref()) && !effective_ipv6;
+    clash_config.insert(Value::from("ipv6"), Value::from(effective_ipv6));
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
@@ -156,6 +164,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
         enable_dns_settings,
         dns_override_confirmation,
         enable_external_controller,
+        ipv6_auto_ipv4_only,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -357,6 +366,13 @@ impl AuthoritativeFields {
             config.insert("hosts".into(), hosts);
         }
         config
+    }
+
+    /// Auto owns `dns.ipv6` while the underlay has no usable IPv6: an AAAA answer would hand an
+    /// application a route that cannot work. The DNS page's value is not rewritten and returns
+    /// with the next generation once IPv6 does.
+    fn constrain_dns_ipv6(&mut self) {
+        self.dns.insert(Value::from("ipv6"), Value::from(false));
     }
 
     /// The owned values as `config` holds them now, for diffing one override.
@@ -871,6 +887,16 @@ async fn apply_dns_settings(config: Mapping, enable_dns_settings: bool) -> (Mapp
     (config, Mapping::new())
 }
 
+/// Auto's temporary DNS safety constraint: an AAAA answer would hand an application a route
+/// that cannot work. A missing `dns` block needs no change because `ipv6: false` already keeps
+/// Mihomo from advertising IPv6 there.
+fn constrain_dns_ipv6(mut config: Mapping) -> Mapping {
+    if let Some(Value::Mapping(dns)) = config.get_mut("dns") {
+        dns.insert(Value::from("ipv6"), Value::from(false));
+    }
+    config
+}
+
 /// Returns the enhanced profile, its original keys, script logs, and DNS override decision.
 pub async fn enhance(
     profiles: &IProfiles,
@@ -887,6 +913,7 @@ pub async fn enhance(
         enable_dns_settings,
         dns_override_confirmation,
         enable_external_controller,
+        ipv6_auto_ipv4_only,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -932,8 +959,19 @@ pub async fn enhance(
     let config = apply_builtin_scripts(config, clash_core, enable_builtin);
     let config = use_tun(config, enable_tun);
     let (config, dns_settings) = apply_dns_settings(config, enable_dns_settings).await;
+    // Nothing to constrain when no DNS block is generated: Mihomo's DNS is not in the path.
+    let constrain_dns = ipv6_auto_ipv4_only && config.get("dns").and_then(Value::as_mapping).is_some();
+    // Constrain the base value extensions see, and own it so their writes are discarded.
+    let config = if constrain_dns {
+        constrain_dns_ipv6(config)
+    } else {
+        config
+    };
 
-    let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
+    let mut authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
+    if constrain_dns {
+        authoritative.constrain_dns_ipv6();
+    }
 
     let (config, exists_keys, result_map) = process_global_items(
         config,
@@ -1339,7 +1377,7 @@ mod merge_default_config_tests {
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod authoritative_field_tests {
-    use super::{AuthoritativeFields, Mapping, Value};
+    use super::{AuthoritativeFields, Mapping, Value, constrain_dns_ipv6};
 
     fn config_with(pairs: &[(&str, Value)]) -> Mapping {
         let mut config = Mapping::new();
@@ -1410,6 +1448,37 @@ mod authoritative_field_tests {
             Some(&Value::from(false)),
             "with the DNS page off, an override may set it"
         );
+    }
+
+    #[test]
+    fn auto_ipv4_only_owns_dns_ipv6_until_ipv6_returns() {
+        let page_value = config_with(&[("dns", dns_with_ipv6(true))]);
+        let constrained_base = constrain_dns_ipv6(page_value.clone());
+        assert_eq!(
+            constrained_base.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
+            Some(&Value::from(false)),
+            "extensions must see the constrained base value"
+        );
+
+        let mut authoritative = AuthoritativeFields::capture(&page_value, &[], page_value.clone());
+        authoritative.constrain_dns_ipv6();
+        let enforced = authoritative.enforce(config_with(&[("dns", dns_with_ipv6(true))]));
+        assert_eq!(
+            enforced.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
+            Some(&Value::from(false)),
+            "an extension must not restore the DNS page's AAAA policy"
+        );
+
+        // The DNS page's value is not rewritten: without the constraint it still wins.
+        let unconstrained = AuthoritativeFields::capture(&page_value, &[], page_value.clone());
+        let restored = unconstrained.enforce(config_with(&[("dns", dns_with_ipv6(true))]));
+        assert_eq!(
+            restored.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
+            Some(&Value::from(true))
+        );
+
+        let bare = constrain_dns_ipv6(config_with(&[("mode", Value::from("rule"))]));
+        assert!(!bare.contains_key(Value::from("dns")), "no DNS block to constrain");
     }
 
     #[test]

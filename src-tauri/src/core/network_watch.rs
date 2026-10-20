@@ -18,6 +18,7 @@ pub fn is_armed() -> bool {
 /// appearing from here on is never missed.
 pub fn start() {
     match NetworkServiceMonitor::start(|| {
+        crate::core::ipv6::note_network_change();
         AsyncHandler::spawn(reapply);
     }) {
         Ok(monitor) => {

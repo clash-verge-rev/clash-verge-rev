@@ -17,6 +17,10 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 
+**🍎/🐧 macOS/Linux**
+
+- macOS/Linux：新增「IPv6」自动模式，仅在物理网络提供 IPv6 时启用，网络切换后自动重新检测
+
 </details>
 
 <details>

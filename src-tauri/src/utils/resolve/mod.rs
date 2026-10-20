@@ -77,6 +77,8 @@ async fn resolve_setup() {
     // Live before the core starts, so a service appearing mid-start is not missed.
     #[cfg(target_os = "macos")]
     crate::core::network_watch::start();
+    // Re-probe the physical underlay on network changes and apply `ipv6_mode: auto` results.
+    crate::core::ipv6::start();
 
     let core_init = AsyncHandler::spawn(|| async {
         init_core_manager().await;

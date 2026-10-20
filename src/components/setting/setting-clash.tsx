@@ -37,7 +37,7 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
 
   const { clash, version, mutateClash, patchClash } = useClash()
-  const { verge, mutateVerge } = useVerge()
+  const { verge, mutateVerge, patchVerge } = useVerge()
   const { current: currentProfile } = useProfiles()
   const dnsEnabled = currentProfile
     ? (verge?.profile_dns_settings?.[currentProfile.uid!]?.enabled ??
@@ -53,6 +53,11 @@ const SettingClash = ({ onError }: Props) => {
     'log-level': logLevel,
     'unified-delay': unifiedDelay,
   } = clash ?? {}
+
+  const ipv6Mode = verge?.ipv6_mode ?? (ipv6 ? 'on' : 'off')
+  const autoSupported = !isWIN
+  const selectedIpv6Mode =
+    ipv6Mode === 'auto' && !autoSupported ? (ipv6 ? 'on' : 'off') : ipv6Mode
 
   const [dnsConfirmation, setDnsConfirmation] = useState<{
     profileUid: string
@@ -203,16 +208,50 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t('settings.sections.clash.form.fields.ipv6')}>
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.ipv6')}
+        secondary={
+          selectedIpv6Mode === 'auto'
+            ? ipv6
+              ? t('settings.sections.clash.form.status.ipv6Auto.available')
+              : t('settings.sections.clash.form.status.ipv6Auto.ipv4Only')
+            : undefined
+        }
+        extra={
+          selectedIpv6Mode === 'auto' ? (
+            <TooltipIcon
+              title={t('settings.sections.clash.form.tooltips.ipv6Auto')}
+              sx={{ opacity: '0.7' }}
+            />
+          ) : undefined
+        }
+      >
         <GuardState
-          value={ipv6 ?? false}
-          valueProps="checked"
+          value={selectedIpv6Mode}
           onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ ipv6: e })}
-          onGuard={(e) => patchClash({ ipv6: e })}
+          onFormat={(e: any) => e.target.value}
+          onChange={() => {}}
+          onGuard={async (value) => {
+            try {
+              await patchVerge({ ipv6_mode: value })
+            } catch (error) {
+              onError(error as Error)
+            }
+          }}
         >
-          <Switch edge="end" />
+          <Select size="small" sx={{ width: 100, '> div': { py: '7.5px' } }}>
+            <MenuItem value="off">
+              {t('settings.sections.clash.form.options.ipv6Mode.off')}
+            </MenuItem>
+            <MenuItem value="on">
+              {t('settings.sections.clash.form.options.ipv6Mode.on')}
+            </MenuItem>
+            {autoSupported && (
+              <MenuItem value="auto">
+                {t('settings.sections.clash.form.options.ipv6Mode.auto')}
+              </MenuItem>
+            )}
+          </Select>
         </GuardState>
       </SettingItem>
 
