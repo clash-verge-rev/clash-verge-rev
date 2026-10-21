@@ -1,7 +1,7 @@
 #!/bin/bash
 
 case "$1" in
-    upgrade|failed-upgrade|1)
+    upgrade|failed-upgrade|abort-upgrade|deconfigure|1)
         # Package upgrades must keep the installed service registered.
         ;;
     *)
