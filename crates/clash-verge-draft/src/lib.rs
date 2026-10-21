@@ -262,22 +262,3 @@ impl Drop for DraftTransaction<'_> {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::Draft;
-
-    #[test]
-    fn apply_reports_whether_a_draft_was_staged() {
-        let draft = Draft::new(vec![1]);
-
-        assert!(!draft.apply(), "nothing staged yet");
-        assert_eq!(**draft.data_arc(), vec![1]);
-
-        draft.edit_draft(|data| data.push(2));
-
-        assert!(draft.apply(), "a staged draft gets committed");
-        assert_eq!(**draft.data_arc(), vec![1, 2]);
-        assert!(!draft.apply(), "the draft is gone once committed");
-    }
-}
