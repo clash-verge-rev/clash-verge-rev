@@ -5,6 +5,7 @@ import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined'
+import TroubleshootOutlinedIcon from '@mui/icons-material/TroubleshootOutlined'
 import WifiOutlinedIcon from '@mui/icons-material/WifiOutlined'
 import { type ComponentType, type ReactNode } from 'react'
 
@@ -18,6 +19,7 @@ import SettingsSvg from '@/assets/image/itemicon/settings.svg?react'
 import UnlockSvg from '@/assets/image/itemicon/unlock.svg?react'
 
 import { navigationItems } from './_navigation-meta'
+import CapturePage from './capture'
 import ConnectionsPage from './connections'
 import HomePage from './home'
 import LogsPage from './logs'
@@ -54,6 +56,14 @@ export const navItems: NavigationItem[] = [
     ...navigationItems.connections,
     icon: [<LanguageOutlinedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
+  },
+  {
+    ...navigationItems.capture,
+    icon: [
+      <TroubleshootOutlinedIcon key="mui" />,
+      <TroubleshootOutlinedIcon key="svg" />,
+    ],
+    Component: CapturePage,
   },
   {
     ...navigationItems.rules,

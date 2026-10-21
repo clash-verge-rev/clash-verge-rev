@@ -380,7 +380,7 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     if verge.proxy_auto_config.unwrap_or_default() {
         return service_proxy_config(verge, 0, server::embedded_server_port()?);
     }
-    let mixed_port = MixedPort::desired().await;
+    let mixed_port = crate::capture::proxy_port(MixedPort::desired().await);
     service_proxy_config(verge, mixed_port, 0)
 }
 

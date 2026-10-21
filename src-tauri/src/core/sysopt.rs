@@ -418,7 +418,8 @@ impl Sysopt {
         let verge = Config::verge().await.latest_arc();
         // Configured, not live: this runs while the Core is being started or restarted, and
         // asking a Core that is not up yet would only fall back here anyway.
-        let port = MixedPort::desired().await;
+        let normal_port = MixedPort::desired().await;
+        let port = crate::capture::proxy_port(normal_port);
         let pac_port = server::embedded_server_port()?;
         // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;
@@ -426,7 +427,7 @@ impl Sysopt {
         let (sys_enable, pac_enable, proxy_host, proxy_guard) = (
             verge.enable_system_proxy.unwrap_or_default(),
             verge.proxy_auto_config.unwrap_or_default(),
-            verge.proxy_host.as_deref().unwrap_or("127.0.0.1"),
+            if port != normal_port { "127.0.0.1" } else { verge.proxy_host.as_deref().unwrap_or("127.0.0.1") },
             verge.enable_proxy_guard.unwrap_or_default(),
         );
 

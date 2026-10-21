@@ -144,3 +144,7 @@ your own device. See the [Privacy Policy](./PRIVACY.md) for details.
 ## License
 
 GPL-3.0 License. See [License here](./LICENSE) for details.
+
+## HTTP capture (fork feature)
+
+This fork adds an HTTP/SOCKS5 capture proxy with HTTPS inspection, domain filters, request/response inspectors, curl copying, and editable request replay. The capture module is built from Go source during prebuild and runs as a child process managed by the desktop client. See [capture module documentation](sidecars/clash-capture/README.md) for setup, certificate trust, recording limits, and manual proxy configuration.

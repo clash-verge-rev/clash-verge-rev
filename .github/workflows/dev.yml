@@ -115,6 +115,13 @@ jobs:
             pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
           lookup-only: true
 
+      - name: Install Go for capture sidecar
+        if: github.event.inputs[matrix.input] == 'true'
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: sidecars/clash-capture/go.mod
+          cache-dependency-path: sidecars/clash-capture/go.sum
+
       - name: Pnpm install and check
         if: github.event.inputs[matrix.input] == 'true'
         run: |

@@ -194,6 +194,111 @@ export interface TranslationResources {
       }
     }
     layout: {
+      capture: {
+        actions: string
+        add: string
+        allDomains: string
+        bodyTruncated: string
+        cancel: string
+        captureAll: string
+        captureAllHint: string
+        certExported: string
+        certHint: string
+        certMissing: string
+        clearAll: string
+        clearConfirmBody: string
+        clearConfirmTitle: string
+        clearDomain: string
+        cleared: string
+        close: string
+        collapse: string
+        confirmClear: string
+        contentCopied: string
+        contentType: string
+        copied: string
+        copyCurl: string
+        copyDialogHint: string
+        copyDialogTitle: string
+        copyTab: string
+        curlNotRecorded: string
+        curlTruncated: string
+        detailTitle: string
+        downloadCert: string
+        edit: string
+        enable: string
+        enableHint: string
+        failed: string
+        filterMethod: string
+        filterStatus: string
+        filterTitle: string
+        filterType: string
+        instructions: string
+        method: string
+        methodAll: string
+        methodOther: string
+        nextPage: string
+        noResults: string
+        nothingToClear: string
+        pageInfo: string
+        pending: string
+        prevPage: string
+        proxyAddress: string
+        proxyAuto: string
+        proxyManual: string
+        remove: string
+        replay: string
+        replayBinary: string
+        replayIncomplete: string
+        replayParams: string
+        replaySent: string
+        replayTitle: string
+        replayUnsupported: string
+        replayWarning: string
+        request: string
+        requestsTitle: string
+        response: string
+        resultCount: string
+        retentionHint: string
+        route: string
+        ruleHint: string
+        ruleLabel: string
+        rulePlaceholder: string
+        scopeAll: string
+        scopeDomain: string
+        searchPlaceholder: string
+        selectAll: string
+        start: string
+        stateAll: string
+        stateNone: string
+        stateOff: string
+        stateRules: string
+        status: string
+        statusAll: string
+        statusClient: string
+        statusError: string
+        statusFailed: string
+        statusRedirect: string
+        statusServer: string
+        statusSuccess: string
+        stop: string
+        tab_cookies: string
+        tab_headers: string
+        tab_json: string
+        tab_query: string
+        tab_raw: string
+        tab_text: string
+        time: string
+        typeAll: string
+        typeCss: string
+        typeFont: string
+        typeHtml: string
+        typeImage: string
+        typeJson: string
+        typeOther: string
+        typeScript: string
+        url: string
+        waiting: string
+      }
       components: {
         navigation: {
           menu: {
@@ -205,6 +310,7 @@ export interface TranslationResources {
             unlock: string
           }
           tabs: {
+            capture: string
             connections: string
             home: string
             logs: string

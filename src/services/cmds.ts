@@ -512,3 +512,15 @@ export async function checkMediaUnlock(onComplete: Channel<UnlockItem>) {
 export async function checkMediaUnlockItem(name: string) {
   return commands.checkMediaUnlockItem(name)
 }
+
+export const captureStatus = () => commands.captureStatus()
+export const captureStart = () => commands.captureStart()
+export const captureStop = () => commands.captureStop()
+export const captureApi = (method: string, path: string, body: string | null) =>
+  commands.captureApi(method, path, body)
+export const captureCaExport = (path: string) => commands.captureCaExport(path)
+export const captureReplay = (
+  id: string,
+  query: string | null,
+  body: string | null,
+) => commands.captureReplay(id, query, body)

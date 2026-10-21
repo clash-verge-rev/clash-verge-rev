@@ -16,6 +16,8 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增「捕捉」：支持请求与响应查看、过滤、复制及修改参数后重发
+
 
 </details>
 

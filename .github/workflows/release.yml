@@ -237,6 +237,12 @@ jobs:
         with:
           run_install: false
 
+      - name: Install Go for capture sidecar
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: sidecars/clash-capture/go.mod
+          cache-dependency-path: sidecars/clash-capture/go.sum
+
       - name: Pnpm install and check
         run: |
           pnpm i
@@ -337,6 +343,12 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           run_install: false
+
+      - name: Install Go for capture sidecar
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: sidecars/clash-capture/go.mod
+          cache-dependency-path: sidecars/clash-capture/go.sum
 
       - name: Pnpm install and check
         run: |
@@ -472,6 +484,12 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
+
+      - name: Install Go for capture sidecar
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: sidecars/clash-capture/go.mod
+          cache-dependency-path: sidecars/clash-capture/go.sum
 
       - name: Pnpm install and check
         run: |

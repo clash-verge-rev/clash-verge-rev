@@ -4,6 +4,24 @@ import { invoke as __TAURI_INVOKE, Channel } from '@tauri-apps/api/core'
 
 /** Commands */
 export const commands = {
+  captureStatus: () => __TAURI_INVOKE<CaptureStatus>('capture_status'),
+  captureStart: () => __TAURI_INVOKE<CaptureStatus>('capture_start'),
+  captureStop: () => __TAURI_INVOKE<CaptureStatus>('capture_stop'),
+  /**  Attach sidecar authentication here so page API calls need no bearer headers. */
+  captureApi: (method: string, path: string, body: string | null) =>
+    __TAURI_INVOKE<JsonValue>('capture_api', { method, path, body }),
+  /**
+   *  Replay once through the capture proxy, preserving normal TLS verification.
+   *  Redirects and automatic retries are disabled to avoid additional side effects.
+   */
+  captureReplay: (id: string, query: string | null, body: string | null) =>
+    __TAURI_INVOKE<JsonValue>('capture_replay', { id, query, body }),
+  /**
+   *  Export the machine-local CA so the user can trust it and decrypt HTTPS.
+   *  The path comes from the system save dialog, which grants write permission.
+   */
+  captureCaExport: (path: string) =>
+    __TAURI_INVOKE<string>('capture_ca_export', { path }),
   getSystemInfo: () => __TAURI_INVOKE<SystemInfo>('get_system_info'),
   /**  获取应用的运行时间（毫秒） */
   getAppUptime: () => __TAURI_INVOKE<number>('get_app_uptime'),
@@ -232,6 +250,12 @@ export const commands = {
 export type AutoProxy = {
   enable: boolean
   url: string
+}
+
+export type CaptureStatus = {
+  running: boolean
+  proxy_port: number
+  admin_url: string | null
 }
 
 export type ClashInfo = {

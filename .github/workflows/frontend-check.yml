@@ -149,7 +149,7 @@ jobs:
         run: |
           mkdir -p src-tauri/sidecar src-tauri/resources dist
           touch dist/index.html
-          for bin in clash-verge-service clash-verge-service-install clash-verge-service-uninstall verge-mihomo verge-mihomo-alpha; do
+          for bin in clash-capture clash-verge-service clash-verge-service-install clash-verge-service-uninstall verge-mihomo verge-mihomo-alpha; do
             touch "src-tauri/sidecar/${bin}-x86_64-unknown-linux-gnu"
           done
 

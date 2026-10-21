@@ -38,6 +38,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Go for capture sidecar
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: sidecars/clash-capture/go.mod
+          cache-dependency-path: sidecars/clash-capture/go.sum
+
       - name: Prepare build resources
         run: pnpm run prebuild x86_64-pc-windows-msvc
 

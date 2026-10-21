@@ -14,7 +14,11 @@
     ],
     "resources": ["resources"],
     "publisher": "Clash Verge Rev",
-    "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
+    "externalBin": [
+      "./sidecar/clash-capture",
+      "sidecar/verge-mihomo",
+      "sidecar/verge-mihomo-alpha"
+    ],
     "copyright": "GNU General Public License v3.0",
     "category": "DeveloperTool",
     "shortDescription": "Clash Verge Rev",

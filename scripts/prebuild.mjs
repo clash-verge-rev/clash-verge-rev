@@ -10,6 +10,7 @@ import { glob } from 'glob'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { extract } from 'tar'
 
+import { buildCaptureSidecar } from './capture-sidecar.mjs'
 import { resolveServiceRelease } from './service-release.mjs'
 import { log_debug, log_error, log_info, log_success } from './utils.mjs'
 
@@ -112,7 +113,7 @@ async function calculateFileHash(filePath) {
     const hashSum = createHash('sha256')
     hashSum.update(fileBuffer)
     return hashSum.digest('hex')
-  } catch (ignoreErr) {
+  } catch (_ignoreErr) {
     return null
   }
 }
@@ -730,6 +731,11 @@ const resolveUnSetDnsScript = () =>
   })
 
 const tasks = [
+  {
+    name: 'clash-capture',
+    func: () => buildCaptureSidecar(SIDECAR_HOST),
+    retry: 1,
+  },
   {
     name: 'verge-mihomo-alpha',
     func: () =>

@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 #![recursion_limit = "512"]
 
+mod capture;
 mod cmd;
 pub mod config;
 mod constants;
@@ -385,6 +386,7 @@ pub fn run() -> std::process::ExitCode {
             });
         }
         tauri::RunEvent::Exit => {
+            capture::stop_process();
             // Windows session ending currently reaches Tao as WM_ENDSESSION and
             // destroys the loop without a preventable ExitRequested event.
             if !handle::Handle::global().is_exiting() {

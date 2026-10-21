@@ -25,6 +25,7 @@
       }
     },
     "externalBin": [
+      "./sidecar/clash-capture",
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
       "./sidecar/clash-verge-service-uninstall",

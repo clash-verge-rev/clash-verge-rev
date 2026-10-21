@@ -1,9 +1,15 @@
-use crate::cmd;
+use crate::{capture, cmd};
 
 pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::new()
         .types(&platform_types())
         .commands(tauri_specta::collect_commands![
+            capture::capture_status,
+            capture::capture_start,
+            capture::capture_stop,
+            capture::capture_api,
+            capture::capture_replay,
+            capture::capture_ca_export,
             tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
             tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info::<tauri::Wry>,
