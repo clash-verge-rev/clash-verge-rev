@@ -55,7 +55,7 @@ const wrapCssInjectionWithScope = (css?: string) => {
     return null
   }
   const scopeRoot = CSS_INJECTION_SCOPE_ROOT
-  const scopeLimit = CSS_INJECTION_SCOPE_LIMIT
+  const scopeLimit = `${CSS_INJECTION_SCOPE_LIMIT} > *`
   const scopedBlock = `@scope (${scopeRoot}) to (${scopeLimit}) {
 ${css}
 }`
