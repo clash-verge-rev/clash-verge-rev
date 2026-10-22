@@ -116,7 +116,6 @@ const virtualGroup = (members: ProxyGroupView['members']): ProxyGroupView => ({
   mptcp: false,
   smux: false,
   history: [],
-  extra: {},
   members,
 })
 

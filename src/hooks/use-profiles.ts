@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 
 import type { ProfilePatch, ProfileSelection } from '@/services/bindings'
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
-import { migrateProfileTestUrls } from '@/services/proxy-test-url'
 import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
@@ -36,10 +35,6 @@ export const useProfiles = () => {
     refetchInterval: false,
   })
 
-  useEffect(() => {
-    if (profiles) migrateProfileTestUrls(profiles)
-  }, [profiles])
-
   const refetchRef = useRef(refetch)
   refetchRef.current = refetch
   const mutateProfiles = useCallback(async () => {
@@ -51,6 +46,7 @@ export const useProfiles = () => {
       try {
         const result = await mutate(() => patchProfilesConfig(value), {
           id: 'patch-profiles-config',
+          errorNotice: false,
           onFulfilled: (outcome) => {
             if (outcome.status === 'valid') {
               void setCacheData<IProfilesConfig>(profilesQueryKey, (current) =>
@@ -60,12 +56,8 @@ export const useProfiles = () => {
           },
         })
 
-        if (!result.ok) {
-          // Backend Busy keeps local state untouched, as before.
-          return result.value
-        }
         const outcome = result.value
-        if (outcome.status !== 'valid' && outcome.status !== 'busy') {
+        if (outcome.status !== 'valid') {
           await mutateProfiles()
         }
         return outcome

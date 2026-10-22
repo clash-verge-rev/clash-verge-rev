@@ -322,6 +322,8 @@ export const translationKeys = [
   'proxies.page.empty.actions.openLogs',
   'proxies.page.chain.header',
   'proxies.page.chain.warning',
+  'proxies.page.chain.confirmEnable',
+  'proxies.page.chain.keepDisabled',
   'proxies.page.chain.empty',
   'proxies.page.chain.instruction',
   'proxies.page.chain.minimumNodes',
