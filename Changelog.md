@@ -11,6 +11,8 @@
 **🐧 Linux**
 
 - Linux：修复 deb/rpm 安装包错误包含多余的 `frontend-contract` 可执行文件，导致下游重新打包失败的问题
+**🐧 Linux**
+修复 Linux 套件升级时服务被移除的问题。
 
 </details>
 
