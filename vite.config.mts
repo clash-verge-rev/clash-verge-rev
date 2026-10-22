@@ -14,7 +14,11 @@ export default defineConfig({
     legacy({
       modernTargets: ['edge>=109', 'safari>=14'],
       renderLegacyChunks: false,
-      modernPolyfills: ['es.object.has-own', 'web.structured-clone'],
+      modernPolyfills: [
+        'es.array.at',
+        'es.object.has-own',
+        'web.structured-clone',
+      ],
       additionalModernPolyfills: [
         path.resolve('./src/polyfills/matchMedia.js'),
         path.resolve('./src/polyfills/WeakRef.js'),
