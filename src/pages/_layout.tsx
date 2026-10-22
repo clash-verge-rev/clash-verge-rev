@@ -1,11 +1,11 @@
 import { Paper, ThemeProvider } from '@mui/material'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router'
 
-import { BaseErrorBoundary } from '@/components/base'
+import { BaseErrorBoundary, BaseLoading } from '@/components/base'
 import { LayoutSidebar } from '@/components/layout/layout-sidebar'
 import { NoticeManager } from '@/components/layout/notice-manager'
 import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
@@ -166,7 +166,22 @@ const Layout = () => {
             <div className="the-bar"></div>
             <div className="the-content">
               <BaseErrorBoundary>
-                <Outlet />
+                <Suspense
+                  fallback={
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                      }}
+                    >
+                      <BaseLoading />
+                    </div>
+                  }
+                >
+                  <Outlet />
+                </Suspense>
               </BaseErrorBoundary>
             </div>
           </div>
