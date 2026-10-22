@@ -77,6 +77,7 @@ interface GroupSelectMenuProps {
 interface ProxyGroupsChainProps {
   mode: string
   chainConfigData?: string | null
+  onExitChainMode: () => void
   availableGroups: any[]
   activeSelectedGroup: string | null
   showScrollTop: boolean
@@ -305,6 +306,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   const {
     mode,
     chainConfigData,
+    onExitChainMode,
     availableGroups,
     activeSelectedGroup,
     showScrollTop,
@@ -521,6 +523,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
             chainConfigData={chainConfigData}
             mode={mode}
             selectedGroup={activeSelectedGroup}
+            onExitChainMode={onExitChainMode}
           />
         </Box>
       </Box>

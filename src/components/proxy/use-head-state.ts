@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useReducer } from 'react'
 
 import { useProfiles } from '@/hooks/use-profiles'
-import {
-  profileTestUrls,
-  commitProfileTestUrl,
-} from '@/services/proxy-test-url'
 
 import { ProxySortType } from './use-filter-sort'
 
@@ -36,45 +32,22 @@ export const DEFAULT_STATE: HeadState = {
 }
 
 type HeadStateAction =
-  | { type: 'reset'; profile: string }
-  | { type: 'replace'; profile: string; payload: Record<string, HeadState> }
+  | { type: 'reset' }
+  | { type: 'replace'; payload: Record<string, HeadState> }
   | { type: 'update'; groupName: string; patch: Partial<HeadState> }
-  | { type: 'urls'; urls: Record<string, string> }
-
-interface LoadedHeadState {
-  profile: string | null
-  heads: Record<string, HeadState>
-}
 
 function headStateReducer(
-  state: LoadedHeadState,
+  state: Record<string, HeadState>,
   action: HeadStateAction,
-): LoadedHeadState {
+): Record<string, HeadState> {
   switch (action.type) {
     case 'reset':
-      return { profile: action.profile, heads: {} }
+      return {}
     case 'replace':
-      return { profile: action.profile, heads: action.payload }
-    case 'urls': {
-      let heads = state.heads
-      for (const [name, testUrl] of Object.entries(action.urls)) {
-        if (heads[name]?.testUrl === testUrl) continue
-        heads = {
-          ...heads,
-          [name]: { ...DEFAULT_STATE, ...heads[name], testUrl },
-        }
-      }
-      return heads === state.heads ? state : { ...state, heads }
-    }
+      return action.payload
     case 'update': {
-      const prev = state.heads[action.groupName] || DEFAULT_STATE
-      return {
-        ...state,
-        heads: {
-          ...state.heads,
-          [action.groupName]: { ...prev, ...action.patch },
-        },
-      }
+      const prev = state[action.groupName] || DEFAULT_STATE
+      return { ...state, [action.groupName]: { ...prev, ...action.patch } }
     }
     default:
       return state
@@ -82,42 +55,30 @@ function headStateReducer(
 }
 
 export function useHeadStateNew() {
-  const { profiles, current: profile } = useProfiles()
+  const { profiles } = useProfiles()
   const current = profiles?.current || ''
 
-  const [{ profile: loadedProfile, heads: state }, dispatch] = useReducer(
-    headStateReducer,
-    { profile: null, heads: {} },
-  )
+  const [state, dispatch] = useReducer(headStateReducer, {})
 
   useEffect(() => {
-    const urls = profile ? profileTestUrls(profile) : {}
-    if (loadedProfile === current) {
-      dispatch({ type: 'urls', urls })
-      return
-    }
     try {
       const data = JSON.parse(
-        localStorage.getItem(HEAD_STATE_KEY) || '{}',
+        localStorage.getItem(HEAD_STATE_KEY)!,
       ) as HeadStateStorage
 
-      const value = data?.[current] || {}
-      for (const [name, testUrl] of Object.entries(urls)) {
-        value[name] = { ...DEFAULT_STATE, ...value[name], testUrl }
-      }
+      const value = data[current] || {}
 
       if (value && typeof value === 'object') {
-        dispatch({ type: 'replace', profile: current, payload: value })
+        dispatch({ type: 'replace', payload: value })
       } else {
-        dispatch({ type: 'reset', profile: current })
+        dispatch({ type: 'reset' })
       }
     } catch {
-      dispatch({ type: 'reset', profile: current })
+      dispatch({ type: 'reset' })
     }
-  }, [current, loadedProfile, profile])
+  }, [current])
 
   useEffect(() => {
-    if (loadedProfile !== current) return
     const timer = setTimeout(() => {
       try {
         const item = localStorage.getItem(HEAD_STATE_KEY)
@@ -133,16 +94,13 @@ export function useHeadStateNew() {
     })
 
     return () => clearTimeout(timer)
-  }, [state, current, loadedProfile])
+  }, [state, current])
 
   const setHeadState = useCallback(
     (groupName: string, obj: Partial<HeadState>) => {
       dispatch({ type: 'update', groupName, patch: obj })
-      if (current && obj.testUrl !== undefined) {
-        void commitProfileTestUrl(current, groupName, obj.testUrl)
-      }
     },
-    [current],
+    [],
   )
 
   return [state, setHeadState] as const

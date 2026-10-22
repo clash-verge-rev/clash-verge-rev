@@ -75,6 +75,7 @@ interface ProxyChainProps {
   onMarkUnsavedChanges?: () => void
   mode?: string
   selectedGroup?: string | null
+  onExitChainMode: () => void
 }
 
 interface ProxyChainItemProps {
@@ -331,6 +332,7 @@ export const ProxyChain = ({
   onMarkUnsavedChanges,
   mode,
   selectedGroup,
+  onExitChainMode,
 }: ProxyChainProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
@@ -696,13 +698,18 @@ export const ProxyChain = ({
           <Box
             sx={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 2,
               height: '100%',
               color: theme.palette.text.secondary,
             }}
           >
             <Typography>{t('proxies.page.chain.empty')}</Typography>
+            <Button size="small" variant="outlined" onClick={onExitChainMode}>
+              {t('shared.actions.close')}
+            </Button>
           </Box>
         ) : (
           <DragDropProvider

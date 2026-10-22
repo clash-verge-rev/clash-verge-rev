@@ -52,7 +52,7 @@ jobs:
       - uses: actions/setup-node@v7
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: '24.21.0'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - name: Restore pnpm cache
@@ -138,7 +138,7 @@ jobs:
       - uses: actions/setup-node@v7
         if: steps.check_inputs.outputs.contract == 'true'
         with:
-          node-version: '24.21.0'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile

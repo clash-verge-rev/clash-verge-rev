@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 
-use serde::{Serialize, Serializer, ser::SerializeMap as _};
+use serde::Serialize;
 use tauri_plugin_mihomo::models::{
-    DelayHistory, Extra, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
+    DelayHistory, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
 };
 
 pub struct ProxyViewInput {
@@ -57,28 +57,6 @@ pub struct ProxyCapabilities {
     pub smux: bool,
 }
 
-#[derive(Serialize, specta::Type)]
-struct ProxyLatencyHistory<'a> {
-    #[specta(type = Vec<crate::ipc::DelayHistory>)]
-    history: &'a [DelayHistory],
-}
-
-fn serialize_proxy_latency_history<S: Serializer>(
-    extra: &HashMap<String, Extra>,
-    serializer: S,
-) -> Result<S::Ok, S::Error> {
-    let mut map = serializer.serialize_map(Some(extra.len()))?;
-    for (url, extra) in extra {
-        map.serialize_entry(
-            url,
-            &ProxyLatencyHistory {
-                history: &extra.history,
-            },
-        )?;
-    }
-    map.end()
-}
-
 #[derive(Debug, PartialEq, Eq, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyGroupView {
@@ -98,9 +76,6 @@ pub struct ProxyGroupView {
     pub test_url: Option<String>,
     #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
-    #[serde(serialize_with = "serialize_proxy_latency_history")]
-    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
-    pub extra: HashMap<String, Extra>,
     #[serde(flatten)]
     pub capabilities: ProxyCapabilities,
     pub members: Vec<ProxyMemberRef>,
@@ -116,9 +91,6 @@ pub struct ProxyNodeView {
     pub proxy_type: ProxyType,
     #[specta(type = Vec<crate::ipc::DelayHistory>)]
     pub history: Vec<DelayHistory>,
-    #[serde(serialize_with = "serialize_proxy_latency_history")]
-    #[specta(type = HashMap<String, ProxyLatencyHistory<'static>>)]
-    pub extra: HashMap<String, Extra>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -284,7 +256,7 @@ impl ProxyViewBuilder {
         } else {
             ProxyViewProviderState::Unavailable
         };
-        let (mut core_groups, core_nodes) = partition_core(proxies, providers.is_some());
+        let (mut core_groups, core_nodes) = partition_core(proxies);
         let (mut records, core_node_ids) = build_core_records(core_nodes);
         let (providers, provider_candidates) = build_provider_records(providers, &mut records);
         let resolver = MemberResolver {
@@ -317,14 +289,14 @@ impl ProxyViewBuilder {
     }
 }
 
-fn partition_core(proxies: Proxies, providers_available: bool) -> (BTreeMap<String, Proxy>, BTreeMap<String, Proxy>) {
+fn partition_core(proxies: Proxies) -> (BTreeMap<String, Proxy>, BTreeMap<String, Proxy>) {
     let mut groups = BTreeMap::new();
     let mut nodes = BTreeMap::new();
 
     for (name, proxy) in proxies.proxies {
         if proxy.all.is_some() {
             groups.insert(name, proxy);
-        } else if !providers_available || proxy.provider_name.is_empty() {
+        } else {
             nodes.insert(name, proxy);
         }
     }
@@ -431,7 +403,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         now,
         test_url,
         history,
-        extra,
         udp,
         xudp,
         tfo,
@@ -464,7 +435,6 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         icon,
         test_url,
         history,
-        extra,
         capabilities: ProxyCapabilities {
             udp,
             xudp,
@@ -483,7 +453,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         icon,
         test_url,
         history,
-        extra,
         udp,
         xudp,
         tfo,
@@ -498,7 +467,6 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         name,
         proxy_type,
         history,
-        extra,
         id,
         hidden,
         icon,
@@ -551,63 +519,4 @@ fn build_standalone(core_node_ids: &BTreeMap<String, String>) -> Vec<String> {
             .map(|(_, record_id)| record_id.clone()),
     );
     standalone
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use serde_json::json;
-
-    #[test]
-    fn provider_echo_in_proxies_does_not_override_group_membership() -> anyhow::Result<()> {
-        let view = ProxyViewBuilder::build(ProxyViewInput {
-            runtime_group_order: vec!["A".into(), "B".into()],
-            group_scopes: ["A", "B"]
-                .into_iter()
-                .map(|name| {
-                    (
-                        name.into(),
-                        GroupScope {
-                            providers: vec![name.into()],
-                            exclude_types: vec![],
-                        },
-                    )
-                })
-                .collect(),
-            proxies: serde_json::from_value(json!({"proxies": {
-                "A": {"all": ["node"], "type": "Selector"},
-                "B": {"all": ["node"], "type": "Selector"},
-                "node": {"name": "node", "provider-name": "A", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}
-            }}))?,
-            providers: Some(serde_json::from_value(json!({"providers": {
-                "A": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 32}]}]},
-                "B": {"vehicleType": "Inline", "proxies": [{"name": "node", "history": [{"time": "2026-10-08T00:00:00Z", "delay": 123}]}]}
-            }}))?),
-        });
-        for (group, expected) in view.groups.iter().zip([32, 123]) {
-            let ProxyMemberRef::Node { record_id, .. } = &group.members[0] else {
-                anyhow::bail!("Expected node")
-            };
-            let record = &view.records[record_id];
-            assert_eq!(record.history.last().map(|entry| entry.delay), Some(expected));
-            assert!(
-                matches!(&record.source, ProxyNodeSource::Provider { provider_name, .. } if provider_name == &group.name)
-            );
-        }
-        Ok(())
-    }
-    #[test]
-    fn unavailable_provider_keeps_core_echo_interactable() -> anyhow::Result<()> {
-        let view = ProxyViewBuilder::build(ProxyViewInput {
-            runtime_group_order: vec!["A".into()],
-            group_scopes: BTreeMap::new(),
-            proxies: serde_json::from_value(json!({"proxies": {
-                "A": {"all": ["node"], "type": "Selector"},
-                "node": {"name": "node", "provider-name": "provider"}
-            }}))?,
-            providers: None,
-        });
-        assert!(matches!(&view.groups[0].members[0], ProxyMemberRef::Node { .. }));
-        Ok(())
-    }
 }
