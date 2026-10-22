@@ -183,9 +183,7 @@ impl AutoBackupManager {
             // Re-arm only when no deadline is tracked: a settings change that does not
             // touch the interval (e.g. toggling the on-change backup) must not reset it.
             if next_fire.is_none() {
-                next_fire = Some(
-                    Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)),
-                );
+                next_fire = Some(Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)));
             }
             let Some(deadline) = next_fire else {
                 continue;
@@ -204,9 +202,7 @@ impl AutoBackupManager {
                             "Scheduled auto backup failed: {err:#?}"
                         );
                     }
-                    next_fire = Some(
-                        Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)),
-                    );
+                    next_fire = Some(Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)));
                 }
                 changed = rx.changed() => {
                     if changed.is_err() {
@@ -214,9 +210,7 @@ impl AutoBackupManager {
                     }
                     let updated = *rx.borrow();
                     if updated.interval_hours != current.interval_hours {
-                        next_fire = Some(
-                            Instant::now() + Duration::from_secs(updated.interval_hours.saturating_mul(3600)),
-                        );
+                        next_fire = Some(Instant::now() + Duration::from_secs(updated.interval_hours.saturating_mul(3600)));
                     }
                     current = updated;
                 }
