@@ -14,7 +14,7 @@ use std::{
         Arc, OnceLock,
         atomic::{AtomicBool, AtomicI64, Ordering},
     },
-    time::{Duration, UNIX_EPOCH},
+    time::{Duration, Instant, UNIX_EPOCH},
 };
 use tokio::{
     fs,
@@ -116,11 +116,23 @@ impl AutoBackupManager {
 
     pub async fn refresh_settings(&self) -> Result<()> {
         let settings = Self::load_settings().await;
-        {
-            *self.settings.write() = settings;
+        let changed = {
+            let mut stored = self.settings.write();
+            if *stored == settings {
+                false
+            } else {
+                *stored = settings;
+                true
+            }
+        };
+
+        // Unrelated settings (theme, language, tray...) also trigger a refresh; sending
+        // unconditionally would make the scheduler drop its in-flight countdown and restart
+        // it from zero, so the scheduled backup could be postponed forever.
+        if changed {
+            let _ = self.settings_tx.send(settings);
+            self.maybe_start_runner(settings);
         }
-        let _ = self.settings_tx.send(settings);
-        self.maybe_start_runner(settings);
         Ok(())
     }
 
@@ -156,8 +168,11 @@ impl AutoBackupManager {
 
     async fn run_scheduler(rx: &mut watch::Receiver<AutoBackupSettings>) {
         let mut current = *rx.borrow();
+        let mut next_fire: Option<Instant> = None;
+
         loop {
             if !current.schedule_enabled {
+                next_fire = None;
                 if rx.changed().await.is_err() {
                     break;
                 }
@@ -165,12 +180,20 @@ impl AutoBackupManager {
                 continue;
             }
 
-            let duration = Duration::from_secs(current.interval_hours.saturating_mul(3600));
-            let sleeper = tokio::time::sleep(duration);
-            tokio::pin!(sleeper);
+            // Re-arm only when no deadline is tracked: a settings change that does not
+            // touch the interval (e.g. toggling the on-change backup) must not reset it.
+            if next_fire.is_none() {
+                next_fire = Some(
+                    Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)),
+                );
+            }
+            let Some(deadline) = next_fire else {
+                continue;
+            };
+            let remaining = deadline.saturating_duration_since(Instant::now());
 
             tokio::select! {
-                _ = &mut sleeper => {
+                _ = tokio::time::sleep(remaining) => {
                     if let Err(err) = Self::global()
                         .execute_trigger(AutoBackupTrigger::Scheduled)
                         .await
@@ -181,12 +204,21 @@ impl AutoBackupManager {
                             "Scheduled auto backup failed: {err:#?}"
                         );
                     }
+                    next_fire = Some(
+                        Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600)),
+                    );
                 }
                 changed = rx.changed() => {
                     if changed.is_err() {
                         break;
                     }
-                    current = *rx.borrow();
+                    let updated = *rx.borrow();
+                    if updated.interval_hours != current.interval_hours {
+                        next_fire = Some(
+                            Instant::now() + Duration::from_secs(updated.interval_hours.saturating_mul(3600)),
+                        );
+                    }
+                    current = updated;
                 }
             }
         }
