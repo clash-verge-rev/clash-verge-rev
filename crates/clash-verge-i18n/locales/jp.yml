@@ -1,0 +1,92 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: ダッシュボード
+    body: ダッシュボードの表示状態が更新されました。
+  clashModeChanged:
+    title: モード切り替え
+    body: '{mode} に切り替えました。'
+  systemProxyToggled:
+    title: システムプロキシ
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: システムプロキシ
+    body: システムプロキシを設定できませんでした。理由は Clash Verge を開いて確認してください。
+  systemProxyGuardStopped:
+    title: システムプロキシガード
+    body: 連続して失敗したため停止しました。理由は Clash Verge を開いて確認してください。
+  tunModeToggled:
+    title: TUN モード
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
+  lightweightModeEntered:
+    title: 軽量モード
+    body: 軽量モードに入りました。
+  profilesReactivated:
+    title: プロファイル
+    body: プロファイルが再有効化されました。
+  appQuit:
+    title: 終了間近
+    body: Clash Verge はまもなく終了します。
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
+service:
+  adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
+  adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。
+core:
+  alreadyRunning: コアを起動できません：コアプロセスが実行中です。関連アプリまたは残存プロセスを終了して再試行してください。解決しない場合は、コンピューターを再起動してください。
+launchGuard:
+  currentExeError: アプリケーションの場所を確認できませんでした：{error}
+  homeDirError: 現在のユーザーのホームディレクトリを確認できないため、アプリケーションを終了します：{error}
+  translocated: macOS が一時的な App Translocation パスからこのアプリケーションを実行しています。Finder で /Applications または ~/Applications に手動で移動してから、もう一度開いてください。
+  rejected: |-
+    このアプリケーションは Applications ディレクトリから起動する必要があります。
+
+    {reason}
+  notInBundle: 実行ファイルがアプリケーションバンドル内にありません。
+  canonicalizeBundleError: アプリケーションバンドルのパスを解決できませんでした：{error}
+  bundleNameError: アプリケーションバンドル名を確認できないため、アプリケーションを終了します。
+  replacePrompt: '{destination} には既にアプリケーションがあります。置き換えて Applications から再起動しますか？'
+  movePrompt: バックグラウンドサービスを安全に起動するには、アプリケーションを {destination} に移動する必要があります。今すぐ移動して再起動しますか？
+  createApplicationsDirError: Applications ディレクトリを作成できませんでした：{error}
+  moveFailed: アプリケーションを移動できませんでした。Finder で手動で移動してから、もう一度お試しください。
+  replaceFailed: 既存のアプリケーションを安全に置き換えられませんでした：{error}
+  relaunchFailed: アプリケーションはコピーされましたが、自動的に再起動できませんでした。Applications から手動で開いてください。
+  cancel: キャンセル
+  move: 移動
+  ok: OK
+tray:
+  dashboard: ダッシュボード
+  ruleMode: ルールモード
+  globalMode: グローバルモード
+  directMode: ダイレクトモード
+  outboundModes: アウトバウンドモード
+  rule: ルール
+  direct: ダイレクト
+  global: グローバル
+  profiles: プロファイル
+  proxies: プロキシ
+  systemProxy: システムプロキシ
+  tunMode: TUN モード
+  closeAllConnections: すべての接続を閉じる
+  lightweightMode: 軽量モード
+  copyEnv: 環境変数をコピー
+  confDir: 設定ディレクトリ
+  coreDir: コアディレクトリ
+  logsDir: ログディレクトリ
+  openDir: ディレクトリを開く
+  appLog: アプリケーションログ
+  coreLog: コアログ
+  restartClash: Clash コアを再起動
+  restartApp: アプリケーションを再起動
+  vergeVersion: Verge バージョン
+  more: その他
+  exit: 終了
+  tooltip:
+    systemProxy: システムプロキシ
+    tun: TUN
+    profile: プロファイル

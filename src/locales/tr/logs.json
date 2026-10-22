@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Günlükler"
+  },
+  "actions": {
+    "showDescending": "Önce en yeni",
+    "showAscending": "Önce en eski"
+  }
+}

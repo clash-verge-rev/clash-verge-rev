@@ -1,0 +1,50 @@
+.base-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  > header {
+    flex: 0 0 58px;
+    width: 100%;
+    // max-width: 850px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  .base-container {
+    height: 100%;
+    overflow: hidden;
+    // border-radius: 10px;
+    // border-top-left-radius: var(--border-radius);
+
+    > section {
+      position: relative;
+      flex: 1 1 100%;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      padding: 10px 0;
+      box-sizing: border-box;
+      scrollbar-gutter: stable;
+      .base-content {
+        width: calc(100% - 10px * 2);
+        margin: 0 auto;
+      }
+    }
+
+    &.no-padding {
+      > section {
+        padding: 0;
+        overflow: visible;
+        .base-content {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

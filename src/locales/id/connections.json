@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Koneksi"
+  },
+  "components": {
+    "fields": {
+      "host": "Host",
+      "dlSpeed": "Kecepatan Unduh",
+      "ulSpeed": "Kecepatan Unggah",
+      "chains": "Rantai",
+      "rule": "Aturan",
+      "process": "Proses",
+      "time": "Waktu",
+      "source": "Sumber",
+      "destination": "IP Tujuan",
+      "destinationPort": "Port Tujuan",
+      "type": "Jenis"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Kecepatan Unggah",
+      "downloadSpeed": "Kecepatan Unduh"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "Tutup Koneksi"
+    },
+    "columnManager": {
+      "title": "Kolom",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Барчасын тестлау"
+    },
+    "title": "Тест"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Тест"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Тест булдыру",
+        "edit": "Тестны үзгәртү"
+      },
+      "fields": {
+        "url": "Тест URL-ы"
+      },
+      "errors": {
+        "nameRequired": "Исем кертегез",
+        "urlRequired": "Тест сылтамасын кертегез",
+        "invalidSvg": "Билгә дөрес SVG түгел",
+        "uidMissing": "Тест элементы билгесе юк",
+        "saveFailed": "Тест элементын саклап булмады"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "{{name}} өчен ачыклау уңышсыз булды",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
+  }
+}

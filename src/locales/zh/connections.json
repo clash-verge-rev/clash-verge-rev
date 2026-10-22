@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "连接"
+  },
+  "components": {
+    "fields": {
+      "host": "主机",
+      "dlSpeed": "下载速度",
+      "ulSpeed": "上传速度",
+      "chains": "链路",
+      "rule": "规则",
+      "process": "进程",
+      "time": "连接时间",
+      "source": "源地址",
+      "destination": "目标地址",
+      "destinationPort": "目标端口",
+      "type": "类型"
+    },
+    "order": {
+      "default": "默认",
+      "uploadSpeed": "上传速度",
+      "downloadSpeed": "下载速度"
+    },
+    "actions": {
+      "active": "活跃",
+      "closed": "已关闭",
+      "closeConnection": "关闭连接"
+    },
+    "columnManager": {
+      "title": "列设置",
+      "dragHandle": "拖拽控件"
+    }
+  }
+}

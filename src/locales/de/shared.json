@@ -1,0 +1,139 @@
+{
+  "actions": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "new": "Neu",
+    "enable": "Aktivieren",
+    "upgrade": "Kern aktualisieren",
+    "restart": "Kern neustarten",
+    "resetToDefault": "Auf Standardwerte zurücksetzen",
+    "refresh": "Aktualisieren",
+    "retry": "Erneut versuchen",
+    "refreshPage": "Seite neu laden",
+    "showDetails": "Details anzeigen",
+    "hideDetails": "Details ausblenden",
+    "listView": "Listenansicht",
+    "tableView": "Tabellenansicht",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "closeAll": "Alle schließen",
+    "clear": "Löschen",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "check": "Prüfen"
+  },
+  "labels": {
+    "updateAt": "Aktualisiert am",
+    "timeout": "Zeitlimit",
+    "icon": "Symbol",
+    "name": "Name",
+    "readOnly": "Schreibgeschützt",
+    "expireTime": "Ablaufzeit",
+    "updateTime": "Aktualisierungszeit",
+    "usedTotal": "Verwendet / Gesamt",
+    "from": "Von",
+    "password": "Passwort",
+    "retryAttempts": "Wiederholungsversuche",
+    "downloaded": "Heruntergeladen",
+    "uploaded": "Hochgeladen"
+  },
+  "statuses": {
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "saving": "Wird gespeichert...",
+    "empty": "Leer",
+    "loading": "Wird geladen..."
+  },
+  "units": {
+    "milliseconds": "Millisekunden",
+    "seconds": "Sekunden",
+    "minutes": "Minuten",
+    "hours": "Stunden",
+    "kilobytes": "KB",
+    "files": "Dateien"
+  },
+  "placeholders": {
+    "resetInput": "Eingabefeld leeren",
+    "filter": "Filterbedingungen",
+    "matchCase": "Groß-/Kleinschreibung beachten",
+    "matchWholeWord": "Ganzes Wort übereinstimmen",
+    "useRegex": "Regulären Ausdruck verwenden"
+  },
+  "validation": {
+    "invalidRegex": "Ungültiger regulärer Ausdruck"
+  },
+  "window": {
+    "maximize": "Maximieren",
+    "minimize": "Minimieren"
+  },
+  "editorModes": {
+    "visualization": "Visualisierung",
+    "advanced": "Erweitert"
+  },
+  "feedback": {
+    "errors": {
+      "unexpected": "Etwas ist schiefgelaufen",
+      "label": "Fehler",
+      "unknown": "Unbekannter Fehler",
+      "details": "Fehlerdetails",
+      "stack": "Fehler-Stack",
+      "componentStack": "Komponenten-Stack",
+      "trafficUnavailable": "Traffic-Daten nicht verfügbar",
+      "operationFailed": "Der Vorgang ist fehlgeschlagen",
+      "trafficStats": "Fehler in der Datenverkehrsstatistik",
+      "trafficStatsDescription": "In der Datenverkehrsstatistik ist ein Fehler aufgetreten; sie wurde deaktiviert, um Abstürze zu vermeiden."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Abonnement erfolgreich importiert",
+      "importSubscriptionSuccess": "Abonnement erfolgreich importiert",
+      "importWithClashProxy": "Abonnement mit Clash-Proxy importiert",
+      "updateAvailable": "Update verfügbar",
+      "saved": "Erfolgreich gespeichert",
+      "common": {
+        "copySuccess": "Kopieren erfolgreich",
+        "saveSuccess": "Konfiguration erfolgreich gespeichert",
+        "saveFailed": "Konfiguration konnte nicht gespeichert werden",
+        "refreshFailed": "Aktualisierung fehlgeschlagen"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
+        "bootFailed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
+        "processTerminated": "Der Validierungsprozess wurde beendet. Bitte prüfen Sie, ob eine Sicherheitssoftware die Ausführung des Kerns verhindert oder ob die CPU und Laufzeitumgebung Ihres Computers das Kernprogramm unterstützen."
+      },
+      "script": {
+        "syntaxError": "Skript-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+        "missingMain": "Skriptfehler. Die Änderungen wurden rückgängig gemacht.",
+        "fileNotFound": "Datei nicht gefunden. Die Änderungen wurden rückgängig gemacht.",
+        "fileError": "Skript-Dateifehler. Die Änderungen wurden rückgängig gemacht."
+      },
+      "yaml": {
+        "syntaxError": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+        "readError": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
+        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht."
+      },
+      "merge": {
+        "syntaxError": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

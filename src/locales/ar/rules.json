@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "مزود القواعد",
+      "dialogTitle": "مزود القواعد",
+      "actions": {
+        "updateAll": "تحديث الكل",
+        "update": "تحديث"
+      }
+    },
+    "title": "القواعد"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "نوع القاعدة",
+          "content": "محتوى القاعدة",
+          "proxyPolicy": "سياسة الوكيل"
+        },
+        "toggles": {
+          "noResolve": "لا يوجد حل"
+        },
+        "actions": {
+          "prependRule": "إضافة قاعدة في البداية",
+          "appendRule": "إضافة قاعدة في النهاية"
+        },
+        "validation": {
+          "conditionRequired": "شرط القاعدة مطلوب",
+          "invalidRule": "قاعدة غير صالحة"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "مطابقة اسم المجال الكامل",
+        "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
+        "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
+        "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
+        "GEOSITE": "مطابقة المجالات ضمن Geosite",
+        "GEOIP": "مطابقة رمز البلد لعنوان IP",
+        "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
+        "IP-ASN": "مطابقة ASN لعنوان IP",
+        "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
+        "IP-CIDR": "مطابقة نطاق عنوان IP",
+        "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
+        "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
+        "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
+        "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
+        "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
+        "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
+        "IN-PORT": "مطابقة المنفذ الوارد",
+        "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
+        "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
+        "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
+        "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
+        "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
+        "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
+        "UID": "مطابقة معرف المستخدم في Linux",
+        "IN-TYPE": "مطابقة نوع الإدخال",
+        "IN-USER": "مطابقة اسم المستخدم للإدخال",
+        "IN-NAME": "مطابقة اسم الإدخال",
+        "SUB-RULE": "قاعدة فرعية",
+        "RULE-SET": "مطابقة مجموعة القواعد",
+        "AND": "منطقي AND",
+        "OR": "منطقي OR",
+        "NOT": "منطقي NOT",
+        "MATCH": "مطابقة جميع الطلبات"
+      },
+      "title": "تعديل القواعد"
+    }
+  }
+}

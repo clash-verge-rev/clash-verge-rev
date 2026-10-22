@@ -1,0 +1,92 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Панель
+    body: Видимость панели обновлена.
+  clashModeChanged:
+    title: Смена режима
+    body: Переключено на {mode}.
+  systemProxyToggled:
+    title: Системный прокси
+    'on': Системный прокси включён.
+    'off': Системный прокси отключён.
+  systemProxyFailed:
+    title: Системный прокси
+    body: Не удалось настроить системный прокси. Откройте Clash Verge, чтобы узнать причину.
+  systemProxyGuardStopped:
+    title: Страж системного прокси
+    body: Остановлен после нескольких неудач подряд. Откройте Clash Verge, чтобы узнать причину.
+  tunModeToggled:
+    title: Режим TUN
+    'on': Режим TUN включён.
+    'off': Режим TUN отключён.
+  lightweightModeEntered:
+    title: Легкий режим
+    body: Включен легкий режим.
+  profilesReactivated:
+    title: Профили
+    body: Профиль повторно активирован.
+  appQuit:
+    title: Скорый выход
+    body: Clash Verge скоро завершит работу.
+  updateReady:
+    title: Обновление Clash Verge
+    body: Новая версия (v{version}) скачана и готова к установке.
+    installNow: Установить сейчас
+    later: Позже
+service:
+  adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
+  adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
+core:
+  alreadyRunning: 'Не удалось запустить ядро: процесс ядра уже работает. Закройте соответствующее приложение или завершите оставшийся процесс и повторите попытку. Если проблема сохраняется, перезагрузите компьютер.'
+launchGuard:
+  currentExeError: 'Не удалось определить расположение приложения: {error}'
+  homeDirError: 'Не удалось определить домашний каталог текущего пользователя. Приложение будет закрыто: {error}'
+  translocated: macOS запускает это приложение из временного пути App Translocation. Переместите его вручную в Finder в /Applications или ~/Applications, затем откройте снова.
+  rejected: |-
+    Это приложение необходимо запускать из каталога Applications.
+
+    {reason}
+  notInBundle: Исполняемый файл не находится внутри пакета приложения.
+  canonicalizeBundleError: 'Не удалось определить путь к пакету приложения: {error}'
+  bundleNameError: Не удалось определить имя пакета приложения. Приложение будет закрыто.
+  replacePrompt: В {destination} уже есть приложение. Заменить его и перезапустить из Applications?
+  movePrompt: Для безопасного запуска фоновой службы приложение необходимо переместить в {destination}. Переместить и перезапустить сейчас?
+  createApplicationsDirError: 'Не удалось создать каталог Applications: {error}'
+  moveFailed: Не удалось переместить приложение. Переместите его вручную в Finder и повторите попытку.
+  replaceFailed: 'Не удалось безопасно заменить существующее приложение: {error}'
+  relaunchFailed: Приложение скопировано, но его не удалось перезапустить автоматически. Откройте его вручную из Applications.
+  cancel: Отмена
+  move: Переместить
+  ok: ОК
+tray:
+  dashboard: Панель
+  ruleMode: Режим правил
+  globalMode: Глобальный режим
+  directMode: Прямой режим
+  outboundModes: Исходящие режимы
+  rule: Правило
+  direct: Прямой
+  global: Глобальный
+  profiles: Профили
+  proxies: Прокси
+  systemProxy: Системный прокси
+  tunMode: Режим TUN
+  closeAllConnections: Закрыть все соединения
+  lightweightMode: Легкий режим
+  copyEnv: Копировать переменные среды
+  confDir: Каталог конфигурации
+  coreDir: Каталог ядра
+  logsDir: Каталог журналов
+  openDir: Открыть каталог
+  appLog: Журнал приложения
+  coreLog: Журнал ядра
+  restartClash: Перезапустить ядро Clash
+  restartApp: Перезапустить приложение
+  vergeVersion: Версия Verge
+  more: Еще
+  exit: Выход
+  tooltip:
+    systemProxy: Системный прокси
+    tun: TUN
+    profile: Профиль

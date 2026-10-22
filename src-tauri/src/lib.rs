@@ -1,0 +1,464 @@
+#![allow(non_snake_case)]
+#![recursion_limit = "512"]
+
+mod cmd;
+pub mod config;
+mod constants;
+mod core;
+mod enhance;
+mod feat;
+pub mod ipc;
+mod process;
+pub mod utils;
+
+use crate::constants::files;
+use crate::{
+    core::handle,
+    process::AsyncHandler,
+    utils::{resolve, server},
+};
+use anyhow::Result;
+use clash_verge_logging::{Type, logging};
+use std::sync::OnceLock;
+use tauri::{AppHandle, Manager as _};
+#[cfg(target_os = "macos")]
+use tauri_plugin_autostart::MacosLauncher;
+use tauri_plugin_deep_link::DeepLinkExt as _;
+
+pub static APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
+
+/// Application initialization helper functions
+mod app_init {
+    use super::*;
+
+    /// Initialize singleton monitoring for other instances
+    pub fn init_singleton_check() -> Result<server::SingletonDisposition> {
+        AsyncHandler::block_on(async move {
+            logging!(debug, Type::Setup, "开始检查单例实例...");
+            server::check_singleton().await
+        })
+    }
+
+    /// Setup plugins for the Tauri builder
+    pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+        #[allow(unused_mut)]
+        let mut builder = builder
+            .plugin(tauri_plugin_clash_verge_sysinfo::init())
+            .plugin(tauri_plugin_notification::init())
+            .plugin(
+                tauri_plugin_updater::Builder::new()
+                    .default_version_comparator(|current, release| {
+                        release.version > current
+                            || core::updater::is_build_to_stable(&current.to_string(), &release.version.to_string())
+                    })
+                    .build(),
+            )
+            .plugin(tauri_plugin_clipboard_manager::init())
+            .plugin(tauri_plugin_process::init())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+            .plugin(tauri_plugin_fs::init())
+            .plugin(tauri_plugin_dialog::init())
+            .plugin(tauri_plugin_shell::init())
+            .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_deep_link::init())
+            .plugin(tauri_plugin_http::init())
+            .plugin(
+                tauri_plugin_mihomo::Builder::new()
+                    .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
+                    .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
+                    .build(),
+            );
+
+        // Devtools plugin only in debug mode with feature tauri-dev
+        // to avoid duplicated registering of logger since the devtools plugin also registers a logger
+        #[cfg(all(debug_assertions, not(feature = "tokio-trace"), feature = "tauri-dev"))]
+        {
+            builder = builder.plugin(tauri_plugin_devtools::init());
+        }
+        builder
+    }
+
+    /// Setup deep link handling
+    pub fn setup_deep_links(app: &tauri::App) {
+        #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+        {
+            logging!(debug, Type::Setup, "注册深层链接...");
+            let _ = app.deep_link().register_all();
+        }
+
+        app.deep_link().on_open_url(|event| {
+            let urls = event.urls();
+            AsyncHandler::spawn(move || async move {
+                if let Some(url) = urls.first() {
+                    resolve::resolve_scheme(url.as_ref()).await;
+                }
+            });
+        });
+    }
+
+    /// Setup autostart plugin
+    pub fn setup_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(target_os = "macos")]
+        let mut auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
+        #[cfg(not(target_os = "macos"))]
+        let auto_start_plugin_builder = tauri_plugin_autostart::Builder::new();
+
+        #[cfg(target_os = "macos")]
+        {
+            auto_start_plugin_builder = auto_start_plugin_builder
+                .macos_launcher(MacosLauncher::LaunchAgent)
+                .app_name(&app.config().identifier);
+        }
+        app.handle().plugin(auto_start_plugin_builder.build())?;
+        Ok(())
+    }
+
+    /// Setup window state management
+    pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+        logging!(debug, Type::Setup, "初始化窗口状态管理...");
+        let window_state_plugin = tauri_plugin_window_state::Builder::new()
+            .with_filename(files::WINDOW_STATE)
+            .with_state_flags(tauri_plugin_window_state::StateFlags::default())
+            .build();
+        app.handle().plugin(window_state_plugin)?;
+        Ok(())
+    }
+
+    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+        {
+            let builder = crate::ipc::builder();
+            move |invoke| builder.invoke_handler()(invoke)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartupAction {
+    Continue,
+    ExitSuccess,
+    ExitFailure,
+}
+
+fn handle_singleton_startup(
+    result: Result<server::SingletonDisposition>,
+    report_error: impl FnOnce(&anyhow::Error),
+) -> StartupAction {
+    match result {
+        Ok(server::SingletonDisposition::Primary) => StartupAction::Continue,
+        Ok(server::SingletonDisposition::Secondary) => StartupAction::ExitSuccess,
+        Err(error) => {
+            report_error(&error);
+            StartupAction::ExitFailure
+        }
+    }
+}
+
+pub fn run() -> std::process::ExitCode {
+    #[cfg(all(target_os = "macos", not(debug_assertions), not(test), not(feature = "verge-dev")))]
+    if utils::macos_launch_guard::enforce_before_initialization() == utils::macos_launch_guard::LaunchDisposition::Exit
+    {
+        return std::process::ExitCode::SUCCESS;
+    }
+
+    // Runs before the singleton check, which is the first thing to open a file in that directory.
+    #[cfg(windows)]
+    if let Err(error) =
+        utils::dirs::preinit_app_data_dir().and_then(|root| core::owner_identity::repair_app_data_root_owner(&root))
+    {
+        // The logger is installed later in setup(), so this would otherwise be lost.
+        eprintln!("[clash-verge] 应用数据目录所有权修复失败: {error:#}");
+        logging!(error, Type::Setup, "应用数据目录所有权修复失败: {error:#}");
+    }
+
+    match handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error) {
+        StartupAction::Continue => {}
+        StartupAction::ExitSuccess => return std::process::ExitCode::SUCCESS,
+        StartupAction::ExitFailure => return std::process::ExitCode::FAILURE,
+    }
+
+    #[cfg(target_os = "linux")]
+    utils::linux::workarounds::apply_nvidia_dmabuf_renderer_workaround();
+    #[cfg(target_os = "linux")]
+    utils::linux::workarounds::apply_wayland_webkit_fix();
+
+    let builder = app_init::setup_plugins(tauri::Builder::default())
+        .setup(|app| {
+            // Logger may not be ready yet, so mirror setup panics to stderr.
+            fn log_setup_panic(stage: &str, panic: Box<dyn std::any::Any + Send>) {
+                let msg = panic
+                    .downcast_ref::<&str>()
+                    .map(|s| (*s).to_string())
+                    .or_else(|| panic.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "unknown panic payload".to_string());
+                eprintln!("[clash-verge] panic during app setup ({stage}), continuing in degraded mode: {msg}");
+                logging!(
+                    error,
+                    Type::Setup,
+                    "setup 阶段 panic（{}）—— 降级继续启动: {}",
+                    stage,
+                    msg
+                );
+            }
+
+            // Prevent setup panics from aborting across macOS applicationDidFinishLaunching.
+            // Keep pre-init separate so window/core/tray startup is still scheduled after a panic.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #[allow(clippy::expect_used)]
+                APP_HANDLE
+                    .set(app.app_handle().clone())
+                    .expect("failed to set global app handle");
+
+                if let Err(e) = resolve::init_work_dir_and_logger() {
+                    logging!(error, Type::Setup, "Failed to init work dir/logger: {e:#}");
+                }
+
+                logging!(debug, Type::Setup, "开始应用初始化...");
+                if let Err(e) = app_init::setup_autostart(app) {
+                    logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+                }
+
+                app_init::setup_deep_links(app);
+
+                if let Err(e) = app_init::setup_window_state(app) {
+                    logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+                }
+            })) {
+                log_setup_panic("pre-init", panic);
+            }
+
+            // Always attempt the startup stage, even if pre-init degraded.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                resolve::resolve_setup_async();
+                resolve::resolve_setup_sync();
+                #[cfg(target_os = "linux")]
+                resolve::init_signal();
+            })) {
+                log_setup_panic("window-core", panic);
+            }
+
+            Ok(())
+        })
+        .invoke_handler(app_init::generate_handlers());
+
+    // macOS 内存压力下 WKWebView 渲染进程可能被系统终止（表现为白屏），
+    // 注册恢复钩子：清理孤儿 WebSocket 订阅防止内存泄漏；窗口可见时立即 reload
+    // 恢复页面，不可见时延迟到用户下次打开窗口再 reload。
+    #[cfg(target_os = "macos")]
+    let builder = builder.on_web_content_process_terminate(resolve::window::on_web_content_process_terminated);
+
+    mod event_handlers {
+        #[cfg(target_os = "macos")]
+        use crate::core::lightweight;
+        use crate::utils::window_manager::WindowManager;
+        use crate::{
+            config::Config,
+            core::{self, handle, hotkey},
+            process::AsyncHandler,
+        };
+        use clash_verge_logging::{Type, logging};
+        use tauri::AppHandle;
+        #[cfg(target_os = "macos")]
+        use tauri::Manager as _;
+
+        pub fn handle_ready_resumed(_app_handle: &AppHandle) {
+            if handle::Handle::global().is_exiting() {
+                logging!(debug, Type::System, "应用正在退出，跳过处理");
+                return;
+            }
+
+            logging!(info, Type::System, "应用就绪");
+            crate::utils::server::set_commands_ready();
+
+            #[cfg(target_os = "macos")]
+            if let Some(window) = _app_handle.get_webview_window("main") {
+                let _ = window.set_title("Clash Verge");
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        pub async fn handle_reopen(has_visible_windows: bool) {
+            if lightweight::is_in_lightweight_mode() {
+                lightweight::exit_lightweight_mode().await;
+                return;
+            }
+
+            if !has_visible_windows {
+                handle::Handle::global().set_activation_policy_regular();
+                let _ = WindowManager::show_main_window().await;
+            }
+        }
+
+        pub fn handle_window_close(api: &tauri::WindowEvent) {
+            #[cfg(target_os = "macos")]
+            handle::Handle::global().set_activation_policy_accessory();
+
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+
+            if let tauri::WindowEvent::CloseRequested { api, .. } = api {
+                api.prevent_close();
+                if let Some(window) = WindowManager::get_main_window() {
+                    let _ = window.hide();
+                }
+            }
+        }
+
+        pub fn handle_window_focus(focused: bool) {
+            AsyncHandler::spawn(move || async move {
+                let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
+
+                if focused {
+                    #[cfg(target_os = "macos")]
+                    {
+                        use crate::core::hotkey::SystemHotkey;
+                        let _ = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdQ)
+                            .await;
+                        let _ = hotkey::Hotkey::global()
+                            .register_system_hotkey(SystemHotkey::CmdW)
+                            .await;
+                    }
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().init(false).await;
+                    }
+                    return;
+                }
+
+                #[cfg(target_os = "macos")]
+                {
+                    use crate::core::hotkey::SystemHotkey;
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                }
+
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
+                }
+            });
+        }
+
+        #[cfg(target_os = "macos")]
+        pub fn handle_window_destroyed() {
+            use crate::core::hotkey::SystemHotkey;
+            AsyncHandler::spawn(move || async move {
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
+                }
+            });
+        }
+    }
+
+    #[cfg(feature = "clippy")]
+    let context = tauri::test::mock_context(tauri::test::noop_assets());
+    #[cfg(feature = "clippy")]
+    let app = builder.build(context).unwrap_or_else(|e| {
+        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
+        std::process::exit(1);
+    });
+
+    #[cfg(not(feature = "clippy"))]
+    let app = builder.build(tauri::generate_context!()).unwrap_or_else(|e| {
+        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
+        std::process::exit(1);
+    });
+
+    app.run(|app_handle, e| match e {
+        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            event_handlers::handle_ready_resumed(app_handle);
+        }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Reopen {
+            has_visible_windows, ..
+        } => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            AsyncHandler::spawn(move || async move {
+                event_handlers::handle_reopen(has_visible_windows).await;
+            });
+        }
+        tauri::RunEvent::Exit => {
+            // Windows session ending currently reaches Tao as WM_ENDSESSION and
+            // destroys the loop without a preventable ExitRequested event.
+            if !handle::Handle::global().is_exiting() {
+                handle::Handle::global().set_is_exiting();
+                if let Some(cleanup_result) = feat::clean_session_ending_with_hard_deadline() {
+                    logging!(
+                        info,
+                        Type::System,
+                        "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
+                        cleanup_result.core_stopped,
+                        cleanup_result.all_success
+                    );
+                }
+            }
+            logging!(info, Type::System, "Application exited");
+            crate::core::logger::Logger::global().flush_logs();
+        }
+        #[allow(unused_variables)]
+        tauri::RunEvent::ExitRequested { api, code, .. } => {
+            if core::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
+                api.prevent_exit();
+            } else if code.is_none() {
+                api.prevent_exit();
+                if !handle::Handle::global().is_exiting() {
+                    AsyncHandler::block_on(async {
+                        feat::quit().await;
+                    });
+                }
+            }
+        }
+        tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {
+            tauri::WindowEvent::CloseRequested { .. } => {
+                event_handlers::handle_window_close(&event);
+            }
+            tauri::WindowEvent::Focused(focused) => {
+                // 兜底：原生取消最小化只触发 Focused、不走 activate_window（macOS）
+                #[cfg(target_os = "macos")]
+                if focused {
+                    crate::utils::resolve::window::reload_main_window_if_needed();
+                }
+                event_handlers::handle_window_focus(focused);
+            }
+            #[cfg(target_os = "macos")]
+            tauri::WindowEvent::Destroyed => {
+                event_handlers::handle_window_destroyed();
+            }
+            _ => {}
+        },
+        _ => {}
+    });
+    std::process::ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+mod startup_tests {
+    use super::{StartupAction, handle_singleton_startup};
+    use crate::utils::server::SingletonDisposition;
+    use std::cell::Cell;
+
+    #[test]
+    fn secondary_instance_exits_quietly_and_successfully() {
+        let reported = Cell::new(false);
+        let action = handle_singleton_startup(Ok(SingletonDisposition::Secondary), |_| reported.set(true));
+
+        assert_eq!(action, StartupAction::ExitSuccess);
+        assert!(!reported.get());
+    }
+
+    #[test]
+    fn fatal_singleton_error_is_reported_and_fails_startup() {
+        let reported = Cell::new(false);
+        let action = handle_singleton_startup(Err(anyhow::anyhow!("listener failed")), |_| reported.set(true));
+
+        assert_eq!(action, StartupAction::ExitFailure);
+        assert!(reported.get());
+    }
+}

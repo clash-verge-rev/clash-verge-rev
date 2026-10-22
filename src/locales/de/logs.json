@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Protokolle"
+  },
+  "actions": {
+    "showDescending": "Neueste zuerst",
+    "showAscending": "Älteste zuerst"
+  }
+}

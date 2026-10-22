@@ -1,0 +1,92 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: 대시보드
+    body: 대시보드 표시 상태가 업데이트되었습니다.
+  clashModeChanged:
+    title: 모드 전환
+    body: '{mode}(으)로 전환되었습니다.'
+  systemProxyToggled:
+    title: 시스템 프록시
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: 시스템 프록시
+    body: 시스템 프록시를 설정하지 못했습니다. 이유는 Clash Verge를 열어 확인하십시오.
+  systemProxyGuardStopped:
+    title: 시스템 프록시 가드
+    body: 연속으로 실패하여 중지되었습니다. 이유는 Clash Verge를 열어 확인하십시오.
+  tunModeToggled:
+    title: TUN 모드
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
+  lightweightModeEntered:
+    title: 경량 모드
+    body: 경량 모드에 진입했습니다.
+  profilesReactivated:
+    title: 프로필
+    body: 프로필이 다시 활성화되었습니다.
+  appQuit:
+    title: 곧 종료
+    body: Clash Verge가 곧 종료됩니다.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
+service:
+  adminInstallPrompt: Clash Verge 서비스 설치에는 관리자 권한이 필요합니다.
+  adminUninstallPrompt: Clash Verge 서비스 제거에는 관리자 권한이 필요합니다.
+core:
+  alreadyRunning: 코어를 시작할 수 없습니다. 이미 실행 중인 코어 프로세스가 있습니다. 관련 앱이나 남아 있는 프로세스를 종료한 뒤 다시 시도하세요. 문제가 계속되면 컴퓨터를 다시 시작하세요.
+launchGuard:
+  currentExeError: '애플리케이션 위치를 확인할 수 없습니다: {error}'
+  homeDirError: '현재 사용자의 홈 디렉터리를 확인할 수 없어 애플리케이션을 종료합니다: {error}'
+  translocated: macOS가 임시 App Translocation 경로에서 이 애플리케이션을 실행하고 있습니다. Finder에서 /Applications 또는 ~/Applications로 직접 이동한 후 다시 여십시오.
+  rejected: |-
+    이 애플리케이션은 Applications 디렉터리에서 실행해야 합니다.
+
+    {reason}
+  notInBundle: 실행 파일이 애플리케이션 번들 안에 없습니다.
+  canonicalizeBundleError: '애플리케이션 번들 경로를 확인할 수 없습니다: {error}'
+  bundleNameError: 애플리케이션 번들 이름을 확인할 수 없어 애플리케이션을 종료합니다.
+  replacePrompt: '{destination}에 애플리케이션이 이미 있습니다. 교체하고 Applications에서 다시 실행하시겠습니까?'
+  movePrompt: 백그라운드 서비스를 안전하게 시작하려면 애플리케이션을 {destination}(으)로 이동해야 합니다. 지금 이동하고 다시 실행하시겠습니까?
+  createApplicationsDirError: 'Applications 디렉터리를 만들 수 없습니다: {error}'
+  moveFailed: 애플리케이션을 이동하지 못했습니다. Finder에서 직접 이동한 후 다시 시도하십시오.
+  replaceFailed: '기존 애플리케이션을 안전하게 교체할 수 없습니다: {error}'
+  relaunchFailed: 애플리케이션을 복사했지만 자동으로 다시 실행하지 못했습니다. Applications에서 직접 여십시오.
+  cancel: 취소
+  move: 이동
+  ok: 확인
+tray:
+  dashboard: 대시보드
+  ruleMode: 규칙 모드
+  globalMode: 전역 모드
+  directMode: 직접 모드
+  outboundModes: 아웃바운드 모드
+  rule: 규칙
+  direct: 직접
+  global: 글로벌
+  profiles: 프로필
+  proxies: 프록시
+  systemProxy: 시스템 프록시
+  tunMode: TUN 모드
+  closeAllConnections: 모든 연결 닫기
+  lightweightMode: 경량 모드
+  copyEnv: 환경 변수 복사
+  confDir: 구성 디렉터리
+  coreDir: 코어 디렉터리
+  logsDir: 로그 디렉터리
+  openDir: 디렉터리 열기
+  appLog: 애플리케이션 로그
+  coreLog: 코어 로그
+  restartClash: Clash 코어 재시작
+  restartApp: 애플리케이션 재시작
+  vergeVersion: Verge 버전
+  more: 더 보기
+  exit: 종료
+  tooltip:
+    systemProxy: 시스템 프록시
+    tun: TUN
+    profile: 프로필

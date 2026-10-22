@@ -1,0 +1,60 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Alle testen"
+    },
+    "title": "Testen"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Testen"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Neuen Test erstellen",
+        "edit": "Test bearbeiten"
+      },
+      "fields": {
+        "url": "Test-URL"
+      },
+      "errors": {
+        "nameRequired": "Namen eingeben",
+        "urlRequired": "Test-URL eingeben",
+        "invalidSvg": "Das Symbol ist kein gültiges SVG",
+        "uidMissing": "Die Kennung des Testelements fehlt",
+        "saveFailed": "Testelement konnte nicht gespeichert werden"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Wartend auf Prüfung",
+      "yes": "Unterstützt",
+      "no": "Nicht unterstützt",
+      "failed": "Test fehlgeschlagen",
+      "completed": "Prüfung abgeschlossen",
+      "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
+      "originalsOnly": "Nur Original",
+      "noDisney": "Nein (IP von Disney+ gesperrt)",
+      "unsupportedRegion": "Nicht unterstütztes Land/Region",
+      "failedNetwork": "Fehlgeschlagen (Netzwerkverbindung)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Wird getestet..."
+      },
+      "empty": "Keine Entsperrungstests vorhanden",
+      "messages": {
+        "detectionFailedWithName": "Erkennung für {{name}} fehlgeschlagen",
+        "detectionTimeout": "Erkennung fehlgeschlagen oder Zeitüberschreitung"
+      },
+      "title": "Entsperrungstest"
+    }
+  }
+}

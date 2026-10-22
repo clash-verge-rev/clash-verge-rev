@@ -1,0 +1,221 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Tüm Profilleri Güncelle",
+      "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
+      "reactivate": "Profilleri Yeniden Etkinleştir",
+      "import": "İçe Aktar"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Seçili Profilleri Sil",
+        "selectAll": "Tümünü Seç",
+        "deselectAll": "Tüm Seçimi Kaldır",
+        "done": "Tamam"
+      },
+      "summary": {
+        "selected": "Seçildi",
+        "items": "öğeler"
+      },
+      "title": "Toplu İşlemler"
+    },
+    "importForm": {
+      "placeholder": "Profil URL'si",
+      "actions": {
+        "paste": "Yapıştır"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Geçersiz profil URL'si. Lütfen http:// veya https:// ile başlayan bir URL girin",
+        "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir",
+        "createFailed": "Profil oluşturulamadı",
+        "deleteFailed": "Profil silinemedi",
+        "enhanceFailed": "Profiller yeniden etkinleştirilemedi",
+        "importFailed": "Profil içe aktarılamadı",
+        "openFailed": "Profil açılamadı",
+        "readFailed": "Profil okunamadı",
+        "reorderFailed": "Profiller yeniden sıralanamadı",
+        "switchFailed": "Profil değiştirilemedi",
+        "updateFailed": "Profil güncellenemedi"
+      },
+      "notifications": {
+        "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+        "importFail": "Clash vekil ile bile içe aktarma başarısız oldu",
+        "importNeedsRefresh": "Profil içe aktarıldı ancak elle yenilemek gerekebilir",
+        "importSuccess": "Profil başarıyla içe aktarıldı, görünmüyorsa lütfen yeniden başlatın",
+        "profileSwitched": "Profil Değiştirildi",
+        "profileReactivated": "Profil Yeniden Etkinleştirildi",
+        "switchBusy": "Profil değiştirme işlemi zaten devam ediyor",
+        "batchDeleted": "Seçili profiller başarıyla silindi"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Zorunlu yenileme tamamlandı",
+        "discardedKeys": "Uzantılar, Ayarlar tarafından yönetilen {{keys}} alanlarını yazdığı için bu değerler yok sayıldı",
+        "emergencyRefreshFailed": "Acil yenileme başarısız oldu: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Profil verileri kullanılamıyor; zorla yenilemek için tıklayın"
+      }
+    },
+    "title": "Profiller"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Abonelik içe aktarmak için tıklayın"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Dosya Seç"
+    },
+    "menu": {
+      "home": "Ana Sayfa",
+      "select": "Seç",
+      "shareQrCode": "QR Kodu Paylaş",
+      "editInfo": "Bilgileri Düzenle",
+      "editFile": "Dosyayı Düzenle",
+      "editRules": "Kuralları Düzenle",
+      "editProxies": "Vekil'leri Düzenle",
+      "editGroups": "Vekil Gruplarını Düzenle",
+      "extendConfig": "Yapılandırma Genişletme",
+      "extendScript": "Betik Genişletme",
+      "openFile": "Dosyayı Aç",
+      "update": "Güncelle",
+      "updateViaProxy": "Vekil üzerinden güncelle"
+    },
+    "more": {
+      "global": {
+        "merge": "Küresel Yapılandırma Genişletme",
+        "script": "Küresel Betik Genişletme"
+      },
+      "chips": {
+        "merge": "Birleştirme",
+        "script": "Betik"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Son güncelleme zamanını göstermek için tıklayın",
+        "showNext": "Sonraki güncellemeyi göstermek için tıklayın"
+      },
+      "status": {
+        "lastUpdateFailed": "Son güncelleme başarısız oldu",
+        "nextUp": "Sıradaki",
+        "noSchedule": "Program yok",
+        "unknown": "Bilinmiyor",
+        "autoUpdateDisabled": "Otomatik güncelleme devre dışı"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Profil Oluştur",
+        "edit": "Profili Düzenle"
+      },
+      "fields": {
+        "type": "Tip",
+        "description": "Açıklamalar",
+        "subscriptionUrl": "Abonelik URL'si",
+        "userAgent": "Kullanıcı Aracısı",
+        "httpTimeout": "HTTP İsteği Zaman Aşımı",
+        "updateInterval": "Güncelleme Aralığı",
+        "useSystemProxy": "Sistem Vekil'ini Kullan",
+        "useClashProxy": "Clash Vekil'ini Kullan",
+        "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
+        "allowAutoUpdate": "Otomatik Güncellemeye İzin Ver"
+      },
+      "types": {
+        "remote": "Uzak",
+        "local": "Yerel"
+      },
+      "errors": {
+        "typeRequired": "Bir profil türü seçin",
+        "urlRequired": "Bir abonelik URL’si girin",
+        "uidMissing": "Profil tanımlayıcısı eksik",
+        "saveFailed": "Profil kaydedilemedi"
+      },
+      "warnings": {
+        "frequentUpdate": "Kısa bir aralık çekirdeği o sıklıkta yeniden yükler ve mevcut bağlantıları koparır. {{minutes}} dakika (24 saat) önerilir."
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+          "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Vekil'leri Düzenle",
+      "placeholders": {
+        "multiUri": "Birden fazla URI için yeni satırlar kullanın (Base64 kodlaması desteklenir)"
+      },
+      "actions": {
+        "prepend": "Vekil'in Başına Ekle",
+        "append": "Vekil'in Sonuna Ekle"
+      }
+    },
+    "groupsEditor": {
+      "title": "Vekil Gruplarını Düzenle",
+      "errors": {
+        "nameRequired": "Grup Adı Gerekli",
+        "nameExists": "Grup Adı Zaten Var"
+      },
+      "fields": {
+        "type": "Grup Tipi",
+        "name": "Grup Adı",
+        "icon": "Vekil Grup Simgesi",
+        "proxies": "Vekil'leri Kullan",
+        "provider": "Sağlayıcı Kullan",
+        "healthCheckUrl": "Sağlık Kontrolü URL'si",
+        "expectedStatus": "Beklenen Durum",
+        "interval": "Aralık",
+        "maxFailedTimes": "Maksimum Başarısız Deneme",
+        "interfaceName": "Arayüz Adı",
+        "routingMark": "Yönlendirme İşareti",
+        "filter": "Filtre",
+        "excludeFilter": "Hariç Tutma Filtresi",
+        "excludeType": "Hariç Tutma Tipi",
+        "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
+        "includeAllProxies": "Tüm Vekil'leri Dahil Et",
+        "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"
+      },
+      "toggles": {
+        "lazy": "Tembel",
+        "disableUdp": "UDP'yi Devre Dışı Bırak",
+        "hidden": "Gizli"
+      },
+      "actions": {
+        "prepend": "Grubun Başına Ekle",
+        "append": "Grubun Sonuna Ekle"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Belgeyi biçimlendir"
+      },
+      "messages": {
+        "readOnly": "Salt okunur düzenleyicide düzenlenemez"
+      },
+      "enhance": {
+        "globalMerge": "Uygulama ayarlarından sonra tüm profillere uygulanır. Genel betik, profil yapılandırması ve profil betiği sonucu hâlâ değiştirebilir.",
+        "globalScript": "Genel yapılandırmanın birleştirilmiş sonucunu kullanarak tüm profillere uygulanır. Profil yapılandırması ve profil betiği sonucu hâlâ değiştirebilir.",
+        "profileMerge": "Genel yapılandırma ve genel betikten sonra yalnızca bu profile uygulanır. Profil betiği sonucu hâlâ değiştirebilir.",
+        "profileScript": "Profil yapılandırmasının birleştirilmiş sonucunu kullanarak yalnızca bu profile uygulanır. Uygulama ayarları yeniden uygulanmadan önceki son genişletme adımıdır.",
+        "order": "Sıra: Özgün profil → Uygulama ayarları → <globalMerge>Genel genişletme yapılandırması</globalMerge> → <globalScript>Genel genişletme betiği</globalScript> → <profileMerge>Profil genişletme yapılandırması</profileMerge> → <profileScript>Profil genişletme betiği</profileScript> → Uygulama ayarlarının yeniden uygulanması",
+        "settingsPriority": "Not: Uygulama ayarları tarafından yönetilen alanlar, son yapılandırmada her zaman bu ayarların değerlerini kullanır. Bu alanları genişletmelerde değiştirmenin etkisi yoktur."
+      }
+    },
+    "confirmDelete": {
+      "title": "Silmeyi Onayla",
+      "message": "Bu işlem geri alınamaz"
+    },
+    "logViewer": {
+      "title": "Betik Konsolu"
+    },
+    "qrViewer": {
+      "title": "Abonelik QR Kodu"
+    }
+  }
+}

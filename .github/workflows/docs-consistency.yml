@@ -1,0 +1,68 @@
+name: docs-consistency
+
+# Guards the cross-references between the collaboration documents so the
+# written contract (CONTRIBUTING, AGENTS.md, PR template) and the enforced
+# policy (pr-ai-slop-review) cannot drift apart unnoticed. Advisory only:
+# it informs, it does not gate merges.
+on:
+  pull_request:
+    paths:
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - CLAUDE.md
+      - GEMINI.md
+      - .github/PULL_REQUEST_TEMPLATE.md
+      - .github/workflows/pr-ai-slop-review.md
+      - .github/workflows/docs-consistency.yml
+  push:
+    branches: [dev]
+    paths:
+      - CONTRIBUTING.md
+      - AGENTS.md
+      - CLAUDE.md
+      - GEMINI.md
+      - .github/PULL_REQUEST_TEMPLATE.md
+      - .github/workflows/pr-ai-slop-review.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check cross-document anchors
+        run: |
+          check() { grep -q "$2" "$1" || { echo "::error::anchor '$2' missing from $1"; exit 1; }; }
+          check CONTRIBUTING.md '## Contribution Expectations'
+          check CONTRIBUTING.md 'ai-slop:med'
+          check CONTRIBUTING.md 'ai-slop:high'
+          check AGENTS.md 'Issue first'
+          check AGENTS.md 'Author accountability'
+          check AGENTS.md 'pr-ai-slop-review'
+          check AGENTS.md 'Disclose AI automation'
+          check CONTRIBUTING.md 'Assisted by:'
+          check .github/workflows/pr-ai-slop-review.md '(../../CONTRIBUTING.md)'
+          check .github/workflows/pr-ai-slop-review.md '(../../AGENTS.md)'
+          check AGENTS.md 'gh aw compile'
+          check CONTRIBUTING.md 'gh aw compile'
+          check AGENTS.md 'Tests are justified'
+          check CONTRIBUTING.md 'Do not pad'
+          check CLAUDE.md '@AGENTS.md'
+          check GEMINI.md 'AGENTS.md'
+          check .github/workflows/pr-ai-slop-review.md 'Linkage Laundering'
+          check .github/PULL_REQUEST_TEMPLATE.md '## Problem'
+          check .github/PULL_REQUEST_TEMPLATE.md '## Approach'
+          check .github/PULL_REQUEST_TEMPLATE.md '## Scope'
+          echo "All cross-document anchors are consistent."
+      - name: How to fix a failure
+        if: failure()
+        run: |
+          cat <<'EOF'
+          An anchor phrase moved or disappeared. If you intentionally reworded
+          one of the collaboration documents, update the other documents (and
+          this check's anchor list) in the same change so the written contract
+          and the AI-slop policy keep telling the same story.
+          EOF

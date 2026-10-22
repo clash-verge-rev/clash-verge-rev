@@ -1,0 +1,716 @@
+{
+  "page": {
+    "actions": {
+      "manual": "Kılavuz",
+      "telegram": "Telegram Kanalı",
+      "github": "GitHub Deposu"
+    },
+    "actionsGroupLabel": "Ayar bağlantıları",
+    "title": "Ayarlar"
+  },
+  "sections": {
+    "system": {
+      "title": "Sistem Ayarları",
+      "toggles": {
+        "tunMode": "Tun Modu",
+        "systemProxy": "Sistem Vekil'i"
+      },
+      "tooltips": {
+        "silentStart": "Programı paneli görüntülemeden arka plan modunda başlatır"
+      },
+      "fields": {
+        "autoLaunch": "Otomatik Başlat",
+        "silentStart": "Sessiz Başlatma"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "Hizmet kullanılamadığı için TUN Modu otomatik olarak devre dışı bırakıldı",
+          "autoDisableFailed": "TUN Modu otomatik olarak devre dışı bırakılamadı"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
+        "tunMode": "Tun (Sanal Ağ Kartı) modu: Tüm sistem trafiğini yakalar, etkinleştirildiğinde sistem vekil'ini etkinleştirmeye gerek yoktur.",
+        "tunUnavailable": "TUN, Hizmet Modu veya Yönetici Modu gerektirir"
+      },
+      "actions": {
+        "installService": "Hizmeti Kur",
+        "uninstallService": "Hizmeti Kaldır",
+        "switchToServiceMode": "Hizmet moduna geç"
+      },
+      "fields": {
+        "systemProxy": "Sistem Vekil'i",
+        "tunMode": "Tun Modu"
+      },
+      "messages": {
+        "installedCheckProxy": "Hizmet kuruldu ve çekirdek onun üzerinden çalışıyor. Sistem vekil sunucusu anahtarını denetleyin; değişikliğiniz uygulanmadıysa yeniden yapın.",
+        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin.",
+        "installedProxyRestored": "Hizmet kuruldu, çekirdek onun üzerinden çalışıyor ve sistem proxy değişikliğiniz uygulandı."
+      }
+    },
+    "externalController": {
+      "title": "Harici Denetleyici",
+      "fields": {
+        "enable": "Harici denetleyiciyi etkinleştir",
+        "address": "Harici Denetleyici",
+        "secret": "Çekirdek Sırrı"
+      },
+      "placeholders": {
+        "address": "Gerekli",
+        "secret": "Önerilen"
+      },
+      "tooltips": {
+        "copy": "Panoya kopyala"
+      },
+      "messages": {
+        "addressRequired": "Denetleyici adresi boş olamaz",
+        "secretRequired": "Gizli anahtar boş olamaz",
+        "copyFailed": "Kopyalama başarısız",
+        "controllerCopied": "Denetleyici adresi panoya kopyalandı",
+        "secretCopied": "Gizli anahtar panoya kopyalandı"
+      }
+    },
+    "externalCors": {
+      "title": "Harici CORS yapılandırması",
+      "fields": {
+        "allowPrivateNetwork": "Özel ağ erişimine izin ver",
+        "allowedOrigins": "İzin verilen kökenler"
+      },
+      "placeholders": {
+        "origin": "Geçerli bir URL girin"
+      },
+      "actions": {
+        "add": "Ekle"
+      },
+      "messages": {
+        "alwaysIncluded": "Her zaman dahil edilen kökenler: {{urls}}"
+      },
+      "tooltips": {
+        "open": "Harici CORS ayarları"
+      }
+    },
+    "appearance": {
+      "light": "Açık",
+      "dark": "Koyu",
+      "system": "Sistem"
+    },
+    "clash": {
+      "title": "Clash Ayarı",
+      "form": {
+        "fields": {
+          "allowLan": "LAN'a İzin Ver",
+          "dnsOverwrite": "DNS Üzerine Yazma",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Birleşik Gecikme",
+          "logLevel": "Günlük Seviyesi",
+          "portConfig": "Port Yapılandırması",
+          "external": "Harici",
+          "webUI": "Web Arayüzü",
+          "clashCore": "Clash Çekirdeği",
+          "openUwpTool": "UWP Aracını Aç",
+          "updateGeoData": "GeoData'yı Güncelle",
+          "tunnels": {
+            "title": "Tünel Yönetimi",
+            "localAddr": "Yerel Dinleme Adresi",
+            "localPort": "Yerel Dinleme Portu",
+            "targetAddr": "Hedef Adresi",
+            "targetPort": "Hedef Portu",
+            "proxyGroup": "Proxy Grubu",
+            "proxyNode": "Proxy Düğümü",
+            "protocols": "Protokol",
+            "existing": "Mevcut Tüneller",
+            "default": "Geçerli Yapılandırmayı İzle",
+            "optional": "İsteğe Bağlı",
+            "messages": {
+              "incomplete": "Lütfen gerekli tüm tünel alanlarını doldurun",
+              "invalidLocalAddr": "Geçersiz yerel dinleme adresi",
+              "invalidLocalPort": "Geçersiz yerel dinleme portu",
+              "invalidTargetAddr": "Geçersiz hedef adresi",
+              "invalidTargetPort": "Geçersiz hedef portu"
+            },
+            "actions": {
+              "add": "Ekle",
+              "addNew": "Yeni Tünel Ekle"
+            }
+          }
+        },
+        "tooltips": {
+          "networkInterface": "Ağ Arayüzü",
+          "unifiedDelay": "Birleşik gecikme açıldığında, bağlantı el sıkışmaları vb. nedeniyle farklı tür düğümler arasındaki gecikme farklarını ortadan kaldırmak için iki gecikme testi gerçekleştirilir",
+          "logLevel": "Bu parametre yalnızca günlük dizini Hizmet klasöründeki çekirdek günlük dosyaları için geçerlidir",
+          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Hata Ayıklama",
+            "info": "Bilgi",
+            "warning": "Uyarı",
+            "error": "Hata",
+            "silent": "Sessiz"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Verge Temel Ayarı",
+        "actions": {
+          "browse": "Gözat"
+        },
+        "trayOptions": {
+          "showMainWindow": "Ana Pencereyi Göster",
+          "showTrayMenu": "Tepsi Menüsünü Göster",
+          "disable": "Devre Dışı Bırak"
+        },
+        "fields": {
+          "language": "Dil",
+          "themeMode": "Tema Modu",
+          "trayClickEvent": "Sistem Tepsisi Tıklama Olayı",
+          "copyEnvType": "Env Tipini Kopyala",
+          "startPage": "Başlangıç Sayfası",
+          "startupScript": "Başlangıç Betiği",
+          "themeSetting": "Tema Ayarı",
+          "layoutSetting": "Düzen Ayarı",
+          "misc": "Çeşitli",
+          "hotkeySetting": "Kısayol Tuşu Ayarı"
+        }
+      },
+      "advanced": {
+        "title": "Verge Gelişmiş Ayarı",
+        "tooltips": {
+          "backupInfo": "WebDAV yedekleme yapılandırma dosyalarını destekler",
+          "openConfDir": "Yazılım anormal çalışıyorsa, bu klasördeki tüm dosyaları YEDEKLEYİN ve silin, ardından yazılımı yeniden başlatın",
+          "liteMode": "GUI'yi kapatın ve yalnızca çekirdeği çalışır durumda tutun"
+        },
+        "actions": {
+          "copyVersion": "Sürümü Kopyala"
+        },
+        "notifications": {
+          "latestVersion": "Şu Anda En Son Sürümdesiniz",
+          "versionCopied": "Sürüm panoya kopyalandı"
+        },
+        "fields": {
+          "backupSetting": "Yedekleme Ayarı",
+          "runtimeConfig": "Çalışma Zamanı Yapılandırması",
+          "openConfDir": "Yapılandırma Dizinini Aç",
+          "openCoreDir": "Çekirdek Dizinini Aç",
+          "openLogsDir": "Günlük Dizinini Aç",
+          "checkUpdates": "Güncellemeleri Kontrol Et",
+          "openDevTools": "Geliştirici Araçları",
+          "liteModeSettings": "Hafif Mod Ayarları",
+          "exit": "Çıkış",
+          "exportDiagnostics": "Tanılama Bilgilerini Dışa Aktar",
+          "vergeVersion": "Verge Sürümü"
+        }
+      },
+      "theme": {
+        "title": "Tema Ayarı",
+        "fields": {
+          "primaryColor": "Ana Renk",
+          "secondaryColor": "İkincil Renk",
+          "primaryText": "Ana Metin",
+          "secondaryText": "İkincil Metin",
+          "infoColor": "Bilgi Rengi",
+          "warningColor": "Uyarı Rengi",
+          "errorColor": "Hata Rengi",
+          "successColor": "Başarı Rengi",
+          "fontFamily": "Yazı Tipi Ailesi",
+          "cssInjection": "CSS Enjeksiyonu"
+        },
+        "actions": {
+          "editCss": "CSS'i Düzenle"
+        },
+        "dialogs": {
+          "editCssTitle": "CSS'i Düzenle"
+        }
+      },
+      "layout": {
+        "title": "Düzen Ayarı",
+        "fields": {
+          "preferSystemTitlebar": "Sistem Başlık Çubuğunu Tercih Et",
+          "trafficGraph": "Trafik Grafiği",
+          "memoryUsage": "Çekirdek Kullanımı",
+          "proxyGroupIcon": "Vekil Grup Simgesi",
+          "toastPosition": "Toast konumu",
+          "hoverNavigator": "Üzerine Gelince Atlama Gezgini",
+          "hoverNavigatorDelay": "Üzerine Gelince Atlama Gecikmesi",
+          "navIcon": "Gezinme Simgesi",
+          "collapseNavBar": "Gezinme çubuğunu daralt",
+          "trayIcon": "Tepsi Simgesi",
+          "proxyGroupsDisplayMode": "Vekil Grupları Görüntüleme Modu",
+          "showOutboundModesInline": "Çıkış Modlarını Satır İçinde Göster",
+          "commonTrayIcon": "Genel Tepsi Simgesi",
+          "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
+          "tunTrayIcon": "Tun Tepsi Simgesi",
+          "enableTrayIcon": "Tepsi Simgesini Etkinleştir",
+          "enableTraySpeed": "Tepsi Hızını Etkinleştir",
+          "pauseRenderTrafficStatsOnBlur": "Odak kaybolduğunda trafik istatistiklerinin işlenmesini duraklat"
+        },
+        "tooltips": {
+          "hoverNavigator": "Alfabe harflerinin üzerine gelindiğinde ilgili vekil grubuna otomatik olarak kaydırır",
+          "hoverNavigatorDelay": "Üzerine gelindiğinde otomatik kaydırmadan önceki gecikme, milisaniye cinsinden"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Tek Renkli",
+            "colorful": "Renkli",
+            "disable": "Devre Dışı Bırak"
+          },
+          "toastPosition": {
+            "topLeft": "Sol üst",
+            "topRight": "Sağ üst",
+            "bottomLeft": "Sol alt",
+            "bottomRight": "Sağ alt"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Varsayılan",
+            "inline": "Satır İçi",
+            "disable": "Devre Dışı"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "Port Yapılandırması",
+      "fields": {
+        "mixed": "Karışık Port",
+        "socks": "Socks Portu",
+        "http": "Http(s) Portu",
+        "redir": "Redir Portu",
+        "tproxy": "Tvekil Portu"
+      },
+      "actions": {
+        "random": "Rastgele Port"
+      },
+      "messages": {
+        "portInUse": "{{port}} portu zaten kullanımda",
+        "runningPort": "Şu anda kullanılan port: {{port}}",
+        "duplicatePort": "Etkin dinleyiciler farklı portlar kullanmalıdır",
+        "invalidPort": "1 ile 65535 arasında bir port girin",
+        "saved": "Port ayarları kaydedildi",
+        "saveFailed": "Port ayarları kaydedilemedi",
+        "automaticFallback": "{{oldPort}} portu kullanımda olduğu için bu oturum {{newPort}} portunu kullanıyor. Ayarınız değişmedi ve sonraki başlatmada {{oldPort}} yeniden denenecek.",
+        "automaticFallbackFailed": "Karma proxy portu otomatik olarak değiştirilemedi: {{error}}",
+        "portTooLow": "Bağlantı noktası 1000 veya daha yüksek olmalıdır",
+        "portTooHigh": "Bağlantı noktası 65535 veya daha düşük olmalıdır"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "Kararlı Sürüm",
+        "alpha": "Alfa Sürümü"
+      }
+    },
+    "liteMode": {
+      "title": "Hafif Mod Ayarları",
+      "actions": {
+        "enterNow": "Şimdi Hafif Moda Gir"
+      },
+      "toggles": {
+        "autoEnter": "Otomatik Hafif Moda Gir"
+      },
+      "tooltips": {
+        "autoEnter": "Pencere belirli bir süre kapatıldıktan sonra Hafif Modun otomatik olarak etkinleştirilmesi için etkinleştirin"
+      },
+      "fields": {
+        "delay": "Otomatik Hafif Mod Giriş Gecikmesi"
+      },
+      "messages": {
+        "autoEnterHint": "Pencere kapatıldığında, Hafif Mod {{n}} dakika sonra otomatik olarak etkinleştirilecek"
+      }
+    },
+    "backup": {
+      "title": "Yedekleme Ayarı",
+      "tabs": {
+        "local": "Yerel yedek",
+        "webdav": "WebDAV yedeği"
+      },
+      "actions": {
+        "selectTarget": "Yedekleme hedefini seçin",
+        "backup": "Yedekle",
+        "export": "Dışa Aktar",
+        "exportBackup": "Yedeği Dışa Aktar",
+        "importBackup": "Yedeği İçe Aktar",
+        "deleteBackup": "Yedeği Sil",
+        "restore": "Geri Yükle",
+        "restoreBackup": "Yedeği Geri Yükle",
+        "viewHistory": "Geçmişi görüntüle"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV Sunucu URL'si",
+        "username": "Kullanıcı Adı",
+        "info": "Yedekler yerel olarak uygulama veri dizininde saklanır. Yedekleri geri yüklemek veya silmek için aşağıdaki listeyi kullanın."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV URL'si boş olamaz",
+        "invalidWebdavUrl": "Geçersiz WebDAV URL formatı",
+        "usernameRequired": "Kullanıcı adı boş olamaz",
+        "passwordRequired": "Şifre boş olamaz",
+        "webdavConfigSaved": "WebDAV yapılandırması başarıyla kaydedildi",
+        "webdavConfigSaveFailed": "WebDAV yapılandırması kaydedilemedi: {{error}}",
+        "backupCreated": "Yedek başarıyla oluşturuldu",
+        "backupFailed": "Yedekleme başarısız oldu: {{error}}",
+        "localBackupCreated": "Yerel yedek başarıyla oluşturuldu",
+        "localBackupFailed": "Yerel yedekleme başarısız oldu",
+        "restoreSuccess": "Geri Yükleme Başarılı, Uygulama 1 saniye içinde yeniden başlatılacak",
+        "localBackupExported": "Yerel yedek başarıyla dışa aktarıldı",
+        "localBackupExportFailed": "Yerel yedek dışa aktarılamadı",
+        "localBackupImported": "Yerel yedek başarıyla içe aktarıldı",
+        "localBackupImportFailed": "Yerel yedek içe aktarılamadı: {{error}}",
+        "webdavRefreshSuccess": "WebDAV yenilemesi başarılı",
+        "webdavRefreshFailed": "WebDAV yenilemesi başarısız oldu: {{error}}",
+        "confirmDelete": "Bu yedek dosyasını silmeyi onaylıyor musunuz?",
+        "confirmRestore": "Bu yedek dosyasını geri yüklemeyi onaylıyor musunuz?"
+      },
+      "auto": {
+        "title": "Otomatik yedekleme",
+        "scheduleLabel": "Zamanlanmış yedeklemeyi etkinleştir",
+        "scheduleHelper": "Yapılandırılan aralıkta arka planda yerel yedekler oluşturur.",
+        "intervalLabel": "Yedekleme sıklığı",
+        "changeLabel": "Kritik değişikliklerde yedekle",
+        "changeHelper": "Küresel Yapılandırma/Betik Genişletme değiştiğinde otomatik olarak yedekler.",
+        "options": {
+          "hours": "{{n}} saatte bir",
+          "days": "{{n}} günde bir"
+        }
+      },
+      "manual": {
+        "title": "Elle yedekleme",
+        "local": "Bu cihazda, uygulama veri dizini altında saklanan bir anlık görüntü oluşturur.",
+        "webdav": "Kimlik bilgileri ayarlandıktan sonra WebDAV sunucunuza bir anlık görüntü yükler.",
+        "configureWebdav": "WebDAV'ı Yapılandır"
+      },
+      "history": {
+        "title": "Yedekleme geçmişi",
+        "summary": "{{count}} yedek • en son {{recent}}",
+        "empty": "Kullanılabilir yedek yok",
+        "unknownPlatform": "bilinmiyor",
+        "unknownTime": "Bilinmeyen zaman"
+      },
+      "webdav": {
+        "title": "WebDAV ayarları"
+      },
+      "table": {
+        "filename": "Dosya Adı",
+        "backupTime": "Yedekleme Zamanı",
+        "actions": "İşlemler",
+        "noBackups": "Kullanılabilir yedek yok",
+        "rowsPerPage": "Sayfa başına satır"
+      }
+    },
+    "misc": {
+      "title": "Çeşitli",
+      "fields": {
+        "appLogLevel": "Uygulama Günlük Seviyesi",
+        "appLogMaxSize": "Uygulama Günlüğü En Büyük Boyutu",
+        "appLogMaxCount": "Uygulama Günlüğü En Fazla Dosya Sayısı",
+        "autoCloseConnections": "Bağlantıları Otomatik Kapat",
+        "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
+        "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
+        "proxyLayoutColumns": "Vekil Düzeni Sütunları",
+        "autoLogClean": "Otomatik Günlük Temizleme",
+        "autoDelayDetection": "Otomatik Gecikme Tespiti",
+        "autoDelayDetectionInterval": "Otomatik Gecikme Tespiti Aralığı",
+        "defaultLatencyTest": "Varsayılan Gecikme Testi",
+        "defaultLatencyTimeout": "Varsayılan Gecikme Zaman Aşımı"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Vekil grup seçimi veya vekil modu değiştiğinde kurulan bağlantıları sonlandır",
+        "enableBuiltinEnhanced": "Yapılandırma dosyası için uyumluluk işleme",
+        "autoDelayDetection": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
+        "defaultLatencyTest": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Otomatik Sütunlar"
+        },
+        "autoLogClean": {
+          "never": "Asla Temizleme",
+          "retainDays": "{{n}} Gün Sakla"
+        }
+      }
+    },
+    "update": {
+      "title": "Yeni Sürüm v{{version}}",
+      "actions": {
+        "goToRelease": "Sürüm Sayfasına Git",
+        "update": "Güncelle"
+      },
+      "messages": {
+        "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun",
+        "available": "Yeni bir sürüm mevcut"
+      },
+      "alerts": {
+        "note": "Not",
+        "tip": "İpucu",
+        "important": "Önemli",
+        "warning": "Uyarı",
+        "caution": "Dikkat"
+      }
+    },
+    "sysproxy": {
+      "title": "Sistem Vekil Ayarı",
+      "fieldsets": {
+        "currentStatus": "Geçerli Sistem Vekil'i"
+      },
+      "fields": {
+        "enableStatus": "Etkinlik Durumu:",
+        "serverAddr": "Sunucu Adresi: ",
+        "pacUrl": "PAC URL'si: ",
+        "proxyHost": "Vekil Sunucusu",
+        "usePacMode": "PAC Modunu Kullan",
+        "proxyGuard": "Vekil Koruyucusu",
+        "guardDuration": "Koruma Süresi",
+        "alwaysUseDefaultBypass": "Her Zaman Varsayılan Baypas Kullan",
+        "enableBypassCheck": "Proxy baypas biçimini doğrula",
+        "proxyBypass": "Vekil Baypas Ayarları: ",
+        "bypass": "Baypas: ",
+        "pacScriptContent": "PAC Betiği İçeriği"
+      },
+      "tooltips": {
+        "proxyGuard": "Diğer yazılımların işletim sisteminin vekil ayarlarını değiştirmesini önlemek için etkinleştirin"
+      },
+      "messages": {
+        "durationTooShort": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
+        "invalidBypass": "Geçersiz Baypas Formatı",
+        "invalidProxyHost": "Geçersiz Vekil Sunucusu Formatı"
+      },
+      "actions": {
+        "editPac": "Düzenle PAC"
+      }
+    },
+    "tun": {
+      "title": "Tun Modu",
+      "fields": {
+        "stack": "Tun Yığını",
+        "device": "Aygıt Adı",
+        "autoRoute": "Otomatik Yönlendirme",
+        "routeExcludeAddress": "Yönlendirme Hariç Adresler",
+        "strictRoute": "Katı Yönlendirme",
+        "autoDetectInterface": "Arayüzü Otomatik Algıla",
+        "dnsHijack": "DNS Ele Geçirme",
+        "mtu": "Maksimum İletim Birimi",
+        "autoRedirect": "Otomatik Yönlendirme"
+      },
+      "tooltips": {
+        "dnsHijack": "Birden fazla DNS sunucusunu ayırmak için lütfen , kullanın",
+        "autoRedirect": "nftables/iptables TCP yönlendirmelerini otomatik olarak yapılandırır"
+      },
+      "messages": {
+        "applied": "Ayarlar Uygulandı",
+        "invalidRouteExcludeAddress": "Lütfen geçerli bir CIDR bloğu girin",
+        "routeExcludeAddressHint": "Yalnızca IPv4/IPv6 CIDR blokları desteklenir; örneğin 192.168.0.0/16 veya fd00::/8"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS Üzerine Yazma",
+        "profileScope": "DNS geçersiz kılma anahtarının durumu her profil için ayrı kaydedilir ve yalnızca o profile uygulanır.",
+        "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
+      },
+      "protection": {
+        "title": "DNS Üzerine Yazma etkinleştirilsin mi?",
+        "message": "Bu abonelik özel DNS ayarları içeriyor. DNS Üzerine Yazma bunların yerine geçebilir; bu da düğümlerin bağlanmasını veya bazı web sitelerinin yüklenmesini engelleyebilir. Yine de etkinleştirilsin mi?",
+        "enableAnyway": "Yine de etkinleştir",
+        "keepDisabled": "Devre dışı bırak",
+        "autoDisabled": "Geçerli abonelikteki özel DNS ayarlarını korumak için DNS Üzerine Yazma devre dışı bırakıldı."
+      },
+      "sections": {
+        "general": "DNS Ayarları",
+        "fallbackFilter": "Yedek Filtre Ayarları",
+        "hosts": "Hosts Ayarları"
+      },
+      "fields": {
+        "enable": "DNS'i Etkinleştir",
+        "listen": "DNS Dinleme",
+        "enhancedMode": "Geliştirilmiş Mod",
+        "fakeIpRange": "Sahte IP Aralığı",
+        "fakeIpRange6": "Sahte IP Aralığı (IPv6)",
+        "fakeIpFilterMode": "Sahte IP Filtre Modu",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "IPv6 DNS çözümlemesini etkinleştir"
+        },
+        "preferH3": {
+          "label": "H3'ü Tercih Et",
+          "description": "DNS DOH, HTTP/3 kullanır"
+        },
+        "respectRules": {
+          "label": "Kurallara Uy",
+          "description": "DNS bağlantıları yönlendirme kurallarını takip eder"
+        },
+        "useHosts": {
+          "label": "Hosts Kullan",
+          "description": "Ana bilgisayarları hosts dosyası aracılığıyla çözümlemek için etkinleştirin"
+        },
+        "useSystemHosts": {
+          "label": "Sistem Hosts Dosyasını Kullan",
+          "description": "Ana bilgisayarları sistem hosts dosyası aracılığıyla çözümlemek için etkinleştirin"
+        },
+        "directPolicy": {
+          "label": "Doğrudan İsim Sunucusu Politikasını Takip Et",
+          "description": "İsim sunucusu politikasının takip edilip edilmeyeceği"
+        },
+        "defaultNameserver": {
+          "label": "Varsayılan İsim Sunucusu",
+          "description": "DNS sunucularını çözümlemek için kullanılan varsayılan DNS sunucuları"
+        },
+        "nameserver": {
+          "label": "İsim Sunucusu",
+          "description": "DNS sunucuları listesi, virgülle ayrılmış"
+        },
+        "fallback": {
+          "label": "Yedek",
+          "description": "Yedek DNS sunucuları listesi, virgülle ayrılmış"
+        },
+        "proxy": {
+          "label": "Vekil Sunucusu İsim Sunucusu",
+          "description": "Vekil düğümü alan adı çözümlemesi için DNS sunucuları"
+        },
+        "directNameserver": {
+          "label": "Doğrudan İsim Sunucusu",
+          "description": "Doğrudan çıkış alan adı çözümlemesi için DNS sunucuları, 'system' anahtar kelimesini destekler, virgülle ayrılmış"
+        },
+        "fakeIpFilter": {
+          "label": "Sahte IP Filtresi",
+          "description": "Sahte IP çözümlemesini atlayan alan adları, virgülle ayrılmış"
+        },
+        "nameserverPolicy": {
+          "label": "İsim Sunucusu Politikası",
+          "description": "Alana özgü DNS sunucusu, birden çok sunucu noktalı virgülle ayrılır, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtreleme",
+          "description": "Yedek için GeoIP filtrelemeyi etkinleştir"
+        },
+        "geoipCode": "GeoIP Kodu",
+        "fallbackIpCidr": {
+          "label": "Yedek IP CIDR",
+          "description": "Yedek sunucuları kullanmayan IP CIDR'ları, virgülle ayrılmış"
+        },
+        "fallbackDomain": {
+          "label": "Yedek Alan Adı",
+          "description": "Yedek sunucuları kullanan alan adları, virgülle ayrılmış"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Özel alan adından IP'ye veya alan adına eşleme"
+        }
+      },
+      "messages": {
+        "saved": "DNS ayarları kaydedildi",
+        "configError": "DNS yapılandırma hatası:"
+      },
+      "errors": {
+        "invalid": "Geçersiz yapılandırma",
+        "invalidYaml": "Geçersiz YAML biçimi"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URL Aç"
+      },
+      "title": "Web Arayüzü",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secret destekler",
+        "placeholderInstruction": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Çekirdek bağlantı bilgisi kullanılamıyor",
+        "invalidServer": "Çekirdek sunucu adresi \"{{server}}\" geçersiz",
+        "openFailed": "Web UI açılamadı"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Küresel Kısayol Tuşunu Etkinleştir"
+      },
+      "title": "Kısayol Tuşu Ayarı",
+      "functions": {
+        "rule": "Kural Modu",
+        "global": "Küresel Mod",
+        "openOrCloseDashboard": "Kontrol Panelini Aç/Kapat",
+        "toggleSystemProxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
+        "toggleTunMode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
+        "entryLightweightMode": "Hafif Moda Gir",
+        "direct": "Doğrudan Mod",
+        "reactivateProfiles": "Profilleri Yeniden Etkinleştir"
+      }
+    },
+    "networkInterface": {
+      "title": "Ağ Arayüzü",
+      "fields": {
+        "ipAddress": "IP Adresi",
+        "macAddress": "MAC Adresi"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Çekirdek yapılandırması güncellenemedi",
+        "modeUpdateFailed": "Proxy modu değiştirilemedi",
+        "restartFailed": "Çekirdek yeniden başlatılamadı",
+        "startFailed": "Çekirdek başlatılamadı",
+        "serviceCoreStopped": "Hizmetin çalıştırdığı çekirdek beklenmedik şekilde durdu",
+        "stopFailed": "Çekirdek durdurulamadı"
+      },
+      "clashService": {
+        "installFailed": "Hizmet kurulamadı",
+        "uninstallFailed": "Hizmet kaldırılamadı",
+        "reinstallFailed": "Hizmet yeniden kurulamadı",
+        "repairFailed": "Hizmet onarılamadı",
+        "sidecarFailed": "Sidecar ile devam edilemedi",
+        "coreAlreadyRunning": "Çekirdek başlatılamıyor: bir çekirdek işlemi zaten çalışıyor. İlgili uygulamayı kapatın veya kalan işlemi sonlandırıp yeniden deneyin. Sorun devam ederse bilgisayarı yeniden başlatın."
+      },
+      "sysproxy": {
+        "privilegeRequired": "Sistem vekil sunucusu ayarlanamıyor: macOS yetki yetersizliği nedeniyle değişikliği reddetti. Clash Verge hizmetini kurun; yöneticiyseniz Sistem Ayarları → Gizlilik ve Güvenlik bölümündeki gelişmiş seçeneklerden, sistem genelindeki ayarlar için yönetici parolası zorunluluğunu da kapatabilirsiniz.",
+        "directFallback": "Sistem vekil sunucusu ayarlanamadı; trafik doğrudan bağlantıya geri döndürüldü.",
+        "guardStopped": "Sistem vekil sunucusu koruması art arda birkaç başarısızlıktan sonra durdu. Sistem vekil sunucusu artık otomatik olarak korunmuyor.",
+        "sidecarWhileServiceReady": "Sistem vekil sunucusu ayarlanamadı: Clash Verge hizmeti hazır ancak çekirdek hâlâ Sidecar olarak çalışıyor. Hizmet moduna geçmek için çekirdeği yeniden başlatın.",
+        "coreNotReady": "Çekirdek çalışmadığı için sistem vekil sunucusu etkinleştirilemedi. Çekirdeği başlatın (veya Clash Verge hizmetini kurun/onarın) ve yeniden deneyin.",
+        "systemCallFailed": "Bir Windows sistem çağrısı başarısız olduğu için sistem vekil sunucusu yazılamadı. Bu genellikle geçicidir, yeniden deneyin."
+      }
+    },
+    "notifications": {
+      "clash": {
+        "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
+        "versionUpdated": "Çekirdek Sürümü Güncellendi",
+        "alreadyLatestVersion": "Zaten en yeni çekirdek sürümünü kullanıyorsunuz",
+        "changeSuccess": "Çekirdek başarıyla değiştirildi",
+        "changeFailed": "Çekirdek değiştirilemedi",
+        "geoDataUpdated": "GeoData Güncellendi"
+      },
+      "clashService": {
+        "appDataNotOwned": "Hizmet çekirdeği başlatmayı reddetti; çünkü diskte uygulama veri klasörünün sahibi hesabınız değil (ana klasör harici bir sürücüdeyse sık görülür). Hizmeti onarmak bunu düzeltmez. Bu komutu bir terminalde çalıştırın, ardından uygulamayı yeniden başlatın:",
+        "installSuccess": "Hizmet Başarıyla Kuruldu",
+        "permissionFallback": "{{reason}} Sidecar moduna geçildi; TUN yönetici yetkisi gerektirir. Kılavuza göre sorunu düzeltip hizmeti yeniden yükleyin veya hizmeti yüklemeden uygulamayı yönetici olarak çalıştırın.",
+        "permissionWritableReason": "Normal hesaplar çekirdek dosyalarını veya üst klasörü değiştirebildiği için hizmet, çekirdeği yükseltilmiş yetkilerle çalıştırmayı reddetti.",
+        "permissionRejectedReason": "Hizmet, çekirdek dosya ve klasörlerinin yükseltilmiş yetkilerle güvenle çalıştırılabileceğini doğrulayamadı.",
+        "permissionRepairGuide": "Düzeltme adımlarını görüntüle",
+        "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
+        "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
+      },
+      "updater": {
+        "withClashProxySuccess": "Clash vekil ile güncelleme başarılı",
+        "withClashProxyFailed": "Clash vekil ile bile güncelleme başarısız oldu"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "Çekirdek Durduruluyor...",
+      "restarting": "Çekirdek Yeniden Başlatılıyor..."
+    },
+    "clashService": {
+      "installing": "Hizmet Kuruluyor...",
+      "uninstalling": "Hizmet Kaldırılıyor..."
+    }
+  }
+}

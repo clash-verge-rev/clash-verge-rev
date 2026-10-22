@@ -1,0 +1,61 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Startseite",
+        "proxies": "Proxy",
+        "profiles": "Abonnement",
+        "connections": "Verbindungen",
+        "rules": "Regeln",
+        "logs": "Protokolle",
+        "unlock": "Testen",
+        "settings": "Einstellungen"
+      },
+      "menu": {
+        "reorderMode": "Menü neu anordnen",
+        "restoreDefaultOrder": "Standardreihenfolge wiederherstellen",
+        "unlock": "Menüreihenfolge entsperren",
+        "lock": "Menüreihenfolge sperren",
+        "collapseNavBar": "Navigationsleiste einklappen",
+        "expandNavBar": "Navigationsleiste ausklappen"
+      }
+    },
+    "serviceMigration": {
+      "locationRefusedMessage": "Der Dienst kann den Kern nicht starten, da sein Installationspfad oder die Verzeichnisberechtigungen die Sicherheitsprüfung nicht bestanden haben. Installieren Sie den Dienst erneut, um Dateien und Berechtigungen wiederherzustellen, und versuchen Sie es erneut. Windows kann eine Administratorbestätigung anfordern.",
+      "notAutoStartedMessage": "Der Starttyp des Clash-Verge-Dienstes wurde auf „Manuell“ oder „Deaktiviert“ geändert (häufig durch Optimierungsprogramme), daher startet er nicht mehr mit Windows; diese Sitzung verwendet Sidecar. Installieren Sie den Dienst erneut, um den automatischen Start wiederherzustellen. Windows kann eine Administratorbestätigung anfordern.",
+      "title": "Dienst-Update erforderlich",
+      "message": "Die Version des Clash-Verge-Dienstes passt nicht zu der Version, die diese App benötigt. Wählen Sie „Dienst neu installieren“, um den vorhandenen Dienst zu deinstallieren und die benötigte Version zu installieren, oder fahren Sie für diese Sitzung mit Sidecar fort.",
+      "checkingMessage": "Der Status des Systemdienstes und der aktuelle Betriebsmodus werden geprüft. Bitte warten…",
+      "unavailableMessage": "Der benötigte Clash-Verge-Dienst ist nicht verfügbar. Installieren oder reparieren Sie ihn, oder fahren Sie für diese Sitzung mit Sidecar fort.",
+      "reinstall": "Dienst neu installieren",
+      "repair": "Dienst reparieren",
+      "continueSidecar": "Mit Sidecar fortfahren",
+      "success": "Der Clash-Verge-Dienst wurde erfolgreich aktualisiert",
+      "errors": {
+        "actionFailed": "Der Dienstvorgang ist fehlgeschlagen",
+        "stateRefreshFailed": "Dienststatus konnte nicht aktualisiert werden",
+        "restartFailed": "Kern konnte nicht neu gestartet werden",
+        "revalidationFailed": "Laufstatus konnte nicht aktualisiert werden",
+        "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Systemproxy konnte nicht gesetzt werden",
+      "message": "macOS hat die Änderung mangels Berechtigungen abgelehnt. Nach Installation des Clash-Verge-Dienstes nimmt dieser die Proxy-Änderungen als Administrator vor, und dieser Hinweis erscheint nicht mehr.",
+      "serviceReadyMessage": "Der Clash-Verge-Dienst ist bereit, der Kern läuft aber noch als Sidecar — deshalb wurde das Setzen des Systemproxys abgelehnt. Ein Wechsel in den Dienstmodus behebt das, eine Neuinstallation ist nicht nötig.",
+      "alternative": "Alternativ: Deaktivieren Sie in den Systemeinstellungen → Datenschutz & Sicherheit → Erweitert die Option, die für systemweite Einstellungen ein Administratorkennwort verlangt.",
+      "later": "Später",
+      "installing": "Der Systemdienst wird installiert. Möglicherweise wird ein Administratorkennwort verlangt.",
+      "restarting": "Dienst installiert. Der Kern wird darüber neu gestartet…",
+      "applying": "Ihre Systemproxy-Änderung wird angewendet…",
+      "tunTitle": "Der TUN-Modus benötigt den Systemdienst",
+      "tunMessage": "Der TUN-Modus benötigt den Clash-Verge-Systemdienst, um den Netzwerkverkehr zu übernehmen. Nach der Installation wird der TUN-Modus für Sie eingeschaltet."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Der Kern konnte nicht sicher gestoppt werden, daher wurde der Neustart abgebrochen",
+      "quitCoreStopFailed": "Der Kern konnte nicht sicher gestoppt werden, daher wurde das Beenden abgebrochen"
+    }
+  }
+}

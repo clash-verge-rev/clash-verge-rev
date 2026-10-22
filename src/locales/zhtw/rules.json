@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "規則集合",
+      "dialogTitle": "規則集合",
+      "actions": {
+        "updateAll": "全部更新",
+        "update": "更新"
+      }
+    },
+    "title": "規則"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "已成功更新 {{name}}",
+        "updateFailed": "更新 {{name}} 失敗：{{message}}",
+        "genericError": "更新失敗：{{message}}",
+        "none": "沒有可更新的規則集合",
+        "allUpdated": "所有規則集合均已更新"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "規則類型",
+          "content": "規則內容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳過 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "新增前置規則",
+          "appendRule": "新增後置規則"
+        },
+        "validation": {
+          "conditionRequired": "規則條件為必填",
+          "invalidRule": "無效規則"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "匹配完整網域 (DOMAIN)",
+        "DOMAIN-SUFFIX": "匹配網域後綴 (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "匹配網域關鍵字 (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "匹配網域正規表示式 (DOMAIN-REGEX)",
+        "GEOSITE": "匹配 GeoSite 內的網域 (GEOSITE)",
+        "GEOIP": "匹配 IP 所屬國家代碼 (GEOIP)",
+        "SRC-GEOIP": "匹配來源 IP 所屬國家代碼 (SRC-GEOIP)",
+        "IP-ASN": "匹配 IP 所屬 ASN (IP-ASN)",
+        "SRC-IP-ASN": "匹配來源 IP 所屬 ASN (SRC-IP-ASN)",
+        "IP-CIDR": "匹配 IP 位址範圍 (IP-CIDR)",
+        "IP-CIDR6": "匹配 IP 位址範圍 (IP-CIDR6)",
+        "SRC-IP-CIDR": "匹配來源 IP 位址範圍 (SRC-IP-CIDR)",
+        "IP-SUFFIX": "匹配 IP 後綴範圍 (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "匹配來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
+        "SRC-PORT": "匹配請求來源連接埠範圍 (SRC-PORT)",
+        "DST-PORT": "匹配請求目標連接埠範圍 (DST-PORT)",
+        "IN-PORT": "匹配傳入連接埠 (IN-PORT)",
+        "DSCP": "匹配 DSCP 標記 (DSCP)",
+        "PROCESS-NAME": "匹配程序名稱 (PROCESS-NAME)",
+        "PROCESS-PATH": "匹配完整程序路徑 (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "正規表示式匹配完整程序名稱 (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "正規表示式匹配完整程序路徑 (PROCESS-PATH-REGEX)",
+        "NETWORK": "匹配 TCP/UDP (NETWORK)",
+        "UID": "匹配 Linux USER ID (UID)",
+        "IN-TYPE": "匹配傳入類型 (IN-TYPE)",
+        "IN-USER": "匹配傳入使用者名稱 (IN-USER)",
+        "IN-NAME": "匹配傳入名稱 (IN-NAME)",
+        "SUB-RULE": "匹配至子規則 (SUB-RULE)",
+        "RULE-SET": "引用規則集合 (RULE-SET)",
+        "AND": "邏輯與 (AND)",
+        "OR": "邏輯或 (OR)",
+        "NOT": "邏輯非 (NOT)",
+        "MATCH": "匹配所有請求 (MATCH)"
+      },
+      "title": "編輯規則"
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "page": {
+    "modes": {
+      "rule": "規則",
+      "global": "全局",
+      "direct": "直連"
+    },
+    "actions": {
+      "toggleChain": "鏈式代理",
+      "connect": "連線",
+      "disconnect": "中斷",
+      "connecting": "連線中...",
+      "clearChainConfig": "刪除鏈式設定"
+    },
+    "provider": {
+      "title": "代理集合",
+      "actions": {
+        "updateAll": "全部更新",
+        "update": "更新"
+      }
+    },
+    "rules": {
+      "title": "代理規則",
+      "select": "選擇規則"
+    },
+    "labels": {
+      "proxyCount": "節點數量",
+      "delayCheckReset": "測試延遲以取消固定",
+      "nodeCount": "{{count}} 個節點"
+    },
+    "tooltips": {
+      "locate": "目前節點",
+      "delayCheck": "延遲測試",
+      "sortDefault": "預設排序",
+      "sortDelay": "按延遲排序",
+      "sortName": "按名稱排序",
+      "delayCheckUrl": "延遲測試網址",
+      "showBasic": "隱藏節點細節",
+      "showDetail": "展示節點細節",
+      "filter": "篩選節點"
+    },
+    "placeholders": {
+      "delayCheckUrl": "延遲測試網址"
+    },
+    "empty": {
+      "noAvailableGroups": "目前沒有可用的代理群組",
+      "noProxies": "目前沒有代理",
+      "noSubscriptions": {
+        "title": "尚未匯入訂閱",
+        "description": "代理頁沒有可顯示的內容。請先前往「訂閱」頁面匯入並啟用訂閱。"
+      },
+      "inactiveSubscription": {
+        "title": "尚未啟用訂閱",
+        "description": "偵測到已有訂閱，但目前沒有有效訂閱被啟用。請前往「訂閱」頁面選擇並啟用一個訂閱。"
+      },
+      "coreUnavailable": {
+        "title": "核心暫時無法使用",
+        "description": "無法從核心取得代理資訊。請嘗試重新啟動核心；若問題仍然存在，請開啟日誌目錄檢查核心日誌。"
+      },
+      "noProxyInfo": {
+        "title": "未取得代理資訊",
+        "description": "目前沒有可顯示的代理群組或節點。請檢查目前訂閱是否包含有效的代理群組和節點，或嘗試重新啟動核心並查看日誌。"
+      },
+      "actions": {
+        "openProfiles": "前往訂閱",
+        "restartCore": "重新啟動核心",
+        "openLogs": "開啟日誌目錄"
+      }
+    },
+    "chain": {
+      "header": "鏈式代理設定",
+      "warning": "鏈式代理會顯著降低網速。如果您沒有明確的業務需求，或不了解此項設定，請保持關閉",
+      "confirmEnable": "我明白，開啟",
+      "keepDisabled": "保持關閉",
+      "empty": "鏈式代理會顯著降低網速。如果您沒有明確的業務需求，或不了解此項設定，請保持關閉",
+      "instruction": "依序點擊節點新增到鏈式代理中",
+      "minimumNodes": "鏈式代理至少需要 2 個節點",
+      "minimumNodesHint": "鏈式代理至少需要 2 個節點，請再新增一個節點。",
+      "connectFailed": "連線鏈式代理失敗",
+      "disconnectFailed": "中斷鏈式代理失敗",
+      "duplicateNode": "該節點已在鏈式代理表中",
+      "entryNode": "入口",
+      "exitNode": "出口"
+    },
+    "messages": {
+      "directMode": "直連模式"
+    },
+    "title": {
+      "default": "代理組",
+      "chainMode": "鏈式代理模式"
+    }
+  },
+  "feedback": {
+    "warnings": {
+      "invalidTestUrl": "Test URL must start with http:// or https://"
+    },
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "手動選擇代理",
+        "url-test": "根據網址測試延遲選擇代理",
+        "fallback": "切換至另一個備用代理",
+        "load-balance": "根據負載平衡分配代理",
+        "relay": "根據定義的代理鏈傳送"
+      },
+      "policies": {
+        "DIRECT": "直接連線 (DIRECT)",
+        "REJECT": "攔截請求 (REJECT)",
+        "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
+        "PASS": "跳過此項 (PASS)"
+      }
+    }
+  }
+}

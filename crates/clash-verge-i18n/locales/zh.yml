@@ -1,0 +1,92 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: 仪表板
+    body: 仪表板显示状态已更新。
+  clashModeChanged:
+    title: 模式切换
+    body: 已切换至 {mode}。
+  systemProxyToggled:
+    title: 系统代理
+    'on': 系统代理已启用。
+    'off': 系统代理已禁用。
+  systemProxyFailed:
+    title: 系统代理
+    body: 系统代理设置失败。打开 Clash Verge 查看原因。
+  systemProxyGuardStopped:
+    title: 系统代理守卫
+    body: 连续多次失败后已停止守卫。打开 Clash Verge 查看原因。
+  tunModeToggled:
+    title: TUN 模式
+    'on': TUN 模式已开启。
+    'off': TUN 模式已关闭。
+  lightweightModeEntered:
+    title: 轻量模式
+    body: 已进入轻量模式。
+  profilesReactivated:
+    title: 订阅
+    body: 订阅已激活。
+  appQuit:
+    title: 即将退出
+    body: Clash Verge 即将退出。
+  updateReady:
+    title: Clash Verge 更新
+    body: 新版本 (v{version}) 已下载完成，是否立即安装？
+    installNow: 立即安装
+    later: 稍后
+service:
+  adminInstallPrompt: 安装 Clash Verge 服务需要管理员权限
+  adminUninstallPrompt: 卸载 Clash Verge 服务需要管理员权限
+core:
+  alreadyRunning: 无法启动内核：已有内核进程正在运行。请退出相关应用或清理残留进程后重试。若仍无法解决，请重启电脑。
+launchGuard:
+  currentExeError: 无法确定应用位置：{error}
+  homeDirError: 无法确定当前用户主目录，应用将退出：{error}
+  translocated: macOS 正在从 App Translocation 临时路径运行此应用。请在 Finder 中将应用手动拖到 /Applications 或 ~/Applications 后重新打开。
+  rejected: |-
+    此应用必须从 Applications 目录启动。
+
+    {reason}
+  notInBundle: 可执行文件不在应用包内。
+  canonicalizeBundleError: 无法解析应用包路径：{error}
+  bundleNameError: 无法确定应用包名称，应用将退出。
+  replacePrompt: 目标位置已存在应用：{destination}。是否替换并从 Applications 重新启动？
+  movePrompt: 为了安全启动后台服务，需要将应用移动到 {destination}。是否现在移动并重新启动？
+  createApplicationsDirError: 无法创建 Applications 目录：{error}
+  moveFailed: 移动应用失败。请在 Finder 中手动移动后重试。
+  replaceFailed: 无法安全替换现有应用：{error}
+  relaunchFailed: 应用已复制，但自动重新启动失败。请从 Applications 手动打开。
+  cancel: 取消
+  move: 移动
+  ok: 好
+tray:
+  dashboard: 仪表板
+  ruleMode: 规则模式
+  globalMode: 全局模式
+  directMode: 直连模式
+  outboundModes: 出站模式
+  rule: 规则
+  direct: 直连
+  global: 全局
+  profiles: 订阅
+  proxies: 代理
+  systemProxy: 系统代理
+  tunMode: TUN 模式
+  closeAllConnections: 关闭所有连接
+  lightweightMode: 轻量模式
+  copyEnv: 复制环境变量
+  confDir: 配置目录
+  coreDir: 内核目录
+  logsDir: 日志目录
+  openDir: 打开目录
+  appLog: 应用日志
+  coreLog: 内核日志
+  restartClash: 重启 Clash 内核
+  restartApp: 重启应用
+  vergeVersion: Verge 版本
+  more: 更多
+  exit: 退出
+  tooltip:
+    systemProxy: 系统代理
+    tun: TUN
+    profile: 订阅

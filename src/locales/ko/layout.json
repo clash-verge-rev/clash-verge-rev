@@ -1,0 +1,61 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "홈",
+        "proxies": "프록시",
+        "profiles": "프로필",
+        "connections": "연결",
+        "rules": "규칙",
+        "logs": "로그",
+        "unlock": "테스트",
+        "settings": "설정"
+      },
+      "menu": {
+        "reorderMode": "메뉴 재정렬 모드",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "메뉴 순서 잠금 해제",
+        "lock": "메뉴 순서 잠금",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    },
+    "serviceMigration": {
+      "locationRefusedMessage": "서비스 설치 경로나 폴더 권한이 보안 검사를 통과하지 못해 코어를 시작할 수 없습니다. 서비스를 다시 설치하여 파일과 권한을 복원한 후 다시 시도하세요. Windows에서 관리자 승인을 요청할 수 있습니다.",
+      "notAutoStartedMessage": "Clash Verge 서비스의 시작 유형이 수동 또는 사용 안 함으로 변경되어(최적화 도구가 변경하는 경우가 많음) Windows 시작 시 실행되지 않습니다. 이번 세션은 Sidecar로 실행 중입니다. 서비스를 다시 설치하면 자동 시작이 복원됩니다. Windows에서 관리자 승인을 요청할 수 있습니다.",
+      "title": "Service update required",
+      "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "서비스 작업에 실패했습니다",
+        "stateRefreshFailed": "서비스 상태를 새로 고치지 못했습니다",
+        "restartFailed": "코어를 재시작하지 못했습니다",
+        "revalidationFailed": "실행 상태를 새로 고치지 못했습니다",
+        "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "시스템 프록시를 설정할 수 없음",
+      "message": "macOS가 권한 부족을 이유로 이 변경을 거부했습니다. Clash Verge 서비스를 설치하면 서비스가 관리자 권한으로 프록시를 설정하며, 이 알림은 다시 나타나지 않습니다.",
+      "serviceReadyMessage": "Clash Verge 서비스는 준비되었지만 코어가 아직 sidecar로 실행 중이어서 시스템 프록시 설정이 거부되었습니다. 서비스 모드로 전환하면 재설치 없이 해결됩니다.",
+      "alternative": "다른 방법: 시스템 설정 → 개인정보 보호 및 보안 → 고급에서 시스템 전체 설정에 관리자 암호를 요구하는 옵션을 끄십시오.",
+      "later": "나중에",
+      "installing": "시스템 서비스를 설치하는 중입니다. 관리자 암호를 요청할 수 있습니다.",
+      "restarting": "서비스가 설치되었습니다. 서비스를 통해 코어를 다시 시작하는 중…",
+      "applying": "시스템 프록시 변경 사항을 적용하는 중…",
+      "tunTitle": "TUN 모드에는 시스템 서비스가 필요합니다",
+      "tunMessage": "TUN 모드가 네트워크 트래픽을 처리하려면 Clash Verge 시스템 서비스가 필요합니다. 설치가 끝나면 TUN 모드가 자동으로 켜집니다."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "코어를 안전하게 중지할 수 없어 재시작이 취소되었습니다",
+      "quitCoreStopFailed": "코어를 안전하게 중지할 수 없어 종료가 취소되었습니다"
+    }
+  }
+}

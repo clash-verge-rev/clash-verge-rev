@@ -1,0 +1,649 @@
+use super::{CmdResult, StringifyErr as _, WithErrorCode as _, coded_error};
+use crate::cmd::validate::{ValidationNoticeTarget, handle_validation_notice};
+use crate::config::profiles;
+use crate::core::notify::NoticeStatus;
+use crate::utils::window_manager::WindowManager;
+use crate::{
+    config::{
+        Config, IProfiles, PrfItem, PrfOption,
+        profiles::{
+            PROFILE_WRITE_LOCK, profiles_append_item_with_filedata_safe, profiles_patch_item_safe,
+            profiles_reorder_safe, profiles_save_file_safe,
+        },
+        profiles_append_item_safe,
+    },
+    core::{CoreManager, handle, timer::Timer, tray::Tray, validate::ValidationOutcome},
+    feat,
+    utils::{dirs, help},
+};
+use clash_verge_draft::{Draft, SharedDraft};
+use clash_verge_logging::{Type, logging, logging_error};
+use scopeguard::defer;
+use smartstring::alias::String;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
+
+fn profile_import_error(err: &anyhow::Error) -> std::string::String {
+    if let Some(cause) = err.chain().find(|cause| cause.to_string().contains("TLS 1.0/1.1")) {
+        return cause.to_string();
+    }
+
+    format!("导入订阅失败: {err:#}")
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_profiles() -> CmdResult<SharedDraft<IProfiles>> {
+    let draft = Config::profiles().await;
+    let data = draft.data_arc();
+    Ok(data)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn enhance_profiles() -> CmdResult<ValidationOutcome> {
+    match feat::enhance_profiles().await {
+        Ok(outcome) if outcome.is_valid() => {
+            handle::Handle::refresh_clash();
+            Ok(outcome)
+        }
+        Ok(outcome) => {
+            logging!(
+                warn,
+                Type::Cmd,
+                "Reactivate profiles command failed validation: {}",
+                outcome
+            );
+            handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+            Ok(outcome)
+        }
+        Err(e) => {
+            logging!(error, Type::Cmd, "enhance profiles failed: {e:#}");
+            Err(coded_error("PROFILE_ENHANCE_FAILED", e))
+        }
+    }
+}
+
+#[tauri::command]
+#[tracing::instrument(skip_all, level = "info", fields(url = %help::mask_url(&url), uid = tracing::field::Empty))]
+#[specta::specta]
+pub async fn import_profile(url: std::string::String, option: Option<PrfOption>) -> CmdResult {
+    let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
+        Ok(it) => it,
+        Err(e) => {
+            logging!(error, Type::Cmd, "[导入订阅] 下载失败: {e:#}");
+            return Err(coded_error("PROFILE_IMPORT_FAILED", profile_import_error(&e)));
+        }
+    };
+
+    if let Err(e) = profiles_append_item_safe(item).await {
+        logging!(error, Type::Cmd, "[导入订阅] 保存配置失败: {e:#}");
+        return Err(coded_error("PROFILE_IMPORT_FAILED", e));
+    }
+
+    if let Err(e) = profiles_save_file_safe().await {
+        logging!(error, Type::Cmd, "[导入订阅] 保存配置文件失败: {e:#}");
+        return Err(coded_error("PROFILE_IMPORT_FAILED", e));
+    }
+    logging_error!(Type::Timer, Timer::global().refresh().await);
+
+    if let Some(uid) = &item.uid {
+        tracing::Span::current().record("uid", tracing::field::display(uid));
+        handle::Handle::notify_profile_changed(uid);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn reorder_profile(active_id: std::string::String, over_id: std::string::String) -> CmdResult {
+    let active_id: String = active_id.into();
+    let over_id: String = over_id.into();
+    match profiles_reorder_safe(&active_id, &over_id).await {
+        Ok(_) => {
+            logging!(info, Type::Cmd, "重新排序配置文件: {} -> {}", active_id, over_id);
+            Ok(())
+        }
+        Err(err) => {
+            logging!(
+                error,
+                Type::Cmd,
+                "重新排序配置文件失败: {} -> {}: {err:#}",
+                active_id,
+                over_id
+            );
+            Err(coded_error("PROFILE_REORDER_FAILED", err))
+        }
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn create_profile(item: ProfileCreate, file_data: Option<std::string::String>) -> CmdResult {
+    let item: PrfItem = item.into();
+    let file_data = file_data.map(String::from);
+    match profiles_append_item_with_filedata_safe(&item, file_data).await {
+        Ok(_) => {
+            profiles_save_file_safe()
+                .await
+                .with_error_code("PROFILE_CREATE_FAILED")?;
+            logging_error!(Type::Timer, Timer::global().refresh().await);
+            Ok(())
+        }
+        Err(err) => Err(coded_error("PROFILE_CREATE_FAILED", err)),
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn update_profile(index: std::string::String, option: Option<PrfOption>) -> CmdResult {
+    let index: String = index.into();
+    match feat::update_profile(&index, option.as_ref(), true).await {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            logging!(error, Type::Cmd, "update profile failed: {e:#}");
+            Err(coded_error("PROFILE_UPDATE_FAILED", e))
+        }
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn delete_profile(index: std::string::String) -> CmdResult {
+    let index: String = index.into();
+    let profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
+
+    let profiles = Config::profiles().await;
+    let result = profiles
+        .with_data_modify(|mut candidate| async move {
+            let original = candidate.clone();
+            let (should_update, plan) = candidate.plan_delete_item(&index)?;
+            let guard = if should_update {
+                match CoreManager::global()
+                    .update_config_forced_with_profiles(&candidate, &original)
+                    .await?
+                {
+                    Ok(guard) => Some(guard),
+                    Err(outcome) => return Ok((original, Err(outcome))),
+                }
+            } else {
+                candidate.save_file().await?;
+                None
+            };
+            let current = candidate.current.clone();
+            plan.cleanup().await;
+            Ok((candidate, Ok((should_update, current, guard))))
+        })
+        .await
+        .with_error_code("PROFILE_DELETE_FAILED")?;
+    let (should_update, current, config_update_guard) = match result {
+        Ok(result) => result,
+        Err(outcome) => {
+            handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+            return Err(coded_error("PROFILE_DELETE_FAILED", outcome));
+        }
+    };
+    if should_update {
+        profiles::activate_selected_nodes();
+    }
+    drop(config_update_guard);
+    drop(profile_write_guard);
+
+    if should_update {
+        logging_error!(Type::Config, Config::sync_dns_override().await);
+    }
+
+    if let Err(e) = Tray::global().update_tooltip().await {
+        logging!(warn, Type::Cmd, "异步更新托盘提示失败: {e:#}");
+    }
+
+    if let Err(e) = Tray::global().update_menu().await {
+        logging!(warn, Type::Cmd, "异步更新托盘菜单失败: {e:#}");
+    }
+    if should_update {
+        handle::Handle::refresh_clash();
+        if let Some(current) = current.as_ref() {
+            handle::Handle::notify_profile_changed(current);
+        }
+    }
+    logging_error!(Type::Timer, Timer::global().refresh().await);
+    Ok(())
+}
+
+async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
+    logging!(info, Type::Cmd, "尝试恢复到之前的配置: {}", prev_profile);
+    let restore_profiles = IProfiles {
+        current: Some(prev_profile.to_owned()),
+        items: None,
+    };
+    Config::profiles()
+        .await
+        .edit_draft(|d| d.patch_config(&restore_profiles));
+    Config::profiles().await.apply();
+    crate::process::AsyncHandler::spawn(|| async move {
+        if let Err(e) = profiles_save_file_safe().await {
+            logging!(warn, Type::Cmd, "异步保存恢复配置文件失败: {e:#}");
+        }
+    });
+    Ok(())
+}
+
+async fn commit_current_profile(profiles: &Draft<IProfiles>, current: Option<String>) -> anyhow::Result<()> {
+    profiles.discard();
+    let Some(current) = current else {
+        return Ok(());
+    };
+
+    profiles
+        .with_data_modify(|mut committed| async move {
+            committed.patch_config(&IProfiles {
+                current: Some(current),
+                items: None,
+            });
+            Ok((committed, ()))
+        })
+        .await
+}
+
+async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationOutcome> {
+    commit_current_profile(&Config::profiles().await, current_value.cloned())
+        .await
+        .stringify_err()?;
+    // Runtime refresh and tray rebuilding happen after saved node selections are restored.
+    profiles::activate_selected_nodes();
+
+    if let Err(e) = profiles_save_file_safe().await {
+        logging!(warn, Type::Cmd, "异步保存配置文件失败: {e:#}");
+    }
+
+    if let Some(current) = current_value
+        && WindowManager::get_main_window().is_some()
+    {
+        handle::Handle::notify_profile_changed(current);
+    }
+
+    logging_error!(Type::Config, Config::sync_dns_override().await);
+    Ok(ValidationOutcome::Valid)
+}
+
+async fn discard_and_restore(current_profile: Option<&String>) -> CmdResult<()> {
+    Config::profiles().await.discard();
+    if let Some(prev_profile) = current_profile {
+        restore_previous_profile(prev_profile).await?;
+    }
+    Ok(())
+}
+
+async fn handle_validation_failure(
+    outcome: ValidationOutcome,
+    current_profile: Option<&String>,
+) -> CmdResult<ValidationOutcome> {
+    logging!(warn, Type::Cmd, "配置验证失败: {}", outcome);
+    discard_and_restore(current_profile).await?;
+    if !matches!(outcome, ValidationOutcome::Busy) {
+        handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+    }
+    Ok(outcome)
+}
+
+async fn handle_update_error<E: std::fmt::Display>(
+    e: E,
+    current_profile: Option<&String>,
+) -> CmdResult<ValidationOutcome> {
+    logging!(warn, Type::Cmd, "更新过程发生错误: {}", e,);
+    discard_and_restore(current_profile).await?;
+    let message: String = e.to_string().into();
+    handle::Handle::notice(NoticeStatus::ConfigValidateBootError, message.as_str());
+    Ok(ValidationOutcome::invalid_from_message(message))
+}
+
+async fn run_profile_config_update_transition<Update, UpdateFuture>(
+    update_config: Update,
+) -> anyhow::Result<ValidationOutcome>
+where
+    Update: FnOnce() -> UpdateFuture,
+    UpdateFuture: std::future::Future<Output = anyhow::Result<ValidationOutcome>>,
+{
+    update_config().await
+}
+
+async fn perform_config_update(
+    current_value: Option<&String>,
+    current_profile: Option<&String>,
+) -> CmdResult<ValidationOutcome> {
+    let update_result = run_profile_config_update_transition(|| CoreManager::global().update_config_forced()).await;
+
+    match update_result {
+        Ok(outcome) if outcome.is_valid() => handle_success(current_value).await,
+        Ok(outcome) => handle_validation_failure(outcome, current_profile).await,
+        Err(e) => handle_update_error(e, current_profile).await,
+    }
+}
+
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfileSelection {
+    #[specta(type = Option<std::string::String>)]
+    pub current: Option<String>,
+}
+
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfileCreate {
+    #[serde(rename = "type")]
+    #[specta(type = Option<std::string::String>)]
+    pub itype: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub desc: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub url: Option<String>,
+    pub option: Option<PrfOption>,
+}
+
+impl From<ProfileCreate> for PrfItem {
+    fn from(item: ProfileCreate) -> Self {
+        Self {
+            itype: item.itype,
+            name: item.name,
+            desc: item.desc,
+            url: item.url,
+            option: item.option,
+            ..Self::default()
+        }
+    }
+}
+
+#[derive(Default, serde::Deserialize, specta::Type)]
+#[serde(default)]
+pub struct ProfilePatch {
+    #[serde(rename = "type")]
+    #[specta(type = Option<std::string::String>)]
+    pub itype: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub desc: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub file: Option<String>,
+    #[specta(type = Option<std::string::String>)]
+    pub url: Option<String>,
+    pub selected: Option<Vec<crate::config::PrfSelected>>,
+    pub extra: Option<crate::config::PrfExtra>,
+    pub updated: Option<usize>,
+    pub option: Option<PrfOption>,
+}
+
+impl From<ProfilePatch> for PrfItem {
+    fn from(patch: ProfilePatch) -> Self {
+        Self {
+            itype: patch.itype,
+            name: patch.name,
+            desc: patch.desc,
+            file: patch.file,
+            url: patch.url,
+            selected: patch.selected,
+            extra: patch.extra,
+            updated: patch.updated,
+            option: patch.option,
+            ..Self::default()
+        }
+    }
+}
+
+#[tauri::command]
+#[tracing::instrument(skip_all, level = "info", fields(target = ?profiles.current))]
+#[specta::specta]
+pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<ValidationOutcome> {
+    if CURRENT_SWITCHING_PROFILE
+        .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
+        .is_err()
+    {
+        logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
+        return Ok(ValidationOutcome::Busy);
+    }
+    defer! {
+        CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
+    }
+    let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
+
+    let profiles = IProfiles {
+        current: profiles.current,
+        items: None,
+    };
+    let target_profile = profiles.current.as_ref();
+
+    let previous_profile = Config::profiles().await.data_arc().current.clone();
+
+    Config::profiles().await.edit_draft(|d| {
+        d.patch_config(&profiles);
+    });
+
+    perform_config_update(target_profile, previous_profile.as_ref())
+        .await
+        .map_err(|error| coded_error("PROFILE_SWITCH_FAILED", error))
+}
+
+pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<ValidationOutcome> {
+    let profiles = ProfileSelection {
+        current: Some(profile_index),
+    };
+    patch_profiles_config(profiles).await
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn patch_profile(index: std::string::String, profile: ProfilePatch) -> CmdResult {
+    let profile: PrfItem = profile.into();
+    let index: String = index.into();
+    let profiles = Config::profiles().await;
+    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
+        && let Some(new_option) = profile.option.as_ref()
+    {
+        let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
+        let new_interval = new_option.update_interval;
+        let old_allow_auto_update = old_profile.option.as_ref().and_then(|o| o.allow_auto_update);
+        let new_allow_auto_update = new_option.allow_auto_update;
+        (old_interval != new_interval) || (old_allow_auto_update != new_allow_auto_update)
+    } else {
+        false
+    };
+
+    // Prevent an in-flight restore from overwriting a newer UI or chain selection.
+    let records_a_selection = profile.selected.is_some();
+
+    profiles_patch_item_safe(&index, &profile)
+        .await
+        .with_error_code("PROFILE_UPDATE_FAILED")?;
+
+    if records_a_selection {
+        profiles::supersede_selected_activation();
+    }
+
+    if should_refresh_timer {
+        crate::process::AsyncHandler::spawn(move || async move {
+            logging!(info, Type::Timer, "Timer update settings changed, refreshing timer...");
+            if let Err(e) = crate::core::Timer::global().refresh().await {
+                logging!(error, Type::Timer, "Failed to refresh timer: {e:#}");
+            } else {
+                crate::core::handle::Handle::notify_timer_updated(&index);
+            }
+        });
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn view_profile(index: std::string::String) -> CmdResult {
+    let profiles = Config::profiles().await;
+    let profiles_ref = profiles.latest_arc();
+    let file = profiles_ref
+        .get_item(&index)
+        .with_error_code("PROFILE_OPEN_FAILED")?
+        .file
+        .as_ref()
+        .ok_or_else(|| coded_error("PROFILE_OPEN_FAILED", "the file field is null"))?;
+
+    let path = dirs::app_profiles_dir()
+        .with_error_code("PROFILE_OPEN_FAILED")?
+        .join(file.as_str());
+    if !path.exists() {
+        return CmdResult::Err(coded_error(
+            "PROFILE_OPEN_FAILED",
+            format!("file not found \"{}\"", path.display()),
+        ));
+    }
+
+    help::open_file(path).with_error_code("PROFILE_OPEN_FAILED")
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::string::String> {
+    let item = {
+        let profiles = Config::profiles().await;
+        let profiles_ref = profiles.latest_arc();
+        PrfItem {
+            file: profiles_ref
+                .get_item(&index)
+                .with_error_code("PROFILE_READ_FAILED")?
+                .file
+                .to_owned(),
+            ..Default::default()
+        }
+    };
+
+    if let Some(file) = item.file.as_ref() {
+        let path = dirs::app_profiles_dir()
+            .with_error_code("PROFILE_READ_FAILED")?
+            .join(file.as_str());
+        match tokio::fs::try_exists(&path).await {
+            Ok(true) => {}
+            Ok(false) => return Ok(std::string::String::new()),
+            Err(err) => {
+                return Err(coded_error(
+                    "PROFILE_READ_FAILED",
+                    format!("failed to check profile file \"{}\": {err}", path.display()),
+                ));
+            }
+        }
+    }
+
+    let data = item.read_file().await.with_error_code("PROFILE_READ_FAILED")?;
+    Ok(data.into())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn get_next_update_time(uid: std::string::String) -> CmdResult<Option<i64>> {
+    let timer = Timer::global();
+    let next_time = timer.get_next_update_time(&uid).await;
+    Ok(next_time)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{commit_current_profile, run_profile_config_update_transition};
+    use crate::config::{IProfiles, PrfItem};
+    use crate::core::validate::ValidationOutcome;
+    use clash_verge_draft::Draft;
+    use std::{
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        task::Poll,
+        time::Duration,
+    };
+    use tokio::sync::Barrier;
+
+    struct CancellationProbe {
+        cancelled: Arc<AtomicBool>,
+        completed: Arc<AtomicBool>,
+    }
+
+    impl Drop for CancellationProbe {
+        fn drop(&mut self) {
+            if !self.completed.load(Ordering::Acquire) {
+                self.cancelled.store(true, Ordering::Release);
+            }
+        }
+    }
+
+    fn profile(uid: &str) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            ..PrfItem::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn committing_profile_switch_preserves_profiles_added_after_draft_creation() -> anyhow::Result<()> {
+        let profiles = Draft::new(IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![profile("a"), profile("b")]),
+        });
+        profiles.edit_draft(|draft| {
+            draft.patch_config(&IProfiles {
+                current: Some("b".into()),
+                items: None,
+            });
+        });
+        profiles
+            .with_data_modify(|mut committed| async move {
+                committed.items.get_or_insert_with(Vec::new).push(profile("new"));
+                Ok((committed, ()))
+            })
+            .await?;
+
+        commit_current_profile(&profiles, Some("b".into())).await?;
+
+        let committed = profiles.data_arc();
+        assert_eq!(committed.current.as_deref(), Some("b"));
+        assert!(committed.get_item("new").is_ok());
+        Ok(())
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn profile_config_update_runs_past_former_deadline_without_cancellation() -> anyhow::Result<()> {
+        let update_started = Arc::new(Barrier::new(2));
+        let release_update = Arc::new(Barrier::new(2));
+        let update_cancelled = Arc::new(AtomicBool::new(false));
+        let update_completed = Arc::new(AtomicBool::new(false));
+
+        let mut update = Box::pin(run_profile_config_update_transition({
+            let update_started = Arc::clone(&update_started);
+            let release_update = Arc::clone(&release_update);
+            let update_cancelled = Arc::clone(&update_cancelled);
+            let update_completed = Arc::clone(&update_completed);
+            move || async move {
+                let _probe = CancellationProbe {
+                    cancelled: update_cancelled,
+                    completed: Arc::clone(&update_completed),
+                };
+                update_started.wait().await;
+                release_update.wait().await;
+                update_completed.store(true, Ordering::Release);
+                Ok(ValidationOutcome::Valid)
+            }
+        }));
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        update_started.wait().await;
+        tokio::time::advance(Duration::from_secs(31)).await;
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        assert!(!update_cancelled.load(Ordering::Acquire));
+
+        release_update.wait().await;
+        assert!(update.await?.is_valid());
+        assert!(update_completed.load(Ordering::Acquire));
+        assert!(!update_cancelled.load(Ordering::Acquire));
+        Ok(())
+    }
+}

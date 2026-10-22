@@ -1,0 +1,199 @@
+import { LanguageRounded } from '@mui/icons-material'
+import { alpha, Box, Divider, Menu, MenuItem, styled } from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { BaseLoading } from '@/components/base'
+import { useIconCache } from '@/hooks/use-icon-cache'
+import { cmdTestDelay } from '@/services/cmds'
+import delayManager from '@/services/delay'
+import { showNotice } from '@/services/notice-service'
+import { useTestAllCounter } from '@/store/app-store-context'
+
+import { TestBox } from './test-box'
+
+interface Props {
+  itemData: IVergeTestItem
+  onEdit: () => void
+  onDelete: (uid: string) => void
+}
+
+export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
+  const { t } = useTranslation()
+  const [anchorEl, setAnchorEl] = useState<any>(null)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+  const [delay, setDelay] = useState(-1)
+  const { uid, name, icon, url } = itemData
+  const iconCachePath = useIconCache({ icon: icon!, cacheKey: uid! })
+
+  const onDelay = useCallback(async () => {
+    setDelay(-2)
+    try {
+      const result = await cmdTestDelay(url!)
+      setDelay(result)
+    } catch (err) {
+      // A failed test must not leave the item stuck in the loading state.
+      setDelay(-1)
+      showNotice.error(err)
+    }
+  }, [url])
+
+  const onEditTest = () => {
+    setAnchorEl(null)
+    onEdit()
+  }
+
+  const onDelete = useLockFn(async () => {
+    setAnchorEl(null)
+    try {
+      removeTest(uid!)
+    } catch (err: any) {
+      showNotice.error(err)
+    }
+  })
+
+  const menu = [
+    { label: t('shared.actions.edit'), handler: onEditTest },
+    { label: t('shared.actions.delete'), handler: onDelete },
+  ]
+
+  // Store bump replaces the per-item event subscription; skip the initial
+  // mount value and call through a ref so url changes do not re-trigger tests.
+  const testAllCounter = useTestAllCounter()
+  const onDelayRef = useRef(onDelay)
+  onDelayRef.current = onDelay
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
+    void onDelayRef.current()
+  }, [testAllCounter])
+
+  return (
+    <Box>
+      <TestBox
+        onContextMenu={(event) => {
+          const { clientX, clientY } = event
+          setPosition({ top: clientY, left: clientX })
+          setAnchorEl(event.currentTarget)
+          event.preventDefault()
+        }}
+      >
+        <Box data-sortable-handle sx={{ position: 'relative', cursor: 'move' }}>
+          {icon && icon.trim() !== '' ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              {icon.trim().startsWith('http') && (
+                <img
+                  alt={name!}
+                  src={iconCachePath === '' ? icon : iconCachePath}
+                  height="40px"
+                />
+              )}
+              {icon.trim().startsWith('data') && (
+                <img alt={name!} src={icon!} height="40px" />
+              )}
+              {icon.trim().startsWith('<svg') && (
+                <img
+                  alt={name!}
+                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon)}`}
+                  height="40px"
+                />
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <LanguageRounded sx={{ height: '40px' }} fontSize="large" />
+            </Box>
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>{name}</Box>
+        </Box>
+        <Divider sx={{ marginTop: '8px' }} />
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '8px',
+            color: 'primary.main',
+          }}
+        >
+          {delay === -2 && (
+            <Widget>
+              <BaseLoading />
+            </Widget>
+          )}
+
+          {delay === -1 && (
+            <Widget
+              className="the-check"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDelay()
+              }}
+              sx={({ palette }) => ({
+                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+              })}
+            >
+              {t('tests.components.item.actions.test')}
+            </Widget>
+          )}
+
+          {delay >= 0 && (
+            // 显示延迟
+            <Widget
+              className="the-delay"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDelay()
+              }}
+              sx={({ palette }) => ({
+                color: delayManager.formatDelayColor(delay),
+                ':hover': {
+                  bgcolor: alpha(palette.primary.main, 0.15),
+                },
+              })}
+            >
+              {delayManager.formatDelay(delay)}
+            </Widget>
+          )}
+        </Box>
+      </TestBox>
+
+      <Menu
+        open={!!anchorEl}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorPosition={position}
+        anchorReference="anchorPosition"
+        transitionDuration={225}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
+        onContextMenu={(e) => {
+          setAnchorEl(null)
+          e.preventDefault()
+        }}
+      >
+        {menu.map((item) => (
+          <MenuItem
+            key={item.label}
+            onClick={item.handler}
+            sx={{ minWidth: 120 }}
+            dense
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
+    </Box>
+  )
+}
+const Widget = styled(Box)(({ theme: { typography } }) => ({
+  padding: '3px 6px',
+  fontSize: 14,
+  fontFamily: typography.fontFamily,
+  borderRadius: '4px',
+}))

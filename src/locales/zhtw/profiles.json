@@ -1,0 +1,221 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "更新所有訂閱",
+      "viewRuntimeConfig": "查看執行時訂閱",
+      "reactivate": "重新啟用訂閱",
+      "import": "匯入"
+    },
+    "batch": {
+      "actions": {
+        "delete": "刪除選取訂閱",
+        "selectAll": "全選",
+        "deselectAll": "取消選取",
+        "done": "完成"
+      },
+      "summary": {
+        "selected": "已選取",
+        "items": "項目"
+      },
+      "title": "批次操作"
+    },
+    "importForm": {
+      "placeholder": "訂閱檔網址",
+      "actions": {
+        "paste": "貼上"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "無效的訂閱網址，請輸入以 http:// 或 https:// 開頭的位址",
+        "onlyYaml": "僅支援 YAML 檔案",
+        "createFailed": "建立訂閱失敗",
+        "deleteFailed": "刪除訂閱失敗",
+        "enhanceFailed": "重新啟用訂閱失敗",
+        "importFailed": "匯入訂閱失敗",
+        "openFailed": "開啟訂閱失敗",
+        "readFailed": "讀取訂閱失敗",
+        "reorderFailed": "調整訂閱順序失敗",
+        "switchFailed": "切換訂閱失敗",
+        "updateFailed": "更新訂閱失敗"
+      },
+      "notifications": {
+        "importRetry": "訂閱匯入失敗，嘗試使用 Clash 代理匯入",
+        "importFail": "使用 Clash 代理匯入訂閱也失敗",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "訂閱已切換",
+        "profileReactivated": "訂閱已啟用",
+        "switchBusy": "正在切換配置，請稍後重試",
+        "batchDeleted": "選取的訂閱已成功刪除"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "discardedKeys": "擴充設定或腳本寫入了由應用程式設定接管的欄位 {{keys}}，這些值已被捨棄",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "訂閱資料異常，點擊強制重新整理"
+      }
+    },
+    "title": "訂閱"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "點擊匯入訂閱"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "選擇檔案"
+    },
+    "menu": {
+      "home": "首 頁",
+      "select": "使用",
+      "shareQrCode": "Share QR Code",
+      "editInfo": "編輯資訊",
+      "editFile": "編輯檔案",
+      "editRules": "編輯規則",
+      "editProxies": "編輯節點",
+      "editGroups": "編輯代理組",
+      "extendConfig": "擴充覆寫設定",
+      "extendScript": "擴充指令碼",
+      "openFile": "開啟檔案",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Extend Config",
+        "script": "Global Extend Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失敗",
+        "nextUp": "下次更新",
+        "noSchedule": "沒有排程",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自動更新已停用"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "新增設定檔",
+        "edit": "編輯設定檔"
+      },
+      "fields": {
+        "type": "類型",
+        "description": "描述",
+        "subscriptionUrl": "訂閱網址",
+        "userAgent": "使用者代理",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "使用系統代理更新",
+        "useClashProxy": "使用內核代理更新",
+        "acceptInvalidCerts": "允許無效憑證（危險）",
+        "allowAutoUpdate": "允許自動更新"
+      },
+      "types": {
+        "remote": "遠端",
+        "local": "本機"
+      },
+      "errors": {
+        "typeRequired": "請選擇訂閱類型",
+        "urlRequired": "請輸入訂閱連結",
+        "uidMissing": "缺少訂閱識別碼",
+        "saveFailed": "儲存訂閱失敗"
+      },
+      "warnings": {
+        "frequentUpdate": "間隔過短會頻繁觸發核心重新載入並中斷現有連線，建議使用預設值 {{minutes}} 分鐘（24 小時）"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
+          "creationSuccess": "使用 Clash 代理建立訂閱成功"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "編輯節點",
+      "placeholders": {
+        "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"
+      },
+      "actions": {
+        "prepend": "新增前置代理節點",
+        "append": "新增後置代理節點"
+      }
+    },
+    "groupsEditor": {
+      "title": "編輯代理組",
+      "errors": {
+        "nameRequired": "代理組名稱為必填",
+        "nameExists": "代理組名稱已存在"
+      },
+      "fields": {
+        "type": "代理組類型",
+        "name": "代理組名稱",
+        "icon": "代理組圖示",
+        "proxies": "使用代理",
+        "provider": "使用代理集合",
+        "healthCheckUrl": "健康檢查網址",
+        "expectedStatus": "預期狀態碼",
+        "interval": "檢查間隔",
+        "maxFailedTimes": "最大失敗次數",
+        "interfaceName": "輸出介面",
+        "routingMark": "路由標記",
+        "filter": "篩選節點",
+        "excludeFilter": "排除節點",
+        "excludeType": "排除節點類型",
+        "includeAll": "包含所有輸出代理、代理集合",
+        "includeAllProxies": "包含所有輸出代理",
+        "includeAllProviders": "包含所有代理集合"
+      },
+      "toggles": {
+        "lazy": "延遲載入",
+        "disableUdp": "停用 UDP",
+        "hidden": "隱藏代理組"
+      },
+      "actions": {
+        "prepend": "新增前置代理組",
+        "append": "新增後置代理組"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "格式化文件"
+      },
+      "messages": {
+        "readOnly": "無法在唯讀模式下編輯"
+      },
+      "enhance": {
+        "globalMerge": "對所有訂閱生效，在應用程式設定之後合併；後續的全域腳本、訂閱擴充設定和訂閱腳本仍可修改結果。",
+        "globalScript": "對所有訂閱生效，接收全域擴充設定合併後的結果；後續的訂閱擴充設定和訂閱腳本仍可修改結果。",
+        "profileMerge": "僅對目前訂閱生效，在全域擴充設定和全域腳本之後合併；後續的訂閱腳本仍可修改結果。",
+        "profileScript": "僅對目前訂閱生效，接收訂閱擴充設定合併後的結果，是應用程式設定回寫前的最後一個擴充步驟。",
+        "order": "執行順序：訂閱原文 → 應用程式設定 → <globalMerge>全域擴充設定</globalMerge> → <globalScript>全域擴充腳本</globalScript> → <profileMerge>訂閱擴充設定</profileMerge> → <profileScript>訂閱擴充腳本</profileScript> → 應用程式設定回寫",
+        "settingsPriority": "注意：由應用程式設定接管的欄位最終以應用程式設定為準，在擴充設定或腳本中修改這些欄位不會生效。"
+      }
+    },
+    "confirmDelete": {
+      "title": "確認刪除",
+      "message": "此操作無法復原"
+    },
+    "logViewer": {
+      "title": "指令碼控制台輸出"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
+    }
+  }
+}

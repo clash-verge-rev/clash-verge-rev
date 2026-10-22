@@ -1,0 +1,60 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Testar tudo"
+    },
+    "title": "Testar"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Testar"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Criar teste",
+        "edit": "Editar teste"
+      },
+      "fields": {
+        "url": "URL de teste"
+      },
+      "errors": {
+        "nameRequired": "Informe um nome",
+        "urlRequired": "Informe uma URL de teste",
+        "invalidSvg": "O ícone não é um SVG válido",
+        "uidMissing": "O identificador do item de teste está ausente",
+        "saveFailed": "Falha ao salvar o item de teste"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pendente",
+      "yes": "Sim",
+      "no": "Não",
+      "failed": "Falhou",
+      "completed": "Concluído",
+      "disallowedIsp": "ISP não permitido",
+      "originalsOnly": "Somente originais",
+      "noDisney": "Não (IP banido pelo Disney+)",
+      "unsupportedRegion": "País/região não suportado",
+      "failedNetwork": "Falhou (conexão de rede)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testando..."
+      },
+      "empty": "Nenhum item de teste de desbloqueio",
+      "messages": {
+        "detectionFailedWithName": "Falha na detecção de {{name}}",
+        "detectionTimeout": "Tempo limite da detecção esgotado ou falhou"
+      },
+      "title": "Teste de desbloqueio"
+    }
+  }
+}

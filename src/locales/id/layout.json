@@ -1,0 +1,61 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Proksi",
+        "profiles": "Profil",
+        "connections": "Koneksi",
+        "rules": "Aturan",
+        "logs": "Log",
+        "unlock": "Test",
+        "settings": "Pengaturan"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    },
+    "serviceMigration": {
+      "locationRefusedMessage": "Layanan tidak dapat memulai inti karena jalur instalasi atau izin direktori tidak lolos pemeriksaan keamanan. Pasang ulang layanan untuk memulihkan berkas dan izinnya, lalu coba lagi. Windows mungkin meminta persetujuan administrator.",
+      "notAutoStartedMessage": "Jenis startup layanan Clash Verge diubah menjadi Manual atau Nonaktif (sering oleh alat pengoptimal), sehingga tidak lagi berjalan saat Windows dimulai; sesi ini menggunakan Sidecar. Pasang ulang layanan untuk memulihkan startup otomatis. Windows mungkin meminta persetujuan administrator.",
+      "title": "Service update required",
+      "message": "The Clash Verge service version does not match the version required by this app. Choose Reinstall Service to uninstall the existing service and install the required version, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Operasi layanan gagal",
+        "stateRefreshFailed": "Gagal menyegarkan status layanan",
+        "restartFailed": "Gagal memulai ulang core",
+        "revalidationFailed": "Gagal menyegarkan status berjalan",
+        "sidecarFailed": "Gagal melanjutkan dengan Sidecar"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Tidak dapat mengatur proxy sistem",
+      "message": "macOS menolak perubahan ini karena izin tidak cukup. Setelah layanan Clash Verge dipasang, layanan akan menerapkan pengaturan proxy sebagai administrator dan pesan ini tidak akan muncul lagi.",
+      "serviceReadyMessage": "Layanan Clash Verge sudah siap, tetapi core masih berjalan sebagai sidecar sehingga pengaturan proxy sistem ditolak. Beralih ke mode layanan mengatasinya tanpa pemasangan ulang.",
+      "alternative": "Alternatif: matikan opsi yang mewajibkan kata sandi administrator untuk mengakses pengaturan seluruh sistem di Pengaturan Sistem → Privasi & Keamanan → Lanjutan.",
+      "later": "Nanti",
+      "installing": "Memasang layanan sistem. Kata sandi administrator mungkin diminta.",
+      "restarting": "Layanan terpasang. Memulai ulang core melaluinya…",
+      "applying": "Menerapkan perubahan proxy sistem Anda…",
+      "tunTitle": "Mode TUN memerlukan layanan sistem",
+      "tunMessage": "Mode TUN memerlukan layanan sistem Clash Verge untuk mengambil alih lalu lintas jaringan. Setelah terpasang, mode TUN akan diaktifkan untuk Anda."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Core tidak dapat dihentikan dengan aman, sehingga mulai ulang dibatalkan",
+      "quitCoreStopFailed": "Core tidak dapat dihentikan dengan aman, sehingga keluar dibatalkan"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "clash-verge-logging"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+log = { workspace = true }
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
+flexi_logger = { workspace = true }
+tracing-estuary = { workspace = true }
+
+[features]
+default = []
+tokio-trace = ["tracing-estuary/tokio-trace"]
+chrome-trace = ["tracing-estuary/chrome-trace"]
+color = ["tracing-estuary/color"]

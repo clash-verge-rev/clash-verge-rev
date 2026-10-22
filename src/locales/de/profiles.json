@@ -1,0 +1,221 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Alle Abonnements aktualisieren",
+      "viewRuntimeConfig": "Laufzeit-Abonnement anzeigen",
+      "reactivate": "Abonnement erneut aktivieren",
+      "import": "Importieren"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Ausgewählte Abonnements löschen",
+        "selectAll": "Alle auswählen",
+        "deselectAll": "Auswahl aufheben",
+        "done": "Fertig"
+      },
+      "summary": {
+        "selected": "Ausgewählt",
+        "items": "Einträge"
+      },
+      "title": "Stapelverarbeitung"
+    },
+    "importForm": {
+      "placeholder": "Abonnement-Datei-Link",
+      "actions": {
+        "paste": "Einfügen"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Ungültige Abonnement-URL. Bitte geben Sie eine URL ein, die mit http:// oder https:// beginnt.",
+        "onlyYaml": "Nur YAML-Dateien werden unterstützt",
+        "createFailed": "Abonnement konnte nicht erstellt werden",
+        "deleteFailed": "Abonnement konnte nicht gelöscht werden",
+        "enhanceFailed": "Abonnements konnten nicht erneut aktiviert werden",
+        "importFailed": "Abonnement konnte nicht importiert werden",
+        "openFailed": "Abonnement konnte nicht geöffnet werden",
+        "readFailed": "Abonnement konnte nicht gelesen werden",
+        "reorderFailed": "Abonnements konnten nicht neu angeordnet werden",
+        "switchFailed": "Abonnement konnte nicht gewechselt werden",
+        "updateFailed": "Abonnement konnte nicht aktualisiert werden"
+      },
+      "notifications": {
+        "importRetry": "Import des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
+        "importFail": "Import des Abonnements auch mit Clash-Proxy fehlgeschlagen",
+        "importNeedsRefresh": "Abonnement importiert, muss aber eventuell manuell aktualisiert werden",
+        "importSuccess": "Abonnement erfolgreich importiert. Falls es nicht angezeigt wird, starten Sie die App bitte neu",
+        "profileSwitched": "Abonnement gewechselt",
+        "profileReactivated": "Abonnement erneut aktiviert",
+        "switchBusy": "Ein Abonnementwechsel läuft bereits",
+        "batchDeleted": "Ausgewählte Abonnements erfolgreich gelöscht"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Erzwungene Aktualisierung abgeschlossen",
+        "discardedKeys": "Erweiterungen haben {{keys}} gesetzt, die von den Einstellungen verwaltet werden, daher wurden diese Werte verworfen",
+        "emergencyRefreshFailed": "Erzwungene Aktualisierung fehlgeschlagen: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Abonnementdaten sind nicht verfügbar; zum erzwungenen Aktualisieren klicken"
+      }
+    },
+    "title": "Abonnement"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Klicken Sie hier, um ein Abonnement zu importieren."
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Datei auswählen"
+    },
+    "menu": {
+      "home": "Startseite",
+      "select": "Verwenden",
+      "shareQrCode": "QR-Code teilen",
+      "editInfo": "Informationen bearbeiten",
+      "editFile": "Datei bearbeiten",
+      "editRules": "Regeln bearbeiten",
+      "editProxies": "Knoten bearbeiten",
+      "editGroups": "Proxy-Gruppen bearbeiten",
+      "extendConfig": "Erweiterte Überdeckungskonfiguration",
+      "extendScript": "Erweitertes Skript",
+      "openFile": "Datei öffnen",
+      "update": "Aktualisieren",
+      "updateViaProxy": "Über Proxy aktualisieren"
+    },
+    "more": {
+      "global": {
+        "merge": "Globale Konfig-Erweiterung",
+        "script": "Globales Erweiterungsskript"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Skript"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Klicken, um die Zeit der letzten Aktualisierung anzuzeigen",
+        "showNext": "Klicken, um die nächste Aktualisierung anzuzeigen"
+      },
+      "status": {
+        "lastUpdateFailed": "Letzte Aktualisierung fehlgeschlagen",
+        "nextUp": "Nächste Aktualisierung",
+        "noSchedule": "Kein Zeitplan",
+        "unknown": "Unbekannt",
+        "autoUpdateDisabled": "Automatische Aktualisierung deaktiviert"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Neue Konfiguration erstellen",
+        "edit": "Konfiguration bearbeiten"
+      },
+      "fields": {
+        "type": "Typ",
+        "description": "Beschreibung",
+        "subscriptionUrl": "Abonnement-Link",
+        "userAgent": "User Agent",
+        "httpTimeout": "Zeitlimit für HTTP-Anfragen",
+        "updateInterval": "Aktualisierungsintervall",
+        "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
+        "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
+        "acceptInvalidCerts": "Ungültige Zertifikate erlauben (gefährlich)",
+        "allowAutoUpdate": "Automatische Aktualisierung erlauben"
+      },
+      "types": {
+        "remote": "Remote",
+        "local": "Lokal"
+      },
+      "errors": {
+        "typeRequired": "Abonnementtyp auswählen",
+        "urlRequired": "Abonnement-URL eingeben",
+        "uidMissing": "Die Abonnement-Kennung fehlt",
+        "saveFailed": "Abonnement konnte nicht gespeichert werden"
+      },
+      "warnings": {
+        "frequentUpdate": "Ein kurzes Intervall lädt den Kern entsprechend häufig neu und trennt bestehende Verbindungen. Empfohlen werden {{minutes}} Minuten (24 Stunden)."
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Erstellung des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
+          "creationSuccess": "Erstellung des Abonnements mit Clash-Proxy erfolgreich"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Knoten bearbeiten",
+      "placeholders": {
+        "multiUri": "Für mehrere URI verwenden Sie Zeilenumbrüche (Base64-Codierung wird unterstützt)"
+      },
+      "actions": {
+        "prepend": "Vorherigen Proxy-Knoten hinzufügen",
+        "append": "Nachfolgenden Proxy-Knoten hinzufügen"
+      }
+    },
+    "groupsEditor": {
+      "title": "Proxy-Gruppen bearbeiten",
+      "errors": {
+        "nameRequired": "Der Proxy-Gruppenname darf nicht leer sein",
+        "nameExists": "Der Proxy-Gruppenname existiert bereits"
+      },
+      "fields": {
+        "type": "Proxy-Gruppentyp",
+        "name": "Proxy-Gruppenname",
+        "icon": "Proxy-Gruppen-Symbol",
+        "proxies": "Proxy einführen",
+        "provider": "Proxy-Sammlung einführen",
+        "healthCheckUrl": "URL für Gesundheitstest",
+        "expectedStatus": "Erwarteter Statuscode",
+        "interval": "Prüfintervall",
+        "maxFailedTimes": "Maximale Anzahl fehlgeschlagener Versuche",
+        "interfaceName": "Ausgangsschnittstelle",
+        "routingMark": "Routierungsmarkierung",
+        "filter": "Knoten filtern",
+        "excludeFilter": "Knoten ausschließen",
+        "excludeType": "Typ der auszuschließenden Knoten",
+        "includeAll": "Alle Ausgangsproxy und Proxy-Sammlungen einführen",
+        "includeAllProxies": "Alle Ausgangsproxy einführen",
+        "includeAllProviders": "Alle Proxy-Sammlungen einführen"
+      },
+      "toggles": {
+        "lazy": "Lazy-Status",
+        "disableUdp": "UDP deaktivieren",
+        "hidden": "Proxy-Gruppe ausblenden"
+      },
+      "actions": {
+        "prepend": "Vorherige Proxy-Gruppe hinzufügen",
+        "append": "Nachfolgende Proxy-Gruppe hinzufügen"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Dokument formatieren"
+      },
+      "messages": {
+        "readOnly": "Bearbeitung im schreibgeschützten Modus nicht möglich"
+      },
+      "enhance": {
+        "globalMerge": "Gilt für alle Profile, nach den App-Einstellungen. Das globale Skript, die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "globalScript": "Gilt für alle Profile und verwendet das Ergebnis der globalen Konfiguration. Die Profilkonfiguration und das Profilskript können das Ergebnis noch ändern.",
+        "profileMerge": "Gilt nur für dieses Profil, nach der globalen Konfiguration und dem globalen Skript. Das Profilskript kann das Ergebnis noch ändern.",
+        "profileScript": "Gilt nur für dieses Profil und verwendet das Ergebnis der Profilkonfiguration. Dies ist der letzte Erweiterungsschritt vor dem erneuten Anwenden der App-Einstellungen.",
+        "order": "Reihenfolge: Originalprofil → App-Einstellungen → <globalMerge>Globale Erweiterungskonfiguration</globalMerge> → <globalScript>Globales Erweiterungsskript</globalScript> → <profileMerge>Profilerweiterungskonfiguration</profileMerge> → <profileScript>Profilerweiterungsskript</profileScript> → App-Einstellungen erneut anwenden",
+        "settingsPriority": "Hinweis: Von den App-Einstellungen verwaltete Felder übernehmen in der endgültigen Konfiguration immer deren Werte. Änderungen dieser Felder in Erweiterungen haben keine Wirkung."
+      }
+    },
+    "confirmDelete": {
+      "title": "Löschung bestätigen",
+      "message": "Diese Operation kann nicht rückgängig gemacht werden"
+    },
+    "logViewer": {
+      "title": "Skript-Konsole-Ausgabe"
+    },
+    "qrViewer": {
+      "title": "Abonnement-QR-Code"
+    }
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "بروكسي السلسلة",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "مزود الوكيل",
+      "actions": {
+        "updateAll": "تحديث الكل",
+        "update": "تحديث"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Proxy Count",
+      "delayCheckReset": "فحص التأخير لإلغاء الثابت",
+      "nodeCount": "{{count}} عقدة"
+    },
+    "tooltips": {
+      "locate": "الموقع",
+      "delayCheck": "فحص التأخير",
+      "sortDefault": "الترتيب الافتراضي",
+      "sortDelay": "الترتيب حسب التأخير",
+      "sortName": "الترتيب حسب الاسم",
+      "delayCheckUrl": "رابط فحص التأخير",
+      "showBasic": "إعدادات الوكيل الأساسية",
+      "showDetail": "تفاصيل الوكيل",
+      "filter": "تصفية"
+    },
+    "placeholders": {
+      "delayCheckUrl": "رابط فحص التأخير"
+    },
+    "empty": {
+      "noAvailableGroups": "لا توجد مجموعات وكيل متاحة",
+      "noProxies": "لا توجد وكلاء",
+      "noSubscriptions": {
+        "title": "لم يتم استيراد أي اشتراك",
+        "description": "لا يوجد محتوى لعرضه في صفحة الوكلاء. انتقل إلى صفحة «الملفات الشخصية» لاستيراد اشتراك وتفعيله."
+      },
+      "inactiveSubscription": {
+        "title": "لا يوجد اشتراك مفعّل",
+        "description": "تم العثور على اشتراكات، لكن لا يوجد أي اشتراك مفعّل حاليًا. انتقل إلى صفحة «الملفات الشخصية» واختر اشتراكًا لتفعيله."
+      },
+      "coreUnavailable": {
+        "title": "النواة غير متاحة مؤقتًا",
+        "description": "تعذر الحصول على معلومات الوكلاء من النواة. حاول إعادة تشغيل النواة. إذا استمرت المشكلة، افتح مجلد السجلات وتحقق من سجلات النواة."
+      },
+      "noProxyInfo": {
+        "title": "معلومات الوكلاء غير متاحة",
+        "description": "لا توجد مجموعات أو عقد وكلاء لعرضها. تحقق من أن الاشتراك المفعّل يحتوي على مجموعات وعقد صالحة، أو أعد تشغيل النواة وراجع السجلات."
+      },
+      "actions": {
+        "openProfiles": "الانتقال إلى الملفات الشخصية",
+        "restartCore": "إعادة تشغيل النواة",
+        "openLogs": "فتح مجلد السجلات"
+      }
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "warning": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
+      "confirmEnable": "I understand, enable",
+      "keepDisabled": "Keep disabled",
+      "empty": "Chain proxy will significantly reduce network speed. If you do not have a clear business need, or do not understand this configuration, keep it disabled.",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain",
+      "entryNode": "مدخل",
+      "exitNode": "مخرج"
+    },
+    "messages": {
+      "directMode": "الوضع المباشر"
+    },
+    "title": {
+      "default": "مجموعات الوكلاء",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "warnings": {
+      "invalidTestUrl": "Test URL must start with http:// or https://"
+    },
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "اختيار الوكيل يدويًا",
+        "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
+        "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
+        "load-balance": "توزيع التحميل بين الوكلاء",
+        "relay": "التمرير عبر سلسلة الوكلاء المحددة"
+      },
+      "policies": {
+        "DIRECT": "البيانات تخرج مباشرة",
+        "REJECT": "رفض الطلبات",
+        "REJECT-DROP": "تجاهل الطلبات",
+        "PASS": "تخطي هذه القاعدة عند المطابقة"
+      }
+    }
+  }
+}

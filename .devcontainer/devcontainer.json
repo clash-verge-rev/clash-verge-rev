@@ -1,0 +1,99 @@
+{
+  "name": "Clash Verge Rev Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "24.22.1",
+      "pnpmVersion": "12.14.0"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "1.99.1",
+      "profile": "default"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tauri-apps.tauri-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "redhat.vscode-yaml",
+        "ms-vscode.hexeditor",
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.vscode-eslint",
+        "biomejs.biome"
+      ],
+      "settings": {
+        "rust-analyzer.cargo.features": ["verge-dev"],
+        "rust-analyzer.check.command": "clippy",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "biomejs.biome",
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "biomejs.biome"
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [1420, 3000, 8080, 9090, 7890, 7891],
+
+  "portsAttributes": {
+    "1420": {
+      "label": "Tauri Dev Server",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    },
+    "7890": {
+      "label": "Clash HTTP Proxy",
+      "onAutoForward": "silent"
+    },
+    "7891": {
+      "label": "Clash SOCKS Proxy",
+      "onAutoForward": "silent"
+    },
+    "9090": {
+      "label": "Clash API",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "mounts": [
+    "source=clash-verge-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=clash-verge-pnpm-store,target=/home/vscode/.local/share/pnpm/store,type=volume",
+    "source=clash-verge-cargo-registry,target=/home/vscode/.cargo/registry,type=volume",
+    "source=clash-verge-cargo-git,target=/home/vscode/.cargo/git,type=volume"
+  ],
+
+  "containerEnv": {
+    "RUST_BACKTRACE": "1",
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "TAURI_DEV_WATCHER_IGNORE_FILE": ".taurignore"
+  },
+
+  "containerUser": "vscode",
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/clash-verge-rev",
+  "shutdownAction": "stopContainer"
+}

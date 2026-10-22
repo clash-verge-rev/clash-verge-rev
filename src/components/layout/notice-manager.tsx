@@ -1,0 +1,371 @@
+import { CloseRounded } from '@mui/icons-material'
+import {
+  Snackbar,
+  Alert,
+  IconButton,
+  Link,
+  Box,
+  Stack,
+  type SnackbarOrigin,
+} from '@mui/material'
+import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import {
+  boundNoticeText,
+  subscribeNotices,
+  hideNotice,
+  getSnapshotNotices,
+  showNotice,
+} from '@/services/notice-service'
+import type { TranslationKey } from '@/types/generated/i18n-keys'
+import { openExternalUrl } from '@/utils/open-external-url'
+
+const SERVICE_PERMISSION_NOTICE =
+  'settings.feedback.notifications.clashService.permissionFallback'
+const SERVICE_PERMISSION_GUIDE =
+  'https://clash-verge-rev.github.io/faq/windows.html#service-core-permissions'
+const SERVICE_OWNER_NOTICE =
+  'settings.feedback.notifications.clashService.appDataNotOwned'
+
+type NoticePosition = NonNullable<IVergeConfig['notice_position']>
+type NoticeItem = ReturnType<typeof getSnapshotNotices>[number]
+type TranslationFn = ReturnType<typeof useTranslation>['t']
+
+const VALID_POSITIONS: NoticePosition[] = [
+  'top-left',
+  'top-right',
+  'bottom-left',
+  'bottom-right',
+]
+
+const resolvePosition = (position?: NoticePosition | null): NoticePosition => {
+  if (position && VALID_POSITIONS.includes(position)) {
+    return position
+  }
+  return 'top-right'
+}
+
+const getAnchorOrigin = (position: NoticePosition): SnackbarOrigin => {
+  const [vertical, horizontal] = position.split('-') as [
+    SnackbarOrigin['vertical'],
+    SnackbarOrigin['horizontal'],
+  ]
+  return { vertical, horizontal }
+}
+
+/** Resolve notice text, bounding display output but not clipboard content. */
+const resolveNoticeMessage = (
+  notice: NoticeItem,
+  t: TranslationFn,
+  options?: { bounded?: boolean },
+): React.ReactNode => {
+  const bound = (text: React.ReactNode): React.ReactNode =>
+    options?.bounded === false || typeof text !== 'string'
+      ? text
+      : boundNoticeText(text)
+
+  const i18n = notice.i18n
+  if (!i18n) return bound(notice.message)
+
+  const detail = i18n.params?.message
+  const existingCore =
+    typeof detail === 'string'
+      ? /process verge-mihomo(?:-alpha|-al)?(?:\.exe)? (?:\(PID (\d+)\) is still running|remains after IPC failure); refusing a second core\s*$/.exec(
+          detail,
+        )
+      : null
+  if (existingCore && typeof detail === 'string') {
+    const permissionRejected = detail.startsWith('Service core rejected:')
+    return (
+      <>
+        {permissionRejected && (
+          <Box sx={{ mb: 1 }}>
+            {t(
+              'settings.feedback.notifications.clashService.permissionRejectedReason',
+            )}{' '}
+            <Link
+              href={SERVICE_PERMISSION_GUIDE}
+              color="inherit"
+              underline="always"
+              onClick={(event) => {
+                event.preventDefault()
+                void openExternalUrl(SERVICE_PERMISSION_GUIDE).catch(
+                  showNotice.error,
+                )
+              }}
+            >
+              {t(
+                'settings.feedback.notifications.clashService.permissionRepairGuide',
+              )}
+            </Link>
+          </Box>
+        )}
+        {t('settings.feedback.errors.clashService.coreAlreadyRunning')}
+        {existingCore[1] && <Box sx={{ mt: 1 }}>PID {existingCore[1]}</Box>}
+        <Box component="details" sx={{ mt: 1 }}>
+          <Box component="summary" sx={{ cursor: 'pointer' }}>
+            {t('shared.feedback.errors.details')}
+          </Box>
+          <Box
+            component="pre"
+            sx={{
+              m: 0,
+              mt: 1,
+              maxHeight: 160,
+              overflow: 'auto',
+              whiteSpace: 'pre-wrap',
+              overflowWrap: 'anywhere',
+              userSelect: 'text',
+              fontSize: 'inherit',
+            }}
+          >
+            {detail}
+          </Box>
+        </Box>
+      </>
+    )
+  }
+
+  if (i18n.key === SERVICE_PERMISSION_NOTICE) {
+    return (
+      <>
+        {t(SERVICE_PERMISSION_NOTICE, {
+          reason: t(
+            'settings.feedback.notifications.clashService.permissionRejectedReason',
+          ),
+        })}
+        <Box sx={{ mt: 1 }}>
+          <Link
+            href={SERVICE_PERMISSION_GUIDE}
+            color="inherit"
+            underline="always"
+            onClick={(event) => {
+              event.preventDefault()
+              void openExternalUrl(SERVICE_PERMISSION_GUIDE).catch(
+                showNotice.error,
+              )
+            }}
+          >
+            {t(
+              'settings.feedback.notifications.clashService.permissionRepairGuide',
+            )}
+          </Link>
+        </Box>
+      </>
+    )
+  }
+
+  if (i18n.key === SERVICE_OWNER_NOTICE) {
+    return (
+      <>
+        {t(SERVICE_OWNER_NOTICE)}
+        <Box
+          component="code"
+          sx={{
+            display: 'block',
+            mt: 1,
+            userSelect: 'text',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+          }}
+        >
+          {String(i18n.params?.command ?? '')}
+        </Box>
+      </>
+    )
+  }
+
+  const source = (i18n.params ?? {}) as Record<string, unknown>
+  // Bound both parameters and their final interpolation.
+  const params =
+    options?.bounded === false
+      ? source
+      : Object.fromEntries(
+          Object.entries(source).map(([key, value]) => [
+            key,
+            typeof value === 'string' ? boundNoticeText(value) : value,
+          ]),
+        )
+  const { prefixKey, prefixParams, prefix, message, ...restParams } = params
+
+  const prefixKeyParams =
+    prefixParams && typeof prefixParams === 'object'
+      ? (prefixParams as Record<string, unknown>)
+      : undefined
+
+  const resolvedPrefix =
+    typeof prefixKey === 'string'
+      ? t(prefixKey as TranslationKey, {
+          defaultValue: prefixKey,
+          ...(prefixKeyParams ?? {}),
+          ...restParams,
+        })
+      : typeof prefix === 'string'
+        ? prefix
+        : undefined
+
+  const messageStr = typeof message === 'string' ? message : undefined
+
+  const defaultValue =
+    messageStr === undefined
+      ? undefined
+      : resolvedPrefix
+        ? `${resolvedPrefix} ${messageStr}`
+        : messageStr
+
+  return bound(
+    t(i18n.key as TranslationKey, {
+      defaultValue,
+      ...restParams,
+      ...(resolvedPrefix !== undefined ? { prefix: resolvedPrefix } : {}),
+      ...(messageStr !== undefined ? { message: messageStr } : {}),
+    }),
+  )
+}
+
+const extractNoticeCopyText = (input: unknown): string | undefined => {
+  if (input === null || input === undefined) return undefined
+  if (typeof input === 'string') return input
+  if (typeof input === 'number' || typeof input === 'boolean') {
+    return String(input)
+  }
+  if (input instanceof Error) {
+    return input.message || input.name
+  }
+  if (React.isValidElement(input)) return undefined
+  if (typeof input === 'object') {
+    const maybeMessage = (input as { message?: unknown }).message
+    if (typeof maybeMessage === 'string') return maybeMessage
+  }
+  try {
+    return JSON.stringify(input)
+  } catch {
+    return String(input)
+  }
+}
+
+const resolveNoticeCopyText = (
+  notice: NoticeItem,
+  t: TranslationFn,
+): string | undefined => {
+  if (notice.i18n?.key === SERVICE_PERMISSION_NOTICE) {
+    return extractNoticeCopyText(notice.i18n.params?.reason)
+  }
+  if (notice.i18n?.key === SERVICE_OWNER_NOTICE) {
+    return extractNoticeCopyText(notice.i18n.params?.command)
+  }
+  if (
+    notice.i18n?.key === 'shared.feedback.notices.prefixedRaw' ||
+    notice.i18n?.key === 'shared.feedback.notices.raw'
+  ) {
+    const rawText = extractNoticeCopyText(notice.i18n?.params?.message)
+    if (rawText) return rawText
+  }
+
+  return (
+    extractNoticeCopyText(
+      resolveNoticeMessage(notice, t, { bounded: false }),
+    ) ?? extractNoticeCopyText(notice.message)
+  )
+}
+
+interface NoticeManagerProps {
+  position?: NoticePosition | null
+}
+
+export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
+  const { t } = useTranslation()
+  const resolvedPosition = useMemo(() => resolvePosition(position), [position])
+  const anchorOrigin = useMemo(
+    () => getAnchorOrigin(resolvedPosition),
+    [resolvedPosition],
+  )
+  const currentNotices = useSyncExternalStore(
+    subscribeNotices,
+    getSnapshotNotices,
+  )
+
+  const handleClose = (id: number) => {
+    hideNotice(id)
+  }
+
+  const handleNoticeCopy = useCallback(
+    async (notice: NoticeItem) => {
+      const text = resolveNoticeCopyText(notice, t)
+      if (!text) return
+      try {
+        await navigator.clipboard.writeText(text)
+        showNotice.success(
+          'shared.feedback.notifications.common.copySuccess',
+          1000,
+        )
+      } catch (error) {
+        console.warn('[NoticeManager] copy to clipboard failed:', error)
+      }
+    },
+    [t],
+  )
+
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        top: anchorOrigin.vertical === 'top' ? '20px' : 'auto',
+        bottom: anchorOrigin.vertical === 'bottom' ? '20px' : 'auto',
+        left: anchorOrigin.horizontal === 'left' ? '20px' : 'auto',
+        right: anchorOrigin.horizontal === 'right' ? '20px' : 'auto',
+        zIndex: 1500,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        maxWidth: '360px',
+      }}
+    >
+      {currentNotices.map((notice) => (
+        <Snackbar
+          key={notice.id}
+          open={true}
+          anchorOrigin={anchorOrigin}
+          sx={{
+            position: 'relative',
+            transform: 'none',
+            top: 'auto',
+            right: 'auto',
+            bottom: 'auto',
+            left: 'auto',
+            width: '100%',
+          }}
+        >
+          <Alert
+            severity={notice.type}
+            variant="filled"
+            sx={{ width: '100%' }}
+            onContextMenu={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              void handleNoticeCopy(notice)
+            }}
+            action={
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{ alignItems: 'center' }}
+              >
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  onClick={() => handleClose(notice.id)}
+                >
+                  <CloseRounded fontSize="inherit" />
+                </IconButton>
+              </Stack>
+            }
+          >
+            {resolveNoticeMessage(notice, t)}
+          </Alert>
+        </Snackbar>
+      ))}
+    </Box>
+  )
+}

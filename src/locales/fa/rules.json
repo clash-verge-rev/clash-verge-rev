@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "تأمین‌کننده قانون",
+      "dialogTitle": "تأمین‌کننده قانون",
+      "actions": {
+        "updateAll": "به‌روزرسانی همه",
+        "update": "به‌روزرسانی"
+      }
+    },
+    "title": "قوانین"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "نوع قانون",
+          "content": "محتوای قانون",
+          "proxyPolicy": "سیاست پروکسی"
+        },
+        "toggles": {
+          "noResolve": "بدون حل"
+        },
+        "actions": {
+          "prependRule": "اضافه کردن قانون به ابتدا",
+          "appendRule": "اضافه کردن قانون به انتها"
+        },
+        "validation": {
+          "conditionRequired": "شرط قانون الزامی است",
+          "invalidRule": "قانون نامعتبر"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "مطابقت با نام کامل دامنه",
+        "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
+        "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
+        "DOMAIN-REGEX": "مطابقت با دامنه با استفاده از عبارات منظم",
+        "GEOSITE": "مطابقت با دامنه‌های درون Geosite",
+        "GEOIP": "مطابقت با کد کشور IP",
+        "SRC-GEOIP": "مطابقت با کد کشور IP مبدا",
+        "IP-ASN": "مطابقت با ASN آدرس IP",
+        "SRC-IP-ASN": "مطابقت با ASN آدرس IP مبدا",
+        "IP-CIDR": "مطابقت با محدوده آدرس IP",
+        "IP-CIDR6": "مطابقت با محدوده آدرس IPv6",
+        "SRC-IP-CIDR": "مطابقت با محدوده آدرس IP مبدا",
+        "IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP",
+        "SRC-IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP مبدا",
+        "SRC-PORT": "مطابقت با محدوده پورت مبدا",
+        "DST-PORT": "مطابقت با محدوده پورت مقصد",
+        "IN-PORT": "مطابقت با پورت ورودی",
+        "DSCP": "علامت‌گذاری DSCP (فقط برای tproxy UDP ورودی)",
+        "PROCESS-NAME": "مطابقت با نام فرآیند (نام بسته Android)",
+        "PROCESS-PATH": "مطابقت با مسیر کامل فرآیند",
+        "PROCESS-NAME-REGEX": "مطابقت با نام فرآیند با استفاده از عبارات منظم (نام بسته Android)",
+        "PROCESS-PATH-REGEX": "مطابقت با مسیر کامل فرآیند با استفاده از عبارات منظم",
+        "NETWORK": "مطابقت با پروتکل انتقال (tcp/udp)",
+        "UID": "مطابقت با شناسه کاربری Linux",
+        "IN-TYPE": "مطابقت با نوع ورودی",
+        "IN-USER": "مطابقت با نام کاربری ورودی",
+        "IN-NAME": "مطابقت با نام ورودی",
+        "SUB-RULE": "قانون فرعی",
+        "RULE-SET": "مطابقت با مجموعه قوانین",
+        "AND": "منطق AND",
+        "OR": "منطق OR",
+        "NOT": "منطق NOT",
+        "MATCH": "مطابقت با تمام درخواست‌ها"
+      },
+      "title": "ویرایش قوانین"
+    }
+  }
+}

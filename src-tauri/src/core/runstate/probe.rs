@@ -1,0 +1,270 @@
+//! Turning raw Service probes into [`ServiceHealth`].
+//!
+//! Everything here is a pure function of its arguments: the probing itself is an effect
+//! on [`super::env::RunStateEnv`], so these classifications are testable without IPC,
+//! systemd, SCM or launchd.
+
+use clash_verge_service_ipc::{
+    MIN_REQUIRED_SERVICE_REVISION, ProtocolInfo, ProtocolVersion, VERSION as SERVICE_VERSION,
+};
+
+use super::health::ServiceHealth;
+
+/// What the Service replied to a protocol-version query.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ServiceVersionReply {
+    pub code: u16,
+    pub message: String,
+    pub protocol: Option<ProtocolInfo>,
+    pub core: Option<clash_verge_service_ipc::CoreAvailability>,
+}
+
+/// The verdict on a [`ServiceVersionReply`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ServiceVersionCheck {
+    Ready,
+    NeedsReinstall(String),
+    CoreUnavailable(String),
+}
+
+/// Leads the Unavailable reason when the Service refused the approved core itself.
+pub const CORE_REJECTED_PREFIX: &str = "approved core was rejected: ";
+
+/// What a live probe of the currently-installed Service told us.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CurrentServiceProbe {
+    Missing,
+    Ready,
+    VersionMismatch,
+    Unavailable,
+}
+
+/// Require the bundled Service version as well as a usable protocol.
+pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersionCheck {
+    let client = ProtocolVersion::current();
+    if reply.code == 0
+        && reply.protocol.as_ref().is_some_and(|info| {
+            info.build_version == SERVICE_VERSION && info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION)
+        })
+    {
+        return match &reply.core {
+            Some(clash_verge_service_ipc::CoreAvailability::Ready) => ServiceVersionCheck::Ready,
+            Some(clash_verge_service_ipc::CoreAvailability::Rejected { reason }) => {
+                ServiceVersionCheck::CoreUnavailable(format!("{CORE_REJECTED_PREFIX}{reason}"))
+            }
+            _ => ServiceVersionCheck::CoreUnavailable(
+                "the selected approved core is missing or does not match; reinstall the service to repair it".into(),
+            ),
+        };
+    }
+
+    let detail = if reply.code == 0 {
+        match reply.protocol.as_ref() {
+            Some(info) => format!(
+                "client requires service version {} with epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                SERVICE_VERSION,
+                client.epoch,
+                MIN_REQUIRED_SERVICE_REVISION,
+                info.protocol.epoch,
+                info.protocol.revision,
+                info.build_version
+            ),
+            None => "service did not report protocol information".to_owned(),
+        }
+    } else {
+        format!(
+            "protocol query returned code {} ({}) while expecting epoch {}",
+            reply.code, reply.message, client.epoch
+        )
+    };
+    ServiceVersionCheck::NeedsReinstall(format!(
+        "Service helper version or protocol mismatch: {detail}. Choose Reinstall to uninstall the existing service and install the required version"
+    ))
+}
+
+/// Classify a version reply into the probe outcome used by [`classify_service_health`].
+pub fn probe_outcome(reply: &ServiceVersionReply) -> CurrentServiceProbe {
+    match classify_service_version_reply(reply) {
+        ServiceVersionCheck::Ready => CurrentServiceProbe::Ready,
+        ServiceVersionCheck::NeedsReinstall(_) => CurrentServiceProbe::VersionMismatch,
+        ServiceVersionCheck::CoreUnavailable(_) => CurrentServiceProbe::Unavailable,
+    }
+}
+
+/// Combine a live probe with platform installation evidence into a health verdict.
+///
+/// The `has_install_marker` case matters: a Service registered with the platform that does
+/// not answer is broken, not absent, so it needs reinstalling rather than installing.
+/// `unavailable_reason` is only consulted for [`CurrentServiceProbe::Unavailable`].
+pub fn classify_service_health(
+    current: CurrentServiceProbe,
+    has_install_marker: bool,
+    unavailable_reason: &str,
+) -> ServiceHealth {
+    match current {
+        CurrentServiceProbe::Ready => ServiceHealth::Ready,
+        CurrentServiceProbe::VersionMismatch => ServiceHealth::VersionMismatch,
+        CurrentServiceProbe::Unavailable => ServiceHealth::Unavailable(unavailable_reason.to_owned()),
+        CurrentServiceProbe::Missing if has_install_marker => ServiceHealth::VersionMismatch,
+        CurrentServiceProbe::Missing => ServiceHealth::NotInstalled,
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod tests {
+    use super::*;
+
+    fn ready_reply() -> ServiceVersionReply {
+        ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
+            code: 0,
+            message: "ok".to_owned(),
+            protocol: Some(ProtocolInfo::current()),
+        }
+    }
+
+    #[test]
+    fn a_compatible_reply_is_ready() {
+        assert_eq!(
+            classify_service_version_reply(&ready_reply()),
+            ServiceVersionCheck::Ready
+        );
+        assert_eq!(probe_outcome(&ready_reply()), CurrentServiceProbe::Ready);
+    }
+
+    #[test]
+    fn compatible_service_with_missing_core_is_unavailable() {
+        for core in [
+            None,
+            Some(clash_verge_service_ipc::CoreAvailability::Missing),
+            Some(clash_verge_service_ipc::CoreAvailability::DigestMismatch),
+        ] {
+            let reply = ServiceVersionReply { core, ..ready_reply() };
+            assert!(matches!(
+                classify_service_version_reply(&reply),
+                ServiceVersionCheck::CoreUnavailable(_)
+            ));
+            assert_eq!(probe_outcome(&reply), CurrentServiceProbe::Unavailable);
+        }
+    }
+
+    #[test]
+    fn a_reply_without_protocol_information_needs_reinstall() {
+        let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
+            code: 0,
+            message: "ok".to_owned(),
+            protocol: None,
+        };
+        let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
+            panic!("expected a reinstall verdict");
+        };
+        assert!(
+            detail.contains("did not report protocol information"),
+            "detail should explain the missing protocol: {detail}"
+        );
+        assert_eq!(probe_outcome(&reply), CurrentServiceProbe::VersionMismatch);
+    }
+
+    #[test]
+    fn a_nonzero_code_needs_reinstall() {
+        let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
+            code: 7,
+            message: "nope".to_owned(),
+            protocol: Some(ProtocolInfo::current()),
+        };
+        let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
+            panic!("expected a reinstall verdict");
+        };
+        assert!(detail.contains("code 7"), "detail should name the code: {detail}");
+    }
+
+    #[test]
+    fn a_mismatched_epoch_needs_reinstall() {
+        let mut info = ProtocolInfo::current();
+        info.protocol.epoch = info.protocol.epoch.wrapping_add(1);
+        let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
+            code: 0,
+            message: "ok".to_owned(),
+            protocol: Some(info),
+        };
+        assert!(matches!(
+            classify_service_version_reply(&reply),
+            ServiceVersionCheck::NeedsReinstall(_)
+        ));
+        assert_eq!(probe_outcome(&reply), CurrentServiceProbe::VersionMismatch);
+    }
+
+    #[test]
+    fn a_service_revision_below_the_minimum_needs_reinstall() {
+        let Some(revision) = MIN_REQUIRED_SERVICE_REVISION.checked_sub(1) else {
+            // Nothing below the minimum exists to test against.
+            return;
+        };
+        let mut info = ProtocolInfo::current();
+        info.protocol.revision = revision;
+        let reply = ServiceVersionReply {
+            core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
+            code: 0,
+            message: "ok".to_owned(),
+            protocol: Some(info),
+        };
+        assert!(matches!(
+            classify_service_version_reply(&reply),
+            ServiceVersionCheck::NeedsReinstall(_)
+        ));
+    }
+
+    #[test]
+    fn every_rejection_tells_the_user_what_to_do_about_it() {
+        let mut old_epoch = ProtocolInfo::current();
+        old_epoch.protocol.epoch = old_epoch.protocol.epoch.wrapping_add(1);
+
+        for protocol in [None, Some(old_epoch)] {
+            for code in [0, 1] {
+                let reply = ServiceVersionReply {
+                    core: None,
+                    code,
+                    message: "unsupported command".to_owned(),
+                    protocol: protocol.clone(),
+                };
+                let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
+                    continue;
+                };
+                assert!(
+                    detail.contains("epoch") || detail.contains("protocol"),
+                    "detail should say what mismatched: {detail}"
+                );
+                assert!(
+                    detail.contains("Reinstall") || detail.contains("Repair"),
+                    "detail should name the action that fixes it: {detail}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn an_unreachable_service_keeps_the_reason() {
+        assert_eq!(
+            classify_service_health(CurrentServiceProbe::Unavailable, true, "socket refused"),
+            ServiceHealth::Unavailable("socket refused".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_live_probe_dominates_the_install_marker() {
+        for has_marker in [false, true] {
+            assert_eq!(
+                classify_service_health(CurrentServiceProbe::Ready, has_marker, ""),
+                ServiceHealth::Ready
+            );
+            assert_eq!(
+                classify_service_health(CurrentServiceProbe::VersionMismatch, has_marker, ""),
+                ServiceHealth::VersionMismatch
+            );
+        }
+    }
+}

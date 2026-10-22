@@ -1,0 +1,92 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Идарә панеле
+    body: Идарә панеленең күренеше яңартылды.
+  clashModeChanged:
+    title: Режим алыштыру
+    body: '{mode} режимына күчтел.'
+  systemProxyToggled:
+    title: Системалы прокси
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Система проксие
+    body: Система проксиен көйләп булмады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
+  systemProxyGuardStopped:
+    title: Система проксие сакчысы
+    body: Берничә тапкыр рәттән уңышсыз булгач туктады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
+  tunModeToggled:
+    title: TUN режимы
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
+  lightweightModeEntered:
+    title: Җиңел режим
+    body: Җиңел режимга күчелде.
+  profilesReactivated:
+    title: Профильләр
+    body: Профиль яңадан активлаштырылды.
+  appQuit:
+    title: Чыгар алдыннан
+    body: Clash Verge чыгарга җыена.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
+service:
+  adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
+  adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
+core:
+  alreadyRunning: 'Төшне башлап булмый: төш процессы инде эшли. Тиешле кушымтаны ябыгыз яки калган процессны тәмамлагыз һәм яңадан сынап карагыз. Проблема хәл ителмәсә, санакны яңадан кабызыгыз.'
+launchGuard:
+  currentExeError: 'Кушымтаның урнашу урынын билгеләп булмады: {error}'
+  homeDirError: 'Хәзерге кулланучының өй каталогын билгеләп булмады. Кушымта ябылачак: {error}'
+  translocated: macOS бу кушымтаны вакытлы App Translocation юлыннан эшләтә. Finder аша аны /Applications яки ~/Applications каталогына кулдан күчерегез һәм яңадан ачыгыз.
+  rejected: |-
+    Бу кушымта Applications каталогыннан эшләтелергә тиеш.
+
+    {reason}
+  notInBundle: Башкарылучы файл кушымта пакетында түгел.
+  canonicalizeBundleError: 'Кушымта пакетының юлын билгеләп булмады: {error}'
+  bundleNameError: Кушымта пакетының исемен билгеләп булмады. Кушымта ябылачак.
+  replacePrompt: '{destination} урынында кушымта бар инде. Аны алыштырып, Applications аша яңадан эшләтергәме?'
+  movePrompt: Фон хезмәтен имин эшләтү өчен кушымтаны {destination} урынына күчерергә кирәк. Хәзер күчереп, яңадан эшләтергәме?
+  createApplicationsDirError: 'Applications каталогын төзеп булмады: {error}'
+  moveFailed: Кушымтаны күчереп булмады. Аны Finder аша кулдан күчереп, кабатлап карагыз.
+  replaceFailed: 'Булган кушымтаны имин алыштырып булмады: {error}'
+  relaunchFailed: Кушымта күчерелде, ләкин автоматик рәвештә яңадан эшләтеп булмады. Аны Applications аша кулдан ачыгыз.
+  cancel: Баш тарту
+  move: Күчерү
+  ok: Ярый
+tray:
+  dashboard: Идарә панеле
+  ruleMode: Кагыйдә режимы
+  globalMode: Глобаль режим
+  directMode: Турыдан-туры режим
+  outboundModes: Чыгыш режимнары
+  rule: Кагыйдә
+  direct: Турыдан-туры
+  global: Глобаль
+  profiles: Профильләр
+  proxies: Проксилар
+  systemProxy: Системалы прокси
+  tunMode: TUN режимы
+  closeAllConnections: Барлык тоташуларны ябу
+  lightweightMode: Җиңел режим
+  copyEnv: Мохит үзгәрүчәннәрен күчерү
+  confDir: Конфигурация каталогы
+  coreDir: Ядро каталогы
+  logsDir: Журнал каталогы
+  openDir: Каталогны ачу
+  appLog: Кушымта журналы
+  coreLog: Ядро журналы
+  restartClash: Clash ядрәсен кабат җибәрү
+  restartApp: Кушымтаны кабат җибәрү
+  vergeVersion: Verge версиясе
+  more: Күбрәк
+  exit: Чыгу
+  tooltip:
+    systemProxy: Системалы прокси
+    tun: TUN
+    profile: Профиль
