@@ -49,7 +49,7 @@ impl AutoBackupTrigger {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct AutoBackupSettings {
     schedule_enabled: bool,
     interval_hours: u64,
