@@ -109,7 +109,7 @@ impl AutoBackupManager {
         {
             *self.settings.write() = settings;
         }
-        let _ = self.settings_tx.send(settings);
+        let _ = self.settings_tx.send_replace(settings);
         self.maybe_start_runner(settings);
         Ok(())
     }
@@ -119,7 +119,7 @@ impl AutoBackupManager {
         {
             *self.settings.write() = settings;
         }
-        let _ = self.settings_tx.send(settings);
+        let _ = self.settings_tx.send_replace(settings);
         self.maybe_start_runner(settings);
         Ok(())
     }
