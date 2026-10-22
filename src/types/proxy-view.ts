@@ -120,19 +120,20 @@ const selectRuntimeStandaloneNodes = (
   view: ProxyViewV1,
   runtimeProxies: unknown,
 ) => {
-  const runtimeProxyNames = new Set(
-    (Array.isArray(runtimeProxies) ? runtimeProxies : []).flatMap((proxy) => {
+  const coreNodes = new Map(
+    resolveStandaloneNodes(view).flatMap((node) =>
+      node.source.kind === 'core' ? [[node.source.proxyName, node]] : [],
+    ),
+  )
+  return (Array.isArray(runtimeProxies) ? runtimeProxies : []).flatMap(
+    (proxy) => {
       const name =
         typeof proxy === 'object' && proxy !== null && 'name' in proxy
           ? proxy.name
           : undefined
-      return typeof name === 'string' && name.length > 0 ? [name] : []
-    }),
-  )
-  return resolveStandaloneNodes(view).filter(
-    (node) =>
-      node.source.kind === 'core' &&
-      runtimeProxyNames.has(node.source.proxyName),
+      const node = typeof name === 'string' ? coreNodes.get(name) : undefined
+      return node ? [node] : []
+    },
   )
 }
 
