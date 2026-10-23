@@ -140,6 +140,9 @@ jobs:
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
           - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
 
+          #### AppImage(免安装，适用于以上以外的发行版) 使用 chmod +x ./路径 后直接运行
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.AppImage)
+
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
 
@@ -289,6 +292,7 @@ jobs:
           subject-path: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
             target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/appimage/*.AppImage*
 
   release-for-linux-arm:
     name: Release Build for Linux ARM
@@ -403,7 +407,9 @@ jobs:
             export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig/:$PKG_CONFIG_PATH
             export PKG_CONFIG_SYSROOT_DIR=/usr/arm-linux-gnueabihf/
           fi
-          pnpm build --target ${{ matrix.target }}
+          # AppImage is built for x86_64 only: bundling it for these targets would run an
+          # aarch64/armhf linuxdeploy under emulation on this x86_64 runner.
+          pnpm build --target ${{ matrix.target }} --bundles deb,rpm
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -686,6 +692,9 @@ jobs:
 
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
           - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
+
+          #### AppImage(免安装，适用于以上以外的发行版) 使用 chmod +x ./路径 后直接运行
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.AppImage)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
