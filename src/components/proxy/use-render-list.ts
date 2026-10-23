@@ -211,7 +211,7 @@ export const useRenderList = (
     if (!proxyView) return []
     if (isChainMode)
       return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
-    return mode === 'rule' || mode === 'script'
+    return mode === 'rule' || mode === 'script' || mode === 'global'
       ? proxyView.groups.map(({ name }) => name)
       : proxyView.global
         ? [proxyView.global.name]
@@ -257,7 +257,12 @@ export const useRenderList = (
       }))
     }
 
-    const useRule = mode === 'rule' || mode === 'script'
+    // In global mode mihomo exposes the same user-defined groups alongside the
+    // synthetic GLOBAL selector. Rendering only GLOBAL flattened every nested
+    // group into a non-expandable proxy row, which made configured groups
+    // un-openable (#8376). Rule, script and global mode all draw the same
+    // group list; GLOBAL itself is a runtime artifact and is not a card.
+    const useRule = mode === 'rule' || mode === 'script' || mode === 'global'
     const renderGroups = useRule
       ? proxyView.groups
       : proxyView.global === null
