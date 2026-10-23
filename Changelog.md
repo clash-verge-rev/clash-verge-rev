@@ -17,6 +17,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增「IP 信息」自动刷新开关，关闭后仍可手动刷新
 
 </details>
 
