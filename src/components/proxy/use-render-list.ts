@@ -262,8 +262,7 @@ export const useRenderList = (
     // group into a non-expandable proxy row, which made configured groups
     // un-openable (#8376). Rule, script and global mode all draw the same
     // group list; GLOBAL itself is a runtime artifact and is not a card.
-    const useRule =
-      mode === 'rule' || mode === 'script' || mode === 'global'
+    const useRule = mode === 'rule' || mode === 'script' || mode === 'global'
     const renderGroups = useRule
       ? proxyView.groups
       : proxyView.global === null
