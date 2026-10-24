@@ -79,7 +79,7 @@
     "react-dom": "19.3.1",
     "react-error-boundary": "6.1.6",
     "react-hook-form": "^7.88.0",
-    "react-i18next": "17.0.19",
+    "react-i18next": "17.1.5",
     "react-markdown": "10.1.0",
     "react-router": "^8.4.0",
     "rehype-raw": "^7.0.0",
@@ -123,7 +123,7 @@
     "https-proxy-agent": "^9.1.0",
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
-    "knip": "6.41.0",
+    "knip": "6.42.1",
     "lint-staged": "^17.5.1",
     "sass": "^1.104.1",
     "tar": "^7.5.22",
@@ -133,7 +133,7 @@
     "vite": "^8.3.0",
     "vite-plugin-svgr": "^5.2.0",
     "vitest": "^5.0.1",
-    "webdriverio": "10.0.2",
+    "webdriverio": "10.1.0",
     "ws": "8.22.0"
   },
   "lint-staged": {
