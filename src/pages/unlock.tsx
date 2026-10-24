@@ -223,7 +223,8 @@ const UnlockPage = () => {
   const getStatusBorderColor = (status: string) => {
     if (status === 'Yes') return theme.palette.success.main
     if (status === 'No') return theme.palette.error.main
-    if (status === 'Soon' || status === 'Risky') return theme.palette.warning.main
+    if (status === 'Soon' || status === 'Risky')
+      return theme.palette.warning.main
     if (status.includes('Failed')) return theme.palette.error.main
     if (status === 'Completed') return theme.palette.info.main
     return theme.palette.divider

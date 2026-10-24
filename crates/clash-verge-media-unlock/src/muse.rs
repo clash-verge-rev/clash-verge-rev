@@ -11,10 +11,7 @@ const CLOUDFLARE_TRACE_URL: &str = "https://www.cloudflare.com/cdn-cgi/trace";
 
 // The aymh ("Are You a Human") gateway answers plain HTTP requests with a
 // generic Meta error page that always contains the Facebook logo asset.
-const AYMH_ERROR_MARKERS: &[&str] = &[
-    "Sorry, something went wrong",
-    "static.facebook.com/images/logos",
-];
+const AYMH_ERROR_MARKERS: &[&str] = &["Sorry, something went wrong", "static.facebook.com/images/logos"];
 
 pub(super) async fn check_muse_ai(client: &Client) -> UnlockItem {
     // muse.ai itself is served by Vercel, so resolve the exit region through
@@ -37,10 +34,7 @@ pub(super) async fn check_muse_ai(client: &Client) -> UnlockItem {
     // challenge. It returns the Meta error page, so reaching this point only
     // proves the exit can connect to Muse's auth infrastructure; availability
     // cannot be verified over plain HTTP and is reported as `Risky`.
-    let behind_anti_bot = landed_on_aymh
-        || AYMH_ERROR_MARKERS
-            .iter()
-            .any(|marker| body.contains(marker));
+    let behind_anti_bot = landed_on_aymh || AYMH_ERROR_MARKERS.iter().any(|marker| body.contains(marker));
 
     let result = if behind_anti_bot {
         "Risky"
