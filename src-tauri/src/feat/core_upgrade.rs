@@ -455,18 +455,17 @@ impl StagedCore {
 /// Publishing next to the target needs write access to its directory. Distribution packages
 /// install the core in a root-owned directory such as `/usr/bin`, so those publish through the
 /// elevated helper.
+#[cfg(target_os = "linux")]
 fn publish_requires_elevation(target: &Path) -> bool {
-    #[cfg(target_os = "linux")]
-    {
-        target
-            .parent()
-            .is_some_and(|directory| !directory_is_writable(directory))
-    }
-    #[cfg(not(target_os = "linux"))]
-    {
-        let _ = target;
-        false
-    }
+    target
+        .parent()
+        .is_some_and(|directory| !directory_is_writable(directory))
+}
+
+/// Only Linux installs the core into a directory the desktop user cannot write.
+#[cfg(not(target_os = "linux"))]
+const fn publish_requires_elevation(_target: &Path) -> bool {
+    false
 }
 
 #[cfg(target_os = "linux")]
@@ -557,6 +556,10 @@ fn publish_core(staged: &StagedCore, target: &Path, service_present: bool) -> (R
 }
 
 /// How far an elevated replacement got, without tying the upgrade to the platform's module.
+///
+/// Only Linux reaches this path: elsewhere the core never lands in a directory the user cannot
+/// write, so neither variant is ever constructed.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 enum ElevatedOutcome {
     Published,
     ServiceFailed(anyhow::Error),
