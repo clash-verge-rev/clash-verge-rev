@@ -17,6 +17,7 @@ import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
 import {
   memberDetails,
+  providerNameOf,
   type ProxyGroupView,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
@@ -56,6 +57,8 @@ export const ProxyItem = (props: Props) => {
   const name = member.ref.name
   const type = unresolved ? member.ref.reason : (details?.type ?? '')
   const now = member.kind === 'group' ? member.group.now : undefined
+  const provider =
+    member.kind === 'node' ? providerNameOf(member.node) : undefined
 
   // -1/<=0 为不显示，-2 为 loading
   const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
@@ -112,6 +115,7 @@ export const ProxyItem = (props: Props) => {
                 {name}
                 {showType && now && ` - ${now}`}
               </Box>
+              {showType && provider && <TypeBox>{provider}</TypeBox>}
               {showType && <TypeBox>{type}</TypeBox>}
               {!unresolved && showType && details?.udp && (
                 <TypeBox>UDP</TypeBox>
