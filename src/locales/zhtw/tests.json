@@ -36,6 +36,7 @@
       "yes": "支援",
       "no": "不支援",
       "failed": "測試失敗",
+      "risky": "存疑",
       "completed": "檢測完成",
       "disallowedIsp": "不允許的網際網路服務供應商",
       "originalsOnly": "僅限原創",
