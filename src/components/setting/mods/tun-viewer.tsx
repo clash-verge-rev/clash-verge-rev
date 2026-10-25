@@ -26,6 +26,7 @@ import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 import { areValidIpCidrs } from '@/utils/network'
 
+import { DnsModeSwitch } from './dns-mode-switch'
 import { StackModeSwitch } from './stack-mode-switch'
 
 const OS = getSystem()
@@ -52,6 +53,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     dnsHijack: ['any:53'],
     strictRoute: false,
     mtu: 1500,
+    dnsMode: '',
   })
 
   const routeExcludeAddressItems = splitRouteExcludeAddress(
@@ -84,6 +86,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         dnsHijack: clash?.tun['dns-hijack'] ?? ['any:53'],
         strictRoute: clash?.tun['strict-route'] ?? false,
         mtu: clash?.tun.mtu ?? 1500,
+        dnsMode: clash?.tun['dns-mode'] ?? '',
       })
     },
     close: () => setOpen(false),
@@ -117,6 +120,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           : {}),
         'auto-detect-interface': values.autoDetectInterface,
         'dns-hijack': values.dnsHijack[0] === '' ? [] : values.dnsHijack,
+        'dns-mode': values.dnsMode,
         'strict-route': values.strictRoute,
         mtu: values.mtu ?? 1500,
       }
@@ -163,6 +167,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 'auto-detect-interface': true,
                 'dns-hijack': ['any:53'],
                 'route-exclude-address': [],
+                'dns-mode': '',
                 'strict-route': false,
                 mtu: 1500,
               }
@@ -176,6 +181,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 dnsHijack: ['any:53'],
                 strictRoute: false,
                 mtu: 1500,
+                dnsMode: '',
               })
               await patchClash({ tun })
               await mutateClash(
@@ -210,6 +216,25 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               }))
             }}
           />
+        </ListItem>
+
+        <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItemText
+            primary={t('settings.modals.tun.fields.dnsMode')}
+            sx={{ maxWidth: 'fit-content' }}
+          />
+          <TooltipIcon
+            title={t('settings.modals.tun.tooltips.dnsMode')}
+            sx={{ opacity: 0.7 }}
+          />
+          <Box sx={{ marginLeft: 'auto' }}>
+            <DnsModeSwitch
+              value={values.dnsMode}
+              onChange={(value) => {
+                setValues((v) => ({ ...v, dnsMode: value }))
+              }}
+            />
+          </Box>
         </ListItem>
 
         <ListItem sx={{ padding: '5px 2px' }}>

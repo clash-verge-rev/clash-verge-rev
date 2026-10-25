@@ -495,11 +495,13 @@
         "strictRoute": "Строгая маршрутизация",
         "autoDetectInterface": "Автоопределение интерфейса",
         "dnsHijack": "Перехват DNS",
+        "dnsMode": "Режим DNS",
         "mtu": "MTU",
         "autoRedirect": "Автоматическое перенаправление"
       },
       "tooltips": {
         "dnsHijack": "Используйте запятую для разделения нескольких DNS-серверов",
+        "dnsMode": "Auto сохраняет прежнее поведение; для hijack нужна Строгая маршрутизация в Windows или Автоматическое перенаправление в Linux",
         "autoRedirect": "Автоматически настраивает перенаправление TCP через nftables/iptables"
       },
       "messages": {

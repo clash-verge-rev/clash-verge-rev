@@ -495,11 +495,13 @@
         "strictRoute": "严格路由",
         "autoDetectInterface": "自动选择流量出口接口",
         "dnsHijack": "DNS 劫持",
+        "dnsMode": "DNS 模式",
         "mtu": "最大传输单元",
         "autoRedirect": "自动重定向"
       },
       "tooltips": {
         "dnsHijack": "多个 DNS 服务器请使用 , 分隔",
+        "dnsMode": "Auto 保持旧行为；hijack 需 Windows 开启严格路由或 Linux 开启自动重定向",
         "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
       },
       "messages": {

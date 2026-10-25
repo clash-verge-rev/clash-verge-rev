@@ -495,11 +495,13 @@
         "strictRoute": "Rute Ketat",
         "autoDetectInterface": "Deteksi Antarmuka Otomatis",
         "dnsHijack": "Pembajakan DNS",
+        "dnsMode": "Mode DNS",
         "mtu": "Unit Transmisi Maksimum",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "Auto mempertahankan perilaku lama; hijack memerlukan Rute Ketat di Windows atau Auto Redirect di Linux",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

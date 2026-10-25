@@ -17,6 +17,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增虚拟网卡设置的「DNS 模式」选项，支持配置 mihomo 系统 DNS 行为
 
 </details>
 

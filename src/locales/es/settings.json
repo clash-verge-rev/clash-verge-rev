@@ -495,11 +495,13 @@
         "strictRoute": "Enrutamiento estricto",
         "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
         "dnsHijack": "Secuestro de DNS",
+        "dnsMode": "Modo DNS",
         "mtu": "Unidad máxima de transmisión",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "Auto mantiene el comportamiento anterior; hijack requiere Enrutamiento estricto en Windows o Auto Redirect en Linux",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
