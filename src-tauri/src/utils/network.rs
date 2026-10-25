@@ -214,11 +214,9 @@ impl NetworkManager {
 
         let status = response.status();
         let headers = response.headers().to_owned();
-        let body = std::string::String::from_utf8_lossy(
-            &Self::read_body_with_limit(response, MAX_DECODED_TEXT_BODY_SIZE).await?,
-        )
-        .into_owned()
-        .into();
+        // Read first, then decode: a failure here points at the size cap, not at UTF-8.
+        let body_bytes = Self::read_body_with_limit(response, MAX_DECODED_TEXT_BODY_SIZE).await?;
+        let body = std::string::String::from_utf8_lossy(&body_bytes).into_owned().into();
 
         Ok(HttpResponse::new(status, headers, body))
     }
