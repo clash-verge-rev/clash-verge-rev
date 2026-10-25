@@ -222,8 +222,16 @@ impl NetworkManager {
     }
 
     /// Streams the response body into a buffer, bailing as soon as it would exceed
-    /// `max_bytes`. A `Content-Length` over the cap fails before any bytes are read;
-    /// chunked responses that lie about the length are aborted once the cap is reached.
+    /// `max_bytes`. A `Content-Length` over the cap fails before any bytes are read,
+    /// and the running check while streaming aborts an oversized body as soon as the
+    /// cap is reached.
+    ///
+    /// `Content-Length` counts the bytes on the wire, while the running check counts
+    /// the bytes `chunk()` delivers. This client does not decompress responses, so the
+    /// two match; if auto-decompression were ever enabled, the wire length could
+    /// understate the decoded size and the running check would still be the
+    /// authoritative bound.
+    ///
     /// Shared by the text and binary download paths.
     async fn read_body_with_limit(mut response: reqwest::Response, max_bytes: usize) -> Result<Vec<u8>> {
         if let Some(content_length) = response.content_length()
