@@ -213,42 +213,44 @@ impl NetworkManager {
 
         let status = response.status();
         let headers = response.headers().to_owned();
-        let body = Self::read_body_with_size_cap(response).await?;
+        let body = std::string::String::from_utf8_lossy(
+            &Self::read_body_with_limit(response, MAX_RESPONSE_BODY_SIZE).await?,
+        )
+        .into_owned()
+        .into();
 
         Ok(HttpResponse::new(status, headers, body))
     }
 
-    /// Reads the response body as text without buffering more than
-    /// `MAX_RESPONSE_BODY_SIZE`. A `Content-Length` larger than the cap fails fast;
-    /// chunked responses that lie about the length are aborted as the cap is reached.
-    async fn read_body_with_size_cap(mut response: reqwest::Response) -> Result<String> {
+    /// Streams the response body into a buffer, bailing as soon as it would exceed
+    /// `max_bytes`. A `Content-Length` over the cap fails before any bytes are read;
+    /// chunked responses that lie about the length are aborted once the cap is reached.
+    /// Shared by the text and binary download paths.
+    async fn read_body_with_limit(
+        mut response: reqwest::Response,
+        max_bytes: usize,
+    ) -> Result<Vec<u8>> {
         if let Some(content_length) = response.content_length()
-            && content_length as usize > MAX_RESPONSE_BODY_SIZE
+            && content_length > max_bytes as u64
         {
             anyhow::bail!(
-                "response body too large: {content_length} bytes exceeds the {MAX_RESPONSE_BODY_SIZE} bytes limit"
+                "response body too large: {content_length} bytes exceeds the {max_bytes} byte limit"
             );
         }
 
-        let mut buf = Vec::new();
-        loop {
-            match response.chunk().await {
-                Ok(Some(chunk)) => {
-                    if buf.len() + chunk.len() > MAX_RESPONSE_BODY_SIZE {
-                        anyhow::bail!("response body exceeds the {MAX_RESPONSE_BODY_SIZE} bytes limit");
-                    }
-                    buf.extend_from_slice(&chunk);
-                }
-                Ok(None) => break,
-                Err(e) => {
-                    return Err(Self::context_reqwest_error(e, "Failed to read response body"));
-                }
+        let mut body = Vec::new();
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
+        {
+            if body.len() + chunk.len() > max_bytes {
+                anyhow::bail!("response exceeded the {max_bytes} byte limit");
             }
+            body.extend_from_slice(&chunk);
         }
 
-        let text = std::string::String::from_utf8(buf)
-            .map_err(|e| anyhow::anyhow!(e).context("response body is not valid UTF-8"))?;
-        Ok(text.into())
+        Ok(body)
     }
 
     async fn create_request_with_tls_mode(
@@ -350,19 +352,7 @@ impl NetworkManager {
             anyhow::bail!("request failed with status {status}");
         }
 
-        let mut body = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
-            .await
-            .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
-        {
-            if body.len() + chunk.len() > max_bytes {
-                anyhow::bail!("response exceeded the {max_bytes} byte limit");
-            }
-            body.extend_from_slice(&chunk);
-        }
-
-        Ok(body)
+        Self::read_body_with_limit(response, max_bytes).await
     }
 
     /// Downloads a binary body, mirroring the TLS fallback of [`Self::get`].
