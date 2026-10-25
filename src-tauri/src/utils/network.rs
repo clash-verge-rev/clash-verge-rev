@@ -214,10 +214,11 @@ impl NetworkManager {
 
         let status = response.status();
         let headers = response.headers().to_owned();
-        let body =
-            std::string::String::from_utf8_lossy(&Self::read_body_with_limit(response, MAX_DECODED_TEXT_BODY_SIZE).await?)
-                .into_owned()
-                .into();
+        let body = std::string::String::from_utf8_lossy(
+            &Self::read_body_with_limit(response, MAX_DECODED_TEXT_BODY_SIZE).await?,
+        )
+        .into_owned()
+        .into();
 
         Ok(HttpResponse::new(status, headers, body))
     }
