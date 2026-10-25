@@ -10,10 +10,11 @@ use std::{sync::Arc, time::Duration};
 use sysproxy::Sysproxy;
 use tauri::Url;
 
-/// Upper bound on how much of a fetched subscription / remote profile body we buffer.
-/// The server controls the body size; without a cap a misconfigured endpoint or a
-/// hostile one can make the whole response land in memory before anything else runs.
-const MAX_RESPONSE_BODY_SIZE: usize = 16 * 1024 * 1024;
+/// Upper bound on the decoded text body we buffer for any response fetched through
+/// the text path (subscription, remote profile, rules, scripts, ...). The server
+/// controls the body size; without a cap a misconfigured or hostile endpoint can
+/// make the whole response land in memory before anything else runs.
+const MAX_DECODED_TEXT_BODY_SIZE: usize = 16 * 1024 * 1024;
 
 #[derive(Debug)]
 pub struct HttpResponse {
@@ -214,39 +215,37 @@ impl NetworkManager {
         let status = response.status();
         let headers = response.headers().to_owned();
         let body =
-            std::string::String::from_utf8_lossy(&Self::read_body_with_limit(response, MAX_RESPONSE_BODY_SIZE).await?)
+            std::string::String::from_utf8_lossy(&Self::read_body_with_limit(response, MAX_DECODED_TEXT_BODY_SIZE).await?)
                 .into_owned()
                 .into();
 
         Ok(HttpResponse::new(status, headers, body))
     }
 
-    /// Streams the response body into a buffer, bailing as soon as it would exceed
-    /// `max_bytes`. A `Content-Length` over the cap fails before any bytes are read,
-    /// and the running check while streaming aborts an oversized body as soon as the
-    /// cap is reached.
+    /// Upper bound on the decoded body we are willing to buffer.
     ///
-    /// `Content-Length` counts the bytes on the wire, while the running check counts
-    /// the bytes `chunk()` delivers. This client does not decompress responses, so the
-    /// two match; if auto-decompression were ever enabled, the wire length could
-    /// understate the decoded size and the running check would still be the
-    /// authoritative bound.
+    /// `Content-Length` is a hint only: when reqwest transparently decompresses a
+    /// response (the `gzip` feature is enabled and this client does not call
+    /// `no_gzip()`), the header is removed and `content_length()` returns `None`.
+    /// The loop below is therefore the authoritative limit, and it counts decoded
+    /// bytes.
     ///
     /// Shared by the text and binary download paths.
     async fn read_body_with_limit(mut response: reqwest::Response, max_bytes: usize) -> Result<Vec<u8>> {
-        if let Some(content_length) = response.content_length()
-            && content_length > max_bytes as u64
+        if let Some(len) = response.content_length()
+            && len > max_bytes as u64
         {
-            anyhow::bail!("response body too large: {content_length} bytes exceeds the {max_bytes} byte limit");
+            anyhow::bail!("response body too large: {len} bytes exceeds the {max_bytes} byte limit");
         }
 
-        let mut body = Vec::new();
+        let mut body = Vec::with_capacity((64 * 1024).min(max_bytes));
         while let Some(chunk) = response
             .chunk()
             .await
             .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
         {
-            if body.len() + chunk.len() > max_bytes {
+            // `saturating_add` keeps the check total if a future caller passes a big cap.
+            if body.len().saturating_add(chunk.len()) > max_bytes {
                 anyhow::bail!("response exceeded the {max_bytes} byte limit");
             }
             body.extend_from_slice(&chunk);
