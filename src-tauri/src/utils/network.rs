@@ -213,11 +213,10 @@ impl NetworkManager {
 
         let status = response.status();
         let headers = response.headers().to_owned();
-        let body = std::string::String::from_utf8_lossy(
-            &Self::read_body_with_limit(response, MAX_RESPONSE_BODY_SIZE).await?,
-        )
-        .into_owned()
-        .into();
+        let body =
+            std::string::String::from_utf8_lossy(&Self::read_body_with_limit(response, MAX_RESPONSE_BODY_SIZE).await?)
+                .into_owned()
+                .into();
 
         Ok(HttpResponse::new(status, headers, body))
     }
@@ -226,16 +225,11 @@ impl NetworkManager {
     /// `max_bytes`. A `Content-Length` over the cap fails before any bytes are read;
     /// chunked responses that lie about the length are aborted once the cap is reached.
     /// Shared by the text and binary download paths.
-    async fn read_body_with_limit(
-        mut response: reqwest::Response,
-        max_bytes: usize,
-    ) -> Result<Vec<u8>> {
+    async fn read_body_with_limit(mut response: reqwest::Response, max_bytes: usize) -> Result<Vec<u8>> {
         if let Some(content_length) = response.content_length()
             && content_length > max_bytes as u64
         {
-            anyhow::bail!(
-                "response body too large: {content_length} bytes exceeds the {max_bytes} byte limit"
-            );
+            anyhow::bail!("response body too large: {content_length} bytes exceeds the {max_bytes} byte limit");
         }
 
         let mut body = Vec::new();
@@ -341,7 +335,7 @@ impl NetworkManager {
             .create_request_with_tls_mode(proxy_type, timeout_secs, None, false, tls_root_mode)
             .await?;
 
-        let mut response = client
+        let response = client
             .get(url)
             .send()
             .await
