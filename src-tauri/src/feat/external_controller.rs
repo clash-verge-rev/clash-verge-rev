@@ -161,4 +161,3 @@ async fn restore_external_controller(snapshots: &[FileSnapshot], previous_mode: 
         }
     }
 }
-
