@@ -9,6 +9,8 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info::<tauri::Wry>,
             cmd::probe_listener,
             cmd::save_proxy_ports,
+            cmd::get_external_controller,
+            cmd::save_external_controller,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::get_embedded_server_port,

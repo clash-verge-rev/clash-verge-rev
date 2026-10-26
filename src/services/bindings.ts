@@ -12,6 +12,10 @@ export const commands = {
     __TAURI_INVOKE<ListenerProbeOutcome>('probe_listener', { request }),
   saveProxyPorts: (settings: ProxyPortSettings) =>
     __TAURI_INVOKE<SaveProxyPortsOutcome>('save_proxy_ports', { settings }),
+  getExternalController: () =>
+    __TAURI_INVOKE<ExternalControllerSettings>('get_external_controller'),
+  saveExternalController: (settings: ExternalControllerSettings) =>
+    __TAURI_INVOKE<null>('save_external_controller', { settings }),
   getSysProxy: () => __TAURI_INVOKE<SystemProxy>('get_sys_proxy'),
   getAutoProxy: () => __TAURI_INVOKE<AutoProxy>('get_auto_proxy'),
   getEmbeddedServerPort: () =>
@@ -304,6 +308,12 @@ export type DownloadEvent =
       }
     }
   | { event: 'Finished' }
+
+export type ExternalControllerSettings = {
+  enabled: boolean
+  address: string
+  secret: string
+}
 
 /**  Operation associated with a pending failure. */
 export type FailedOperation =
