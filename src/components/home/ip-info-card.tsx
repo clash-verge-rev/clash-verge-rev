@@ -4,10 +4,19 @@ import {
   VisibilityOffOutlined,
   VisibilityOutlined,
 } from '@mui/icons-material'
-import { Box, Button, IconButton, Skeleton, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  IconButton,
+  Skeleton,
+  Switch,
+  Typography,
+} from '@mui/material'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'foxact/use-abortable-effect'
 import { useIntersection } from 'foxact/use-intersection'
+import { useLocalStorage } from 'foxact/use-local-storage'
 import type { XOR } from 'foxts/ts-xor'
 import {
   forwardRef,
@@ -99,9 +108,13 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
 export const IpInfoCard = () => {
   const { t } = useTranslation()
   const [showIp, setShowIp] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useLocalStorage(
+    'ip-info-auto-refresh',
+    true,
+  )
   const appWindow = useMemo(() => getCurrentWebviewWindow(), [])
 
-  // Once intersected, refreshes stay enabled until unmount.
+  // Once intersected, the card stays eligible for refresh until unmount.
   const [containerRef, hasIntersected, _resetIntersected] = useIntersection({
     rootMargin: '0px',
   })
@@ -151,6 +164,8 @@ export const IpInfoCard = () => {
   })
 
   useEffect(() => {
+    if (!autoRefresh) return
+
     let timer: number | null = null
 
     // Prefer DOM intersection state; Tauri visibility is unreliable on some platforms.
@@ -190,7 +205,7 @@ export const IpInfoCard = () => {
       if (timer != null) clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisibilityChange)
     }
-  }, [hasIntersected])
+  }, [autoRefresh, hasIntersected])
 
   const toggleShowIp = useCallback(() => {
     setShowIp((prev) => !prev)
@@ -364,12 +379,25 @@ export const IpInfoCard = () => {
               fontSize: '0.7rem',
             }}
           >
-            <Typography variant="caption">
-              {t('home.components.ipInfo.labels.autoRefresh')}
-              {countdown.type === 'countdown'
-                ? `: ${countdown.remainingSeconds}s`
-                : '...'}
-            </Typography>
+            <FormControlLabel
+              sx={{ m: 0 }}
+              control={
+                <Switch
+                  size="small"
+                  checked={autoRefresh}
+                  onChange={(_, checked) => setAutoRefresh(checked)}
+                />
+              }
+              label={
+                <Typography variant="caption">
+                  {t('home.components.ipInfo.labels.autoRefresh')}
+                  {autoRefresh &&
+                    (countdown.type === 'countdown'
+                      ? `: ${countdown.remainingSeconds}s`
+                      : '...')}
+                </Typography>
+              }
+            />
             <Typography
               variant="caption"
               sx={{

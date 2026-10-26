@@ -18,6 +18,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 新增虚拟网卡设置的「DNS 模式」选项，支持配置 mihomo 系统 DNS 行为
+- 新增「IP 信息」自动刷新开关，关闭后仍可手动刷新
 
 </details>
 
