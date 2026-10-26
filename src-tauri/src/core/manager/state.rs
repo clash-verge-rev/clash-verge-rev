@@ -16,6 +16,7 @@ use std::num::NonZeroUsize;
 use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
+use tristr::alias::String;
 
 pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
     let detail = error.to_string();
@@ -27,7 +28,7 @@ pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
 }
 
 #[cfg(target_os = "windows")]
-fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
+fn sidecar_config_without_tun(yaml: &str) -> Result<String> {
     use serde_yaml_ng::{Mapping, Value};
 
     let mut config: Mapping = serde_yaml_ng::from_str(yaml)?;
@@ -40,7 +41,7 @@ fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
     tun.as_mapping_mut()
         .context("invalid Sidecar TUN configuration")?
         .insert(Value::from("enable"), Value::Bool(false));
-    Ok(serde_yaml_ng::to_string(&config)?)
+    Ok(serde_yaml_ng::to_string(&config)?.into())
 }
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
@@ -153,7 +154,7 @@ impl CoreManager {
     pub async fn get_clash_logs(&self) -> Result<Vec<String>> {
         match *self.get_running_mode() {
             RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs()),
+            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().into_iter().map(Into::into).collect()),
             RunningMode::NotRunning => Ok(Vec::new()),
         }
     }
@@ -257,7 +258,9 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = String::from_utf8_lossy_owned(line);
+                        // from_utf8_lossy_owned exists only on the std String type; the tristr
+                        // alias shadows the bare name. LogRing stores std Strings.
+                        let message = std::string::String::from_utf8_lossy_owned(line);
                         Logger::global().writer_sidecar_log(Level::Error, &message);
                         CLASH_LOGGER.append_log(message);
                     }
@@ -265,12 +268,12 @@ impl CoreManager {
                         let _ = terminated.send(());
                         let manager = Self::global();
                         let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
-                        let message = if let Some(code) = term.code {
-                            format!("Process terminated with code: {}", code)
+                        let message: String = if let Some(code) = term.code {
+                            format!("Process terminated with code: {}", code).into()
                         } else if let Some(signal) = term.signal {
-                            format!("Process terminated by signal: {}", signal)
+                            format!("Process terminated by signal: {}", signal).into()
                         } else {
-                            String::from("Process terminated")
+                            "Process terminated".into()
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
                         CLASH_LOGGER.clear_logs();

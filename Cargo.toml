@@ -85,9 +85,8 @@ reqwest = { version = "0.13.5", features = [
 ] }
 rust_iso3166 = "0.2.0"
 
-smartstring = { version = "1.0.1" }
-
 serde = { version = "1.0.229" }
+tristr = { path = "../tristr", default-features = false, features = ["serde", "specta"] }
 serde_json = { version = "1.0.154" }
 serde_yaml_ng = { version = "0.10.0" }
 bitflags = { version = "2.13.2" }

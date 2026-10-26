@@ -1,4 +1,4 @@
-use super::CmdResult;
+use super::{CmdResult, CommandFailure};
 use crate::{
     cmd::StringifyErr as _,
     cmd::validate::{ValidationNoticeTarget, handle_validation_notice},
@@ -11,18 +11,15 @@ use crate::{
     utils::dirs,
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 /// 保存profiles的配置
 #[tauri::command]
 #[specta::specta]
-pub async fn save_profile_file(
-    index: std::string::String,
-    file_data: Option<std::string::String>,
-) -> CmdResult<ValidationOutcome> {
-    let index: String = index.into();
-    let file_data = file_data.map(String::from);
+pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult<ValidationOutcome> {
+    let index: String = index;
+    let file_data = file_data;
     let file_data = match file_data {
         Some(d) => d,
         None => return Ok(ValidationOutcome::Valid),
@@ -153,7 +150,7 @@ async fn handle_saved_profile_file(
         Err(e) => {
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {e:#}");
             restore_original(file_path, original_content, original_existed).await?;
-            return Err(e.to_string().into());
+            return Err(CommandFailure::plain(e));
         }
     }
 
@@ -181,7 +178,7 @@ async fn handle_saved_profile_file(
         Err(err) => {
             logging!(error, Type::Config, "[cmd配置save] 运行时配置应用错误: {err:#}");
             restore_original(file_path, original_content, original_existed).await?;
-            Err(err.to_string().into())
+            Err(CommandFailure::plain(err))
         }
     }
 }

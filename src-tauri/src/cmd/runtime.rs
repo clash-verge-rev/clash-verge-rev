@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
-use smartstring::alias::String;
 use std::collections::HashMap;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -17,7 +17,7 @@ pub async fn get_runtime_config() -> CmdResult<Option<crate::ipc::YamlMapping>> 
 
 #[tauri::command]
 #[specta::specta]
-pub async fn get_runtime_yaml() -> CmdResult<std::string::String> {
+pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();
 
@@ -36,22 +36,17 @@ pub async fn get_runtime_logs() -> CmdResult<RuntimeLogs> {
 
 #[derive(serde::Serialize, specta::Type)]
 #[serde(transparent)]
-pub struct RuntimeLogs(
-    #[specta(type = HashMap<std::string::String, Vec<(std::string::String, std::string::String)>>)]
-    HashMap<String, Vec<(String, String)>>,
-);
+pub struct RuntimeLogs(HashMap<String, Vec<(String, String)>>);
 
 #[tauri::command]
 #[specta::specta]
-pub fn take_discarded_keys_notice() -> Option<std::string::String> {
-    crate::enhance::take_discarded_keys_notice().map(Into::into)
+pub fn take_discarded_keys_notice() -> Option<String> {
+    crate::enhance::take_discarded_keys_notice()
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn get_runtime_proxy_chain_config(
-    proxy_chain_exit_node: std::string::String,
-) -> CmdResult<std::string::String> {
+pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
     let runtime = Config::runtime().await;
     let runtime = runtime.latest_arc();
 

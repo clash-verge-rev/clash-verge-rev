@@ -5,8 +5,8 @@ use crate::{
     feat,
     utils::dirs,
 };
-use smartstring::alias::String;
 use tauri::{AppHandle, Manager as _, ipc::Channel};
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -59,10 +59,10 @@ pub async fn restart_app() -> CmdResult<()> {
 #[specta::specta]
 pub async fn install_update(
     app_handle: AppHandle,
-    version: std::string::String,
+    version: String,
     on_event: Channel<DownloadEvent>,
 ) -> CmdResult<bool> {
-    let version: String = version.into();
+    let version: String = version;
     SilentUpdater::global()
         .install_update(&app_handle, &version, |event| {
             let _ = on_event.send(event);
@@ -79,25 +79,22 @@ pub fn cancel_update_download() {
 
 #[tauri::command]
 #[specta::specta]
-pub fn get_app_dir() -> CmdResult<std::string::String> {
+pub fn get_app_dir() -> CmdResult<String> {
     let app_home_dir = dirs::app_home_dir().stringify_err()?.to_string_lossy().into();
     Ok(app_home_dir)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn download_icon_cache(
-    url: std::string::String,
-    name: std::string::String,
-) -> CmdResult<std::string::String> {
-    let url: String = url.into();
-    let name: String = name.into();
-    feat::download_icon_cache(url, name).await.map(Into::into)
+pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
+    let url: String = url;
+    let name: String = name;
+    feat::download_icon_cache(url, name).await
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn copy_icon_file(path: std::string::String, icon_info: feat::IconInfo) -> CmdResult<std::string::String> {
-    let path: String = path.into();
-    feat::copy_icon_file(path, icon_info).await.map(Into::into)
+pub async fn copy_icon_file(path: String, icon_info: feat::IconInfo) -> CmdResult<String> {
+    let path: String = path;
+    feat::copy_icon_file(path, icon_info).await
 }

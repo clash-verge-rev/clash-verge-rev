@@ -6,8 +6,8 @@ use boa_engine::{Context, JsString, JsValue, Source, js_string, native_function:
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use std::sync::Arc;
+use tristr::alias::String;
 
 const MAX_OUTPUTS: usize = 1000;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024; // 1MB
@@ -16,7 +16,7 @@ const MAX_LOOP_ITERATIONS: u64 = 10_000_000;
 const SCRIPT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
 type ScriptResult = (Mapping, Vec<String>, Vec<(String, String)>);
-type EvalOutcome = (Result<Mapping, std::string::String>, Vec<(String, String)>);
+type EvalOutcome = (Result<Mapping, String>, Vec<(String, String)>);
 
 /// Never fails: exceptions are logged and the input config is returned unchanged.
 pub(super) async fn use_script(script: String, config: Mapping, name: String) -> ScriptResult {
@@ -37,9 +37,9 @@ pub(super) async fn use_script(script: String, config: Mapping, name: String) ->
     let evaluated = AsyncHandler::spawn_blocking(move || eval_script(&script, &json, &name));
     let (outcome, mut logs) = match tokio::time::timeout(SCRIPT_TIMEOUT, evaluated).await {
         Ok(Ok(evaluated)) => evaluated,
-        Ok(Err(join_err)) => (Err(format!("script task panicked: {join_err}")), vec![]),
+        Ok(Err(join_err)) => (Err(format!("script task panicked: {join_err}").into()), vec![]),
         Err(_elapsed) => (
-            Err(format!("script execution timed out after {SCRIPT_TIMEOUT:?}")),
+            Err(format!("script execution timed out after {SCRIPT_TIMEOUT:?}").into()),
             vec![],
         ),
     };
@@ -59,7 +59,7 @@ pub(super) async fn use_script(script: String, config: Mapping, name: String) ->
             (result, changed_keys, logs)
         }
         Err(reason) => {
-            logs.push(("exception".into(), reason.into()));
+            logs.push(("exception".into(), reason));
             (config, vec![], logs)
         }
     }
@@ -79,7 +79,7 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
     let outputs_clone = Arc::clone(&outputs);
     let total_size_clone = Arc::clone(&total_size);
 
-    let bail = |reason: std::string::String| (Err(reason), outputs.lock().to_vec());
+    let bail = |reason: String| (Err(reason), outputs.lock().to_vec());
 
     let _ = context.register_global_builtin_callable("__verge_log__".into(), 2, unsafe {
         NativeFunction::from_closure(move |_: &JsValue, args: &[JsValue], context: &mut Context| {
@@ -137,13 +137,13 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
         JsValue::from(JsString::from(config_json)),
         Attribute::all(),
     ) {
-        return bail(format!("failed to bind config for script: {err}"));
+        return bail(format!("failed to bind config for script: {err}").into());
     }
 
     // 仅处理 name 参数中的特殊字符
     let safe_name = escape_js_string_for_single_quote(name);
     if safe_name.len() > 1024 {
-        return bail("Name parameter too long".to_owned());
+        return bail("Name parameter too long".into());
     }
 
     let code = format!(
@@ -157,19 +157,19 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
 
     let result = match context.eval(Source::from_bytes(code.as_str())) {
         Ok(result) if result.is_string() => result,
-        _ => return bail("main function should return object".to_owned()),
+        _ => return bail("main function should return object".into()),
     };
     let result = match result.to_string(&mut context) {
         Ok(result) => result,
-        Err(e) => return bail(format!("Failed to convert JS result to string: {e}")),
+        Err(e) => return bail(format!("Failed to convert JS result to string: {e}").into()),
     };
     let result = match result.to_std_string() {
         Ok(result) => result,
-        Err(_) => return bail("Failed to convert JS string to std string".to_owned()),
+        Err(_) => return bail("Failed to convert JS string to std string".into()),
     };
 
     if result.len() > MAX_JSON_SIZE {
-        return bail("Script result exceeds maximum allowed size".to_owned());
+        return bail("Script result exceeds maximum allowed size".into());
     }
 
     match parse_json_safely(&result) {
@@ -180,7 +180,7 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
                 Type::Config,
                 "Script execution error: {err:#}. Script name: {name}"
             );
-            bail("Script execution failed".to_owned())
+            bail("Script execution failed".into())
         }
     }
 }

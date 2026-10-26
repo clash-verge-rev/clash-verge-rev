@@ -4,8 +4,8 @@ use clash_verge_draft::DraftTransaction;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
-use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tristr::alias::String;
 
 use super::{Config, IVerge};
 use crate::core::handle::Handle;
@@ -110,7 +110,6 @@ impl DnsOverrideState {
 pub struct ProfileDnsSettings {
     pub enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[specta(type = Option<std::string::String>)]
     pub confirmation: Option<String>,
 }
 

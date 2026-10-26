@@ -12,17 +12,14 @@ use chrono::Utc;
 use clash_verge_logging::{Type, logging, logging_error};
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
-use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::fs;
+use tristr::alias::String;
 
 #[derive(Debug, Serialize, specta::Type)]
 pub struct LocalBackupFile {
-    #[specta(type = std::string::String)]
     pub filename: String,
-    #[specta(type = std::string::String)]
     pub path: String,
-    #[specta(type = std::string::String)]
     pub last_modified: String,
     pub content_length: u64,
 }

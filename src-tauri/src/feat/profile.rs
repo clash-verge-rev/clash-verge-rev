@@ -8,7 +8,7 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging, logging_error};
-use smartstring::alias::String;
+use tristr::alias::String;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {
@@ -231,7 +231,7 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
                 };
                 let message = mask_err(&message);
                 let message = if profile_persisted {
-                    format!("订阅已保存，但未能确认已应用到内核: {message}")
+                    format!("订阅已保存，但未能确认已应用到内核: {message}").into()
                 } else {
                     message
                 };

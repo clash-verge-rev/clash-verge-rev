@@ -1,4 +1,5 @@
 use crate::cmd;
+use tristr::alias::String;
 
 pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
     tauri_specta::Builder::new()
@@ -121,7 +122,7 @@ pub struct WebDavFile {
 impl From<reqwest_dav::list_cmd::ListFile> for WebDavFile {
     fn from(file: reqwest_dav::list_cmd::ListFile) -> Self {
         Self {
-            href: file.href,
+            href: file.href.into(),
             last_modified: file.last_modified,
         }
     }
@@ -148,20 +149,20 @@ pub struct IpAddress {
 impl From<network_interface::NetworkInterface> for NetworkInterfaceView {
     fn from(interface: network_interface::NetworkInterface) -> Self {
         Self {
-            name: interface.name,
+            name: interface.name.into(),
             addr: interface
                 .addr
                 .into_iter()
                 .map(|address| match address {
                     network_interface::Addr::V4(address) => InterfaceAddress::V4(IpAddress {
-                        ip: address.ip.to_string(),
+                        ip: address.ip.to_string().into(),
                     }),
                     network_interface::Addr::V6(address) => InterfaceAddress::V6(IpAddress {
-                        ip: address.ip.to_string(),
+                        ip: address.ip.to_string().into(),
                     }),
                 })
                 .collect(),
-            mac_addr: interface.mac_addr,
+            mac_addr: interface.mac_addr.map(Into::into),
         }
     }
 }

@@ -8,7 +8,6 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
 use scopeguard::defer;
-use smartstring::alias::String;
 use std::{
     sync::{
         Arc,
@@ -18,6 +17,7 @@ use std::{
 };
 use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tokio::sync::Mutex as TokioMutex;
+use tristr::alias::String;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ProxyApplyStep {
@@ -677,8 +677,8 @@ mod tests {
         (calls.into_inner(), result.is_ok())
     }
 
-    fn failure_text(result: anyhow::Result<()>) -> std::string::String {
-        result.map_or_else(|error| format!("{error:#}"), |()| "no failure".to_owned())
+    fn failure_text(result: anyhow::Result<()>) -> String {
+        result.map_or_else(|error| format!("{error:#}").into(), |()| String::from("no failure"))
     }
 
     #[test]

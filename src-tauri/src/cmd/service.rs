@@ -7,6 +7,7 @@ use crate::{
         service::{SERVICE_MANAGER, ServiceStatus, request_runtime_provider_sync},
     },
 };
+use tristr::alias::String;
 
 #[derive(Debug, PartialEq, Eq, serde::Serialize, specta::Type)]
 #[serde(tag = "status", rename_all = "camelCase")]
@@ -74,7 +75,7 @@ where
     if reasons.is_empty() {
         return Err(proxy_aware_coded_error(&error, error_code));
     }
-    let reason = reasons.join("\n");
+    let reason: String = reasons.join("\n").into();
     fallback(reason.clone())
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))?;
@@ -179,7 +180,7 @@ mod tests {
             let error = match availability {
                 Some(availability) => anyhow::Error::new(InstallationVerificationError {
                     status: InstallationStatus {
-                        service_sha256: String::new(),
+                        service_sha256: std::string::String::new(),
                         protocol: ProtocolInfo::current(),
                         cores: vec![CoreInspection {
                             name: "verge-mihomo.exe".into(),
@@ -203,7 +204,7 @@ mod tests {
                 assert_eq!(
                     result,
                     Ok(ServiceInstallOutcome::Sidecar {
-                        reason: format!("verge-mihomo.exe: {reason}")
+                        reason: format!("verge-mihomo.exe: {reason}").into()
                     })
                 );
             } else {

@@ -17,7 +17,6 @@ use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use std::num::NonZeroUsize;
 use std::{
     collections::{HashMap, HashSet},
@@ -30,6 +29,7 @@ use std::{
 };
 use tauri_plugin_mihomo::models::{Proxies, ProxyType};
 use tokio::{fs, task::JoinHandle};
+use tristr::alias::String;
 
 pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
@@ -51,7 +51,6 @@ const SELECTED_NODES_FIRST_PASS_BUDGET: Duration = Duration::from_secs(3);
 #[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
 #[serde(default)]
 pub struct IProfiles {
-    #[specta(type = Option<std::string::String>)]
     pub current: Option<String>,
 
     pub items: Option<Vec<PrfItem>>,
@@ -115,7 +114,7 @@ impl IProfiles {
                 let mut home_changed = false;
                 for item in items.iter_mut() {
                     if item.uid.is_none() {
-                        item.uid = Some(help::get_uid("d").into());
+                        item.uid = Some(help::get_uid("d"));
                     }
                     if item.itype.as_deref() == Some("remote") {
                         item.option

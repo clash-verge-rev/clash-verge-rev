@@ -1,5 +1,5 @@
 use anyhow::Result;
-use smartstring::alias::String;
+use tristr::alias::String;
 
 pub type CmdResult<T = ()> = Result<T, CommandFailure>;
 
@@ -8,9 +8,9 @@ pub type CmdResult<T = ()> = Result<T, CommandFailure>;
 pub struct CommandFailure {
     /// Stable frontend identifier, when classified.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub code: Option<std::string::String>,
+    pub code: Option<String>,
     /// Human-readable diagnostic detail.
-    pub detail: std::string::String,
+    pub detail: String,
     /// Requested operation when known by the command.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operation: Option<crate::core::notification::FailedOperation>,
@@ -20,8 +20,8 @@ impl CommandFailure {
     /// A failure with a stable code.
     pub fn coded(code: &str, detail: impl std::fmt::Display) -> Self {
         Self {
-            code: Some(code.to_owned()),
-            detail: detail.to_string(),
+            code: Some(code.into()),
+            detail: detail.to_string().into(),
             operation: None,
         }
     }
@@ -30,7 +30,7 @@ impl CommandFailure {
     pub fn plain(detail: impl std::fmt::Display) -> Self {
         Self {
             code: None,
-            detail: detail.to_string(),
+            detail: detail.to_string().into(),
             operation: None,
         }
     }
@@ -47,16 +47,6 @@ impl CommandFailure {
 impl From<&str> for CommandFailure {
     fn from(detail: &str) -> Self {
         Self::plain(detail)
-    }
-}
-
-impl From<std::string::String> for CommandFailure {
-    fn from(detail: std::string::String) -> Self {
-        Self {
-            code: None,
-            detail,
-            operation: None,
-        }
     }
 }
 

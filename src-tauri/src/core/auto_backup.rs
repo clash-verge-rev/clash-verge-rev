@@ -20,6 +20,7 @@ use tokio::{
     fs,
     sync::{Mutex, watch},
 };
+use tristr::alias::String;
 
 const DEFAULT_INTERVAL_HOURS: u64 = 24;
 const MIN_INTERVAL_HOURS: u64 = 1;
@@ -211,7 +212,7 @@ impl AutoBackupManager {
             return Ok(());
         }
 
-        let file_name = create_local_backup_with_namer(|name| append_auto_suffix(name, trigger.slug()).into()).await?;
+        let file_name = create_local_backup_with_namer(|name| append_auto_suffix(name, trigger.slug())).await?;
         self.last_backup.store(Local::now().timestamp(), Ordering::Release);
 
         if let Err(err) = cleanup_auto_backups().await {
@@ -239,8 +240,8 @@ impl AutoBackupManager {
 
 fn append_auto_suffix(file_name: &str, slug: &str) -> String {
     match file_name.rsplit_once('.') {
-        Some((stem, ext)) => format!("{stem}{AUTO_MARKER}{slug}.{ext}"),
-        None => format!("{file_name}{AUTO_MARKER}{slug}"),
+        Some((stem, ext)) => format!("{stem}{AUTO_MARKER}{slug}.{ext}").into(),
+        None => format!("{file_name}{AUTO_MARKER}{slug}").into(),
     }
 }
 

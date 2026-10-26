@@ -9,6 +9,7 @@ use clash_verge_service_ipc::{
 };
 
 use super::health::ServiceHealth;
+use tristr::alias::String;
 
 /// What the Service replied to a protocol-version query.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,7 +51,7 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
         return match &reply.core {
             Some(clash_verge_service_ipc::CoreAvailability::Ready) => ServiceVersionCheck::Ready,
             Some(clash_verge_service_ipc::CoreAvailability::Rejected { reason }) => {
-                ServiceVersionCheck::CoreUnavailable(format!("{CORE_REJECTED_PREFIX}{reason}"))
+                ServiceVersionCheck::CoreUnavailable(format!("{CORE_REJECTED_PREFIX}{reason}").into())
             }
             _ => ServiceVersionCheck::CoreUnavailable(
                 "the selected approved core is missing or does not match; reinstall the service to repair it".into(),
@@ -77,9 +78,12 @@ pub fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVer
             reply.code, reply.message, client.epoch
         )
     };
-    ServiceVersionCheck::NeedsReinstall(format!(
-        "Service helper version or protocol mismatch: {detail}. Choose Reinstall to uninstall the existing service and install the required version"
-    ))
+    ServiceVersionCheck::NeedsReinstall(
+        format!(
+            "Service helper version or protocol mismatch: {detail}. Choose Reinstall to uninstall the existing service and install the required version"
+        )
+        .into(),
+    )
 }
 
 /// Classify a version reply into the probe outcome used by [`classify_service_health`].
@@ -104,7 +108,7 @@ pub fn classify_service_health(
     match current {
         CurrentServiceProbe::Ready => ServiceHealth::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceHealth::VersionMismatch,
-        CurrentServiceProbe::Unavailable => ServiceHealth::Unavailable(unavailable_reason.to_owned()),
+        CurrentServiceProbe::Unavailable => ServiceHealth::Unavailable(unavailable_reason.into()),
         CurrentServiceProbe::Missing if has_install_marker => ServiceHealth::VersionMismatch,
         CurrentServiceProbe::Missing => ServiceHealth::NotInstalled,
     }
@@ -119,7 +123,7 @@ mod tests {
         ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
-            message: "ok".to_owned(),
+            message: "ok".into(),
             protocol: Some(ProtocolInfo::current()),
         }
     }
@@ -154,7 +158,7 @@ mod tests {
         let reply = ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
-            message: "ok".to_owned(),
+            message: "ok".into(),
             protocol: None,
         };
         let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
@@ -172,7 +176,7 @@ mod tests {
         let reply = ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 7,
-            message: "nope".to_owned(),
+            message: "nope".into(),
             protocol: Some(ProtocolInfo::current()),
         };
         let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
@@ -188,7 +192,7 @@ mod tests {
         let reply = ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
-            message: "ok".to_owned(),
+            message: "ok".into(),
             protocol: Some(info),
         };
         assert!(matches!(
@@ -209,7 +213,7 @@ mod tests {
         let reply = ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
-            message: "ok".to_owned(),
+            message: "ok".into(),
             protocol: Some(info),
         };
         assert!(matches!(
@@ -228,7 +232,7 @@ mod tests {
                 let reply = ServiceVersionReply {
                     core: None,
                     code,
-                    message: "unsupported command".to_owned(),
+                    message: "unsupported command".into(),
                     protocol: protocol.clone(),
                 };
                 let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
@@ -250,7 +254,7 @@ mod tests {
     fn an_unreachable_service_keeps_the_reason() {
         assert_eq!(
             classify_service_health(CurrentServiceProbe::Unavailable, true, "socket refused"),
-            ServiceHealth::Unavailable("socket refused".to_owned())
+            ServiceHealth::Unavailable("socket refused".into())
         );
     }
 

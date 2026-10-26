@@ -24,6 +24,7 @@ use std::{
     time::Duration,
 };
 use tokio::{sync::Mutex, time::timeout};
+use tristr::alias::String;
 
 const CLEAR_ATTEMPTS: u32 = 3;
 const CLEAR_RETRY_DELAY: Duration = Duration::from_millis(100);
@@ -320,7 +321,8 @@ fn truncate_utf8(value: &mut String, max_bytes: usize) {
     while !value.is_char_boundary(boundary) {
         boundary -= 1;
     }
-    value.truncate(boundary);
+    let truncated = value.as_str()[..boundary].into();
+    *value = truncated;
 }
 
 fn service_bypass(verge: &IVerge) -> Result<String> {
@@ -328,11 +330,11 @@ fn service_bypass(verge: &IVerge) -> Result<String> {
     ensure!(!custom.contains('\0'), "system proxy bypass contains NUL");
 
     let mut bypass = if custom.is_empty() {
-        MACOS_DEFAULT_BYPASS.to_owned()
+        MACOS_DEFAULT_BYPASS.into()
     } else if verge.use_default_bypass.unwrap_or(true) {
-        format!("{MACOS_DEFAULT_BYPASS},{custom}")
+        format!("{MACOS_DEFAULT_BYPASS},{custom}").into()
     } else {
-        custom.to_owned()
+        custom.into()
     };
     truncate_utf8(&mut bypass, MAX_SERVICE_BYPASS_LEN);
     Ok(bypass)
@@ -353,7 +355,7 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
         Ok(MacosProxyConfig::Global {
             host: LOOPBACK_HOST.to_owned(),
             port: mixed_port,
-            bypass: service_bypass(verge)?,
+            bypass: service_bypass(verge)?.into(),
         })
     }
 }
@@ -368,7 +370,7 @@ fn service_apply_result(requested: &MacosProxyConfig, outcome: ProxyApplyOutcome
         // Direct fallback satisfies a disable request.
         ProxyApplyOutcome::DirectFallback { .. } if matches!(requested, MacosProxyConfig::Disabled) => Ok(()),
         ProxyApplyOutcome::DirectFallback { message } => {
-            Err(SysproxyFailure::DirectFallback { detail: message }.into())
+            Err(SysproxyFailure::DirectFallback { detail: message.into() }.into())
         }
     }
 }
@@ -644,7 +646,7 @@ const GUARD_FAILURES_BEFORE_STOPPING: u32 = 3;
 
 async fn report_guard_stopped(captured_generation: u64, error: &anyhow::Error) {
     let stopped = anyhow::Error::new(SysproxyFailure::GuardStopped {
-        detail: format!("{error:#}"),
+        detail: format!("{error:#}").into(),
     });
     // Do not publish a late failure from a replaced guard.
     let recorded = SERVICE_PROXY_OPERATIONS
@@ -1106,7 +1108,7 @@ mod tests {
         let requested = MacosProxyConfig::Global {
             host: "127.0.0.1".to_owned(),
             port: 7890,
-            bypass: String::new(),
+            bypass: std::string::String::new(),
         };
 
         let error = service_apply_result(
@@ -1146,8 +1148,8 @@ mod tests {
         let events = Mutex::new(Vec::new());
         super::settle_table(
             effect,
-            |asked| events.lock().push(format!("retire:{asked:?}")),
-            |operation, _| events.lock().push(format!("file:{operation:?}")),
+            |asked| events.lock().push(format!("retire:{asked:?}").into()),
+            |operation, _| events.lock().push(format!("file:{operation:?}").into()),
         );
         events.into_inner()
     }
@@ -1276,7 +1278,7 @@ mod tests {
         let combined = rollback_failure(
             mappable(),
             anyhow::anyhow!("the service could not set it").context(SysproxyFailure::DirectFallback {
-                detail: "fell back to direct".to_owned(),
+                detail: "fell back to direct".into(),
             }),
         );
 

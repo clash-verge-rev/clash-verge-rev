@@ -18,6 +18,7 @@ use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Value;
 use std::{collections::HashSet, net::SocketAddr, str::FromStr as _};
+use tristr::alias::String;
 
 #[derive(Clone, Copy)]
 struct MixedPortFallback {
@@ -141,8 +142,8 @@ impl Config {
     }
 
     pub(crate) fn block_startup_core(error: &anyhow::Error) {
-        *STARTUP_CORE_BLOCK_REASON.lock() = Some(error.to_string());
-        report_fallback_error(error.to_string());
+        *STARTUP_CORE_BLOCK_REASON.lock() = Some(error.to_string().into());
+        report_fallback_error(error.to_string().into());
     }
 
     pub(crate) fn startup_core_block_reason() -> Option<String> {

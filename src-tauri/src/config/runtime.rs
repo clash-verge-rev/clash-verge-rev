@@ -1,6 +1,6 @@
 use serde_yaml_ng::{Mapping, Value};
-use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
+use tristr::alias::String;
 
 use crate::enhance::field::use_keys;
 

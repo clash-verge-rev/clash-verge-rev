@@ -4,6 +4,7 @@ use serde::Serialize;
 use tauri_plugin_mihomo::models::{
     DelayHistory, Proxies, Proxy, ProxyProvider, ProxyProviders, ProxyType, VehicleType,
 };
+use tristr::alias::String;
 
 pub struct ProxyViewInput {
     pub runtime_group_order: Vec<String>,
@@ -270,7 +271,7 @@ impl ProxyViewBuilder {
 
         let global = core_groups
             .remove("GLOBAL")
-            .map(|proxy| build_group("GLOBAL".to_owned(), proxy, &resolver));
+            .map(|proxy| build_group(String::from("GLOBAL"), proxy, &resolver));
         let (groups, order_source) = build_ordered_groups(core_groups, runtime_group_order, &resolver);
         let direct = core_node_ids.get("DIRECT").cloned();
         let standalone = build_standalone(&core_node_ids);
@@ -294,6 +295,7 @@ fn partition_core(proxies: Proxies) -> (BTreeMap<String, Proxy>, BTreeMap<String
     let mut nodes = BTreeMap::new();
 
     for (name, proxy) in proxies.proxies {
+        let name = String::from(name);
         if proxy.all.is_some() {
             groups.insert(name, proxy);
         } else {
@@ -311,7 +313,7 @@ fn build_core_records(
     let mut ids = BTreeMap::new();
 
     for (index, (name, proxy)) in core_nodes.into_iter().enumerate() {
-        let record_id = format!("c:{index}");
+        let record_id = String::from(format!("c:{index}"));
         ids.insert(name.clone(), record_id.clone());
         records.insert(
             record_id.clone(),
@@ -332,7 +334,13 @@ fn build_provider_records(
     records: &mut BTreeMap<String, ProxyNodeView>,
 ) -> (Vec<ProxyProviderView>, ProviderCandidates) {
     let providers = providers
-        .map(|providers| providers.providers.into_iter().collect::<BTreeMap<_, _>>())
+        .map(|providers| {
+            providers
+                .providers
+                .into_iter()
+                .map(|(name, provider)| (String::from(name), provider))
+                .collect::<BTreeMap<_, _>>()
+        })
         .unwrap_or_default();
     let mut views = Vec::new();
     let mut candidates = BTreeMap::new();
@@ -355,9 +363,9 @@ fn build_provider_records(
         let mut proxy_record_ids = Vec::new();
 
         for (member_index, proxy) in proxies.into_iter().enumerate() {
-            let record_id = format!("p:{provider_index}:{member_index}");
-            let proxy_name = proxy.name.clone();
-            let node_name = proxy.name.clone();
+            let record_id = String::from(format!("p:{provider_index}:{member_index}"));
+            let proxy_name = String::from(proxy.name.as_str());
+            let node_name = String::from(proxy.name.as_str());
             candidates
                 .entry(proxy_name.clone())
                 .or_insert_with(Vec::new)
@@ -380,7 +388,7 @@ fn build_provider_records(
         views.push(ProxyProviderView {
             name: provider_name,
             vehicle_type,
-            updated_at,
+            updated_at: updated_at.map(String::from),
             subscription_info: subscription_info.map(|subscription_info| ProxySubscriptionInfo {
                 upload: subscription_info.upload,
                 download: subscription_info.download,
@@ -417,6 +425,7 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
         .unwrap_or_default()
         .into_iter()
         .map(|member| {
+            let member = String::from(member);
             let (occurrence, scoped) = seen
                 .entry(member.clone())
                 .or_insert_with(|| (0, resolver.scoped_candidates(&name, &member)));
@@ -429,11 +438,11 @@ fn build_group(name: String, proxy: Proxy, resolver: &MemberResolver<'_>) -> Pro
     ProxyGroupView {
         name,
         proxy_type,
-        now,
-        fixed,
+        now: now.map(String::from),
+        fixed: fixed.map(String::from),
         hidden,
-        icon,
-        test_url,
+        icon: icon.map(String::from),
+        test_url: test_url.map(String::from),
         history,
         capabilities: ProxyCapabilities {
             udp,
@@ -467,10 +476,10 @@ fn build_node(record_id: String, name: String, proxy: Proxy, source: ProxyNodeSo
         name,
         proxy_type,
         history,
-        id,
+        id: id.map(String::from),
         hidden,
-        icon,
-        test_url,
+        icon: icon.map(String::from),
+        test_url: test_url.map(String::from),
         capabilities: ProxyCapabilities {
             udp,
             xudp,

@@ -173,7 +173,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
                     Type::Service,
                     "failed to inspect trusted service evidence: {error:#}"
                 );
-                return ServiceHealth::Unavailable(format!("service detection failed: {error:#}"));
+                return ServiceHealth::Unavailable(format!("service detection failed: {error:#}").into());
             }
         };
 
@@ -331,7 +331,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
     }
 
     #[cfg(target_os = "windows")]
-    pub fn allow_sidecar_after_service_refusal(&self, reason: String) -> Result<()> {
+    pub fn allow_sidecar_after_service_refusal(&self, reason: tristr::alias::String) -> Result<()> {
         let mut state = self.service.lock();
         if self.operation_running.load(Ordering::Acquire) || state.service.pending.is_some() {
             bail!("cannot fall back while a service operation is pending");
@@ -496,7 +496,7 @@ mod tests {
         ServiceVersionReply {
             core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
             code: 0,
-            message: "ok".to_owned(),
+            message: "ok".into(),
             protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),
         }
     }
@@ -713,7 +713,7 @@ mod tests {
         for health in [
             ServiceHealth::NotInstalled,
             ServiceHealth::VersionMismatch,
-            ServiceHealth::Unavailable("boom".to_owned()),
+            ServiceHealth::Unavailable("boom".into()),
         ] {
             let store = with_env(FakeEnv::new());
             store.observe(health.clone());
@@ -858,7 +858,7 @@ mod tests {
 
     #[tokio::test]
     async fn awaiting_readiness_retries_a_silent_service_then_accepts_its_reply() {
-        let store = with_env(FakeEnv::new().replying(vec![Err("ipc path not ready".to_owned()), Ok(ready_reply())]));
+        let store = with_env(FakeEnv::new().replying(vec![Err("ipc path not ready".into()), Ok(ready_reply())]));
 
         let state = store
             .await_ready(2, Duration::ZERO)

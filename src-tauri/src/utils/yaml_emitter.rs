@@ -1,5 +1,6 @@
 use serde::Serialize;
 use serde_yaml_ng::Result;
+use tristr::alias::String;
 
 pub fn to_mihomo_config_string<T: Serialize>(data: &T) -> Result<String> {
     let yaml = serde_yaml_ng::to_string(data)?;
@@ -7,7 +8,8 @@ pub fn to_mihomo_config_string<T: Serialize>(data: &T) -> Result<String> {
 }
 
 fn quote_fake_ip_filter_wildcards(yaml: &str) -> String {
-    let mut result = String::with_capacity(yaml.len());
+    // with_capacity exists only on the std String type; the tristr alias shadows the bare name.
+    let mut result = std::string::String::with_capacity(yaml.len());
     let mut in_fake_ip_filter = false;
     let mut fake_ip_filter_indent = 0;
 
@@ -39,7 +41,7 @@ fn quote_fake_ip_filter_wildcards(yaml: &str) -> String {
         result.push('\n');
     }
 
-    result
+    result.into()
 }
 
 fn leading_spaces(line: &str) -> usize {
@@ -50,12 +52,12 @@ fn quote_wildcard_item(item: &str) -> String {
     if !item.starts_with('\"') && !item.starts_with('\'') && contains_wildcard(item) {
         quote_string(item)
     } else {
-        item.to_string()
+        item.into()
     }
 }
 
 fn quote_string(s: &str) -> String {
-    "\'".to_string() + s.replace('\'', "''").as_str() + "\'"
+    ("\'".to_string() + s.replace('\'', "''").as_str() + "\'").into()
 }
 
 fn contains_wildcard(value: &str) -> bool {

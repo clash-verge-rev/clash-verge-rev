@@ -36,6 +36,7 @@ use std::{
     sync::atomic::{AtomicBool, AtomicU64, Ordering},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
+use tristr::alias::String;
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Mutex<Option<ActiveServiceSession>> = Mutex::new(None);
@@ -62,7 +63,7 @@ pub(crate) fn is_not_auto_started(reason: &str) -> bool {
 
 #[cfg(target_os = "windows")]
 pub(crate) fn notify_service_fallback(reason: &str) {
-    *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(reason.to_owned());
+    *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(reason.into());
     Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
 }
 
@@ -91,7 +92,7 @@ fn app_data_owner_command(credentials: &OwnerCredentials) -> Option<String> {
         return None;
     };
     let path = credentials.app_data_dir.replace('\'', r"'\''");
-    Some(format!("sudo chown -R {uid}:{gid} '{path}'"))
+    Some(format!("sudo chown -R {uid}:{gid} '{path}'").into())
 }
 
 /// Capabilities of the service session that owns the running Core.
@@ -243,22 +244,24 @@ fn macos_service_install_markers() -> Vec<String> {
         format!(
             "/Library/LaunchDaemons/{}.plist",
             clash_verge_service_ipc::MACOS_SERVICE_ID
-        ),
+        )
+        .into(),
         format!(
             "/Library/PrivilegedHelperTools/{}.bundle",
             clash_verge_service_ipc::MACOS_SERVICE_ID
-        ),
+        )
+        .into(),
         #[cfg(not(feature = "verge-dev"))]
-        "/Library/LaunchDaemons/io.github.clashverge.helper.plist".to_owned(),
+        "/Library/LaunchDaemons/io.github.clashverge.helper.plist".into(),
         #[cfg(not(feature = "verge-dev"))]
-        "/Library/PrivilegedHelperTools/io.github.clashverge.helper".to_owned(),
+        "/Library/PrivilegedHelperTools/io.github.clashverge.helper".into(),
     ]
 }
 
 #[cfg(target_os = "macos")]
 fn macos_service_install_marker_exists() -> std::io::Result<bool> {
     for marker in macos_service_install_markers() {
-        if path_entry_exists_without_follow(Path::new(&marker))? {
+        if path_entry_exists_without_follow(Path::new(marker.as_str()))? {
             return Ok(true);
         }
     }
@@ -335,7 +338,8 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
             output.status
         );
     }
-    Ok(String::from_utf8_lossy(&output.stdout).trim() != "not-found")
+    // from_utf8_lossy exists only on the std String type; the tristr alias shadows the bare name.
+    Ok(std::string::String::from_utf8_lossy(&output.stdout).trim() != "not-found")
 }
 
 #[cfg(target_os = "macos")]
@@ -564,12 +568,12 @@ fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
 
 #[cfg(target_os = "macos")]
 fn escape_osascript_double_quoted_string(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
+    value.replace('\\', "\\\\").replace('"', "\\\"").into()
 }
 
 #[cfg(target_os = "macos")]
 fn shell_single_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', r"'\''"))
+    format!("'{}'", value.replace('\'', r"'\''")).into()
 }
 
 fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
@@ -641,7 +645,7 @@ fn uninstall_service() -> Result<()> {
     let status = if linux_running_as_root() {
         StdCommand::new(&uninstall_path).status()?
     } else {
-        let result = StdCommand::new(&elevator)
+        let result = StdCommand::new(elevator.as_str())
             .arg("--disable-internal-agent")
             .arg(&uninstall_path)
             .status()?;
@@ -697,7 +701,7 @@ fn uninstall_service() -> Result<()> {
     }
 
     let uninstall_path = macos_service_tool_path(&uninstall_path)?;
-    let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
+    let uninstall_shell: String = uninstall_path.to_string_lossy().into();
 
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
@@ -843,7 +847,7 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
     if response.code > 0 {
         return Ok(StageRequest::Refused {
             code: response.code,
-            message: response.message,
+            message: response.message.into(),
         });
     }
     response
@@ -879,7 +883,7 @@ fn record_service_start_refusal<E: RunStateEnv>(
     if store.state().mode == crate::core::manager::RunningMode::NotRunning
         && refusal.code != ServiceErrorCode::ProxyClearFailed as u16
     {
-        store.observe(ServiceHealth::Unavailable(refusal.to_string()));
+        store.observe(ServiceHealth::Unavailable(refusal.to_string().into()));
     }
     refusal.into()
 }
@@ -887,7 +891,7 @@ fn record_service_start_refusal<E: RunStateEnv>(
 /// Sidecar stays blocked until a reinstall replaces the residual helper, so ask for repair.
 pub(super) fn record_residual_service(error: &anyhow::Error) {
     if let Some(residual) = error.downcast_ref::<clash_verge_service_ipc::execution::ResidualServiceError>() {
-        RUN_STATE.observe(ServiceHealth::Unavailable(residual.to_string()));
+        RUN_STATE.observe(ServiceHealth::Unavailable(residual.to_string().into()));
     }
 }
 
@@ -901,7 +905,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let proposed_session_token = generate_service_session_token()?;
     let request = StartClashRequest {
         runtime,
-        proposed_session_token: proposed_session_token.clone(),
+        proposed_session_token: proposed_session_token.clone().into(),
         macos_proxy: None,
     };
 
@@ -939,8 +943,8 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
             &RUN_STATE,
             ServiceStartRefusal {
                 code: response.code,
-                core_path: request.runtime.core_path,
-                message: err_msg,
+                core_path: request.runtime.core_path.into(),
+                message: err_msg.into(),
             },
         ));
     }
@@ -952,7 +956,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
         proof: OwnerSessionProof {
             generation: result.session.generation,
-            token: proposed_session_token,
+            token: proposed_session_token.into(),
         },
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
@@ -1012,7 +1016,10 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<String>> {
         bail!(err_msg);
     }
 
-    Ok(response.data.unwrap_or_default())
+    Ok(response
+        .data
+        .map(|logs| logs.into_iter().map(Into::into).collect())
+        .unwrap_or_default())
 }
 
 pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
@@ -1030,7 +1037,8 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
     let content = decode_hex(&encoded).context("服务返回了无效的核心日志快照")?;
-    Ok(String::from_utf8_lossy_owned(content))
+    // from_utf8_lossy_owned exists only on the std String type; the tristr alias shadows the bare name.
+    Ok(std::string::String::from_utf8_lossy_owned(content).into())
 }
 
 fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
@@ -1344,7 +1352,7 @@ async fn read_chunk(
     }
     Ok(Some(match response.data.context("服务未返回运行时文件")? {
         RuntimeFileOutcome::Absent => (None, 0, None),
-        RuntimeFileOutcome::Chunk { hex, len, mtime_ns } => (Some(hex), len, mtime_ns),
+        RuntimeFileOutcome::Chunk { hex, len, mtime_ns } => (Some(hex.into()), len, mtime_ns),
     }))
 }
 
@@ -1356,11 +1364,11 @@ async fn provider_load_times() -> Result<ProviderLoadTimes> {
     let proxies = proxies.map_err(|error| anyhow!("failed to query proxy providers: {error}"))?;
     let mut loaded = ProviderLoadTimes::new();
     for (name, provider) in rules.providers {
-        loaded.insert(("rule-providers", name), epoch_nanos(&provider.updated_at));
+        loaded.insert(("rule-providers", name.into()), epoch_nanos(&provider.updated_at));
     }
     for (name, provider) in proxies.providers {
         loaded.insert(
-            ("proxy-providers", name),
+            ("proxy-providers", name.into()),
             provider.updated_at.as_deref().and_then(epoch_nanos),
         );
     }
@@ -1586,7 +1594,7 @@ const fn owner_recovery_policy(reason: OwnerRecoveryReason, is_macos: bool) -> O
 fn mark_service_unavailable_after_owner_loss<E: RunStateEnv>(store: &RunStateStore<E>, reason: OwnerRecoveryReason) {
     if matches!(reason, OwnerRecoveryReason::TransportFailure) {
         store.observe(ServiceHealth::Unavailable(
-            "service control IPC unavailable after sustained transport failure".to_owned(),
+            "service control IPC unavailable after sustained transport failure".into(),
         ));
     }
 }
@@ -1847,7 +1855,7 @@ async fn wait_for_service_ipc() -> Result<()> {
         }
         Err(ReadyWaitError::Unreachable(error)) => {
             tracing::Span::current().record("outcome", "unreachable");
-            RUN_STATE.observe(ServiceHealth::Unavailable(format!("{CONTEXT}: {error:#}")));
+            RUN_STATE.observe(ServiceHealth::Unavailable(format!("{CONTEXT}: {error:#}").into()));
             Err(error).context(CONTEXT)
         }
         Err(ReadyWaitError::Rejected(error)) => {
@@ -2662,7 +2670,7 @@ mod tests {
         let outcome = super::run_action_restoring_sidecar(&store, was_allowed, async {
             store.perform(PendingAction::Install).await?;
             // Simulate `wait_for_service_ipc` recording health before it fails.
-            store.observe(ServiceHealth::Unavailable("service never answered".to_owned()));
+            store.observe(ServiceHealth::Unavailable("service never answered".into()));
             bail!("service IPC did not become available")
         })
         .await;

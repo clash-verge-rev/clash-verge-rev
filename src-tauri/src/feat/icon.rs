@@ -1,20 +1,17 @@
 use crate::{
-    cmd::{CmdResult, StringifyErr as _},
+    cmd::{CmdResult, CommandFailure, StringifyErr as _},
     utils::dirs::{self, PathBufExec as _},
 };
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 use tokio::io::AsyncWriteExt as _;
+use tristr::alias::String;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct IconInfo {
-    #[specta(type = std::string::String)]
     name: String,
-    #[specta(type = std::string::String)]
     previous_t: String,
-    #[specta(type = std::string::String)]
     current_t: String,
 }
 
@@ -43,7 +40,7 @@ fn ensure_icon_cache_target(icon_cache_dir: &Path, file_name: &str) -> CmdResult
     Ok(icon_path)
 }
 
-fn normalized_text_prefix(content: &[u8]) -> std::string::String {
+fn normalized_text_prefix(content: &[u8]) -> String {
     let content = content.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(content);
     let start = content
         .iter()
@@ -51,7 +48,8 @@ fn normalized_text_prefix(content: &[u8]) -> std::string::String {
         .unwrap_or(content.len());
     let end = content.len().min(start.saturating_add(2048));
     let prefix = &content[start..end];
-    std::string::String::from_utf8_lossy(prefix).to_ascii_lowercase()
+    // from_utf8_lossy exists only on the std String type; the tristr alias shadows the bare name.
+    std::string::String::from_utf8_lossy(prefix).to_ascii_lowercase().into()
 }
 
 fn looks_like_html(content: &[u8]) -> bool {
@@ -95,7 +93,10 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 
     if !is_supported_icon_content(&content) {
         let _ = temp_path.remove_if_exists().await;
-        return Err(format!("Downloaded content is not a valid image: {}", url.as_str()).into());
+        return Err(CommandFailure::plain(format!(
+            "Downloaded content is not a valid image: {}",
+            url.as_str()
+        )));
     }
 
     {
@@ -164,7 +165,7 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
 
         match fs::copy(file_path, &dest_path).await {
             Ok(_) => Ok(dest_path.to_string_lossy().into()),
-            Err(err) => Err(err.to_string().into()),
+            Err(err) => Err(CommandFailure::plain(err)),
         }
     } else {
         Err("file not found".into())

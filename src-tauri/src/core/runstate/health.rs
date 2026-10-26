@@ -2,6 +2,7 @@
 //! Core lifecycle remains in `CoreManager`.
 
 use crate::core::manager::RunningMode;
+use tristr::alias::String;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum ServiceHealth {

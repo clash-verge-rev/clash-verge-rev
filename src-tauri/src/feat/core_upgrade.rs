@@ -21,6 +21,7 @@ use std::{
     process::Command,
     sync::atomic::{AtomicU64, Ordering},
 };
+use tristr::alias::String;
 
 const RELEASE_VERSION_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
 const ALPHA_BASE_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha";
@@ -50,7 +51,7 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     // A core already broken by the in-place updater cannot report a version; upgrading is the repair.
     let installed = read_core_version(&target).unwrap_or_else(|error| {
         logging!(warn, Type::Core, "core upgrade: unreadable installed core: {error:#}");
-        std::string::String::new()
+        String::new()
     });
 
     let (proxy, latest) = resolve_latest_version(alpha).await?;
@@ -172,14 +173,15 @@ fn managed_core_path(core: &str) -> Result<PathBuf> {
 }
 
 /// Pins the package to the resolved version, so a release moving on mid-upgrade cannot 404.
-fn package_url(alpha: bool, version: &str) -> Result<std::string::String> {
+fn package_url(alpha: bool, version: &str) -> Result<String> {
     let asset = asset_base_name(alpha)?;
     let extension = if cfg!(windows) { "zip" } else { "gz" };
     Ok(if alpha {
         format!("{ALPHA_BASE_URL}/{asset}-{version}.{extension}")
     } else {
         format!("{RELEASE_DOWNLOAD_URL}/{version}/{asset}-{version}.{extension}")
-    })
+    }
+    .into())
 }
 
 /// Mirrors the asset map in `scripts/prebuild.mjs` so an upgrade keeps the build variant
@@ -218,11 +220,11 @@ fn asset_base_name(alpha: bool) -> Result<&'static str> {
 
 /// Returns the proxy that reached GitHub so the package download reuses it.
 #[tracing::instrument(skip_all, level = "debug", fields(alpha))]
-async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::String)> {
+async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, String)> {
     let url = if alpha {
-        format!("{ALPHA_BASE_URL}/version.txt")
+        String::from(format!("{ALPHA_BASE_URL}/version.txt"))
     } else {
-        RELEASE_VERSION_URL.to_owned()
+        String::from(RELEASE_VERSION_URL)
     };
     let mut last_error = None;
 
@@ -234,7 +236,7 @@ async fn resolve_latest_version(alpha: bool) -> Result<(ProxyType, std::string::
         match attempt {
             Ok(response) if response.status().is_success() => {
                 // An error page answered with 200 must not become a version, nor reach the URL.
-                let version = response.text().trim().to_owned();
+                let version = String::from(response.text().trim());
                 if !is_usable_version(&version) {
                     logging!(
                         warn,
@@ -446,7 +448,7 @@ fn new_command(program: impl AsRef<OsStr>) -> Command {
 }
 
 /// Parses the version out of `Mihomo Meta v1.19.30 darwin arm64 with go1.22.12 ...`.
-fn read_core_version(path: &Path) -> Result<std::string::String> {
+fn read_core_version(path: &Path) -> Result<String> {
     let output = new_command(path)
         .arg("-v")
         .output()
@@ -456,11 +458,12 @@ fn read_core_version(path: &Path) -> Result<std::string::String> {
         bail!("{} -v exited with {}", path.display(), output.status);
     }
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
+    // from_utf8_lossy exists only on the std String type; the tristr alias shadows the bare name.
+    let stdout = std::string::String::from_utf8_lossy(&output.stdout);
     stdout
         .split_whitespace()
         .nth(2)
-        .map(str::to_owned)
+        .map(String::from)
         .with_context(|| format!("unexpected version output from {}: {stdout}", path.display()))
 }
 

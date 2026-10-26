@@ -1,8 +1,8 @@
 use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
-use smartstring::alias::String;
 use tauri::Url;
+use tristr::alias::String;
 
 use crate::{
     config::{Config, PrfItem, profiles},
@@ -39,7 +39,7 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     Ok(())
 }
 
-fn extract_subscription_info(link_parsed: &Url) -> Option<(std::string::String, Option<String>)> {
+fn extract_subscription_info(link_parsed: &Url) -> Option<(String, Option<String>)> {
     if !matches!(link_parsed.scheme(), "clash" | "clash-verge") {
         return None;
     }
@@ -52,7 +52,7 @@ fn extract_subscription_info(link_parsed: &Url) -> Option<(std::string::String, 
     Some((url, name))
 }
 
-fn extract_subscription_url(link_parsed: &Url) -> Option<std::string::String> {
+fn extract_subscription_url(link_parsed: &Url) -> Option<String> {
     let query = link_parsed.query()?;
     let prefix = "url=";
     let pos = query.find(prefix)?;
@@ -60,15 +60,15 @@ fn extract_subscription_url(link_parsed: &Url) -> Option<std::string::String> {
     Some(decode_subscription_url(raw_url))
 }
 
-fn decode_subscription_url(raw_url: &str) -> std::string::String {
+fn decode_subscription_url(raw_url: &str) -> String {
     // Avoid double-decoding nested subscription URLs; decode only when needed.
     if Url::parse(raw_url).is_ok() {
-        return raw_url.to_string();
+        return String::from(raw_url);
     }
 
-    let mut candidate = raw_url.to_string();
+    let mut candidate = String::from(raw_url);
     for _ in 0..2 {
-        let next = percent_decode_str(&candidate).decode_utf8_lossy().to_string();
+        let next = String::from(percent_decode_str(&candidate).decode_utf8_lossy());
         if next == candidate {
             break;
         }

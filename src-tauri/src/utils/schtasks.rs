@@ -5,6 +5,7 @@ use std::fs;
 use std::os::windows::process::CommandExt as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use tristr::alias::String;
 use windows::Win32::Globalization::{GetACP, GetOEMCP, MULTI_BYTE_TO_WIDE_CHAR_FLAGS, MultiByteToWideChar};
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -72,11 +73,11 @@ fn get_task_user_id() -> Result<String> {
     if let Some(domain) = domain {
         let domain = domain.trim();
         if !domain.is_empty() {
-            return Ok(format!("{domain}\\{username}"));
+            return Ok(format!("{domain}\\{username}").into());
         }
     }
 
-    Ok(username.to_string())
+    Ok(username.into())
 }
 
 fn get_startup_dir() -> Result<PathBuf> {
@@ -118,7 +119,8 @@ fn task_xml_path(mode: TaskMode) -> Result<PathBuf> {
 }
 
 fn xml_escape(value: &str) -> String {
-    let mut escaped = String::with_capacity(value.len());
+    // Per-char pushes must stay on the std String: TriStr growth re-materializes per push.
+    let mut escaped = std::string::String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
             '&' => escaped.push_str("&amp;"),
@@ -129,7 +131,7 @@ fn xml_escape(value: &str) -> String {
             _ => escaped.push(ch),
         }
     }
-    escaped
+    escaped.into()
 }
 
 fn build_task_xml(mode: TaskMode) -> Result<String> {
@@ -182,7 +184,8 @@ fn build_task_xml(mode: TaskMode) -> Result<String> {
         user_id,
         mode.xml_run_level(),
         exe_path
-    ))
+    )
+    .into())
 }
 
 fn encode_utf16le_with_bom(content: &str) -> Vec<u8> {
@@ -226,12 +229,13 @@ fn decode_with_code_page(bytes: &[u8], code_page: u32) -> Option<String> {
     }
 
     wide.truncate(written as usize);
-    Some(String::from_utf16_lossy(&wide))
+    // from_utf16_lossy exists only on the std String type; the tristr alias shadows the bare name.
+    Some(std::string::String::from_utf16_lossy(&wide).into())
 }
 
 fn decode_console_output(bytes: &[u8]) -> String {
     if let Ok(text) = std::str::from_utf8(bytes) {
-        return text.to_string();
+        return text.into();
     }
 
     let oem = unsafe { GetOEMCP() };
@@ -244,7 +248,8 @@ fn decode_console_output(bytes: &[u8]) -> String {
         return text;
     }
 
-    String::from_utf8_lossy(bytes).to_string()
+    // from_utf8_lossy exists only on the std String type; the tristr alias shadows the bare name.
+    std::string::String::from_utf8_lossy(bytes).into()
 }
 
 fn output_message(output: &Output) -> String {
@@ -254,10 +259,10 @@ fn output_message(output: &Output) -> String {
     let stderr = stderr.trim();
 
     match (stdout.is_empty(), stderr.is_empty()) {
-        (true, true) => "unknown error".to_string(),
-        (false, true) => stdout.to_string(),
-        (true, false) => stderr.to_string(),
-        (false, false) => format!("{stdout} | {stderr}"),
+        (true, true) => "unknown error".into(),
+        (false, true) => stdout.into(),
+        (true, false) => stderr.into(),
+        (false, false) => format!("{stdout} | {stderr}").into(),
     }
 }
 

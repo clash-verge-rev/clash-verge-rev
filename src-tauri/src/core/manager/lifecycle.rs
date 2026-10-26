@@ -7,10 +7,10 @@ use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
-use smartstring::alias::String;
 use std::path::Path;
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+use tristr::alias::String;
 
 #[cfg(any(target_os = "windows", test))]
 const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admin: bool) -> bool {
@@ -194,7 +194,7 @@ async fn run_service_start_with_sidecar_fallback<Start, StartFuture, Check, Chec
     start_service: Start,
     confirm_idle: Check,
     start_sidecar: Fallback,
-    record_unavailable: impl FnOnce(std::string::String),
+    record_unavailable: impl FnOnce(String),
 ) -> Result<()>
 where
     Start: FnOnce() -> StartFuture,
@@ -217,7 +217,7 @@ where
     // A lost start response can hide a running core; the shared check must resolve occupancy.
     if let Err(probe_error) = confirm_idle().await {
         let error = error.context(format!("Sidecar fallback was not safe: {probe_error:#}"));
-        record_unavailable(format!("{error:#}"));
+        record_unavailable(format!("{error:#}").into());
         return Err(error);
     }
     logging!(
@@ -650,7 +650,7 @@ impl CoreManager {
                         |error| self.start_sidecar_after_service_failure(error),
                         |reason| {
                             crate::core::runstate::RUN_STATE
-                                .observe(crate::core::runstate::ServiceHealth::Unavailable(reason));
+                                .observe(crate::core::runstate::ServiceHealth::Unavailable(reason.into()));
                         },
                     )
                     .await
@@ -688,7 +688,7 @@ impl CoreManager {
         }
         let reason = match state.health {
             ServiceHealth::Unavailable(reason) => reason,
-            ServiceHealth::VersionMismatch => "registered service is unavailable or incompatible".to_owned(),
+            ServiceHealth::VersionMismatch => "registered service is unavailable or incompatible".into(),
             _ => return Ok(()),
         };
         if let Err(error) = clash_verge_service_ipc::execution::check_sidecar_available()
@@ -712,7 +712,7 @@ impl CoreManager {
         if Handle::global().is_exiting() {
             return Err(error.context("application exited before Sidecar fallback"));
         }
-        let reason = format!("{error:#}");
+        let reason: String = format!("{error:#}").into();
         RUN_STATE.allow_sidecar_after_service_refusal(reason.clone())?;
         logging!(warn, Type::Core, "Starting Sidecar with Service unavailable: {reason}");
         let result = self.start_core_by_sidecar().await;
@@ -1590,7 +1590,7 @@ mod tests {
                     started.store(true, Ordering::SeqCst);
                     Ok(())
                 },
-                |reason| store.observe(ServiceHealth::Unavailable(reason)),
+                |reason| store.observe(ServiceHealth::Unavailable(reason.into())),
             )
             .await;
 

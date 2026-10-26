@@ -10,6 +10,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     str::FromStr as _,
 };
+use tristr::alias::String;
 
 /// The config key of the Mixed Port, named once so callers stop spelling it out.
 pub(crate) const MIXED_PORT_KEY: &str = "mixed-port";
@@ -163,7 +164,7 @@ pub(crate) fn probe_listener(request: &ListenerProbe) -> ListenerProbeOutcome {
         Ok(address) => address,
         Err(error) => {
             return ListenerProbeOutcome::Invalid {
-                message: error.to_string(),
+                message: error.to_string().into(),
             };
         }
     };
@@ -201,7 +202,7 @@ pub(crate) fn probe_proxy_port_change(
             Ok(claims) => claims,
             Err(error) => {
                 return ListenerProbeOutcome::Invalid {
-                    message: format!("current proxy listener configuration is invalid: {error:#}"),
+                    message: format!("current proxy listener configuration is invalid: {error:#}").into(),
                 };
             }
         }
@@ -212,7 +213,7 @@ pub(crate) fn probe_proxy_port_change(
         Ok(claims) => claims,
         Err(error) => {
             return ListenerProbeOutcome::Invalid {
-                message: format!("candidate proxy listener configuration is invalid: {error:#}"),
+                message: format!("candidate proxy listener configuration is invalid: {error:#}").into(),
             };
         }
     };
@@ -401,7 +402,8 @@ fn probe_claims(claims: &[BindClaim]) -> ListenerProbeOutcome {
                         claim.socket_addr(),
                         transport_name(claim.transport),
                         error
-                    ),
+                    )
+                    .into(),
                 };
             }
             Err(error) => {
@@ -412,7 +414,8 @@ fn probe_claims(claims: &[BindClaim]) -> ListenerProbeOutcome {
                         claim.socket_addr(),
                         transport_name(claim.transport),
                         error
-                    ),
+                    )
+                    .into(),
                 };
             }
         }
@@ -739,7 +742,7 @@ mod tests {
         let port = listener.local_addr()?.port();
         assert_eq!(
             probe_listener(&ListenerProbe {
-                address: format!("0.0.0.0:{port}"),
+                address: format!("0.0.0.0:{port}").into(),
                 transports: vec![ListenerTransport::Tcp],
             }),
             ListenerProbeOutcome::Conflict {
@@ -755,7 +758,7 @@ mod tests {
         let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?;
         let port = listener.local_addr()?.port();
         let outcome = probe_listener(&ListenerProbe {
-            address: format!("127.0.0.1:{port}"),
+            address: format!("127.0.0.1:{port}").into(),
             transports: vec![ListenerTransport::Tcp],
         });
         assert_eq!(
@@ -773,7 +776,7 @@ mod tests {
         let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0))?;
         let port = listener.local_addr()?.port();
         let outcome = probe_listener(&ListenerProbe {
-            address: format!("127.0.0.1:{port}"),
+            address: format!("127.0.0.1:{port}").into(),
             transports: vec![ListenerTransport::Tcp],
         });
         assert_eq!(
@@ -809,7 +812,7 @@ mod tests {
 
         assert_eq!(
             probe_listener(&ListenerProbe {
-                address: format!("127.0.0.1:{port}"),
+                address: format!("127.0.0.1:{port}").into(),
                 transports: vec![ListenerTransport::Tcp],
             }),
             ListenerProbeOutcome::Available
@@ -822,7 +825,7 @@ mod tests {
         let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0))?;
         let port = socket.local_addr()?.port();
         let outcome = probe_listener(&ListenerProbe {
-            address: format!("127.0.0.1:{port}"),
+            address: format!("127.0.0.1:{port}").into(),
             transports: vec![ListenerTransport::Udp],
         });
         assert_eq!(

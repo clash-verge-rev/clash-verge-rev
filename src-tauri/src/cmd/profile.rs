@@ -19,17 +19,17 @@ use crate::{
 use clash_verge_draft::{Draft, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
 use scopeguard::defer;
-use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tristr::alias::String;
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
-fn profile_import_error(err: &anyhow::Error) -> std::string::String {
+fn profile_import_error(err: &anyhow::Error) -> String {
     if let Some(cause) = err.chain().find(|cause| cause.to_string().contains("TLS 1.0/1.1")) {
-        return cause.to_string();
+        return cause.to_string().into();
     }
 
-    format!("导入订阅失败: {err:#}")
+    format!("导入订阅失败: {err:#}").into()
 }
 
 #[tauri::command]
@@ -68,7 +68,7 @@ pub async fn enhance_profiles() -> CmdResult<ValidationOutcome> {
 #[tauri::command]
 #[tracing::instrument(skip_all, level = "info", fields(url = %help::mask_url(&url), uid = tracing::field::Empty))]
 #[specta::specta]
-pub async fn import_profile(url: std::string::String, option: Option<PrfOption>) -> CmdResult {
+pub async fn import_profile(url: String, option: Option<PrfOption>) -> CmdResult {
     let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
         Ok(it) => it,
         Err(e) => {
@@ -98,9 +98,9 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
 
 #[tauri::command]
 #[specta::specta]
-pub async fn reorder_profile(active_id: std::string::String, over_id: std::string::String) -> CmdResult {
-    let active_id: String = active_id.into();
-    let over_id: String = over_id.into();
+pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
+    let active_id: String = active_id;
+    let over_id: String = over_id;
     match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
             logging!(info, Type::Cmd, "重新排序配置文件: {} -> {}", active_id, over_id);
@@ -121,9 +121,9 @@ pub async fn reorder_profile(active_id: std::string::String, over_id: std::strin
 
 #[tauri::command]
 #[specta::specta]
-pub async fn create_profile(item: ProfileCreate, file_data: Option<std::string::String>) -> CmdResult {
+pub async fn create_profile(item: ProfileCreate, file_data: Option<String>) -> CmdResult {
     let item: PrfItem = item.into();
-    let file_data = file_data.map(String::from);
+    let file_data = file_data;
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             profiles_save_file_safe()
@@ -138,8 +138,8 @@ pub async fn create_profile(item: ProfileCreate, file_data: Option<std::string::
 
 #[tauri::command]
 #[specta::specta]
-pub async fn update_profile(index: std::string::String, option: Option<PrfOption>) -> CmdResult {
-    let index: String = index.into();
+pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
+    let index: String = index;
     match feat::update_profile(&index, option.as_ref(), true).await {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -151,8 +151,8 @@ pub async fn update_profile(index: std::string::String, option: Option<PrfOption
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_profile(index: std::string::String) -> CmdResult {
-    let index: String = index.into();
+pub async fn delete_profile(index: String) -> CmdResult {
+    let index: String = index;
     let profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
     let profiles = Config::profiles().await;
@@ -325,7 +325,6 @@ async fn perform_config_update(
 #[derive(Default, serde::Deserialize, specta::Type)]
 #[serde(default)]
 pub struct ProfileSelection {
-    #[specta(type = Option<std::string::String>)]
     pub current: Option<String>,
 }
 
@@ -333,13 +332,9 @@ pub struct ProfileSelection {
 #[serde(default)]
 pub struct ProfileCreate {
     #[serde(rename = "type")]
-    #[specta(type = Option<std::string::String>)]
     pub itype: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub desc: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
     pub option: Option<PrfOption>,
 }
@@ -361,15 +356,10 @@ impl From<ProfileCreate> for PrfItem {
 #[serde(default)]
 pub struct ProfilePatch {
     #[serde(rename = "type")]
-    #[specta(type = Option<std::string::String>)]
     pub itype: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub desc: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub file: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
     pub selected: Option<Vec<crate::config::PrfSelected>>,
     pub extra: Option<crate::config::PrfExtra>,
@@ -436,9 +426,9 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 
 #[tauri::command]
 #[specta::specta]
-pub async fn patch_profile(index: std::string::String, profile: ProfilePatch) -> CmdResult {
+pub async fn patch_profile(index: String, profile: ProfilePatch) -> CmdResult {
     let profile: PrfItem = profile.into();
-    let index: String = index.into();
+    let index: String = index;
     let profiles = Config::profiles().await;
     let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
         && let Some(new_option) = profile.option.as_ref()
@@ -479,7 +469,7 @@ pub async fn patch_profile(index: std::string::String, profile: ProfilePatch) ->
 
 #[tauri::command]
 #[specta::specta]
-pub async fn view_profile(index: std::string::String) -> CmdResult {
+pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
     let profiles_ref = profiles.latest_arc();
     let file = profiles_ref
@@ -504,7 +494,7 @@ pub async fn view_profile(index: std::string::String) -> CmdResult {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::string::String> {
+pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let item = {
         let profiles = Config::profiles().await;
         let profiles_ref = profiles.latest_arc();
@@ -524,7 +514,7 @@ pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::str
             .join(file.as_str());
         match tokio::fs::try_exists(&path).await {
             Ok(true) => {}
-            Ok(false) => return Ok(std::string::String::new()),
+            Ok(false) => return Ok(String::new()),
             Err(err) => {
                 return Err(coded_error(
                     "PROFILE_READ_FAILED",
@@ -535,12 +525,12 @@ pub async fn read_profile_file(index: std::string::String) -> CmdResult<std::str
     }
 
     let data = item.read_file().await.with_error_code("PROFILE_READ_FAILED")?;
-    Ok(data.into())
+    Ok(data)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn get_next_update_time(uid: std::string::String) -> CmdResult<Option<i64>> {
+pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
     let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)

@@ -3,11 +3,10 @@ use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 #[cfg(test)]
 use serde_json::json;
-use smartstring::alias::String;
-use std::sync::Arc;
 use std::sync::LazyLock;
 use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
+use tristr::alias::String;
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent<'a> {
@@ -17,7 +16,7 @@ pub enum FrontendEvent<'a> {
     RefreshProxyConfig,
     NoticeMessage {
         status: NoticeStatus,
-        message: Arc<str>,
+        message: String,
     },
     ProfileChanged {
         current_profile_id: &'a String,
@@ -77,10 +76,8 @@ impl FailedOperation {
 #[serde(rename_all = "camelCase")]
 pub struct PendingFailure {
     /// Stable code used as the table key.
-    #[specta(type = std::string::String)]
     pub code: String,
     /// Full diagnostic context chain.
-    #[specta(type = std::string::String)]
     pub detail: String,
     pub operation: FailedOperation,
     /// Monotonic identity for repeated failures under the same code.
@@ -247,7 +244,6 @@ static PENDING_FAILURES: LazyLock<FailureTable> = LazyLock::new(FailureTable::de
 #[derive(Debug, Default, Clone, serde::Serialize, specta::Type)]
 pub struct SidecarFailureSnapshot {
     pub revision: u64,
-    #[specta(type = Option<std::string::String>)]
     pub detail: Option<String>,
 }
 
@@ -391,7 +387,7 @@ fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str,
         (
             FrontendEvent::NoticeMessage {
                 status: NoticeStatus::Info,
-                message: Arc::from("ok"),
+                message: String::from("ok"),
             },
             "verge://notice-message",
             json!(["info", "ok"]),
@@ -456,16 +452,16 @@ frontend_events! {
     refresh_verge: () = "verge://refresh-verge-config", FrontendEvent::RefreshVerge => ();
     refresh_profiles: () = "verge://refresh-profiles", FrontendEvent::RefreshProfiles => ();
     refresh_proxy: () = "verge://refresh-proxy-config", FrontendEvent::RefreshProxyConfig => ();
-    notice: (NoticeStatus, std::string::String) = "verge://notice-message", FrontendEvent::NoticeMessage { status, ref message } => (status, message.to_string());
-    profile_changed: std::string::String = "profile-changed", FrontendEvent::ProfileChanged { current_profile_id } => current_profile_id.to_string();
-    timer_updated: std::string::String = "verge://timer-updated", FrontendEvent::TimerUpdated { profile_index } => profile_index.to_string();
-    profile_started: ProfileUpdatePayload = "profile-update-started", FrontendEvent::ProfileUpdateStarted { uid } => ProfileUpdatePayload { uid: uid.to_string() };
-    profile_completed: ProfileUpdatePayload = "profile-update-completed", FrontendEvent::ProfileUpdateCompleted { uid } => ProfileUpdatePayload { uid: uid.to_string() };
+    notice: (NoticeStatus, String) = "verge://notice-message", FrontendEvent::NoticeMessage { status, ref message } => (status, message.clone());
+    profile_changed: String = "profile-changed", FrontendEvent::ProfileChanged { current_profile_id } => current_profile_id.clone();
+    timer_updated: String = "verge://timer-updated", FrontendEvent::TimerUpdated { profile_index } => profile_index.clone();
+    profile_started: ProfileUpdatePayload = "profile-update-started", FrontendEvent::ProfileUpdateStarted { uid } => ProfileUpdatePayload { uid: uid.clone() };
+    profile_completed: ProfileUpdatePayload = "profile-update-completed", FrontendEvent::ProfileUpdateCompleted { uid } => ProfileUpdatePayload { uid: uid.clone() };
     run_state: crate::core::runstate::RunStateView = "verge://run-state-changed", FrontendEvent::RunStateChanged { state } => state;
     pending_failures: () = "verge://pending-failures-changed", FrontendEvent::PendingFailuresChanged => ();
 }
 
 #[derive(serde::Serialize, specta::Type)]
 pub struct ProfileUpdatePayload {
-    pub uid: std::string::String,
+    pub uid: String,
 }

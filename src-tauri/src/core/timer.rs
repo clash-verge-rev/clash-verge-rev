@@ -8,7 +8,6 @@ use crate::{
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::{Mutex, RwLock};
-use smartstring::alias::String;
 use std::{
     collections::HashMap,
     sync::{
@@ -23,6 +22,7 @@ use tokio::{
 };
 use tokio_stream::StreamExt as _;
 use tokio_util::time::{DelayQueue, delay_queue::Key};
+use tristr::alias::String;
 
 enum TimerCommand {
     Apply(HashMap<String, TaskSchedule>),
@@ -502,7 +502,6 @@ mod tests {
     use super::{TaskSchedule, Timer, run_timer_profile_update_transition};
     use crate::config::{PrfItem, PrfOption};
     use parking_lot::Mutex;
-    use smartstring::alias::String;
     use std::collections::HashMap;
     use std::{
         sync::{
@@ -515,6 +514,7 @@ mod tests {
     use tokio::sync::Barrier;
     use tokio_stream::StreamExt as _;
     use tokio_util::time::DelayQueue;
+    use tristr::alias::String;
 
     struct CancellationProbe {
         cancelled: Arc<AtomicBool>,

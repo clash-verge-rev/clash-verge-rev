@@ -11,6 +11,7 @@ use std::{
 };
 use tauri_plugin_updater::{Update, UpdaterExt as _};
 use tokio_util::sync::CancellationToken;
+use tristr::alias::String;
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
@@ -55,8 +56,8 @@ impl SilentUpdater {
             .with_context(|| format!("failed to write update cache {}", bin_path.display()))?;
 
         let meta = UpdateCacheMeta {
-            version: version.to_string(),
-            downloaded_at: Utc::now().to_rfc3339(),
+            version: version.into(),
+            downloaded_at: Utc::now().to_rfc3339().into(),
         };
         let meta_path = cache_dir.join("pending_update.json");
         std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
@@ -133,9 +134,8 @@ fn verify_signature(app_handle: &tauri::AppHandle, bytes: &[u8], signature: &str
     use base64::Engine as _;
 
     let decode = |value: &str| -> Result<String> {
-        Ok(String::from_utf8(
-            base64::engine::general_purpose::STANDARD.decode(value)?,
-        )?)
+        // from_utf8 exists only on the std String type; the tristr alias shadows the bare name.
+        Ok(std::string::String::from_utf8(base64::engine::general_purpose::STANDARD.decode(value)?)?.into())
     };
     let config: tauri_plugin_updater::Config = serde_json::from_value(
         app_handle

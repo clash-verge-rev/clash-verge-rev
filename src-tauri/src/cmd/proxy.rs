@@ -15,6 +15,7 @@ use std::{
     collections::{BTreeMap, HashSet},
     sync::atomic::{AtomicBool, Ordering},
 };
+use tristr::alias::String;
 
 /// Merges one selection pair into fresh backend state to avoid stale-list overwrites.
 #[tauri::command]
@@ -48,7 +49,7 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
         .filter_map(|name| name.as_str())
         .filter(|name| !name.is_empty() && *name != "GLOBAL")
         .filter(|name| seen.insert(*name))
-        .map(str::to_owned)
+        .map(String::from)
         .collect()
 }
 
@@ -63,7 +64,7 @@ fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope
         .into_iter()
         .flat_map(|providers| providers.keys())
         .filter_map(|name| name.as_str())
-        .map(str::to_owned)
+        .map(String::from)
         .collect::<Vec<_>>();
     all_providers.sort();
     let flag = |group: &Mapping, key: &str| group.get(key).and_then(|value| value.as_bool()) == Some(true);
@@ -75,7 +76,7 @@ fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope
         .flatten()
         .filter_map(|group| group.as_mapping())
         .filter_map(|group| {
-            let name = group.get("name")?.as_str()?.to_owned();
+            let name: String = group.get("name")?.as_str()?.into();
             let providers = if flag(group, "include-all") || flag(group, "include-all-providers") {
                 all_providers.clone()
             } else {
@@ -85,14 +86,14 @@ fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope
                     .into_iter()
                     .flatten()
                     .filter_map(|provider| provider.as_str())
-                    .map(str::to_owned)
+                    .map(String::from)
                     .collect()
             };
             let exclude_types = group
                 .get("exclude-type")
                 .and_then(|types| types.as_str())
                 .filter(|types| !types.is_empty())
-                .map(|types| types.split('|').map(str::to_owned).collect())
+                .map(|types| types.split('|').map(String::from).collect())
                 .unwrap_or_default();
             Some((
                 name,

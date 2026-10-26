@@ -1,5 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
-use smartstring::alias::String;
+use tristr::alias::String;
 
 pub const HANDLE_FIELDS: [&str; 12] = [
     "mode",

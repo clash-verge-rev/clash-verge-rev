@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr as _, feat};
 use feat::LocalBackupFile;
-use smartstring::alias::String;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -17,15 +17,15 @@ pub async fn list_local_backup() -> CmdResult<Vec<LocalBackupFile>> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_local_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: String = filename.into();
+pub async fn delete_local_backup(filename: String) -> CmdResult<()> {
+    let filename: String = filename;
     feat::delete_local_backup(filename).await.stringify_err()
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn restore_local_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: String = filename.into();
+pub async fn restore_local_backup(filename: String) -> CmdResult<()> {
+    let filename: String = filename;
     feat::restore_local_backup(filename)
         .await
         .map_err(|error| super::proxy_aware_error(&error))
@@ -33,15 +33,15 @@ pub async fn restore_local_backup(filename: std::string::String) -> CmdResult<()
 
 #[tauri::command]
 #[specta::specta]
-pub async fn import_local_backup(source: std::string::String) -> CmdResult<std::string::String> {
-    let source: String = source.into();
-    feat::import_local_backup(source).await.map(Into::into).stringify_err()
+pub async fn import_local_backup(source: String) -> CmdResult<String> {
+    let source: String = source;
+    feat::import_local_backup(source).await.stringify_err()
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn export_local_backup(filename: std::string::String, destination: std::string::String) -> CmdResult<()> {
-    let filename: String = filename.into();
-    let destination: String = destination.into();
+pub async fn export_local_backup(filename: String, destination: String) -> CmdResult<()> {
+    let filename: String = filename;
+    let destination: String = destination;
     feat::export_local_backup(filename, destination).await.stringify_err()
 }

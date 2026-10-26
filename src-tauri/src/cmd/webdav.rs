@@ -4,18 +4,14 @@ use crate::{
     config::{Config, IVerge},
     core, feat,
 };
-use smartstring::alias::String;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
-pub async fn save_webdav_config(
-    url: std::string::String,
-    username: std::string::String,
-    password: std::string::String,
-) -> CmdResult<()> {
-    let url: String = url.into();
-    let username: String = username.into();
-    let password: String = password.into();
+pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
+    let url: String = url;
+    let username: String = username;
+    let password: String = password;
     let patch = IVerge {
         webdav_url: Some(url),
         webdav_username: Some(username),
@@ -48,15 +44,15 @@ pub async fn list_webdav_backup() -> CmdResult<Vec<crate::ipc::WebDavFile>> {
 
 #[tauri::command]
 #[specta::specta]
-pub async fn delete_webdav_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: String = filename.into();
+pub async fn delete_webdav_backup(filename: String) -> CmdResult<()> {
+    let filename: String = filename;
     feat::delete_webdav_backup(filename).await.stringify_err()
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn restore_webdav_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: String = filename.into();
+pub async fn restore_webdav_backup(filename: String) -> CmdResult<()> {
+    let filename: String = filename;
     feat::restore_webdav_backup(filename)
         .await
         .map_err(|error| super::proxy_aware_error(&error))

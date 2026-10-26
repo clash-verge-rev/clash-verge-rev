@@ -7,7 +7,6 @@ use crate::{config::Config, core::handle, core::lightweight::entry_lightweight_m
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use std::{
     collections::HashMap,
     fmt,
@@ -18,6 +17,7 @@ use std::{
     },
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt as _, ShortcutState};
+use tristr::alias::String;
 
 /// Enum representing all available hotkey functions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

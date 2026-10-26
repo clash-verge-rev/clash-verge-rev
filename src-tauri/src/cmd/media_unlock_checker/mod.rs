@@ -2,6 +2,7 @@ pub use clash_verge_media_unlock::UnlockItem;
 use reqwest::{Client, Proxy};
 use std::time::Duration;
 use tauri::{command, ipc::Channel};
+use tristr::alias::String;
 
 #[command]
 #[specta::specta]
@@ -23,7 +24,7 @@ async fn create_client() -> Result<Client, String> {
         .cookie_store(true)
         .proxy(proxy)
         .build()
-        .map_err(|error| format!("创建HTTP客户端失败: {error}"))
+        .map_err(|error| format!("创建HTTP客户端失败: {error}").into())
 }
 
 #[command]
@@ -40,5 +41,7 @@ pub async fn check_media_unlock(on_complete: Channel<UnlockItem>) -> Result<Vec<
 #[specta::specta]
 pub async fn check_media_unlock_item(name: String) -> Result<UnlockItem, String> {
     let client = create_client().await?;
-    clash_verge_media_unlock::check_media_unlock_item(&client, &name).await
+    clash_verge_media_unlock::check_media_unlock_item(&client, &name)
+        .await
+        .map_err(Into::into)
 }

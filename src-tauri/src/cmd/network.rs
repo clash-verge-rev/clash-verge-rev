@@ -5,6 +5,7 @@ use crate::core::{proxy_control, sysopt::Sysopt};
 use gethostname::gethostname;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -24,8 +25,8 @@ pub async fn get_sys_proxy() -> CmdResult<SystemProxy> {
 
     Ok(SystemProxy {
         enable,
-        server: format!("{host}:{port}"),
-        bypass,
+        server: format!("{host}:{port}").into(),
+        bypass: bypass.into(),
     })
 }
 
@@ -39,7 +40,10 @@ pub async fn get_auto_proxy() -> CmdResult<AutoProxy> {
     };
     let Autoproxy { enable, url } = auto_proxy;
 
-    Ok(AutoProxy { enable, url })
+    Ok(AutoProxy {
+        enable,
+        url: url.into(),
+    })
 }
 
 #[tauri::command]
@@ -52,10 +56,10 @@ pub fn get_embedded_server_port() -> CmdResult<u16> {
 #[specta::specta]
 pub fn get_system_hostname() -> String {
     match gethostname().into_string() {
-        Ok(name) => name,
+        Ok(name) => name.into(),
         Err(os_string) => {
             let fallback = format!("{os_string:?}");
-            fallback.trim_matches('"').to_string()
+            fallback.trim_matches('"').into()
         }
     }
 }
@@ -64,6 +68,9 @@ pub fn get_system_hostname() -> String {
 #[specta::specta]
 pub fn get_network_interfaces() -> Vec<String> {
     tauri_plugin_clash_verge_sysinfo::list_network_interfaces()
+        .into_iter()
+        .map(Into::into)
+        .collect()
 }
 
 #[tauri::command]
@@ -77,7 +84,7 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<crate::ipc::NetworkInterfa
     let mut result = Vec::new();
 
     for interface in interfaces {
-        if names.contains(&interface.name) {
+        if names.iter().any(|name| name == &interface.name) {
             result.push(interface.into());
         }
     }

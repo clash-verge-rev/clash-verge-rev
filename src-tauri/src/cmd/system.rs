@@ -2,6 +2,7 @@ use crate::core::{
     notification::{self, PendingFailure},
     runstate::{RUN_STATE, RunStateView},
 };
+use tristr::alias::String;
 
 /// Returns one coherent core/service snapshot instead of independently refreshed state.
 #[tauri::command]

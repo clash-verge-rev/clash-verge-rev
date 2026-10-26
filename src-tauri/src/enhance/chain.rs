@@ -4,8 +4,8 @@ use crate::{
     utils::{dirs, help},
 };
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 #[derive(Debug, Clone)]
 pub struct ChainItem {

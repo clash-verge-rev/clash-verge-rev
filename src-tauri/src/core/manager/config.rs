@@ -15,7 +15,6 @@ use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::StageRuntimeOutcome;
 use scopeguard::defer;
-use smartstring::alias::String;
 use std::{
     collections::HashSet,
     path::PathBuf,
@@ -23,6 +22,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::Error as MihomoError;
+use tristr::alias::String;
 
 /// A staging result separated from the policy that acts on it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -92,7 +92,7 @@ async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
     match crate::core::service::stage_runtime_by_service(path).await {
         Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
         Ok(StageRequest::Refused { code, message }) => {
-            let message = message.into();
+            let message = message;
             if StageRequest::is_about_the_bundle(code) {
                 StageAttempt::RefusedTheBundle(message)
             } else {

@@ -10,6 +10,7 @@ use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr as _,
 };
+use tristr::alias::String;
 
 #[derive(Default, Debug, Clone)]
 pub struct IClashTemp(pub Mapping);
@@ -84,12 +85,12 @@ impl IClashTemp {
         #[cfg(unix)]
         map.insert(
             "external-controller-unix".into(),
-            Self::guard_external_controller_ipc().into(),
+            Self::guard_external_controller_ipc().as_str().into(),
         );
         #[cfg(windows)]
         map.insert(
             "external-controller-pipe".into(),
-            Self::guard_external_controller_ipc().into(),
+            Self::guard_external_controller_ipc().as_str().into(),
         );
         map.insert("tun".into(), tun_config.into());
         cors_map.insert("allow-private-network".into(), true.into());
@@ -134,12 +135,18 @@ impl IClashTemp {
         config.insert("mixed-port".into(), mixed_port.into());
         config.insert("socks-port".into(), socks_port.into());
         config.insert("port".into(), port.into());
-        config.insert("external-controller".into(), ctrl.into());
+        config.insert("external-controller".into(), ctrl.as_str().into());
 
         #[cfg(unix)]
-        config.insert("external-controller-unix".into(), external_controller_unix.into());
+        config.insert(
+            "external-controller-unix".into(),
+            external_controller_unix.as_str().into(),
+        );
         #[cfg(windows)]
-        config.insert("external-controller-pipe".into(), external_controller_pipe.into());
+        config.insert(
+            "external-controller-pipe".into(),
+            external_controller_pipe.as_str().into(),
+        );
         config
     }
 
@@ -166,9 +173,9 @@ impl IClashTemp {
             port: Self::guard_port(config),
             server: Self::guard_client_ctrl(config),
             secret: config.get("secret").and_then(|value| match value {
-                Value::String(val_str) => Some(val_str.clone()),
-                Value::Bool(val_bool) => Some(val_bool.to_string()),
-                Value::Number(val_num) => Some(val_num.to_string()),
+                Value::String(val_str) => Some(val_str.clone().into()),
+                Value::Bool(val_bool) => Some(val_bool.to_string().into()),
+                Value::Number(val_num) => Some(val_num.to_string().into()),
                 _ => None,
             }),
         }
@@ -180,7 +187,7 @@ impl IClashTemp {
     /// 的严格 `BaseConfig` 反序列化，因此即使核心返回的字段与插件结构体不匹配也能取到。
     pub fn get_mode(&self) -> Option<String> {
         self.0.get("mode").and_then(|value| match value {
-            Value::String(val_str) => Some(val_str.clone()),
+            Value::String(val_str) => Some(val_str.clone().into()),
             _ => None,
         })
     }
@@ -276,7 +283,7 @@ impl IClashTemp {
                         false => Cow::Borrowed(val_str),
                     };
 
-                    SocketAddr::from_str(&val).ok().map(|s| s.to_string())
+                    SocketAddr::from_str(&val).ok().map(|s| s.to_string().into())
                 }
                 None => None,
             })
@@ -290,7 +297,7 @@ impl IClashTemp {
                 if socket.ip().is_unspecified() {
                     socket.set_ip(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)));
                 }
-                socket.to_string()
+                socket.to_string().into()
             }
             Err(_) => "127.0.0.1:9097".into(),
         }

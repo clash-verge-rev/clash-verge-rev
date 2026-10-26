@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Sequence, Value};
 use std::collections::HashSet;
+use tristr::alias::String;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SeqMap {
@@ -12,8 +13,8 @@ pub struct SeqMap {
 fn collect_proxy_names(seq: &Sequence) -> Vec<String> {
     seq.iter()
         .filter_map(|item| match item {
-            Value::Mapping(map) => map.get("name").and_then(Value::as_str).map(str::to_owned),
-            Value::String(name) => Some(name.to_owned()),
+            Value::Mapping(map) => map.get("name").and_then(Value::as_str).map(Into::into),
+            Value::String(name) => Some(name.to_owned().into()),
             _ => None,
         })
         .collect()
@@ -58,10 +59,10 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
             .into_iter()
             .filter(|item| {
                 if let Value::String(s) = item {
-                    !delete.contains(s)
+                    !delete.iter().any(|deleted| deleted == s)
                 } else if let Value::Mapping(m) = item {
                     if let Some(Value::String(name)) = m.get("name") {
-                        !delete.contains(name)
+                        !delete.iter().any(|deleted| deleted == name)
                     } else {
                         true
                     }
@@ -99,7 +100,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                         .into_iter()
                         .filter(|p| {
                             if let Value::String(name) = p {
-                                !delete.contains(name)
+                                !delete.iter().any(|deleted| deleted == name)
                             } else {
                                 true
                             }
@@ -119,12 +120,12 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 let mut seen_proxy_names = HashSet::new();
                 for name in &added_proxy_names {
                     if seen_proxy_names.insert(name.clone()) {
-                        merged_proxies.push(Value::String(name.clone()));
+                        merged_proxies.push(Value::String(name.clone().into()));
                     }
                 }
                 for value in base_group_proxies {
                     if let Value::String(name) = &value
-                        && !seen_proxy_names.insert(name.to_owned())
+                        && !seen_proxy_names.insert(name.to_owned().into())
                     {
                         continue;
                     }
@@ -180,7 +181,7 @@ proxy-groups:
         let seq = SeqMap {
             prepend: Sequence::new(),
             append: Sequence::new(),
-            delete: vec!["proxy1".to_string()],
+            delete: vec!["proxy1".into()],
         };
 
         config = use_seq(seq, config, "proxies");
@@ -317,7 +318,7 @@ proxy-groups: "invalid"
         let seq = SeqMap {
             prepend: Sequence::new(),
             append: Sequence::new(),
-            delete: vec!["proxy1".to_string()],
+            delete: vec!["proxy1".into()],
         };
 
         config = use_seq(seq, config, "proxies");

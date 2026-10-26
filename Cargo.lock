@@ -1139,7 +1139,6 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.1",
- "smartstring",
  "socket2",
  "specta",
  "specta-typescript",
@@ -1169,6 +1168,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
+ "tristr",
  "warp",
  "webpki-roots",
  "windows 0.62.2",
@@ -6721,18 +6721,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "smartstring"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fb72c633efbaa2dd666986505016c32c3044395ceaf881518399d2f4127ee29"
-dependencies = [
- "autocfg",
- "serde",
- "static_assertions",
- "version_check",
-]
-
-[[package]]
 name = "socket2"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8503,6 +8491,14 @@ dependencies = [
  "arc-swap",
  "serde",
  "stable_deref_trait",
+]
+
+[[package]]
+name = "tristr"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "specta",
 ]
 
 [[package]]

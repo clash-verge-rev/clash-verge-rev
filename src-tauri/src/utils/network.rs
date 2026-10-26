@@ -5,10 +5,10 @@ use reqwest::{
     Client, Proxy, StatusCode,
     header::{HeaderMap, HeaderValue, USER_AGENT},
 };
-use smartstring::alias::String;
 use std::{sync::Arc, time::Duration};
 use sysproxy::Sysproxy;
 use tauri::Url;
+use tristr::alias::String;
 
 #[derive(Debug)]
 pub struct HttpResponse {
@@ -57,7 +57,7 @@ impl NetworkManager {
 
     fn build_client(
         &self,
-        proxy_url: Option<std::string::String>,
+        proxy_url: Option<String>,
         default_headers: HeaderMap,
         accept_invalid_certs: bool,
         timeout_secs: Option<u64>,
@@ -76,7 +76,7 @@ impl NetworkManager {
 
         // 设置代理
         if let Some(proxy_str) = proxy_url {
-            let proxy = Proxy::all(proxy_str)?;
+            let proxy = Proxy::all(proxy_str.as_str())?;
             builder = builder.proxy(proxy);
         } else {
             builder = builder.no_proxy();
@@ -226,15 +226,15 @@ impl NetworkManager {
         accept_invalid_certs: bool,
         tls_root_mode: TlsRootMode,
     ) -> Result<Client> {
-        let proxy_url: Option<std::string::String> = match proxy_type {
+        let proxy_url: Option<String> = match proxy_type {
             ProxyType::None => None,
             ProxyType::Localhost => {
                 let port = MixedPort::desired().await;
-                Some(format!("http://127.0.0.1:{port}"))
+                Some(format!("http://127.0.0.1:{port}").into())
             }
             ProxyType::System => {
                 if let Ok(p @ Sysproxy { enable: true, .. }) = Sysproxy::get_system_proxy() {
-                    Some(format!("http://{}:{}", p.host, p.port))
+                    Some(format!("http://{}:{}", p.host, p.port).into())
                 } else {
                     None
                 }

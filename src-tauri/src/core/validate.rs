@@ -1,7 +1,6 @@
 use anyhow::Result;
 use scopeguard::defer;
 use serde::Serialize;
-use smartstring::alias::String;
 use std::{
     fmt,
     hash::{DefaultHasher, Hash as _, Hasher as _},
@@ -10,6 +9,7 @@ use std::{
 };
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
+use tristr::alias::String;
 
 use crate::config::Config;
 use crate::core::handle;
@@ -114,14 +114,8 @@ impl fmt::Display for ValidationSkipReason {
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ValidationOutcome {
     Valid,
-    Invalid {
-        kind: ValidationErrorKind,
-        #[specta(type = std::string::String)]
-        message: String,
-    },
-    Skipped {
-        reason: ValidationSkipReason,
-    },
+    Invalid { kind: ValidationErrorKind, message: String },
+    Skipped { reason: ValidationSkipReason },
     Busy,
 }
 

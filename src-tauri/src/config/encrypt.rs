@@ -7,6 +7,7 @@ use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cell::Cell;
 use std::future::Future;
+use tristr::alias::String;
 
 const NONCE_LENGTH: usize = 12;
 
@@ -28,7 +29,7 @@ pub fn encrypt_data(data: &str) -> Result<String, Box<dyn std::error::Error>> {
 
     let mut combined = nonce.to_vec();
     combined.extend(ciphertext);
-    Ok(STANDARD.encode(combined))
+    Ok(STANDARD.encode(combined).into())
 }
 
 pub fn decrypt_data(encrypted: &str) -> Result<String, Box<dyn std::error::Error>> {
@@ -46,7 +47,10 @@ pub fn decrypt_data(encrypted: &str) -> Result<String, Box<dyn std::error::Error
         .decrypt(nonce.into(), ciphertext)
         .map_err(|e| format!("Decryption failed: {e}"))?;
 
-    String::from_utf8(plaintext).map_err(|e| e.into())
+    // from_utf8 exists only on the std String type; the tristr alias shadows the bare name.
+    std::string::String::from_utf8(plaintext)
+        .map_err(|e| e.into())
+        .map(Into::into)
 }
 
 pub fn serialize_encrypted<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>

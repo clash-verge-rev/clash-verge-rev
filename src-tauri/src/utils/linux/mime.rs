@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use tristr::alias::String;
 
 pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<()> {
     let Some(path) = mimeapps_list_path() else {
@@ -46,19 +47,19 @@ pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<(
             if trimmed.eq_ignore_ascii_case("[Default Applications]") {
                 default_present = true;
                 current_section = Some(SectionKind::DefaultApplications);
-                output_lines.push("[Default Applications]".to_string());
+                output_lines.push("[Default Applications]".into());
                 continue;
             } else if trimmed.eq_ignore_ascii_case("[Added Associations]") {
                 current_section = Some(SectionKind::AddedAssociations);
-                output_lines.push("[Added Associations]".to_string());
+                output_lines.push("[Added Associations]".into());
                 continue;
             }
         }
 
         if current_section.is_some() {
-            section_buffer.push(line.to_string());
+            section_buffer.push(line.into());
         } else {
-            output_lines.push(line.to_string());
+            output_lines.push(line.into());
         }
     }
 
@@ -78,9 +79,9 @@ pub fn ensure_mimeapps_entries(desktop_file: &str, schemes: &[&str]) -> Result<(
         if output_lines.last().is_some_and(|line| !line.is_empty()) {
             output_lines.push(String::new());
         }
-        output_lines.push("[Default Applications]".to_string());
+        output_lines.push("[Default Applications]".into());
         for &scheme in schemes {
-            output_lines.push(format!("x-scheme-handler/{scheme}={desktop_file};"));
+            output_lines.push(format!("x-scheme-handler/{scheme}={desktop_file};").into());
         }
     }
 
@@ -171,7 +172,7 @@ fn flush_section(
                 .split(';')
                 .filter_map(|value| {
                     let trimmed = value.trim();
-                    (!trimmed.is_empty()).then(|| trimmed.to_string())
+                    (!trimmed.is_empty()).then(|| trimmed.into())
                 })
                 .collect();
 
@@ -187,7 +188,7 @@ fn flush_section(
                     .split(';')
                     .filter_map(|value| {
                         let trimmed = value.trim();
-                        (!trimmed.is_empty()).then(|| trimmed.to_string())
+                        (!trimmed.is_empty()).then(|| trimmed.into())
                     })
                     .collect();
 
@@ -203,10 +204,10 @@ fn flush_section(
                         merged_values.insert(0, moved);
                     }
                 } else {
-                    merged_values.insert(0, desktop_file.to_string());
+                    merged_values.insert(0, desktop_file.into());
                 }
 
-                let mut merged_line = format!("{existing_prefix}x-scheme-handler/{scheme}=");
+                let mut merged_line: String = format!("{existing_prefix}x-scheme-handler/{scheme}=").into();
                 merged_line.push_str(&merged_values.join(";"));
                 merged_line.push(';');
 
@@ -222,16 +223,16 @@ fn flush_section(
             if let Some(pos) = values.iter().position(|value| value == desktop_file) {
                 if pos != 0 {
                     values.remove(pos);
-                    values.insert(0, desktop_file.to_string());
+                    values.insert(0, desktop_file.into());
                     *changed = true;
                 }
             } else {
-                values.insert(0, desktop_file.to_string());
+                values.insert(0, desktop_file.into());
                 *changed = true;
             }
 
             let prefix = line.chars().take_while(|c| c.is_whitespace()).collect::<String>();
-            let mut new_line = format!("{prefix}x-scheme-handler/{scheme}=");
+            let mut new_line: String = format!("{prefix}x-scheme-handler/{scheme}=").into();
             new_line.push_str(&values.join(";"));
             new_line.push(';');
 
@@ -253,7 +254,7 @@ fn flush_section(
     if ensure_all {
         for &scheme in schemes {
             if !seen.contains_key(scheme) {
-                processed.push(format!("x-scheme-handler/{scheme}={desktop_file};"));
+                processed.push(format!("x-scheme-handler/{scheme}={desktop_file};").into());
                 *changed = true;
             }
         }

@@ -5,6 +5,7 @@ use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf};
+use tristr::alias::String;
 
 pub(crate) const GEO_ASSETS: &[&str] = &[
     "Country.mmdb",
@@ -64,7 +65,7 @@ struct ProviderPathOwners {
 pub(crate) fn resolve_provider_path_conflicts(config: &mut Mapping, config_root: &Path) -> Result<()> {
     let config_root = std::fs::canonicalize(config_root)?;
     let mut paths = BTreeMap::<String, ProviderPathOwners>::new();
-    let mut reserved: HashSet<String> = GEO_ASSETS.iter().map(|name| (*name).to_owned()).collect();
+    let mut reserved: HashSet<String> = GEO_ASSETS.iter().map(|name| (*name).into()).collect();
     for section in ["proxy-providers", "rule-providers"] {
         let Some(providers) = config.get(section).and_then(Value::as_mapping) else {
             continue;
@@ -89,7 +90,7 @@ pub(crate) fn resolve_provider_path_conflicts(config: &mut Mapping, config_root:
             match (is_remote, provider.get("url").and_then(Value::as_str)) {
                 (true, Some(url)) => owners
                     .remote
-                    .entry(url.to_owned())
+                    .entry(url.into())
                     .or_default()
                     .push((section, name.clone())),
                 _ => owners.local = true,
@@ -105,7 +106,7 @@ pub(crate) fn resolve_provider_path_conflicts(config: &mut Mapping, config_root:
         for (url, providers) in owners.remote {
             let replacement = allocate_provider_destination(&destination, &url, &mut reserved);
             for (section, name) in providers {
-                config[section][&name]["path"] = Value::String(replacement.clone());
+                config[section][&name]["path"] = Value::String(replacement.clone().into());
                 logging!(
                     warn,
                     Type::Config,
@@ -131,15 +132,16 @@ fn allocate_provider_destination(destination: &str, url: &str, reserved: &mut Ha
     let mut suffix = String::new();
     let mut sequence = 0;
     loop {
-        let candidate = path
+        let candidate: String = path
             .with_file_name(format!("cvr-{digest}{suffix}{extension}"))
             .to_string_lossy()
-            .replace('\\', "/");
+            .replace('\\', "/")
+            .into();
         if reserved.insert(candidate.clone()) {
             return candidate;
         }
         sequence += 1;
-        suffix = format!("-{sequence}");
+        suffix = format!("-{sequence}").into();
     }
 }
 
@@ -167,7 +169,7 @@ fn collect_runtime_parts(mut config: Value, config_root: &Path) -> Result<Runtim
     )?;
     for filename in GEO_ASSETS {
         let source = config_root.join(filename);
-        if source.is_file() && destinations.insert((*filename).to_string()) {
+        if source.is_file() && destinations.insert((*filename).into()) {
             assets.push(RuntimeAsset {
                 source: std::fs::canonicalize(&source)?.to_string_lossy().into_owned(),
                 destination: (*filename).to_string(),
@@ -228,9 +230,9 @@ fn collect_provider_assets(
                         }
                         remote_providers.push(RemoteProviderRef {
                             section,
-                            name: name.as_str().unwrap_or_default().to_owned(),
+                            name: name.as_str().unwrap_or_default().into(),
                             provider: RemoteProvider {
-                                destination: destination.clone(),
+                                destination: destination.clone().into(),
                                 url,
                             },
                         });
@@ -259,13 +261,13 @@ fn collect_provider_assets(
                 if destinations.insert(destination.clone()) {
                     assets.push(RuntimeAsset {
                         source: source.to_string_lossy().into_owned(),
-                        destination: destination.clone(),
+                        destination: destination.clone().into(),
                     });
                 }
                 destination
             }
         };
-        provider.insert(Value::String("path".to_owned()), Value::String(destination));
+        provider.insert(Value::String("path".to_owned()), Value::String(destination.into()));
     }
     Ok(())
 }
@@ -339,7 +341,7 @@ fn normalized_destination(relative: &Path) -> Result<String> {
     if destination.as_os_str().is_empty() {
         bail!("local runtime provider destination is empty");
     }
-    Ok(destination.to_string_lossy().replace('\\', "/"))
+    Ok(destination.to_string_lossy().replace('\\', "/").into())
 }
 
 #[cfg(test)]
@@ -385,12 +387,12 @@ mod tests {
         for declared in readback {
             assert!(bundle.remote_providers.contains(&declared.provider));
             assert_eq!(
-                config[declared.section][&declared.name]["path"],
+                config[declared.section][declared.name.as_str()]["path"],
                 declared.provider.destination
             );
             assert_eq!(
-                config[declared.section][&declared.name]["url"],
-                original[declared.section][&declared.name]["url"]
+                config[declared.section][declared.name.as_str()]["url"],
+                original[declared.section][declared.name.as_str()]["url"]
             );
         }
         std::fs::remove_dir_all(root)?;

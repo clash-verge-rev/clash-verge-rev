@@ -16,6 +16,7 @@ use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tokio::sync::oneshot;
+use tristr::alias::String;
 use warp::Filter as _;
 
 const INSTANCE_TOKEN_HEADER: &str = "x-instance-token";
@@ -141,7 +142,7 @@ async fn notify_existing_instance(record: &InstanceRecord) -> bool {
     let request = client.get(format!("http://127.0.0.1:{}/commands/visible", record.port));
 
     request
-        .header(INSTANCE_TOKEN_HEADER, &record.token)
+        .header(INSTANCE_TOKEN_HEADER, record.token.as_str())
         .send()
         .await
         .is_ok_and(|response| response.status().is_success())

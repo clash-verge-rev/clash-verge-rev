@@ -64,7 +64,7 @@ impl RunStateEnv for RealEnv {
         Ok(ServiceVersionReply {
             core,
             code: response.code,
-            message: response.message,
+            message: response.message.into(),
             protocol: response.data,
         })
     }
@@ -123,6 +123,7 @@ mod fake {
 
     use super::{PendingAction, RunState, RunStateEnv, ServiceVersionReply};
     use crate::core::manager::RunningMode;
+    use tristr::alias::String;
 
     /// A fail-closed scripted machine that records outbound effects.
     #[derive(Debug)]
@@ -163,7 +164,7 @@ mod fake {
             self.with_evidence(true).always_replying(Ok(ServiceVersionReply {
                 core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
                 code: 0,
-                message: "ok".to_owned(),
+                message: "ok".into(),
                 protocol: Some(ProtocolInfo::current()),
             }))
         }
@@ -173,7 +174,7 @@ mod fake {
             self.with_evidence(true).always_replying(Ok(ServiceVersionReply {
                 core: Some(clash_verge_service_ipc::CoreAvailability::Ready),
                 code: 0,
-                message: "ok".to_owned(),
+                message: "ok".into(),
                 protocol: None,
             }))
         }
@@ -181,12 +182,12 @@ mod fake {
         #[must_use]
         pub fn service_unreachable(self) -> Self {
             self.with_evidence(true)
-                .always_replying(Err("ipc transport refused".to_owned()))
+                .always_replying(Err("ipc transport refused".into()))
         }
 
         #[must_use]
         pub fn evidence_unavailable(mut self) -> Self {
-            self.evidence = Err("registry probe failed".to_owned());
+            self.evidence = Err("registry probe failed".into());
             self
         }
 
@@ -236,7 +237,7 @@ mod fake {
 
         #[must_use]
         pub fn privileged_operations_fail(self, reason: &str) -> Self {
-            *self.privileged_outcome.lock() = Err(reason.to_owned());
+            *self.privileged_outcome.lock() = Err(reason.into());
             self
         }
 
@@ -256,7 +257,7 @@ mod fake {
                 replies
                     .first()
                     .cloned()
-                    .unwrap_or_else(|| Err("no service configured".to_owned()))
+                    .unwrap_or_else(|| Err("no service configured".into()))
             };
             reply.map_err(|error| anyhow!(error))
         }

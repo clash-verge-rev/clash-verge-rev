@@ -2,6 +2,8 @@ use crate::utils::dirs;
 use anyhow::{Context as _, Result};
 use clash_verge_service_ipc::{OwnerCredentials, OwnerIdentity};
 use std::path::Path;
+#[cfg(windows)]
+use tristr::alias::String;
 
 pub(crate) fn current_owner_credentials() -> Result<OwnerCredentials> {
     current_owner_credentials_for_root(&dirs::app_home_dir()?)
@@ -39,16 +41,16 @@ pub(crate) fn current_owner_credentials_for_root(app_root: &Path) -> Result<Owne
 }
 
 #[cfg(windows)]
-fn windows_owner_credentials(app_data_root: &Path) -> Result<(OwnerIdentity, Option<String>)> {
+fn windows_owner_credentials(app_data_root: &Path) -> Result<(OwnerIdentity, Option<std::string::String>)> {
     let sid = windows_owner::current_sid()?;
     let token = windows_owner::load_or_create_token(app_data_root, &sid)?;
-    Ok((OwnerIdentity::Windows { sid }, Some(token)))
+    Ok((OwnerIdentity::Windows { sid: sid.into() }, Some(token.into())))
 }
 
 #[cfg(windows)]
 fn windows_current_identity() -> Result<OwnerIdentity> {
     Ok(OwnerIdentity::Windows {
-        sid: windows_owner::current_sid()?,
+        sid: windows_owner::current_sid()?.into(),
     })
 }
 
@@ -79,7 +81,7 @@ pub(crate) fn repair_app_data_root_owner(app_data_root: &Path) -> Result<()> {
 #[cfg(windows)]
 pub(crate) fn current_user_pipe_sddl() -> Result<String> {
     let sid = windows_owner::current_sid()?;
-    Ok(format!("D:P(A;;GA;;;{sid})(A;;GA;;;SY)(A;;GA;;;BA)"))
+    Ok(format!("D:P(A;;GA;;;{sid})(A;;GA;;;SY)(A;;GA;;;BA)").into())
 }
 
 #[cfg(windows)]
@@ -644,17 +646,19 @@ mod windows_owner {
         }
         let value = LocalWideString(value);
         let length = (0..).take_while(|index| unsafe { *value.0.add(*index) } != 0).count();
-        String::from_utf16(unsafe { std::slice::from_raw_parts(value.0, length) })
+        // from_utf16 exists only on the std String type; the tristr alias shadows the bare name.
+        std::string::String::from_utf16(unsafe { std::slice::from_raw_parts(value.0, length) })
             .context("process SID is not valid UTF-16")
+            .map(Into::into)
     }
 
     fn encode_token(token: &[u8; TOKEN_BYTES]) -> String {
-        let mut encoded = String::with_capacity(TOKEN_BYTES * 2);
+        let mut encoded = std::string::String::with_capacity(TOKEN_BYTES * 2);
         for byte in token {
             use std::fmt::Write as _;
             let _ = write!(encoded, "{byte:02x}");
         }
-        encoded
+        encoded.into()
     }
 
     fn wide_path(path: &Path) -> Result<Vec<u16>> {

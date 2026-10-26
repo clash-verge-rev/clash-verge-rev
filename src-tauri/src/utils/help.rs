@@ -11,6 +11,7 @@ use std::{
     str::FromStr,
 };
 use tokio::io::AsyncWriteExt as _;
+use tristr::alias::String;
 
 pub async fn read_yaml<T: DeserializeOwned>(path: &Path) -> Result<T> {
     if !tokio::fs::try_exists(path).await.unwrap_or(false) {
@@ -34,12 +35,13 @@ pub async fn read_mapping(path: &Path) -> Result<Mapping> {
     let bytes = tokio::fs::read(path)
         .await
         .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
-    let yaml_str =
-        String::from_utf8(bytes).with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    // from_utf8 exists only on the std String type; the tristr alias shadows the bare name.
+    let yaml_str = std::string::String::from_utf8(bytes)
+        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
     let label = path.to_path_buf();
 
     // Parsing a multi-megabyte profile is pure CPU; keep it off the async worker.
-    AsyncHandler::spawn_blocking(move || parse_mapping(yaml_str, label))
+    AsyncHandler::spawn_blocking(move || parse_mapping(yaml_str.into(), label))
         .await
         .map_err(|join| anyhow!("yaml parse task failed: {join}"))?
 }
@@ -139,7 +141,7 @@ const ALPHABET: [char; 62] = [
 
 pub fn get_uid(prefix: &str) -> String {
     let id = nanoid!(11, &ALPHABET);
-    format!("{prefix}{id}")
+    format!("{prefix}{id}").into()
 }
 
 pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
@@ -171,7 +173,7 @@ pub fn mask_url(url: &str) -> String {
     let scheme_and_host = &path_part[..host_end];
     let path = &path_part[host_end..]; // starts with '/' or empty
 
-    let mut result = scheme_and_host.to_owned();
+    let mut result: String = scheme_and_host.into();
 
     if !path.is_empty() {
         let masked: Vec<&str> = path
@@ -186,8 +188,8 @@ pub fn mask_url(url: &str) -> String {
         let masked_query: Vec<String> = query
             .split('&')
             .map(|param| match param.find('=') {
-                Some(eq) => format!("{}=***", &param[..eq]),
-                None => param.to_owned(),
+                Some(eq) => format!("{}=***", &param[..eq]).into(),
+                None => param.into(),
             })
             .collect();
         result.push_str(&masked_query.join("&"));
@@ -198,7 +200,8 @@ pub fn mask_url(url: &str) -> String {
 
 /// Masks every HTTP(S) URL embedded in a log string while preserving surrounding text.
 pub fn mask_err(err: &str) -> String {
-    let mut result = String::with_capacity(err.len());
+    // with_capacity exists only on the std String type; the tristr alias shadows the bare name.
+    let mut result = std::string::String::with_capacity(err.len());
     let mut remaining = err;
 
     loop {
@@ -224,7 +227,7 @@ pub fn mask_err(err: &str) -> String {
         remaining = &remaining[url_end..];
     }
 
-    result
+    result.into()
 }
 
 pub fn get_last_part_and_decode(url: &str) -> Option<String> {
@@ -235,7 +238,8 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
     Some(
         percent_encoding::percent_decode_str(last_segment)
             .decode_utf8_lossy()
-            .to_string(),
+            .to_string()
+            .into(),
     )
 }
 
@@ -277,15 +281,15 @@ pub fn linux_elevator() -> String {
         Ok(output) => {
             if !output.stdout.is_empty() {
                 if let Ok(path) = std::str::from_utf8(&output.stdout) {
-                    path.trim().to_string()
+                    path.trim().into()
                 } else {
-                    "sudo".to_string()
+                    "sudo".into()
                 }
             } else {
-                "sudo".to_string()
+                "sudo".into()
             }
         }
-        Err(_) => "sudo".to_string(),
+        Err(_) => "sudo".into(),
     }
 }
 
