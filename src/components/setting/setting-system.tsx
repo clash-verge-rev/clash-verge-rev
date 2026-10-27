@@ -58,8 +58,6 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={async (e) => {
             try {
-              // 先触发UI更新立即看到反馈
-              onChangeData({ enable_auto_launch: e })
               await patchVerge({ enable_auto_launch: e })
               return Promise.resolve()
             } catch (error) {
