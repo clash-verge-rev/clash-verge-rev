@@ -17,7 +17,7 @@ fn deep_merge(a: &mut Value, b: Value) {
 }
 
 pub fn use_merge(merge: &Mapping, mut config: Mapping) -> Mapping {
-    for (key, value) in use_lowercase(merge.clone()) {
+    for (key, value) in use_lowercase(merge) {
         match (config.get_mut(&key), value) {
             (Some(Value::Mapping(existing)), Value::Mapping(overlay)) if key.as_str() == Some("dns") => {
                 existing.extend(overlay);
