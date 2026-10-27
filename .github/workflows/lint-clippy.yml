@@ -2,6 +2,13 @@ name: Clippy Lint
 
 on:
   pull_request:
+    paths:
+      - "src-tauri/**"
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/lint-clippy.yml"
   workflow_dispatch:
 env:
   HUSKY: 0
@@ -23,28 +30,6 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Check src-tauri changes
-        if: github.event_name != 'workflow_dispatch'
-        id: check_changes
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            rust:
-              - 'src-tauri/**'
-
-      - name: Skip if src-tauri not changed
-        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust != 'true'
-        run: echo "No src-tauri changes, skipping clippy lint."
-
-      - name: Continue if src-tauri changed
-        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true'
-        run: echo "src-tauri changed, running clippy lint."
-
-      - name: Manual trigger - always run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "Manual trigger detected: skipping changes check and running clippy."
-
       - name: Checkout Repository
         uses: actions/checkout@v7
 
@@ -79,7 +64,7 @@ jobs:
         run: cargo clippy-all
 
       - name: Run Windows security tests
-        if: matrix.os == 'windows-latest' && (github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true')
+        if: matrix.os == 'windows-latest'
         working-directory: ./src-tauri
         run: cargo test --all-features --target ${{ matrix.target }}
 

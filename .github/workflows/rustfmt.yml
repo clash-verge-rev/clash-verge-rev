@@ -6,6 +6,10 @@ name: Check Formatting
 
 on:
   pull_request:
+    paths:
+      - "src-tauri/**"
+      - "**/*.rs"
+      - ".github/workflows/rustfmt.yml"
 
 permissions:
   contents: read
@@ -19,25 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Check Rust changes
-        id: check_rust
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            rust:
-              - 'src-tauri/**'
-              - '**/*.rs'
-
-      - name: Skip if no Rust changes
-        if: steps.check_rust.outputs.rust != 'true'
-        run: echo "No Rust changes, skipping rustfmt."
-
       - name: install Rust stable and rustfmt
-        if: steps.check_rust.outputs.rust == 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
 
       - name: run cargo fmt
-        if: steps.check_rust.outputs.rust == 'true'
         run: cargo fmt --manifest-path ./src-tauri/Cargo.toml --all -- --check
