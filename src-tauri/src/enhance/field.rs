@@ -25,14 +25,7 @@ fn lowercase_key(key: &str) -> Value {
 }
 
 pub fn use_lowercase(config: &Mapping) -> Mapping {
-    let mut lowercased = Mapping::new();
-
-    for (key, value) in config.into_iter() {
-        if let Some(key_str) = key.as_str() {
-            lowercased.insert(lowercase_key(key_str), value.clone());
-        }
-    }
-    lowercased
+    use_lowercase_owned(config.clone())
 }
 
 pub fn use_lowercase_owned(config: Mapping) -> Mapping {
