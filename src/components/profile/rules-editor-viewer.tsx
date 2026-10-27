@@ -397,9 +397,9 @@ export const RulesEditorViewer = (props: Props) => {
       return
     }
 
-    setPrependSeq(obj?.prepend || [])
-    setAppendSeq(obj?.append || [])
-    setDeleteSeq(obj?.delete || [])
+    setPrependSeq((obj?.prepend || []).filter((rule) => rule !== null))
+    setAppendSeq((obj?.append || []).filter((rule) => rule !== null))
+    setDeleteSeq((obj?.delete || []).filter((rule) => rule !== null))
     hasLoadedSeqConfigRef.current = true
   }, [property])
 
@@ -417,9 +417,9 @@ export const RulesEditorViewer = (props: Props) => {
 
     hasLoadedSeqConfigRef.current = true
     startTransition(() => {
-      setPrependSeq(obj?.prepend ?? [])
-      setAppendSeq(obj?.append ?? [])
-      setDeleteSeq(obj?.delete ?? [])
+      setPrependSeq((obj?.prepend ?? []).filter((rule) => rule !== null))
+      setAppendSeq((obj?.append ?? []).filter((rule) => rule !== null))
+      setDeleteSeq((obj?.delete ?? []).filter((rule) => rule !== null))
     })
     setVisualization(true)
   }
