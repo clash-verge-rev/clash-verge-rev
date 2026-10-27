@@ -199,35 +199,25 @@ async fn collect_profile_items(profiles: &IProfiles) -> Result<ProfileItems> {
 
     let name = current_item.name.clone().unwrap_or_default();
 
+    let ProfileItems {
+        merge_item: default_merge,
+        script_item: default_script,
+        rules_item: default_rules,
+        proxies_item: default_proxies,
+        groups_item: default_groups,
+        global_merge: default_global_merge,
+        global_script: default_global_script,
+        ..
+    } = ProfileItems::default();
+
     let (merge_item, script_item, rules_item, proxies_item, groups_item, global_merge, global_script) = tokio::join!(
-        chain_item_or_default(profiles.get_item(&merge_uid).ok(), || ChainItem {
-            uid: "".into(),
-            data: ChainType::Merge(Mapping::new()),
-        },),
-        chain_item_or_default(profiles.get_item(&script_uid).ok(), || ChainItem {
-            uid: "".into(),
-            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-        },),
-        chain_item_or_default(profiles.get_item(&rules_uid).ok(), || ChainItem {
-            uid: "".into(),
-            data: ChainType::Rules(SeqMap::default()),
-        },),
-        chain_item_or_default(profiles.get_item(&proxies_uid).ok(), || ChainItem {
-            uid: "".into(),
-            data: ChainType::Proxies(SeqMap::default()),
-        },),
-        chain_item_or_default(profiles.get_item(&groups_uid).ok(), || ChainItem {
-            uid: "".into(),
-            data: ChainType::Groups(SeqMap::default()),
-        },),
-        chain_item_or_default(profiles.get_item("Merge").ok(), || ChainItem {
-            uid: "Merge".into(),
-            data: ChainType::Merge(Mapping::new()),
-        },),
-        chain_item_or_default(profiles.get_item("Script").ok(), || ChainItem {
-            uid: "Script".into(),
-            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-        },),
+        chain_item_or_default(profiles.get_item(&merge_uid).ok(), || default_merge,),
+        chain_item_or_default(profiles.get_item(&script_uid).ok(), || default_script,),
+        chain_item_or_default(profiles.get_item(&rules_uid).ok(), || default_rules,),
+        chain_item_or_default(profiles.get_item(&proxies_uid).ok(), || default_proxies,),
+        chain_item_or_default(profiles.get_item(&groups_uid).ok(), || default_groups,),
+        chain_item_or_default(profiles.get_item("Merge").ok(), || default_global_merge,),
+        chain_item_or_default(profiles.get_item("Script").ok(), || default_global_script,),
     );
 
     Ok(ProfileItems {
@@ -243,16 +233,16 @@ async fn collect_profile_items(profiles: &IProfiles) -> Result<ProfileItems> {
     })
 }
 
-async fn process_global_items(
+async fn process_override_items(
     mut config: Mapping,
     mut exists_keys: Vec<String>,
     mut result_map: HashMap<String, ResultLog>,
-    global_merge: ChainItem,
-    global_script: ChainItem,
+    merge_item: ChainItem,
+    script_item: ChainItem,
     profile_name: &String,
     authoritative: &AuthoritativeFields,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    if let ChainType::Merge(merge) = global_merge.data {
+    if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
         let before = authoritative.current(&config);
         config = use_merge(&merge, config);
@@ -262,11 +252,11 @@ async fn process_global_items(
             .map(discarded_note)
             .collect();
         if !notes.is_empty() {
-            result_map.entry(global_merge.uid).or_default().extend(notes);
+            result_map.entry(merge_item.uid).or_default().extend(notes);
         }
     }
 
-    if let ChainType::Script(script) = global_script.data {
+    if let ChainType::Script(script) = script_item.data {
         let before = authoritative.current(&config);
         let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.clone()).await;
         exists_keys.extend(changed_keys);
@@ -277,7 +267,7 @@ async fn process_global_items(
                 .into_iter()
                 .map(discarded_note),
         );
-        result_map.insert(global_script.uid, logs);
+        result_map.insert(script_item.uid, logs);
     }
 
     (config, exists_keys, result_map)
@@ -542,46 +532,6 @@ fn ensure_lan_bind_address(mut config: Mapping) -> Mapping {
     }
 
     config
-}
-
-async fn process_profile_items(
-    mut config: Mapping,
-    mut exists_keys: Vec<String>,
-    mut result_map: HashMap<String, ResultLog>,
-    merge_item: ChainItem,
-    script_item: ChainItem,
-    profile_name: &String,
-    authoritative: &AuthoritativeFields,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    if let ChainType::Merge(merge) = merge_item.data {
-        exists_keys.extend(use_keys(&merge));
-        let before = authoritative.current(&config);
-        config = use_merge(&merge, config);
-        let notes: ResultLog = authoritative
-            .overridden(&before, &authoritative.current(&config))
-            .into_iter()
-            .map(discarded_note)
-            .collect();
-        if !notes.is_empty() {
-            result_map.entry(merge_item.uid).or_default().extend(notes);
-        }
-    }
-
-    if let ChainType::Script(script) = script_item.data {
-        let before = authoritative.current(&config);
-        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.clone()).await;
-        exists_keys.extend(changed_keys);
-        config = res_config;
-        logs.extend(
-            authoritative
-                .overridden(&before, &authoritative.current(&config))
-                .into_iter()
-                .map(discarded_note),
-        );
-        result_map.insert(script_item.uid, logs);
-    }
-
-    (config, exists_keys, result_map)
 }
 
 /// Merges the app's clash config over the profile; switches are parameters to keep it pure.
@@ -935,7 +885,7 @@ pub async fn enhance(
 
     let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
 
-    let (config, exists_keys, result_map) = process_global_items(
+    let (config, exists_keys, result_map) = process_override_items(
         config,
         exists_keys,
         result_map,
@@ -946,7 +896,7 @@ pub async fn enhance(
     )
     .await;
 
-    let (config, exists_keys, result_map) = process_profile_items(
+    let (config, exists_keys, result_map) = process_override_items(
         config,
         exists_keys,
         result_map,
@@ -1428,7 +1378,7 @@ mod authoritative_field_tests {
 mod tests {
     use super::{
         AuthoritativeFields, ChainItem, ChainType, Mapping, cleanup_proxy_groups, ensure_lan_bind_address,
-        process_global_items, process_profile_items, use_keys,
+        process_override_items, use_keys,
     };
     use std::collections::HashMap;
 
@@ -1476,7 +1426,7 @@ mod tests {
                 data: ChainType::Merge(merge.clone()),
             };
             let profile_name = "test-profile".into();
-            let (config, keys, logs) = process_global_items(
+            let (config, keys, logs) = process_override_items(
                 config,
                 vec![],
                 HashMap::new(),
@@ -1486,7 +1436,7 @@ mod tests {
                 &authoritative,
             )
             .await;
-            let (config, _, logs) = process_profile_items(
+            let (config, _, logs) = process_override_items(
                 config,
                 keys,
                 logs,
@@ -1564,7 +1514,7 @@ mod tests {
 
         let profile_name = "test-profile".into();
         let authoritative = AuthoritativeFields::capture(&config, &[], Mapping::new());
-        let (config, exists_keys, result_map) = process_global_items(
+        let (config, exists_keys, result_map) = process_override_items(
             config,
             exists_keys,
             HashMap::new(),
@@ -1574,7 +1524,7 @@ mod tests {
             &authoritative,
         )
         .await;
-        let (config, exists_keys, _) = process_profile_items(
+        let (config, exists_keys, _) = process_override_items(
             config,
             exists_keys,
             result_map,
