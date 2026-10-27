@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+// CI path-gate probe: Rust-only change, no frontend side effects.
+
 use std::process::ExitCode;
 #[cfg(not(all(feature = "perf-harness", target_os = "macos")))]
 use std::sync::atomic::{AtomicUsize, Ordering};
