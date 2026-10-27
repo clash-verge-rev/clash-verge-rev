@@ -22,12 +22,6 @@ pub enum ChainType {
     Groups(SeqMap),
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum ChainSupport {
-    Mihomo,
-    MihomoAlpha,
-}
-
 // Helper trait to allow async conversion
 pub trait AsyncChainItemFrom {
     async fn from_async(item: &PrfItem) -> Option<ChainItem>;
@@ -68,13 +62,11 @@ impl AsyncChainItemFrom for Option<ChainItem> {
 }
 impl ChainItem {
     /// 内建支持一些脚本
-    pub fn builtin() -> Vec<(ChainSupport, Self)> {
+    pub fn builtin() -> Vec<Self> {
         // data intentionally empty: the enhance loop dispatches on uid to native implementations
         vec![
-            (ChainSupport::Mihomo, Self::to_script("verge_hy_alpn", "")),
-            (ChainSupport::Mihomo, Self::to_script("verge_meta_guard", "")),
-            (ChainSupport::MihomoAlpha, Self::to_script("verge_hy_alpn", "")),
-            (ChainSupport::MihomoAlpha, Self::to_script("verge_meta_guard", "")),
+            Self::to_script("verge_hy_alpn", ""),
+            Self::to_script("verge_meta_guard", ""),
         ]
     }
 
@@ -82,18 +74,6 @@ impl ChainItem {
         Self {
             uid: uid.into(),
             data: ChainType::Script(data.into()),
-        }
-    }
-}
-
-impl ChainSupport {
-    pub fn is_support(&self, core: Option<&String>) -> bool {
-        match core {
-            Some(core) => matches!(
-                (self, core.as_str()),
-                (Self::Mihomo, "verge-mihomo") | (Self::MihomoAlpha, "verge-mihomo-alpha")
-            ),
-            None => true,
         }
     }
 }

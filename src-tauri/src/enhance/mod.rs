@@ -34,7 +34,6 @@ type ResultLog = Vec<(String, String)>;
 #[derive(Debug)]
 struct ConfigValues {
     clash_config: Mapping,
-    clash_core: Option<String>,
     enable_tun: bool,
     enable_builtin: bool,
     socks_enabled: bool,
@@ -128,8 +127,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let dns_settings = verge_arc.dns_settings_for(profile_uid);
     let dns_override_confirmation = dns_settings.confirmation;
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
-        Some(verge_arc.get_valid_clash_core()),
+    let (enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         enable_tun_mode.unwrap_or(false),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
@@ -148,7 +146,6 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
 
     ConfigValues {
         clash_config,
-        clash_core,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -605,24 +602,17 @@ fn merge_default_config(
     config
 }
 
-fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+fn apply_builtin_scripts(mut config: Mapping, enable_builtin: bool) -> Mapping {
     if enable_builtin {
-        let items: Vec<_> = ChainItem::builtin()
-            .into_iter()
-            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
-            .map(|(_, c)| c)
-            .collect();
-        if !items.is_empty() {
-            // The JS path saw a lowercased view; lowercase once, only when a builtin runs.
-            config = use_lowercase(&config);
-            for item in items {
-                logging!(debug, Type::Core, "run builtin script {}", item.uid);
-                config = match item.uid.as_str() {
-                    "verge_hy_alpn" => builtin_hy_alpn(config),
-                    "verge_meta_guard" => builtin_meta_guard(config),
-                    _ => config,
-                };
-            }
+        // The JS path saw a lowercased view; lowercase once, only when a builtin runs.
+        config = use_lowercase(&config);
+        for item in ChainItem::builtin() {
+            logging!(debug, Type::Core, "run builtin script {}", item.uid);
+            config = match item.uid.as_str() {
+                "verge_hy_alpn" => builtin_hy_alpn(config),
+                "verge_meta_guard" => builtin_meta_guard(config),
+                _ => config,
+            };
         }
     }
 
@@ -829,7 +819,6 @@ pub async fn enhance(
     let cfg_vals = get_config_values(profile_uid).await;
     let ConfigValues {
         clash_config,
-        clash_core,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -879,7 +868,7 @@ pub async fn enhance(
         tproxy_enabled,
     );
 
-    let config = apply_builtin_scripts(config, clash_core, enable_builtin);
+    let config = apply_builtin_scripts(config, enable_builtin);
     let config = use_tun(config, enable_tun);
     let (config, dns_settings) = apply_dns_settings(config, enable_dns_settings).await;
 
