@@ -1,5 +1,5 @@
 use super::{
-    PrfOption,
+    PrfOption, patch_opt_field,
     prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
 };
 use crate::core::notify::{Refresh, announce};
@@ -84,14 +84,6 @@ impl ProfileDeletePlan {
             }
         }
     }
-}
-
-macro_rules! patch {
-    ($lv: expr, $rv: expr, $key: tt) => {
-        if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key.to_owned();
-        }
-    };
 }
 
 impl IProfiles {
@@ -244,15 +236,15 @@ impl IProfiles {
 
         for each in items.iter_mut() {
             if each.uid.as_deref() == Some(uid) {
-                patch!(each, item, itype);
-                patch!(each, item, name);
-                patch!(each, item, desc);
-                patch!(each, item, file);
-                patch!(each, item, url);
-                patch!(each, item, selected);
-                patch!(each, item, extra);
-                patch!(each, item, updated);
-                patch!(each, item, option);
+                patch_opt_field!(each, item, itype);
+                patch_opt_field!(each, item, name);
+                patch_opt_field!(each, item, desc);
+                patch_opt_field!(each, item, file);
+                patch_opt_field!(each, item, url);
+                patch_opt_field!(each, item, selected);
+                patch_opt_field!(each, item, extra);
+                patch_opt_field!(each, item, updated);
+                patch_opt_field!(each, item, option);
 
                 self.items = Some(items);
                 return self.save_file().await;
@@ -420,6 +412,21 @@ pub(crate) async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file
     profiles_append_item_safe(item).await
 }
 
+/// Applies `edit` to the committed profiles; commits only when the edit succeeds.
+async fn with_profiles_edit<F, Fut>(edit: F) -> Result<()>
+where
+    F: FnOnce(IProfiles) -> Fut + Send,
+    Fut: std::future::Future<Output = Result<IProfiles>> + Send,
+{
+    Config::profiles()
+        .await
+        .with_data_modify(|profiles| async move {
+            let profiles = edit(profiles).await?;
+            Ok((profiles, ()))
+        })
+        .await
+}
+
 pub(crate) async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
     let profiles = Config::profiles().await;
     profiles_append_item_to_safe(&profiles, item).await
@@ -435,43 +442,19 @@ pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, it
 }
 
 pub(crate) async fn profiles_patch_item_safe(index: &str, item: &PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            profiles.patch_item(index, item).await?;
-            Ok((profiles, ()))
-        })
-        .await
+    with_profiles_edit(|mut profiles| async move { profiles.patch_item(index, item).await.map(|_| profiles) }).await
 }
 
 pub(crate) async fn profiles_reorder_safe(active_id: &str, over_id: &str) -> Result<()> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            profiles.reorder(active_id, over_id).await?;
-            Ok((profiles, ()))
-        })
-        .await
+    with_profiles_edit(|mut profiles| async move { profiles.reorder(active_id, over_id).await.map(|_| profiles) }).await
 }
 
 pub(crate) async fn profiles_save_file_safe() -> Result<()> {
-    Config::profiles()
-        .await
-        .with_data_modify(|profiles| async move {
-            profiles.save_file().await?;
-            Ok((profiles, ()))
-        })
-        .await
+    with_profiles_edit(|profiles| async move { profiles.save_file().await.map(|_| profiles) }).await
 }
 
 pub(crate) async fn profiles_update_item_safe(index: &str, item: &mut PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            profiles.update_item(index, item).await?;
-            Ok((profiles, ()))
-        })
-        .await
+    with_profiles_edit(|mut profiles| async move { profiles.update_item(index, item).await.map(|_| profiles) }).await
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -713,19 +696,21 @@ where
     Ok(())
 }
 
+fn current_item_mut(profiles: &mut IProfiles) -> Option<&mut PrfItem> {
+    let current = profiles.current.clone()?;
+    profiles
+        .items
+        .as_mut()?
+        .iter_mut()
+        .find(|item| item.uid.as_ref() == Some(&current))
+}
+
 /// Records a backend-made selection so the next core start restores it.
 pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     let group_name = String::from(group_name);
     let node = String::from(node);
     persist_selected_update(true, move |mut profiles| async move {
-        let Some(current) = profiles.current.clone() else {
-            return Ok((profiles, false));
-        };
-        let Some(item) = profiles
-            .items
-            .as_mut()
-            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
-        else {
+        let Some(item) = current_item_mut(&mut profiles) else {
             return Ok((profiles, false));
         };
 
@@ -760,14 +745,7 @@ fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bo
 
 pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
     persist_selected_update(true, move |mut profiles| async move {
-        let Some(current) = profiles.current.clone() else {
-            return Ok((profiles, false));
-        };
-        let Some(item) = profiles
-            .items
-            .as_mut()
-            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
-        else {
+        let Some(item) = current_item_mut(&mut profiles) else {
             return Ok((profiles, false));
         };
 
