@@ -8,7 +8,7 @@ mod tun;
 
 use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
-    field::{use_keys, use_lowercase_owned, use_sort},
+    field::{use_keys, use_lowercase, use_sort},
     merge::use_merge,
     script::use_script,
     seq::{SeqMap, use_seq},
@@ -614,7 +614,7 @@ fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable
             .collect();
         if !items.is_empty() {
             // The JS path saw a lowercased view; lowercase once, only when a builtin runs.
-            config = use_lowercase_owned(config);
+            config = use_lowercase(config);
             for item in items {
                 logging!(debug, Type::Core, "run builtin script {}", item.uid);
                 config = match item.uid.as_str() {
