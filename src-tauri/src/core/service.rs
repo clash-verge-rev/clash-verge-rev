@@ -593,49 +593,70 @@ fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> R
 }
 
 #[cfg(target_os = "windows")]
-fn uninstall_service() -> Result<()> {
-    logging!(info, Type::Service, "uninstall service");
-
+pub(super) fn run_maybe_elevated(program: &Path, hide_window: bool) -> Result<std::process::ExitStatus> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt as _;
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall.exe", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
-    })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
-
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
-        _ => StdCommand::new(uninstall_path).creation_flags(0x08000000).status()?,
+        PrivilegeLevel::NotPrivileged => {
+            let mut command = RunasCommand::new(program);
+            if hide_window {
+                command.show(false);
+            }
+            command.status()?
+        }
+        _ => {
+            let mut command = StdCommand::new(program);
+            if hide_window {
+                // 0x08000000 is CREATE_NO_WINDOW, the direct counterpart of runas's show(false).
+                command.creation_flags(0x08000000);
+            }
+            command.status()?
+        }
     };
+    Ok(status)
+}
 
+fn uninstaller_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
+    let uninstall_path = packaged_service_tool_path(file_name, packaged_path)?;
+    if !uninstall_path.exists() {
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
+    }
+    Ok(uninstall_path)
+}
+
+fn ensure_uninstall_success(status: &std::process::ExitStatus) -> Result<()> {
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
             status.code().unwrap_or(-1)
         );
     }
-
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn uninstall_service() -> Result<()> {
+    logging!(info, Type::Service, "uninstall service");
+
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
+    })?;
+
+    let status = run_maybe_elevated(&uninstall_path, true)?;
+    ensure_uninstall_success(&status)
 }
 
 #[cfg(target_os = "linux")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
         Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall"))
     })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
 
     let elevator = crate::utils::help::linux_elevator();
     let status = if linux_running_as_root() {
@@ -666,14 +687,7 @@ fn uninstall_service() -> Result<()> {
         status.code().unwrap_or(-1)
     );
 
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-
-    Ok(())
+    ensure_uninstall_success(&status)
 }
 
 #[cfg(target_os = "linux")]
@@ -688,13 +702,9 @@ fn linux_running_as_root() -> bool {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
         Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall"))
     })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
 
     let uninstall_path = macos_service_tool_path(&uninstall_path)?;
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
@@ -711,14 +721,7 @@ fn uninstall_service() -> Result<()> {
 
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-
-    Ok(())
+    ensure_uninstall_success(&status)
 }
 
 fn install_service() -> Result<()> {
