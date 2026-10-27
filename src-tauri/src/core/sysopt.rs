@@ -242,7 +242,7 @@ async fn current_os_proxy_state(sys: Sysproxy, auto: Autoproxy) -> OsProxyState 
 
 pub(crate) struct Sysopt {
     // Owns the proxy target pair; every reader and writer goes through this lock.
-    update_lock: TokioMutex<(Sysproxy, Autoproxy)>,
+    proxy_state_lock: TokioMutex<(Sysproxy, Autoproxy)>,
     guard_operation_lock: TokioMutex<()>,
     reset_sysproxy: AtomicBool,
     guard: Arc<RwLock<GuardMonitor>>,
@@ -251,7 +251,7 @@ pub(crate) struct Sysopt {
 impl Default for Sysopt {
     fn default() -> Self {
         Self {
-            update_lock: TokioMutex::new((Sysproxy::default(), Autoproxy::default())),
+            proxy_state_lock: TokioMutex::new((Sysproxy::default(), Autoproxy::default())),
             guard_operation_lock: TokioMutex::new(()),
             reset_sysproxy: AtomicBool::new(false),
             guard: Arc::new(RwLock::new(GuardMonitor::new(GuardType::None, Duration::from_secs(30)))),
@@ -268,7 +268,7 @@ static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 static BYPASS_SEPARATOR: &str = ",";
 #[cfg(target_os = "macos")]
-static DEFAULT_BYPASS: &str = crate::constants::proxy::MACOS_DEFAULT_BYPASS;
+static DEFAULT_BYPASS: &str = crate::constants::sysproxy::MACOS_DEFAULT_BYPASS;
 
 pub(super) fn format_bypass(use_default: bool, custom_bypass: &str) -> String {
     if custom_bypass.is_empty() {
@@ -407,16 +407,16 @@ impl Sysopt {
     /// configuration instead of a partially-applied one (e.g. SOCKS already
     /// disabled but HTTP still enabled mid-transition).
     pub(crate) async fn wait_idle(&self) {
-        let _ = self.update_lock.lock().await;
+        let _ = self.proxy_state_lock.lock().await;
     }
 
     /// init the sysproxy
     #[allow(
         clippy::significant_drop_tightening,
-        reason = "the update lock must stay held until the OS write finishes; wait_idle relies on it"
+        reason = "the proxy state lock must stay held until the OS write finishes; wait_idle relies on it"
     )]
     pub(super) async fn update_sysproxy(&self) -> Result<()> {
-        let mut inner_proxy = self.update_lock.lock().await;
+        let mut proxy_state = self.proxy_state_lock.lock().await;
         let verge = Config::verge().await.latest_arc();
         // Configured, not live: this runs while the Core is being started or restarted, and
         // asking a Core that is not up yet would only fall back here anyway.
@@ -432,7 +432,7 @@ impl Sysopt {
         );
 
         let (sys, auto, guard_type) = {
-            let (sys, auto) = &mut *inner_proxy;
+            let (sys, auto) = &mut *proxy_state;
             sys.host = proxy_host.into();
             sys.port = port;
             sys.bypass = bypass.into();
@@ -531,7 +531,7 @@ impl Sysopt {
     /// reset the sysproxy
     #[allow(
         clippy::significant_drop_tightening,
-        reason = "the update lock must stay held until the disable finishes; wait_idle relies on it"
+        reason = "the proxy state lock must stay held until the disable finishes; wait_idle relies on it"
     )]
     pub(super) async fn reset_sysproxy(&self) -> Result<()> {
         if self
@@ -544,13 +544,13 @@ impl Sysopt {
         defer! {
             self.reset_sysproxy.store(false, Ordering::SeqCst);
         }
-        let mut inner_proxy = self.update_lock.lock().await;
+        let mut proxy_state = self.proxy_state_lock.lock().await;
         let _guard_operation = self.guard_operation_lock.lock().await;
         let drained = self.stop_proxy_guard_locked().await;
 
         // 直接关闭所有代理
         let (sys, auto) = {
-            let (sys, auto) = &mut *inner_proxy;
+            let (sys, auto) = &mut *proxy_state;
             sys.enable = false;
             auto.enable = false;
             (sys.clone(), auto.clone())

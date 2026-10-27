@@ -14,7 +14,7 @@ pub mod network {
     }
 }
 
-pub mod proxy {
+pub mod sysproxy {
     /// Single source of the macOS default bypass list; both proxy backends compose from it.
     #[cfg(target_os = "macos")]
     pub const MACOS_DEFAULT_BYPASS: &str =
