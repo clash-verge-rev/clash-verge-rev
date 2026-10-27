@@ -241,20 +241,19 @@ async fn current_os_proxy_state(sys: Sysproxy, auto: Autoproxy) -> OsProxyState 
 }
 
 pub(crate) struct Sysopt {
-    update_lock: TokioMutex<()>,
+    // Owns the proxy target pair; every reader and writer goes through this lock.
+    update_lock: TokioMutex<(Sysproxy, Autoproxy)>,
     guard_operation_lock: TokioMutex<()>,
     reset_sysproxy: AtomicBool,
-    inner_proxy: Arc<RwLock<(Sysproxy, Autoproxy)>>,
     guard: Arc<RwLock<GuardMonitor>>,
 }
 
 impl Default for Sysopt {
     fn default() -> Self {
         Self {
-            update_lock: TokioMutex::new(()),
+            update_lock: TokioMutex::new((Sysproxy::default(), Autoproxy::default())),
             guard_operation_lock: TokioMutex::new(()),
             reset_sysproxy: AtomicBool::new(false),
-            inner_proxy: Arc::new(RwLock::new((Sysproxy::default(), Autoproxy::default()))),
             guard: Arc::new(RwLock::new(GuardMonitor::new(GuardType::None, Duration::from_secs(30)))),
         }
     }
@@ -361,7 +360,7 @@ impl Sysopt {
             }
         }
         while self.access_guard().read().get_state().is_pendding() {
-            tokio::task::yield_now().await;
+            tokio::time::sleep(Duration::from_millis(10)).await;
         }
         // `start()` false may also mean a guard was already running.
         !self.access_guard().read().get_state().is_stopped()
@@ -413,14 +412,17 @@ impl Sysopt {
     }
 
     /// init the sysproxy
+    #[allow(
+        clippy::significant_drop_tightening,
+        reason = "the update lock must stay held until the OS write finishes; wait_idle relies on it"
+    )]
     pub(super) async fn update_sysproxy(&self) -> Result<()> {
-        let _lock = self.update_lock.lock().await;
+        let mut inner_proxy = self.update_lock.lock().await;
         let verge = Config::verge().await.latest_arc();
         // Configured, not live: this runs while the Core is being started or restarted, and
         // asking a Core that is not up yet would only fall back here anyway.
         let port = MixedPort::desired().await;
         let pac_port = server::embedded_server_port()?;
-        // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;
 
         let (sys_enable, pac_enable, proxy_host, proxy_guard) = (
@@ -431,7 +433,7 @@ impl Sysopt {
         );
 
         let (sys, auto, guard_type) = {
-            let (sys, auto) = &mut *self.inner_proxy.write();
+            let (sys, auto) = &mut *inner_proxy;
             sys.host = proxy_host.into();
             sys.port = port;
             sys.bypass = bypass.into();
@@ -528,6 +530,10 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
+    #[allow(
+        clippy::significant_drop_tightening,
+        reason = "the update lock must stay held until the disable finishes; wait_idle relies on it"
+    )]
     pub(super) async fn reset_sysproxy(&self) -> Result<()> {
         if self
             .reset_sysproxy
@@ -539,13 +545,13 @@ impl Sysopt {
         defer! {
             self.reset_sysproxy.store(false, Ordering::SeqCst);
         }
-        let _lock = self.update_lock.lock().await;
+        let mut inner_proxy = self.update_lock.lock().await;
         let _guard_operation = self.guard_operation_lock.lock().await;
         let drained = self.stop_proxy_guard_locked().await;
 
         // 直接关闭所有代理
         let (sys, auto) = {
-            let (sys, auto) = &mut *self.inner_proxy.write();
+            let (sys, auto) = &mut *inner_proxy;
             sys.enable = false;
             auto.enable = false;
             (sys.clone(), auto.clone())
