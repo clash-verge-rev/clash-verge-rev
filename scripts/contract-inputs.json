@@ -17,7 +17,7 @@
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
     "scripts/contract-inputs.json",
-    ".github/workflows/frontend-check.yml",
+    ".github/workflows/contract-parity.yml",
     ".husky/pre-push"
   ]
 }
