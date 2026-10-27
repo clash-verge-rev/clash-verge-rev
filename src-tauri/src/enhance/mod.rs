@@ -604,15 +604,10 @@ fn merge_default_config(
 
 fn apply_builtin_scripts(mut config: Mapping, enable_builtin: bool) -> Mapping {
     if enable_builtin {
-        // The JS path saw a lowercased view; lowercase once, only when a builtin runs.
+        // The JS path saw a lowercased view; lowercase once, only when the builtin runs.
         config = use_lowercase(&config);
-        for item in ChainItem::builtin() {
-            logging!(debug, Type::Core, "run builtin script {}", item.uid);
-            config = match item.uid.as_str() {
-                "verge_hy_alpn" => builtin_hy_alpn(config),
-                _ => config,
-            };
-        }
+        logging!(debug, Type::Core, "run builtin script verge_hy_alpn");
+        config = builtin_hy_alpn(config);
     }
 
     config
@@ -1411,7 +1406,10 @@ mod tests {
                 vec![],
                 HashMap::new(),
                 merge_item("global-merge"),
-                ChainItem::to_script("global-script", script),
+                ChainItem {
+                    uid: "global-script".into(),
+                    data: ChainType::Script(script.into()),
+                },
                 &profile_name,
                 &authoritative,
             )
@@ -1421,7 +1419,10 @@ mod tests {
                 keys,
                 logs,
                 merge_item("profile-merge"),
-                ChainItem::to_script("profile-script", script),
+                ChainItem {
+                    uid: "profile-script".into(),
+                    data: ChainType::Script(script.into()),
+                },
                 &profile_name,
                 &authoritative,
             )
@@ -1466,16 +1467,19 @@ mod tests {
                    nested: {winner: global-merge}, dns: {enable: false}, tun: {enable: false}}",
             )),
         };
-        let global_script = ChainItem::to_script(
-            "Script",
-            r#"function main(config) {
+        let global_script = ChainItem {
+            uid: "Script".into(),
+            data: ChainType::Script(
+                r#"function main(config) {
               config["global-script-wins"] = "global-script";
               config["profile-merge-wins"] = "global-script";
               config["profile-script-wins"] = "global-script";
               config.nested.winner = "global-script";
               return config;
-            }"#,
-        );
+            }"#
+                .into(),
+            ),
+        };
         let profile_merge = ChainItem {
             uid: "profile-merge".into(),
             data: ChainType::Merge(mapping(
@@ -1483,14 +1487,17 @@ mod tests {
                    nested: {winner: profile-merge}}",
             )),
         };
-        let profile_script = ChainItem::to_script(
-            "profile-script",
-            r#"function main(config) {
+        let profile_script = ChainItem {
+            uid: "profile-script".into(),
+            data: ChainType::Script(
+                r#"function main(config) {
               config["profile-script-wins"] = "profile-script";
               config.nested.winner = "profile-script";
               return config;
-            }"#,
-        );
+            }"#
+                .into(),
+            ),
+        };
 
         let profile_name = "test-profile".into();
         let authoritative = AuthoritativeFields::capture(&config, &[], Mapping::new());
