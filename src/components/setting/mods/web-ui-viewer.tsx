@@ -50,21 +50,21 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const handleAdd = useLockFn(async (value: string) => {
     const newList = [...webUIList, value]
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old))
     await patchVerge({ web_ui_list: newList })
   })
 
   const handleChange = useLockFn(async (index: number, value?: string) => {
     const newList = [...webUIList]
     newList[index] = value ?? ''
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old))
     await patchVerge({ web_ui_list: newList })
   })
 
   const handleDelete = useLockFn(async (index: number) => {
     const newList = [...webUIList]
     newList.splice(index, 1)
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old))
     await patchVerge({ web_ui_list: newList })
   })
 

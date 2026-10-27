@@ -35,7 +35,6 @@ interface IpInfo {
 interface ServiceConfig {
   url: string
   mapping: (data: any) => IpInfo
-  timeout?: number // 保留timeout字段（如有需要）
 }
 
 // 可用的IP检测服务列表及字段映射
@@ -159,7 +158,7 @@ export const getIpInfo = async (): Promise<
     const timeoutController = new AbortController()
     const timeoutId = setTimeout(() => {
       timeoutController.abort()
-    }, service.timeout || serviceTimeout)
+    }, serviceTimeout)
 
     try {
       return await asyncRetry(
@@ -168,8 +167,8 @@ export const getIpInfo = async (): Promise<
 
           const response = await fetch(service.url, {
             method: 'GET',
-            signal: timeoutController.signal, // AbortSignal.timeout(service.timeout || serviceTimeout),
-            connectTimeout: service.timeout || serviceTimeout,
+            signal: timeoutController.signal, // AbortSignal.timeout(serviceTimeout),
+            connectTimeout: serviceTimeout,
             headers: {
               'User-Agent': userAgent,
             },
