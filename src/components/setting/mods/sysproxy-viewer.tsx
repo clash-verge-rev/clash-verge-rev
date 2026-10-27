@@ -339,7 +339,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     Promise.resolve().then(async () => {
       try {
         if (Object.keys(patch).length > 0) {
-          mutateVerge({ ...verge, ...patch }, false)
+          mutateVerge({ ...verge, ...patch })
         }
         if (Object.keys(patch).length > 0) {
           await patchVerge(patch)

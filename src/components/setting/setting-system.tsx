@@ -29,7 +29,7 @@ const SettingSystem = ({ onError }: Props) => {
     value: boolean,
   ) => value
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false)
+    mutateVerge({ ...verge, ...patch })
   }
 
   return (

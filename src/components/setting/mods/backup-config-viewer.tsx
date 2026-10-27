@@ -113,17 +113,15 @@ export const BackupConfigViewer = memo(
             errorNotice: false,
           },
         )
-        await mutateVerge(
-          (current) =>
-            current
-              ? {
-                  ...current,
-                  webdav_url: trimmedUrl,
-                  webdav_username: trimmedUsername,
-                  webdav_password: data.password,
-                }
-              : current,
-          false,
+        await mutateVerge((current) =>
+          current
+            ? {
+                ...current,
+                webdav_url: trimmedUrl,
+                webdav_username: trimmedUsername,
+                webdav_password: data.password,
+              }
+            : current,
         )
         setWebdavStatus(signature, 'unknown')
         showNotice.success('settings.modals.backup.messages.webdavConfigSaved')

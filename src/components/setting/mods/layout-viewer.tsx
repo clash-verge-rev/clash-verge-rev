@@ -107,7 +107,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
     showNotice.error(err)
   }
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false)
+    mutateVerge({ ...verge, ...patch })
   }
 
   return (

@@ -35,10 +35,7 @@ export const LayoutSidebar = (props: LayoutSidebarProps) => {
 
   const handleMenuOrderOptimisticUpdate = useCallback(
     (order: string[]) => {
-      mutateVerge(
-        (prev) => (prev ? { ...prev, menu_order: order } : prev),
-        false,
-      )
+      mutateVerge((prev) => (prev ? { ...prev, menu_order: order } : prev))
     },
     [mutateVerge],
   )
