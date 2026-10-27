@@ -64,10 +64,7 @@ impl ChainItem {
     /// 内建支持一些脚本
     pub fn builtin() -> Vec<Self> {
         // data intentionally empty: the enhance loop dispatches on uid to native implementations
-        vec![
-            Self::to_script("verge_hy_alpn", ""),
-            Self::to_script("verge_meta_guard", ""),
-        ]
+        vec![Self::to_script("verge_hy_alpn", "")]
     }
 
     pub fn to_script<U: Into<String>, D: Into<String>>(uid: U, data: D) -> Self {
