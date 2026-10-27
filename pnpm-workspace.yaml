@@ -10,3 +10,11 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - dayjs@1.11.21
+  - "@tsrs/darwin-arm64@0.20.0-ts7.1.0-beta"
+  - "@tsrs/darwin-x64@0.20.0-ts7.1.0-beta"
+  - "@tsrs/linux-arm64-gnu@0.20.0-ts7.1.0-beta"
+  - "@tsrs/linux-arm64-musl@0.20.0-ts7.1.0-beta"
+  - "@tsrs/linux-x64-gnu@0.20.0-ts7.1.0-beta"
+  - "@tsrs/linux-x64-musl@0.20.0-ts7.1.0-beta"
+  - "@tsrs/win32-x64@0.20.0-ts7.1.0-beta"
+  - tsrs@0.20.0-ts7.1.0-beta

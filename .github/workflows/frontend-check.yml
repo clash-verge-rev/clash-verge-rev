@@ -75,7 +75,7 @@ jobs:
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm lint
 
-      - name: Run TypeScript typecheck
+      - name: Run tsrs typecheck
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
 
