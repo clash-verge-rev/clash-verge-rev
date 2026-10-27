@@ -36,6 +36,7 @@
       "yes": "Yes",
       "no": "No",
       "failed": "Failed",
+      "risky": "Tidak pasti",
       "completed": "Completed",
       "disallowedIsp": "Disallowed ISP",
       "originalsOnly": "Originals Only",

@@ -70,6 +70,8 @@
     "chain": {
       "header": "Configuração do proxy em cadeia",
       "warning": "O proxy em cadeia reduz significativamente a velocidade da rede. Se você não tem uma necessidade clara ou não entende esta configuração, mantenha-o desativado.",
+      "confirmEnable": "Entendi, ativar",
+      "keepDisabled": "Manter desativado",
       "empty": "O proxy em cadeia reduz significativamente a velocidade da rede. Se você não tem uma necessidade clara ou não entende esta configuração, mantenha-o desativado.",
       "instruction": "Clique nos nós em ordem para adicioná-los à cadeia de proxy",
       "minimumNodes": "O proxy em cadeia requer pelo menos 2 nós",

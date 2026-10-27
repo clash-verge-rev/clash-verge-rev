@@ -1,3 +1,5 @@
+// Dev-only target: Tauri ships everything under src/bin/ to /usr/bin in deb/rpm
+// bundles (PR #8131), so this generator must stay an example, never a bin.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = std::env::args_os().skip(1);
     let output = args

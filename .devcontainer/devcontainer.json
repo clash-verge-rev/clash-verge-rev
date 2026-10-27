@@ -4,11 +4,11 @@
 
   "features": {
     "ghcr.io/devcontainers/features/node:2": {
-      "version": "24.21.0",
-      "pnpmVersion": "12.11.2"
+      "version": "24.22.1",
+      "pnpmVersion": "12.15.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "1.99.0",
+      "version": "1.99.1",
       "profile": "default"
     },
     "ghcr.io/devcontainers/features/git:1": {},

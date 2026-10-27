@@ -46,6 +46,17 @@
       "groupName": "npm dependencies"
     },
     {
+      "description": "Update Tauri npm packages and Cargo crates together so frontend and backend stay in sync",
+      "matchPackageNames": [
+        "@tauri-apps/**",
+        "@wdio/tauri-service",
+        "tauri",
+        "tauri-*"
+      ],
+      "groupName": "tauri",
+      "addLabels": ["tauri"]
+    },
+    {
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
@@ -67,6 +78,13 @@
       "matchManagers": ["npm"],
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7.0.0 || >=7.1.0"
+    },
+    {
+      "description": "Review tsrs bumps alone; the version encodes the pinned TypeScript release",
+      "matchPackageNames": ["tsrs", "/^@tsrs//"],
+      "groupName": "tsrs",
+      "rangeStrategy": "pin",
+      "automerge": false
     },
     {
       "description": "Prevent project from supply chain attack",

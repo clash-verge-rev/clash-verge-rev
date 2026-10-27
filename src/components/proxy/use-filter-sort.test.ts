@@ -13,17 +13,11 @@ const node = (memberIndex: number, delay: number, name = `${memberIndex}`) =>
       kind: 'node',
       ref: { kind: 'node', name, recordId: `${memberIndex}` },
       node: {
-        recordId: `${memberIndex}`,
         history: [{ delay }],
-        extra: {
-          'http://cp.cloudflare.com/generate_204': {
-            history: [{ time: new Date(0).toISOString(), delay }],
-          },
-        },
         source: { kind: 'provider', providerName: `${memberIndex}` },
       },
     },
-  }) as unknown as ResolvedMemberOccurrence
+  }) as ResolvedMemberOccurrence
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -42,9 +36,7 @@ test('matches the previous comparator for cached, fallback and sentinel delays',
   for (const cached of [false, true]) {
     const group = `sort-${cached}`
     if (cached) {
-      values.forEach((delay, i) =>
-        delayManager.setDelay(list[i].member, group, delay),
-      )
+      values.forEach((delay, i) => delayManager.setDelay(`${i}`, group, delay))
     }
     for (const timeout of [10000, 20, 0, NaN]) {
       const expected = list
@@ -74,7 +66,7 @@ test('reads each occurrence once and observes cache updates and expiry on the ne
     node(3, 25),
   ]
   const cachedOrder = [list[0], list[2], list[1], list[3]]
-  delayManager.setDelay(list[0].member, 'expiry', 1)
+  delayManager.setDelay('0', 'expiry', 1)
   const get = vi.spyOn(delayManager, 'getDelayFix')
   expect(filterSort(list, 'expiry', '', 1)).toEqual(cachedOrder)
   expect(get).toHaveBeenCalledTimes(list.length)
@@ -88,7 +80,7 @@ test('reads each occurrence once and observes cache updates and expiry on the ne
     list[3],
     list[0],
   ])
-  delayManager.setDelay(list[0].member, 'expiry', 2)
+  delayManager.setDelay('0', 'expiry', 2)
   expect(filterSort(list, 'expiry', '', 1)).toEqual(cachedOrder)
   get.mockClear()
   filterSort([], 'expiry', '', 1)

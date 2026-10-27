@@ -495,11 +495,13 @@
         "strictRoute": "مسیر دقیق",
         "autoDetectInterface": "تشخیص خودکار رابط",
         "dnsHijack": "ربایش DNS",
+        "dnsMode": "حالت DNS",
         "mtu": "واحد حداکثر انتقال",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "لطفا برای جدا کردن چندین سرور DNS از , استفاده کنید.",
+        "dnsMode": "Auto رفتار قدیمی را حفظ می‌کند؛ hijack در ویندوز نیاز به مسیر دقیق یا در لینوکس نیاز به Auto Redirect دارد",
         "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables"
       },
       "messages": {

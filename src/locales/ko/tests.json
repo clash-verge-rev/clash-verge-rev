@@ -36,6 +36,7 @@
       "yes": "예",
       "no": "아니오",
       "failed": "실패",
+      "risky": "확인 필요",
       "completed": "완료",
       "disallowedIsp": "허용되지 않는 ISP",
       "originalsOnly": "오리지널만",

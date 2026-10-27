@@ -116,7 +116,6 @@ const virtualGroup = (members: ProxyGroupView['members']): ProxyGroupView => ({
   mptcp: false,
   smux: false,
   history: [],
-  extra: {},
   members,
 })
 
@@ -212,7 +211,7 @@ export const useRenderList = (
     if (!proxyView) return []
     if (isChainMode)
       return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
-    return mode === 'rule' || mode === 'script'
+    return mode === 'rule' || mode === 'global'
       ? proxyView.groups.map(({ name }) => name)
       : proxyView.global
         ? [proxyView.global.name]
@@ -258,7 +257,7 @@ export const useRenderList = (
       }))
     }
 
-    const useRule = mode === 'rule' || mode === 'script'
+    const useRule = mode === 'rule' || mode === 'global'
     const renderGroups = useRule
       ? proxyView.groups
       : proxyView.global === null

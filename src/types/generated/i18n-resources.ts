@@ -525,6 +525,7 @@ export interface TranslationResources {
           toggleChain: string
         }
         chain: {
+          confirmEnable: string
           connectFailed: string
           disconnectFailed: string
           duplicateNode: string
@@ -533,6 +534,7 @@ export interface TranslationResources {
           exitNode: string
           header: string
           instruction: string
+          keepDisabled: string
           minimumNodes: string
           minimumNodesHint: string
           warning: string
@@ -1188,6 +1190,7 @@ export interface TranslationResources {
             autoRoute: string
             device: string
             dnsHijack: string
+            dnsMode: string
             mtu: string
             routeExcludeAddress: string
             stack: string
@@ -1202,6 +1205,7 @@ export interface TranslationResources {
           tooltips: {
             autoRedirect: string
             dnsHijack: string
+            dnsMode: string
           }
         }
         update: {
