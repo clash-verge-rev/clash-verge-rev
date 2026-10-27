@@ -22,7 +22,7 @@ pub enum ChainType {
     Groups(SeqMap),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum ChainSupport {
     Mihomo,
     MihomoAlpha,
@@ -70,14 +70,11 @@ impl ChainItem {
     /// 内建支持一些脚本
     pub fn builtin() -> Vec<(ChainSupport, Self)> {
         // data intentionally empty: the enhance loop dispatches on uid to native implementations
-        let hy_alpn = Self::to_script("verge_hy_alpn", "");
-        let meta_guard = Self::to_script("verge_meta_guard", "");
-
         vec![
-            (ChainSupport::Mihomo, hy_alpn.clone()),
-            (ChainSupport::Mihomo, meta_guard.clone()),
-            (ChainSupport::MihomoAlpha, hy_alpn),
-            (ChainSupport::MihomoAlpha, meta_guard),
+            (ChainSupport::Mihomo, Self::to_script("verge_hy_alpn", "")),
+            (ChainSupport::Mihomo, Self::to_script("verge_meta_guard", "")),
+            (ChainSupport::MihomoAlpha, Self::to_script("verge_hy_alpn", "")),
+            (ChainSupport::MihomoAlpha, Self::to_script("verge_meta_guard", "")),
         ]
     }
 

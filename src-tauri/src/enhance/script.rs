@@ -22,10 +22,10 @@ type EvalOutcome = (Result<Mapping, std::string::String>, Vec<(String, String)>)
 pub(super) async fn use_script(script: String, config: Mapping, name: String) -> ScriptResult {
     // The template is identity-plus-lowercasing; skip the Boa round-trip.
     if script == tmpl::ITEM_SCRIPT {
-        return (use_lowercase(config), vec![], vec![]);
+        return (use_lowercase(&config), vec![], vec![]);
     }
 
-    let json = match serde_json::to_string(&use_lowercase(config.clone())) {
+    let json = match serde_json::to_string(&use_lowercase(&config)) {
         Ok(json) if json.len() <= MAX_JSON_SIZE => json,
         Ok(_) => {
             let message = "Configuration size exceeds maximum allowed size";
@@ -173,7 +173,7 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
     }
 
     match parse_json_safely(&result) {
-        Ok(config) => (Ok(use_lowercase(config)), outputs.lock().to_vec()),
+        Ok(config) => (Ok(use_lowercase(&config)), outputs.lock().to_vec()),
         Err(err) => {
             logging!(
                 error,
