@@ -80,6 +80,13 @@
       "allowedVersions": "<7.0.0 || >=7.1.0"
     },
     {
+      "description": "Review tsrs bumps alone; the version encodes the pinned TypeScript release",
+      "matchPackageNames": ["tsrs", "/^@tsrs//"],
+      "groupName": "tsrs",
+      "rangeStrategy": "pin",
+      "automerge": false
+    },
+    {
       "description": "Prevent project from supply chain attack",
       "matchDatasources": ["npm"],
       "minimumReleaseAge": "1 days"

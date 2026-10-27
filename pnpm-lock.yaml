@@ -416,6 +416,9 @@ importers:
       terser:
         specifier: ^5.51.2
         version: 5.51.2
+      tsrs:
+        specifier: 0.20.0-ts7.1.0-beta
+        version: 0.20.0-ts7.1.0-beta
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -2217,6 +2220,52 @@ packages:
 
   '@tauri-apps/plugin-updater@2.14.0':
     resolution: {integrity: sha512-gdylJ9tger4hkyOn24QZd6MNOKVo2Eh53iw5th2Qj1vKTR/+u4PIwJWuiis5hohYvobn6iOvlnALfrqIPSzh7Q==}
+
+  '@tsrs/darwin-arm64@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-mhHj8QGUmdJDBvJEnMXx5P/jvAKXYU3hy/z3qxrWBo8XHlbLES32PgC0ZpTRbJA960ReTpVqqvCOYaC6EL32/Q==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@tsrs/darwin-x64@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-CsRUnyYRLrhmChS7ol7LgmdqMXTu+mVlDU+7JgbW8RpkJRGLZ/zgEDEOeD8qrndt8rpP9oW1T1SJ36HSzB3/sg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tsrs/linux-arm64-gnu@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-VNwpdI/iICwQMMlS/MoSZCvKFByEn2+g7D0HREWG+3r3GRayXgbLv8iaNSHKT3QGcu8pXr3lH9170ghJQi2zRg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tsrs/linux-arm64-musl@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-cXnqPpmj5gzeGi4u1OV0ctd5df5t4ivwyeToCa4pBrKtjYodu0EeAo5Y76SHbJwggbiA1gzEJVj1vvuciQm5mQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@tsrs/linux-x64-gnu@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-jlhJSrO9lxNh0TF5EU1i+Frok5sRWsBvCuQhmdqMZKIN2pSHsDZl3CSmKUsJ4tNr50np9USCPpkkxwby2Eiqhg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tsrs/linux-x64-musl@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-pestGEPplhEPzIERc7zwuQ5zhh9ZwMSvAPNQy5TM0je/QuaizmM1zKoPYJ4NiaPzLh2M25HtP4HcpumTqmF3KQ==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@tsrs/win32-x64@0.20.0-ts7.1.0-beta':
+    resolution: {integrity: sha512-sstxBfhjjOSYvSHFfSmROau2oGAVNLwAnj+H0h+ywLo7N7ueFKIDk14HAkIYa/F9iVboiICCpHDY/pmBO71sSg==}
+    engines: {node: '>=16.20.0'}
+    cpu: [x64]
+    os: [win32]
 
   '@tybys/wasm-util@0.10.4':
     resolution: {integrity: sha512-W3c4gRigFS0T/Ma4qIYF3GDAc5AQdHb1yL5znJT1Zv1YaD9Kitx656wBjvr19qbiosmZT8lWDM5BEMynUqX65A==}
@@ -4770,6 +4819,11 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
+  tsrs@0.20.0-ts7.1.0-beta:
+    resolution: {integrity: sha512-8NifAn2tcna3t/nluu1yFvp0fYE28vElDpnD4jiWik69+MDjiHgxdjH8sUYUEFmf/2hl6QIE5ExVGpJzQbBDPw==}
+    engines: {node: '>=16.20.0'}
+    hasBin: true
+
   tunnel@0.0.6:
     resolution: {integrity: sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==}
     engines: {node: '>=0.6.11 <=0.7.0 || >=0.7.3'}
@@ -6882,6 +6936,27 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.12.4
 
+  '@tsrs/darwin-arm64@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/darwin-x64@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/linux-arm64-gnu@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/linux-arm64-musl@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/linux-x64-gnu@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/linux-x64-musl@0.20.0-ts7.1.0-beta':
+    optional: true
+
+  '@tsrs/win32-x64@0.20.0-ts7.1.0-beta':
+    optional: true
+
   '@tybys/wasm-util@0.10.4':
     dependencies:
       tslib: 2.8.1
@@ -7222,7 +7297,7 @@ snapshots:
 
   '@wdio/globals@9.31.3(expect-webdriverio@6.1.0)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0))':
     dependencies:
-      expect-webdriverio: 6.1.0(@wdio/globals@9.31.3)(@wdio/logger@10.1.0)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0))
+      expect-webdriverio: 6.1.0(@wdio/globals@9.31.3)(@wdio/logger@9.29.1)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0))
       webdriverio: 10.1.0(supports-color@7.2.0)(yauzl@2.10.0)
 
   '@wdio/logger@10.1.0':
@@ -8206,11 +8281,11 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  expect-webdriverio@6.1.0(@wdio/globals@9.31.3)(@wdio/logger@10.1.0)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0)):
+  expect-webdriverio@6.1.0(@wdio/globals@9.31.3)(@wdio/logger@9.29.1)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0)):
     dependencies:
       '@vitest/snapshot': 4.1.11
       '@wdio/globals': 9.31.3(expect-webdriverio@6.1.0)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0))
-      '@wdio/logger': 10.1.0
+      '@wdio/logger': 9.29.1
       deep-eql: 5.0.2
       expect: 30.5.2
       jest-matcher-utils: 30.5.2
@@ -9864,6 +9939,16 @@ snapshots:
   ts-pattern@5.9.0: {}
 
   tslib@2.8.1: {}
+
+  tsrs@0.20.0-ts7.1.0-beta:
+    optionalDependencies:
+      '@tsrs/darwin-arm64': 0.20.0-ts7.1.0-beta
+      '@tsrs/darwin-x64': 0.20.0-ts7.1.0-beta
+      '@tsrs/linux-arm64-gnu': 0.20.0-ts7.1.0-beta
+      '@tsrs/linux-arm64-musl': 0.20.0-ts7.1.0-beta
+      '@tsrs/linux-x64-gnu': 0.20.0-ts7.1.0-beta
+      '@tsrs/linux-x64-musl': 0.20.0-ts7.1.0-beta
+      '@tsrs/win32-x64': 0.20.0-ts7.1.0-beta
 
   tunnel@0.0.6: {}
 
