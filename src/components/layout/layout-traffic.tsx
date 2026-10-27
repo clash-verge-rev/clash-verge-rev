@@ -130,7 +130,6 @@ export const LayoutTraffic = () => {
                 cursor: 'auto',
               }}
               color={'disabled'}
-              onClick={async () => {}}
             >
               <MemoryRounded {...iconStyle} />
               <Typography {...valStyle}>{inuse}</Typography>
