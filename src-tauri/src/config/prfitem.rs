@@ -182,9 +182,11 @@ impl PrfItem {
         }
     }
 
-    async fn append_companion_item(item: &mut Self) -> Result<Option<String>> {
+    async fn append_companion_item(item: &mut Self) -> Result<String> {
         profiles::profiles_append_item_safe(item).await?;
-        Ok(item.uid.clone())
+        item.uid
+            .clone()
+            .ok_or_else(|| anyhow::anyhow!("appended companion item has no uid"))
     }
 
     async fn ensure_companion_items(
@@ -195,19 +197,19 @@ impl PrfItem {
         groups: &mut Option<String>,
     ) -> Result<()> {
         if merge.is_none() {
-            *merge = Self::append_companion_item(&mut Self::from_merge(None)).await?;
+            *merge = Some(Self::append_companion_item(&mut Self::from_merge(None)).await?);
         }
         if script.is_none() {
-            *script = Self::append_companion_item(&mut Self::from_script(None)).await?;
+            *script = Some(Self::append_companion_item(&mut Self::from_script(None)).await?);
         }
         if rules.is_none() {
-            *rules = Self::append_companion_item(&mut Self::from_rules()).await?;
+            *rules = Some(Self::append_companion_item(&mut Self::from_rules()).await?);
         }
         if proxies.is_none() {
-            *proxies = Self::append_companion_item(&mut Self::from_proxies()).await?;
+            *proxies = Some(Self::append_companion_item(&mut Self::from_proxies()).await?);
         }
         if groups.is_none() {
-            *groups = Self::append_companion_item(&mut Self::from_groups()).await?;
+            *groups = Some(Self::append_companion_item(&mut Self::from_groups()).await?);
         }
         Ok(())
     }
@@ -444,7 +446,7 @@ impl PrfItem {
         }
     }
 
-    fn from_seq_item(prefix: &str, itype: &str, template: &str) -> Self {
+    fn new_seq_item(prefix: &str, itype: &str, template: &str) -> Self {
         let uid = help::get_uid(prefix).into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
@@ -459,15 +461,15 @@ impl PrfItem {
     }
 
     fn from_rules() -> Self {
-        Self::from_seq_item("r", "rules", tmpl::ITEM_RULES)
+        Self::new_seq_item("r", "rules", tmpl::ITEM_RULES)
     }
 
     fn from_proxies() -> Self {
-        Self::from_seq_item("p", "proxies", tmpl::ITEM_PROXIES)
+        Self::new_seq_item("p", "proxies", tmpl::ITEM_PROXIES)
     }
 
     fn from_groups() -> Self {
-        Self::from_seq_item("g", "groups", tmpl::ITEM_GROUPS)
+        Self::new_seq_item("g", "groups", tmpl::ITEM_GROUPS)
     }
 
     pub(crate) async fn read_file(&self) -> Result<String> {
