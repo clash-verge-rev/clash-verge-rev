@@ -3,7 +3,7 @@ use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{Config, MixedPort},
     core::{CoreManager, handle, tray},
-    feat::clean_async,
+    feat::run_exit_cleanup_flow,
     process::AsyncHandler,
     utils,
 };
@@ -31,38 +31,9 @@ pub async fn restart_clash_core() {
 
 pub async fn restart_app() {
     logging!(debug, Type::System, "启动重启应用流程");
-    handle::Handle::global().set_is_exiting();
-
-    Config::apply_all_and_save_file().await;
-
-    let cleanup_result = clean_async().await;
-
-    logging!(
-        info,
-        Type::System,
-        "资源清理完成，退出代码: {}",
-        if cleanup_result.all_success { 0 } else { 1 }
-    );
+    let cleanup_result = run_exit_cleanup_flow(NoticeStatus::AppRestartCoreStopFailed).await;
 
     if !cleanup_result.core_stopped {
-        handle::Handle::global().clear_is_exiting();
-        // A failed stop may still have marked the core stopped, and exit cleanup skipped the DNS restore.
-        // A core that kept running keeps its DNS, whatever an unapplied config draft says.
-        #[cfg(target_os = "macos")]
-        {
-            let manager = CoreManager::global();
-            let _lifecycle = manager.lifecycle_lock.lock().await;
-            if matches!(
-                *manager.get_running_mode(),
-                crate::core::manager::RunningMode::NotRunning
-            ) {
-                crate::utils::resolve::dns::sync_public_dns().await;
-            }
-        }
-        handle::Handle::notice(
-            NoticeStatus::AppRestartCoreStopFailed,
-            cleanup_result.stop_error.unwrap_or_default(),
-        );
         return;
     }
 
