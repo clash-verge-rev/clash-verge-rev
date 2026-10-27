@@ -4,8 +4,6 @@
  * - env flag `VITE_ENABLE_DEBUG_LOGS` is truthy (1/true/yes)
  * - page sets `window.__VERGE_ENABLE_DEBUG_LOGS__ = true`
  * - localStorage item `VERGE_DEBUG_LOGS` is truthy (1/true/yes)
- *
- * CI path-gate probe: frontend-only change, no Rust side effects.
  */
 let cachedDebugEnabled: boolean | undefined
 
