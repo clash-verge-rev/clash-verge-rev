@@ -1,3 +1,5 @@
+use super::patch_opt_field;
+
 use crate::{
     config::profiles,
     utils::{
@@ -131,19 +133,18 @@ impl PrfOption {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
-                result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
-                result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
-                result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
-                result.danger_accept_invalid_certs =
-                    b_ref.danger_accept_invalid_certs.or(result.danger_accept_invalid_certs);
-                result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
-                result.update_interval = b_ref.update_interval.or(result.update_interval);
-                result.merge = b_ref.merge.clone().or(result.merge);
-                result.script = b_ref.script.clone().or(result.script);
-                result.rules = b_ref.rules.clone().or(result.rules);
-                result.proxies = b_ref.proxies.clone().or(result.proxies);
-                result.groups = b_ref.groups.clone().or(result.groups);
-                result.timeout_seconds = b_ref.timeout_seconds.or(result.timeout_seconds);
+                patch_opt_field!(result, b_ref, user_agent);
+                patch_opt_field!(result, b_ref, with_proxy);
+                patch_opt_field!(result, b_ref, self_proxy);
+                patch_opt_field!(result, b_ref, danger_accept_invalid_certs);
+                patch_opt_field!(result, b_ref, allow_auto_update);
+                patch_opt_field!(result, b_ref, update_interval);
+                patch_opt_field!(result, b_ref, merge);
+                patch_opt_field!(result, b_ref, script);
+                patch_opt_field!(result, b_ref, rules);
+                patch_opt_field!(result, b_ref, proxies);
+                patch_opt_field!(result, b_ref, groups);
+                patch_opt_field!(result, b_ref, timeout_seconds);
                 Some(result)
             }
             (Some(a_ref), None) => Some(a_ref.clone()),
