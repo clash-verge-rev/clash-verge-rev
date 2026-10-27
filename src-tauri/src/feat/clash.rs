@@ -14,15 +14,8 @@ use smartstring::alias::String;
 use std::sync::{Arc, LazyLock};
 
 #[allow(clippy::expect_used)]
-static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> = LazyLock::new(|| {
-    let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let config = rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-        .with_safe_default_protocol_versions()
-        .expect("Failed to set TLS versions")
-        .with_root_certificates(root_store)
-        .with_no_client_auth();
-    Arc::new(config)
-});
+static TLS_CONFIG: LazyLock<Arc<rustls::ClientConfig>> =
+    LazyLock::new(|| Arc::new(utils::network::build_webpki_rooted_tls_config().expect("Failed to set TLS versions")));
 
 pub async fn restart_clash_core() {
     match CoreManager::global().restart_core().await {
