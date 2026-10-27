@@ -610,7 +610,6 @@ fn apply_builtin_scripts(mut config: Mapping, enable_builtin: bool) -> Mapping {
             logging!(debug, Type::Core, "run builtin script {}", item.uid);
             config = match item.uid.as_str() {
                 "verge_hy_alpn" => builtin_hy_alpn(config),
-                "verge_meta_guard" => builtin_meta_guard(config),
                 _ => config,
             };
         }
@@ -628,14 +627,6 @@ fn builtin_hy_alpn(mut config: Mapping) -> Mapping {
                 proxy.insert("alpn".into(), Value::Sequence(vec![Value::String(alpn)]));
             }
         }
-    }
-
-    config
-}
-
-fn builtin_meta_guard(mut config: Mapping) -> Mapping {
-    if config.get("mode").and_then(Value::as_str) == Some("script") {
-        config.insert(Value::from("mode"), Value::from("rule"));
     }
 
     config
