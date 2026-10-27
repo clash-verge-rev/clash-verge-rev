@@ -39,7 +39,7 @@ pub struct IVerge {
 
     pub traffic_graph: Option<bool>,
 
-    /// show memory info (only for Clash Meta)
+    /// show memory info (only for Mihomo)
     pub enable_memory_usage: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
