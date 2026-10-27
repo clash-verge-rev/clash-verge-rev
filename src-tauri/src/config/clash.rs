@@ -184,84 +184,41 @@ impl IClashTemp {
             _ => None,
         })
     }
-    #[cfg(not(target_os = "windows"))]
-    fn guard_redir_port(config: &Mapping) -> u16 {
+    fn guard_port_value(config: &Mapping, key: &str, default: u16) -> u16 {
         let mut port = config
-            .get("redir-port")
+            .get(key)
             .and_then(|value| match value {
                 Value::String(val_str) => val_str.parse().ok(),
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7895);
+            .unwrap_or(default);
         if port == 0 {
-            port = 7895;
+            port = default;
         }
         port
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn guard_redir_port(config: &Mapping) -> u16 {
+        Self::guard_port_value(config, "redir-port", network::ports::DEFAULT_REDIR)
     }
 
     #[cfg(target_os = "linux")]
     fn guard_tproxy_port(config: &Mapping) -> u16 {
-        let mut port = config
-            .get("tproxy-port")
-            .and_then(|value| match value {
-                Value::String(val_str) => val_str.parse().ok(),
-                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
-                _ => None,
-            })
-            .unwrap_or(network::ports::DEFAULT_TPROXY);
-        if port == 0 {
-            port = network::ports::DEFAULT_TPROXY;
-        }
-        port
+        Self::guard_port_value(config, "tproxy-port", network::ports::DEFAULT_TPROXY)
     }
 
     fn guard_mixed_port(config: &Mapping) -> u16 {
-        let raw_value = config.get("mixed-port");
-
-        let mut port = raw_value
-            .and_then(|value| match value {
-                Value::String(val_str) => val_str.parse().ok(),
-                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
-                _ => None,
-            })
-            .unwrap_or(network::ports::DEFAULT_MIXED);
-
-        if port == 0 {
-            port = network::ports::DEFAULT_MIXED;
-        }
-
-        port
+        Self::guard_port_value(config, "mixed-port", network::ports::DEFAULT_MIXED)
     }
 
     fn guard_socks_port(config: &Mapping) -> u16 {
-        let mut port = config
-            .get("socks-port")
-            .and_then(|value| match value {
-                Value::String(val_str) => val_str.parse().ok(),
-                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
-                _ => None,
-            })
-            .unwrap_or(7898);
-        if port == 0 {
-            port = 7898;
-        }
-        port
+        Self::guard_port_value(config, "socks-port", network::ports::DEFAULT_SOCKS)
     }
 
     fn guard_port(config: &Mapping) -> u16 {
-        let mut port = config
-            .get("port")
-            .and_then(|value| match value {
-                Value::String(val_str) => val_str.parse().ok(),
-                Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
-                _ => None,
-            })
-            .unwrap_or(7899);
-        if port == 0 {
-            port = 7899;
-        }
-        port
+        Self::guard_port_value(config, "port", network::ports::DEFAULT_HTTP)
     }
 
     pub(super) fn guard_server_ctrl(config: &Mapping) -> String {
