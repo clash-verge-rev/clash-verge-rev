@@ -148,10 +148,18 @@ async fn restore_backup_archive(path: PathBuf) -> Result<()> {
         )
     };
 
-    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&path)).await??;
-    let mut zip = zip::ZipArchive::new(file)?;
+    let home_dir = app_home_dir()?;
+    AsyncHandler::spawn_blocking(move || -> Result<()> {
+        let file = std::fs::File::open(&path)?;
+        let mut zip = zip::ZipArchive::new(file)?;
+        zip.extract(&home_dir)?;
+        Ok(())
+    })
+    .await
+    .map_err(|join| anyhow!("backup extraction task failed: {join}"))??;
+
+    // Held for the config-data transition only; extraction is plain filesystem work.
     let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
-    zip.extract(app_home_dir()?)?;
     finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await
 }
 
