@@ -63,7 +63,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24.22.1'
+          node-version: '26.13.0'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
