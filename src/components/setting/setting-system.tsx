@@ -1,14 +1,12 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
-import { SysproxyViewer } from './mods/sysproxy-viewer'
-import { TunViewer } from './mods/tun-viewer'
 
 interface Props {
   onError?: (err: Error) => void
@@ -21,9 +19,6 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { enable_auto_launch, enable_silent_start } = verge ?? {}
 
-  const sysproxyRef = useRef<DialogRef>(null)
-  const tunRef = useRef<DialogRef>(null)
-
   const onSwitchFormat = (
     _e: React.ChangeEvent<HTMLInputElement>,
     value: boolean,
@@ -34,9 +29,6 @@ const SettingSystem = ({ onError }: Props) => {
 
   return (
     <SettingList title={t('settings.sections.system.title')}>
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
-
       <ProxyControlSwitches
         label={t('settings.sections.system.toggles.tunMode')}
         onError={onError}
