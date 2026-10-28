@@ -51,7 +51,7 @@ const mountBus = async () => {
   return createEventBus({
     dispatch,
     handleNotice: ([status, message]: [string, string]) => {
-      notice(status, message, (key) => key, vi.fn())
+      notice(status, message, vi.fn())
     },
     revalidateKeys: (keys) => void revalidateQueries(keys.map((key) => [key])),
     readPendingFailures: () => {},
@@ -72,7 +72,7 @@ it('does not replay a recovered startup error after WebView recreation', async (
     kind: 'startFailed',
     detail: 'startup failed',
   })
-  first.handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
+  first.handleNoticeMessage('core_start::error', '', vi.fn())
   await flush()
   expect(showNotice.error).toHaveBeenCalledOnce()
 
@@ -81,7 +81,7 @@ it('does not replay a recovered startup error after WebView recreation', async (
   vi.mocked(getCoreStartupError).mockResolvedValue(null)
   vi.resetModules()
   const recreated = await import('@/services/notice-handlers')
-  recreated.handleNoticeMessage('core_start::error', '', (key) => key, vi.fn())
+  recreated.handleNoticeMessage('core_start::error', '', vi.fn())
   await flush()
   expect(showNotice.error).toHaveBeenCalledOnce()
 })

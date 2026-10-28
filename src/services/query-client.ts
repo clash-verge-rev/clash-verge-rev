@@ -18,7 +18,7 @@ type QueryOptions<T> = {
   placeholderData?: T | (() => T | undefined)
   staleTime?: number
   retry?: number | false
-  retryDelay?: number | ((attempt: number) => number)
+  retryDelay?: number
   refetchInterval?: number | false
   refetchIntervalInBackground?: boolean
   revalidateOnMount?: boolean
@@ -90,25 +90,9 @@ export function useQuery<T>(options: QueryOptions<T>): QueryResult<T> {
   const swr = useSWR<T>(enabled ? queryKey : null, queryFn, {
     dedupingInterval: staleTime,
     errorRetryCount: retry === false ? 0 : retry,
-    errorRetryInterval:
-      typeof retryDelay === 'number'
-        ? retryDelay
-        : swrConfig.errorRetryInterval,
+    errorRetryInterval: retryDelay ?? swrConfig.errorRetryInterval,
     fallbackData,
     keepPreviousData: placeholderData !== undefined,
-    onErrorRetry: (_error, _key, config, revalidate, { retryCount }) => {
-      const maxRetries = config.errorRetryCount
-      if (maxRetries !== undefined && retryCount > maxRetries) return
-
-      const interval =
-        typeof retryDelay === 'function'
-          ? retryDelay(Math.max(retryCount - 1, 0))
-          : config.errorRetryInterval
-
-      setTimeout(() => {
-        revalidate({ retryCount, dedupe: true })
-      }, interval)
-    },
     revalidateOnFocus: refetchOnWindowFocus,
     revalidateOnMount,
     revalidateOnReconnect: refetchOnReconnect,
