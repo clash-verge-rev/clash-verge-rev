@@ -155,48 +155,52 @@ export const getIpInfo = async (): Promise<
   for (const service of shuffledServices) {
     debugLog(`尝试IP检测服务: ${service.url}`)
 
-    const timeoutController = new AbortController()
-    const timeoutId = setTimeout(() => {
-      timeoutController.abort()
-    }, serviceTimeout)
-
     try {
       return await asyncRetry(
         async (bail) => {
           console.debug('Fetching IP information:', service.url)
 
-          const response = await fetch(service.url, {
-            method: 'GET',
-            signal: timeoutController.signal, // AbortSignal.timeout(serviceTimeout),
-            connectTimeout: serviceTimeout,
-            headers: {
-              'User-Agent': userAgent,
-            },
-          })
+          const timeoutController = new AbortController()
+          const timeoutId = setTimeout(() => {
+            timeoutController.abort()
+          }, serviceTimeout)
 
-          if (!response.ok) {
-            return bail(
-              new Error(
-                `IP 检测服务出错，状态码: ${response.status} from ${service.url}`,
-              ),
-            )
-          }
-
-          let data: any
           try {
-            data = await response.json()
-          } catch {
-            return bail(new Error(`无法解析 JSON 响应 from ${service.url}`))
-          }
-
-          if (data && data.ip) {
-            debugLog(`IP检测成功，使用服务: ${service.url}`)
-            return Object.assign(service.mapping(data), {
-              // use last fetch success timestamp
-              lastFetchTs: Date.now(),
+            const response = await fetch(service.url, {
+              method: 'GET',
+              signal: timeoutController.signal,
+              connectTimeout: serviceTimeout,
+              headers: {
+                'User-Agent': userAgent,
+              },
             })
-          } else {
-            return bail(new Error(`无效的响应格式 from ${service.url}`))
+
+            if (!response.ok) {
+              return bail(
+                new Error(
+                  `IP 检测服务出错，状态码: ${response.status} from ${service.url}`,
+                ),
+              )
+            }
+
+            let data: any
+            try {
+              data = await response.json()
+            } catch {
+              return bail(new Error(`无法解析 JSON 响应 from ${service.url}`))
+            }
+
+            if (data && data.ip) {
+              debugLog(`IP检测成功，使用服务: ${service.url}`)
+              return Object.assign(service.mapping(data), {
+                // use last fetch success timestamp
+                lastFetchTs: Date.now(),
+              })
+            } else {
+              return bail(new Error(`无效的响应格式 from ${service.url}`))
+            }
+          } finally {
+            clearTimeout(timeoutId)
           }
         },
         {
@@ -209,8 +213,6 @@ export const getIpInfo = async (): Promise<
     } catch (error) {
       debugLog(`IP检测服务失败: ${service.url}`, error)
       lastError = error
-    } finally {
-      clearTimeout(timeoutId)
     }
   }
 
