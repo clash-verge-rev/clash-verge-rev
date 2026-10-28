@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "در فارسی",
       "manual": "راهنما",
-      "settings": "Home Settings"
+      "settings": "Home Settings",
+      "dragCard": "برای جابه‌جایی بکشید"
     },
     "cards": {
       "trafficStats": "Traffic Stats",

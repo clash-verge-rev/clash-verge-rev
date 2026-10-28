@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "輕量模式",
       "manual": "使用手冊",
-      "settings": "首頁設定"
+      "settings": "首頁設定",
+      "dragCard": "拖曳調整位置"
     },
     "cards": {
       "trafficStats": "流量統計",

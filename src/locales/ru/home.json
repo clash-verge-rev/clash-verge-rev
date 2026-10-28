@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Режим LightWeight",
       "manual": "Документация",
-      "settings": "Настройки главной страницы"
+      "settings": "Настройки главной страницы",
+      "dragCard": "Перетащите, чтобы изменить порядок"
     },
     "cards": {
       "trafficStats": "Статистика трафика",

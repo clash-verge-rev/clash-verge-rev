@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Җиңел Режим",
       "manual": "Документация",
-      "settings": "Home Settings"
+      "settings": "Home Settings",
+      "dragCard": "Drag to reorder"
     },
     "cards": {
       "trafficStats": "Traffic Stats",

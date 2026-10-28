@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "وضع الأداء الخفيف",
       "manual": "دليل",
-      "settings": "Home Settings"
+      "settings": "Home Settings",
+      "dragCard": "اسحب لإعادة الترتيب"
     },
     "cards": {
       "trafficStats": "Traffic Stats",

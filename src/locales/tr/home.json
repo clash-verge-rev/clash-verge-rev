@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Hafif Mod",
       "manual": "Kılavuz",
-      "settings": "Ana Sayfa Ayarları"
+      "settings": "Ana Sayfa Ayarları",
+      "dragCard": "Yeniden sıralamak için sürükleyin"
     },
     "cards": {
       "trafficStats": "Trafik İstatistikleri",

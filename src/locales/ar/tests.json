@@ -57,5 +57,10 @@
       },
       "title": "Unlock Test"
     }
+  },
+  "presets": {
+    "title": "Manage Built-in Websites",
+    "description": "Choose websites to show on the home page. Use + to add custom websites. Tests measure connection latency, not service unlock or account access.",
+    "empty": "Choose built-in websites or use + to add your own."
   }
 }

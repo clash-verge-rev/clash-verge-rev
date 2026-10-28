@@ -1,5 +1,7 @@
+import { DragDropProvider, KeyboardSensor, PointerSensor } from '@dnd-kit/react'
 import {
   DnsOutlined,
+  DragIndicatorRounded,
   HelpOutlineRounded,
   HistoryEduOutlined,
   RouterOutlined,
@@ -17,15 +19,23 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
+  type GridProps,
   IconButton,
   Skeleton,
   Tooltip,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
+import {
+  type ReactNode,
+  Suspense,
+  lazy,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BasePage } from '@/components/base'
+import { BasePage, SortableItem } from '@/components/base'
 import { ClashModeCard } from '@/components/home/clash-mode-card'
 import { CurrentProxyCard } from '@/components/home/current-proxy-card'
 import { EnhancedCard } from '@/components/home/enhanced-card'
@@ -34,6 +44,7 @@ import { HomeProfileCard } from '@/components/home/home-profile-card'
 import { ProxyTunCard } from '@/components/home/proxy-tun-card'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
+import { useNavMenuOrder } from '@/pages/_layout/hooks'
 import { entry_lightweight_mode } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
@@ -99,6 +110,22 @@ const DEFAULT_HOME_CARDS: HomeCardsSettings = {
   ip: true,
 }
 
+const HOME_CARD_KEYS = [
+  'profile',
+  'proxy',
+  'network',
+  'mode',
+  'traffic',
+  'test',
+  'ip',
+  'clashinfo',
+  'systeminfo',
+] as const
+
+type HomeCardKey = (typeof HOME_CARD_KEYS)[number]
+
+const CARD_SENSORS = [PointerSensor, KeyboardSensor]
+
 const serializeCardFlags = (cards: HomeCardsSettings) =>
   Object.keys(cards)
     .sort()
@@ -118,6 +145,7 @@ const HomeSettingsDialog = ({
 }: HomeSettingsDialogProps) => {
   const { t } = useTranslation()
   const [cards, setCards] = useState<HomeCardsSettings>(homeCards)
+  const [saving, setSaving] = useState(false)
   const { patchVerge } = useVerge()
 
   const handleToggle = (key: string) => {
@@ -127,13 +155,20 @@ const HomeSettingsDialog = ({
     }))
   }
 
-  const handleSave = async () => {
-    await patchVerge({ home_cards: cards })
-    onClose()
-  }
+  const handleSave = useLockFn(async () => {
+    setSaving(true)
+    try {
+      await patchVerge({ home_cards: cards })
+      onClose()
+    } catch (error) {
+      showNotice.error(error)
+    } finally {
+      setSaving(false)
+    }
+  })
 
   return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open onClose={saving ? undefined : onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{t('home.page.settings.title')}</DialogTitle>
       <DialogContent>
         <FormGroup>
@@ -221,8 +256,10 @@ const HomeSettingsDialog = ({
         </FormGroup>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('shared.actions.cancel')}</Button>
-        <Button onClick={handleSave} color="primary">
+        <Button onClick={onClose} disabled={saving}>
+          {t('shared.actions.cancel')}
+        </Button>
+        <Button onClick={handleSave} color="primary" loading={saving}>
           {t('shared.actions.save')}
         </Button>
       </DialogActions>
@@ -232,15 +269,20 @@ const HomeSettingsDialog = ({
 
 const HomePage = () => {
   const { t } = useTranslation()
-  const { verge } = useVerge()
+  const { verge, mutateVerge, patchVerge } = useVerge()
   const { current, mutateProfiles } = useProfiles()
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   // 卡片显示状态
-  const homeCards =
-    (verge?.home_cards as HomeCardsSettings | undefined) ?? DEFAULT_HOME_CARDS
+  const homeCards = useMemo(
+    () => ({
+      ...DEFAULT_HOME_CARDS,
+      ...(verge?.home_cards as HomeCardsSettings | undefined),
+    }),
+    [verge?.home_cards],
+  )
 
   // 文档链接函数
   const toGithubDoc = useLockFn(() =>
@@ -254,72 +296,113 @@ const HomePage = () => {
     setSettingsOpen(true)
   }, [])
 
-  const renderCard = useCallback(
-    (cardKey: string, component: React.ReactNode, size: number = 6) => {
-      if (!homeCards[cardKey]) return null
-
-      return (
-        <Grid size={size} key={cardKey}>
-          {component}
-        </Grid>
-      )
-    },
+  // Only visible cards take part in sorting; hidden ones keep their place at the end of the stored order.
+  const visibleCardItems = useMemo(
+    () =>
+      HOME_CARD_KEYS.filter((key) => homeCards[key]).map((path) => ({ path })),
     [homeCards],
   )
-
-  const criticalCards = useMemo(
-    () => [
-      renderCard(
-        'profile',
-        <HomeProfileCard current={current} onProfileUpdated={mutateProfiles} />,
-      ),
-      renderCard('proxy', <CurrentProxyCard />),
-      renderCard('network', <NetworkSettingsCard />),
-      renderCard('mode', <ClashModeEnhancedCard />),
-    ],
-    [current, mutateProfiles, renderCard],
-  )
-
-  const nonCriticalCards = useMemo(
-    () => [
-      renderCard(
-        'traffic',
-        <EnhancedCard
-          title={t('home.page.cards.trafficStats')}
-          icon={<SpeedOutlined />}
-          iconColor="secondary"
-        >
-          <EnhancedTrafficStats />
-        </EnhancedCard>,
-        12,
-      ),
-      renderCard(
-        'test',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyTestCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'ip',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyIpInfoCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'clashinfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyClashInfoCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'systeminfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazySystemInfoCard />
-        </Suspense>,
+  // The order lives inside the free-form home_cards config next to the visibility flags.
+  const storedCardOrder = (verge?.home_cards as { order?: string[] } | null)
+    ?.order
+  const withHiddenCards = useCallback(
+    (order: string[]) => [
+      ...order,
+      ...(storedCardOrder ?? HOME_CARD_KEYS).filter(
+        (key) => !order.includes(key),
       ),
     ],
-    [t, renderCard],
+    [storedCardOrder],
   )
+  const optimisticCardOrder = useCallback(
+    (order: string[]) =>
+      mutateVerge(
+        (prev) =>
+          prev
+            ? {
+                ...prev,
+                home_cards: { ...homeCards, order: withHiddenCards(order) },
+              }
+            : prev,
+        false,
+      ),
+    [homeCards, mutateVerge, withHiddenCards],
+  )
+  const persistCardOrder = useCallback(
+    (order: string[]) =>
+      patchVerge({
+        home_cards: { ...homeCards, order: withHiddenCards(order) },
+      }),
+    [homeCards, patchVerge, withHiddenCards],
+  )
+  const { menuOrder: cardOrder, handleMenuDragEnd: handleCardDragEnd } =
+    useNavMenuOrder({
+      enabled: true,
+      items: visibleCardItems,
+      storedOrder: storedCardOrder,
+      onOptimisticUpdate: optimisticCardOrder,
+      onPersist: persistCardOrder,
+    })
+
+  const cards = useMemo<
+    Record<HomeCardKey, { node: ReactNode; size?: GridProps['size'] }>
+  >(
+    () => ({
+      profile: {
+        node: (
+          <HomeProfileCard
+            current={current}
+            onProfileUpdated={mutateProfiles}
+          />
+        ),
+      },
+      proxy: { node: <CurrentProxyCard /> },
+      network: { node: <NetworkSettingsCard /> },
+      mode: { node: <ClashModeEnhancedCard /> },
+      traffic: {
+        node: (
+          <EnhancedCard
+            title={t('home.page.cards.trafficStats')}
+            icon={<SpeedOutlined />}
+            iconColor="secondary"
+          >
+            <EnhancedTrafficStats />
+          </EnhancedCard>
+        ),
+        size: 12,
+      },
+      test: {
+        node: (
+          <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+            <LazyTestCard />
+          </Suspense>
+        ),
+      },
+      ip: {
+        node: (
+          <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+            <LazyIpInfoCard />
+          </Suspense>
+        ),
+      },
+      clashinfo: {
+        node: (
+          <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+            <LazyClashInfoCard />
+          </Suspense>
+        ),
+      },
+      systeminfo: {
+        node: (
+          <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+            <LazySystemInfoCard />
+          </Suspense>
+        ),
+      },
+    }),
+    [current, mutateProfiles, t],
+  )
+
   return (
     <BasePage
       title={t('home.page.title')}
@@ -353,11 +436,51 @@ const HomePage = () => {
         </Box>
       }
     >
-      <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
-        {criticalCards}
-
-        {nonCriticalCards}
-      </Grid>
+      <DragDropProvider sensors={CARD_SENSORS} onDragEnd={handleCardDragEnd}>
+        <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
+          {cardOrder.map((key, index) => (
+            <SortableItem key={key} id={key} index={index}>
+              {({ ref, handleRef, style }) => (
+                <Grid
+                  ref={ref}
+                  size={cards[key as HomeCardKey].size ?? 6}
+                  style={style}
+                  sx={{
+                    '&:hover > .home-card-handle, & > .home-card-handle:focus-visible':
+                      { opacity: 1 },
+                  }}
+                >
+                  {cards[key as HomeCardKey].node}
+                  <Box
+                    ref={handleRef}
+                    className="home-card-handle"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={t('home.page.tooltips.dragCard')}
+                    title={t('home.page.tooltips.dragCard')}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      px: 1.5,
+                      lineHeight: 0,
+                      color: 'text.secondary',
+                      cursor: 'grab',
+                      opacity: 0,
+                      transition: 'opacity 0.15s',
+                    }}
+                  >
+                    <DragIndicatorRounded
+                      sx={{ fontSize: 18, transform: 'rotate(90deg)' }}
+                    />
+                  </Box>
+                </Grid>
+              )}
+            </SortableItem>
+          ))}
+        </Grid>
+      </DragDropProvider>
 
       {/* 首页设置弹窗 */}
       {settingsOpen && (

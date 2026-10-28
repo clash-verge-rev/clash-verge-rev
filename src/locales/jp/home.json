@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "軽量モード",
       "manual": "マニュアル",
-      "settings": "ホーム設定"
+      "settings": "ホーム設定",
+      "dragCard": "ドラッグして並べ替え"
     },
     "cards": {
       "trafficStats": "トラフィック統計",

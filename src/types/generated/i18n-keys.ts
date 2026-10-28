@@ -25,6 +25,7 @@ export const translationKeys = [
   'home.page.tooltips.lightweightMode',
   'home.page.tooltips.manual',
   'home.page.tooltips.settings',
+  'home.page.tooltips.dragCard',
   'home.page.cards.trafficStats',
   'home.page.cards.networkSettings',
   'home.page.cards.proxyMode',
@@ -939,6 +940,7 @@ export const translationKeys = [
   'tests.statuses.test.yes',
   'tests.statuses.test.no',
   'tests.statuses.test.failed',
+  'tests.statuses.test.risky',
   'tests.statuses.test.completed',
   'tests.statuses.test.disallowedIsp',
   'tests.statuses.test.originalsOnly',
@@ -950,6 +952,9 @@ export const translationKeys = [
   'tests.unlock.page.messages.detectionFailedWithName',
   'tests.unlock.page.messages.detectionTimeout',
   'tests.unlock.page.title',
+  'tests.presets.title',
+  'tests.presets.description',
+  'tests.presets.empty',
 ] as const
 
 export type TranslationKey = (typeof translationKeys)[number]

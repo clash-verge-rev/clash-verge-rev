@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Mode Ringan",
       "manual": "Manual",
-      "settings": "Home Settings"
+      "settings": "Home Settings",
+      "dragCard": "Seret untuk mengubah urutan"
     },
     "cards": {
       "trafficStats": "Traffic Stats",

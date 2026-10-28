@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Modo ligero",
       "manual": "Manual de uso",
-      "settings": "Configuración de la página de inicio"
+      "settings": "Configuración de la página de inicio",
+      "dragCard": "Arrastra para reordenar"
     },
     "cards": {
       "trafficStats": "Estadísticas de tráfico",

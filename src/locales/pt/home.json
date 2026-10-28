@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Modo leve",
       "manual": "Manual",
-      "settings": "Configurações do início"
+      "settings": "Configurações do início",
+      "dragCard": "Arraste para reordenar"
     },
     "cards": {
       "trafficStats": "Estatísticas de tráfego",

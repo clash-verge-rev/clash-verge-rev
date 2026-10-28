@@ -1,0 +1,1 @@
+Additional website icons except Disney+ are adapted from [Simple Icons](https://github.com/simple-icons/simple-icons), released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Claude uses version 15.12.0; the other additional icons use version 11.15.0. Brand colors are applied locally. Disney+ uses a locally drawn text badge.

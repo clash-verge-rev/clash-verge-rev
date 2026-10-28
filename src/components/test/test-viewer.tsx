@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+import { DEFAULT_TEST_LIST } from '@/utils/test-presets'
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void
@@ -26,7 +27,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
     const [openType, setOpenType] = useState<'new' | 'edit'>('new')
     const [loading, setLoading] = useState(false)
     const { verge, patchVerge } = useVerge()
-    const testList = verge?.test_list ?? []
+    const testList = verge?.test_list ?? DEFAULT_TEST_LIST
     const { control, ...formIns } = useForm<IVergeTestItem>({
       defaultValues: {
         name: '',

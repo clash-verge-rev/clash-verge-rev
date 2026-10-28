@@ -3,7 +3,8 @@
     "tooltips": {
       "lightweightMode": "Leichtgewichtiger Modus",
       "manual": "Bedienungsanleitung",
-      "settings": "Startseite-Einstellungen"
+      "settings": "Startseite-Einstellungen",
+      "dragCard": "Zum Neuanordnen ziehen"
     },
     "cards": {
       "trafficStats": "Verkehrsstatistik",

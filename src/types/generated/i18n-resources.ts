@@ -187,6 +187,7 @@ export interface TranslationResources {
         }
         title: string
         tooltips: {
+          dragCard: string
           lightweightMode: string
           manual: string
           settings: string
@@ -1579,6 +1580,11 @@ export interface TranslationResources {
         }
         title: string
       }
+      presets: {
+        description: string
+        empty: string
+        title: string
+      }
       statuses: {
         test: {
           completed: string
@@ -1589,6 +1595,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

@@ -4,22 +4,25 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/react'
 import { isSortable } from '@dnd-kit/react/sortable'
-import { Add, NetworkCheck } from '@mui/icons-material'
-import { Box, IconButton, Tooltip, alpha, styled } from '@mui/material'
-import { nanoid } from 'nanoid'
-import { useEffect, useRef, useMemo, useCallback } from 'react'
+import { Add, NetworkCheck, Tune } from '@mui/icons-material'
+import {
+  Box,
+  IconButton,
+  Tooltip,
+  Typography,
+  alpha,
+  styled,
+} from '@mui/material'
+import { useState, useRef, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-// test icons
-import apple from '@/assets/image/test/apple.svg?raw'
-import github from '@/assets/image/test/github.svg?raw'
-import google from '@/assets/image/test/google.svg?raw'
-import youtube from '@/assets/image/test/youtube.svg?raw'
 import { SortableItem } from '@/components/base'
 import { TestItem } from '@/components/test/test-item'
+import { TestPresetsDialog } from '@/components/test/test-presets-dialog'
 import { TestViewer, type TestViewerRef } from '@/components/test/test-viewer'
 import { useVerge } from '@/hooks/use-verge'
 import { emitTestAll } from '@/services/bus'
+import { DEFAULT_TEST_LIST } from '@/utils/test-presets'
 
 import { EnhancedCard } from './enhanced-card'
 
@@ -37,38 +40,11 @@ const ScrollBox = styled(Box)(({ theme }) => ({
   },
 }))
 
-// 默认测试列表，移到组件外部避免重复创建
-const DEFAULT_TEST_LIST = [
-  {
-    uid: nanoid(),
-    name: 'Apple',
-    url: 'https://www.apple.com',
-    icon: apple,
-  },
-  {
-    uid: nanoid(),
-    name: 'GitHub',
-    url: 'https://www.github.com',
-    icon: github,
-  },
-  {
-    uid: nanoid(),
-    name: 'Google',
-    url: 'https://www.google.com',
-    icon: google,
-  },
-  {
-    uid: nanoid(),
-    name: 'YouTube',
-    url: 'https://www.youtube.com',
-    icon: youtube,
-  },
-]
-
 export const TestCard = () => {
   const { t } = useTranslation()
   const { verge, mutateVerge, patchVerge } = useVerge()
   const viewerRef = useRef<TestViewerRef>(null)
+  const [presetsOpen, setPresetsOpen] = useState(false)
 
   // 使用useMemo优化测试列表，避免每次渲染重新计算
   const testList = useMemo(() => {
@@ -144,13 +120,6 @@ export const TestCard = () => {
     [testList, verge, mutateVerge, patchVerge],
   )
 
-  // 仅在verge首次加载时初始化测试列表
-  useEffect(() => {
-    if (verge && !verge.test_list) {
-      patchVerge({ test_list: DEFAULT_TEST_LIST })
-    }
-  }, [verge, patchVerge])
-
   // 使用useMemo优化UI内容，减少渲染计算
   const renderTestItems = useMemo(
     () => (
@@ -192,12 +161,29 @@ export const TestCard = () => {
       action={
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Tooltip title={t('tests.page.actions.testAll')} arrow>
-            <IconButton size="small" onClick={handleTestAll}>
+            <IconButton
+              size="small"
+              onClick={handleTestAll}
+              aria-label={t('tests.page.actions.testAll')}
+            >
               <NetworkCheck fontSize="small" />
             </IconButton>
           </Tooltip>
+          <Tooltip title={t('tests.presets.title')} arrow>
+            <IconButton
+              size="small"
+              onClick={() => setPresetsOpen(true)}
+              aria-label={t('tests.presets.title')}
+            >
+              <Tune fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title={t('tests.modals.test.title.create')} arrow>
-            <IconButton size="small" onClick={handleCreateTest}>
+            <IconButton
+              size="small"
+              onClick={handleCreateTest}
+              aria-label={t('tests.modals.test.title.create')}
+            >
               <Add fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -205,12 +191,27 @@ export const TestCard = () => {
       }
     >
       <ScrollBox>
+        {testList.length === 0 && (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ textAlign: 'center', py: 3 }}
+          >
+            {t('tests.presets.empty')}
+          </Typography>
+        )}
         <DragDropProvider sensors={[PointerSensor]} onDragEnd={onDragEnd}>
           {renderTestItems}
         </DragDropProvider>
       </ScrollBox>
 
       <TestViewer ref={viewerRef} onChange={onTestListItemChange} />
+      {presetsOpen && (
+        <TestPresetsDialog
+          testList={testList}
+          onClose={() => setPresetsOpen(false)}
+        />
+      )}
     </EnhancedCard>
   )
 }
