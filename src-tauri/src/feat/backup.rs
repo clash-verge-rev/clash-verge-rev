@@ -33,6 +33,9 @@ async fn finalize_restored_verge_config(
     webdav_username: Option<String>,
     webdav_password: Option<String>,
 ) -> Result<()> {
+    // The lock must cover every restored layer; an unlocked apply races a concurrently staged draft.
+    let config_write = Config::lock_config_write().await;
+
     // A broken restored `verge.yaml` is a restore failure, not a reason to load defaults.
     let mut restored = help::read_yaml::<IVerge>(&verge_path()?).await?;
     restored.webdav_url = webdav_url;
@@ -55,14 +58,10 @@ async fn finalize_restored_verge_config(
     profiles_draft.apply();
 
     let verge_draft = Config::verge().await;
-    {
-        // Hold the write lock so a concurrent patch cannot stage a draft the proxy write reads.
-        let _config_write = Config::lock_config_write().await;
-        verge_draft.edit_draft(|d| {
-            *d = restored.clone();
-        });
-        verge_draft.apply();
-    }
+    verge_draft.edit_draft(|d| {
+        *d = restored.clone();
+    });
+    verge_draft.apply();
 
     // Turn it off here; a failing core side effect below would otherwise skip this step.
     if !restored.enable_system_proxy.unwrap_or_default() {
@@ -79,6 +78,9 @@ async fn finalize_restored_verge_config(
             }
         }
     }
+
+    // `patch_verge` re-acquires the lock through `try_lock_config_write`.
+    drop(config_write);
 
     // Run configuration side effects without rewriting the already-restored file.
     if let Err(err) = super::patch_verge(&restored, true).await {
@@ -146,10 +148,18 @@ async fn restore_backup_archive(path: PathBuf) -> Result<()> {
         )
     };
 
-    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&path)).await??;
-    let mut zip = zip::ZipArchive::new(file)?;
+    let home_dir = app_home_dir()?;
+    AsyncHandler::spawn_blocking(move || -> Result<()> {
+        let file = std::fs::File::open(&path)?;
+        let mut zip = zip::ZipArchive::new(file)?;
+        zip.extract(&home_dir)?;
+        Ok(())
+    })
+    .await
+    .map_err(|join| anyhow!("backup extraction task failed: {join}"))??;
+
+    // Held for the config-data transition only; extraction is plain filesystem work.
     let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
-    zip.extract(app_home_dir()?)?;
     finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await
 }
 
