@@ -596,7 +596,7 @@ export const CurrentProxyCard = () => {
     [getProfileStorageKey],
   )
 
-  const { handleSelectChange } = useProxySelection({
+  const { select } = useProxySelection({
     onSuccess: () => {
       refreshProxy()
     },
@@ -766,15 +766,9 @@ export const CurrentProxyCard = () => {
       const previousProxy = selectedGroup.now
       const nextName = option.member.ref.name
       // The profile selection is the durable source across core restarts and run modes.
-      handleSelectChange(
-        selectedGroup.name,
-        previousProxy!,
-        selectedGroup.fixed!,
-      )({
-        target: { value: nextName },
-      })
+      select(selectedGroup.name, nextName, previousProxy!, selectedGroup.fixed!)
     },
-    [handleSelectChange, isDirectMode, selectedGroup, unsortedProxyOptions],
+    [isDirectMode, select, selectedGroup, unsortedProxyOptions],
   )
 
   const goToProxies = useCallback(() => {
