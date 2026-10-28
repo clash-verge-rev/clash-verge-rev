@@ -1,6 +1,6 @@
 import { ContentCopyRounded } from '@mui/icons-material'
 import { Typography } from '@mui/material'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DialogRef, TooltipIcon } from '@/components/base'
@@ -21,6 +21,7 @@ import { version } from '@root/package.json'
 import { BackupViewer } from './mods/backup-viewer'
 import { ConfigViewer } from './mods/config-viewer'
 import { HotkeyViewer } from './mods/hotkey-viewer'
+import { IpAssessmentSettings } from './mods/ip-assessment-settings'
 import { LayoutViewer } from './mods/layout-viewer'
 import { LiteModeViewer } from './mods/lite-mode-viewer'
 import { MiscViewer } from './mods/misc-viewer'
@@ -34,6 +35,7 @@ interface Props {
 
 const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const { t } = useTranslation()
+  const [ipSettingsOpen, setIpSettingsOpen] = useState(false)
 
   const configRef = useRef<DialogRef>(null)
   const hotkeyRef = useRef<DialogRef>(null)
@@ -88,6 +90,14 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
       <LiteModeViewer ref={liteModeRef} />
+      {ipSettingsOpen && (
+        <IpAssessmentSettings onClose={() => setIpSettingsOpen(false)} />
+      )}
+
+      <SettingItem
+        onClick={() => setIpSettingsOpen(true)}
+        label={t('home.network.settings.title')}
+      />
 
       <SettingItem
         onClick={() => backupRef.current?.open()}

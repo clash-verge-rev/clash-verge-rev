@@ -1,4 +1,5 @@
 import {
+  InfoOutlined,
   LocationOnOutlined,
   RefreshOutlined,
   VisibilityOffOutlined,
@@ -9,6 +10,8 @@ import {
   Button,
   FormControlLabel,
   IconButton,
+  MenuItem,
+  Select,
   Skeleton,
   Switch,
   Typography,
@@ -28,13 +31,20 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useDnsLeak } from '@/hooks/use-dns-leak'
+import { useIpAssessment } from '@/hooks/use-ip-assessment'
+import { useWebrtcLeak } from '@/hooks/use-webrtc-leak'
 import { getIpInfo } from '@/services/api'
 import { useQuery } from '@/services/query-client'
 import getSystem from '@/utils/get-system'
 
 import { EnhancedCard } from './enhanced-card'
+import { IpAssessmentPanel, IpPanelTitle } from './ip-assessment-panel'
+import { IpRiskChecksPanel, IpRiskPanel } from './ip-risk-panel'
 
-const IP_REFRESH_SECONDS = 300
+// Assessment providers rate-limit, so the shortest interval stays at one minute.
+const REFRESH_MINUTE_OPTIONS = [1, 5, 10, 30, 60]
+const DEFAULT_REFRESH_MINUTES = 5
 const COUNTDOWN_TICK_INTERVAL = 5_000
 const IP_INFO_CACHE_KEY = 'cv_ip_info_cache'
 
@@ -86,6 +96,9 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
   ({ children }, ref) => {
     const { t } = useTranslation()
     const { refetch: mutate } = useIPInfo()
+    const { refetch: refetchAssessment } = useIpAssessment()
+    const { refetch: refetchWebrtc } = useWebrtcLeak()
+    const { refetch: refetchDns } = useDnsLeak()
 
     return (
       <EnhancedCard
@@ -94,7 +107,15 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
         iconColor="info"
         ref={ref}
         action={
-          <IconButton size="small" onClick={() => mutate()}>
+          <IconButton
+            size="small"
+            onClick={() => {
+              void mutate()
+              void refetchAssessment()
+              void refetchWebrtc()
+              void refetchDns()
+            }}
+          >
             <RefreshOutlined />
           </IconButton>
         }
@@ -112,6 +133,14 @@ export const IpInfoCard = () => {
     'ip-info-auto-refresh',
     true,
   )
+  const [storedRefreshMinutes, setRefreshMinutes] = useLocalStorage(
+    'ip-info-refresh-minutes',
+    DEFAULT_REFRESH_MINUTES,
+  )
+  const refreshMinutes = REFRESH_MINUTE_OPTIONS.includes(storedRefreshMinutes)
+    ? storedRefreshMinutes
+    : DEFAULT_REFRESH_MINUTES
+  const refreshSeconds = refreshMinutes * 60
   const appWindow = useMemo(() => getCurrentWebviewWindow(), [])
 
   // Once intersected, the card stays eligible for refresh until unmount.
@@ -121,10 +150,13 @@ export const IpInfoCard = () => {
 
   const [countdown, setCountdown] = useState<CountDownState>({
     type: 'countdown',
-    remainingSeconds: IP_REFRESH_SECONDS,
+    remainingSeconds: refreshSeconds,
   })
 
   const { data: ipInfo, error, isLoading, refetch: mutate } = useIPInfo()
+  const { refetch: refetchAssessment } = useIpAssessment()
+  const { refetch: refetchWebrtc } = useWebrtcLeak()
+  const { refetch: refetchDns } = useDnsLeak()
 
   const onCountdownTick = useEffectEvent(async () => {
     const now = Date.now()
@@ -134,7 +166,7 @@ export const IpInfoCard = () => {
     }
 
     const elapsed = Math.floor((now - ts) / 1000)
-    const remaining = IP_REFRESH_SECONDS - elapsed
+    const remaining = refreshSeconds - elapsed
 
     if (remaining <= 0) {
       if (
@@ -145,11 +177,16 @@ export const IpInfoCard = () => {
       ) {
         setCountdown({ type: 'revalidating' })
         try {
-          await mutate()
+          await Promise.all([
+            mutate(),
+            refetchAssessment(),
+            refetchWebrtc(),
+            refetchDns(),
+          ])
         } finally {
           setCountdown({
             type: 'countdown',
-            remainingSeconds: IP_REFRESH_SECONDS,
+            remainingSeconds: refreshSeconds,
           })
         }
       } else {
@@ -249,172 +286,211 @@ export const IpInfoCard = () => {
       break
     default: // Normal render
       mainElement = (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ overflow: 'hidden' }}>
           <Box
             sx={{
               display: 'flex',
-              flexDirection: 'row',
-              flex: 1,
+              alignItems: 'center',
+              mb: 1,
               overflow: 'hidden',
             }}
           >
-            <Box sx={{ width: '40%', overflow: 'hidden' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  mb: 1,
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: '1.5rem',
-                    mr: 1,
-                    display: 'inline-block',
-                    width: 28,
-                    textAlign: 'center',
-                    flexShrink: 0,
-                    fontFamily:
-                      getSystem() === 'windows'
-                        ? '"twemoji mozilla", sans-serif'
-                        : 'sans-serif',
-                  }}
-                >
-                  {getCountryFlag(ipInfo?.country_code)}
-                </Box>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 'medium',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: '100%',
-                  }}
-                >
-                  {ipInfo?.country ||
-                    t('home.components.ipInfo.labels.unknown')}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ flexShrink: 0 }}
-                >
-                  {t('home.components.ipInfo.labels.ip')}:
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    ml: 1,
-                    overflow: 'hidden',
-                    maxWidth: 'calc(100% - 30px)',
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.75rem',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      wordBreak: 'break-all',
-                    }}
-                  >
-                    {showIp ? ipInfo?.ip : '••••••••••'}
-                  </Typography>
-                  <IconButton size="small" onClick={toggleShowIp}>
-                    {showIp ? (
-                      <VisibilityOffOutlined fontSize="small" />
-                    ) : (
-                      <VisibilityOutlined fontSize="small" />
-                    )}
-                  </IconButton>
-                </Box>
-              </Box>
-
-              <InfoItem
-                label={t('home.components.ipInfo.labels.asn')}
-                value={ipInfo?.asn ? `AS${ipInfo.asn}` : 'N/A'}
-              />
-            </Box>
-
-            <Box sx={{ width: '60%', overflow: 'auto' }}>
-              <InfoItem
-                label={t('home.components.ipInfo.labels.isp')}
-                value={ipInfo?.organization}
-              />
-              <InfoItem
-                label={t('home.components.ipInfo.labels.org')}
-                value={ipInfo?.asn_organization}
-              />
-              <InfoItem
-                label={t('home.components.ipInfo.labels.location')}
-                value={[ipInfo?.city, ipInfo?.region]
-                  .filter(Boolean)
-                  .join(', ')}
-              />
-              <InfoItem
-                label={t('home.components.ipInfo.labels.timezone')}
-                value={ipInfo?.timezone}
-              />
-            </Box>
-          </Box>
-
-          <Box
-            sx={{
-              mt: 'auto',
-              pt: 0.5,
-              borderTop: 1,
-              borderColor: 'divider',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              opacity: 0.7,
-              fontSize: '0.7rem',
-            }}
-          >
-            <FormControlLabel
-              sx={{ m: 0 }}
-              control={
-                <Switch
-                  size="small"
-                  checked={autoRefresh}
-                  onChange={(_, checked) => setAutoRefresh(checked)}
-                />
-              }
-              label={
-                <Typography variant="caption">
-                  {t('home.components.ipInfo.labels.autoRefresh')}
-                  {autoRefresh &&
-                    (countdown.type === 'countdown'
-                      ? `: ${countdown.remainingSeconds}s`
-                      : '...')}
-                </Typography>
-              }
-            />
-            <Typography
-              variant="caption"
+            <Box
+              component="span"
               sx={{
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
+                fontSize: '1.5rem',
+                mr: 1,
+                display: 'inline-block',
+                width: 28,
+                textAlign: 'center',
+                flexShrink: 0,
+                fontFamily:
+                  getSystem() === 'windows'
+                    ? '"twemoji mozilla", sans-serif'
+                    : 'sans-serif',
               }}
             >
-              {`${ipInfo?.country_code ?? 'N/A'}, ${ipInfo?.longitude?.toFixed(2) ?? 'N/A'}, ${ipInfo?.latitude?.toFixed(2) ?? 'N/A'}`}
+              {getCountryFlag(ipInfo?.country_code)}
+            </Box>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 'medium',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: '100%',
+              }}
+            >
+              {ipInfo?.country || t('home.components.ipInfo.labels.unknown')}
             </Typography>
           </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ flexShrink: 0 }}
+            >
+              {t('home.components.ipInfo.labels.ip')}:
+            </Typography>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                ml: 1,
+                overflow: 'hidden',
+                maxWidth: 'calc(100% - 30px)',
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-all',
+                }}
+              >
+                {showIp ? ipInfo?.ip : '••••••••••'}
+              </Typography>
+              <IconButton size="small" onClick={toggleShowIp}>
+                {showIp ? (
+                  <VisibilityOffOutlined fontSize="small" />
+                ) : (
+                  <VisibilityOutlined fontSize="small" />
+                )}
+              </IconButton>
+            </Box>
+          </Box>
+
+          <InfoItem
+            label={t('home.components.ipInfo.labels.asn')}
+            value={ipInfo?.asn ? `AS${ipInfo.asn}` : 'N/A'}
+          />
+          <InfoItem
+            label={t('home.components.ipInfo.labels.isp')}
+            value={ipInfo?.organization}
+          />
+          <InfoItem
+            label={t('home.components.ipInfo.labels.org')}
+            value={ipInfo?.asn_organization}
+          />
+          <InfoItem
+            label={t('home.components.ipInfo.labels.location')}
+            value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(', ')}
+          />
+          <InfoItem
+            label={t('home.components.ipInfo.labels.timezone')}
+            value={ipInfo?.timezone}
+          />
         </Box>
       )
   }
 
   return (
-    <IPInfoCardContainer ref={containerRef}>{mainElement}</IPInfoCardContainer>
+    <IPInfoCardContainer ref={containerRef}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'repeat(2, minmax(0, 1fr))',
+            lg: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr)',
+          },
+          gap: 3,
+          flex: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <IpPanelTitle
+            icon={<InfoOutlined fontSize="small" />}
+            color="info"
+            title={t('home.components.ipInfo.labels.basic')}
+          />
+          {mainElement}
+        </Box>
+        <IpAssessmentPanel />
+        {/* Spans the second row in the two-column layout. */}
+        <Box sx={{ gridColumn: { md: '1 / -1', lg: 'auto' } }}>
+          <IpRiskChecksPanel />
+        </Box>
+      </Box>
+
+      <IpRiskPanel egressIp={ipInfo?.ip} />
+
+      <Box
+        sx={{
+          mt: 2,
+          pt: 0.5,
+          borderTop: 1,
+          borderColor: 'divider',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 1,
+          opacity: 0.7,
+          fontSize: '0.7rem',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <FormControlLabel
+            sx={{ m: 0 }}
+            control={
+              <Switch
+                size="small"
+                checked={autoRefresh}
+                onChange={(_, checked) => setAutoRefresh(checked)}
+              />
+            }
+            label={
+              <Typography variant="caption">
+                {t('home.components.ipInfo.labels.autoRefresh')}
+                {autoRefresh &&
+                  (countdown.type === 'countdown'
+                    ? `: ${countdown.remainingSeconds}s`
+                    : '...')}
+              </Typography>
+            }
+          />
+          <Select
+            size="small"
+            variant="standard"
+            disableUnderline
+            disabled={!autoRefresh}
+            value={refreshMinutes}
+            onChange={(event) => setRefreshMinutes(Number(event.target.value))}
+            inputProps={{
+              'aria-label': t('home.components.ipInfo.labels.refreshInterval'),
+            }}
+            sx={{ fontSize: '0.75rem' }}
+          >
+            {REFRESH_MINUTE_OPTIONS.map((minutes) => (
+              <MenuItem
+                key={minutes}
+                value={minutes}
+                sx={{ fontSize: '0.8rem' }}
+              >
+                {t('home.components.ipInfo.labels.everyMinutes', {
+                  count: minutes,
+                })}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
+        <Typography
+          variant="caption"
+          sx={{
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {`${ipInfo?.country_code ?? 'N/A'}, ${ipInfo?.longitude?.toFixed(2) ?? 'N/A'}, ${ipInfo?.latitude?.toFixed(2) ?? 'N/A'}`}
+        </Typography>
+      </Box>
+    </IPInfoCardContainer>
   )
 }
 

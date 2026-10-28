@@ -98,10 +98,13 @@ export interface TranslationResources {
           labels: {
             asn: string
             autoRefresh: string
+            basic: string
+            everyMinutes: string
             ip: string
             isp: string
             location: string
             org: string
+            refreshInterval: string
             timezone: string
             unknown: string
           }
@@ -164,6 +167,132 @@ export interface TranslationResources {
           }
           unknownTime: string
         }
+      }
+      network: {
+        broadcast: string
+        checkedAt: string
+        detection: string
+        failed: string
+        fallback: string
+        flagged: string
+        flags: {
+          abuser: string
+          datacenter: string
+          proxy: string
+          tor: string
+          vpn: string
+        }
+        loading: string
+        lowerBetter: string
+        native: string
+        no: string
+        purity: string
+        referenceOnly: string
+        risk: {
+          checks: {
+            abuser: string
+            anonymous: string
+            botnet: string
+            commentSpam: string
+            compromised: string
+            crawler: string
+            dnsbl: string
+            forumSpam: string
+            fraud: string
+            harvester: string
+            honeypot: string
+            knownAttacker: string
+            localThreat: string
+            loginAttack: string
+            malware: string
+            multiReports: string
+            proxy: string
+            publicList: string
+            registrationAttack: string
+            relay: string
+            reports: string
+            residentialProxy: string
+            threatIntel: string
+            tor: string
+            vpn: string
+          }
+          dns: {
+            checking: string
+            failed: string
+            mismatch: string
+            safe: string
+            servers: string
+            unknown: string
+          }
+          groups: {
+            abuse: string
+            anonymity: string
+            attack: string
+            blacklist: string
+          }
+          legend: string
+          metrics: {
+            dns: string
+            networkAbuse: string
+            proxyRisk: string
+            publicLists: string
+            reports: string
+            reportsDays: string
+            sharedDevices: string
+            webrtc: string
+          }
+          summary: string
+          title: string
+          units: {
+            devices: string
+            entries: string
+            lists: string
+          }
+          webrtc: {
+            blocked: string
+            checking: string
+            leak: string
+            safe: string
+            unknown: string
+            unsupported: string
+          }
+        }
+        riskBands: string
+        riskLevels: {
+          default: string
+          error: string
+          success: string
+          warning: string
+        }
+        riskScore: string
+        score: string
+        settings: {
+          add: string
+          description: string
+          empty: string
+          enabled: string
+          httpsRequired: string
+          keyRequired: string
+          privacy: string
+          provider: string
+          remove: string
+          title: string
+          url: string
+        }
+        types: {
+          banking: string
+          business: string
+          education: string
+          government: string
+          hosting: string
+          isp: string
+          mobile: string
+          residential: string
+          unknown: string
+        }
+        unflagged: string
+        unknown: string
+        yes: string
       }
       page: {
         cards: {
@@ -1589,6 +1718,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

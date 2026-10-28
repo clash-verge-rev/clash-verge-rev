@@ -304,6 +304,7 @@ const HomePage = () => {
         <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
           <LazyIpInfoCard />
         </Suspense>,
+        12,
       ),
       renderCard(
         'clashinfo',

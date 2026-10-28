@@ -80,7 +80,10 @@
         "location": "位置",
         "timezone": "时区",
         "autoRefresh": "自动刷新",
-        "unknown": "未知"
+        "unknown": "未知",
+        "basic": "基本信息",
+        "refreshInterval": "刷新间隔",
+        "everyMinutes": "每 {{count}} 分钟"
       },
       "errors": {
         "load": "获取 IP 信息失败",
@@ -151,6 +154,132 @@
         "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
         "direct": "所有流量不经过代理节点，但经过 Clash 内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
       }
+    }
+  },
+  "network": {
+    "purity": "网络纯净度",
+    "loading": "正在检测网络",
+    "failed": "暂时无法获取检测结果，请稍后刷新。",
+    "fallback": "配置的检测服务均不可用，已使用公开接口。",
+    "detection": "风险标记检测",
+    "riskScore": "{{provider}} 风险系数",
+    "lowerBetter": "数值越低越好 · 来源方评分，非网速测试",
+    "flagged": "存在检测标记",
+    "unflagged": "未见检测标记",
+    "unknown": "未知",
+    "yes": "是",
+    "no": "否",
+    "score": "风险 {{score}} / 100",
+    "broadcast": "广播 IP",
+    "native": "原生 IP",
+    "checkedAt": "{{time}} 检测",
+    "referenceOnly": "第三方检测结果仅供参考，不代表 AI 服务的实际可用性。",
+    "flags": {
+      "proxy": "代理",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "datacenter": "机房",
+      "abuser": "滥用"
+    },
+    "types": {
+      "residential": "住宅网络",
+      "hosting": "机房网络",
+      "mobile": "移动网络",
+      "business": "企业网络",
+      "unknown": "属性未知",
+      "isp": "运营商网络",
+      "education": "教育网络",
+      "government": "政府网络",
+      "banking": "金融网络"
+    },
+    "settings": {
+      "title": "IP 质量检测",
+      "description": "同时查询已启用的服务并整合指标：相同结果合并，不同结果保留来源。全部关闭时只使用 IPPure。ipapi.is 可无 Key 查询；cleanip.io 和 IPinfo 需要凭据。IPinfo 优先查询完整接口，权限不足时回退 Lite；Lite 仅提供国家和 ASN 等基础信息。",
+      "privacy": "Key / Token 以未加密形式保存在本机，不随订阅备份，只通过 HTTPS 发送给对应服务（ipapi.is 放在请求正文，cleanip.io 放在 X-API-Key 请求头，IPinfo 放在 Authorization 请求头）。检测服务会收到查询的 IP 和本次请求的出口 IP。",
+      "provider": "服务类型",
+      "url": "服务器地址",
+      "add": "添加服务",
+      "remove": "删除",
+      "empty": "未添加检测服务，将只使用 IPPure 公开接口。",
+      "httpsRequired": "检测服务必须使用有效的 HTTPS 地址；留空使用默认地址。",
+      "enabled": "启用",
+      "keyRequired": "请填写此服务的 API Key / Token，或关闭此服务。"
+    },
+    "risk": {
+      "title": "风险检测",
+      "summary": "有记录 {{hit}} · 未命中 {{clear}} · 未取得 {{unknown}}",
+      "legend": "⚠ 有记录 · ✓ 已检测且未命中 · — 当前检测服务未返回此项",
+      "groups": {
+        "anonymity": "匿名性",
+        "abuse": "滥用",
+        "blacklist": "黑名单",
+        "attack": "攻击"
+      },
+      "checks": {
+        "proxy": "代理",
+        "vpn": "VPN",
+        "tor": "Tor",
+        "anonymous": "匿名出口",
+        "crawler": "爬虫",
+        "residentialProxy": "住宅代理",
+        "relay": "中继",
+        "commentSpam": "评论垃圾",
+        "forumSpam": "论坛垃圾",
+        "harvester": "邮件采集",
+        "abuser": "滥用",
+        "threatIntel": "威胁情报",
+        "fraud": "高欺诈分",
+        "dnsbl": "DNSBL",
+        "honeypot": "HTTP 蜜罐",
+        "botnet": "C&C",
+        "malware": "恶意软件",
+        "publicList": "黑名单",
+        "compromised": "失陷设备",
+        "reports": "近期举报",
+        "multiReports": "多人举报",
+        "knownAttacker": "已知攻击者",
+        "localThreat": "本地威胁",
+        "loginAttack": "登录攻击",
+        "registrationAttack": "注册攻击"
+      },
+      "metrics": {
+        "proxyRisk": "代理威胁分",
+        "sharedDevices": "共用设备",
+        "networkAbuse": "所在网络滥用比例",
+        "publicLists": "公开名单",
+        "reports": "举报记录",
+        "reportsDays": "近 {{days}} 天举报",
+        "webrtc": "WebRTC 泄漏",
+        "dns": "DNS 泄漏"
+      },
+      "units": {
+        "devices": "{{count}} 台",
+        "entries": "{{count}} 条",
+        "lists": "{{count}} 份"
+      },
+      "webrtc": {
+        "checking": "检测中",
+        "safe": "未泄漏",
+        "leak": "已泄漏",
+        "blocked": "已阻断",
+        "unsupported": "不支持",
+        "unknown": "未知"
+      },
+      "dns": {
+        "checking": "检测中",
+        "safe": "未泄漏",
+        "mismatch": "可能泄漏",
+        "failed": "检测失败",
+        "servers": "{{count}} 个 DNS 服务器",
+        "unknown": "未知"
+      }
+    },
+    "riskBands": "颜色提示：0–29 低风险 · 30–69 中风险 · 70–100 高风险",
+    "riskLevels": {
+      "success": "低风险",
+      "warning": "中风险",
+      "error": "高风险",
+      "default": "未知"
     }
   }
 }

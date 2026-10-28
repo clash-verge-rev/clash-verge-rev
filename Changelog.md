@@ -20,6 +20,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增首页 IP 检测汇总，可配置检测服务并查看来源差异与风险标记
 - 新增虚拟网卡设置的「DNS 模式」选项，支持配置 mihomo 系统 DNS 行为
 - 新增「IP 信息」自动刷新开关，关闭后仍可手动刷新
 - 新增 Muse AI 解锁检测，针对 Muse AI 特有的 Cloudflare 人机验证增加「Risky」状态标记

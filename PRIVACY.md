@@ -116,15 +116,55 @@ update.
 The Home page shows your apparent public IP address and its geolocation. To do
 this it queries one randomly chosen service from:
 `api.ip.sb`, `ipapi.co`, `api.ipapi.is`, `ipwho.is`, `ip.api.skk.moe`,
-`get.geojs.io`. The query is refreshed about every 5 minutes while the card is
-visible and the window is shown; it is not sent while the window is hidden or
-the Home page is not in view.
+`get.geojs.io`. Queries start when the card mounts. Automatic refresh runs
+while the card has entered the viewport and the window is shown, every 1, 5
+(default), 10, 30 or 60 minutes as selected in the card. Turning off automatic
+refresh stops the timer, but does not prevent initial or manual requests.
 
 By design these services see and return the IP address the request came from —
 that is the feature. If a proxy is active, they see the proxy's address.
 Each service is operated by an independent third party under its own privacy
 policy; the project has no agreement with any of them. Keep the Home page
 closed (or the application minimised) if you do not want these requests.
+
+The expanded card also queries IP assessment services. Under *Settings →
+Advanced → IP quality detection*, enabled ipapi.is, cleanip.io and IPinfo
+entries are queried together for one public address resolved through the IP
+information services above. Custom HTTPS endpoints are supported. If no
+service is enabled or all configured queries fail, the card uses
+`https://my.ippure.com/v1/info`. Turning off all provider switches therefore
+selects this public fallback; it does not disable assessment requests.
+Missing fields remain unknown, and conflicting results retain their sources.
+Risk scores and classifications are third-party claims, not a project
+verification or a guarantee that another service will accept an address.
+
+Keys and tokens are stored unencrypted in this device's WebView local storage,
+outside profile backups. They are sent to the configured endpoint over HTTPS:
+ipapi.is in a POST body, cleanip.io in `X-API-Key`, and IPinfo in
+`Authorization`. Redirects are disabled for these authenticated requests.
+These endpoints see both the queried address and the request's egress address;
+routing rules can give different requests different egress addresses. IPinfo
+falls back from Lookup to Lite on a permission denial; Lite contains basic
+country and ASN information, not privacy or risk flags. Remove a provider
+entry in Settings to delete its saved credential.
+
+DNS checks contact `https://bash.ws/id`, request ten unique subdomains of
+`bash.ws` through the WebView, and retrieve resolver observations from
+`https://bash.ws/dnsleak/test/<id>?json`. That service can observe the request
+IP and resolvers used for those lookups. The displayed comparison of resolver
+and exit countries is a heuristic, not proof that all DNS traffic is private.
+WebRTC checks use Google (`stun.l.google.com:19302`) and Cloudflare
+(`stun.cloudflare.com:3478`) STUN servers. These servers may see a public
+address outside an HTTP proxy; detecting that difference is the purpose of
+the probe. Probes do not request camera or microphone access. Unsupported or
+incomplete probes are reported separately from successful checks.
+
+Assessment and probe results are shared in memory with a 30-minute request
+deduplication interval; the card's refresh button and automatic refresh can
+request them sooner. Disable *IP info card* in *Home Settings* to unmount the
+card and prevent subsequent assessment and probe requests. An already started
+request may still complete. These services are independent third parties;
+this project cannot control their retention, accuracy or telemetry policies.
 
 ### 4.6 Latency tests — *user-initiated*
 

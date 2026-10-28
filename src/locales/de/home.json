@@ -80,7 +80,10 @@
         "location": "Standort",
         "timezone": "Zeitzone",
         "autoRefresh": "Automatische Aktualisierung",
-        "unknown": "Unbekannt"
+        "unknown": "Unbekannt",
+        "basic": "Grunddaten",
+        "refreshInterval": "Aktualisierungsintervall",
+        "everyMinutes": "Alle {{count}} Min."
       },
       "errors": {
         "load": "IP-Informationen konnten nicht abgerufen werden",
@@ -151,6 +154,132 @@
         "global": "Leitet alle Netzwerkanfragen über den ausgewählten Proxy.",
         "direct": "Umgeht den Proxy und verbindet sich direkt mit dem Internet."
       }
+    }
+  },
+  "network": {
+    "purity": "Network purity",
+    "loading": "Checking network",
+    "failed": "Detection unavailable. Try refreshing later.",
+    "fallback": "Configured detection services are unavailable; using the public API.",
+    "detection": "Detection results",
+    "riskScore": "{{provider}} risk score",
+    "lowerBetter": "Lower is better · Provider score, not a connection speed test",
+    "flagged": "Detection flags present",
+    "unflagged": "No detection flags",
+    "unknown": "Unknown",
+    "yes": "Detected",
+    "no": "Not detected",
+    "score": "Risk {{score}} / 100",
+    "broadcast": "Non-native IP",
+    "native": "Native IP",
+    "checkedAt": "Checked at {{time}}",
+    "referenceOnly": "Third-party results are for reference; they do not guarantee access to AI services.",
+    "flags": {
+      "proxy": "Proxy",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "datacenter": "Hosting",
+      "abuser": "Abuse"
+    },
+    "types": {
+      "residential": "Residential",
+      "hosting": "Hosting",
+      "mobile": "Mobile",
+      "business": "Business",
+      "unknown": "Unknown type",
+      "isp": "ISP network",
+      "education": "Education network",
+      "government": "Government network",
+      "banking": "Banking network"
+    },
+    "settings": {
+      "title": "IP quality detection",
+      "description": "Query all enabled services and combine their metrics. Matching results are merged; conflicting results retain their sources. Turn off every service to use only IPPure. ipapi.is can query without a key; cleanip.io and IPinfo require credentials. IPinfo tries Lookup first, then Lite if access is denied; Lite provides basic country and ASN data only.",
+      "privacy": "Keys and tokens are stored unencrypted on this device, outside profile backups, and sent only to their own service over HTTPS (ipapi.is in the request body, cleanip.io in X-API-Key, IPinfo in Authorization). Detection services receive the queried IP and the request egress IP.",
+      "provider": "Service",
+      "url": "Server address",
+      "add": "Add service",
+      "remove": "Remove",
+      "empty": "No detection service added. Only IPPure public detection will be used.",
+      "httpsRequired": "Use a valid HTTPS address for detection services, or leave it blank for the default.",
+      "enabled": "Enable",
+      "keyRequired": "Enter an API key / token for this service, or turn it off."
+    },
+    "risk": {
+      "title": "Risk checks",
+      "summary": "Recorded {{hit}} · Clear {{clear}} · Not reported {{unknown}}",
+      "legend": "⚠ Recorded · ✓ Checked, nothing found · — Not reported by the current service",
+      "groups": {
+        "anonymity": "Anonymity",
+        "abuse": "Abuse",
+        "blacklist": "Blacklists",
+        "attack": "Attacks"
+      },
+      "checks": {
+        "proxy": "Proxy",
+        "vpn": "VPN",
+        "tor": "Tor",
+        "anonymous": "Anonymous exit",
+        "crawler": "Crawler",
+        "residentialProxy": "Residential proxy",
+        "relay": "Relay",
+        "commentSpam": "Comment spam",
+        "forumSpam": "Forum spam",
+        "harvester": "Email harvesting",
+        "abuser": "Abuse",
+        "threatIntel": "Threat intel",
+        "fraud": "High fraud score",
+        "dnsbl": "DNSBL",
+        "honeypot": "HTTP honeypot",
+        "botnet": "C&C",
+        "malware": "Malware",
+        "publicList": "Blacklist",
+        "compromised": "Compromised device",
+        "reports": "Recent reports",
+        "multiReports": "Multiple reporters",
+        "knownAttacker": "Known attacker",
+        "localThreat": "Local threat",
+        "loginAttack": "Login attacks",
+        "registrationAttack": "Sign-up attacks"
+      },
+      "metrics": {
+        "proxyRisk": "Proxy threat score",
+        "sharedDevices": "Shared devices",
+        "networkAbuse": "Network abuse rate",
+        "publicLists": "Public lists",
+        "reports": "Abuse reports",
+        "reportsDays": "Reports, last {{days}} days",
+        "webrtc": "WebRTC leak",
+        "dns": "DNS leak"
+      },
+      "units": {
+        "devices": "{{count}} devices",
+        "entries": "{{count}}",
+        "lists": "{{count}}"
+      },
+      "webrtc": {
+        "checking": "Checking",
+        "safe": "No leak",
+        "leak": "Leaking",
+        "blocked": "Blocked",
+        "unsupported": "Unsupported",
+        "unknown": "Unknown"
+      },
+      "dns": {
+        "checking": "Checking",
+        "safe": "No leak",
+        "mismatch": "Possible leak",
+        "failed": "Failed",
+        "servers": "{{count}} DNS servers",
+        "unknown": "Unknown"
+      }
+    },
+    "riskBands": "Color guide: 0–29 low · 30–69 medium · 70–100 high risk",
+    "riskLevels": {
+      "success": "Low risk",
+      "warning": "Medium risk",
+      "error": "High risk",
+      "default": "Unknown"
     }
   }
 }

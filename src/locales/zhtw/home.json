@@ -80,7 +80,10 @@
         "location": "位置",
         "timezone": "時區",
         "autoRefresh": "自動重整",
-        "unknown": "未知"
+        "unknown": "未知",
+        "basic": "基本資訊",
+        "refreshInterval": "重新整理間隔",
+        "everyMinutes": "每 {{count}} 分鐘"
       },
       "errors": {
         "load": "取得 IP 資訊失敗",
@@ -151,6 +154,132 @@
         "global": "將所有網路請求轉送至所選代理。",
         "direct": "略過代理，直接連線至網際網路。"
       }
+    }
+  },
+  "network": {
+    "purity": "Network purity",
+    "loading": "Checking network",
+    "failed": "Detection unavailable. Try refreshing later.",
+    "fallback": "設定的檢測服務均無法使用，已使用公開介面。",
+    "detection": "Detection results",
+    "riskScore": "{{provider}} risk score",
+    "lowerBetter": "Lower is better · Provider score, not a connection speed test",
+    "flagged": "Detection flags present",
+    "unflagged": "No detection flags",
+    "unknown": "Unknown",
+    "yes": "Detected",
+    "no": "Not detected",
+    "score": "Risk {{score}} / 100",
+    "broadcast": "Non-native IP",
+    "native": "Native IP",
+    "checkedAt": "Checked at {{time}}",
+    "referenceOnly": "Third-party results are for reference; they do not guarantee access to AI services.",
+    "flags": {
+      "proxy": "Proxy",
+      "vpn": "VPN",
+      "tor": "Tor",
+      "datacenter": "Hosting",
+      "abuser": "Abuse"
+    },
+    "types": {
+      "residential": "Residential",
+      "hosting": "Hosting",
+      "mobile": "Mobile",
+      "business": "Business",
+      "unknown": "Unknown type",
+      "isp": "電信業者網路",
+      "education": "教育網路",
+      "government": "政府網路",
+      "banking": "金融網路"
+    },
+    "settings": {
+      "title": "IP quality detection",
+      "description": "同時查詢已啟用的服務並整合指標：相同結果合併，不同結果保留來源。全部關閉時僅使用 IPPure。ipapi.is 可無 Key 查詢；cleanip.io 和 IPinfo 需要憑證。IPinfo 優先查詢完整介面，權限不足時回退 Lite；Lite 僅提供國家和 ASN 等基本資訊。",
+      "privacy": "Key / Token 以未加密形式儲存在本機，不隨訂閱備份，僅透過 HTTPS 傳送給對應服務（ipapi.is 放在請求本文，cleanip.io 放在 X-API-Key 標頭，IPinfo 放在 Authorization 標頭）。檢測服務會收到查詢的 IP 和本次請求的出口 IP。",
+      "provider": "服務類型",
+      "url": "伺服器位址",
+      "add": "新增服務",
+      "remove": "刪除",
+      "empty": "未新增檢測服務，將只使用 IPPure 公開介面。",
+      "httpsRequired": "檢測服務必須使用有效的 HTTPS 位址；留空使用預設位址。",
+      "enabled": "啟用",
+      "keyRequired": "請填寫此服務的 API Key / Token，或關閉此服務。"
+    },
+    "risk": {
+      "title": "風險檢測",
+      "summary": "有紀錄 {{hit}} · 未命中 {{clear}} · 未取得 {{unknown}}",
+      "legend": "⚠ 有紀錄 · ✓ 已檢測且未命中 · — 目前檢測服務未回傳此項",
+      "groups": {
+        "anonymity": "匿名性",
+        "abuse": "濫用",
+        "blacklist": "黑名單",
+        "attack": "攻擊"
+      },
+      "checks": {
+        "proxy": "代理",
+        "vpn": "VPN",
+        "tor": "Tor",
+        "anonymous": "匿名出口",
+        "crawler": "爬蟲",
+        "residentialProxy": "住宅代理",
+        "relay": "中繼",
+        "commentSpam": "留言垃圾",
+        "forumSpam": "論壇垃圾",
+        "harvester": "郵件採集",
+        "abuser": "濫用",
+        "threatIntel": "威脅情報",
+        "fraud": "高詐騙分",
+        "dnsbl": "DNSBL",
+        "honeypot": "HTTP 蜜罐",
+        "botnet": "C&C",
+        "malware": "惡意軟體",
+        "publicList": "黑名單",
+        "compromised": "失陷裝置",
+        "reports": "近期檢舉",
+        "multiReports": "多人檢舉",
+        "knownAttacker": "已知攻擊者",
+        "localThreat": "本地威脅",
+        "loginAttack": "登入攻擊",
+        "registrationAttack": "註冊攻擊"
+      },
+      "metrics": {
+        "proxyRisk": "代理威脅分",
+        "sharedDevices": "共用裝置",
+        "networkAbuse": "所在網路濫用比例",
+        "publicLists": "公開名單",
+        "reports": "檢舉紀錄",
+        "reportsDays": "近 {{days}} 天檢舉",
+        "webrtc": "WebRTC 洩漏",
+        "dns": "DNS 洩漏"
+      },
+      "units": {
+        "devices": "{{count}} 台",
+        "entries": "{{count}} 筆",
+        "lists": "{{count}} 份"
+      },
+      "webrtc": {
+        "checking": "檢測中",
+        "safe": "未洩漏",
+        "leak": "已洩漏",
+        "blocked": "已阻斷",
+        "unsupported": "不支援",
+        "unknown": "未知"
+      },
+      "dns": {
+        "checking": "檢測中",
+        "safe": "未洩漏",
+        "mismatch": "可能洩漏",
+        "failed": "檢測失敗",
+        "servers": "{{count}} 個 DNS 伺服器",
+        "unknown": "未知"
+      }
+    },
+    "riskBands": "顏色提示：0–29 低風險 · 30–69 中風險 · 70–100 高風險",
+    "riskLevels": {
+      "success": "低風險",
+      "warning": "中風險",
+      "error": "高風險",
+      "default": "未知"
     }
   }
 }
