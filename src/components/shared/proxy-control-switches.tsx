@@ -229,8 +229,8 @@ const ProxyControlSwitches = ({
         />
       )}
 
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
+      {isSystemProxyMode && <SysproxyViewer ref={sysproxyRef} />}
+      {isTunMode && <TunViewer ref={tunRef} />}
     </Box>
   )
 }
