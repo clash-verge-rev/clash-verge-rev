@@ -51,14 +51,14 @@ rustup set default-host x86_64-pc-windows-msvc
 
 ### Install Node.js Package Manager
 
-Install the pnpm version pinned by `packageManager` in [`package.json`](package.json):
+[Corepack is no longer bundled with Node.js starting with Node.js 25](https://nodejs.org/api/corepack.html). Install it globally if it is not already available, then enable it:
 
 ```bash
-npm install --global pnpm@12.15.0
-pnpm --version
+npm install --global corepack
+corepack enable
 ```
 
-This installs pnpm globally. If you already manage pnpm with another tool, use that tool to select the pinned version instead. [Corepack is no longer bundled with Node.js starting with Node.js 25](https://nodejs.org/api/corepack.html), so `corepack enable` alone does not work with a fresh installation of the Node.js version used here.
+Run pnpm from this repository so Corepack selects the version pinned by `packageManager` in [`package.json`](package.json).
 
 ### Install Project Dependencies
 
@@ -83,13 +83,9 @@ pnpm run prebuild --force  # Re-download and overwrite Mihomo core and service b
 
 ### Prepare the Development Service Source
 
-`pnpm dev` builds the development service from a sibling checkout of [`clash-verge-service-ipc`](https://github.com/clash-verge-rev/clash-verge-service-ipc). The binaries downloaded by `pnpm prebuild` do not replace this source checkout. From the root of `clash-verge-rev`, create it alongside this repository:
+`pnpm dev` builds the development service from a sibling checkout of [`clash-verge-service-ipc`](https://github.com/clash-verge-rev/clash-verge-service-ipc). The binaries downloaded by `pnpm prebuild` do not replace this source checkout.
 
-```bash
-git clone --branch v2.7.6 https://github.com/clash-verge-rev/clash-verge-service-ipc.git ../clash-verge-service-ipc
-```
-
-The tag should match the `clash_verge_service_ipc` dependency in [`src-tauri/Cargo.toml`](src-tauri/Cargo.toml). If the sibling directory already exists, reuse it and check its version rather than overwriting it. Without this checkout, `pnpm dev` fails when it tries to access `../clash-verge-service-ipc/Cargo.toml`.
+Check the `clash_verge_service_ipc` dependency in [`src-tauri/Cargo.toml`](src-tauri/Cargo.toml), then clone the service repository alongside `clash-verge-rev` and check out the matching tag. If the sibling directory already exists, reuse it and check its version rather than overwriting it. Without this checkout, `pnpm dev` fails when it tries to access `../clash-verge-service-ipc/Cargo.toml`.
 
 ### Run the Development Server
 
