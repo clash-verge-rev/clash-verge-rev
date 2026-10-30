@@ -28,7 +28,7 @@ Before contributing, you need to set up your development environment. Follow the
 ### Prerequisites
 
 1. **Install Rust and Node.js**  
-   Our project requires both Rust and Node.js. Follow the official installation instructions [here](https://tauri.app/start/prerequisites/).
+   Follow the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your operating system. Use the Node.js version in [`.tool-versions`](.tool-versions); [`rust-toolchain.toml`](rust-toolchain.toml) selects the Rust version and required components when you run Cargo from this repository.
 
 ### Windows Users
 
@@ -51,18 +51,21 @@ rustup set default-host x86_64-pc-windows-msvc
 
 ### Install Node.js Package Manager
 
-Enable `corepack`:
+[Corepack is no longer bundled with Node.js starting with Node.js 25](https://nodejs.org/api/corepack.html). Install it globally if it is not already available, then enable it:
 
 ```bash
+npm install --global corepack
 corepack enable
 ```
+
+Run pnpm from this repository so Corepack selects the version pinned by `packageManager` in [`package.json`](package.json).
 
 ### Install Project Dependencies
 
 Node.js dependencies:
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 ```
 
 Ubuntu-only system packages:
@@ -78,13 +81,23 @@ pnpm run prebuild
 pnpm run prebuild --force  # Re-download and overwrite Mihomo core and service binaries
 ```
 
+### Prepare the Development Service Source
+
+`pnpm dev` builds the development service from a sibling checkout of [`clash-verge-service-ipc`](https://github.com/clash-verge-rev/clash-verge-service-ipc). The binaries downloaded by `pnpm prebuild` do not replace this source checkout.
+
+Check the `clash_verge_service_ipc` dependency in [`src-tauri/Cargo.toml`](src-tauri/Cargo.toml), then clone the service repository alongside `clash-verge-rev` and check out the matching tag. If the sibling directory already exists, reuse it and check its version rather than overwriting it. Without this checkout, `pnpm dev` fails when it tries to access `../clash-verge-service-ipc/Cargo.toml`.
+
 ### Run the Development Server
 
+Run these commands from the root of `clash-verge-rev`:
+
 ```bash
-pnpm dev           # Standard
-pnpm dev:diff      # If an app instance already exists
-pnpm dev:tauri     # Run Tauri development mode
+pnpm dev           # Build the development service and start the desktop app
+pnpm dev:diff      # Alias of pnpm dev
+pnpm dev:tauri     # Run Tauri directly with the tauri-dev feature
 ```
+
+For frontend-only development, use `pnpm web:dev`. It does not start the Rust backend or build the development service.
 
 ### Build the Project
 
