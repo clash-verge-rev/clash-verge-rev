@@ -79,7 +79,7 @@ tauri-plugin-fs = "2.7.1"
 tauri-plugin-process = "2.4.0"
 tauri-plugin-deep-link = "2.6.2"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.0.4"
+zip = "9.1.3"
 flate2 = "1.1.10"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
@@ -154,7 +154,7 @@ windows-sys.workspace = true
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.7.0"
 tauri-plugin-global-shortcut = "2.4.1"
-tauri-plugin-updater = "2.14.0"
+tauri-plugin-updater = "2.14.1"
 
 [dev-dependencies]
 criterion = { workspace = true }
