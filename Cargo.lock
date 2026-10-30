@@ -33,6 +33,7 @@ dependencies = [
  "cipher",
  "cpubits",
  "cpufeatures 0.3.0",
+ "zeroize",
 ]
 
 [[package]]
@@ -1175,7 +1176,7 @@ dependencies = [
  "windows-service",
  "windows-sys 0.61.2",
  "winreg 0.56.0",
- "zip 9.1.2",
+ "zip 9.1.3",
 ]
 
 [[package]]
@@ -10066,9 +10067,9 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "9.1.2"
+version = "9.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec2e3161de27091f18a831d9494e9c53378a34833af5c1dda35ad85849da18d6"
+checksum = "1156b39d142a34b999c2310a50455e0cb3760bf7efad0122f796d813bee26ccb"
 dependencies = [
  "aes",
  "bzip2",
