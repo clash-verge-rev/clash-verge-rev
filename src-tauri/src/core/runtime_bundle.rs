@@ -3,8 +3,8 @@ use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
 use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
-use std::collections::{BTreeMap, HashSet};
-use std::path::{Component, Path, PathBuf};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::path::{Component, Path, PathBuf, Prefix};
 
 pub(crate) const GEO_ASSETS: &[&str] = &[
     "Country.mmdb",
@@ -165,6 +165,7 @@ fn collect_runtime_parts(mut config: Value, config_root: &Path) -> Result<Runtim
         &mut assets,
         &mut remote_providers,
     )?;
+    collect_ssh_private_keys(&mut config, &config_root, &mut destinations, &mut assets);
     for filename in GEO_ASSETS {
         let source = config_root.join(filename);
         if source.is_file() && destinations.insert((*filename).to_string()) {
@@ -268,6 +269,81 @@ fn collect_provider_assets(
         provider.insert(Value::String("path".to_owned()), Value::String(destination));
     }
     Ok(())
+}
+
+/// Stages file-based ssh keys, which mihomo resolves against the core home directory.
+fn collect_ssh_private_keys(
+    config: &mut Value,
+    config_root: &Path,
+    destinations: &mut HashSet<String>,
+    assets: &mut Vec<RuntimeAsset>,
+) {
+    let Some(config) = config.as_mapping_mut() else {
+        return;
+    };
+    // mihomo parses `payload` for every provider type, eagerly as fallback proxies for file and http.
+    let mut proxy_lists = Vec::new();
+    for (key, value) in config.iter_mut() {
+        match key.as_str() {
+            Some("proxies") => proxy_lists.extend(value.as_sequence_mut()),
+            Some("proxy-providers") => proxy_lists.extend(
+                value
+                    .as_mapping_mut()
+                    .into_iter()
+                    .flat_map(Mapping::values_mut)
+                    .filter_map(|provider| provider.get_mut("payload").and_then(Value::as_sequence_mut)),
+            ),
+            _ => {}
+        }
+    }
+
+    let mut staged = HashMap::new();
+    for proxy in proxy_lists.into_iter().flatten().filter_map(Value::as_mapping_mut) {
+        if proxy.get("type").and_then(Value::as_str) != Some("ssh") {
+            continue;
+        }
+        // mihomo reads any value containing "PRIVATE KEY" as inline key material.
+        let Some(raw_path) = proxy
+            .get("private-key")
+            .and_then(Value::as_str)
+            .filter(|key| !key.is_empty() && !key.contains("PRIVATE KEY") && is_local_path(key))
+        else {
+            continue;
+        };
+        let Some(source) = local_provider_source(config_root, raw_path)
+            .ok()
+            .filter(|source| source.is_file())
+        else {
+            let name = proxy.get("name").and_then(Value::as_str).unwrap_or_default();
+            logging!(
+                warn,
+                Type::Config,
+                "ssh proxy {name:?} private key is unavailable below the config root; leaving it to the core"
+            );
+            continue;
+        };
+        // A root-level alias keeps the user's path away from service name rules and mihomo's inline-key test.
+        let destination = staged
+            .entry(source.to_string_lossy().into_owned())
+            .or_insert_with_key(|source| {
+                let destination = allocate_provider_destination("ssh-private-key", source, destinations);
+                assets.push(RuntimeAsset {
+                    source: source.clone(),
+                    destination: destination.clone(),
+                });
+                destination
+            })
+            .clone();
+        proxy.insert(Value::String("private-key".to_owned()), Value::String(destination));
+    }
+}
+
+/// Resolving a UNC or device path would authenticate to its server, so those stay with the core.
+fn is_local_path(raw_path: &str) -> bool {
+    match Path::new(raw_path).components().next() {
+        Some(Component::Prefix(prefix)) => matches!(prefix.kind(), Prefix::Disk(_) | Prefix::VerbatimDisk(_)),
+        _ => true,
+    }
 }
 
 fn local_provider_source(config_root: &Path, raw_path: &str) -> Result<PathBuf> {
