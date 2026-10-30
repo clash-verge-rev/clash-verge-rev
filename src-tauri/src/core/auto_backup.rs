@@ -19,6 +19,7 @@ use std::{
 use tokio::{
     fs,
     sync::{Mutex, watch},
+    time::Instant,
 };
 
 const DEFAULT_INTERVAL_HOURS: u64 = 24;
@@ -57,6 +58,10 @@ struct AutoBackupSettings {
 }
 
 impl AutoBackupSettings {
+    const fn interval(self) -> Duration {
+        Duration::from_secs(self.interval_hours.saturating_mul(3600))
+    }
+
     fn from_verge(verge: &IVerge) -> Self {
         let interval = verge
             .auto_backup_interval_hours
@@ -156,17 +161,19 @@ impl AutoBackupManager {
 
     async fn run_scheduler(rx: &mut watch::Receiver<AutoBackupSettings>) {
         let mut current = *rx.borrow();
+        let mut cycle_start = Instant::now();
         loop {
             if !current.schedule_enabled {
                 if rx.changed().await.is_err() {
                     break;
                 }
-                current = *rx.borrow();
+                let next = *rx.borrow();
+                cycle_start = next_cycle_start(cycle_start, current, next, Instant::now());
+                current = next;
                 continue;
             }
 
-            let duration = Duration::from_secs(current.interval_hours.saturating_mul(3600));
-            let sleeper = tokio::time::sleep(duration);
+            let sleeper = tokio::time::sleep_until(cycle_start + current.interval());
             tokio::pin!(sleeper);
 
             tokio::select! {
@@ -181,12 +188,17 @@ impl AutoBackupManager {
                             "Scheduled auto backup failed: {err:#?}"
                         );
                     }
+                    cycle_start = Instant::now();
                 }
                 changed = rx.changed() => {
                     if changed.is_err() {
                         break;
                     }
-                    current = *rx.borrow();
+                    // Saving any verge setting refreshes these settings; keep the
+                    // elapsed time unless the schedule was just switched on.
+                    let next = *rx.borrow();
+                    cycle_start = next_cycle_start(cycle_start, current, next, Instant::now());
+                    current = next;
                 }
             }
         }
@@ -234,6 +246,22 @@ impl AutoBackupManager {
     async fn load_settings() -> AutoBackupSettings {
         let verge = Config::verge().await;
         AutoBackupSettings::from_verge(&verge.latest_arc())
+    }
+}
+
+/// Start of the current schedule cycle after a settings refresh. The countdown
+/// only restarts when the schedule goes from disabled to enabled; an interval
+/// change keeps the time already waited.
+const fn next_cycle_start(
+    cycle_start: Instant,
+    prev: AutoBackupSettings,
+    next: AutoBackupSettings,
+    now: Instant,
+) -> Instant {
+    if next.schedule_enabled && !prev.schedule_enabled {
+        now
+    } else {
+        cycle_start
     }
 }
 
