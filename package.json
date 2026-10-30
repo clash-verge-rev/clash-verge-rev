@@ -60,7 +60,7 @@
     "@tauri-apps/plugin-fs": "2.7.1",
     "@tauri-apps/plugin-http": "2.8.3",
     "@tauri-apps/plugin-opener": "2.7.2",
-    "@tauri-apps/plugin-updater": "2.14.0",
+    "@tauri-apps/plugin-updater": "2.14.1",
     "ahooks": "^3.10.0",
     "cidr-block": "^2.3.0",
     "compare-versions": "^6.1.1",
