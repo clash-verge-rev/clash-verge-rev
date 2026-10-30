@@ -118,6 +118,7 @@
         "type": "Typ",
         "description": "Beschreibung",
         "subscriptionUrl": "Abonnement-Link",
+        "ageSecretKey": "age-Geheimschlüssel (optional)",
         "userAgent": "User Agent",
         "httpTimeout": "Zeitlimit für HTTP-Anfragen",
         "updateInterval": "Aktualisierungsintervall",

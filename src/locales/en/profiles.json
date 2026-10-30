@@ -118,6 +118,7 @@
         "type": "Type",
         "description": "Descriptions",
         "subscriptionUrl": "Subscription URL",
+        "ageSecretKey": "age Secret Key (Optional)",
         "userAgent": "User Agent",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Update Interval",

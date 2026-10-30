@@ -118,6 +118,7 @@
         "type": "Тип",
         "description": "Описание",
         "subscriptionUrl": "URL подписки",
+        "ageSecretKey": "Секретный ключ age (необязательно)",
         "userAgent": "User Agent",
         "httpTimeout": "Тайм-аут HTTP-запроса",
         "updateInterval": "Интервал обновления",

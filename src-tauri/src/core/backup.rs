@@ -313,8 +313,47 @@ pub async fn create_backup() -> Result<(String, PathBuf), Error> {
         zip.write_all(fs::read(&dns_config_path).await?.as_slice())?;
     }
 
+    let profiles_text = fs::read_to_string(dirs::profiles_path()?).await?;
+    let profiles_config = profiles_for_backup(&profiles_text)?;
     zip.start_file(dirs::PROFILE_YAML, options)?;
-    zip.write_all(fs::read(dirs::profiles_path()?).await?.as_slice())?;
+    zip.write_all(serde_yaml_ng::to_string(&profiles_config)?.as_bytes())?;
     zip.finish()?;
     Ok((zip_file_name, zip_path))
+}
+
+fn profiles_for_backup(text: &str) -> Result<serde_yaml_ng::Mapping, Error> {
+    // Parse raw YAML so credentials from another machine never need local decryption.
+    let mut config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(text)?;
+    if let Some(items) = config.get_mut("items").and_then(serde_yaml_ng::Value::as_sequence_mut) {
+        for item in items {
+            if let Some(option) = item.get_mut("option").and_then(serde_yaml_ng::Value::as_mapping_mut) {
+                option.remove("age_secret_key");
+            }
+        }
+    }
+    Ok(config)
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, reason = "tests assert by panicking")]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn age_subscription_backup_restores_without_machine_credentials() -> Result<(), Error> {
+        let source = "current: remote\nitems:\n- uid: remote\n  type: remote\n  file: remote.yaml\n  option:\n    age_secret_key: ciphertext-from-another-machine\n    update_interval: 1440\n- uid: local\n  type: local\n  file: local.yaml\n";
+        let config = profiles_for_backup(source)?;
+        let backup = serde_yaml_ng::to_string(&config)?;
+        assert!(!backup.contains("age_secret_key"));
+        assert!(!backup.contains("ciphertext-from-another-machine"));
+        let restored: crate::config::IProfiles =
+            crate::config::with_encryption(|| async { serde_yaml_ng::from_str(&backup) }).await?;
+        assert_eq!(restored.items.as_ref().unwrap().len(), 2);
+        assert_eq!(
+            restored.get_item("remote")?.option.as_ref().unwrap().update_interval,
+            Some(1440)
+        );
+        assert!(source.contains("age_secret_key"));
+        Ok(())
+    }
 }

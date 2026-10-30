@@ -151,6 +151,7 @@ export const commands = {
   importProfile: (
     url: string,
     option: {
+      age_secret_key?: string | null
       user_agent?: string | null
       with_proxy?: boolean | null
       self_proxy?: boolean | null
@@ -175,6 +176,7 @@ export const commands = {
   updateProfile: (
     index: string,
     option: {
+      age_secret_key?: string | null
       user_agent?: string | null
       with_proxy?: boolean | null
       self_proxy?: boolean | null
@@ -683,6 +685,7 @@ export type PrfItem_Serialize = {
 export type PrfOption = PrfOption_Serialize | PrfOption_Deserialize
 
 export type PrfOption_Deserialize = {
+  age_secret_key?: string | null
   user_agent?: string | null
   with_proxy?: boolean | null
   self_proxy?: boolean | null
@@ -703,6 +706,7 @@ export type PrfOption_Deserialize = {
 }
 
 export type PrfOption_Serialize = {
+  age_secret_key?: string | null
   user_agent?: string | null
   with_proxy?: boolean | null
   self_proxy?: boolean | null

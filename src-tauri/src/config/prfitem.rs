@@ -1,5 +1,8 @@
 use crate::{
-    config::profiles,
+    config::{
+        encrypt::{deserialize_encrypted, serialize_encrypted},
+        profiles,
+    },
     utils::{
         dirs, help,
         network::{NetworkManager, ProxyType},
@@ -10,7 +13,7 @@ use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::time::Duration;
+use std::{borrow::Cow, fmt, io::Read as _, time::Duration};
 use tokio::fs;
 // TODO, use other re-export
 use reqwest_dav::re_exports::url::form_urlencoded;
@@ -87,9 +90,18 @@ pub struct PrfExtra {
     pub expire: u64,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
+#[derive(Default, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(default)]
 pub struct PrfOption {
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_encrypted"
+    )]
+    #[specta(type = Option<std::string::String>)]
+    pub age_secret_key: Option<String>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     #[specta(type = Option<std::string::String>)]
     pub user_agent: Option<String>,
@@ -126,7 +138,28 @@ pub struct PrfOption {
     pub groups: Option<String>,
 }
 
+impl fmt::Debug for PrfOption {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PrfOption")
+            .field("age_secret_key", &self.age_secret_key.as_ref().map(|_| "[REDACTED]"))
+            .field("user_agent", &self.user_agent)
+            .field("with_proxy", &self.with_proxy)
+            .field("self_proxy", &self.self_proxy)
+            .field("update_interval", &self.update_interval)
+            .field("timeout_seconds", &self.timeout_seconds)
+            .field("danger_accept_invalid_certs", &self.danger_accept_invalid_certs)
+            .field("allow_auto_update", &self.allow_auto_update)
+            .field("merge", &self.merge)
+            .field("script", &self.script)
+            .field("rules", &self.rules)
+            .field("proxies", &self.proxies)
+            .field("groups", &self.groups)
+            .finish()
+    }
+}
+
 impl PrfOption {
+    // Refresh requests and downloaded metadata cannot replace the saved credential.
     pub(crate) fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
@@ -147,7 +180,10 @@ impl PrfOption {
                 Some(result)
             }
             (Some(a_ref), None) => Some(a_ref.clone()),
-            (None, Some(b_ref)) => Some(b_ref.clone()),
+            (None, Some(b_ref)) => Some(Self {
+                age_secret_key: None,
+                ..b_ref.clone()
+            }),
             (None, None) => None,
         }
     }
@@ -252,6 +288,7 @@ impl PrfItem {
         desc: Option<&String>,
         option: Option<&PrfOption>,
     ) -> Result<Self> {
+        let age_secret_key = normalize_age_secret_key(option.and_then(|o| o.age_secret_key.as_deref()))?;
         let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
         let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs = option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
@@ -365,8 +402,7 @@ impl PrfItem {
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text();
-
+        let data = decrypt_remote_profile(resp.text().trim_start_matches('\u{feff}'), age_secret_key.as_deref())?;
         let data = data.trim_start_matches('\u{feff}');
 
         let yaml = serde_yaml_ng::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
@@ -411,6 +447,7 @@ impl PrfItem {
             selected: None,
             extra,
             option: Some(PrfOption {
+                age_secret_key,
                 update_interval,
                 merge,
                 script,
@@ -542,6 +579,38 @@ fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {
     option.and_then(|o| o.allow_auto_update).unwrap_or(true)
 }
 
+pub(super) fn normalize_age_secret_key(key: Option<&str>) -> Result<Option<String>> {
+    let Some(key) = key.map(str::trim).filter(|key| !key.is_empty()) else {
+        return Ok(None);
+    };
+    key.parse::<age::x25519::Identity>()
+        .map_err(|_| anyhow::anyhow!("invalid age X25519 secret key"))?;
+    Ok(Some(key.into()))
+}
+
+fn decrypt_remote_profile<'a>(data: &'a str, key: Option<&str>) -> Result<Cow<'a, str>> {
+    if !data.starts_with("-----BEGIN AGE ENCRYPTED FILE-----") {
+        return Ok(Cow::Borrowed(data));
+    }
+    let key = key.ok_or_else(|| anyhow::anyhow!("an age secret key is required for this subscription"))?;
+    let identity = key
+        .parse::<age::x25519::Identity>()
+        .map_err(|_| anyhow::anyhow!("invalid age X25519 secret key"))?;
+    let decryptor = age::Decryptor::new(age::armor::ArmoredReader::new(data.as_bytes()))
+        .map_err(|_| anyhow::anyhow!("failed to decrypt age subscription"))?;
+    let mut reader = decryptor
+        .decrypt(std::iter::once(&identity as &dyn age::Identity))
+        .map_err(|_| anyhow::anyhow!("failed to decrypt age subscription"))?;
+    let mut plaintext = Vec::new();
+    // The final chunk must authenticate before any profile files or metadata are written.
+    reader
+        .read_to_end(&mut plaintext)
+        .map_err(|_| anyhow::anyhow!("failed to decrypt age subscription"))?;
+    let plaintext = std::string::String::from_utf8(plaintext)
+        .map_err(|_| anyhow::anyhow!("the decrypted subscription is not UTF-8"))?;
+    Ok(Cow::Owned(plaintext))
+}
+
 /// Fix URLs where query parameters are incorrectly appended to the path segment
 ///
 /// Incorrect Example: https://example.com/path&param1=value1
@@ -569,4 +638,140 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     }
 
     Ok(url)
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used, clippy::expect_used, reason = "tests assert by panicking")]
+pub(super) mod tests {
+    use super::*;
+    use age::secrecy::ExposeSecret as _;
+    use std::io::Write as _;
+
+    // Generated by Mihomo's EncryptBytes with a disposable X25519 identity.
+    pub(in crate::config) const AGE_KEY: &str =
+        "AGE-SECRET-KEY-1V3CRQHY4RDQG630CG0UUTU0L5UZL7HZYATPM4J697953NFE6YP2S0VGCK6";
+    pub(in crate::config) const AGE_PROFILE: &str = "-----BEGIN AGE ENCRYPTED FILE-----\n\
+YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBUMjNHU0RUbmZkcGczM0s5\n\
+akxPNW1KajdmNmdDWFhOd0wxRHpWUFlqVFF3CmRLdHE5aGZZOCtQVFNxYkR2RHE3\n\
+TnIvTWo2WklLK0pUVHh1aUpjditkVDQKLS0tIGNmSFhkTTJ4Q3dhN2VwL0U2bjJV\n\
+RUd1OG56K21MRlVhZGh6dDBBNCtuRncK2gAyIGK1M5r86XRdQoSX3cAPRpk+d4FZ\n\
+rlBhp3apE3YxD+SBkrViOOsDo1k11Ipa4BdJHsavZ83lNw9tB5VfiqXYFC5KThg=\n\
+-----END AGE ENCRYPTED FILE-----\n";
+    const PLAIN_PROFILE: &str = "proxies: []\nproxy-groups: []\nrules: []\n";
+
+    pub(in crate::config) async fn fetch_profile(body: &str, option: Option<&PrfOption>) -> Result<PrfItem> {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+        let url = format!("http://{}/profile.yaml", listener.local_addr()?);
+        let body = body.to_owned();
+        let server = std::thread::spawn(move || -> std::io::Result<()> {
+            let (mut socket, _) = listener.accept()?;
+            let mut request = [0; 4096];
+            let _ = socket.read(&mut request)?;
+            write!(
+                socket,
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            )
+        });
+        let result = PrfItem::from(
+            &PrfItem {
+                itype: Some("remote".into()),
+                url: Some(url.into()),
+                option: option.cloned(),
+                ..PrfItem::default()
+            },
+            None,
+        )
+        .await;
+        server.join().expect("fixture server panicked")?;
+        result
+    }
+
+    #[tokio::test]
+    async fn age_subscription_import_and_refresh() -> Result<()> {
+        let option: PrfOption = serde_json::from_value(serde_json::json!({
+            "age_secret_key": format!("  {AGE_KEY}\n"),
+            "merge": "m", "script": "s", "rules": "r", "proxies": "p", "groups": "g"
+        }))?;
+        let imported = fetch_profile(AGE_PROFILE, Some(&option)).await?;
+        assert_eq!(imported.file_data.as_deref(), Some(PLAIN_PROFILE));
+        assert_eq!(
+            imported.option.as_ref().and_then(|o| o.age_secret_key.as_deref()),
+            Some(AGE_KEY)
+        );
+        let refreshed = fetch_profile(AGE_PROFILE, imported.option.as_ref()).await?;
+        assert_eq!(refreshed.file_data.as_deref(), Some(PLAIN_PROFILE));
+        let mut plain_option = option;
+        plain_option.age_secret_key = None;
+        let plain = fetch_profile(&format!("\u{feff}{PLAIN_PROFILE}"), Some(&plain_option)).await?;
+        assert_eq!(plain.file_data.as_deref(), Some(PLAIN_PROFILE));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn age_subscription_rejects_missing_wrong_and_corrupt_keys() -> Result<()> {
+        let missing = fetch_profile(AGE_PROFILE, None).await.unwrap_err();
+        assert!(missing.to_string().contains("secret key is required"));
+        let wrong_key = age::x25519::Identity::generate().to_string();
+        let option = PrfOption {
+            age_secret_key: Some(wrong_key.expose_secret().into()),
+            ..PrfOption::default()
+        };
+        let wrong = fetch_profile(AGE_PROFILE, Some(&option)).await.unwrap_err();
+        assert_eq!(wrong.to_string(), "failed to decrypt age subscription");
+        assert!(!format!("{wrong:#?}").contains(wrong_key.expose_secret()));
+        let corrupt = AGE_PROFILE.replace("FC5KThg=", "FC5KThA=");
+        let option = PrfOption {
+            age_secret_key: Some(AGE_KEY.into()),
+            ..PrfOption::default()
+        };
+        let error = fetch_profile(&corrupt, Some(&option)).await.unwrap_err();
+        assert_eq!(error.to_string(), "failed to decrypt age subscription");
+        assert!(!format!("{error:#?}").contains(AGE_KEY));
+        let invalid = normalize_age_secret_key(Some("AGE-SECRET-KEY-private-invalid")).unwrap_err();
+        assert_eq!(invalid.to_string(), "invalid age X25519 secret key");
+        let recipient = AGE_KEY
+            .parse::<age::x25519::Identity>()
+            .expect("valid fixture key")
+            .to_public();
+        for invalid_yaml in ["proxies: [", "unrelated: true"] {
+            let encryptor = age::Encryptor::with_recipients(std::iter::once(&recipient as &dyn age::Recipient))?;
+            let armor = age::armor::ArmoredWriter::wrap_output(Vec::new(), age::armor::Format::AsciiArmor)?;
+            let mut writer = encryptor.wrap_output(armor)?;
+            writer.write_all(invalid_yaml.as_bytes())?;
+            let encrypted = std::string::String::from_utf8(writer.finish()?.finish()?)?;
+            assert!(fetch_profile(&encrypted, Some(&option)).await.is_err());
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn age_subscription_refresh_options_never_override_saved_key() -> Result<()> {
+        let saved = PrfOption {
+            age_secret_key: Some(AGE_KEY.into()),
+            ..PrfOption::default()
+        };
+        let stale = saved.clone();
+        let cleared = PrfOption {
+            timeout_seconds: Some(30),
+            ..PrfOption::default()
+        };
+        for current in [None, Some(&cleared)] {
+            let merged = PrfOption::merge(current, Some(&stale)).unwrap();
+            assert!(merged.age_secret_key.is_none());
+            assert!(decrypt_remote_profile(AGE_PROFILE, merged.age_secret_key.as_deref()).is_err());
+        }
+        let newer = PrfOption {
+            age_secret_key: Some("new saved key".into()),
+            ..PrfOption::default()
+        };
+        let committed = PrfOption::merge(Some(&newer), Some(&stale)).unwrap();
+        assert_eq!(committed.age_secret_key, newer.age_secret_key);
+        let json = serde_json::to_string(&saved)?;
+        assert!(json.contains(AGE_KEY));
+        assert!(!format!("{saved:?}").contains(AGE_KEY));
+        assert!(serde_json::from_str::<PrfOption>("{}")?.age_secret_key.is_none());
+        assert!(normalize_age_secret_key(Some(" \n"))?.is_none());
+        Ok(())
+    }
 }

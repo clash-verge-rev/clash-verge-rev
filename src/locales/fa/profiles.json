@@ -118,6 +118,7 @@
         "type": "نوع",
         "description": "توضیحات",
         "subscriptionUrl": "آدرس اشتراک",
+        "ageSecretKey": "کلید خصوصی age (اختیاری)",
         "userAgent": "عامل کاربر",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "فاصله زمانی به‌روزرسانی",

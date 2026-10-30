@@ -71,7 +71,7 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
 
 async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
-    let profiles = profiles.latest_arc();
+    let profiles = profiles.data_arc();
     let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 
@@ -252,4 +252,115 @@ pub async fn enhance_profiles() -> Result<ValidationOutcome> {
         logging_error!(Type::Config, Config::sync_dns_override().await);
     }
     Ok(outcome)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        config::{IProfiles, profiles::profiles_patch_item_safe},
+        utils::{dirs, help},
+    };
+    use age::secrecy::ExposeSecret as _;
+    use std::io::{Read as _, Write as _};
+    use tokio::fs;
+
+    #[tokio::test]
+    #[ignore = "requires HOME and CLASH_VERGE_TEST_HOME pointing to a disposable directory"]
+    #[allow(clippy::unwrap_used, clippy::expect_used, reason = "tests assert by panicking")]
+    async fn age_subscription_selects_committed_key_while_switch_draft_is_pending() -> Result<()> {
+        let test_root = std::env::var("CLASH_VERGE_TEST_HOME")?;
+        assert!(!test_root.is_empty());
+        assert!(dirs::app_home_dir()?.starts_with(&test_root));
+        fs::create_dir_all(dirs::app_profiles_dir()?).await?;
+        let cache_path = dirs::app_profiles_dir()?.join("age-selection.yaml");
+        fs::write(&cache_path, "proxies: []\n").await?;
+
+        let original = age::x25519::Identity::generate();
+        let replacement = age::x25519::Identity::generate();
+        let stale_option = PrfOption {
+            age_secret_key: Some(original.to_string().expose_secret().into()),
+            merge: Some("m".into()),
+            script: Some("s".into()),
+            rules: Some("r".into()),
+            proxies: Some("p".into()),
+            groups: Some("g".into()),
+            ..PrfOption::default()
+        };
+        let uid: String = "age-selection".into();
+        let profiles = Config::profiles().await;
+        for current_key in [None, Some(replacement.to_string())] {
+            let recipient = if current_key.is_none() { &original } else { &replacement }.to_public();
+            let encryptor = age::Encryptor::with_recipients(std::iter::once(&recipient as &dyn age::Recipient))?;
+            let armor = age::armor::ArmoredWriter::wrap_output(Vec::new(), age::armor::Format::AsciiArmor)?;
+            let mut writer = encryptor.wrap_output(armor)?;
+            writer.write_all(b"proxies: []\nrules: []\n")?;
+            let body = writer.finish()?.finish()?;
+            let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+            let url: String = format!("http://{}/profile.yaml", listener.local_addr()?).into();
+            let server = std::thread::spawn(move || -> std::io::Result<()> {
+                let (mut socket, _) = listener.accept()?;
+                let mut request = [0; 4096];
+                let _ = socket.read(&mut request)?;
+                write!(
+                    socket,
+                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                    body.len()
+                )?;
+                socket.write_all(&body)
+            });
+            profiles.discard();
+            profiles
+                .with_data_modify(|_| async {
+                    Ok((
+                        IProfiles {
+                            current: None,
+                            items: Some(vec![PrfItem {
+                                uid: Some(uid.clone()),
+                                itype: Some("remote".into()),
+                                file: Some("age-selection.yaml".into()),
+                                url: Some(url.clone()),
+                                option: Some(stale_option.clone()),
+                                ..PrfItem::default()
+                            }]),
+                        },
+                        (),
+                    ))
+                })
+                .await?;
+            profiles.edit_draft(|_| {});
+            profiles_patch_item_safe(
+                &uid,
+                &PrfItem {
+                    option: Some(PrfOption {
+                        age_secret_key: Some(current_key.as_ref().map(|key| key.expose_secret()).unwrap_or("").into()),
+                        ..stale_option.clone()
+                    }),
+                    ..PrfItem::default()
+                },
+            )
+            .await?;
+            assert_eq!(profiles.latest_arc().get_item(&uid)?.option, Some(stale_option.clone()));
+            let persisted: IProfiles = help::read_yaml(&dirs::profiles_path()?).await?;
+            let (selected_url, selected_option) = should_update_profile(&uid, false).await?.unwrap();
+            assert_eq!(selected_option, persisted.get_item(&uid)?.option);
+            let options = PrfOption::merge(selected_option.as_ref(), Some(&stale_option));
+            let metadata = fs::read(dirs::profiles_path()?).await?;
+            let cache = fs::read(&cache_path).await?;
+            let downloaded = PrfItem::from_url(&selected_url, None, None, options.as_ref()).await;
+            server.join().expect("fixture server panicked")?;
+            if current_key.is_none() {
+                assert_eq!(
+                    downloaded.unwrap_err().to_string(),
+                    "an age secret key is required for this subscription"
+                );
+            } else {
+                assert_eq!(downloaded?.file_data.as_deref(), Some("proxies: []\nrules: []\n"));
+            }
+            assert_eq!(fs::read(dirs::profiles_path()?).await?, metadata);
+            assert_eq!(fs::read(&cache_path).await?, cache);
+        }
+        profiles.discard();
+        Ok(())
+    }
 }

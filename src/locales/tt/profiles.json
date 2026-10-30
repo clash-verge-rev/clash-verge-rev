@@ -118,6 +118,7 @@
         "type": "Төр",
         "description": "Тасвирламалар",
         "subscriptionUrl": "Подписка URL-ы",
+        "ageSecretKey": "age яшерен ачкычы (өстәмә)",
         "userAgent": "Кулланучы агенты",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Яңарту интервалы",

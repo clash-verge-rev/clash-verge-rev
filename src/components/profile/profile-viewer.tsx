@@ -54,6 +54,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         desc: '',
         url: '',
         option: {
+          age_secret_key: '',
           with_proxy: false,
           self_proxy: false,
           allow_auto_update: true,
@@ -63,14 +64,13 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
   useImperativeHandle(ref, () => ({
     create: () => {
+      reset()
       setOpenType('new')
       setOpen(true)
     },
     edit: (item: IProfileItem) => {
       if (item) {
-        Object.entries(item).forEach(([key, value]) => {
-          setValue(key as any, value)
-        })
+        reset(item, { keepDefaultValues: true })
       }
       setOpenType('edit')
       setOpen(true)
@@ -112,6 +112,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
         if (option?.user_agent === '') {
           option.user_agent = undefined
+        }
+        if (option) {
+          option.age_secret_key = option.age_secret_key?.trim() ?? ''
         }
 
         const name = form.name || `${form.type} file`
@@ -217,7 +220,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         setOpen(false)
-        setTimeout(() => reset(), 500)
+        reset()
         fileDataRef.current = null
 
         setTimeout(() => {
@@ -235,7 +238,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     try {
       setOpen(false)
       fileDataRef.current = null
-      setTimeout(() => reset(), 500)
+      reset()
     } catch (e) {
       console.warn('[ProfileViewer] handleClose error:', e)
     }
@@ -334,6 +337,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 multiline
                 label={t('profiles.modals.profileForm.fields.subscriptionUrl')}
+              />
+            )}
+          />
+
+          <Controller
+            name="option.age_secret_key"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...text}
+                {...field}
+                value={field.value ?? ''}
+                type="password"
+                placeholder="AGE-SECRET-KEY-..."
+                label={t('profiles.modals.profileForm.fields.ageSecretKey')}
               />
             )}
           />

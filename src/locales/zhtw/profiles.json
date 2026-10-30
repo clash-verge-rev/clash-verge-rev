@@ -118,6 +118,7 @@
         "type": "類型",
         "description": "描述",
         "subscriptionUrl": "訂閱網址",
+        "ageSecretKey": "age 私鑰（選填）",
         "userAgent": "使用者代理",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "更新間隔",

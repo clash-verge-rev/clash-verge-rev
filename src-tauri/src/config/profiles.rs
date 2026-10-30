@@ -1,6 +1,6 @@
 use super::{
     PrfOption,
-    prfitem::{PrfItem, PrfSelected, normalize_profile_home_url},
+    prfitem::{PrfItem, PrfSelected, normalize_age_secret_key, normalize_profile_home_url},
 };
 use crate::core::notify::{Refresh, announce};
 use crate::utils::retry::{RetryError, RetryPolicy, retry, retry_with_state};
@@ -240,6 +240,17 @@ impl IProfiles {
             Self::validate_profile_file(file)?;
         }
 
+        let mut option = item.option.clone();
+        if let Some(option) = option.as_mut() {
+            let key = option.age_secret_key.as_deref().or_else(|| {
+                self.get_item(uid)
+                    .ok()
+                    .and_then(|item| item.option.as_ref())
+                    .and_then(|option| option.age_secret_key.as_deref())
+            });
+            option.age_secret_key = normalize_age_secret_key(key)?;
+        }
+
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -252,7 +263,9 @@ impl IProfiles {
                 patch!(each, item, selected);
                 patch!(each, item, extra);
                 patch!(each, item, updated);
-                patch!(each, item, option);
+                if let Some(option) = option {
+                    each.option = Some(option);
+                }
 
                 self.items = Some(items);
                 return self.save_file().await;
@@ -1069,7 +1082,127 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
 #[cfg(test)]
 mod tests {
     use super::*;
+    use age::secrecy::ExposeSecret as _;
     use tauri_plugin_mihomo::models::Proxy;
+
+    #[tokio::test]
+    #[ignore = "requires HOME and CLASH_VERGE_TEST_HOME pointing to a disposable directory"]
+    #[allow(clippy::unwrap_used, reason = "tests assert by panicking")]
+    async fn age_subscription_persistence_and_inflight_refresh() -> Result<()> {
+        use crate::config::prfitem::tests::{AGE_KEY, AGE_PROFILE, fetch_profile};
+
+        let test_root = std::env::var("CLASH_VERGE_TEST_HOME")?;
+        assert!(!test_root.is_empty());
+        assert!(dirs::app_home_dir()?.starts_with(&test_root));
+        fs::create_dir_all(dirs::app_profiles_dir()?).await?;
+        let key = AGE_KEY;
+        let mut profiles = IProfiles::default();
+        let option: PrfOption = serde_json::from_value(serde_json::json!({
+            "age_secret_key": key,
+            "merge": "m", "script": "s", "rules": "r", "proxies": "p", "groups": "g"
+        }))?;
+        let mut item = fetch_profile(AGE_PROFILE, Some(&option)).await?;
+        item.uid = Some("age-test".into());
+        item.file = Some("age-test.yaml".into());
+        profiles.append_item(&mut item).await?;
+        profiles.save_file().await?;
+        let disk = fs::read_to_string(dirs::profiles_path()?).await?;
+        assert!(!disk.contains(key));
+        let mut profiles: IProfiles = help::read_yaml(&dirs::profiles_path()?).await?;
+        assert_eq!(
+            profiles
+                .get_item("age-test")?
+                .option
+                .as_ref()
+                .unwrap()
+                .age_secret_key
+                .as_deref(),
+            Some(key)
+        );
+        assert!(serde_json::to_string(&profiles)?.contains(key));
+
+        fs::write(dirs::clash_path()?, "mixed-port: 7890\n").await?;
+        fs::write(dirs::verge_path()?, "{}\n").await?;
+        let (_, backup_path) = crate::core::backup::create_backup().await?;
+        let mut zip = zip::ZipArchive::new(std::fs::File::open(backup_path)?)?;
+        assert!(zip.by_name(".encryption_key").is_err());
+        let mut backed_up = std::string::String::new();
+        std::io::Read::read_to_string(&mut zip.by_name(dirs::PROFILE_YAML)?, &mut backed_up)?;
+        assert!(!backed_up.contains("age_secret_key"));
+        let restored: IProfiles =
+            crate::config::with_encryption(|| async { serde_yaml_ng::from_str(&backed_up) }).await?;
+        assert_eq!(restored.get_item("age-test")?.file, item.file);
+        assert_eq!(fs::read_to_string(dirs::profiles_path()?).await?, disk);
+        let mut cached = std::string::String::new();
+        std::io::Read::read_to_string(&mut zip.by_name("profiles/age-test.yaml")?, &mut cached)?;
+        assert_eq!(cached, "proxies: []\nproxy-groups: []\nrules: []\n");
+
+        let original_cache = fs::read(dirs::app_profiles_dir()?.join("age-test.yaml")).await?;
+        let original_metadata = fs::read(dirs::profiles_path()?).await?;
+        let wrong = age::x25519::Identity::generate().to_string();
+        let wrong_option = PrfOption {
+            age_secret_key: Some(wrong.expose_secret().into()),
+            ..PrfOption::default()
+        };
+        let corrupt = AGE_PROFILE.replace("FC5KThg=", "FC5KThA=");
+        for (body, key_option) in [
+            (AGE_PROFILE, None),
+            (AGE_PROFILE, Some(&wrong_option)),
+            (&corrupt, Some(&option)),
+        ] {
+            assert!(fetch_profile(body, key_option).await.is_err());
+            assert_eq!(fs::read(dirs::profiles_path()?).await?, original_metadata);
+            assert_eq!(
+                fs::read(dirs::app_profiles_dir()?.join("age-test.yaml")).await?,
+                original_cache
+            );
+        }
+
+        let downloaded = item.clone();
+        let replacement = age::x25519::Identity::generate().to_string();
+        let replacement = replacement.expose_secret();
+        for current_key in [replacement, ""] {
+            profiles
+                .patch_item(
+                    "age-test",
+                    &PrfItem {
+                        option: Some(PrfOption {
+                            age_secret_key: Some(current_key.into()),
+                            ..PrfOption::default()
+                        }),
+                        ..PrfItem::default()
+                    },
+                )
+                .await?;
+            let mut refresh = downloaded.clone();
+            refresh.file_data = Some("proxies: []\nrules: []\n".into());
+            profiles.update_item("age-test", &mut refresh).await?;
+            let reloaded: IProfiles = help::read_yaml(&dirs::profiles_path()?).await?;
+            let saved_key = &reloaded.get_item("age-test")?.option.as_ref().unwrap().age_secret_key;
+            assert_eq!(saved_key.as_deref(), (!current_key.is_empty()).then_some(current_key));
+        }
+        assert_eq!(
+            fs::read_to_string(dirs::app_profiles_dir()?.join("age-test.yaml")).await?,
+            "proxies: []\nrules: []\n"
+        );
+        let before = fs::read(dirs::profiles_path()?).await?;
+        let invalid = profiles
+            .patch_item(
+                "age-test",
+                &PrfItem {
+                    option: Some(PrfOption {
+                        age_secret_key: Some("invalid-private-key".into()),
+                        ..PrfOption::default()
+                    }),
+                    ..PrfItem::default()
+                },
+            )
+            .await
+            .unwrap_err();
+        assert!(!format!("{invalid:#?}").contains("invalid-private-key"));
+        assert_eq!(fs::read(dirs::profiles_path()?).await?, before);
+        Ok(())
+    }
 
     fn deletion_item(uid: &str, kind: &str, file: &str, merge: Option<&str>) -> PrfItem {
         PrfItem {

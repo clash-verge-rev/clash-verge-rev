@@ -118,6 +118,7 @@
         "type": "Jenis",
         "description": "Deskripsi",
         "subscriptionUrl": "URL Langganan",
+        "ageSecretKey": "Kunci Rahasia age (Opsional)",
         "userAgent": "User Agent",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Interval Pembaruan",
