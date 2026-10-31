@@ -731,6 +731,8 @@ export interface TranslationResources {
               language: string
               layoutSetting: string
               misc: string
+              speedTestUrl: string
+              speedTestUrlCustom: string
               startPage: string
               startupScript: string
               themeMode: string
@@ -1524,6 +1526,10 @@ export interface TranslationResources {
         resetInput: string
         useRegex: string
       }
+      speed: string
+      speedAvg: string
+      speedFail: string
+      speedPeak: string
       statuses: {
         disabled: string
         empty: string
@@ -1589,6 +1595,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

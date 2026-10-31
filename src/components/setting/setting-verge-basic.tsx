@@ -11,6 +11,7 @@ import { copyClashEnv } from '@/services/cmds'
 import { supportedLanguages } from '@/services/i18n'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
+import { DEFAULT_SPEED_TEST_URL, SPEED_TEST_SOURCES } from '@/services/speed'
 import getSystem from '@/utils/get-system'
 
 import { BackupViewer } from './mods/backup-viewer'
@@ -62,6 +63,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
     env_type,
     startup_script,
     start_page,
+    speed_test_url,
   } = verge ?? {}
   const configRef = useRef<DialogRef>(null)
   const hotkeyRef = useRef<DialogRef>(null)
@@ -74,6 +76,20 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const onChangeData = (patch: any) => {
     mutateVerge({ ...verge, ...patch }, false)
   }
+
+  // A hand-written URL that is not one of the presets stays selectable.
+  const speedSources =
+    speed_test_url && !SPEED_TEST_SOURCES.some((s) => s.url === speed_test_url)
+      ? [
+          ...SPEED_TEST_SOURCES,
+          {
+            label: t(
+              'settings.components.verge.basic.fields.speedTestUrlCustom',
+            ),
+            url: speed_test_url,
+          },
+        ]
+      : SPEED_TEST_SOURCES
 
   const onCopyClashEnv = useCallback(async () => {
     try {
@@ -206,6 +222,34 @@ const SettingVergeBasic = ({ onError }: Props) => {
                 </MenuItem>
               )
             })}
+          </Select>
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t('settings.components.verge.basic.fields.speedTestUrl')}
+      >
+        <GuardState
+          value={speed_test_url || DEFAULT_SPEED_TEST_URL}
+          onCatch={onError}
+          onFormat={(e: any) => e.target.value}
+          onChange={(e) =>
+            onChangeData({
+              speed_test_url: e && e !== DEFAULT_SPEED_TEST_URL ? e : null,
+            })
+          }
+          onGuard={(e) =>
+            patchVerge({
+              speed_test_url: e && e !== DEFAULT_SPEED_TEST_URL ? e : null,
+            })
+          }
+        >
+          <Select size="small" sx={{ width: 240, '> div': { py: '7.5px' } }}>
+            {speedSources.map((source) => (
+              <MenuItem key={source.url} value={source.url}>
+                {source.label}
+              </MenuItem>
+            ))}
           </Select>
         </GuardState>
       </SettingItem>

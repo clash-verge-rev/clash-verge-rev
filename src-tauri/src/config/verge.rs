@@ -224,6 +224,11 @@ pub struct IVerge {
     pub hover_jump_navigator_delay: Option<u64>,
 
     pub enable_external_controller: Option<bool>,
+
+    /// 网速测试使用的下载地址（留空则使用内置默认端点）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
+    pub speed_test_url: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
@@ -422,6 +427,7 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            speed_test_url: None,
             ..Self::default()
         }
     }
@@ -524,6 +530,7 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(speed_test_url);
     }
 
     pub fn get_log_level(&self) -> LevelFilter {

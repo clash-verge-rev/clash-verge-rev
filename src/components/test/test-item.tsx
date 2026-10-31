@@ -6,9 +6,11 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useIconCache } from '@/hooks/use-icon-cache'
-import { cmdTestDelay } from '@/services/cmds'
+import { useVerge } from '@/hooks/use-verge'
+import { cmdTestDelay, cmdTestSpeed } from '@/services/cmds'
 import delayManager from '@/services/delay'
 import { showNotice } from '@/services/notice-service'
+import { formatSpeed, DEFAULT_SPEED_TEST_URL } from '@/services/speed'
 import { useTestAllCounter } from '@/store/app-store-context'
 
 import { TestBox } from './test-box'
@@ -24,8 +26,12 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
   const [anchorEl, setAnchorEl] = useState<any>(null)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const [delay, setDelay] = useState(-1)
+  const [speed, setSpeed] = useState(-1)
+  const [peakSpeed, setPeakSpeed] = useState(0)
   const { uid, name, icon, url } = itemData
   const iconCachePath = useIconCache({ icon: icon!, cacheKey: uid! })
+  const { verge } = useVerge()
+  const speedUrl = verge?.speed_test_url || DEFAULT_SPEED_TEST_URL
 
   const onDelay = useCallback(async () => {
     setDelay(-2)
@@ -38,6 +44,26 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
       showNotice.error(err)
     }
   }, [url])
+
+  // Runs both latency and download-speed tests for the current connection.
+  const onDelayWithSpeed = useCallback(async () => {
+    setDelay(-2)
+    setSpeed(-2)
+    try {
+      const [delayResult, speedResult] = await Promise.all([
+        cmdTestDelay(url!),
+        cmdTestSpeed(speedUrl),
+      ])
+      setDelay(delayResult)
+      setSpeed(speedResult.speed)
+      setPeakSpeed(speedResult.peak)
+    } catch (err) {
+      setDelay(-1)
+      setSpeed(-1)
+      setPeakSpeed(0)
+      showNotice.error(err)
+    }
+  }, [url, speedUrl])
 
   const onEditTest = () => {
     setAnchorEl(null)
@@ -115,7 +141,9 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
         <Box
           sx={{
             display: 'flex',
-            justifyContent: 'center',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '2px',
             marginTop: '8px',
             color: 'primary.main',
           }}
@@ -132,7 +160,7 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay()
+                onDelayWithSpeed()
               }}
               sx={({ palette }) => ({
                 ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
@@ -149,7 +177,7 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay()
+                onDelayWithSpeed()
               }}
               sx={({ palette }) => ({
                 color: delayManager.formatDelayColor(delay),
@@ -161,6 +189,44 @@ export const TestItem = ({ itemData, onEdit, onDelete: removeTest }: Props) => {
               {delayManager.formatDelay(delay)}
             </Widget>
           )}
+
+          {speed === -2 ? (
+            <Box
+              component="span"
+              title={t('shared.speed')}
+              sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1 }}
+            >
+              ↓ …
+            </Box>
+          ) : speed > 0 ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1px',
+              }}
+            >
+              <Box
+                component="span"
+                title={t('shared.speed')}
+                sx={{ fontSize: 11, color: 'text.secondary', lineHeight: 1.1 }}
+              >
+                ↓ {formatSpeed(peakSpeed > 0 ? peakSpeed : speed)}
+              </Box>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: 10,
+                  color: 'text.secondary',
+                  lineHeight: 1.1,
+                  opacity: 0.75,
+                }}
+              >
+                {t('shared.speedAvg')} {formatSpeed(speed)}
+              </Box>
+            </Box>
+          ) : null}
         </Box>
       </TestBox>
 

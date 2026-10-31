@@ -26,6 +26,10 @@
     "next": "下一页",
     "check": "检测"
   },
+  "speed": "网速",
+  "speedPeak": "峰值",
+  "speedAvg": "平均",
+  "speedFail": "测速失败",
   "labels": {
     "updateAt": "更新于",
     "timeout": "超时",

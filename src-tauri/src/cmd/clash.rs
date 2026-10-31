@@ -124,6 +124,19 @@ pub async fn test_delay(url: std::string::String) -> CmdResult<u32> {
     Ok(result)
 }
 
+/// Measures download throughput, optionally through a specific proxy node.
+#[tauri::command]
+#[specta::specta]
+pub async fn test_speed(
+    url: std::string::String,
+    proxy_name: Option<std::string::String>,
+    timeout_ms: u64,
+) -> CmdResult<feat::SpeedTestResult> {
+    feat::test_speed(url.into(), proxy_name.map(|p| p.into()), timeout_ms)
+        .await
+        .map_err(|error| proxy_aware_coded_error(&error, "SPEED_TEST_FAILED"))
+}
+
 #[tauri::command]
 #[specta::specta]
 pub async fn save_dns_config(dns_config: crate::ipc::YamlMapping) -> CmdResult {

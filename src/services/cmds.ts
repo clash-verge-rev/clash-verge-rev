@@ -15,6 +15,7 @@ import type {
   ProfileSelection,
   ProfilePatch,
   ProfileCreate,
+  SpeedTestResult,
 } from './bindings'
 
 export type {
@@ -328,6 +329,14 @@ export async function syncRuntimeProviders() {
 
 export async function cmdTestDelay(url: string) {
   return commands.testDelay(url)
+}
+
+export async function cmdTestSpeed(
+  url: string,
+  proxyName?: string,
+  timeoutMs = 6000,
+): Promise<SpeedTestResult> {
+  return commands.testSpeed(url, proxyName ?? null, timeoutMs)
 }
 
 export async function invoke_uwp_tool() {

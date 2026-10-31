@@ -129,6 +129,13 @@ export const commands = {
   patchVergeConfig: (payload: IVerge_Deserialize) =>
     __TAURI_INVOKE<null>('patch_verge_config', { payload }),
   testDelay: (url: string) => __TAURI_INVOKE<number>('test_delay', { url }),
+  /**  Measures download throughput, optionally through a specific proxy node. */
+  testSpeed: (url: string, proxyName: string | null, timeoutMs: number) =>
+    __TAURI_INVOKE<SpeedTestResult>('test_speed', {
+      url,
+      proxyName,
+      timeoutMs,
+    }),
   getAppDir: () => __TAURI_INVOKE<string>('get_app_dir'),
   copyIconFile: (path: string, iconInfo: IconInfo) =>
     __TAURI_INVOKE<string>('copy_icon_file', { path, iconInfo }),
@@ -432,6 +439,8 @@ export type IVerge_Deserialize = {
   /**  代理页面自动滚动延迟（毫秒） */
   hover_jump_navigator_delay?: number | null
   enable_external_controller?: boolean | null
+  /**  网速测试使用的下载地址（留空则使用内置默认端点） */
+  speed_test_url?: string | null
   tray_icon?: string | null
   verge_redir_port?: number | null
   verge_redir_enabled?: boolean | null
@@ -522,6 +531,8 @@ export type IVerge_Serialize = {
   /**  代理页面自动滚动延迟（毫秒） */
   hover_jump_navigator_delay: number | null
   enable_external_controller: boolean | null
+  /**  网速测试使用的下载地址（留空则使用内置默认端点） */
+  speed_test_url?: string | null
   tray_icon?: string | null
   verge_redir_port?: number | null
   verge_redir_enabled?: boolean | null
@@ -978,6 +989,20 @@ export type ServiceInstallOutcome =
 export type SidecarFailureSnapshot = {
   revision: number
   detail: string | null
+}
+
+/**  Result of a download-throughput measurement. */
+export type SpeedTestResult = {
+  /**  Average throughput across the measurement window, in bytes per second. */
+  speed: number
+  /**  Best sampled throughput after warm-up, in bytes per second. */
+  peak: number
+  /**  Total bytes received during the measurement window. */
+  downloaded: number
+  /**  Measurement duration in milliseconds. */
+  elapsedMs: number
+  /**  Number of concurrent connections used for the measurement. */
+  connections: number
 }
 
 export type SystemInfo = {

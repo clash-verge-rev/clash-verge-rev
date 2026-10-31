@@ -3,6 +3,11 @@ import { useCallback, useEffect, useReducer } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager, { type DelayUpdate } from '@/services/delay'
+import speedManager, {
+  DEFAULT_SPEED_TEST_URL,
+  SPEED_TEST_WINDOW_MS,
+  type SpeedUpdate,
+} from '@/services/speed'
 import {
   isInteractableMember,
   memberDetails,
@@ -17,13 +22,25 @@ const PRESET_PROXY_NAMES = [
   'COMPATIBLE',
 ]
 
-const identity = (_: DelayUpdate, next: DelayUpdate): DelayUpdate => next
+const identity = <T>(_: T, next: T): T => next
 
 const INITIAL_DELAY: DelayUpdate = { delay: -1, updatedAt: 0 }
+
+const INITIAL_SPEED: SpeedUpdate = {
+  speed: -1,
+  peak: 0,
+  downloaded: 0,
+  elapsed: 0,
+  updatedAt: 0,
+  error: undefined,
+}
 
 export interface UseProxyDelayState {
   delayState: DelayUpdate
   delayValue: number
+  speedValue: number
+  peakValue: number
+  speedError?: string
   isPreset: boolean
   timeout: number
   onDelay: () => Promise<void>
@@ -32,20 +49,34 @@ export interface UseProxyDelayState {
 export function useProxyDelayState(
   member: ResolvedProxyMember,
   groupName: string,
+  options: { withSpeed?: boolean } = {},
 ): UseProxyDelayState {
+  const { withSpeed = true } = options
   const name = member.ref.name
   const details = memberDetails(member)
   const unresolved = member.kind === 'unresolved'
   const isPreset = unresolved || PRESET_PROXY_NAMES.includes(name)
   const [delayState, setDelayState] = useReducer(identity, INITIAL_DELAY)
+  const [speedState, setSpeedState] = useReducer(identity, INITIAL_SPEED)
   const { verge } = useVerge()
   const timeout = verge?.default_latency_timeout || 10000
+  const speedUrl = verge?.speed_test_url || DEFAULT_SPEED_TEST_URL
 
   useEffect(() => {
     if (isPreset) return
     delayManager.setListener(name, groupName, setDelayState)
     return () => {
       delayManager.removeListener(name, groupName)
+    }
+  }, [name, groupName, isPreset])
+
+  useEffect(() => {
+    if (isPreset) return
+    speedManager.setListener(name, groupName, setSpeedState)
+    const cached = speedManager.getSpeedUpdate(name, groupName)
+    if (cached) setSpeedState({ ...cached })
+    return () => {
+      speedManager.removeListener(name, groupName)
     }
   }, [name, groupName, isPreset])
 
@@ -86,12 +117,42 @@ export function useProxyDelayState(
   const onDelay = useLockFn(async () => {
     if (!isInteractableMember(member)) return
     setDelayState({ delay: -2, updatedAt: Date.now() })
-    setDelayState(await delayManager.checkDelay(member, groupName, timeout))
+    setSpeedState({
+      speed: -2,
+      peak: 0,
+      downloaded: 0,
+      elapsed: 0,
+      updatedAt: Date.now(),
+    })
+    const delayUpd = await delayManager.checkDelay(member, groupName, timeout)
+    setDelayState(delayUpd)
+    if (!withSpeed) return
+    try {
+      const speedUpd = await speedManager.checkSpeed(
+        name,
+        groupName,
+        speedUrl,
+        SPEED_TEST_WINDOW_MS,
+      )
+      setSpeedState(speedUpd)
+    } catch (error) {
+      setSpeedState({
+        speed: 0,
+        peak: 0,
+        downloaded: 0,
+        elapsed: 0,
+        updatedAt: Date.now(),
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   })
 
   return {
     delayState,
     delayValue: delayState.delay,
+    speedValue: speedState.speed,
+    peakValue: speedState.peak,
+    speedError: speedState.error,
     isPreset,
     timeout,
     onDelay,

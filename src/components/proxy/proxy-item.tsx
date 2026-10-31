@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
+import { formatSpeed } from '@/services/speed'
 import {
   memberDetails,
   type ProxyGroupView,
@@ -58,10 +59,15 @@ export const ProxyItem = (props: Props) => {
   const now = member.kind === 'group' ? member.group.now : undefined
 
   // -1/<=0 为不显示，-2 为 loading
-  const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
-    member,
-    group.name,
-  )
+  const {
+    delayValue,
+    speedValue,
+    peakValue,
+    speedError,
+    isPreset,
+    timeout,
+    onDelay,
+  } = useProxyDelayState(member, group.name)
 
   return (
     <ListItem sx={sx}>
@@ -92,7 +98,8 @@ export const ProxyItem = (props: Props) => {
               },
               backgroundColor: bgcolor,
               marginBottom: '8px',
-              height: '40px',
+              minHeight: '48px',
+              py: '4px',
             }
           },
         ]}
@@ -137,47 +144,99 @@ export const ProxyItem = (props: Props) => {
             justifyContent: 'flex-end',
             color: 'primary.main',
             display: isPreset ? 'none' : '',
+            minWidth: 76,
+            flexShrink: 0,
+            alignSelf: 'stretch',
           }}
         >
-          {!unresolved && delayValue === -2 && (
-            <Widget>
-              <BaseLoading />
-            </Widget>
-          )}
-
-          {!unresolved && delayValue !== -2 && (
-            <Widget
-              className="the-check"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                void onDelay()
+          {!unresolved && (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                gap: '2px',
               }}
-              sx={({ palette }) => ({
-                display: 'none', // hover 时显示
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
             >
-              {t('shared.actions.check')}
-            </Widget>
-          )}
+              {delayValue === -2 ? (
+                <Widget>
+                  <BaseLoading />
+                </Widget>
+              ) : delayValue > 0 ? (
+                // 显示延迟
+                <Widget
+                  className="the-delay"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    void onDelay()
+                  }}
+                  sx={({ palette }) => ({
+                    color: delayManager.formatDelayColor(delayValue, timeout),
+                    ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+                  })}
+                >
+                  {delayManager.formatDelay(delayValue, timeout)}
+                </Widget>
+              ) : (
+                <Widget
+                  className="the-check"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    void onDelay()
+                  }}
+                  sx={({ palette }) => ({
+                    display: 'none', // hover 时显示
+                    ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+                  })}
+                >
+                  {t('shared.actions.check')}
+                </Widget>
+              )}
 
-          {!unresolved && delayValue > 0 && (
-            // 显示延迟
-            <Widget
-              className="the-delay"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                void onDelay()
-              }}
-              sx={({ palette }) => ({
-                color: delayManager.formatDelayColor(delayValue, timeout),
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
-            >
-              {delayManager.formatDelay(delayValue, timeout)}
-            </Widget>
+              {speedValue === -2 ? (
+                <Box
+                  component="span"
+                  title={t('shared.speed')}
+                  sx={{
+                    fontSize: 11,
+                    color: 'text.secondary',
+                    lineHeight: 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ↓ …
+                </Box>
+              ) : speedValue > 0 ? (
+                <Box
+                  component="span"
+                  title={`${t('shared.speed')} · ${t('shared.speedPeak')} ${formatSpeed(peakValue)} · ${t('shared.speedAvg')} ${formatSpeed(speedValue)}`}
+                  sx={{
+                    fontSize: 11,
+                    color: 'text.secondary',
+                    lineHeight: 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ↓ {formatSpeed(peakValue > 0 ? peakValue : speedValue)}
+                </Box>
+              ) : speedError ? (
+                <Box
+                  component="span"
+                  title={speedError}
+                  sx={{
+                    fontSize: 11,
+                    color: 'error.main',
+                    lineHeight: 1,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {t('shared.speedFail')}
+                </Box>
+              ) : null}
+            </Box>
           )}
 
           {!unresolved && delayValue !== -2 && delayValue <= 0 && selected && (
