@@ -29,7 +29,7 @@ perf-harness = ["dep:tauri-plugin-wdio-webdriver"]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.7.3", features = [] }
+tauri-build = { version = "2.7.4", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -72,12 +72,12 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch 
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
-tauri-plugin-shell = "2.5.0"
+tauri-plugin-shell = "2.6.0"
 tauri-plugin-opener = "2.7.2"
-tauri-plugin-dialog = "2.8.3"
+tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-process = "2.4.0"
-tauri-plugin-deep-link = "2.6.2"
+tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
 zip = "9.1.3"
 flate2 = "1.1.10"
@@ -90,12 +90,12 @@ getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
-tauri-plugin-notification = "2.7.0"
+tauri-plugin-notification = "2.8.0"
 tokio-stream = "0.1.19"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.8.3"
 tracing = { workspace = true }
-tauri-plugin-devtools = { version = "2.2.2", optional = true }
+tauri-plugin-devtools = { version = "2.2.3", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "7a03d16f4d39b1bb885b7babe66b9e153e34b615" }
 async-trait = "0.1.92"
 clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.7.6", version = "2.7.6", features = [
@@ -109,7 +109,7 @@ dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.20", features = ["time"] }
 specta = { version = "=2.0.0-rc.25", features = ["derive", "function", "serde_json"] }
-tauri-specta = { version = "=2.0.0-rc.25", features = ["derive", "typescript"] }
+tauri-specta = { version = "=2.0.0-rc.26", features = ["derive", "typescript"] }
 specta-typescript = "=0.0.12"
 
 [target.'cfg(unix)'.dependencies]
@@ -120,7 +120,7 @@ libc = "0.2.191"
 clash-verge-signal = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-tauri-plugin-wdio-webdriver = { version = "=1.5.0", optional = true }
+tauri-plugin-wdio-webdriver = { version = "=1.5.1", optional = true }
 objc2 = "0.6.5"
 objc2-foundation = { version = "0.3.2", features = [
   "NSString",
