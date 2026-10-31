@@ -5,14 +5,14 @@ edition = "2024"
 rust-version = "1.91"
 
 [dependencies]
-specta = { version = "=2.0.0-rc.25", features = ["derive", "function"] }
+specta = { version = "=2.0.0-rc.27", features = ["derive", "function"] }
 tauri = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
 parking_lot = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 # sysinfo 0.38.2 conflicts with dark-light
 # see https://github.com/GuillaumeGomez/sysinfo/issues/1623
-sysinfo = { version = "0.39.6", features = ["network", "system"] }
+sysinfo = { version = "0.40.1", features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
 libc = "0.2.191"
