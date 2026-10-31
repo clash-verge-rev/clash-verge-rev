@@ -29,7 +29,7 @@ export function filterSort(
 const regex1 = /delay([=<>])(\d+|timeout|error)/i
 const regex2 = /type=(.*)/i
 
-function filterProxies(
+export function filterProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,
   filterText: string,
