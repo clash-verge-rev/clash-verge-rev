@@ -8,6 +8,7 @@ import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
+import { setNativeWindowTheme } from '@/services/cmds'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
@@ -123,7 +124,7 @@ export const useCustomTheme = () => {
   }, [theme_mode, appWindow, setMode])
 
   useEffect(() => {
-    if (theme_mode === undefined) {
+    if (theme_mode === undefined || theme_mode === null) {
       return
     }
 
@@ -137,6 +138,12 @@ export const useCustomTheme = () => {
     } else if (mode) {
       appWindow.setTheme(mode as TauriOsTheme).catch((err) => {
         console.error(`Failed to set window theme to ${mode}:`, err)
+      })
+    }
+
+    if (mode) {
+      setNativeWindowTheme(mode).catch((err) => {
+        console.error('Failed to set native window theme:', err)
       })
     }
   }, [mode, appWindow, theme_mode])
@@ -207,6 +214,8 @@ export const useCustomTheme = () => {
       const dividerColor =
         mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
       rootEle.style.setProperty('--divider-color', dividerColor)
+      // macOS 26+ derives the native titlebar appearance from the document background.
+      rootEle.style.setProperty('background-color', backgroundColor)
       rootEle.style.setProperty('--background-color', backgroundColor)
       rootEle.style.setProperty('--selection-color', selectColor)
       rootEle.style.setProperty('--scroller-color', scrollColor)

@@ -19,6 +19,18 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
 
+pub fn set_native_window_theme(window: WebviewWindow, theme: &str) -> Result<(), String> {
+    let background_color = match theme {
+        "dark" => DARK_BACKGROUND_COLOR,
+        "light" => LIGHT_BACKGROUND_COLOR,
+        _ => return Err(format!("unsupported theme: {theme}")),
+    };
+
+    window
+        .set_background_color(Some(background_color))
+        .map_err(|error| error.to_string())
+}
+
 #[cfg(target_os = "linux")]
 const DEFAULT_DECORATIONS: bool = false;
 #[cfg(not(target_os = "linux"))]
