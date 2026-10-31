@@ -40,8 +40,47 @@ impl LightweightState {
 
 static LIGHTWEIGHT_STATE: AtomicU8 = AtomicU8::new(LightweightState::Normal as u8);
 
-static WINDOW_CLOSE_HANDLER_ID: AtomicU32 = AtomicU32::new(0);
-static WEBVIEW_FOCUS_HANDLER_ID: AtomicU32 = AtomicU32::new(0);
+struct WindowListener {
+    handler_id: AtomicU32,
+    event: &'static str,
+    label: &'static str,
+}
+
+impl WindowListener {
+    fn setup(&self, on_event: impl Fn() + Send + 'static) {
+        if let Some(window) = WindowManager::get_main_window() {
+            let previous_handler_id = self.handler_id.swap(0, Ordering::AcqRel);
+            if previous_handler_id != 0 {
+                window.unlisten(previous_handler_id);
+                logging!(debug, Type::Lightweight, "覆盖旧的{}监听", self.label);
+            }
+            let handler_id = window.listen(self.event, move |_event| on_event());
+            self.handler_id.store(handler_id, Ordering::Release);
+        }
+    }
+
+    fn cancel(&self) {
+        let id = self.handler_id.swap(0, Ordering::AcqRel);
+        if id != 0 {
+            if let Some(window) = WindowManager::get_main_window() {
+                window.unlisten(id);
+            }
+            logging!(debug, Type::Lightweight, "取消了{}监听", self.label);
+        }
+    }
+}
+
+static WINDOW_CLOSE_LISTENER: WindowListener = WindowListener {
+    handler_id: AtomicU32::new(0),
+    event: "tauri://close-requested",
+    label: "窗口关闭",
+};
+
+static WEBVIEW_FOCUS_LISTENER: WindowListener = WindowListener {
+    handler_id: AtomicU32::new(0),
+    event: "tauri://focus",
+    label: "窗口焦点",
+};
 
 static CANCEL_TX: Mutex<Option<oneshot::Sender<()>>> = Mutex::new(None);
 
@@ -154,55 +193,27 @@ pub async fn add_light_weight_timer() {
 }
 
 fn setup_window_close_listener() {
-    if let Some(window) = WindowManager::get_main_window() {
-        let previous_handler_id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
-        if previous_handler_id != 0 {
-            window.unlisten(previous_handler_id);
-            logging!(debug, Type::Lightweight, "覆盖旧的窗口关闭监听");
-        }
-        let handler_id = window.listen("tauri://close-requested", move |_event| {
-            std::mem::drop(AsyncHandler::spawn(|| async {
-                setup_light_weight_timer().await;
-            }));
-            logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
-        });
-        WINDOW_CLOSE_HANDLER_ID.store(handler_id, Ordering::Release);
-    }
+    WINDOW_CLOSE_LISTENER.setup(|| {
+        std::mem::drop(AsyncHandler::spawn(|| async {
+            setup_light_weight_timer().await;
+        }));
+        logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
+    });
 }
 
 fn cancel_window_close_listener() {
-    let id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
-    if id != 0 {
-        if let Some(window) = WindowManager::get_main_window() {
-            window.unlisten(id);
-        }
-        logging!(debug, Type::Lightweight, "取消了窗口关闭监听");
-    }
+    WINDOW_CLOSE_LISTENER.cancel();
 }
 
 fn setup_webview_focus_listener() {
-    if let Some(window) = WindowManager::get_main_window() {
-        let previous_handler_id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
-        if previous_handler_id != 0 {
-            window.unlisten(previous_handler_id);
-            logging!(debug, Type::Lightweight, "覆盖旧的窗口焦点监听");
-        }
-        let handler_id = window.listen("tauri://focus", move |_event| {
-            cancel_light_weight_timer();
-            logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
-        });
-        WEBVIEW_FOCUS_HANDLER_ID.store(handler_id, Ordering::Release);
-    }
+    WEBVIEW_FOCUS_LISTENER.setup(|| {
+        cancel_light_weight_timer();
+        logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
+    });
 }
 
 fn cancel_webview_focus_listener() {
-    let id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
-    if id != 0 {
-        if let Some(window) = WindowManager::get_main_window() {
-            window.unlisten(id);
-        }
-        logging!(debug, Type::Lightweight, "取消了窗口焦点监听");
-    }
+    WEBVIEW_FOCUS_LISTENER.cancel();
 }
 
 async fn setup_light_weight_timer() {

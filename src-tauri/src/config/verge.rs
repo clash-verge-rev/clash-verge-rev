@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::{
-    config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
+    config::{DEFAULT_PAC, deserialize_encrypted, patch_opt_field, serialize_encrypted},
     constants::network,
     utils::{dirs, help},
 };
@@ -39,7 +39,7 @@ pub struct IVerge {
 
     pub traffic_graph: Option<bool>,
 
-    /// show memory info (only for Clash Meta)
+    /// show memory info (only for Mihomo)
     pub enable_memory_usage: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -432,98 +432,90 @@ impl IVerge {
 
     #[allow(clippy::cognitive_complexity)]
     pub fn patch_config(&mut self, patch: &Self) {
-        macro_rules! patch {
-            ($key: tt) => {
-                if patch.$key.is_some() {
-                    self.$key = patch.$key.clone();
-                }
-            };
-        }
+        patch_opt_field!(self, patch, app_log_level);
+        patch_opt_field!(self, patch, app_log_max_size);
+        patch_opt_field!(self, patch, app_log_max_count);
 
-        patch!(app_log_level);
-        patch!(app_log_max_size);
-        patch!(app_log_max_count);
-
-        patch!(language);
-        patch!(theme_mode);
-        patch!(tray_event);
-        patch!(env_type);
-        patch!(start_page);
-        patch!(startup_script);
-        patch!(traffic_graph);
-        patch!(enable_memory_usage);
-        patch!(enable_group_icon);
-        patch!(pause_render_traffic_stats_on_blur);
+        patch_opt_field!(self, patch, language);
+        patch_opt_field!(self, patch, theme_mode);
+        patch_opt_field!(self, patch, tray_event);
+        patch_opt_field!(self, patch, env_type);
+        patch_opt_field!(self, patch, start_page);
+        patch_opt_field!(self, patch, startup_script);
+        patch_opt_field!(self, patch, traffic_graph);
+        patch_opt_field!(self, patch, enable_memory_usage);
+        patch_opt_field!(self, patch, enable_group_icon);
+        patch_opt_field!(self, patch, pause_render_traffic_stats_on_blur);
         #[cfg(target_os = "macos")]
-        patch!(tray_icon);
-        patch!(menu_icon);
-        patch!(menu_order);
-        patch!(proxy_group_tools_position);
-        patch!(notice_position);
-        patch!(collapse_navbar);
-        patch!(common_tray_icon);
-        patch!(sysproxy_tray_icon);
-        patch!(tun_tray_icon);
+        patch_opt_field!(self, patch, tray_icon);
+        patch_opt_field!(self, patch, menu_icon);
+        patch_opt_field!(self, patch, menu_order);
+        patch_opt_field!(self, patch, proxy_group_tools_position);
+        patch_opt_field!(self, patch, notice_position);
+        patch_opt_field!(self, patch, collapse_navbar);
+        patch_opt_field!(self, patch, common_tray_icon);
+        patch_opt_field!(self, patch, sysproxy_tray_icon);
+        patch_opt_field!(self, patch, tun_tray_icon);
 
-        patch!(enable_tun_mode);
-        patch!(enable_auto_launch);
-        patch!(enable_silent_start);
-        patch!(enable_hover_jump_navigator);
-        patch!(hover_jump_navigator_delay);
+        patch_opt_field!(self, patch, enable_tun_mode);
+        patch_opt_field!(self, patch, enable_auto_launch);
+        patch_opt_field!(self, patch, enable_silent_start);
+        patch_opt_field!(self, patch, enable_hover_jump_navigator);
+        patch_opt_field!(self, patch, hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_port);
+        patch_opt_field!(self, patch, verge_redir_port);
         #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_enabled);
+        patch_opt_field!(self, patch, verge_redir_enabled);
         #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_port);
+        patch_opt_field!(self, patch, verge_tproxy_port);
         #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_enabled);
-        patch!(verge_mixed_port);
-        patch!(verge_socks_port);
-        patch!(verge_socks_enabled);
-        patch!(verge_port);
-        patch!(verge_http_enabled);
-        patch!(enable_system_proxy);
-        patch!(enable_proxy_guard);
-        patch!(enable_bypass_check);
-        patch!(use_default_bypass);
-        patch!(system_proxy_bypass);
-        patch!(proxy_guard_duration);
-        patch!(proxy_auto_config);
-        patch!(pac_file_content);
-        patch!(proxy_host);
-        patch!(theme_setting);
-        patch!(web_ui_list);
-        patch!(clash_core);
-        patch!(hotkeys);
-        patch!(enable_global_hotkey);
+        patch_opt_field!(self, patch, verge_tproxy_enabled);
+        patch_opt_field!(self, patch, verge_mixed_port);
+        patch_opt_field!(self, patch, verge_socks_port);
+        patch_opt_field!(self, patch, verge_socks_enabled);
+        patch_opt_field!(self, patch, verge_port);
+        patch_opt_field!(self, patch, verge_http_enabled);
+        patch_opt_field!(self, patch, enable_system_proxy);
+        patch_opt_field!(self, patch, enable_proxy_guard);
+        patch_opt_field!(self, patch, enable_bypass_check);
+        patch_opt_field!(self, patch, use_default_bypass);
+        patch_opt_field!(self, patch, system_proxy_bypass);
+        patch_opt_field!(self, patch, proxy_guard_duration);
+        patch_opt_field!(self, patch, proxy_auto_config);
+        patch_opt_field!(self, patch, pac_file_content);
+        patch_opt_field!(self, patch, proxy_host);
+        patch_opt_field!(self, patch, theme_setting);
+        patch_opt_field!(self, patch, web_ui_list);
+        patch_opt_field!(self, patch, clash_core);
+        patch_opt_field!(self, patch, hotkeys);
+        patch_opt_field!(self, patch, enable_global_hotkey);
 
-        patch!(auto_close_connection);
-        patch!(auto_check_update);
-        patch!(default_latency_test);
-        patch!(default_latency_timeout);
-        patch!(enable_auto_delay_detection);
-        patch!(auto_delay_detection_interval_minutes);
-        patch!(enable_builtin_enhanced);
-        patch!(proxy_layout_column);
-        patch!(test_list);
-        patch!(auto_log_clean);
-        patch!(enable_auto_backup_schedule);
-        patch!(auto_backup_interval_hours);
-        patch!(auto_backup_on_change);
+        patch_opt_field!(self, patch, auto_close_connection);
+        patch_opt_field!(self, patch, auto_check_update);
+        patch_opt_field!(self, patch, default_latency_test);
+        patch_opt_field!(self, patch, default_latency_timeout);
+        patch_opt_field!(self, patch, enable_auto_delay_detection);
+        patch_opt_field!(self, patch, auto_delay_detection_interval_minutes);
+        patch_opt_field!(self, patch, enable_builtin_enhanced);
+        patch_opt_field!(self, patch, proxy_layout_column);
+        patch_opt_field!(self, patch, test_list);
+        patch_opt_field!(self, patch, auto_log_clean);
+        patch_opt_field!(self, patch, enable_auto_backup_schedule);
+        patch_opt_field!(self, patch, auto_backup_interval_hours);
+        patch_opt_field!(self, patch, auto_backup_on_change);
 
-        patch!(webdav_url);
-        patch!(webdav_username);
-        patch!(webdav_password);
+        patch_opt_field!(self, patch, webdav_url);
+        patch_opt_field!(self, patch, webdav_username);
+        patch_opt_field!(self, patch, webdav_password);
         #[cfg(target_os = "macos")]
-        patch!(enable_tray_speed);
-        patch!(tray_proxy_groups_display_mode);
-        patch!(tray_inline_outbound_modes);
-        patch!(enable_auto_light_weight_mode);
-        patch!(auto_light_weight_minutes);
-        patch!(enable_dns_settings);
-        patch!(home_cards);
-        patch!(enable_external_controller);
+        patch_opt_field!(self, patch, enable_tray_speed);
+        patch_opt_field!(self, patch, tray_proxy_groups_display_mode);
+        patch_opt_field!(self, patch, tray_inline_outbound_modes);
+        patch_opt_field!(self, patch, enable_auto_light_weight_mode);
+        patch_opt_field!(self, patch, auto_light_weight_minutes);
+        patch_opt_field!(self, patch, enable_dns_settings);
+        patch_opt_field!(self, patch, home_cards);
+        patch_opt_field!(self, patch, enable_external_controller);
     }
 
     pub fn get_log_level(&self) -> LevelFilter {

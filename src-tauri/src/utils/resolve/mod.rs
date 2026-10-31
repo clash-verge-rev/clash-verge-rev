@@ -1,8 +1,6 @@
 use crate::core::notify::NoticeStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use anyhow::Result;
-
 use crate::{
     config::Config,
     core::{
@@ -95,18 +93,6 @@ async fn resolve_setup() {
     Handle::refresh_clash();
     refresh_tray_menu().await;
     resolve_done();
-}
-
-pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
-    CoreManager::global().stop_core().await?;
-
-    #[cfg(target_os = "macos")]
-    {
-        use dns::restore_public_dns;
-        restore_public_dns().await?;
-    }
-
-    Ok(())
 }
 
 fn init_scheme() {

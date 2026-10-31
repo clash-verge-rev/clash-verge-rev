@@ -14,6 +14,13 @@ pub mod network {
     }
 }
 
+pub mod sysproxy {
+    /// Single source of the macOS default bypass list; both proxy backends compose from it.
+    #[cfg(target_os = "macos")]
+    pub const MACOS_DEFAULT_BYPASS: &str =
+        "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
+}
+
 pub mod timing {
     use super::Duration;
 

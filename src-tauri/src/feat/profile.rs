@@ -47,24 +47,9 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
             record_switched_node(group_name, proxy_name).await;
             announce(Refresh::Proxies);
             let _ = tray::Tray::global().update_menu().await;
-            return;
         }
         Err(err) => {
             logging!(error, Type::Tray, "切换代理失败: {err:?}");
-        }
-    }
-
-    match handle::Handle::mihomo()
-        .select_node_for_group(group_name, proxy_name)
-        .await
-    {
-        Ok(_) => {
-            logging!(info, Type::Tray, "代理切换回退成功: {} -> {}", group_name, proxy_name);
-            record_switched_node(group_name, proxy_name).await;
-            let _ = tray::Tray::global().update_menu().await;
-        }
-        Err(err) => {
-            logging!(error, Type::Tray, "代理切换最终失败: {err:?}");
         }
     }
 }
