@@ -17,6 +17,7 @@
 
 **🐧 Linux**
 
+- Linux：修复系统包安装（deb/rpm/AUR）升级内核时因系统目录无写入权限而失败的问题，升级后系统目录与服务使用的内核会一并更新
 - Linux：修复 deb/rpm 安装包错误包含多余的 `frontend-contract` 可执行文件，导致下游重新打包失败的问题
 
 </details>
