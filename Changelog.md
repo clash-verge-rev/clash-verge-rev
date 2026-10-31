@@ -15,6 +15,10 @@
 
 - macOS：修复 Bigsur 上首页测速和流量图无法显示的问题
 
+**🍎 macOS**
+
+- 修复 macOS 使用 `redir-host` 与 TUN 时，局域网 DNS 绕过代理导致部分网站无法访问的问题
+
 **🐧 Linux**
 
 - Linux：修复 deb/rpm 安装包错误包含多余的 `frontend-contract` 可执行文件，导致下游重新打包失败的问题
