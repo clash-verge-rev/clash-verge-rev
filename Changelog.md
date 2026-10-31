@@ -15,6 +15,10 @@
 
 - macOS：修复 Bigsur 上首页测速和流量图无法显示的问题
 
+**🍎 macOS**
+
+- 修复 macOS 从托盘打开窗口时跳转到其他桌面的问题
+
 **🐧 Linux**
 
 - Linux：修复 deb/rpm 安装包错误包含多余的 `frontend-contract` 可执行文件，导致下游重新打包失败的问题
