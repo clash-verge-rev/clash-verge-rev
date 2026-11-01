@@ -939,6 +939,7 @@ export const translationKeys = [
   'tests.statuses.test.yes',
   'tests.statuses.test.no',
   'tests.statuses.test.failed',
+  'tests.statuses.test.risky',
   'tests.statuses.test.completed',
   'tests.statuses.test.disallowedIsp',
   'tests.statuses.test.originalsOnly',
