@@ -5,7 +5,7 @@ mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
-use clash_verge_logging::{LogRing, Type, logging};
+use clash_verge_logging::{LogRing, Type, logging, logging_error};
 use std::{
     fmt,
     sync::{
@@ -303,6 +303,7 @@ impl CoreManager {
                         }
                         match crate::config::Config::resolve_startup_mixed_port().await {
                             Ok(true) => {
+                                logging_error!(Type::Config, crate::config::Config::sync_dns_override().await);
                                 let retries = retries + 1;
                                 tracing::Span::current().record("retries", retries);
                                 logging!(

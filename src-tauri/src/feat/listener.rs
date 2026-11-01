@@ -18,7 +18,7 @@ use crate::{
 };
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{Type, logging, logging_error};
 use scopeguard::{ScopeGuard, defer, guard};
 
 pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutcome> {
@@ -30,7 +30,7 @@ pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutco
 #[allow(clippy::cognitive_complexity)]
 pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
     settings.validate()?;
-    let _config_write = Config::lock_config_write().await;
+    let config_write = Config::lock_config_write().await;
     let manager = CoreManager::global();
     if !manager.try_start_config_update() {
         bail!("configuration update is already running");
@@ -124,6 +124,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     transaction.commit();
+    logging_error!(Type::Config, Config::sync_dns_override_locked(&config_write).await);
     // The save landed, so the port the app had borrowed is now irrelevant.
     let _ = ScopeGuard::into_inner(borrowed_port);
     announce(Refresh::Clash);

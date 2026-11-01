@@ -59,6 +59,7 @@ pub async fn change_clash_core(clash_core: std::string::String) -> CmdResult<Opt
 
     match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
+            logging_error!(Type::Config, Config::sync_dns_override().await);
             logging_error!(Type::Core, profiles_save_file_safe().await);
 
             match CoreManager::global().restart_core().await {
