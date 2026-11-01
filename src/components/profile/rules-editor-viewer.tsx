@@ -511,10 +511,12 @@ export const RulesEditorViewer = (props: Props) => {
     const originRuleSet = originRuleSetObj?.['rule-providers'] || {}
     const moreRuleSetObj = parseYamlSafe(mergeData) as {
       'rule-providers': Record<string, unknown>
+      'proxy-groups'?: IProxyGroupConfig[]
     } | null
     const moreRuleSet = moreRuleSetObj?.['rule-providers'] || {}
     const globalRuleSetObj = parseYamlSafe(globalMergeData) as {
       'rule-providers': Record<string, unknown>
+      'proxy-groups'?: IProxyGroupConfig[]
     } | null
     const globalRuleSet = globalRuleSetObj?.['rule-providers'] || {}
     const ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet)
@@ -532,8 +534,12 @@ export const RulesEditorViewer = (props: Props) => {
     } | null
     const globalSubRule = globalSubRuleObj?.['sub-rules'] || {}
     const subRule = Object.assign({}, originSubRule, moreSubRule, globalSubRule)
+    const policyGroups =
+      moreRuleSetObj?.['proxy-groups'] ??
+      globalRuleSetObj?.['proxy-groups'] ??
+      groups
     setProxyPolicyList(
-      builtinProxyPolicies.concat(groups.map((group: any) => group.name)),
+      builtinProxyPolicies.concat(policyGroups.map((group) => group.name)),
     )
     setRuleSetList(Object.keys(ruleSet))
     setSubRuleList(Object.keys(subRule))
