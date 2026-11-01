@@ -122,7 +122,7 @@
     "https-proxy-agent": "^9.1.0",
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
-    "knip": "6.43.0",
+    "knip": "6.44.1",
     "lint-staged": "^17.5.1",
     "sass": "^1.104.1",
     "tar": "^7.5.22",
@@ -134,7 +134,7 @@
     "vite-plugin-svgr": "^5.2.0",
     "vitest": "^5.0.1",
     "webdriverio": "10.1.0",
-    "ws": "8.22.0"
+    "ws": "8.22.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
