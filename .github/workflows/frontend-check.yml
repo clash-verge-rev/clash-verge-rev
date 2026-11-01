@@ -10,7 +10,6 @@ on:
       - "**/*.css"
       - "**/*.scss"
       - "**/*.json"
-      - "**/*.md"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "vite.config.*"
