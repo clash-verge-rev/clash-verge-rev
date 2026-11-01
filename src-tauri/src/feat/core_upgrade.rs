@@ -12,7 +12,7 @@ use crate::{
     utils::network::{NetworkManager, ProxyType},
 };
 use anyhow::{Context as _, Result, anyhow, bail};
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{Type, logging, logging_error};
 use std::{
     env::current_exe,
     ffi::OsStr,
@@ -42,6 +42,9 @@ pub struct CoreUpgradeReport {
 
 pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let _serialized = UPGRADE_LOCK.lock().await;
+    // A previous upgrade may have been interrupted between publishing and cleanup. Recover before
+    // the current core is read, otherwise a broken target hides the usable backup.
+    logging_error!(Type::Core, recover_interrupted_core_upgrade().await);
     let core = Config::verge().await.latest_arc().get_valid_clash_core();
     tracing::Span::current().record("core", tracing::field::display(&core));
     let alpha = core.ends_with("-alpha");
@@ -67,11 +70,17 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let staged = stage_core(&target, &package, &latest)?;
 
     // A hard link keeps the previous core reachable without touching the inode the running
-    // core executes from, so publishing below stays one atomic rename.
-    let rollback = target.with_file_name(format!(".{core}.rollback"));
+    // core executes from, so publishing below stays one atomic rename. Filesystems without
+    // hard links fall back to a copy; without either, refuse to replace a working core.
+    let rollback = rollback_path(&target, &core);
     let _ = std::fs::remove_file(&rollback);
     // Nothing to roll back to when the core we are replacing could not report a version.
-    let restorable = !installed.is_empty() && std::fs::hard_link(&target, &rollback).is_ok();
+    let restorable = if installed.is_empty() {
+        false
+    } else {
+        backup_core(&target, &rollback).context("refusing to replace the managed core without a rollback copy")?;
+        true
+    };
 
     // Decided before anything can crash: after a failed restart the mode reads NotRunning, which
     // says nothing about whether this upgrade went through the Service.
@@ -106,35 +115,21 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
         // new core also restores: leaving the new file would make a retry read the new version
         // and report nothing to do while the service keeps running the old core.
         let core_is_down = matches!(*CoreManager::global().get_running_mode(), RunningMode::NotRunning);
-        if restorable
-            && (matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists())
-            && std::fs::rename(&rollback, &target).is_ok()
-        {
-            logging!(warn, Type::Core, "core upgrade: rolled back to {installed:?}");
-            // Only a staging that SUCCEEDED left the failing bytes in the approved copy, and only
-            // then must the restore reach it too — otherwise the restart below would spawn the
-            // very core that just failed. Refused or never-attempted staging left the approved
-            // copy untouched, and re-staging would raise an elevation prompt for a no-op. This is
-            // deliberately not gated on the current running mode, which reads NotRunning after
-            // the very crash being rolled back.
-            if matches!(service_staging, ServiceStaging::Succeeded)
-                && let Err(stage_error) = crate::core::service::stage_approved_core(&target)
-            {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "core upgrade: could not restore the service copy: {stage_error:#}"
-                );
-            }
-            if core_is_down {
-                let _ = CoreManager::global().restart_core().await;
-            }
-        }
-        // Renaming one hard link over the other succeeds without consuming the name.
-        let _ = std::fs::remove_file(&rollback);
-        // Redundant once the rollback link exists; without one it is the only copy left.
+        let error = rollback_failed_upgrade(
+            error,
+            &rollback,
+            &target,
+            &installed,
+            restorable,
+            service_staging,
+            core_is_down,
+            crate::core::service::stage_approved_core,
+            || CoreManager::global().restart_core(),
+        )
+        .await;
+        // Redundant once the rollback succeeded; without a working target it may be the only copy left.
         #[cfg(windows)]
-        if restorable {
+        if restorable && target.exists() && !rollback.exists() {
             let _ = std::fs::remove_file(target.with_extension("old"));
         }
         return Err(error);
@@ -145,6 +140,91 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let _ = std::fs::remove_file(target.with_extension("old"));
 
     Ok(CoreUpgradeReport { upgraded: true })
+}
+
+/// The rollback copy is kept until the target, its service copy, and the restarted process are usable.
+#[allow(clippy::too_many_arguments)]
+async fn rollback_failed_upgrade<StageService, Restart, RestartFuture>(
+    error: anyhow::Error,
+    rollback: &Path,
+    target: &Path,
+    installed: &str,
+    restorable: bool,
+    service_staging: ServiceStaging,
+    core_is_down: bool,
+    stage_service: StageService,
+    restart_core: Restart,
+) -> anyhow::Error
+where
+    StageService: FnOnce(&Path) -> Result<()>,
+    Restart: FnOnce() -> RestartFuture,
+    RestartFuture: std::future::Future<Output = Result<()>>,
+{
+    if !restorable || !(matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists()) {
+        let _ = std::fs::remove_file(rollback);
+        return error;
+    }
+
+    match restore_backup(rollback, target) {
+        Ok(()) => {
+            logging!(warn, Type::Core, "core upgrade: rolled back to {installed:?}");
+            let mut error = error;
+            // Only a staging that SUCCEEDED left the failing bytes in the approved copy, and only
+            // then must the restore reach it too — otherwise the restart below would spawn the
+            // very core that just failed. Refused or never-attempted staging left the approved
+            // copy untouched, and re-staging would raise an elevation prompt for a no-op. This is
+            // deliberately not gated on the current running mode, which reads NotRunning after
+            // the very crash being rolled back.
+            let stage_error = if matches!(service_staging, ServiceStaging::Succeeded) {
+                stage_service(target).err()
+            } else {
+                None
+            };
+            let stage_failed = stage_error.is_some();
+            if let Some(stage_error) = stage_error {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "core upgrade: could not restore the service copy: {stage_error:#}"
+                );
+                error = error.context(format!(
+                    "the previous core was restored but the service copy could not be updated; \
+                     the backup was kept at {}: {stage_error:#}",
+                    rollback.display()
+                ));
+            }
+            let restart_error = if core_is_down { restart_core().await.err() } else { None };
+            let restart_failed = restart_error.is_some();
+            if let Some(restart_error) = restart_error {
+                logging!(
+                    error,
+                    Type::Core,
+                    "core upgrade: restored core failed to restart: {restart_error:#}"
+                );
+                error = error.context(format!(
+                    "the previous core was restored but failed to restart; the backup was kept at {}: \
+                     {restart_error:#}",
+                    rollback.display()
+                ));
+            }
+            if !stage_failed && !restart_failed {
+                let _ = std::fs::remove_file(rollback);
+            }
+            error
+        }
+        Err(restore_error) => {
+            logging!(
+                error,
+                Type::Core,
+                "core upgrade: failed to restore {}: {restore_error:#}",
+                rollback.display()
+            );
+            error.context(format!(
+                "the previous core could not be restored; the backup was kept at {}: {restore_error:#}",
+                rollback.display()
+            ))
+        }
+    }
 }
 
 /// Whether this upgrade handed bytes to the Service's approved core directory.
@@ -159,6 +239,159 @@ enum ServiceStaging {
     NotAttempted,
     Succeeded,
     Refused,
+}
+
+fn rollback_path(target: &Path, core: &str) -> PathBuf {
+    target.with_file_name(format!(".{core}.rollback"))
+}
+
+fn meta_backup_path(target: &Path) -> Option<PathBuf> {
+    Some(target.parent()?.join("meta-backup").join(target.file_name()?))
+}
+
+fn backup_core(target: &Path, rollback: &Path) -> Result<()> {
+    let _ = std::fs::remove_file(rollback);
+    match std::fs::hard_link(target, rollback) {
+        Ok(()) => Ok(()),
+        Err(link_error) => stage_file_from(target, rollback)
+            .and_then(|staged| {
+                std::fs::rename(&staged.path, rollback)
+                    .with_context(|| format!("failed to publish {}", rollback.display()))
+            })
+            .with_context(|| {
+                format!(
+                    "failed to back up {} to {} (hard link failed: {link_error})",
+                    target.display(),
+                    rollback.display()
+                )
+            }),
+    }
+}
+
+/// Stages a synced copy of `source` beside `destination`. Syncing on the write handle avoids
+/// Windows `FlushFileBuffers` (`ERROR_ACCESS_DENIED` on read-only handles), and `StagedCore`
+/// cleans up the temporary file if publishing fails.
+fn stage_file_from(source: &Path, destination: &Path) -> Result<StagedCore> {
+    let directory = destination
+        .parent()
+        .with_context(|| format!("the managed core has no parent directory: {}", destination.display()))?;
+    let core_name = destination
+        .file_name()
+        .with_context(|| format!("the managed core has no file name: {}", destination.display()))?;
+
+    let (path, mut file) = create_staging_file(directory, core_name)?;
+    let staged = StagedCore { path };
+    let mut reader = File::open(source).with_context(|| format!("failed to open {}", source.display()))?;
+    std::io::copy(&mut reader, &mut file)
+        .with_context(|| format!("failed to copy {} to {}", source.display(), staged.path.display()))?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt as _;
+
+        file.set_permissions(std::fs::Permissions::from_mode(0o755))
+            .with_context(|| format!("failed to make {} executable", staged.path.display()))?;
+    }
+
+    file.sync_all()
+        .with_context(|| format!("failed to flush {}", staged.path.display()))?;
+    drop(file);
+
+    Ok(staged)
+}
+
+fn restore_backup(rollback: &Path, target: &Path) -> Result<()> {
+    let staged = stage_file_from(rollback, target)?;
+    // When restoring from `.old`, avoid `StagedCore::publish`'s `.old` displacement fallback so a
+    // failed rename cannot overwrite the backup being restored.
+    if rollback == target.with_extension("old") {
+        std::fs::rename(&staged.path, target)
+            .with_context(|| format!("failed to restore the core from {}", rollback.display()))
+    } else {
+        staged
+            .publish(target)
+            .with_context(|| format!("failed to restore the core from {}", rollback.display()))
+    }
+}
+
+/// `.rollback` only exists when a prior upgrade was interrupted after backing up or could not
+/// complete its rollback, so a runnable `.rollback` takes precedence even when `target` is a
+/// runnable new binary that was never accepted by the service or runtime config.
+fn recover_core(
+    target: &Path,
+    rollback: &Path,
+    displaced: &Path,
+    meta_backup: Option<&Path>,
+    is_runnable: impl Fn(&Path) -> bool,
+) -> Result<Option<PathBuf>> {
+    if rollback.exists() && is_runnable(rollback) {
+        restore_backup(rollback, target)?;
+        let _ = std::fs::remove_file(rollback);
+        let _ = std::fs::remove_file(displaced);
+        return Ok(Some(rollback.to_path_buf()));
+    }
+
+    if is_runnable(target) {
+        let _ = std::fs::remove_file(rollback);
+        let _ = std::fs::remove_file(displaced);
+        return Ok(None);
+    }
+
+    for backup in [Some(displaced), meta_backup].into_iter().flatten() {
+        if !backup.exists() || !is_runnable(backup) {
+            continue;
+        }
+        restore_backup(backup, target)?;
+        let _ = std::fs::remove_file(rollback);
+        let _ = std::fs::remove_file(displaced);
+        return Ok(Some(backup.to_path_buf()));
+    }
+
+    Ok(None)
+}
+
+fn is_runnable_core(path: &Path) -> bool {
+    #[cfg(unix)]
+    if let Ok(metadata) = std::fs::metadata(path) {
+        use std::os::unix::fs::PermissionsExt as _;
+
+        let permissions = metadata.permissions();
+        if permissions.mode() & 0o111 == 0 {
+            let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755));
+        }
+    }
+    read_core_version(path).is_ok()
+}
+
+pub async fn recover_interrupted_core_upgrade() -> Result<()> {
+    let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    let target = managed_core_path(&core)?;
+    let rollback = rollback_path(&target, &core);
+    let displaced = target.with_extension("old");
+    let meta_backup = meta_backup_path(&target);
+    let target_present = std::fs::metadata(&target).is_ok_and(|meta| meta.len() > 0);
+    // Avoid spawning `<core> -v` on normal startups when no upgrade artifacts exist.
+    if target_present && !rollback.exists() && !displaced.exists() {
+        return Ok(());
+    }
+    if !target_present
+        && !rollback.exists()
+        && !displaced.exists()
+        && !meta_backup.as_ref().is_some_and(|path| path.exists())
+    {
+        return Ok(());
+    }
+
+    if let Some(backup) = recover_core(&target, &rollback, &displaced, meta_backup.as_deref(), is_runnable_core)? {
+        logging!(
+            warn,
+            Type::Core,
+            "core upgrade: restored {} from the interrupted upgrade backup {}",
+            target.display(),
+            backup.display()
+        );
+    }
+    Ok(())
 }
 
 /// The sidecar next to the app executable. On macOS development builds the Service runs a
@@ -460,13 +693,200 @@ fn read_core_version(path: &Path) -> Result<std::string::String> {
     stdout
         .split_whitespace()
         .nth(2)
+        .filter(|version| is_usable_version(version))
         .map(str::to_owned)
         .with_context(|| format!("unexpected version output from {}: {stdout}", path.display()))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{is_usable_version, package_url};
+    #[cfg(unix)]
+    use super::is_runnable_core;
+    #[cfg(unix)]
+    use super::read_core_version;
+    use super::{
+        ServiceStaging, backup_core, is_usable_version, meta_backup_path, package_url, recover_core, restore_backup,
+        rollback_failed_upgrade, stage_file_from,
+    };
+    use std::path::{Path, PathBuf};
+
+    fn scratch(name: &str) -> anyhow::Result<PathBuf> {
+        let dir = std::env::temp_dir().join(format!("clash-verge-core-upgrade-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir)?;
+        Ok(dir)
+    }
+
+    fn runnable(path: &Path, expected: &[u8]) -> bool {
+        std::fs::read(path).is_ok_and(|bytes| bytes == expected)
+    }
+
+    #[cfg(unix)]
+    fn write_fake_core(path: &Path, version: &str, mode: u32) -> anyhow::Result<()> {
+        use std::os::unix::fs::PermissionsExt as _;
+
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, format!("#!/bin/sh\necho \"Mihomo Meta {version} unix test\"\n"))?;
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode))?;
+        Ok(())
+    }
+
+    #[test]
+    fn backup_stages_synced_fallback_and_aborts_on_failure() -> anyhow::Result<()> {
+        let dir = scratch("backup")?;
+        let target = dir.join("verge-mihomo");
+        let rollback = dir.join(".verge-mihomo.rollback");
+        std::fs::write(&target, b"old")?;
+
+        backup_core(&target, &rollback)?;
+        assert_eq!(std::fs::read(&rollback)?, b"old");
+
+        // Exercise the copy fallback used when `hard_link` is unavailable.
+        let copied = dir.join(".verge-mihomo.copy");
+        let staged = stage_file_from(&target, &copied)?;
+        std::fs::rename(&staged.path, &copied)?;
+        assert_eq!(std::fs::read(&copied)?, b"old");
+
+        let replacement = dir.join("verge-mihomo.new");
+        std::fs::write(&replacement, b"new")?;
+        #[cfg(windows)]
+        std::fs::remove_file(&target)?;
+        std::fs::rename(&replacement, &target)?;
+        restore_backup(&rollback, &target)?;
+        assert_eq!(std::fs::read(&target)?, b"old");
+        assert!(rollback.exists());
+
+        let impossible = dir.join("missing").join(".verge-mihomo.rollback");
+        assert!(backup_core(&target, &impossible).is_err());
+        assert_eq!(std::fs::read(&target)?, b"old");
+
+        let _ = std::fs::remove_dir_all(&dir);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn rollback_keeps_backup_and_surfaces_restore_and_restart_failures() -> anyhow::Result<()> {
+        let dir = scratch("rollback-errors")?;
+        let target = dir.join("verge-mihomo");
+        let rollback = dir.join(".verge-mihomo.rollback");
+        std::fs::write(&rollback, b"previous")?;
+        // A non-empty directory at `target` makes publishing the restored copy fail.
+        std::fs::create_dir_all(&target)?;
+        std::fs::write(target.join("busy"), b"x")?;
+
+        let error = rollback_failed_upgrade(
+            anyhow::anyhow!("core replaced but failed to restart"),
+            &rollback,
+            &target,
+            "v1.19.29",
+            true,
+            ServiceStaging::NotAttempted,
+            true,
+            |_| Ok(()),
+            || async { Ok(()) },
+        )
+        .await;
+        let detail = format!("{error:#}");
+        assert!(rollback.exists());
+        assert!(detail.contains(&rollback.display().to_string()), "{detail}");
+
+        std::fs::remove_dir_all(&target)?;
+        std::fs::write(&target, b"broken-new")?;
+        let error = rollback_failed_upgrade(
+            anyhow::anyhow!("core replaced but failed to restart"),
+            &rollback,
+            &target,
+            "v1.19.29",
+            true,
+            ServiceStaging::NotAttempted,
+            true,
+            |_| Ok(()),
+            || async { Err(anyhow::anyhow!("ipc socket refused")) },
+        )
+        .await;
+        let detail = format!("{error:#}");
+        assert_eq!(std::fs::read(&target)?, b"previous");
+        assert!(rollback.exists());
+        assert!(detail.contains("ipc socket refused"), "{detail}");
+
+        let _ = rollback_failed_upgrade(
+            anyhow::anyhow!("core replaced but failed to restart"),
+            &rollback,
+            &target,
+            "v1.19.29",
+            true,
+            ServiceStaging::NotAttempted,
+            true,
+            |_| Ok(()),
+            || async { Ok(()) },
+        )
+        .await;
+        assert!(!rollback.exists());
+
+        let _ = std::fs::remove_dir_all(&dir);
+        Ok(())
+    }
+
+    #[test]
+    fn recovery_prefers_pending_rollback_and_falls_back_through_backups() -> anyhow::Result<()> {
+        let dir = scratch("recover")?;
+        let target = dir.join("verge-mihomo");
+        let rollback = dir.join(".verge-mihomo.rollback");
+        let displaced = dir.join("verge-mihomo.old");
+        let meta = meta_backup_path(&target).unwrap_or_else(|| dir.join("meta-backup/verge-mihomo"));
+        if let Some(parent) = meta.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+
+        // An interrupted upgrade leaves a runnable new binary at `target` alongside `.rollback`;
+        // `.rollback` must win so a core rejected by the service or runtime config is reverted.
+        std::fs::write(&target, b"unaccepted-new")?;
+        std::fs::write(&rollback, b"previous")?;
+        let restored = recover_core(&target, &rollback, &displaced, Some(&meta), |path| {
+            runnable(path, b"unaccepted-new") || runnable(path, b"previous")
+        })?;
+        assert_eq!(restored.as_deref(), Some(rollback.as_path()));
+        assert_eq!(std::fs::read(&target)?, b"previous");
+        assert!(!rollback.exists());
+
+        // Once `.rollback` is gone, a healthy target cleans up stale `.old` without restoring.
+        std::fs::write(&displaced, b"stale")?;
+        let restored = recover_core(&target, &rollback, &displaced, Some(&meta), |path| {
+            runnable(path, b"previous")
+        })?;
+        assert_eq!(restored, None);
+        assert!(!displaced.exists());
+
+        // When `target`, `.rollback`, and `.old` are all broken, `meta-backup/` is restored and kept.
+        std::fs::write(&target, b"broken")?;
+        std::fs::write(&rollback, b"bad")?;
+        std::fs::write(&displaced, b"also-bad")?;
+        std::fs::write(&meta, b"from-meta")?;
+        let restored = recover_core(&target, &rollback, &displaced, Some(&meta), |path| {
+            runnable(path, b"from-meta")
+        })?;
+        assert_eq!(restored.as_deref(), Some(meta.as_path()));
+        assert_eq!(std::fs::read(&target)?, b"from-meta");
+        assert!(!rollback.exists());
+        assert!(!displaced.exists());
+        assert!(meta.exists());
+
+        #[cfg(unix)]
+        {
+            std::fs::write(&target, b"")?;
+            write_fake_core(&rollback, "<html>bad</html>", 0o755)?;
+            // `meta-backup` without `+x` is made executable before the version probe runs.
+            write_fake_core(&meta, "v1.19.28", 0o644)?;
+            let restored = recover_core(&target, &rollback, &displaced, Some(&meta), is_runnable_core)?;
+            assert_eq!(restored.as_deref(), Some(meta.as_path()));
+            assert_eq!(read_core_version(&target)?, "v1.19.28");
+        }
+
+        let _ = std::fs::remove_dir_all(&dir);
+        Ok(())
+    }
 
     #[test]
     fn only_plain_version_tokens_reach_the_package_url() {
