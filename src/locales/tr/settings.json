@@ -497,17 +497,21 @@
         "dnsHijack": "DNS Ele Geçirme",
         "dnsMode": "DNS Modu",
         "mtu": "Maksimum İletim Birimi",
-        "autoRedirect": "Otomatik Yönlendirme"
+        "autoRedirect": "Otomatik Yönlendirme",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "Birden fazla DNS sunucusunu ayırmak için lütfen , kullanın",
         "dnsMode": "Auto eski davranışı korur; hijack için Windows'ta Katı Yönlendirme veya Linux'ta Otomatik Yönlendirme gerekir",
-        "autoRedirect": "nftables/iptables TCP yönlendirmelerini otomatik olarak yapılandırır"
+        "autoRedirect": "nftables/iptables TCP yönlendirmelerini otomatik olarak yapılandırır",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "Ayarlar Uygulandı",
         "invalidRouteExcludeAddress": "Lütfen geçerli bir CIDR bloğu girin",
-        "routeExcludeAddressHint": "Yalnızca IPv4/IPv6 CIDR blokları desteklenir; örneğin 192.168.0.0/16 veya fd00::/8"
+        "routeExcludeAddressHint": "Yalnızca IPv4/IPv6 CIDR blokları desteklenir; örneğin 192.168.0.0/16 veya fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

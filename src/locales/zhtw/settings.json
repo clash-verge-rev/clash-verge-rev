@@ -497,17 +497,21 @@
         "dnsHijack": "DNS 綁架",
         "dnsMode": "DNS 模式",
         "mtu": "最大傳輸單位",
-        "autoRedirect": "自動重導"
+        "autoRedirect": "自動重導",
+        "dnsAddress": "系統 DNS"
       },
       "tooltips": {
         "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器",
         "dnsMode": "Auto 保持舊行為；hijack 需 Windows 開啟嚴格路由或 Linux 開啟自動重導",
-        "autoRedirect": "自動配置 nftables/iptables 的 TCP 重導"
+        "autoRedirect": "自動配置 nftables/iptables 的 TCP 重導",
+        "dnsAddress": "TUN 使用 fake-ip 時暫時設定，停用後還原原系統 DNS。"
       },
       "messages": {
         "applied": "設定已套用",
         "invalidRouteExcludeAddress": "請輸入有效的 CIDR 網段",
-        "routeExcludeAddressHint": "僅支援 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8"
+        "routeExcludeAddressHint": "僅支援 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8",
+        "invalidDnsAddress": "請輸入有效的 IPv4 位址，多個位址以英文逗號分隔",
+        "dnsAddressFormat": "格式：8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

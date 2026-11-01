@@ -36,6 +36,7 @@ fi
 
 for backup in .original_dns/*; do
     [ -f "$backup" ] || continue
+    managed=".original_dns/.${backup##*/}"
     hardware_port=$(sc_value "Setup:/Network/Service/${backup##*/}" UserDefinedName)
     # Kept for a service that is gone: there is nothing to write it back to.
     [ -n "$hardware_port" ] || continue
@@ -44,8 +45,10 @@ for backup in .original_dns/*; do
         result=1
         continue
     fi
+    current_dns_key=${current_dns//$'\n'/,}
     # A service no longer on the placeholder was changed by someone else, and that change stands.
-    if [ "$current_dns" = "$1" ]; then
+    if { [ -f "$managed" ] && grep -Fxq -- "$current_dns_key" "$managed"; } ||
+        { [ ! -f "$managed" ] && [ "$current_dns" = "$1" ]; }; then
         original_dns=$(cat "$backup") || { result=1; continue; }
         # Older releases could back up the placeholder itself.
         [ "$original_dns" = "$1" ] && original_dns=empty
@@ -57,6 +60,7 @@ for backup in .original_dns/*; do
         fi
     fi
     rm -f "$backup" || result=1
+    rm -f "$managed" || result=1
 done
 rmdir .original_dns 2>/dev/null
 exit $result

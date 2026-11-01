@@ -497,17 +497,21 @@
         "dnsHijack": "ربایش DNS",
         "dnsMode": "حالت DNS",
         "mtu": "واحد حداکثر انتقال",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Auto Redirect",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "لطفا برای جدا کردن چندین سرور DNS از , استفاده کنید.",
         "dnsMode": "Auto رفتار قدیمی را حفظ می‌کند؛ hijack در ویندوز نیاز به مسیر دقیق یا در لینوکس نیاز به Auto Redirect دارد",
-        "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables"
+        "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "تنظیمات اعمال شد",
         "invalidRouteExcludeAddress": "لطفاً یک محدوده CIDR معتبر وارد کنید",
-        "routeExcludeAddressHint": "فقط CIDRهای IPv4/IPv6 پشتیبانی می‌شوند، مانند 192.168.0.0/16 یا fd00::/8"
+        "routeExcludeAddressHint": "فقط CIDRهای IPv4/IPv6 پشتیبانی می‌شوند، مانند 192.168.0.0/16 یا fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

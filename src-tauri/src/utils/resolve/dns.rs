@@ -1,3 +1,4 @@
+use crate::config::{Config, DEFAULT_TUN_DNS_ADDRESS};
 use anyhow::{Context as _, bail, ensure};
 use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::{Mapping, Value};
@@ -12,8 +13,6 @@ use tokio::sync::Mutex;
 
 const DNS_STATE_FILE: &str = ".original_dns.txt";
 const DNS_BACKUP_DIR: &str = ".original_dns";
-// Any address routed into TUN works, since dns-hijack answers it; the value only matters if left behind.
-const PLACEHOLDER_DNS: &str = "114.114.114.114";
 // Scripts run under lifecycle_lock, and networksetup waits for other preference writers without a limit.
 pub(crate) const DNS_SCRIPT_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -53,10 +52,7 @@ fn needs_public_dns(config: &Mapping) -> bool {
 
 /// Sets the placeholder DNS while the running config needs it, and restores the system DNS otherwise.
 pub async fn sync_public_dns() {
-    use crate::{
-        config::Config,
-        core::{CoreManager, handle::Handle, manager::RunningMode},
-    };
+    use crate::core::{CoreManager, handle::Handle, manager::RunningMode};
 
     let _guard = DNS_LOCK.lock().await;
     // Exit cleanup restores DNS on its own budget; a sync queued behind it must not undo that.
@@ -81,7 +77,8 @@ async fn set_public_dns() {
     logging!(debug, Type::Config, "try to set system dns");
     let result = async {
         let script = crate::utils::dirs::app_resources_dir()?.join("set_dns.sh");
-        run_dns_script(&script, dns_state_dir()?).await
+        let address = Config::verge().await.latest_arc().get_tun_dns_address();
+        run_dns_script(&script, dns_state_dir()?, &address).await
     }
     .await;
     match result {
@@ -95,7 +92,7 @@ async fn unset_public_dns() -> anyhow::Result<()> {
     let result = async {
         let resource_dir = crate::utils::dirs::app_resources_dir()?;
         let state_dir = restore_dns_state_dir(&resource_dir, dns_state_dir()?);
-        run_dns_script(&resource_dir.join("unset_dns.sh"), state_dir).await
+        run_dns_script(&resource_dir.join("unset_dns.sh"), state_dir, DEFAULT_TUN_DNS_ADDRESS).await
     }
     .await;
     match &result {
@@ -106,11 +103,11 @@ async fn unset_public_dns() -> anyhow::Result<()> {
 }
 
 /// On timeout the script's whole process group is killed, so no networksetup it started writes late.
-async fn run_dns_script(script: &Path, dir: PathBuf) -> anyhow::Result<()> {
+async fn run_dns_script(script: &Path, dir: PathBuf, address: &str) -> anyhow::Result<()> {
     ensure!(script.exists(), "DNS script not found: {}", script.display());
     let mut child = Command::new("bash")
         .arg(script)
-        .arg(PLACEHOLDER_DNS)
+        .args([address, DEFAULT_TUN_DNS_ADDRESS])
         .current_dir(dir)
         .stdout(Stdio::null())
         .stderr(Stdio::piped())

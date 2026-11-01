@@ -70,6 +70,7 @@ verge_registry! {
     sysproxy_tray_icon => [TrayIcon];
     tun_tray_icon => [TrayIcon];
     enable_tun_mode => Tun;
+    tun_dns_address => NoEffect;
     enable_auto_launch => [Autostart];
     enable_silent_start => NoEffect;
     enable_system_proxy => [SystemProxy, TrayMenu, TrayTooltip, TrayIcon];

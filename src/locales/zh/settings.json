@@ -497,17 +497,21 @@
         "dnsHijack": "DNS 劫持",
         "dnsMode": "DNS 模式",
         "mtu": "最大传输单元",
-        "autoRedirect": "自动重定向"
+        "autoRedirect": "自动重定向",
+        "dnsAddress": "系统 DNS"
       },
       "tooltips": {
         "dnsHijack": "多个 DNS 服务器请使用 , 分隔",
         "dnsMode": "Auto 保持旧行为；hijack 需 Windows 开启严格路由或 Linux 开启自动重定向",
-        "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
+        "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向",
+        "dnsAddress": "TUN 使用 fake-ip 时临时设置，停用后恢复原系统 DNS。"
       },
       "messages": {
         "applied": "设置已应用",
         "invalidRouteExcludeAddress": "请输入有效的 CIDR 网段",
-        "routeExcludeAddressHint": "仅支持 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8"
+        "routeExcludeAddressHint": "仅支持 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8",
+        "invalidDnsAddress": "请输入有效的 IPv4 地址，多个地址用英文逗号分隔",
+        "dnsAddressFormat": "格式：8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

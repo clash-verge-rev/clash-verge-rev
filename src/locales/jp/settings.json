@@ -497,17 +497,21 @@
         "dnsHijack": "DNSハイジャック",
         "dnsMode": "DNSモード",
         "mtu": "最大転送単位",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Auto Redirect",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
         "dnsMode": "Auto は従来の動作を維持します。hijack には Windows で厳格なルートまたは Linux で Auto Redirect が必要です",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "設定が適用されました",
         "invalidRouteExcludeAddress": "有効な CIDR ブロックを入力してください",
-        "routeExcludeAddressHint": "IPv4/IPv6 の CIDR のみ対応しています。例: 192.168.0.0/16、fd00::/8"
+        "routeExcludeAddressHint": "IPv4/IPv6 の CIDR のみ対応しています。例: 192.168.0.0/16、fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

@@ -497,17 +497,21 @@
         "dnsHijack": "DNS-Hijacking",
         "dnsMode": "DNS-Modus",
         "mtu": "Maximale Übertragungseinheit",
-        "autoRedirect": "Automatische Umleitung"
+        "autoRedirect": "Automatische Umleitung",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "Mehrere DNS-Server durch Kommas trennen",
         "dnsMode": "Auto behält das alte Verhalten bei; hijack erfordert Strenges Routing unter Windows oder Automatische Umleitung unter Linux",
-        "autoRedirect": "Richtet TCP-Umleitungen per nftables/iptables automatisch ein"
+        "autoRedirect": "Richtet TCP-Umleitungen per nftables/iptables automatisch ein",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "Einstellungen angewendet",
         "invalidRouteExcludeAddress": "Bitte geben Sie einen gültigen CIDR-Block ein",
-        "routeExcludeAddressHint": "Es werden nur IPv4-/IPv6-CIDR-Blöcke unterstützt, z. B. 192.168.0.0/16 oder fd00::/8"
+        "routeExcludeAddressHint": "Es werden nur IPv4-/IPv6-CIDR-Blöcke unterstützt, z. B. 192.168.0.0/16 oder fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

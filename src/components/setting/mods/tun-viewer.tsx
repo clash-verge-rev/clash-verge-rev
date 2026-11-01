@@ -11,6 +11,7 @@ import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import isIP from 'validator/es/lib/isIP'
 
 import {
   BaseDialog,
@@ -20,6 +21,7 @@ import {
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
+import { useVerge } from '@/hooks/use-verge'
 import { enhanceProfiles } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
@@ -30,6 +32,7 @@ import { DnsModeSwitch } from './dns-mode-switch'
 import { StackModeSwitch } from './stack-mode-switch'
 
 const OS = getSystem()
+const DEFAULT_DNS_ADDRESS = '114.114.114.114'
 
 const splitRouteExcludeAddress = (value: string) =>
   value
@@ -41,8 +44,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { clash, mutateClash, patchClash } = useClash()
+  const { verge, patchVerge } = useVerge()
 
   const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [values, setValues] = useState({
     stack: 'mips',
     device: OS === 'macos' ? 'utun1024' : 'Mihomo',
@@ -54,7 +59,21 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     strictRoute: false,
     mtu: 1500,
     dnsMode: '',
+    dnsAddress: DEFAULT_DNS_ADDRESS,
   })
+
+  const dnsAddresses = values.dnsAddress.split(',').map((value) => value.trim())
+  const dnsAddressError =
+    OS === 'macos' && !dnsAddresses.every((value) => isIP(value, 4))
+  const configuredDnsAddress = verge?.tun_dns_address ?? DEFAULT_DNS_ADDRESS
+  const currentDnsAddress = configuredDnsAddress
+    .split(',')
+    .every((value) => isIP(value.trim(), 4))
+    ? configuredDnsAddress
+    : DEFAULT_DNS_ADDRESS
+  const close = () => {
+    if (!saving) setOpen(false)
+  }
 
   const routeExcludeAddressItems = splitRouteExcludeAddress(
     values.routeExcludeAddress,
@@ -87,9 +106,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         strictRoute: clash?.tun['strict-route'] ?? false,
         mtu: clash?.tun.mtu ?? 1500,
         dnsMode: clash?.tun['dns-mode'] ?? '',
+        dnsAddress: currentDnsAddress,
       })
     },
-    close: () => setOpen(false),
+    close,
   }))
 
   const onSave = useLockFn(async () => {
@@ -102,6 +122,12 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         )
         return
       }
+
+      if (dnsAddressError) {
+        showNotice.error('settings.modals.tun.messages.invalidDnsAddress')
+        return
+      }
+      setSaving(true)
 
       const tun: IConfigData['tun'] = {
         stack: values.stack,
@@ -125,6 +151,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         mtu: values.mtu ?? 1500,
       }
       await patchClash({ tun })
+      if (OS === 'macos' && dnsAddresses.join(',') !== currentDnsAddress) {
+        await patchVerge({ tun_dns_address: dnsAddresses.join(',') })
+      }
       await mutateClash(
         (old) => ({
           ...old!,
@@ -142,6 +171,8 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       })
     } catch (err: any) {
       showNotice.error(err)
+    } finally {
+      setSaving(false)
     }
   })
 
@@ -154,43 +185,58 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <Button
             variant="outlined"
             size="small"
+            disabled={saving}
             onClick={async () => {
-              const tun: IConfigData['tun'] = {
-                stack: 'mips',
-                device: OS === 'macos' ? 'utun1024' : 'Mihomo',
-                'auto-route': true,
-                ...(OS === 'linux'
-                  ? {
-                      'auto-redirect': false,
-                    }
-                  : {}),
-                'auto-detect-interface': true,
-                'dns-hijack': ['any:53'],
-                'route-exclude-address': [],
-                'dns-mode': '',
-                'strict-route': false,
-                mtu: 1500,
+              setSaving(true)
+              try {
+                const tun: IConfigData['tun'] = {
+                  stack: 'mips',
+                  device: OS === 'macos' ? 'utun1024' : 'Mihomo',
+                  'auto-route': true,
+                  ...(OS === 'linux'
+                    ? {
+                        'auto-redirect': false,
+                      }
+                    : {}),
+                  'auto-detect-interface': true,
+                  'dns-hijack': ['any:53'],
+                  'route-exclude-address': [],
+                  'dns-mode': '',
+                  'strict-route': false,
+                  mtu: 1500,
+                }
+                setValues({
+                  stack: 'mips',
+                  device: OS === 'macos' ? 'utun1024' : 'Mihomo',
+                  autoRoute: true,
+                  routeExcludeAddress: '',
+                  autoRedirect: false,
+                  autoDetectInterface: true,
+                  dnsHijack: ['any:53'],
+                  strictRoute: false,
+                  mtu: 1500,
+                  dnsMode: '',
+                  dnsAddress: DEFAULT_DNS_ADDRESS,
+                })
+                await patchClash({ tun })
+                if (
+                  OS === 'macos' &&
+                  currentDnsAddress !== DEFAULT_DNS_ADDRESS
+                ) {
+                  await patchVerge({ tun_dns_address: DEFAULT_DNS_ADDRESS })
+                }
+                await mutateClash(
+                  (old) => ({
+                    ...old!,
+                    tun,
+                  }),
+                  false,
+                )
+              } catch (err: any) {
+                showNotice.error(err)
+              } finally {
+                setSaving(false)
               }
-              setValues({
-                stack: 'mips',
-                device: OS === 'macos' ? 'utun1024' : 'Mihomo',
-                autoRoute: true,
-                routeExcludeAddress: '',
-                autoRedirect: false,
-                autoDetectInterface: true,
-                dnsHijack: ['any:53'],
-                strictRoute: false,
-                mtu: 1500,
-                dnsMode: '',
-              })
-              await patchClash({ tun })
-              await mutateClash(
-                (old) => ({
-                  ...old!,
-                  tun,
-                }),
-                false,
-              )
             }}
           >
             {t('shared.actions.resetToDefault')}
@@ -200,8 +246,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       contentSx={{ width: 450 }}
       okBtn={t('shared.actions.save')}
       cancelBtn={t('shared.actions.cancel')}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      loading={saving}
+      onClose={close}
+      onCancel={close}
       onOk={onSave}
     >
       <List>
@@ -236,6 +283,40 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             />
           </Box>
         </ListItem>
+
+        {OS === 'macos' && (
+          <ListItem sx={{ padding: '5px 2px' }}>
+            <ListItemText
+              primary={t('settings.modals.tun.fields.dnsAddress')}
+              sx={{ maxWidth: 'fit-content', mr: 1 }}
+            />
+            <TooltipIcon
+              title={t('settings.modals.tun.tooltips.dnsAddress')}
+              sx={{ opacity: 0.7 }}
+            />
+            <TextField
+              size="small"
+              sx={{ width: 250, ml: 'auto' }}
+              value={values.dnsAddress}
+              placeholder={DEFAULT_DNS_ADDRESS}
+              disabled={saving}
+              error={dnsAddressError}
+              helperText={
+                dnsAddressError
+                  ? t('settings.modals.tun.messages.invalidDnsAddress')
+                  : t('settings.modals.tun.messages.dnsAddressFormat')
+              }
+              slotProps={{
+                htmlInput: {
+                  'aria-label': t('settings.modals.tun.fields.dnsAddress'),
+                },
+              }}
+              onChange={(event) =>
+                setValues((v) => ({ ...v, dnsAddress: event.target.value }))
+              }
+            />
+          </ListItem>
+        )}
 
         <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText primary={t('settings.modals.tun.fields.device')} />

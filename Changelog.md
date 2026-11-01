@@ -28,6 +28,10 @@
 - 新增「IP 信息」自动刷新开关，关闭后仍可手动刷新
 - 新增 Muse AI 解锁检测，针对 Muse AI 特有的 Cloudflare 人机验证增加「Risky」状态标记
 
+**🍎 macOS**
+
+- macOS：新增虚拟网卡设置中的「系统 DNS」，支持用英文逗号配置多个地址
+
 </details>
 
 <details>

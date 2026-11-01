@@ -22,6 +22,11 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     if patch.enable_tun_mode.is_some() {
         super::reconcile_tun_availability().await;
     }
+    #[cfg(target_os = "macos")]
+    if patch.tun_dns_address.is_some() {
+        let _lifecycle = crate::core::CoreManager::global().lifecycle_lock.lock().await;
+        crate::utils::resolve::dns::sync_public_dns().await;
+    }
     Ok(())
 }
 
@@ -38,6 +43,9 @@ pub(super) async fn apply_verge_patch_locked(
     patch: &IVerge,
     not_save_file: bool,
 ) -> Result<()> {
+    if let Some(address) = &patch.tun_dns_address {
+        crate::config::normalize_tun_dns_addresses(address)?;
+    }
     super::executor::apply(
         _config_write,
         super::executor::Patch::Verge {
@@ -53,4 +61,20 @@ pub async fn fetch_verge_config() -> Result<SharedDraft<IVerge>> {
     let draft = Config::verge().await;
     let data = draft.data_arc();
     Ok(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn invalid_tun_dns_address_is_rejected_before_applying_config() {
+        let lock = tokio::sync::Mutex::new(());
+        let guard = lock.lock().await;
+        let patch = IVerge {
+            tun_dns_address: Some("1.1.1.1,999.1.1.1".into()),
+            ..IVerge::default()
+        };
+        assert!(apply_verge_patch_locked(&guard, &patch, false).await.is_err());
+    }
 }

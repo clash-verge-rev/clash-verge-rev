@@ -10,6 +10,23 @@ use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 
+// Any address routed into TUN works, since dns-hijack answers it; the value only matters if left behind.
+pub const DEFAULT_TUN_DNS_ADDRESS: &str = "114.114.114.114";
+
+pub fn normalize_tun_dns_addresses(value: &str) -> Result<std::string::String> {
+    value
+        .split(',')
+        .map(|address| {
+            address
+                .trim()
+                .parse::<std::net::Ipv4Addr>()
+                .map(|address| address.to_string())
+                .map_err(|_| anyhow::anyhow!("TUN DNS must contain valid IPv4 addresses separated by commas"))
+        })
+        .collect::<Result<Vec<_>>>()
+        .map(|addresses| addresses.join(","))
+}
+
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
 #[serde(default)]
@@ -78,6 +95,9 @@ pub struct IVerge {
     pub tun_tray_icon: Option<bool>,
 
     pub enable_tun_mode: Option<bool>,
+
+    #[specta(type = Option<std::string::String>)]
+    pub tun_dns_address: Option<String>,
 
     pub enable_auto_launch: Option<bool>,
 
@@ -420,6 +440,7 @@ impl IVerge {
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
             enable_dns_settings: Some(false),
+            tun_dns_address: Some(DEFAULT_TUN_DNS_ADDRESS.into()),
             home_cards: None,
             enable_external_controller: Some(false),
             ..Self::default()
@@ -466,6 +487,7 @@ impl IVerge {
         patch!(tun_tray_icon);
 
         patch!(enable_tun_mode);
+        patch!(tun_dns_address);
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
@@ -526,6 +548,13 @@ impl IVerge {
         patch!(enable_external_controller);
     }
 
+    pub fn get_tun_dns_address(&self) -> std::string::String {
+        self.tun_dns_address
+            .as_deref()
+            .and_then(|address| normalize_tun_dns_addresses(address).ok())
+            .unwrap_or_else(|| DEFAULT_TUN_DNS_ADDRESS.to_owned())
+    }
+
     pub fn get_log_level(&self) -> LevelFilter {
         if let Some(level) = self.app_log_level.as_ref() {
             match level.to_lowercase().as_str() {
@@ -540,5 +569,40 @@ impl IVerge {
         } else {
             LevelFilter::Info
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_tun_dns_address_defaults_and_survives_saved_patches() -> Result<()> {
+        let mut config: IVerge = serde_yaml_ng::from_str("enable_tun_mode: true")?;
+        assert_eq!(config.get_tun_dns_address(), DEFAULT_TUN_DNS_ADDRESS);
+        let patch: IVerge = serde_yaml_ng::from_str("tun_dns_address: 1.1.1.1, 8.8.8.8")?;
+        config.patch_config(&patch);
+        let saved = serde_yaml_ng::to_string(&config)?;
+        let loaded: IVerge = serde_yaml_ng::from_str(&saved)?;
+        assert_eq!(loaded.get_tun_dns_address(), "1.1.1.1,8.8.8.8");
+        config.tun_dns_address = Some("invalid".into());
+        assert_eq!(config.get_tun_dns_address(), DEFAULT_TUN_DNS_ADDRESS);
+        Ok(())
+    }
+
+    #[test]
+    fn tun_dns_addresses_accept_single_or_comma_separated_ipv4_addresses() -> Result<()> {
+        assert_eq!(normalize_tun_dns_addresses("1.1.1.1")?, "1.1.1.1");
+        assert_eq!(normalize_tun_dns_addresses(" 1.1.1.1, 8.8.8.8 ")?, "1.1.1.1,8.8.8.8");
+        for invalid in [
+            "",
+            "1.1.1.1,",
+            "1.1.1.1,,8.8.8.8",
+            "1.1.1.1,999.1.1.1",
+            "1.1.1.1;8.8.8.8",
+        ] {
+            assert!(normalize_tun_dns_addresses(invalid).is_err(), "{invalid}");
+        }
+        Ok(())
     }
 }

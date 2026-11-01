@@ -497,17 +497,21 @@
         "dnsHijack": "DNS 하이재킹",
         "dnsMode": "DNS 모드",
         "mtu": "MTU",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Auto Redirect",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "여러 DNS 서버는 쉼표(,)로 구분하세요",
         "dnsMode": "Auto는 기존 동작을 유지합니다. hijack은 Windows에서 엄격 라우팅 또는 Linux에서 Auto Redirect가 필요합니다",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "설정이 적용되었습니다",
         "invalidRouteExcludeAddress": "유효한 CIDR 대역을 입력하세요",
-        "routeExcludeAddressHint": "IPv4/IPv6 CIDR만 지원합니다. 예: 192.168.0.0/16 또는 fd00::/8"
+        "routeExcludeAddressHint": "IPv4/IPv6 CIDR만 지원합니다. 예: 192.168.0.0/16 또는 fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

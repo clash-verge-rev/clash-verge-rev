@@ -50,8 +50,14 @@ function dns_of() {
     echo "$dns"
 }
 
-[ $# -lt 1 ] && echo "Usage: $0 <IP address>" && exit 1
-! is_valid_ip "$1" && echo "$1 is not a valid IP address." && exit 1
+[ $# -lt 1 ] && echo "Usage: $0 <comma-separated IP addresses>" && exit 1
+[[ "$1" == *, || "$1" == *,,* ]] && echo "Invalid DNS address list." >&2 && exit 1
+IFS=',' read -r -a dns_servers <<<"$1"
+[ "${#dns_servers[@]}" -gt 0 ] || exit 1
+for address in "${dns_servers[@]}"; do
+    ! is_valid_ip "$address" && echo "$address is not a valid IP address." >&2 && exit 1
+done
+target_dns=$(printf '%s\n' "${dns_servers[@]}")
 
 # Backups are keyed by service ID, which survives renaming the service and renumbering its interface.
 service_id=$(sc_value State:/Network/Global/IPv4 PrimaryService)
@@ -59,8 +65,10 @@ hardware_port=$(sc_value "Setup:/Network/Service/$service_id" UserDefinedName)
 [ -z "$hardware_port" ] && echo "No primary network service." && exit 1
 
 original_dns=$(dns_of "$hardware_port") || { echo "Cannot read DNS servers of $hardware_port." >&2; exit 1; }
+original_dns_key=${original_dns//$'\n'/,}
 
 backup=".original_dns/$service_id"
+managed=".original_dns/.$service_id"
 mkdir -p .original_dns || exit 1
 # Older releases kept a single backup for whichever service was primary.
 if [ -f .original_dns.txt ]; then
@@ -71,10 +79,18 @@ if [ -f .original_dns.txt ]; then
     fi
 fi
 # The placeholder is ours, not the user's: keep the backup taken before it was applied.
-if [ "$original_dns" != "$1" ]; then
-    echo "$original_dns" >"$backup" || exit 1
-    networksetup -setdnsservers "$hardware_port" "$1"
-    [ "$(dns_of "$hardware_port")" = "$1" ] || { echo "Failed to set DNS for $hardware_port." >&2; exit 1; }
+if [ "$original_dns" != "$target_dns" ]; then
+    if ! { [ -f "$managed" ] && grep -Fxq -- "$original_dns_key" "$managed"; } &&
+        ! { [ ! -f "$managed" ] && [ "$original_dns" = "${2:-$1}" ]; }; then
+        echo "$original_dns" >"$backup" || exit 1
+    elif [ ! -f "$backup" ]; then
+        echo "empty" >"$backup" || exit 1
+    fi
+    # Either DNS list can be active if the process is interrupted during the change.
+    printf '%s\n%s\n' "$original_dns_key" "$1" >"$managed" || exit 1
+    networksetup -setdnsservers "$hardware_port" "${dns_servers[@]}"
+    [ "$(dns_of "$hardware_port")" = "$target_dns" ] || { echo "Failed to set DNS for $hardware_port." >&2; exit 1; }
 elif [ ! -f "$backup" ]; then
     echo "empty" >"$backup" || exit 1
 fi
+printf '%s\n' "$1" >"$managed" || exit 1

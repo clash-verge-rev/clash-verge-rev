@@ -497,17 +497,21 @@
         "dnsHijack": "Secuestro de DNS",
         "dnsMode": "Modo DNS",
         "mtu": "Unidad máxima de transmisión",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Auto Redirect",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
         "dnsMode": "Auto mantiene el comportamiento anterior; hijack requiere Enrutamiento estricto en Windows o Auto Redirect en Linux",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "Ajustes aplicados",
         "invalidRouteExcludeAddress": "Introduce un bloque CIDR válido",
-        "routeExcludeAddressHint": "Solo se admiten bloques CIDR de IPv4/IPv6, como 192.168.0.0/16 o fd00::/8"
+        "routeExcludeAddressHint": "Solo se admiten bloques CIDR de IPv4/IPv6, como 192.168.0.0/16 o fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

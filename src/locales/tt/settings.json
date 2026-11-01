@@ -497,17 +497,21 @@
         "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
         "dnsMode": "DNS режиме",
         "mtu": "MTU (макс. тапшыру берәмлеге)",
-        "autoRedirect": "Auto Redirect"
+        "autoRedirect": "Auto Redirect",
+        "dnsAddress": "System DNS"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
         "dnsMode": "Auto иске тәртипне саклый; hijack өчен Windows'ta Катгый маршрутлау яки Linux'ta Auto Redirect кирәк",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects",
+        "dnsAddress": "Temporarily applied while TUN uses fake-ip. The original system DNS is restored when no longer needed."
       },
       "messages": {
         "applied": "Көйләүләр кулланылды",
         "invalidRouteExcludeAddress": "Дөрес CIDR блогын кертегез",
-        "routeExcludeAddressHint": "IPv4/IPv6 CIDR блоклары гына хуплана, мәсәлән 192.168.0.0/16 яки fd00::/8"
+        "routeExcludeAddressHint": "IPv4/IPv6 CIDR блоклары гына хуплана, мәсәлән 192.168.0.0/16 яки fd00::/8",
+        "invalidDnsAddress": "Enter valid IPv4 addresses separated by commas",
+        "dnsAddressFormat": "Format: 8.8.8.8,8.8.4.4"
       }
     },
     "dns": {

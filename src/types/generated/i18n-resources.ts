@@ -1189,6 +1189,7 @@ export interface TranslationResources {
             autoRedirect: string
             autoRoute: string
             device: string
+            dnsAddress: string
             dnsHijack: string
             dnsMode: string
             mtu: string
@@ -1198,12 +1199,15 @@ export interface TranslationResources {
           }
           messages: {
             applied: string
+            dnsAddressFormat: string
+            invalidDnsAddress: string
             invalidRouteExcludeAddress: string
             routeExcludeAddressHint: string
           }
           title: string
           tooltips: {
             autoRedirect: string
+            dnsAddress: string
             dnsHijack: string
             dnsMode: string
           }
@@ -1589,6 +1593,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }
