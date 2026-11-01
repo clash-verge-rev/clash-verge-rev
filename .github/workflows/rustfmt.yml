@@ -9,6 +9,8 @@ on:
     paths:
       - "src-tauri/**"
       - "**/*.rs"
+      - "rustfmt.toml"
+      - "rust-toolchain.toml"
       - ".github/workflows/rustfmt.yml"
 
 permissions:

@@ -8,6 +8,7 @@ on:
       - "Cargo.toml"
       - "Cargo.lock"
       - "rust-toolchain.toml"
+      - ".cargo/config.toml"
       - ".github/workflows/lint-clippy.yml"
   workflow_dispatch:
 env:
