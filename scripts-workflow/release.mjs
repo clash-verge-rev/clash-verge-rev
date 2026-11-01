@@ -134,6 +134,31 @@ function fetchBranches() {
   )
 }
 
+function discardClosedCandidate(branch, base, prefix) {
+  const candidates = list(
+    `pulls?state=all&base=${base}&head=${repository.split('/')[0]}:${branch}&per_page=100`,
+  )
+  const latest = candidates[0]
+  if (!latest || candidates.some((pr) => pr.state === 'open'))
+    throw new Error(
+      `Branch ${branch} is reserved by an active or unknown candidate.`,
+    )
+  const pr = get(`pulls/${latest.number}`)
+  requireBotPr(pr, base, prefix)
+  if (pr.state !== 'closed' || pr.merged)
+    throw new Error(
+      `Close the unmerged candidate before retrying: ${pr.html_url}`,
+    )
+  updateRefs(pr.base.repo.node_id, [
+    {
+      name: `refs/heads/${branch}`,
+      beforeOid: pr.head.sha,
+      afterOid: '0'.repeat(40),
+    },
+  ])
+  summary(`Released the unused branch from closed PR: ${pr.html_url}`)
+}
+
 function prepare() {
   let refresh
   if (env.GITHUB_EVENT_NAME === 'pull_request_target') {
@@ -211,8 +236,15 @@ function prepare() {
       : last
         ? `${base}-rc.${BigInt(last.match(rcPattern)[4] ?? 0) + 1n}`
         : `${base}-rc`)
-  if (occupied.includes(tag))
-    throw new Error(`Tag ${tag} already exists or is reserved.`)
+  if (tags.includes(tag)) throw new Error(`Tag ${tag} already exists.`)
+  for (const [prefix, target] of [
+    ['release/', 'dev'],
+    ['publish/', 'main'],
+  ]) {
+    const branch = `${prefix}${tag}`
+    if (refs.includes(`refs/heads/${branch}`) && branch !== refresh?.head.ref)
+      discardClosedCandidate(branch, target, prefix)
+  }
   const sha = git('rev-parse', 'HEAD')
   const body = releaseBody(tag, sha, tags, false)
   summary(body)
@@ -453,7 +485,7 @@ function publishPr() {
   validateVersionCommit(tag, sha)
   const branch = `publish/${tag}`
   const existing = list(
-    `pulls?state=all&base=main&head=${repository.split('/')[0]}:${branch}&per_page=100`,
+    `pulls?state=open&base=main&head=${repository.split('/')[0]}:${branch}&per_page=100`,
   )
   if (existing.length) {
     const publication = existing[0]
@@ -567,28 +599,31 @@ function publish() {
     requireApproval(pr, sha)
     const main = git('rev-parse', 'origin/main')
     git('merge-base', '--is-ancestor', main, sha)
-    const object = api('git/tags', {
+    git(
+      '-c',
+      'user.name=github-actions[bot]',
+      '-c',
+      'user.email=41898282+github-actions[bot]@users.noreply.github.com',
+      'tag',
+      '--annotate',
+      '--no-sign',
+      '--message',
+      marker,
       tag,
-      message: marker,
-      object: sha,
-      type: 'commit',
-    })
-    // The tag records run ownership in the same transaction as the fast-forward.
-    updateRefs(pr.base.repo.node_id, [
-      { name: 'refs/heads/main', beforeOid: main, afterOid: sha, force: false },
-      {
-        name: `refs/heads/${pr.head.ref}`,
-        beforeOid: sha,
-        afterOid: sha,
-        force: false,
-      },
-      {
-        name: `refs/tags/${tag}`,
-        beforeOid: '0'.repeat(40),
-        afterOid: object.sha,
-        force: false,
-      },
-    ])
+      sha,
+    )
+    // GraphQL updateRefs rejects annotated tag objects; Git preserves atomicity.
+    git(
+      'push',
+      '--atomic',
+      `--force-with-lease=refs/heads/main:${main}`,
+      `--force-with-lease=refs/heads/${pr.head.ref}:${sha}`,
+      `--force-with-lease=refs/tags/${tag}:`,
+      'origin',
+      `${sha}:refs/heads/main`,
+      `${sha}:refs/heads/${pr.head.ref}`,
+      `refs/tags/${tag}:refs/tags/${tag}`,
+    )
     summary(`Fast-forwarded main and tagged ${tag} at approved commit ${sha}.`)
   }
   releaseOutput(tag, sha)
