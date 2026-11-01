@@ -332,6 +332,8 @@ Function PageLeaveReinstall
   ${EndIf}
 
   reinst_uninstall:
+    !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
+
     HideWindow
     ClearErrors
 
@@ -368,7 +370,10 @@ Function PageLeaveReinstall
       MessageBox MB_ICONEXCLAMATION "$(unableToUninstall)"
       Abort
     ${EndIf}
+    Return
+
   reinst_done:
+    !insertmacro CheckIfAppIsRunning "$INSTDIR\${MAINBINARYNAME}.exe" "${PRODUCTNAME}"
 FunctionEnd
 
 ; 5. Choose install directory page
