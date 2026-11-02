@@ -316,6 +316,7 @@ pub async fn hide() {
     {
         let _ = window.hide();
     }
+    handle::Handle::global().set_activation_policy_accessory();
 }
 
 #[cfg(test)]
