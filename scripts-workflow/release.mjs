@@ -652,9 +652,14 @@ function validateTag() {
 function prepareDraft() {
   const tag = env.RELEASE_TAG
   verifyTarget()
-  const release = list('releases?per_page=100').find(
-    (release) => release.tag_name === tag,
-  )
+  const result = run('gh', [
+    'api',
+    '--paginate',
+    endpoint('releases?per_page=100'),
+    '--jq',
+    `.[] | select(.tag_name == ${JSON.stringify(tag)}) | {id, draft}`,
+  ])
+  const release = result ? JSON.parse(result) : null
   if (release && !release.draft)
     throw new Error('This release is already public.')
   const draft =
