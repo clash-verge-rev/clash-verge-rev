@@ -418,13 +418,15 @@
         "autoDelayDetection": "Otomatik Gecikme Tespiti",
         "autoDelayDetectionInterval": "Otomatik Gecikme Tespiti Aralığı",
         "defaultLatencyTest": "Varsayılan Gecikme Testi",
-        "defaultLatencyTimeout": "Varsayılan Gecikme Zaman Aşımı"
+        "defaultLatencyTimeout": "Varsayılan Gecikme Zaman Aşımı",
+        "testFilteredNodesOnly": "Yalnızca filtrelenen düğümleri test et"
       },
       "tooltips": {
         "autoCloseConnections": "Vekil grup seçimi veya vekil modu değiştiğinde kurulan bağlantıları sonlandır",
         "enableBuiltinEnhanced": "Yapılandırma dosyası için uyumluluk işleme",
         "autoDelayDetection": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
-        "defaultLatencyTest": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz"
+        "defaultLatencyTest": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz",
+        "testFilteredNodesOnly": "Elle gecikme testleri yalnızca filtreyle eşleşen düğümlere uygulanır. Filtre yoksa grubun tamamı test edilir."
       },
       "options": {
         "proxyLayoutColumns": {

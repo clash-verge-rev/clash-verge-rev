@@ -418,13 +418,15 @@
         "autoDelayDetection": "Auto Delay Detection",
         "autoDelayDetectionInterval": "Auto Delay Detection Interval",
         "defaultLatencyTest": "Default Latency Test",
-        "defaultLatencyTimeout": "Default Latency Timeout"
+        "defaultLatencyTimeout": "Default Latency Timeout",
+        "testFilteredNodesOnly": "Test Filtered Nodes Only"
       },
       "tooltips": {
         "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
         "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
         "autoDelayDetection": "Periodically test the current node latency in the background",
-        "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"
+        "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file",
+        "testFilteredNodesOnly": "Limit manual group latency tests to nodes matching the active filter. With no filter, test the whole group."
       },
       "options": {
         "proxyLayoutColumns": {
