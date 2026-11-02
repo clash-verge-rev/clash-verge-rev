@@ -24,14 +24,18 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复全局模式缺少 `GLOBAL` 策略组，无法单独选择全局出口
+
 </details>
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+
 </details>
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
+
 
 </details>

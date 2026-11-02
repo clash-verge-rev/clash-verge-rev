@@ -206,17 +206,20 @@ export const useRenderList = (
     verge?.default_latency_timeout,
   ])
 
+  const renderGroups = useMemo(() => {
+    if (!proxyView) return []
+    if (mode === 'rule') return proxyView.groups
+    const global = proxyView.global ? [proxyView.global] : []
+    return mode === 'global' ? [...global, ...proxyView.groups] : global
+  }, [mode, proxyView])
+
   // Every group this list draws, so a test settling in any of them re-sorts that group.
   const renderedGroupNames = useMemo(() => {
     if (!proxyView) return []
     if (isChainMode)
       return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
-    return mode === 'rule' || mode === 'global'
-      ? proxyView.groups.map(({ name }) => name)
-      : proxyView.global
-        ? [proxyView.global.name]
-        : []
-  }, [isChainMode, mode, proxyView, selectedGroup])
+    return renderGroups.map(({ name }) => name)
+  }, [isChainMode, proxyView, renderGroups, selectedGroup])
   const groupDelays = useGroupsDelays(renderedGroupNames)
 
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
@@ -258,13 +261,7 @@ export const useRenderList = (
     }
 
     const useRule = mode === 'rule' || mode === 'global'
-    const renderGroups = useRule
-      ? proxyView.groups
-      : proxyView.global === null
-        ? []
-        : [proxyView.global]
     const cache = groupCacheRef.current
-    let anyChanged = false
 
     const retList = renderGroups.flatMap((group) => {
       const headState = headStates[group.name] || DEFAULT_STATE
@@ -281,7 +278,6 @@ export const useRenderList = (
         return cached.items
       }
 
-      anyChanged = true
       const ret: IRenderItem[] = [
         {
           type: 0,
@@ -350,7 +346,10 @@ export const useRenderList = (
     const filtered = !useRule
       ? retList.slice(1)
       : retList.filter((item) => !item.group.hidden)
-    if (!anyChanged && prevListRef.current.length === filtered.length) {
+    if (
+      prevListRef.current.length === filtered.length &&
+      filtered.every((item, index) => item === prevListRef.current[index])
+    ) {
       return prevListRef.current
     }
     prevListRef.current = filtered
@@ -364,6 +363,7 @@ export const useRenderList = (
     latencyTimeout,
     mode,
     proxyView,
+    renderGroups,
     selectedGroup,
   ])
 
