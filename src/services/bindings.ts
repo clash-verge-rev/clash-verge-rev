@@ -403,6 +403,7 @@ export type IVerge_Deserialize = {
   auto_check_update?: boolean | null
   default_latency_test?: string | null
   default_latency_timeout?: number | null
+  proxy_test_filtered_nodes_only?: boolean | null
   enable_auto_delay_detection?: boolean | null
   /**  自动检测当前节点延迟的间隔（分钟） */
   auto_delay_detection_interval_minutes?: number | null
@@ -493,6 +494,7 @@ export type IVerge_Serialize = {
   auto_check_update: boolean | null
   default_latency_test: string | null
   default_latency_timeout: number | null
+  proxy_test_filtered_nodes_only: boolean | null
   enable_auto_delay_detection: boolean | null
   /**  自动检测当前节点延迟的间隔（分钟） */
   auto_delay_detection_interval_minutes: number | null

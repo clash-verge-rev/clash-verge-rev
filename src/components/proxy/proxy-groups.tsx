@@ -42,6 +42,7 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import { filterSort } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 import {
   PROXY_GROUP_HEADER_SENSORS,
@@ -92,6 +93,7 @@ function useProxyRenderState(
   const { proxyView } = useProxiesData()
   const {
     renderList,
+    headStates,
     onProxies,
     onHeadState: setListHeadState,
   } = useRenderList(mode, isChainMode, activeSelectedGroup)
@@ -120,13 +122,32 @@ function useProxyRenderState(
       const group =
         proxyView?.groups.find(({ name }) => name === groupName) ??
         (proxyView?.global?.name === groupName ? proxyView.global : undefined)
-      const occurrences =
+      let occurrences =
         proxyView && group
           ? group.members.map((member, memberIndex) => ({
               memberIndex,
               member: resolveMember(proxyView, member),
             }))
           : []
+      const headState = headStates[groupName]
+      if (
+        verge?.proxy_test_filtered_nodes_only === true &&
+        !isChainMode &&
+        headState?.filterText.trim()
+      ) {
+        occurrences = filterSort(
+          occurrences,
+          groupName,
+          headState.filterText,
+          0,
+          timeout,
+          {
+            matchCase: headState.filterMatchCase,
+            matchWholeWord: headState.filterMatchWholeWord,
+            useRegularExpression: headState.filterUseRegularExpression,
+          },
+        )
+      }
       const interactable = occurrences
         .map(({ member }) => member)
         .filter(isInteractableMember)

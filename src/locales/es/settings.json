@@ -418,13 +418,15 @@
         "autoDelayDetection": "Detección automática de latencia",
         "autoDelayDetectionInterval": "Intervalo de detección automática de latencia",
         "defaultLatencyTest": "Enlace de prueba de latencia predeterminado",
-        "defaultLatencyTimeout": "Tiempo de espera de la prueba de latencia"
+        "defaultLatencyTimeout": "Tiempo de espera de la prueba de latencia",
+        "testFilteredNodesOnly": "Probar solo los nodos filtrados"
       },
       "tooltips": {
         "autoCloseConnections": "Cierra las conexiones establecidas cuando se cambia el nodo seleccionado en el grupo de proxy o el modo de proxy.",
         "enableBuiltinEnhanced": "Procesamiento de compatibilidad de archivos de configuración",
         "autoDelayDetection": "Prueba periódicamente la latencia del nodo actual en segundo plano",
-        "defaultLatencyTest": "Solo se utiliza para pruebas de solicitudes de clientes HTTP y no afectará al archivo de configuración."
+        "defaultLatencyTest": "Solo se utiliza para pruebas de solicitudes de clientes HTTP y no afectará al archivo de configuración.",
+        "testFilteredNodesOnly": "Las pruebas manuales de latencia se limitan a los nodos filtrados. Sin filtro, se prueba todo el grupo."
       },
       "options": {
         "proxyLayoutColumns": {

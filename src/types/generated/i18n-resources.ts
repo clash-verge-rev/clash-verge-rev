@@ -1127,6 +1127,7 @@ export interface TranslationResources {
             defaultLatencyTimeout: string
             enableBuiltinEnhanced: string
             proxyLayoutColumns: string
+            testFilteredNodesOnly: string
           }
           options: {
             autoLogClean: {
@@ -1143,6 +1144,7 @@ export interface TranslationResources {
             autoDelayDetection: string
             defaultLatencyTest: string
             enableBuiltinEnhanced: string
+            testFilteredNodesOnly: string
           }
         }
         networkInterface: {
@@ -1589,6 +1591,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

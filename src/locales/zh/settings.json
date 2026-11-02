@@ -418,13 +418,15 @@
         "autoDelayDetection": "自动延迟检测",
         "autoDelayDetectionInterval": "自动延迟检测间隔",
         "defaultLatencyTest": "默认测试链接",
-        "defaultLatencyTimeout": "测试超时时间"
+        "defaultLatencyTimeout": "测试超时时间",
+        "testFilteredNodesOnly": "仅测试筛选节点"
       },
       "tooltips": {
         "autoCloseConnections": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
         "enableBuiltinEnhanced": "配置文件的兼容性处理",
         "autoDelayDetection": "后台定时检测当前节点延迟",
-        "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响"
+        "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响",
+        "testFilteredNodesOnly": "手动测试延迟时仅测筛选结果，无筛选时测整个组。"
       },
       "options": {
         "proxyLayoutColumns": {
