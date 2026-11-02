@@ -84,7 +84,7 @@ reqwest = { version = "0.13.5", features = [
 ] }
 rust_iso3166 = "0.2.0"
 
-smartstring = { version = "1.0.1" }
+smartstring = { version = "2.0.0" }
 
 serde = { version = "1.0.229" }
 serde_json = { version = "1.0.154" }
