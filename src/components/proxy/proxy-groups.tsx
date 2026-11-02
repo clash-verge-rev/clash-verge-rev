@@ -42,6 +42,7 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import { filterProxies } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 import {
   PROXY_GROUP_HEADER_SENSORS,
@@ -114,7 +115,7 @@ function useProxyRenderState(
   const timeout = verge?.default_latency_timeout || 10000
 
   const handleCheckAll = useStableCallback(
-    useLockFn(async (groupName: string) => {
+    useLockFn(async (groupName: string, headState?: HeadState) => {
       debugLog(`[ProxyGroups] 开始测试所有延迟，组: ${groupName}`)
 
       const group =
@@ -127,9 +128,21 @@ function useProxyRenderState(
               member: resolveMember(proxyView, member),
             }))
           : []
-      const interactable = occurrences
+      const filtered = filterProxies(
+        occurrences,
+        groupName,
+        headState?.filterText ?? '',
+        {
+          matchCase: headState?.filterMatchCase,
+          matchWholeWord: headState?.filterMatchWholeWord,
+          useRegularExpression: headState?.filterUseRegularExpression,
+        },
+      )
+      const interactable = filtered
         .map(({ member }) => member)
         .filter(isInteractableMember)
+
+      if (interactable.length === 0) return
 
       debugLog(`[ProxyGroups] 找到代理数量: ${interactable.length}`)
 

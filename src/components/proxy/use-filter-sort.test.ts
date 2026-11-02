@@ -3,7 +3,11 @@ import { afterEach, expect, test, vi } from 'vitest'
 import delayManager from '@/services/delay'
 import { compareByDelay } from '@/utils/delay'
 
-import { filterSort } from './use-filter-sort'
+import {
+  filterProxies,
+  filterSort,
+  type ProxySearchState,
+} from './use-filter-sort'
 import type { ResolvedMemberOccurrence } from './use-render-list'
 
 const node = (memberIndex: number, delay: number, name = `${memberIndex}`) =>
@@ -88,4 +92,26 @@ test('reads each occurrence once and observes cache updates and expiry on the ne
   expect(filterSort(list, 'expiry', '', 0)).toBe(list)
   filterSort(list, 'expiry', '', 2)
   expect(get).not.toHaveBeenCalled()
+})
+
+const members = ['HK', 'hk', 'HK Premium', 'Tokyo'].map((name, index) =>
+  node(index, 100, name),
+)
+
+test.each<[string, ProxySearchState, string[]]>([
+  ['', {}, ['HK', 'hk', 'HK Premium', 'Tokyo']],
+  ['   ', {}, ['HK', 'hk', 'HK Premium', 'Tokyo']],
+  ['hk', {}, ['HK', 'hk', 'HK Premium']],
+  ['hk', { matchCase: true }, ['hk']],
+  ['Tok', { matchWholeWord: true }, []],
+  ['^HK$', { useRegularExpression: true, matchCase: true }, ['HK']],
+  ['[', { useRegularExpression: true }, []],
+  ['missing', {}, []],
+])('filters %j with %j', (query, options, expected) => {
+  expect(
+    filterProxies(members, 'group', query, options).map(
+      ({ member }) => member.ref.name,
+    ),
+  ).toEqual(expected)
+  expect(members).toHaveLength(4)
 })
