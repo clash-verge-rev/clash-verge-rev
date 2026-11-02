@@ -63,18 +63,18 @@ tracing = "0.1.44"
 
 tauri = { version = "2.12.4" }
 tauri-plugin-clipboard-manager = "2.5.0"
-parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
+parking_lot = { version = "0.13.0", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
 chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
-tokio = { version = "1.53.3", features = [
+tokio = { version = "1.54.1", features = [
   "rt-multi-thread",
   "macros",
   "time",
   "sync",
 ] }
 flexi_logger = "0.31.10"
-log = "0.4.34"
+log = "0.4.35"
 regex = "1.13.1"
 reqwest = { version = "0.13.5", features = [
   "json",
