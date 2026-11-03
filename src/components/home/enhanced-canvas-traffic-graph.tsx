@@ -4,6 +4,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useMemo,
   useReducer,
@@ -120,7 +121,6 @@ export const EnhancedCanvasTrafficGraph = memo(
     const drawFrameRef = useRef<number | undefined>(undefined)
     const hoverFrameRef = useRef<number | undefined>(undefined)
     const mouseMoveFrameRef = useRef<number | undefined>(undefined)
-    const scheduleDrawGraphRef = useRef<() => void>(() => {})
     const pendingMousePositionRef = useRef<{
       clientX: number
       clientY: number
@@ -189,11 +189,11 @@ export const EnhancedCanvasTrafficGraph = memo(
       }
     }, [displayData])
 
-    const handleFocusStateChange = useCallback((focused: boolean) => {
+    const handleFocusStateChange = useEffectEvent((focused: boolean) => {
       isWindowFocusedRef.current = focused
 
-      scheduleDrawGraphRef.current()
-    }, [])
+      scheduleDrawGraph()
+    })
 
     useEffect(() => {
       if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -217,7 +217,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         window.removeEventListener('blur', handleBlur)
         document.removeEventListener('visibilitychange', handleVisibilityChange)
       }
-    }, [handleFocusStateChange])
+    }, [])
 
     const calculateY = useCallback(
       (
@@ -906,25 +906,21 @@ export const EnhancedCanvasTrafficGraph = memo(
       scheduleDrawGraph()
     }, [scheduleDrawGraph])
 
-    useEffect(() => {
-      scheduleDrawGraphRef.current = scheduleDrawGraph
-    }, [scheduleDrawGraph])
+    const redrawGraph = useEffectEvent(() => scheduleDrawGraph())
 
     useEffect(() => {
       const canvas = canvasRef.current
       if (!canvas || typeof window === 'undefined') return
 
       if (typeof ResizeObserver === 'undefined') {
-        const handleResize = () => scheduleDrawGraphRef.current()
+        const handleResize = () => redrawGraph()
         window.addEventListener('resize', handleResize)
         return () => {
           window.removeEventListener('resize', handleResize)
         }
       }
 
-      const resizeObserver = new ResizeObserver(() =>
-        scheduleDrawGraphRef.current(),
-      )
+      const resizeObserver = new ResizeObserver(() => redrawGraph())
       resizeObserver.observe(canvas)
 
       return () => {

@@ -13,13 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -41,6 +35,7 @@ import {
   getSystemHostname,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
@@ -128,13 +123,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   } = verge ?? {}
 
   const [value, setValue] = useState(() => buildInitialValues(null))
-  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
-    null,
-  )
-
-  useEffect(() => {
-    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
-  }, [])
+  const { data: embeddedServerPort } = useQuery({
+    queryKey: ['getEmbeddedServerPort'],
+    queryFn: getEmbeddedServerPort,
+  })
 
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 

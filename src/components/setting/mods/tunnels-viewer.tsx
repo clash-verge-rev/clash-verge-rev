@@ -1,4 +1,3 @@
-/* eslint-disable @eslint-react/set-state-in-effect */
 import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
 import {
   Button,
@@ -14,7 +13,6 @@ import {
 } from '@mui/material'
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -157,28 +155,19 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const selectedProxyToken = selectedProxyOption
     ? proxyOptionToken(selectedProxyOption)
     : ''
-  const selectedGroupExists =
-    !values.group || proxyGroups.some(({ name }) => name === values.group)
+  // A group or member missing from the proxy view reads as the default.
+  const effectiveGroup = proxyGroups.some(({ name }) => name === values.group)
+    ? values.group
+    : ''
+  const effectiveProxy = selectedProxyOption ? values.proxy : null
   const latestProxyStateRef = useRef({
-    binding: values.proxy,
+    binding: effectiveProxy,
     options: proxyOptions,
   })
   latestProxyStateRef.current = {
-    binding: values.proxy,
+    binding: effectiveProxy,
     options: proxyOptions,
   }
-
-  useEffect(() => {
-    if (selectedGroupExists && (!values.proxy || selectedProxyOption)) return
-    setValues((current) => {
-      if (current.group !== values.group || current.proxy !== values.proxy) {
-        return current
-      }
-      return selectedGroupExists
-        ? { ...current, proxy: null }
-        : { ...current, group: '', proxy: null }
-    })
-  }, [selectedGroupExists, selectedProxyOption, values.group, values.proxy])
 
   const handleSave = async () => {
     try {
@@ -490,7 +479,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                 <Select
                   size="small"
                   sx={{ width: 200, '> div': { py: '7.5px' } }}
-                  value={values.group}
+                  value={effectiveGroup}
                   displayEmpty
                   onChange={(e) => {
                     const nextGroup = e.target.value as string
@@ -569,7 +558,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                         : null,
                     }))
                   }}
-                  disabled={!values.group} // 没选组就禁用
+                  disabled={!effectiveGroup} // 没选组就禁用
                 >
                   <MenuItem value="">
                     {t('settings.sections.clash.form.fields.tunnels.default')}
