@@ -369,6 +369,7 @@ export const useRenderList = (
 
   return {
     renderList,
+    headStates,
     onProxies: refreshProxy,
     onHeadState: setHeadState,
     currentColumns: col,

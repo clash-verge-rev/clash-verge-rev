@@ -418,13 +418,15 @@
         "autoDelayDetection": "自動延遲偵測",
         "autoDelayDetectionInterval": "自動延遲偵測間隔",
         "defaultLatencyTest": "預設測試網址",
-        "defaultLatencyTimeout": "測試逾時"
+        "defaultLatencyTimeout": "測試逾時",
+        "testFilteredNodesOnly": "僅測試篩選節點"
       },
       "tooltips": {
         "autoCloseConnections": "當代理組選中節點或代理模式變動時，關閉已建立的連線",
         "enableBuiltinEnhanced": "配置檔案的相容性處理",
         "autoDelayDetection": "在背景定時偵測目前節點延遲",
-        "defaultLatencyTest": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響"
+        "defaultLatencyTest": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響",
+        "testFilteredNodesOnly": "手動測試延遲時僅測篩選結果，無篩選時測整個群組。"
       },
       "options": {
         "proxyLayoutColumns": {

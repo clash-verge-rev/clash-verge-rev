@@ -33,6 +33,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     defaultLatencyTest: '',
     autoLogClean: 2,
     defaultLatencyTimeout: 10000,
+    testFilteredNodesOnly: false,
   })
 
   useImperativeHandle(ref, () => ({
@@ -52,6 +53,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         defaultLatencyTest: verge?.default_latency_test || '',
         autoLogClean: verge?.auto_log_clean || 0,
         defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
+        testFilteredNodesOnly: verge?.proxy_test_filtered_nodes_only ?? false,
       })
     },
     close: () => setOpen(false),
@@ -72,6 +74,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           values.autoDelayDetectionIntervalMinutes,
         default_latency_test: values.defaultLatencyTest,
         default_latency_timeout: values.defaultLatencyTimeout,
+        proxy_test_filtered_nodes_only: values.testFilteredNodesOnly,
         auto_log_clean: values.autoLogClean as any,
       })
       setOpen(false)
@@ -419,6 +422,25 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
                 ),
               },
             }}
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItemText
+            primary={t('settings.modals.misc.fields.testFilteredNodesOnly')}
+            sx={{ maxWidth: 'fit-content' }}
+          />
+          <TooltipIcon
+            title={t('settings.modals.misc.tooltips.testFilteredNodesOnly')}
+            sx={{ opacity: '0.7' }}
+          />
+          <Switch
+            edge="end"
+            checked={values.testFilteredNodesOnly}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, testFilteredNodesOnly: c }))
+            }
+            sx={{ marginLeft: 'auto' }}
           />
         </ListItem>
       </List>

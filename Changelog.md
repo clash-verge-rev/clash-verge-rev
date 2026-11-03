@@ -35,6 +35,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增「仅测试筛选节点」选项，默认关闭，开启后仅对筛选结果手动测试延迟
 
 </details>
 
