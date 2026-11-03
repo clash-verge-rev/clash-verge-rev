@@ -77,11 +77,12 @@ jobs:
         uses: dtolnay/rust-toolchain@1.99.1
 
       - name: Rust Cache
+        if: github.event.inputs[matrix.input] == 'true'
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
           prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          shared-key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -105,15 +106,6 @@ jobs:
         with:
           node-version: '26.13.0'
           cache: 'pnpm'
-
-      - name: Pnpm Cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
-          lookup-only: true
 
       - name: Pnpm install and check
         if: github.event.inputs[matrix.input] == 'true'

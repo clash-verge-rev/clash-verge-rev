@@ -1,0 +1,79 @@
+name: Prepare Release
+
+on:
+  pull_request_target:
+    types: [edited, closed]
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel
+        required: true
+        type: choice
+        options: [rc, stable]
+        default: rc
+      release_tag:
+        description: 'Optional tag: vX.Y.Z-rc[.N] for RC, vX.Y.Z for stable'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          (github.event.pull_request.head.repo.full_name == github.repository &&
+           github.event.pull_request.user.login == 'github-actions[bot]' &&
+           ((startsWith(github.event.pull_request.head.ref, 'release/v') &&
+             ((github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+              (github.event.changes.body && github.event.pull_request.state == 'open' &&
+               contains(github.event.pull_request.body, '[x] Refresh this PR from latest dev')))) ||
+            (startsWith(github.event.pull_request.head.ref, 'next-dev/v') &&
+             github.event.changes.body && github.event.pull_request.state == 'open' &&
+             (contains(github.event.pull_request.body, '[x] Refresh this PR from latest dev') ||
+              contains(github.event.pull_request.body, '[x] Use the next minor version') !=
+              contains(github.event.changes.body.from, '[x] Use the next minor version'))))) }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Require the dev branch
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          SOURCE_REF: ${{ github.ref }}
+        run: |
+          if [[ "$SOURCE_REF" != 'refs/heads/dev' ]]; then
+            echo '::error::Run Prepare Release from the dev branch.'
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/heads/dev
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+
+      - uses: pnpm/action-setup@v6
+        if: github.event.action != 'closed'
+        with:
+          run_install: false
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+        if: github.event.action != 'closed'
+
+      - name: Create or refresh version or publication PR
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_COMMAND: ${{ github.event.action == 'closed' && 'publish-pr' || startsWith(github.event.pull_request.head.ref, 'next-dev/') && 'next-dev' || 'prepare' }}
+        run: node scripts-workflow/release.mjs "$RELEASE_COMMAND"

@@ -129,6 +129,7 @@ export default defineConfig([
             'eslint.config.ts',
             `vite.config.mts`,
             'scripts/*.mjs',
+            'scripts-workflow/*.mjs',
             'tests/*.ts',
             'src/polyfills/*.js',
             'tests/*.mjs',
@@ -237,6 +238,13 @@ export default defineConfig([
         ...globals.node,
       },
     },
+  },
+  {
+    files: ['scripts-workflow/*.mjs'],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: { 'es-x/no-object-groupby': 'off' },
   },
   {
     files: ['scripts/perf/*.{mjs,mts}'],

@@ -266,13 +266,13 @@ async function getLatestReleaseVersion() {
 }
 
 if (!META_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`)
+  throw new Error(`mihomo unsupported platform "${platform}-${arch}"`)
 }
 if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta alpha unsupported platform "${platform}-${arch}"`)
+  throw new Error(`mihomo alpha unsupported platform "${platform}-${arch}"`)
 }
 
-function clashMetaAlpha() {
+function mihomoAlpha() {
   const name = META_ALPHA_MAP[`${platform}-${arch}`]
   const isWin = platform === 'win32'
   const urlExt = isWin ? 'zip' : 'gz'
@@ -285,7 +285,7 @@ function clashMetaAlpha() {
   }
 }
 
-function clashMeta() {
+function mihomo() {
   const name = META_MAP[`${platform}-${arch}`]
   const isWin = platform === 'win32'
   const urlExt = isWin ? 'zip' : 'gz'
@@ -733,13 +733,12 @@ const tasks = [
   {
     name: 'verge-mihomo-alpha',
     func: () =>
-      getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
+      getLatestAlphaVersion().then(() => resolveSidecar(mihomoAlpha())),
     retry: 5,
   },
   {
     name: 'verge-mihomo',
-    func: () =>
-      getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
+    func: () => getLatestReleaseVersion().then(() => resolveSidecar(mihomo())),
     retry: 5,
   },
   // After both sidecar tasks: it hashes what they downloaded.

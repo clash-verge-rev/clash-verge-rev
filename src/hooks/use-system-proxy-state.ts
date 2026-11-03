@@ -52,9 +52,8 @@ export const useSystemProxyState = () => {
   const toggleSystemProxy = async (enabled: boolean) => {
     // Roll failed optimistic writes back to the latest confirmed state.
     let confirmed = verge?.enable_system_proxy ?? false
-    mutateVerge(
-      (prev) => (prev ? { ...prev, enable_system_proxy: enabled } : prev),
-      false,
+    mutateVerge((prev) =>
+      prev ? { ...prev, enable_system_proxy: enabled } : prev,
     )
     pendingRef.current = enabled
 
@@ -78,9 +77,8 @@ export const useSystemProxyState = () => {
         }
       }
     } catch (error) {
-      mutateVerge(
-        (prev) => (prev ? { ...prev, enable_system_proxy: confirmed } : prev),
-        false,
+      mutateVerge((prev) =>
+        prev ? { ...prev, enable_system_proxy: confirmed } : prev,
       )
       // Queued requests were based on a state that never landed.
       pendingRef.current = null

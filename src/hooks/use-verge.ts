@@ -25,7 +25,6 @@ export const useVerge = () => {
       | IVergeConfig
       | ((prev: IVergeConfig | undefined) => IVergeConfig | undefined)
       | undefined,
-    _revalidate?: boolean,
   ) => {
     if (updaterOrData === undefined) {
       void refetch()

@@ -205,7 +205,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         logging!(info, Type::Config, "Config regenerated successfully");
     }
 
-    logging_error!(Type::Config, Config::sync_dns_override().await);
     handle::Handle::refresh_clash();
     Ok(())
 }

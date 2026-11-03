@@ -28,7 +28,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             .and_then(|v| v.as_str())
             .unwrap_or("fake-ip");
 
-        if current_mode == "fake-ip" || !dns_val.contains_key(Value::from("enhanced-mode")) {
+        if current_mode == "fake-ip" {
             revise!(dns_val, "enable", true);
             revise!(dns_val, "ipv6", ipv6_val);
 

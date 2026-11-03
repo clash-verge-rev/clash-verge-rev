@@ -1,7 +1,10 @@
 use super::CmdResult;
 use crate::{
     cmd::StringifyErr as _,
-    core::{SilentUpdater, updater::DownloadEvent},
+    core::{
+        SilentUpdater,
+        updater::{DownloadEvent, InstallUpdateOutcome},
+    },
     feat,
     utils::dirs,
 };
@@ -61,8 +64,7 @@ pub async fn install_update(
     app_handle: AppHandle,
     version: std::string::String,
     on_event: Channel<DownloadEvent>,
-) -> CmdResult<bool> {
-    let version: String = version.into();
+) -> CmdResult<InstallUpdateOutcome> {
     SilentUpdater::global()
         .install_update(&app_handle, &version, |event| {
             let _ = on_event.send(event);
