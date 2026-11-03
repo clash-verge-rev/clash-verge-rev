@@ -28,7 +28,7 @@ interface Props {
 }
 
 export interface ProfileViewerRef {
-  create: () => void
+  create: (url?: string, option?: IProfileOption) => void
   edit: (item: IProfileItem) => void
 }
 
@@ -46,31 +46,44 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
   const fileDataRef = useRef<string | null>(null)
 
-  const { control, watch, setValue, reset, handleSubmit, getValues } =
-    useForm<IProfileItem>({
-      defaultValues: {
-        type: 'remote',
-        name: '',
-        desc: '',
-        url: '',
-        option: {
-          with_proxy: false,
-          self_proxy: false,
-          allow_auto_update: true,
-        },
+  const {
+    control,
+    watch,
+    setValue,
+    reset,
+    handleSubmit,
+    getValues,
+    formState: { defaultValues },
+  } = useForm<IProfileItem>({
+    defaultValues: {
+      type: 'remote',
+      name: '',
+      desc: '',
+      url: '',
+      option: {
+        with_proxy: false,
+        self_proxy: false,
+        allow_auto_update: true,
       },
-    })
+    },
+  })
 
   useImperativeHandle(ref, () => ({
-    create: () => {
+    create: (url = '', option) => {
+      reset(
+        {
+          ...defaultValues,
+          url,
+          option: { ...defaultValues?.option, ...option },
+        },
+        { keepDefaultValues: true },
+      )
       setOpenType('new')
       setOpen(true)
     },
     edit: (item: IProfileItem) => {
       if (item) {
-        Object.entries(item).forEach(([key, value]) => {
-          setValue(key as any, value)
-        })
+        reset(item, { keepDefaultValues: true })
       }
       setOpenType('edit')
       setOpen(true)
@@ -206,7 +219,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         setOpen(false)
-        setTimeout(() => reset(), 500)
+        reset()
         fileDataRef.current = null
 
         setTimeout(() => {
@@ -224,7 +237,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     try {
       setOpen(false)
       fileDataRef.current = null
-      setTimeout(() => reset(), 500)
+      reset()
     } catch (e) {
       console.warn('[ProfileViewer] handleClose error:', e)
     }
@@ -323,6 +336,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 multiline
                 label={t('profiles.modals.profileForm.fields.subscriptionUrl')}
+              />
+            )}
+          />
+
+          <Controller
+            name="option.age_secret_key"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...text}
+                {...field}
+                value={field.value ?? ''}
+                type="password"
+                placeholder="AGE-SECRET-KEY-..."
+                label={t('profiles.modals.profileForm.fields.ageSecretKey')}
               />
             )}
           />

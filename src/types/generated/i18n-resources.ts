@@ -386,6 +386,7 @@ export interface TranslationResources {
           }
           fields: {
             acceptInvalidCerts: string
+            ageSecretKey: string
             allowAutoUpdate: string
             description: string
             httpTimeout: string

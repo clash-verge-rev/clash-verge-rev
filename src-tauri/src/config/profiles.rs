@@ -244,7 +244,13 @@ impl IProfiles {
                 patch_opt_field!(each, item, selected);
                 patch_opt_field!(each, item, extra);
                 patch_opt_field!(each, item, updated);
-                patch_opt_field!(each, item, option);
+                if let Some(option) = &item.option {
+                    let mut option = option.clone();
+                    option.age_secret_key = option
+                        .age_secret_key
+                        .or_else(|| each.option.as_ref().and_then(|saved| saved.age_secret_key.clone()));
+                    each.option = Some(option);
+                }
 
                 self.items = Some(items);
                 return self.save_file().await;
