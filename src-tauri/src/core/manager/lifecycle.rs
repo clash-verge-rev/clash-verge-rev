@@ -5,7 +5,7 @@ use crate::core::manager::CLASH_LOGGER;
 use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::path::Path;
@@ -428,7 +428,6 @@ impl CoreManager {
             }
             // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
             proxy_control::stop_guard().await;
-            let starts_core = matches!(*self.get_running_mode(), RunningMode::NotRunning);
             let result = async {
                 self.start_core_inner().await?;
                 if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
@@ -437,7 +436,7 @@ impl CoreManager {
                     anyhow::bail!("Sidecar did not become ready");
                 }
                 // A Sidecar that was already running never loaded this generation.
-                if starts_core {
+                if matches!(*mode, RunningMode::NotRunning) {
                     Config::runtime().await.apply();
                 }
                 tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
@@ -456,12 +455,7 @@ impl CoreManager {
             Ok(())
         }
         .await;
-        let result = result.map_err(|error| report_sidecar_failure(error, service_rejection));
-        // Lock order is config then lifecycle.
-        drop(_life);
-        // A failure after the commit still leaves that runtime for the Sidecar or the next start.
-        logging_error!(Type::Config, Config::sync_dns_override().await);
-        result
+        result.map_err(|error| report_sidecar_failure(error, service_rejection))
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(readiness_generation = tracing::field::Empty))]
@@ -473,7 +467,7 @@ impl CoreManager {
             self.finish_config_update();
         }
         // Lock order is config then lifecycle, for the unclaimed draft write below.
-        let config_write = Config::lock_config_write().await;
+        let _config_write = Config::lock_config_write().await;
         let _life = self.lifecycle_lock.lock().await;
 
         self.controlled_stop_core_inner().await?;
@@ -509,15 +503,8 @@ impl CoreManager {
         )
         .await;
 
-        let cleanup = if result.is_err() {
-            self.rollback_failed_sidecar_transition().await
-        } else {
-            Ok(())
-        };
-        // A failure after the commit still leaves that runtime for the Sidecar or the next start.
-        logging_error!(Type::Config, Config::sync_dns_override_locked(&config_write).await);
         if let Err(error) = result {
-            if let Err(cleanup_error) = cleanup {
+            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
                 return Err(proxy_control::rollback_failure(error, cleanup_error)
                     .context("failed to clear the proxy before rolling back"));
             }

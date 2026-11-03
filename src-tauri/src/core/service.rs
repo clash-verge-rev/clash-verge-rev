@@ -1248,36 +1248,29 @@ async fn sync_runtime_geo(
     let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, asset, u64::MAX).await? else {
         return Ok(());
     };
-    let local_mtime_ns = local
-        .modified()?
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |since_epoch| since_epoch.as_nanos());
     // A newer local file is a change the next staging still has to copy into the runtime.
-    if u128::from(runtime_mtime_ns) <= local_mtime_ns {
+    if UNIX_EPOCH + Duration::from_nanos(runtime_mtime_ns) <= local.modified()? {
         return Ok(());
     }
     let (temp, file) = create_sync_temp(target).await?;
-    let published = async {
-        let Fetch::Complete {
+    let result = async {
+        if let Fetch::Complete {
             mtime_ns: Some(mtime_ns),
             ..
         } = fetch_runtime_file(credentials, session, asset, file).await?
-        else {
-            return Ok(false);
-        };
-        // Matching the runtime copy's time lets the service skip copying these bytes straight back.
-        std::fs::File::options()
-            .write(true)
-            .open(&temp)?
-            .set_modified(UNIX_EPOCH + Duration::from_nanos(mtime_ns))?;
-        tokio::fs::rename(&temp, target).await?;
-        anyhow::Ok(true)
+        {
+            // Matching the runtime copy's time lets the service skip copying these bytes straight back.
+            std::fs::File::options()
+                .write(true)
+                .open(&temp)?
+                .set_modified(UNIX_EPOCH + Duration::from_nanos(mtime_ns))?;
+            tokio::fs::rename(&temp, target).await?;
+        }
+        anyhow::Ok(())
     }
     .await;
-    if !matches!(published, Ok(true)) {
-        remove_temp(&temp).await;
-    }
-    published.map(|_| ())
+    remove_temp(&temp).await;
+    result
 }
 
 // The on-disk YAML may describe a rejected apply; use the committed runtime.

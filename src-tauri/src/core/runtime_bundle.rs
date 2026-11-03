@@ -3,7 +3,7 @@ use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
 use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Component, Path, PathBuf, Prefix};
 
 pub(crate) const GEO_ASSETS: &[&str] = &[
@@ -297,7 +297,6 @@ fn collect_ssh_private_keys(
         }
     }
 
-    let mut staged = HashMap::new();
     for proxy in proxy_lists.into_iter().flatten().filter_map(Value::as_mapping_mut) {
         if proxy.get("type").and_then(Value::as_str) != Some("ssh") {
             continue;
@@ -323,17 +322,12 @@ fn collect_ssh_private_keys(
             continue;
         };
         // A root-level alias keeps the user's path away from service name rules and mihomo's inline-key test.
-        let destination = staged
-            .entry(source.to_string_lossy().into_owned())
-            .or_insert_with_key(|source| {
-                let destination = allocate_provider_destination("ssh-private-key", source, destinations);
-                assets.push(RuntimeAsset {
-                    source: source.clone(),
-                    destination: destination.clone(),
-                });
-                destination
-            })
-            .clone();
+        let source = source.to_string_lossy().into_owned();
+        let destination = allocate_provider_destination("ssh-private-key", &source, destinations);
+        assets.push(RuntimeAsset {
+            source,
+            destination: destination.clone(),
+        });
         proxy.insert(Value::String("private-key".to_owned()), Value::String(destination));
     }
 }

@@ -6,7 +6,6 @@ use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::MutexGuard;
 
 use super::{Config, IVerge};
 use crate::core::handle::Handle;
@@ -129,12 +128,7 @@ impl IVerge {
 
 impl Config {
     pub(crate) async fn sync_dns_override() -> Result<()> {
-        let config_write = Self::lock_config_write().await;
-        Self::sync_dns_override_locked(&config_write).await
-    }
-
-    /// Callers must have ended their own draft transaction, which claims the same Verge layer.
-    pub(crate) async fn sync_dns_override_locked(_config_write: &MutexGuard<'_, ()>) -> Result<()> {
+        let _config_write = Self::lock_config_write().await;
         let state = Self::runtime().await.data_arc().dns_override.clone();
         let Some(state) = state else {
             return Ok(());

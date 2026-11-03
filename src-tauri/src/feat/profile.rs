@@ -7,7 +7,7 @@ use crate::{
     utils::help::{mask_err, mask_url},
 };
 use anyhow::{Result, bail};
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 
 /// Toggle proxy profile
@@ -217,10 +217,7 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
     if should_refresh {
         logging!(debug, Type::Config, "[订阅更新] 更新内核配置");
         match CoreManager::global().update_config_with_force(is_mannual_trigger).await {
-            Ok(outcome) if outcome.is_valid() => {
-                logging_error!(Type::Config, Config::sync_dns_override().await);
-                announce(Refresh::Clash);
-            }
+            Ok(outcome) if outcome.is_valid() => announce(Refresh::Clash),
             Ok(outcome @ (ValidationOutcome::Skipped { .. } | ValidationOutcome::Busy)) if !is_mannual_trigger => {
                 logging!(info, Type::Config, "[订阅更新] 本次配置刷新已跳过: {}", outcome);
             }
@@ -247,9 +244,5 @@ pub async fn update_profile(uid: &String, option: Option<&PrfOption>, is_mannual
 
 /// 增强配置
 pub async fn enhance_profiles() -> Result<ValidationOutcome> {
-    let outcome = CoreManager::global().update_config_forced().await?;
-    if outcome.is_valid() {
-        logging_error!(Type::Config, Config::sync_dns_override().await);
-    }
-    Ok(outcome)
+    CoreManager::global().update_config_forced().await
 }

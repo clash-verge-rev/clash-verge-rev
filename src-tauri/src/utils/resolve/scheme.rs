@@ -146,10 +146,7 @@ async fn refresh_core_config() {
         "Deep link import set current profile; refreshing core config"
     );
     match CoreManager::global().update_config_forced().await {
-        Ok(outcome) if outcome.is_valid() => {
-            logging_error!(Type::Config, Config::sync_dns_override().await);
-            handle::Handle::refresh_clash();
-        }
+        Ok(outcome) if outcome.is_valid() => handle::Handle::refresh_clash(),
         Ok(outcome) => {
             let message = outcome.to_string();
             logging!(warn, Type::Config, "Apply config failed: {}", message);

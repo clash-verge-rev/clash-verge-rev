@@ -3,7 +3,6 @@ use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{
         Config, IVerge,
-        runtime::IRuntime,
         snapshot::{capture_config_files, restore_files},
     },
     core::auto_backup::AutoBackupManager,
@@ -13,7 +12,7 @@ use crate::{
     },
 };
 use anyhow::Result;
-use clash_verge_draft::{DraftTransaction, SharedDraft};
+use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging_error};
 use serde_yaml_ng::Mapping;
 use std::sync::Arc;
@@ -109,12 +108,6 @@ async fn ensure_effect(
     Ok(())
 }
 
-async fn sync_dns_of_replaced_runtime(config_write: &MutexGuard<'_, ()>, original: &SharedDraft<IRuntime>) {
-    if !Arc::ptr_eq(original, &Config::runtime().await.data_arc()) {
-        logging_error!(Type::Config, Config::sync_dns_override_locked(config_write).await);
-    }
-}
-
 pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
     let manager = CoreManager::global();
     let update = manager.claim_config_update(config_write)?;
@@ -162,16 +155,12 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
             let runtime_path = crate::utils::dirs::app_home_dir()?.join(crate::constants::files::RUNTIME_CONFIG);
             snapshots.retain(|snapshot| snapshot.path != runtime_path);
         }
-        let restored = restore_files(&snapshots).await;
-        // After the restore, which would otherwise overwrite the saved decision.
-        sync_dns_of_replaced_runtime(config_write, &original_runtime).await;
-        return match restored {
+        return match restore_files(&snapshots).await {
             Ok(()) => Err(error),
             Err(rollback_error) => Err(proxy_control::rollback_failure(error, rollback_error)),
         };
     }
     transaction.commit();
-    sync_dns_of_replaced_runtime(config_write, &original_runtime).await;
     match patch {
         Patch::Verge { patch, .. } => {
             if patch.auto_check_update == Some(false) {

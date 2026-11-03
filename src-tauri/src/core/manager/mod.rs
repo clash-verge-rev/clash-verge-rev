@@ -274,6 +274,10 @@ impl CoreManager {
 
     pub(crate) fn finish_config_update(&self) {
         self.config_update_in_progress.store(false, Ordering::Release);
+        // Spawned because the caller may still hold the config write lock this waits for.
+        crate::process::AsyncHandler::spawn(|| async {
+            logging_error!(Type::Config, crate::config::Config::sync_dns_override().await);
+        });
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]
@@ -303,7 +307,6 @@ impl CoreManager {
                         }
                         match crate::config::Config::resolve_startup_mixed_port().await {
                             Ok(true) => {
-                                logging_error!(Type::Config, crate::config::Config::sync_dns_override().await);
                                 let retries = retries + 1;
                                 tracing::Span::current().record("retries", retries);
                                 logging!(
