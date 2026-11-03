@@ -120,6 +120,7 @@
       "matchPackageNames": ["specta", "tauri-specta", "specta-typescript"],
       "groupName": "specta",
       "groupSlug": "specta",
+      "prCreation": "immediate",
       "automerge": false
     },
     {
