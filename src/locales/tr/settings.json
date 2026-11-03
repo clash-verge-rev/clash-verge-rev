@@ -152,6 +152,33 @@
           }
         }
       }
+    },
+    "hotspot": {
+      "title": "Wi-Fi Hotspot",
+      "toggles": {
+        "enable": "Wi-Fi Hotspot"
+      },
+      "fields": {
+        "configuration": "Hotspot Configuration",
+        "autoStart": "Start with TUN"
+      },
+      "secondary": {
+        "configuration": "{{ssid}} · {{band}}"
+      },
+      "tooltips": {
+        "autoStart": "Turn the hotspot on when TUN mode starts and off when it stops"
+      },
+      "status": {
+        "stopped": "Off",
+        "starting": "Starting…",
+        "running": "On · {{count}} devices",
+        "stopping": "Stopping…",
+        "failed": "Hotspot failed",
+        "unsupported": "Windows only"
+      },
+      "messages": {
+        "credentialsRequired": "Set the hotspot name and password first"
+      }
     }
   },
   "components": {
@@ -650,6 +677,33 @@
       "fields": {
         "ipAddress": "IP Adresi",
         "macAddress": "MAC Adresi"
+      }
+    },
+    "hotspot": {
+      "title": "Wi-Fi Hotspot",
+      "fields": {
+        "ssid": "Hotspot name",
+        "password": "Password",
+        "band": "Band",
+        "adapter": "AP adapter",
+        "adapterAuto": "Automatic",
+        "autoStart": "Start with TUN",
+        "requiresTun": "Requires TUN mode"
+      },
+      "bands": {
+        "auto": "Automatic",
+        "band24": "2.4 GHz",
+        "band5": "5 GHz"
+      },
+      "tooltips": {
+        "password": "8-63 printable ASCII characters",
+        "autoStart": "Turn the hotspot on when TUN mode starts and off when TUN stops",
+        "requiresTun": "Client traffic is shared through the mihomo TUN adapter; start TUN mode before enabling the hotspot."
+      },
+      "messages": {
+        "invalidSsid": "Hotspot name must be 1-32 bytes",
+        "invalidPassword": "Password must be 8-63 printable ASCII characters",
+        "saved": "Hotspot configuration saved"
       }
     }
   },

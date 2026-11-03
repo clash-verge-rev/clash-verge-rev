@@ -55,6 +55,11 @@ impl Handle {
         Self::send_event(FrontendEvent::RunStateChanged { state: state.clone() });
     }
 
+    /// Push the hotspot state so the settings section does not depend on polling.
+    pub fn notify_hotspot_status(status: &crate::core::hotspot::HotspotStatus) {
+        Self::send_event(FrontendEvent::HotspotStatusChanged { status: status.clone() });
+    }
+
     pub fn notify_profile_changed(profile_id: &String) {
         Self::send_event(FrontendEvent::ProfileChanged {
             current_profile_id: profile_id,

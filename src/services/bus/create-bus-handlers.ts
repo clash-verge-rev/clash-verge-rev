@@ -91,6 +91,8 @@ export const createEventBus = (deps: BusHandlerDeps) => {
       if (payload.mode !== 'NotRunning') forgetShownStartupError()
     },
     'verge://pending-failures-changed': () => deps.readPendingFailures(),
+    'verge://hotspot-status-changed': () =>
+      deps.revalidateKeys(['getHotspotStatus']),
     [TEST_ALL_EVENT]: () => deps.dispatch({ type: 'testAll/requested' }),
   }
 

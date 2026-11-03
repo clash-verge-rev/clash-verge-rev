@@ -1095,6 +1095,33 @@ export interface TranslationResources {
             enableGlobal: string
           }
         }
+        hotspot: {
+          bands: {
+            auto: string
+            band24: string
+            band5: string
+          }
+          fields: {
+            adapter: string
+            adapterAuto: string
+            autoStart: string
+            band: string
+            password: string
+            requiresTun: string
+            ssid: string
+          }
+          messages: {
+            invalidPassword: string
+            invalidSsid: string
+            saved: string
+          }
+          title: string
+          tooltips: {
+            autoStart: string
+            password: string
+            requiresTun: string
+          }
+        }
         liteMode: {
           actions: {
             enterNow: string
@@ -1355,6 +1382,33 @@ export interface TranslationResources {
             open: string
           }
         }
+        hotspot: {
+          fields: {
+            autoStart: string
+            configuration: string
+          }
+          messages: {
+            credentialsRequired: string
+          }
+          secondary: {
+            configuration: string
+          }
+          status: {
+            failed: string
+            running: string
+            starting: string
+            stopped: string
+            stopping: string
+            unsupported: string
+          }
+          title: string
+          toggles: {
+            enable: string
+          }
+          tooltips: {
+            autoStart: string
+          }
+        }
         proxyControl: {
           actions: {
             installService: string
@@ -1589,6 +1643,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

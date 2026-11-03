@@ -34,6 +34,9 @@ pub enum FrontendEvent<'a> {
     RunStateChanged {
         state: crate::core::runstate::RunStateView,
     },
+    HotspotStatusChanged {
+        status: crate::core::hotspot::HotspotStatus,
+    },
     PendingFailuresChanged,
     #[cfg(target_os = "linux")]
     ThemeChanged {
@@ -407,6 +410,28 @@ fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str,
             serde_json::to_value(state).unwrap_or(serde_json::Value::Null),
         ),
         (
+            FrontendEvent::HotspotStatusChanged {
+                status: crate::core::hotspot::HotspotStatus {
+                    state: crate::core::hotspot::HotspotState::Running,
+                    ssid: "ClashVerge".to_owned(),
+                    band: "auto".to_owned(),
+                    ..Default::default()
+                },
+            },
+            "verge://hotspot-status-changed",
+            json!({
+                "state": "running",
+                "ssid": "ClashVerge",
+                "band": "auto",
+                "clients": 0,
+                "gateway": null,
+                "adapter": null,
+                "message": null,
+                "devices": [],
+                "updatedAt": 0,
+            }),
+        ),
+        (
             FrontendEvent::PendingFailuresChanged,
             "verge://pending-failures-changed",
             json!(null),
@@ -462,6 +487,7 @@ frontend_events! {
     profile_started: ProfileUpdatePayload = "profile-update-started", FrontendEvent::ProfileUpdateStarted { uid } => ProfileUpdatePayload { uid: uid.to_string() };
     profile_completed: ProfileUpdatePayload = "profile-update-completed", FrontendEvent::ProfileUpdateCompleted { uid } => ProfileUpdatePayload { uid: uid.to_string() };
     run_state: crate::core::runstate::RunStateView = "verge://run-state-changed", FrontendEvent::RunStateChanged { state } => state;
+    hotspot_status: crate::core::hotspot::HotspotStatus = "verge://hotspot-status-changed", FrontendEvent::HotspotStatusChanged { status } => status;
     pending_failures: () = "verge://pending-failures-changed", FrontendEvent::PendingFailuresChanged => ();
 }
 

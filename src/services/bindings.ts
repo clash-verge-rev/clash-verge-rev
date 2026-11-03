@@ -22,6 +22,15 @@ export const commands = {
   getNetworkInterfaces: () =>
     __TAURI_INVOKE<string[]>('get_network_interfaces'),
   getSystemHostname: () => __TAURI_INVOKE<string>('get_system_hostname'),
+  getHotspotStatus: () =>
+    __TAURI_INVOKE<HotspotStatus_Serialize>('get_hotspot_status'),
+  listHotspotAdapters: () =>
+    __TAURI_INVOKE<HotspotAdapter[]>('list_hotspot_adapters'),
+  startHotspot: (config: HotspotStartConfig_Deserialize) =>
+    __TAURI_INVOKE<HotspotStatus_Serialize>('start_hotspot', { config }),
+  stopHotspot: () => __TAURI_INVOKE<HotspotStatus_Serialize>('stop_hotspot'),
+  saveHotspotConfig: (config: HotspotConfigPatch_Deserialize) =>
+    __TAURI_INVOKE<null>('save_hotspot_config', { config }),
   restartApp: () => __TAURI_INVOKE<null>('restart_app'),
   installUpdate: (
     version: string,
@@ -304,6 +313,106 @@ export type FailedOperation =
   | 'systemProxyRestore'
   | 'systemProxyGuard'
 
+export type HotspotAdapter = {
+  id: string
+  name: string
+  description: string
+  status: string
+}
+
+/**
+ *  The hotspot password is stored encrypted, so the plaintext form value cannot
+ *  travel through `patch_verge_config` (its deserializer expects ciphertext).
+ */
+export type HotspotConfigPatch =
+  | HotspotConfigPatch_Serialize
+  | HotspotConfigPatch_Deserialize
+
+/**
+ *  The hotspot password is stored encrypted, so the plaintext form value cannot
+ *  travel through `patch_verge_config` (its deserializer expects ciphertext).
+ */
+export type HotspotConfigPatch_Deserialize = {
+  ssid: string
+  password: string
+  band: string
+  adapterId?: string | null
+  autoStart: boolean
+}
+
+/**
+ *  The hotspot password is stored encrypted, so the plaintext form value cannot
+ *  travel through `patch_verge_config` (its deserializer expects ciphertext).
+ */
+export type HotspotConfigPatch_Serialize = {
+  ssid: string
+  password: string
+  band: string
+  adapterId: string | null
+  autoStart: boolean
+}
+
+export type HotspotDevice = {
+  mac: string
+  hosts: string[]
+}
+
+export type HotspotStartConfig =
+  | HotspotStartConfig_Serialize
+  | HotspotStartConfig_Deserialize
+
+export type HotspotStartConfig_Deserialize = {
+  ssid: string
+  password: string
+  /**  `auto`, `2.4` or `5`. */
+  band: string
+  /**  Wi-Fi adapter GUID; empty selects the radio Windows prefers. */
+  adapterId?: string | null
+}
+
+export type HotspotStartConfig_Serialize = {
+  ssid: string
+  password: string
+  /**  `auto`, `2.4` or `5`. */
+  band: string
+  /**  Wi-Fi adapter GUID; empty selects the radio Windows prefers. */
+  adapterId: string | null
+}
+
+export type HotspotState =
+  | 'stopped'
+  | 'starting'
+  | 'running'
+  | 'stopping'
+  | 'failed'
+  | 'unsupported'
+
+export type HotspotStatus = HotspotStatus_Serialize | HotspotStatus_Deserialize
+
+export type HotspotStatus_Deserialize = {
+  state: HotspotState
+  ssid: string
+  band: string
+  clients: number
+  gateway?: string | null
+  adapter?: string | null
+  message?: string | null
+  devices: HotspotDevice[]
+  updatedAt: number
+}
+
+export type HotspotStatus_Serialize = {
+  state: HotspotState
+  ssid: string
+  band: string
+  clients: number
+  gateway: string | null
+  adapter: string | null
+  message: string | null
+  devices: HotspotDevice[]
+  updatedAt: number
+}
+
 /**  Define the `profiles.yaml` schema */
 export type IProfiles = IProfiles_Serialize | IProfiles_Deserialize
 
@@ -456,6 +565,11 @@ export type IVerge_Deserialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  hotspot_ssid?: string | null
+  hotspot_password?: string | null
+  hotspot_band?: string | null
+  hotspot_adapter_id?: string | null
+  hotspot_auto_start?: boolean | null
 }
 
 /**  ### `verge.yaml` schema */
@@ -546,6 +660,11 @@ export type IVerge_Serialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  hotspot_ssid?: string | null
+  hotspot_password?: string | null
+  hotspot_band?: string | null
+  hotspot_adapter_id?: string | null
+  hotspot_auto_start?: boolean | null
 }
 
 export type IconInfo = {
@@ -673,6 +792,11 @@ export type PlatformVergeFields_Deserialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  hotspot_ssid?: string | null
+  hotspot_password?: string | null
+  hotspot_band?: string | null
+  hotspot_adapter_id?: string | null
+  hotspot_auto_start?: boolean | null
 }
 
 export type PlatformVergeFields_Serialize = {
@@ -682,6 +806,11 @@ export type PlatformVergeFields_Serialize = {
   verge_tproxy_port?: number | null
   verge_tproxy_enabled?: boolean | null
   enable_tray_speed?: boolean | null
+  hotspot_ssid?: string | null
+  hotspot_password?: string | null
+  hotspot_band?: string | null
+  hotspot_adapter_id?: string | null
+  hotspot_auto_start?: boolean | null
 }
 
 export type PrfExtra = {
@@ -1130,6 +1259,7 @@ export type VergeEventPayloads_Deserialize = {
   'profile-update-started': ProfileUpdatePayload
   'profile-update-completed': ProfileUpdatePayload
   'verge://run-state-changed': RunStateView_Deserialize
+  'verge://hotspot-status-changed': HotspotStatus_Deserialize
   'verge://pending-failures-changed': null
 }
 
@@ -1144,6 +1274,7 @@ export type VergeEventPayloads_Serialize = {
   'profile-update-started': ProfileUpdatePayload
   'profile-update-completed': ProfileUpdatePayload
   'verge://run-state-changed': RunStateView_Serialize
+  'verge://hotspot-status-changed': HotspotStatus_Serialize
   'verge://pending-failures-changed': null
 }
 

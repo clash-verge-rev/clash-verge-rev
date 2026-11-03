@@ -152,6 +152,33 @@
           }
         }
       }
+    },
+    "hotspot": {
+      "title": "無線熱點",
+      "toggles": {
+        "enable": "無線熱點"
+      },
+      "fields": {
+        "configuration": "熱點設定",
+        "autoStart": "隨 TUN 自動開啟"
+      },
+      "secondary": {
+        "configuration": "{{ssid}} · {{band}}"
+      },
+      "tooltips": {
+        "autoStart": "TUN 啟動時自動開啟熱點，TUN 停止時自動關閉"
+      },
+      "status": {
+        "stopped": "已關閉",
+        "starting": "正在開啟…",
+        "running": "已開啟 · {{count}} 台裝置",
+        "stopping": "正在關閉…",
+        "failed": "熱點啟動失敗",
+        "unsupported": "僅支援 Windows"
+      },
+      "messages": {
+        "credentialsRequired": "請先設定熱點名稱與密碼"
+      }
     }
   },
   "components": {
@@ -650,6 +677,33 @@
       "fields": {
         "ipAddress": "IP 位址",
         "macAddress": "MAC 位址"
+      }
+    },
+    "hotspot": {
+      "title": "無線熱點",
+      "fields": {
+        "ssid": "熱點名稱",
+        "password": "密碼",
+        "band": "頻段",
+        "adapter": "發射網卡",
+        "adapterAuto": "自動選擇",
+        "autoStart": "隨 TUN 自動開啟",
+        "requiresTun": "需要 TUN 模式"
+      },
+      "bands": {
+        "auto": "自動",
+        "band24": "2.4 GHz",
+        "band5": "5 GHz"
+      },
+      "tooltips": {
+        "password": "8–63 個可列印 ASCII 字元",
+        "autoStart": "TUN 啟動時自動開啟熱點，TUN 停止時自動關閉",
+        "requiresTun": "熱點用戶端流量經 mihomo TUN 轉發，請先開啟 TUN 模式。"
+      },
+      "messages": {
+        "invalidSsid": "熱點名稱需為 1–32 位元組",
+        "invalidPassword": "密碼需為 8–63 個可列印 ASCII 字元",
+        "saved": "熱點設定已儲存"
       }
     }
   },
