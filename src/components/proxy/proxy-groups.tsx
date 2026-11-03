@@ -462,7 +462,7 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   }, [handleScroll])
 
-  const { handleProxyGroupChange } = useProxySelection({
+  const { select } = useProxySelection({
     onSuccess: () => {
       onProxies()
     },
@@ -477,9 +477,9 @@ function NormalProxyGroups(props: { mode: string }) {
       if (!['Selector', 'URLTest', 'Fallback'].includes(group.type)) return
       if (!isInteractableMember(member)) return
 
-      handleProxyGroupChange(group, { name: member.ref.name })
+      select(group.name, member.ref.name, group.now!, group.fixed!)
     },
-    [handleProxyGroupChange],
+    [select],
   )
 
   const handleLocation = useStableCallback((group: ProxyGroupView) => {

@@ -354,7 +354,6 @@ pub(super) async fn init_dns_config() -> Result<()> {
                 Value::String("*.arpa".into()),
                 Value::String("time.*.com".into()),
                 Value::String("ntp.*.com".into()),
-                Value::String("time.*.com".into()),
                 Value::String("+.market.xiaomi.com".into()),
                 Value::String("localhost.ptlogin2.qq.com".into()),
                 Value::String("*.msftncsi.com".into()),
@@ -509,11 +508,9 @@ pub async fn init_resources() -> Result<()> {
     let app_dir = dirs::app_home_dir()?;
     let res_dir = dirs::app_resources_dir()?;
 
-    if !app_dir.exists() {
-        std::mem::drop(fs::create_dir_all(&app_dir).await);
-    }
+    // app_home is created by `ensure_directories` in `init_config`, which always runs first.
     if !res_dir.exists() {
-        std::mem::drop(fs::create_dir_all(&res_dir).await);
+        fs::create_dir_all(&res_dir).await?;
     }
 
     let file_list = ["Country.mmdb", "ASN.mmdb", "geoip.dat", "geosite.dat"];

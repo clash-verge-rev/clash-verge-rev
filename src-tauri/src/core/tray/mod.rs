@@ -636,7 +636,8 @@ async fn create_tray_menu(
         .tray_proxy_groups_display_mode
         .as_deref()
         .unwrap_or("default");
-    let include_proxy_groups = options.include_proxy_groups && tray_proxy_groups_display_mode != "disable";
+    let include_proxy_groups =
+        options.include_proxy_groups && verge_settings.tray_proxy_groups_display_mode.as_deref() != Some("disable");
 
     let proxy_group_order_map = runtime_proxy_groups_order;
 

@@ -435,6 +435,10 @@ impl CoreManager {
                 {
                     anyhow::bail!("Sidecar did not become ready");
                 }
+                // A Sidecar that was already running never loaded this generation.
+                if matches!(*mode, RunningMode::NotRunning) {
+                    Config::runtime().await.apply();
+                }
                 tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
                 self.apply_proxy_after_start().await
             }
@@ -492,6 +496,7 @@ impl CoreManager {
                 {
                     anyhow::bail!("Sidecar did not become ready after service uninstall");
                 }
+                Config::runtime().await.apply();
                 tracing::Span::current().record("readiness_generation", self.current_core_readiness_generation());
                 self.apply_proxy_after_start().await
             },

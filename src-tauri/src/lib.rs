@@ -289,6 +289,9 @@ pub fn run() -> std::process::ExitCode {
         }
 
         pub fn handle_window_close(api: &tauri::WindowEvent) {
+            #[cfg(target_os = "macos")]
+            handle::Handle::global().set_activation_policy_accessory();
+
             if core::handle::Handle::global().is_exiting() {
                 return;
             }

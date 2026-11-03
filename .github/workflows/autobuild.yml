@@ -157,15 +157,12 @@ jobs:
           toolchain: '1.99.1'
           targets: ${{ matrix.target }}
 
-      - name: Add Rust Target
-        run: rustup target add ${{ matrix.target }}
-
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
           prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          shared-key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -188,14 +185,6 @@ jobs:
           node-version: '26.13.0'
           cache: 'pnpm'
 
-      - name: Pnpm Cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
-
       - name: Pnpm install and check
         run: |
           pnpm i
@@ -203,12 +192,6 @@ jobs:
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
-
-      - name: Add Rust Target
-        run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.99.1 || rustup target add ${{ matrix.target }}
-          rustup target list --installed
-          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v1
@@ -260,15 +243,12 @@ jobs:
           toolchain: '1.99.1'
           targets: ${{ matrix.target }}
 
-      - name: Add Rust Target
-        run: rustup target add ${{ matrix.target }}
-
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
           prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          shared-key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -284,14 +264,6 @@ jobs:
         with:
           node-version: '26.13.0'
           cache: 'pnpm'
-
-      - name: Pnpm Cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -344,12 +316,6 @@ jobs:
           sudo apt install -y \
             gcc-arm-linux-gnueabihf \
             g++-arm-linux-gnueabihf
-
-      - name: Add Rust Target
-        run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.99.1 || rustup target add ${{ matrix.target }}
-          rustup target list --installed
-          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri Build for Linux
         run: |
@@ -404,15 +370,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v7
 
-      - name: Add Rust Target
-        run: rustup target add ${{ matrix.target }}
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.99.1'
+          targets: ${{ matrix.target }}
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
           prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          shared-key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}-fixed-webview2'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -429,14 +398,6 @@ jobs:
           node-version: '26.13.0'
           cache: 'pnpm'
 
-      - name: Pnpm Cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
-
       - name: Pnpm install and check
         run: |
           pnpm i
@@ -451,12 +412,6 @@ jobs:
           Expand .\Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -F:* ./src-tauri
           Remove-Item .\src-tauri\tauri.windows.conf.json
           Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
-
-      - name: Add Rust Target
-        run: |
-          rustup target add ${{ matrix.target }} --toolchain 1.99.1 || rustup target add ${{ matrix.target }}
-          rustup target list --installed
-          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows
         id: build

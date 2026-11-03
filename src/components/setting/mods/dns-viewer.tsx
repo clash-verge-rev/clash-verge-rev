@@ -586,20 +586,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         ? event.target.checked
         : event.target.value
 
-    setValues((prev) => {
-      const newValues = {
-        ...prev,
-        [field]: value,
-      }
-
-      if (visualization) {
-        setTimeout(() => {
-          updateYamlFromValues()
-        }, 0)
-      }
-
-      return newValues
-    })
+    setValues((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
   return (
