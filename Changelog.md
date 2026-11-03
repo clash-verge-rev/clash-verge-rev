@@ -46,6 +46,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 支持通过 age 私钥导入和更新加密远程订阅，快捷导入时自动提示填写私钥
 
 </details>
 

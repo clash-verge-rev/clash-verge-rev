@@ -118,6 +118,7 @@
         "type": "유형",
         "description": "설명",
         "subscriptionUrl": "구독 URL",
+        "ageSecretKey": "age 비밀 키 (선택 사항)",
         "userAgent": "사용자 에이전트",
         "httpTimeout": "HTTP 요청 시간 초과",
         "updateInterval": "업데이트 간격",

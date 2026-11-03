@@ -118,6 +118,7 @@
         "type": "Tip",
         "description": "Açıklamalar",
         "subscriptionUrl": "Abonelik URL'si",
+        "ageSecretKey": "age Gizli Anahtarı (İsteğe Bağlı)",
         "userAgent": "Kullanıcı Aracısı",
         "httpTimeout": "HTTP İsteği Zaman Aşımı",
         "updateInterval": "Güncelleme Aralığı",
