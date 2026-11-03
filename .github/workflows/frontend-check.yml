@@ -39,14 +39,6 @@ jobs:
           node-version: '26.13.0'
           cache: 'pnpm'
 
-      - name: Restore pnpm cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.pnpm-store
-          key: "pnpm-shared-stable-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}"
-          restore-keys: |
-            pnpm-shared-stable-${{ runner.os }}-
-
       - run: pnpm install --frozen-lockfile
 
       - name: Run Prettier check

@@ -345,6 +345,8 @@ function releaseBody(tag, sha, tags, publishing) {
       .join('\n\n') || 'No new commits.'
   return `## ${titleFor(tag)}
 
+@clash-verge-rev/release
+
 Source: \`dev\` · [${sha}](${url}/commit/${sha})  \n${comparison}
 ${
   publishing
