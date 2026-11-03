@@ -17,7 +17,12 @@ const PRESET_PROXY_NAMES = [
   'COMPATIBLE',
 ]
 
-const identity = (_: DelayUpdate, next: DelayUpdate): DelayUpdate => next
+const identity = (previous: DelayUpdate, next: DelayUpdate): DelayUpdate =>
+  previous.delay === next.delay &&
+  previous.elapsed === next.elapsed &&
+  previous.updatedAt === next.updatedAt
+    ? previous
+    : next
 
 const INITIAL_DELAY: DelayUpdate = { delay: -1, updatedAt: 0 }
 
