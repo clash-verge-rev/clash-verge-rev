@@ -664,6 +664,7 @@ export type PrfItem_Deserialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  proxy_chain?: string[] | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -679,6 +680,7 @@ export type PrfItem_Serialize = {
   desc?: string | null
   url?: string | null
   selected?: PrfSelected[] | null
+  proxy_chain?: string[] | null
   extra?: PrfExtra | null
   updated: number | null
   option?: PrfOption_Serialize | null
