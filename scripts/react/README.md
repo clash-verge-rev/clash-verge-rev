@@ -13,6 +13,13 @@ mutually exclusive; `CVR_REACT_DIAGNOSTICS` accepts only `profiler` or `wdyr` on
 the development server. Each mode uses its own Vite cache. Production builds
 ignore this variable and include neither diagnostic entry nor runtime.
 
+`pnpm audit:react` scans supported source files under `src`. Pass file paths to
+limit the scan, for example `pnpm audit:react src/hooks/use-proxy-delay-state.ts`;
+add `--json` for the original structured report. Diagnostics are advisory.
+Execution errors and incomplete scans fail the command. Telemetry, remote scores
+and supply-chain scanning are disabled; the command does not fix code, erase
+historical diagnostics or run in CI.
+
 Install the browser explicitly with `pnpm exec playwright install chromium`.
 Then run `pnpm react:ab --base <ref> --head <ref>`. Both Git trees run against
 one installed dependency set and the same fixed DNS, delay-hook and proxy-tab
