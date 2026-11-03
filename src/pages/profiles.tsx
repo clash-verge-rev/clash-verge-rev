@@ -214,16 +214,18 @@ const ProfilePage = () => {
 
     const prevCurrent = profiles.current
 
-    const promptForAgeKey = (error: unknown, option: IProfileOption) => {
-      if (failureCode(error) !== 'PROFILE_AGE_KEY_REQUIRED') return false
-      viewerRef.current?.create(url, option)
-      return true
-    }
-
     const handleImportSuccess = async (noticeKey: string) => {
       showNotice.success(noticeKey)
       setUrl('')
       await performRobustRefresh(prevCurrent)
+    }
+
+    const promptForAgeKey = (error: unknown, option: IProfileOption) => {
+      if (failureCode(error) !== 'PROFILE_AGE_KEY_REQUIRED') return false
+      viewerRef.current?.create(url, option, () =>
+        handleImportSuccess('shared.feedback.notifications.importSuccess'),
+      )
+      return true
     }
     try {
       await mutate(() => importProfile(url), {
@@ -232,7 +234,7 @@ const ProfilePage = () => {
       })
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
-      if (promptForAgeKey(initialErr, { with_proxy: true })) return
+      if (promptForAgeKey(initialErr, {})) return
       console.warn('[订阅导入] 首次导入失败:', initialErr)
 
       const initialDetail = errorDetail(initialErr)
