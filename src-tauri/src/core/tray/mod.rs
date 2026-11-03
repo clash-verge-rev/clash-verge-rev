@@ -31,6 +31,17 @@ use tauri::{
 mod menu_def;
 #[cfg(target_os = "macos")]
 mod speed_task;
+
+fn tray_icon_image(bytes: &[u8]) -> Result<tauri::image::Image<'static>> {
+    #[cfg(target_os = "windows")]
+    {
+        crate::utils::tray_icon::image_from_bytes(bytes)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(tauri::image::Image::from_bytes(bytes)?)
+    }
+}
 use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
@@ -267,7 +278,7 @@ impl Tray {
                 false
             }
         };
-        let icon = Some(tauri::image::Image::from_bytes(&icon_bytes)?);
+        let icon = Some(tray_icon_image(&icon_bytes)?);
 
         logging_error!(Type::Tray, tray.set_icon_with_as_template(icon, template));
 
@@ -370,7 +381,7 @@ impl Tray {
         let verge = Config::verge().await.data_arc();
 
         let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
-        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+        let icon = tray_icon_image(&icon_bytes)?;
 
         #[cfg(target_os = "linux")]
         let builder = TrayIconBuilder::with_id(TRAY_ID).icon(icon).icon_as_template(false);

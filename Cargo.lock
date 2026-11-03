@@ -1109,6 +1109,7 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.4.3",
+ "image",
  "libc",
  "log",
  "minisign-verify",

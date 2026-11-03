@@ -19,6 +19,8 @@ pub mod singleton;
 pub mod speed;
 pub(crate) mod startup;
 pub mod tmpl;
+#[cfg(target_os = "windows")]
+pub mod tray_icon;
 #[cfg(target_os = "macos")]
 pub mod tray_speed;
 pub mod window_manager;
