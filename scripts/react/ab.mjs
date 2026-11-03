@@ -21,10 +21,18 @@ import { chromium } from 'playwright'
 import { build, createServer, preview } from 'vite'
 
 const { values } = parseArgs({
-  options: { base: { type: 'string' }, head: { type: 'string' } },
+  options: {
+    base: { type: 'string' },
+    head: { type: 'string' },
+    assert: { type: 'string', multiple: true },
+  },
 })
 if (!values.base || !values.head)
   throw new Error('Usage: pnpm react:ab --base <ref> --head <ref>')
+const assertions = new Set(values.assert ?? [])
+for (const name of assertions) {
+  if (name !== 'dns') throw new Error(`Unknown regression assertion: ${name}`)
+}
 const harness = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(harness, '../..')
 const output = await mkdtemp('/tmp/cvr-react-ab-')
@@ -49,6 +57,7 @@ function git(...args) {
   return result.stdout
 }
 const manifest = {
+  assertions: [...assertions],
   environment: {
     platform: process.platform,
     architecture: process.arch,
@@ -216,6 +225,15 @@ try {
             )
             result.tabs = await tabs(page)
             result.dns = await dns(page)
+            if (variant === 'head' && assertions.has('dns')) {
+              for (const edit of result.dns.edits) {
+                assert.equal(
+                  edit.serialized.at(-1),
+                  edit.value,
+                  'Latest DNS serialization must match the edited field',
+                )
+              }
+            }
             result.delay = await delay(page)
             result.profile = await page.evaluate(() => {
               const before = window.__CVR_REACT_PROFILER__.read()
