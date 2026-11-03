@@ -2,6 +2,7 @@ pub mod auto_backup;
 pub mod autostart;
 pub mod backup;
 pub mod hotkey;
+pub mod hotspot;
 pub mod lightweight;
 pub mod listener;
 pub mod logger;

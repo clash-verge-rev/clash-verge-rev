@@ -17,6 +17,11 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::open_core_dir,
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
+            cmd::get_hotspot_status,
+            cmd::list_hotspot_adapters,
+            cmd::start_hotspot,
+            cmd::stop_hotspot,
+            cmd::save_hotspot_config,
             cmd::restart_app,
             cmd::install_update,
             cmd::cancel_update_download,
@@ -219,6 +224,16 @@ struct PlatformVergeFields {
     verge_tproxy_enabled: Option<bool>,
     #[specta(optional)]
     enable_tray_speed: Option<bool>,
+    #[specta(optional)]
+    hotspot_ssid: Option<String>,
+    #[specta(optional)]
+    hotspot_password: Option<String>,
+    #[specta(optional)]
+    hotspot_band: Option<String>,
+    #[specta(optional)]
+    hotspot_adapter_id: Option<String>,
+    #[specta(optional)]
+    hotspot_auto_start: Option<bool>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, specta::Type)]

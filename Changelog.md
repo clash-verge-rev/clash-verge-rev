@@ -38,6 +38,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增 Windows「无线热点」：将 TUN 出口共享为 Wi-Fi 热点，可配置名称、密码、频段与发射网卡
 
 </details>
 

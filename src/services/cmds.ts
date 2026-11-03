@@ -15,6 +15,8 @@ import type {
   ProfileSelection,
   ProfilePatch,
   ProfileCreate,
+  HotspotStartConfig,
+  HotspotConfigPatch,
 } from './bindings'
 
 export type {
@@ -28,6 +30,11 @@ export type {
   ListenerTransport,
   ListenerProbe,
   UnlockItem,
+  HotspotStatus,
+  HotspotAdapter,
+  HotspotStartConfig,
+  HotspotConfigPatch,
+  HotspotState,
 } from './bindings'
 
 export async function copyClashEnv() {
@@ -375,6 +382,26 @@ export async function downloadIconCache(url: string, name: string) {
 
 export async function getNetworkInterfaces() {
   return commands.getNetworkInterfaces()
+}
+
+export async function getHotspotStatus() {
+  return commands.getHotspotStatus()
+}
+
+export async function listHotspotAdapters() {
+  return commands.listHotspotAdapters()
+}
+
+export async function startHotspot(config: HotspotStartConfig) {
+  return commands.startHotspot(config)
+}
+
+export async function stopHotspot() {
+  return commands.stopHotspot()
+}
+
+export async function saveHotspotConfig(config: HotspotConfigPatch) {
+  return commands.saveHotspotConfig(config)
 }
 
 export async function getSystemHostname() {

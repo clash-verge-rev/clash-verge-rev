@@ -5,12 +5,16 @@ import { useTranslation } from 'react-i18next'
 
 import { BasePage } from '@/components/base'
 import SettingClash from '@/components/setting/setting-clash'
+import SettingHotspot from '@/components/setting/setting-hotspot'
 import SettingSystem from '@/components/setting/setting-system'
 import SettingVergeAdvanced from '@/components/setting/setting-verge-advanced'
 import SettingVergeBasic from '@/components/setting/setting-verge-basic'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
+import getSystem from '@/utils/get-system'
 import { openExternalUrl } from '@/utils/open-external-url'
+
+const isWindows = getSystem() === 'windows'
 
 const SettingPage = () => {
   const { t } = useTranslation()
@@ -88,11 +92,22 @@ const SettingPage = () => {
           <Box
             sx={{
               borderRadius: 2,
+              marginBottom: 1.5,
               backgroundColor: isDark ? '#282a36' : '#ffffff',
             }}
           >
             <SettingClash onError={onError} />
           </Box>
+          {isWindows && (
+            <Box
+              sx={{
+                borderRadius: 2,
+                backgroundColor: isDark ? '#282a36' : '#ffffff',
+              }}
+            >
+              <SettingHotspot onError={onError} />
+            </Box>
+          )}
         </Grid>
         <Grid size={6}>
           <Box

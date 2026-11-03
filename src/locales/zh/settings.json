@@ -152,6 +152,33 @@
           }
         }
       }
+    },
+    "hotspot": {
+      "title": "无线热点",
+      "toggles": {
+        "enable": "无线热点"
+      },
+      "fields": {
+        "configuration": "热点配置",
+        "autoStart": "随 TUN 自动开启"
+      },
+      "secondary": {
+        "configuration": "{{ssid}} · {{band}}"
+      },
+      "tooltips": {
+        "autoStart": "TUN 启动时自动开启热点，TUN 停止时自动关闭"
+      },
+      "status": {
+        "stopped": "已关闭",
+        "starting": "正在开启…",
+        "running": "已开启 · {{count}} 台设备",
+        "stopping": "正在关闭…",
+        "failed": "热点启动失败",
+        "unsupported": "仅支持 Windows"
+      },
+      "messages": {
+        "credentialsRequired": "请先设置热点名称和密码"
+      }
     }
   },
   "components": {
@@ -650,6 +677,33 @@
       "fields": {
         "ipAddress": "IP 地址",
         "macAddress": "MAC 地址"
+      }
+    },
+    "hotspot": {
+      "title": "无线热点",
+      "fields": {
+        "ssid": "热点名称",
+        "password": "密码",
+        "band": "频段",
+        "adapter": "发射网卡",
+        "adapterAuto": "自动选择",
+        "autoStart": "随 TUN 自动开启",
+        "requiresTun": "需要 TUN 模式"
+      },
+      "bands": {
+        "auto": "自动",
+        "band24": "2.4 GHz",
+        "band5": "5 GHz"
+      },
+      "tooltips": {
+        "password": "8–63 个可打印 ASCII 字符",
+        "autoStart": "TUN 启动时自动开启热点，TUN 停止时自动关闭",
+        "requiresTun": "热点客户端流量经 mihomo TUN 转发，请先开启 TUN 模式。"
+      },
+      "messages": {
+        "invalidSsid": "热点名称需为 1–32 字节",
+        "invalidPassword": "密码需为 8–63 个可打印 ASCII 字符",
+        "saved": "热点配置已保存"
       }
     }
   },
