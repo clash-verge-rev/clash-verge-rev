@@ -66,6 +66,12 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
         return Err(err.to_string().into());
     }
 
+    if mode.as_str() == "global"
+        && let Err(err) = crate::config::profiles::leave_default_global_exit().await
+    {
+        logging!(warn, Type::Core, "failed to move GLOBAL off its default: {err:#}");
+    }
+
     let clash = Config::clash().await;
     let save_result = {
         let _config_write = Config::lock_config_write().await;

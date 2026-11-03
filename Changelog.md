@@ -25,6 +25,7 @@
 <summary><strong> 🐞 修复问题 </strong></summary>
 
 - 修复检测更新后又发布新版时，应用内更新失败
+- 修复全局模式默认停在 `DIRECT` 或 `REJECT` 导致流量未经代理，现自动切换到第一个策略组
 
 </details>
 
@@ -37,5 +38,6 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化全局模式代理列表：仅显示 `GLOBAL` 节点，选中其中的策略组时才显示该组
 
 </details>
