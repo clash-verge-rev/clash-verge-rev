@@ -257,6 +257,40 @@ export default defineConfig([
     },
   },
   {
+    files: ['scripts/react/*.{mjs,mts,ts,tsx}'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: {
+        projectService: false,
+        project: './scripts/react/tsconfig.json',
+      },
+    },
+    settings: {
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({
+          project: './scripts/react/tsconfig.json',
+        }),
+      ],
+    },
+  },
+  {
+    files: ['scripts/react/*.{mjs,mts}'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: './scripts/react/tsconfig.node.json',
+      },
+    },
+  },
+  {
+    files: ['scripts/react/{boundaries,material,scene}.tsx'],
+    // The isolated fixtures use full reloads and preserve aliased Hook names.
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      '@eslint-react/no-unnecessary-use-prefix': 'off',
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx,js,jsx,mts,mjs}'],
     rules: ipcBoundaryRules(),
   },

@@ -1,6 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/polyfills/*.js!", "scripts/check-contract-changes.mjs!"],
+  "entry": [
+    "src/polyfills/*.js!",
+    "scripts/check-contract-changes.mjs!",
+    "scripts/react/scene.tsx!",
+    "scripts/react/profiler.ts!",
+    "scripts/react/boundaries.tsx!",
+    "scripts/react/material.tsx!",
+    "scripts/react/yaml.ts!"
+  ],
   "project": ["src/**/*.{js,jsx,ts,tsx,sass,scss}!", "scripts/**/*.{js,mjs}!"],
   "include": [
     "files",
