@@ -11,36 +11,24 @@ const useWindow = () => {
 }
 
 export const useWindowControls = () => {
-  const {
-    maximized,
-    minimize,
-    toggleMaximize,
-    close,
-    toggleFullscreen,
-    currentWindow,
-  } = useWindow()
+  const { maximized, minimize, toggleMaximize, close, currentWindow } =
+    useWindow()
   return {
     maximized,
     minimize,
     toggleMaximize,
     close,
-    toggleFullscreen,
     currentWindow,
   } satisfies Pick<
     WindowContextType,
-    | 'maximized'
-    | 'minimize'
-    | 'toggleMaximize'
-    | 'close'
-    | 'toggleFullscreen'
-    | 'currentWindow'
+    'maximized' | 'minimize' | 'toggleMaximize' | 'close' | 'currentWindow'
   >
 }
 
 export const useWindowDecorations = () => {
-  const { decorated, toggleDecorations, refreshDecorated } = useWindow()
-  return { decorated, toggleDecorations, refreshDecorated } satisfies Pick<
+  const { decorated, toggleDecorations } = useWindow()
+  return { decorated, toggleDecorations } satisfies Pick<
     WindowContextType,
-    'decorated' | 'toggleDecorations' | 'refreshDecorated'
+    'decorated' | 'toggleDecorations'
   >
 }

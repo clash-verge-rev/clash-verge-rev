@@ -76,34 +76,28 @@ const proxyOptionToken = ({ memberIndex, member }: TunnelProxyOption) =>
     member.kind === 'node' ? member.node.recordId : member.ref.name
   }`
 
+const buildInitialValues = (): TunnelFormValues => ({
+  localAddr: '',
+  localPort: '',
+  targetAddr: '',
+  targetPort: '',
+  network: 'tcp+udp',
+  group: '',
+  proxy: null,
+})
+
 export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const { t } = useTranslation()
   const { clash, mutateClash, patchClash } = useClash()
 
   const [open, setOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [values, setValues] = useState<TunnelFormValues>({
-    localAddr: '',
-    localPort: '',
-    targetAddr: '',
-    targetPort: '',
-    network: 'tcp+udp',
-    group: '',
-    proxy: null,
-  })
+  const [values, setValues] = useState<TunnelFormValues>(buildInitialValues)
   const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([])
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setValues(() => ({
-        localAddr: '',
-        localPort: '',
-        targetAddr: '',
-        targetPort: '',
-        network: 'tcp+udp',
-        group: '',
-        proxy: null,
-      }))
+      setValues(buildInitialValues())
       setDraftTunnels(() => clash?.tunnels ?? [])
       setOpen(true)
       // 如果没有隧道，则自动展开

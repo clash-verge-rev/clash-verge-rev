@@ -35,7 +35,6 @@ const cleanupConnections = async (previousProxy: string) => {
 interface ProxySelectionOptions {
   onSuccess?: () => void
   onError?: (error: any) => void
-  enableConnectionCleanup?: boolean
 }
 
 interface ProxyChangeRequest {
@@ -53,7 +52,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
   const isProcessingRef = useRef(false)
 
-  const { onSuccess, onError, enableConnectionCleanup = true } = options
+  const { onSuccess, onError } = options
 
   const autoCloseConnection = verge?.auto_close_connection ?? false
 
@@ -98,7 +97,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
           )
         }
 
-        if (enableConnectionCleanup && autoCloseConnection && previousProxy) {
+        if (autoCloseConnection && previousProxy) {
           void cleanupConnections(previousProxy)
         }
       } catch (error) {
@@ -112,7 +111,6 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     [
       autoCloseConnection,
       forgetSelection,
-      enableConnectionCleanup,
       onError,
       onSuccess,
       recordSelection,
@@ -138,7 +136,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     }
   }, [executeChange])
 
-  const changeProxy = useCallback(
+  const select = useCallback(
     (
       groupName: string,
       proxyName: string,
@@ -156,27 +154,5 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     [flushChangeQueue],
   )
 
-  const handleSelectChange = useCallback(
-    (groupName: string, previousProxy?: string, fixed?: string) =>
-      (event: { target: { value: string } }) => {
-        changeProxy(groupName, event.target.value, previousProxy, fixed)
-      },
-    [changeProxy],
-  )
-
-  const handleProxyGroupChange = useCallback(
-    (
-      group: { name: string; now?: string | null; fixed?: string | null },
-      proxy: { name: string },
-    ) => {
-      changeProxy(group.name, proxy.name, group.now!, group.fixed!)
-    },
-    [changeProxy],
-  )
-
-  return {
-    changeProxy,
-    handleSelectChange,
-    handleProxyGroupChange,
-  }
+  return { select }
 }
