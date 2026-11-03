@@ -31,7 +31,8 @@ if (!values.base || !values.head)
   throw new Error('Usage: pnpm react:ab --base <ref> --head <ref>')
 const assertions = new Set(values.assert ?? [])
 for (const name of assertions) {
-  if (name !== 'dns') throw new Error(`Unknown regression assertion: ${name}`)
+  if (!['dns', 'delay'].includes(name))
+    throw new Error(`Unknown regression assertion: ${name}`)
 }
 const harness = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(harness, '../..')
@@ -235,6 +236,20 @@ try {
               }
             }
             result.delay = await delay(page)
+            if (variant === 'head' && assertions.has('delay')) {
+              for (const [index, observation] of result.delay.entries()) {
+                assert.equal(
+                  observation.sameReference,
+                  index === 1,
+                  'Preserve the reference only when all three delay fields match',
+                )
+              }
+              assert.equal(
+                result.delay[1].childRenders,
+                result.delay[0].childRenders,
+                'Equal delay state must not rerender the memoized consumer',
+              )
+            }
             result.profile = await page.evaluate(() => {
               const before = window.__CVR_REACT_PROFILER__.read()
               window.__CVR_REACT_PROFILER__.clear()
