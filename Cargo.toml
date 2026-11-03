@@ -63,7 +63,7 @@ tracing = "0.1.44"
 
 tauri = { version = "2.12.4" }
 tauri-plugin-clipboard-manager = "2.5.0"
-parking_lot = { version = "0.13.0", features = ["hardware-lock-elision"] }
+parking_lot = "0.13.0"
 anyhow = "1.0.104"
 chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
