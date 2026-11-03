@@ -116,37 +116,22 @@
     },
     {
       "description": "Update the Specta contract toolchain together",
-      "matchManagers": [
-        "cargo"
-      ],
-      "matchPackageNames": [
-        "specta",
-        "tauri-specta",
-        "specta-typescript"
-      ],
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["specta", "tauri-specta", "specta-typescript"],
       "groupName": "specta",
       "groupSlug": "specta",
       "automerge": false
     },
     {
       "description": "Keep Specta aligned with the supported tauri-specta release",
-      "matchManagers": [
-        "cargo"
-      ],
-      "matchPackageNames": [
-        "specta",
-        "tauri-specta"
-      ],
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["specta", "tauri-specta"],
       "allowedVersions": "/^2\\.0\\.0-rc\\.26$/"
     },
     {
       "description": "Keep the TypeScript exporter compatible with Specta rc.26",
-      "matchManagers": [
-        "cargo"
-      ],
-      "matchPackageNames": [
-        "specta-typescript"
-      ],
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["specta-typescript"],
       "allowedVersions": "/^0\\.0\\.13$/"
     }
   ],
