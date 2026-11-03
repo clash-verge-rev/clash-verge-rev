@@ -5,12 +5,16 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
 
+import { reactDiagnostics } from './scripts/react/vite.mts'
+
 export default defineConfig({
   root: 'src',
+  cacheDir: path.resolve('node_modules/.vite/default'),
   server: { port: 3000 },
   plugins: [
     svgr(),
     react(),
+    ...reactDiagnostics(process.env.CVR_REACT_DIAGNOSTICS),
     legacy({
       modernTargets: ['edge>=109', 'safari>=14'],
       renderLegacyChunks: false,

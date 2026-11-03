@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["../../src/*"],
+      "@root/*": ["../../*"],
+      "fixture-material": ["../../node_modules/@mui/material"],
+      "fixture-yaml": ["../../node_modules/js-yaml"]
+    }
+  },
+  "include": ["./*.ts", "./*.tsx", "../../src"]
+}
