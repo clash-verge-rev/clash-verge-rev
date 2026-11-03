@@ -118,6 +118,6 @@ fn cover_pixel(src: &[u8], src_w: u32, src_h: u32, src_x0: f64, src_x1: f64, src
     ]
 }
 
-fn channel(value: f64) -> u8 {
+const fn channel(value: f64) -> u8 {
     value.round().clamp(0.0, 255.0) as u8
 }
