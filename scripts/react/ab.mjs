@@ -21,10 +21,19 @@ import { chromium } from 'playwright'
 import { build, createServer, preview } from 'vite'
 
 const { values } = parseArgs({
-  options: { base: { type: 'string' }, head: { type: 'string' } },
+  options: {
+    base: { type: 'string' },
+    head: { type: 'string' },
+    assert: { type: 'string', multiple: true },
+  },
 })
 if (!values.base || !values.head)
   throw new Error('Usage: pnpm react:ab --base <ref> --head <ref>')
+const assertions = new Set(values.assert ?? [])
+for (const name of assertions) {
+  if (!['dns', 'delay', 'tabs'].includes(name))
+    throw new Error(`Unknown regression assertion: ${name}`)
+}
 const harness = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(harness, '../..')
 const output = await mkdtemp('/tmp/cvr-react-ab-')
@@ -49,6 +58,7 @@ function git(...args) {
   return result.stdout
 }
 const manifest = {
+  assertions: [...assertions],
   environment: {
     platform: process.platform,
     architecture: process.arch,
@@ -215,8 +225,38 @@ try {
               () => window.__REACT_AB__.read().listeners.length === 1,
             )
             result.tabs = await tabs(page)
+            if (variant === 'head' && assertions.has('tabs')) {
+              assert.equal(
+                result.tabs.unrelated,
+                0,
+                'Unrelated parent updates must not rerender the memoized tabs',
+              )
+            }
             result.dns = await dns(page)
+            if (variant === 'head' && assertions.has('dns')) {
+              for (const edit of result.dns.edits) {
+                assert.equal(
+                  edit.serialized.at(-1),
+                  edit.value,
+                  'Latest DNS serialization must match the edited field',
+                )
+              }
+            }
             result.delay = await delay(page)
+            if (variant === 'head' && assertions.has('delay')) {
+              for (const [index, observation] of result.delay.entries()) {
+                assert.equal(
+                  observation.sameReference,
+                  index === 1,
+                  'Preserve the reference only when all three delay fields match',
+                )
+              }
+              assert.equal(
+                result.delay[1].childRenders,
+                result.delay[0].childRenders,
+                'Equal delay state must not rerender the memoized consumer',
+              )
+            }
             result.profile = await page.evaluate(() => {
               const before = window.__CVR_REACT_PROFILER__.read()
               window.__CVR_REACT_PROFILER__.clear()
@@ -292,7 +332,19 @@ async function settle(page) {
 }
 async function tabs(page) {
   const buttons = page.locator('#tabs .MuiPaper-root')
+  const readTabs = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        window.__REACT_AB__.fixture.tabRenders.map((tab) => [
+          tab.label.split('.').at(-1),
+          tab,
+        ]),
+      ),
+    )
+
   assert.equal(await buttons.count(), 2)
+  assert.equal((await readTabs()).systemProxy.active, true)
+  assert.equal((await readTabs()).tunMode.active, false)
   const before = await page.evaluate(
     () => window.__REACT_AB__.fixture.tabRenders.length,
   )
@@ -304,6 +356,9 @@ async function tabs(page) {
     (await page.evaluate(() => window.__REACT_AB__.fixture.tabRenders.length)) -
     before
   await buttons.nth(1).click()
+  await settle(page)
+  assert.equal((await readTabs()).systemProxy.active, false)
+  assert.equal((await readTabs()).tunMode.active, true)
   assert.equal(
     await page.evaluate(() =>
       localStorage.getItem('clash-verge-proxy-active-tab'),
@@ -324,30 +379,45 @@ async function tabs(page) {
   )
   await page.evaluate(() => window.__REACT_AB__.update({ mounted: true }))
   await settle(page)
+  assert.equal((await readTabs()).tunMode.active, true)
+  assert.equal((await readTabs()).systemProxy.active, false)
   await buttons.nth(0).click()
+  await settle(page)
+  assert.equal((await readTabs()).systemProxy.active, true)
+  assert.equal((await readTabs()).tunMode.active, false)
   assert.equal(
     await page.evaluate(() =>
       localStorage.getItem('clash-verge-proxy-active-tab'),
     ),
     'system',
   )
-  const beforeColor = await buttons
-    .nth(0)
-    .evaluate((element) => getComputedStyle(element).backgroundColor)
   await page.evaluate(() => {
-    Object.assign(window.__REACT_AB__.fixture, {
-      indicator: true,
-      language: 'zh',
-      theme: 'dark',
-    })
+    window.__REACT_AB__.fixture.indicator = true
     window.__REACT_AB__.fixture.verge.enable_tun_mode = true
     window.__REACT_AB__.update()
   })
   await settle(page)
-  const updated = await page.evaluate(() =>
-    window.__REACT_AB__.fixture.tabRenders.slice(-2),
+  assert(Object.values(await readTabs()).every((tab) => tab.indicator))
+  await page.evaluate(() => {
+    window.__REACT_AB__.fixture.language = 'zh'
+    window.__REACT_AB__.update()
+  })
+  await settle(page)
+  const updated = Object.values(await readTabs())
+  assert(updated.every((tab) => tab.label.startsWith('zh:')))
+  assert(
+    (await page.locator('#tabs').textContent()).includes(
+      'zh:home.components.proxyTun.status.systemProxyEnabled',
+    ),
   )
-  assert(updated.every((tab) => tab.indicator && tab.label.startsWith('zh:')))
+  const beforeColor = await buttons
+    .nth(0)
+    .evaluate((element) => getComputedStyle(element).backgroundColor)
+  await page.evaluate(() => {
+    window.__REACT_AB__.fixture.theme = 'dark'
+    window.__REACT_AB__.update()
+  })
+  await settle(page)
   const color = await buttons
     .nth(0)
     .evaluate((element) => getComputedStyle(element).backgroundColor)

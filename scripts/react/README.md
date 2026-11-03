@@ -29,7 +29,13 @@ behavior assertions, render observations and profiles under `/tmp/cvr-react-ab-*
 Each version and mode has separate Vite caches and output. Three pairs alternate
 order in ordinary development, Strict Mode and production. A behavior failure
 returns a nonzero exit status. DNS stale serialization and same-value renders
-are observations so a known baseline can be compared with its fix.
+are observations so a known baseline can be compared with its fix. Append
+`--assert dns` to require the head version to keep the latest serialized YAML in sync with
+continuous field edits; this is the focused DNS regression assertion.
+`--assert delay` requires same-value delay updates to retain their reference and memoized consumer,
+while each changed field (including clearing elapsed time) propagates.
+`--assert tabs` requires zero tab renders during unrelated parent updates. Use
+`--assert dns --assert delay --assert tabs` for a cumulative candidate.
 
 The fixtures execute the actual selected components and hook. IPC, data,
 editor and UI rendering boundaries are replaced, and outgoing network requests
