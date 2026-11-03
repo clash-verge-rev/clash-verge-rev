@@ -231,7 +231,7 @@
       "layout": {
         "title": "Configurações de Layout",
         "fields": {
-          "preferSystemTitlebar": "Preferir Barra de Título do Sistema",
+          "enableSystemTitlebar": "Ativar barra de título do sistema",
           "trafficGraph": "Gráfico de Tráfego",
           "memoryUsage": "Uso do Núcleo",
           "proxyGroupIcon": "Ícone do Grupo de Proxy",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "Pausar a renderização das estatísticas de tráfego quando sem foco"
         },
         "tooltips": {
+          "enableSystemTitlebar": "Usar a barra de título nativa do sistema em vez da barra de título personalizada integrada (é necessário reiniciar no Linux).",
           "hoverNavigator": "Rola automaticamente até o grupo de proxy correspondente ao passar o mouse sobre as letras do alfabeto",
           "hoverNavigatorDelay": "Atraso antes da rolagem automática ao passar o mouse, em milissegundos"
         },

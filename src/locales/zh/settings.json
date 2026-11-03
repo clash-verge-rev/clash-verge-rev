@@ -231,7 +231,7 @@
       "layout": {
         "title": "界面设置",
         "fields": {
-          "preferSystemTitlebar": "优先使用系统标题栏",
+          "enableSystemTitlebar": "启用系统标题栏",
           "trafficGraph": "流量图显",
           "memoryUsage": "内核占用",
           "proxyGroupIcon": "代理组图标",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "失去焦点时暂停渲染流量统计"
         },
         "tooltips": {
+          "enableSystemTitlebar": "使用系统原生标题栏替代内置的自定义标题栏（Linux 下需重启生效）",
           "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
           "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
         },

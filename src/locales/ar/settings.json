@@ -231,7 +231,7 @@
       "layout": {
         "title": "إعدادات التخطيط",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "تفعيل شريط عنوان النظام",
           "trafficGraph": "مخطط حركة المرور",
           "memoryUsage": "استهلاك الذاكرة",
           "proxyGroupIcon": "أيقونة مجموعة الوكلاء",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "إيقاف عرض إحصاءات حركة المرور مؤقتًا عند فقدان التركيز"
         },
         "tooltips": {
+          "enableSystemTitlebar": "استخدام شريط عنوان النظام الأصلي بدلاً من شريط العنوان المخصص المدمج (يلزم إعادة التشغيل على Linux).",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

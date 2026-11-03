@@ -12,7 +12,6 @@ import { BaseErrorBoundary } from './components/base'
 import { router } from './pages/_routers'
 import { preloadHomePageCards } from './pages/home'
 import { AppDataProvider } from './providers/app-data-provider'
-import { WindowProvider } from './providers/window'
 import { FALLBACK_LANGUAGE, initializeLanguage } from './services/i18n'
 import {
   preloadAppData,
@@ -50,11 +49,9 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
       <ComposeContextProvider contexts={contexts}>
         <BaseErrorBoundary>
           <SWRConfig value={swrConfig}>
-            <WindowProvider>
-              <AppDataProvider>
-                <RouterProvider router={router} />
-              </AppDataProvider>
-            </WindowProvider>
+            <AppDataProvider>
+              <RouterProvider router={router} />
+            </AppDataProvider>
           </SWRConfig>
         </BaseErrorBoundary>
       </ComposeContextProvider>

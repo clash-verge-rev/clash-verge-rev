@@ -1,13 +1,13 @@
 import { Close, CropSquare, FilterNone, Minimize } from '@mui/icons-material'
 import { Box, IconButton } from '@mui/material'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import {
-  forwardRef,
+  type MouseEvent,
   type PointerEvent,
   useCallback,
-  useImperativeHandle,
+  useEffect,
 } from 'react'
 
-import { useWindowControls } from '@/hooks/use-window'
 import getSystem from '@/utils/get-system'
 
 const RESIZE_HANDLES = [
@@ -21,9 +21,7 @@ const RESIZE_HANDLES = [
   { direction: 'NorthWest', position: 'north-west' },
 ] as const
 
-export const WindowResizeHandles = () => {
-  const { currentWindow, maximized } = useWindowControls()
-
+export const WindowResizeHandles = ({ maximized }: { maximized: boolean }) => {
   const startResizeDragging = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return
@@ -33,14 +31,14 @@ export const WindowResizeHandles = () => {
       const handle = RESIZE_HANDLES.find((item) => item.direction === direction)
 
       if (handle) {
-        void currentWindow
+        void getCurrentWindow()
           .startResizeDragging(handle.direction)
           .catch((error) =>
             console.warn('[WindowResizeHandles] 调整窗口大小失败:', error),
           )
       }
     },
-    [currentWindow],
+    [],
   )
 
   if (getSystem() !== 'linux' || maximized) return null
@@ -63,44 +61,77 @@ export const WindowResizeHandles = () => {
   )
 }
 
-export const WindowControls = forwardRef(function WindowControls(props, ref) {
+export const WindowControls = ({
+  maximized,
+  setMaximized,
+}: {
+  maximized: boolean
+  setMaximized: (value: boolean) => void
+}) => {
   const OS = getSystem()
-  const {
-    currentWindow,
-    maximized,
-    minimize,
-    close,
-    toggleFullscreen,
-    toggleMaximize,
-  } = useWindowControls()
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      currentWindow,
-      maximized,
-      minimize,
-      close,
-      toggleFullscreen,
-      toggleMaximize,
-    }),
-    [
-      currentWindow,
-      maximized,
-      minimize,
-      close,
-      toggleFullscreen,
-      toggleMaximize,
-    ],
+  const close = useCallback(async () => {
+    // Delay one frame so the UI can clear :hover before the window hides.
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    await getCurrentWindow().close()
+  }, [])
+
+  const minimize = useCallback(async () => {
+    // Delay one frame so the UI can clear :hover before the window hides.
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    await getCurrentWindow().minimize()
+  }, [])
+
+  const toggleMaximize = useCallback(async () => {
+    const currentWindow = getCurrentWindow()
+    if (await currentWindow.isMaximized()) {
+      await currentWindow.unmaximize()
+      setMaximized(false)
+    } else {
+      await currentWindow.maximize()
+      setMaximized(true)
+    }
+  }, [setMaximized])
+
+  useEffect(() => {
+    getCurrentWindow().setMinimizable(true)
+  }, [])
+
+  const handleTitlebarMouseDown = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      // Left button only, and only on the first press: detail 2 is the second
+      // press of a double-click, which `handleTitlebarDoubleClick` turns into maximize.
+      if (event.button !== 0 || event.detail !== 1) return
+      // Only the empty bar area drags; the control buttons keep their own clicks.
+      if (event.target !== event.currentTarget) return
+      event.preventDefault()
+      void getCurrentWindow()
+        .startDragging()
+        .catch((error) => console.warn('[WindowControls] 开始拖动失败:', error))
+    },
+    [],
   )
 
-  // 通过前端对 tauri 窗口进行翻转全屏时会短暂地与系统图标重叠渲染。
-  // 这可能是上游缺陷，保险起见跨平台以窗口的最大化翻转为准。
+  const handleTitlebarDoubleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) return
+      void toggleMaximize().catch((error) =>
+        console.warn('[WindowControls] 切换最大化失败:', error),
+      )
+    },
+    [toggleMaximize],
+  )
 
   return (
     <Box
+      onMouseDown={handleTitlebarMouseDown}
+      onDoubleClick={handleTitlebarDoubleClick}
       sx={{
         display: 'flex',
+        justifyContent: OS === 'macos' ? 'flex-start' : 'flex-end',
+        width: '100%',
+        height: '100%',
+        px: 1,
         gap: 1,
         alignItems: 'center',
         '> button': {
@@ -186,4 +217,4 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
       )}
     </Box>
   )
-})
+}

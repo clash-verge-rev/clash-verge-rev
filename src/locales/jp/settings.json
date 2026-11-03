@@ -231,7 +231,7 @@
       "layout": {
         "title": "レイアウト設定",
         "fields": {
-          "preferSystemTitlebar": "Prefer System Titlebar",
+          "enableSystemTitlebar": "システムタイトルバーを有効にする",
           "trafficGraph": "トラフィックグラフ",
           "memoryUsage": "コアメモリ使用量",
           "proxyGroupIcon": "プロキシグループアイコン",
@@ -251,6 +251,7 @@
           "pauseRenderTrafficStatsOnBlur": "フォーカスを失ったときにトラフィック統計の描画を一時停止"
         },
         "tooltips": {
+          "enableSystemTitlebar": "内蔵のカスタムタイトルバーの代わりにシステム標準のタイトルバーを使用します（Linux では再起動が必要です）。",
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
           "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
         },

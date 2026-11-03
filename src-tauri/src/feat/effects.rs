@@ -67,6 +67,7 @@ verge_registry! {
     proxy_group_tools_position => NoEffect;
     notice_position => NoEffect;
     collapse_navbar => NoEffect;
+    enable_system_titlebar => NoEffect;
     sysproxy_tray_icon => [TrayIcon];
     tun_tray_icon => [TrayIcon];
     enable_tun_mode => Tun;
