@@ -5,7 +5,7 @@ use crate::core::notify::NoticeStatus;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::{
-        Config, IProfiles, PrfItem, PrfOption,
+        AgeSecretKeyRequired, Config, IProfiles, PrfItem, PrfOption,
         profiles::{
             PROFILE_WRITE_LOCK, profiles_append_item_with_filedata_safe, profiles_patch_item_safe,
             profiles_reorder_safe, profiles_save_file_safe,
@@ -72,6 +72,9 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
         Ok(it) => it,
         Err(e) => {
+            if e.is::<AgeSecretKeyRequired>() {
+                return Err(coded_error("PROFILE_AGE_KEY_REQUIRED", e));
+            }
             logging!(error, Type::Cmd, "[导入订阅] 下载失败: {e:#}");
             return Err(coded_error("PROFILE_IMPORT_FAILED", profile_import_error(&e)));
         }

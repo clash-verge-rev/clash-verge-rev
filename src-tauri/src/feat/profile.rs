@@ -71,7 +71,7 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
 
 async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result<Option<(String, Option<PrfOption>)>> {
     let profiles = Config::profiles().await;
-    let profiles = profiles.latest_arc();
+    let profiles = profiles.data_arc();
     let item = profiles.get_item(uid)?;
     let is_remote = item.itype.as_ref().is_some_and(|s| s == "remote");
 

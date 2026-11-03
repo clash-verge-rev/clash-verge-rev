@@ -490,7 +490,7 @@ const baseShowNotice = (
   return id
 }
 
-function failureCode(input: unknown): string | undefined {
+export function failureCode(input: unknown): string | undefined {
   return isCommandFailure(input) ? input.code! : undefined
 }
 
