@@ -183,6 +183,7 @@ function useProxyRenderState(
     renderList,
     onProxies,
     onHeadState,
+    setHeadState: setListHeadState,
     handleCheckAll,
     saveScrollPosition,
     getScrollPosition,
@@ -377,12 +378,17 @@ function NormalProxyGroups(props: { mode: string }) {
     renderList,
     onProxies,
     onHeadState,
+    setHeadState,
     handleCheckAll,
     getScrollPosition,
     saveScrollPosition,
   } = useProxyRenderState(mode, false, null)
   const emptyList = useEmptyRenderList()
   const { onDragEnd: onHeaderDragEnd } = useProxyGroupHeaderLayout()
+  const { proxyView } = useProxiesData()
+  const globalGroupName = proxyView?.global?.name
+  // The revealed group sits below GLOBAL's rows, so a click must bring it into view.
+  const pendingRevealRef = useRef<string | null>(null)
   const renderFirstRef = useRef(true)
   // Do not persist intermediate positions produced while restoring virtual scroll.
   const isRestoringRef = useRef(false)
@@ -477,9 +483,17 @@ function NormalProxyGroups(props: { mode: string }) {
       if (!['Selector', 'URLTest', 'Fallback'].includes(group.type)) return
       if (!isInteractableMember(member)) return
 
+      if (group.name === globalGroupName) {
+        pendingRevealRef.current =
+          member.kind === 'group' ? member.ref.name : null
+        // The selection refetches the view, so skip onHeadState's refetch.
+        if (member.kind === 'group') {
+          setHeadState(member.ref.name, { open: true })
+        }
+      }
       select(group.name, member.ref.name, group.now!, group.fixed!)
     },
-    [select],
+    [globalGroupName, select, setHeadState],
   )
 
   const handleLocation = useStableCallback((group: ProxyGroupView) => {
@@ -524,6 +538,17 @@ function NormalProxyGroups(props: { mode: string }) {
       .map((item) => item.group!.name)
     return Array.from(new Set(names))
   }, [renderList])
+
+  useEffect(() => {
+    if (mode !== 'global') {
+      pendingRevealRef.current = null
+      return
+    }
+    const groupName = pendingRevealRef.current
+    if (!groupName || !proxyGroupNames.includes(groupName)) return
+    pendingRevealRef.current = null
+    handleGroupLocationByName(groupName)
+  }, [handleGroupLocationByName, mode, proxyGroupNames])
 
   const handleGroupToggle = useCallback(
     async (group: ProxyGroupView) => {
@@ -608,7 +633,7 @@ function NormalProxyGroups(props: { mode: string }) {
         />
       </DragDropProvider>
 
-      {(mode === 'rule' || mode === 'global') && (
+      {mode === 'rule' && (
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}

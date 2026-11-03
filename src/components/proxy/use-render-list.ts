@@ -6,6 +6,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import delayManager, { type DelaySnapshot } from '@/services/delay'
 import {
+  findCurrentGroupMember,
   isInteractableMember,
   resolveMember,
   selectGlobalChainNodes,
@@ -77,6 +78,18 @@ const resolveOccurrences = (view: ProxyViewV1, group: ProxyGroupView) =>
     memberIndex,
     member: resolveMember(view, member),
   }))
+
+// mihomo selects DIRECT in GLOBAL by default, so the selected built-in stays visible.
+const HIDDEN_GLOBAL_BUILTINS = new Set(['DIRECT', 'REJECT'])
+
+const isHiddenGlobalBuiltin = (
+  group: ProxyGroupView,
+  { member }: ResolvedMemberOccurrence,
+) =>
+  member.kind === 'node' &&
+  member.node.source.kind === 'core' &&
+  HIDDEN_GLOBAL_BUILTINS.has(member.node.source.proxyName) &&
+  member.ref.name !== group.now
 
 const memberKey = (
   group: ProxyGroupView,
@@ -209,8 +222,10 @@ export const useRenderList = (
   const renderGroups = useMemo(() => {
     if (!proxyView) return []
     if (mode === 'rule') return proxyView.groups
-    const global = proxyView.global ? [proxyView.global] : []
-    return mode === 'global' ? [...global, ...proxyView.groups] : global
+    const { global } = proxyView
+    if (!global) return []
+    const current = findCurrentGroupMember(proxyView, global)?.member
+    return current?.kind === 'group' ? [global, current.group] : [global]
   }, [mode, proxyView])
 
   // Every group this list draws, so a test settling in any of them re-sorts that group.
@@ -260,10 +275,10 @@ export const useRenderList = (
       }))
     }
 
-    const useRule = mode === 'rule' || mode === 'global'
     const cache = groupCacheRef.current
 
     const retList = renderGroups.flatMap((group) => {
+      const isFlat = group === proxyView.global
       const headState = headStates[group.name] || DEFAULT_STATE
       const cached = cache.get(group.name)
       if (
@@ -279,19 +294,24 @@ export const useRenderList = (
       }
 
       const ret: IRenderItem[] = [
-        {
-          type: 0,
-          key: group.name,
-          group,
-          headState,
-          icon: group.icon!,
-          testUrl: group.testUrl!,
-        },
+        isFlat
+          ? { type: 1, key: `head-${group.name}`, group, headState }
+          : {
+              type: 0,
+              key: group.name,
+              group,
+              headState,
+              icon: group.icon!,
+              testUrl: group.testUrl!,
+            },
       ]
 
-      if (headState.open || !useRule) {
+      if (headState.open || isFlat) {
+        const resolved = resolveOccurrences(proxyView, group)
         const occurrences = filterSort(
-          resolveOccurrences(proxyView, group),
+          isFlat
+            ? resolved.filter((item) => !isHiddenGlobalBuiltin(group, item))
+            : resolved,
           group.name,
           headState.filterText,
           headState.sortType,
@@ -302,9 +322,6 @@ export const useRenderList = (
             useRegularExpression: headState.filterUseRegularExpression,
           },
         )
-        if (!useRule) {
-          ret.push({ type: 1, key: `head-${group.name}`, group, headState })
-        }
         if (occurrences.length === 0) {
           ret.push({ type: 3, key: `empty-${group.name}`, group, headState })
         } else if (col > 1) {
@@ -343,9 +360,8 @@ export const useRenderList = (
       return ret
     })
 
-    const filtered = !useRule
-      ? retList.slice(1)
-      : retList.filter((item) => !item.group.hidden)
+    const filtered =
+      mode === 'rule' ? retList.filter((item) => !item.group.hidden) : retList
     if (
       prevListRef.current.length === filtered.length &&
       filtered.every((item, index) => item === prevListRef.current[index])
