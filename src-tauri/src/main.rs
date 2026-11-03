@@ -15,6 +15,12 @@ fn main() -> ExitCode {
 
 #[cfg(not(all(feature = "perf-harness", target_os = "macos")))]
 fn main() -> ExitCode {
+    // The privileged replacement must run before the runtime, the singleton check or any window.
+    #[cfg(target_os = "linux")]
+    if let Some(code) = app_lib::utils::elevated::run_if_requested() {
+        return code;
+    }
+
     let default_parallelism = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
     let worker_limit = std::cmp::min(default_parallelism, 4);
     let blocking_limit = 2 * worker_limit;
