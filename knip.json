@@ -7,7 +7,8 @@
     "scripts/react/profiler.ts!",
     "scripts/react/boundaries.tsx!",
     "scripts/react/material.tsx!",
-    "scripts/react/yaml.ts!"
+    "scripts/react/yaml.ts!",
+    "scripts/react/wdyr.ts!"
   ],
   "project": ["src/**/*.{js,jsx,ts,tsx,sass,scss}!", "scripts/**/*.{js,mjs}!"],
   "include": [

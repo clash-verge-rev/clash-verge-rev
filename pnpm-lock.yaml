@@ -341,6 +341,9 @@ importers:
       '@wdio/tauri-service':
         specifier: 1.5.0
         version: 1.5.0(expect-webdriverio@6.1.0)(supports-color@7.2.0)(webdriverio@10.1.0(supports-color@7.2.0)(yauzl@2.10.0))
+      '@welldone-software/why-did-you-render':
+        specifier: 10.0.1
+        version: 10.0.1(react@19.3.1)
       adm-zip:
         specifier: ^0.6.1
         version: 0.6.1
@@ -2680,6 +2683,11 @@ packages:
   '@wdio/utils@10.1.0':
     resolution: {integrity: sha512-BABJY+L4JidOD2bfQe3icuRZ0jQeUimTwUEe66I4BHVGWwaa5QBeVU+JZmdNQLjMA9q+Nk385aL96Mb1/PbKYw==}
     engines: {node: '>=22.19.0'}
+
+  '@welldone-software/why-did-you-render@10.0.1':
+    resolution: {integrity: sha512-tMgGkt30iVYeLMUKExNmtm019QgyjLtA7lwB0QAizYNEuihlCG2eoAWBBaz/bDeI7LeqAJ9msC6hY3vX+JB97g==}
+    peerDependencies:
+      react: ^19
 
   '@zip.js/zip.js@2.24.0':
     resolution: {integrity: sha512-WlaVKzdqBK+RF3bdiXZWbdCnvGB6PdO4IHC1mn/2Yfl3bASgqUNegnU3+PNg61iecwoPfUi5BgLUPqBukXpyWw==}
@@ -7388,6 +7396,11 @@ snapshots:
       - proxy-agent
       - supports-color
       - yauzl
+
+  '@welldone-software/why-did-you-render@10.0.1(react@19.3.1)':
+    dependencies:
+      lodash: 4.18.1
+      react: 19.3.1
 
   '@zip.js/zip.js@2.24.0': {}
 

@@ -10,10 +10,39 @@ export function reactDiagnostics(mode: string | undefined): Plugin[] {
       enforce: 'pre',
       apply: 'serve',
       config() {
-        if (mode !== 'profiler')
+        if (mode !== 'profiler' && mode !== 'wdyr')
           throw new Error(`Unknown CVR_REACT_DIAGNOSTICS mode: ${mode}`)
+        return {
+          cacheDir: path.resolve('node_modules/.vite', mode),
+          ...(mode === 'wdyr'
+            ? {
+                oxc: {
+                  jsx: {
+                    importSource: '@welldone-software/why-did-you-render',
+                  },
+                },
+                optimizeDeps: {
+                  include: [
+                    '@welldone-software/why-did-you-render',
+                    '@welldone-software/why-did-you-render/jsx-dev-runtime',
+                  ],
+                },
+              }
+            : {}),
+        }
+      },
+      transformIndexHtml(html) {
+        if (mode !== 'wdyr') return html
+        const entry = 'src="./main.tsx"'
+        if (!html.includes(entry))
+          throw new Error('WDYR entry no longer matches index.html')
+        return html.replace(
+          entry,
+          `src="/@fs/${normalizePath(path.resolve('scripts/react/wdyr.ts'))}"`,
+        )
       },
       transform(code, id) {
+        if (mode !== 'profiler') return
         if (id !== normalizePath(path.resolve('src/main.tsx'))) return
         const open = '<React.StrictMode>'
         const close = '</React.StrictMode>'

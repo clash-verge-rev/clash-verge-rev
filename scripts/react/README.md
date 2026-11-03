@@ -6,6 +6,13 @@ copies of the latest 1,000 standard Profiler callback records; `.clear()` drops
 them. Records contain timing and commit metadata, never business props. Normal
 development and production builds do not load the collector.
 
+`pnpm dev:wdyr` instead initializes why-did-you-render before loading the app
+and uses its development JSX runtime. It reports avoidable renders for
+`ProxyItem`, `ProxyItemMini` and `ProxyTunCard` in the console. The modes are
+mutually exclusive; `CVR_REACT_DIAGNOSTICS` accepts only `profiler` or `wdyr` on
+the development server. Each mode uses its own Vite cache. Production builds
+ignore this variable and include neither diagnostic entry nor runtime.
+
 Install the browser explicitly with `pnpm exec playwright install chromium`.
 Then run `pnpm react:ab --base <ref> --head <ref>`. Both Git trees run against
 one installed dependency set and the same fixed DNS, delay-hook and proxy-tab

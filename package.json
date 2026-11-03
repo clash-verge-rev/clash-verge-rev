@@ -42,7 +42,8 @@
     "perf:compare": "node scripts/perf/compare.mjs",
     "perf:test": "node --test scripts/perf/report.test.mjs",
     "dev:profile": "cross-env CVR_REACT_DIAGNOSTICS=profiler node scripts/dev.mjs dev",
-    "react:ab": "node scripts/react/ab.mjs"
+    "react:ab": "node scripts/react/ab.mjs",
+    "dev:wdyr": "cross-env CVR_REACT_DIAGNOSTICS=wdyr node scripts/dev.mjs dev"
   },
   "dependencies": {
     "@dnd-kit/collision": "^0.5.0",
@@ -137,7 +138,8 @@
     "vitest": "^5.0.1",
     "webdriverio": "10.1.0",
     "ws": "8.22.1",
-    "playwright": "1.64.1"
+    "playwright": "1.64.1",
+    "@welldone-software/why-did-you-render": "10.0.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
