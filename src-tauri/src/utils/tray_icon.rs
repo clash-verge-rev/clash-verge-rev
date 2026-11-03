@@ -1,4 +1,5 @@
-//! Windows 通知区域按 `SM_CXSMICON` 绘制。更大的位图会被系统最近邻缩小，边缘出现锯齿。
+//! The notification area draws at `SM_CXSMICON`. A larger bitmap is
+//! nearest-neighbor scaled by the shell, which aliases the edges.
 
 use anyhow::Result;
 
