@@ -6,7 +6,7 @@ use crate::{
         notification::{self, FailedOperation},
         runstate::RUN_STATE,
         service,
-        sysopt::Sysopt,
+        sysopt::{Sysopt, format_bypass},
     },
     process::AsyncHandler,
     utils::{
@@ -204,8 +204,6 @@ const fn refusal_classification(service_usable: Option<bool>) -> SysproxyFailure
 }
 
 const LOOPBACK_HOST: &str = "127.0.0.1";
-const MACOS_DEFAULT_BYPASS: &str =
-    "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 const MAX_SERVICE_BYPASS_LEN: usize = 8192;
 
 static SERVICE_PROXY_OPERATIONS: ServiceProxyOperations = ServiceProxyOperations::new();
@@ -327,13 +325,7 @@ fn service_bypass(verge: &IVerge) -> Result<String> {
     let custom = verge.system_proxy_bypass.as_deref().unwrap_or("");
     ensure!(!custom.contains('\0'), "system proxy bypass contains NUL");
 
-    let mut bypass = if custom.is_empty() {
-        MACOS_DEFAULT_BYPASS.to_owned()
-    } else if verge.use_default_bypass.unwrap_or(true) {
-        format!("{MACOS_DEFAULT_BYPASS},{custom}")
-    } else {
-        custom.to_owned()
-    };
+    let mut bypass: String = format_bypass(verge.use_default_bypass.unwrap_or(true), custom).into();
     truncate_utf8(&mut bypass, MAX_SERVICE_BYPASS_LEN);
     Ok(bypass)
 }
