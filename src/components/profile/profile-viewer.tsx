@@ -1,6 +1,8 @@
+import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material'
 import {
   Box,
   FormControl,
+  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -28,7 +30,11 @@ interface Props {
 }
 
 export interface ProfileViewerRef {
-  create: (url?: string, option?: IProfileOption) => void
+  create: (
+    url?: string,
+    option?: IProfileOption,
+    onCreated?: () => void,
+  ) => void
   edit: (item: IProfileItem) => void
 }
 
@@ -42,9 +48,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const [open, setOpen] = useState(false)
   const [openType, setOpenType] = useState<'new' | 'edit'>('new')
   const [loading, setLoading] = useState(false)
+  const [showAgeKey, setShowAgeKey] = useState(false)
   const { profiles } = useProfiles()
 
   const fileDataRef = useRef<string | null>(null)
+  const onCreatedRef = useRef<() => void>(undefined)
 
   const {
     control,
@@ -69,7 +77,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   })
 
   useImperativeHandle(ref, () => ({
-    create: (url = '', option) => {
+    create: (url = '', option, onCreated) => {
+      onCreatedRef.current = onCreated
+      setShowAgeKey(false)
       reset(
         {
           ...defaultValues,
@@ -82,6 +92,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       setOpen(true)
     },
     edit: (item: IProfileItem) => {
+      onCreatedRef.current = undefined
+      setShowAgeKey(false)
       if (item) {
         reset(item, { keepDefaultValues: true })
       }
@@ -116,7 +128,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           option.user_agent = undefined
         }
 
-        const name = form.name || `${form.type} file`
+        const isRemote = form.type === 'remote'
+        const isUpdate = openType === 'edit'
+        // Unnamed, the backend names a new subscription from its response.
+        const name =
+          form.name || (isRemote && !isUpdate ? undefined : `${form.type} file`)
         const item = {
           type: form.type,
           name,
@@ -124,8 +140,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           option,
           ...(form.type === 'remote' ? { url: form.url } : {}),
         }
-        const isRemote = form.type === 'remote'
-        const isUpdate = openType === 'edit'
 
         const isActivating = isUpdate && form.uid === (profiles?.current ?? '')
 
@@ -221,6 +235,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         setOpen(false)
         reset()
         fileDataRef.current = null
+        onCreatedRef.current?.()
 
         setTimeout(() => {
           onChange(isActivating)
@@ -348,9 +363,28 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...text}
                 {...field}
                 value={field.value ?? ''}
-                type="password"
+                type={showAgeKey ? 'text' : 'password'}
                 placeholder="AGE-SECRET-KEY-..."
                 label={t('profiles.modals.profileForm.fields.ageSecretKey')}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          edge="end"
+                          onClick={() => setShowAgeKey(!showAgeKey)}
+                        >
+                          {showAgeKey ? (
+                            <VisibilityOffOutlined fontSize="small" />
+                          ) : (
+                            <VisibilityOutlined fontSize="small" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             )}
           />

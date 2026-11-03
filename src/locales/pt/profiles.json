@@ -118,6 +118,7 @@
         "type": "Tipo",
         "description": "Descrição",
         "subscriptionUrl": "URL da assinatura",
+        "ageSecretKey": "Chave secreta age (opcional)",
         "userAgent": "User Agent",
         "httpTimeout": "Tempo limite HTTP",
         "updateInterval": "Intervalo de atualização",

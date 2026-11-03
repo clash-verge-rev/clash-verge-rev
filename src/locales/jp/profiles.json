@@ -118,6 +118,7 @@
         "type": "タイプ",
         "description": "説明",
         "subscriptionUrl": "サブスクリプションURL",
+        "ageSecretKey": "age 秘密鍵（任意）",
         "userAgent": "ユーザーエージェント",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "更新間隔",
