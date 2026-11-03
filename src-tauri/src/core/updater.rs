@@ -18,6 +18,14 @@ pub struct SilentUpdater {
     background_cancel: Mutex<Option<CancellationToken>>,
 }
 
+#[derive(Serialize, specta::Type)]
+#[serde(rename_all = "snake_case")]
+pub enum InstallUpdateOutcome {
+    Installed,
+    Cancelled,
+    UpdateChanged,
+}
+
 singleton!(SilentUpdater, SILENT_UPDATER);
 
 impl SilentUpdater {
@@ -34,7 +42,7 @@ impl SilentUpdater {
     }
 }
 
-#[derive(Serialize, Deserialize, specta::Type)]
+#[derive(Serialize, Deserialize)]
 struct UpdateCacheMeta {
     version: String,
     downloaded_at: String,
@@ -101,11 +109,11 @@ impl SilentUpdater {
     }
 
     /// Returns the cached installer for `update`, deleting a cache that does not match it.
-    fn verified_cache(app_handle: &tauri::AppHandle, update: &Update) -> Option<Vec<u8>> {
+    fn verified_cache(update: &Update) -> Option<Vec<u8>> {
         let meta = Self::read_cache_meta().ok()?;
         let bytes = if meta.version == update.version {
             Self::read_cache_bytes().and_then(|bytes| {
-                verify_signature(app_handle, &bytes, &update.signature, &update.version)?;
+                update.verify(&bytes)?;
                 Ok(bytes)
             })
         } else {
@@ -125,46 +133,6 @@ impl SilentUpdater {
             }
         }
     }
-}
-
-/// The cache directory is user-writable and feeds an elevated installer, so it is re-verified
-/// with the same rules `Update::download` applies.
-fn verify_signature(app_handle: &tauri::AppHandle, bytes: &[u8], signature: &str, version: &str) -> Result<()> {
-    use base64::Engine as _;
-
-    let decode = |value: &str| -> Result<String> {
-        Ok(String::from_utf8(
-            base64::engine::general_purpose::STANDARD.decode(value)?,
-        )?)
-    };
-    let config: tauri_plugin_updater::Config = serde_json::from_value(
-        app_handle
-            .config()
-            .plugins
-            .0
-            .get("updater")
-            .cloned()
-            .context("updater is not configured")?,
-    )?;
-
-    let public_key = minisign_verify::PublicKey::decode(&decode(&config.pubkey)?)?;
-    let signature = minisign_verify::Signature::decode(&decode(signature)?)?;
-    public_key
-        .verify(bytes, &signature, true)
-        .context("signature mismatch")?;
-
-    match signature
-        .trusted_comment()
-        .split('\t')
-        .find_map(|field| field.strip_prefix("version:"))
-    {
-        Some(signed) => anyhow::ensure!(
-            signed.trim_start_matches('v') == version,
-            "signed for v{signed}, not v{version}"
-        ),
-        None => anyhow::ensure!(!config.require_signed_version, "signature carries no version"),
-    }
-    Ok(())
 }
 
 pub fn is_build_to_stable(current: &str, remote: &str) -> bool {
@@ -391,7 +359,7 @@ impl SilentUpdater {
             }
         };
 
-        let Some(bytes) = Self::verified_cache(app_handle, &update) else {
+        let Some(bytes) = Self::verified_cache(&update) else {
             return false;
         };
 
@@ -424,13 +392,13 @@ impl SilentUpdater {
     }
 
     /// Installs `version` for the update dialog, reusing the cache when it holds that version;
-    /// `false` when cancelled before the installer starts.
+    /// A changed offer must be confirmed again before downloading or installing it.
     pub async fn install_update(
         &self,
         app_handle: &tauri::AppHandle,
         version: &str,
         on_event: impl Fn(DownloadEvent) + Sync,
-    ) -> Result<bool> {
+    ) -> Result<InstallUpdateOutcome> {
         let cancel = CancellationToken::new();
         *self.manual_cancel.lock() = Some(cancel.clone());
         let prepared = tokio::select! {
@@ -440,31 +408,36 @@ impl SilentUpdater {
         // `cancel_download` cancels under the lock, so once the token is taken back its state is
         // final; a cancel during the last synchronous poll of `prepare_install` still wins.
         self.manual_cancel.lock().take();
-        let Some((update, bytes)) = prepared.filter(|_| !cancel.is_cancelled()).transpose()? else {
+        let Some(prepared) = prepared.filter(|_| !cancel.is_cancelled()).transpose()? else {
             logging!(info, Type::System, "Update v{version} cancelled");
-            return Ok(false);
+            return Ok(InstallUpdateOutcome::Cancelled);
+        };
+        let Some((update, bytes)) = prepared else {
+            return Ok(InstallUpdateOutcome::UpdateChanged);
         };
 
         logging!(info, Type::System, "Installing update v{version}...");
         Self::install(update, bytes).await?;
         Self::delete_cache();
-        Ok(true)
+        Ok(InstallUpdateOutcome::Installed)
     }
 
     async fn prepare_install(
         app_handle: &tauri::AppHandle,
         version: &str,
         on_event: impl Fn(DownloadEvent) + Sync,
-    ) -> Result<(Update, Vec<u8>)> {
-        let update = Self::check(app_handle)
+    ) -> Result<Option<(Update, Vec<u8>)>> {
+        let Some(update) = Self::check(app_handle)
             .await?
             .filter(|update| update.version == version)
-            .with_context(|| format!("v{version} is no longer offered"))?;
-        let bytes = match Self::verified_cache(app_handle, &update) {
+        else {
+            return Ok(None);
+        };
+        let bytes = match Self::verified_cache(&update) {
             Some(bytes) => bytes,
             None => download(&update, on_event).await?,
         };
-        Ok((update, bytes))
+        Ok(Some((update, bytes)))
     }
 
     pub fn cancel_download(&self) {
@@ -641,7 +614,7 @@ impl SilentUpdater {
             return Ok(());
         }
 
-        if Self::verified_cache(app_handle, &update).is_some() {
+        if Self::verified_cache(&update).is_some() {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {
             logging!(info, Type::System, "Silent updater: downloading v{version}...");

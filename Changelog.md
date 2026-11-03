@@ -24,14 +24,18 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复检测更新后又发布新版时，应用内更新失败
+
 </details>
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+
 </details>
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
+
 
 </details>
