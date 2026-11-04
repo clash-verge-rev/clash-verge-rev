@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "Последние 7 дней",
+    "last30Days": "Последние 30 дней",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "Не удалось загрузить данные",
+    "retry": "Повторить"
+  },
+  "footer": {
+    "note": "Статистика строится опросом соединений раз в секунду: соединения короче 1 с и последний ~1 с каждого соединения могут не учитываться. Данные хранятся только локально (до 90 дней)."
+  }
+}

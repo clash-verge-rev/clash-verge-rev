@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Estatísticas de Tráfego"
+  },
+  "summary": {
+    "title": "Visão geral do tráfego",
+    "totalUpload": "Total enviado",
+    "totalDownload": "Total baixado",
+    "totalConnections": "Conexões",
+    "uniqueDomains": "Domínios",
+    "uniqueProcesses": "Processos"
+  },
+  "filter": {
+    "byDomain": "Por domínio",
+    "byProcess": "Por processo",
+    "timeRange": "Período",
+    "today": "Hoje",
+    "last7Days": "Últimos 7 dias",
+    "last30Days": "Últimos 30 dias",
+    "allTime": "Tudo"
+  },
+  "table": {
+    "domain": "Domínio",
+    "process": "Processo",
+    "upload": "Envio",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Conexões",
+    "noData": "Ainda não há dados de tráfego; gere algum tráfego pelo proxy e aguarde a atualização"
+  },
+  "errors": {
+    "loadFailed": "Falha ao carregar os dados",
+    "retry": "Tentar novamente"
+  },
+  "footer": {
+    "note": "As estatísticas são geradas consultando as conexões uma vez por segundo: conexões com menos de 1 s e o último ~1 s de cada conexão podem não ser contabilizadas. Os dados ficam apenas locais (até 90 dias)."
+  }
+}

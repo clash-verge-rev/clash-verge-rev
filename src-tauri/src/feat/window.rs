@@ -133,6 +133,9 @@ pub async fn open_or_close_dashboard() {
 pub(crate) async fn run_exit_cleanup_flow(stop_failed_notice: NoticeStatus) -> CleanupResult {
     handle::Handle::global().set_is_exiting();
 
+    // Flush traffic stats buffers before the async runtime starts tearing down.
+    crate::traffic_stats::TrafficStatsManager::global().stop().await;
+
     Config::apply_all_and_save_file().await;
 
     let cleanup_result = clean_async().await;

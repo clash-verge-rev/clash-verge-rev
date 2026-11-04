@@ -6,6 +6,7 @@
         "proxies": "프록시",
         "profiles": "프로필",
         "connections": "연결",
+        "trafficStats": "트래픽 통계",
         "rules": "규칙",
         "logs": "로그",
         "unlock": "테스트",

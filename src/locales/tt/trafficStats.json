@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "соңгы 7 көн",
+    "last30Days": "соңгы 30 көн",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "Мәгълүматларны йөкләп булмады",
+    "retry": "Кабатлап карау"
+  },
+  "footer": {
+    "note": "Статистика тоташуларны секундына бер тапкыр сорашуга нигезләнә: 1 секундтан кыска тотышулар һәм һәр тотышуның соңгы ~1 секунды исәпләнмәскә мөмкин. Мәгълүматлар бары тик җирле саклана (90 көнгә кадәр)."
+  }
+}

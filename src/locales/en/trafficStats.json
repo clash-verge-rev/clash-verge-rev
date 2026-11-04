@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "Last 7 days",
+    "last30Days": "Last 30 days",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "retry": "Retry"
+  },
+  "footer": {
+    "note": "Statistics are built by polling connections once per second: connections shorter than 1s and the final ~1s of each connection may not be counted. Data stays local (kept up to 90 days)."
+  }
+}

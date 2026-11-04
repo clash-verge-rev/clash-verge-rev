@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "流量统计"
+  },
+  "summary": {
+    "title": "流量概览",
+    "totalUpload": "总上传",
+    "totalDownload": "总下载",
+    "totalConnections": "连接数",
+    "uniqueDomains": "域名数",
+    "uniqueProcesses": "进程数"
+  },
+  "filter": {
+    "byDomain": "按域名",
+    "byProcess": "按进程",
+    "timeRange": "时间范围",
+    "today": "今天",
+    "last7Days": "近7天",
+    "last30Days": "近30天",
+    "allTime": "全部"
+  },
+  "table": {
+    "domain": "域名",
+    "process": "进程",
+    "upload": "上传",
+    "download": "下载",
+    "total": "总计",
+    "connections": "连接数",
+    "noData": "暂无流量数据，请确保代理已开启并产生流量后刷新页面"
+  },
+  "errors": {
+    "loadFailed": "加载失败",
+    "retry": "重试"
+  },
+  "footer": {
+    "note": "统计基于每秒轮询连接生成：存活不足 1 秒的连接与其关闭前最后约 1 秒的流量可能未被计入。数据仅保存在本地（最长 90 天）。"
+  }
+}

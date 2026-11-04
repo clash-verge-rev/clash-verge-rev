@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "近7天",
+    "last30Days": "近30天",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "載入失敗",
+    "retry": "重試"
+  },
+  "footer": {
+    "note": "統計基於每秒輪詢連線生成：存活不足 1 秒的連線與其關閉前最後約 1 秒的流量可能未被計入。資料僅保存在本機（最長 90 天）。"
+  }
+}

@@ -28,6 +28,8 @@ export type {
   ListenerTransport,
   ListenerProbe,
   UnlockItem,
+  TrafficAggregate,
+  TrafficSummary,
 } from './bindings'
 
 export async function copyClashEnv() {
@@ -500,4 +502,20 @@ export async function checkMediaUnlock(onComplete: Channel<UnlockItem>) {
 
 export async function checkMediaUnlockItem(name: string) {
   return commands.checkMediaUnlockItem(name)
+}
+
+export async function queryTrafficStats(
+  start: string | null,
+  end: string | null,
+  groupBy: 'domain' | 'process',
+  limit: number | null,
+) {
+  return commands.queryTrafficStats(start, end, groupBy, limit)
+}
+
+export async function getTrafficSummary(
+  start: string | null,
+  end: string | null,
+) {
+  return commands.getTrafficSummary(start, end)
 }

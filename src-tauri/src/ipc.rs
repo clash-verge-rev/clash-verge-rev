@@ -96,6 +96,8 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::get_unlock_items,
             cmd::check_media_unlock,
             cmd::check_media_unlock_item,
+            cmd::query_traffic_stats,
+            cmd::get_traffic_summary,
         ])
         .error_handling(tauri_specta::ErrorHandlingMode::Throw)
         .dangerously_cast_bigints_to_number()

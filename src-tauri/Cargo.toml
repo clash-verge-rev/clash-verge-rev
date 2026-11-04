@@ -63,6 +63,7 @@ dirs = "7.0.0"
 dunce = "1.0.5"
 nanoid = "0.5"
 chrono = { workspace = true }
+rusqlite = { workspace = true }
 boa_engine = "0.22.0"
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }

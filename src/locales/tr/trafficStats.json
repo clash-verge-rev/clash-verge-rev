@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "Son 7 gün",
+    "last30Days": "Son 30 gün",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "Veriler yüklenemedi",
+    "retry": "Tekrar dene"
+  },
+  "footer": {
+    "note": "İstatistikler bağlantıların saniyede bir sorgulanmasıyla oluşturulur: 1 saniyeden kısa bağlantılar ve her bağlantının son ~1 saniyesi sayılmayabilir. Veriler yalnızca yerelde saklanır (en fazla 90 gün)."
+  }
+}

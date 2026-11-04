@@ -1,0 +1,38 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "summary": {
+    "title": "Traffic Overview",
+    "totalUpload": "Total Upload",
+    "totalDownload": "Total Download",
+    "totalConnections": "Connections",
+    "uniqueDomains": "Domains",
+    "uniqueProcesses": "Processes"
+  },
+  "filter": {
+    "byDomain": "By Domain",
+    "byProcess": "By Process",
+    "timeRange": "Time Range",
+    "today": "Today",
+    "last7Days": "۷ روز گذشته",
+    "last30Days": "۳۰ روز گذشته",
+    "allTime": "All Time"
+  },
+  "table": {
+    "domain": "Domain",
+    "process": "Process",
+    "upload": "Upload",
+    "download": "Download",
+    "total": "Total",
+    "connections": "Connections",
+    "noData": "No traffic data yet. Make sure proxy is enabled and generate some traffic, then refresh the page"
+  },
+  "errors": {
+    "loadFailed": "بارگذاری داده‌ها ناموفق بود",
+    "retry": "تلاش مجدد"
+  },
+  "footer": {
+    "note": "آمار بر اساس نظرسنجی هر ثانیه از اتصال‌ها ساخته می‌شود: اتصال‌های کوتاه‌تر از ۱ ثانیه و حدود ۱ ثانیه پایانی هر اتصال ممکن است شمرده نشوند. داده‌ها فقط به‌صورت محلی نگهداری می‌شوند (حداکثر ۹۰ روز)."
+  }
+}

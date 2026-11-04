@@ -9,6 +9,7 @@ mod enhance;
 mod feat;
 pub mod ipc;
 mod process;
+pub mod traffic_stats;
 pub mod utils;
 
 use crate::constants::files;
