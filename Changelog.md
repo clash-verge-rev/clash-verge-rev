@@ -27,6 +27,11 @@
 - 修复检测更新后又发布新版时，应用内更新失败
 - 修复全局模式默认停在 `DIRECT` 或 `REJECT` 导致流量未经代理，现自动切换到第一个策略组
 
+**🍎 macOS**
+
+- 修复 macOS TUN 模式下原有 DNS 被清除、关闭后 DNS 未恢复及联网后设置未生效
+- 修复 macOS 断网时误报代理已回退直连，恢复联网后自动重试系统代理
+
 </details>
 
 <details>
@@ -39,5 +44,9 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 优化全局模式代理列表：仅显示 `GLOBAL` 节点，选中其中的策略组时才显示该组
+
+**🍎 macOS**
+
+- 优化 macOS TUN 模式的系统 DNS，增加阿里和 Cloudflare 地址
 
 </details>
