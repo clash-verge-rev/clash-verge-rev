@@ -1970,7 +1970,7 @@ impl ServiceManager {
 
     async fn run_operation(&self, operation: impl Future<Output = Result<()>>) -> Result<()> {
         run_operation_and_then(&RUN_STATE, operation, || async {
-            if let Err(error) = Tray::global().update_menu().await {
+            if let Err(error) = Tray::global().update_part().await {
                 logging!(
                     warn,
                     Type::Service,
