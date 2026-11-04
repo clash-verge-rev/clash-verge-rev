@@ -55,7 +55,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
-bitflags = { workspace = true }
 socket2 = { workspace = true }
 warp = { version = "0.4.3", features = ["server"] }
 open = "5.4.5"
@@ -67,7 +66,6 @@ chrono = { workspace = true }
 boa_engine = "0.22.0"
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
-regex = { workspace = true }
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
   "guard",
 ] }
@@ -76,7 +74,6 @@ tauri-plugin-shell = "2.6.0"
 tauri-plugin-opener = "2.7.2"
 tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
-tauri-plugin-process = "2.4.0"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
 zip = "9.2.2"
@@ -90,7 +87,6 @@ futures = "0.3.34"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.8.0"
-tokio-stream = "0.1.19"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.8.3"
 tracing = { workspace = true }
@@ -156,7 +152,6 @@ tauri-plugin-global-shortcut = "2.4.1"
 tauri-plugin-updater = "2.14.1"
 
 [dev-dependencies]
-criterion = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }
 warp = { version = "0.4.3", features = ["test"] }
 

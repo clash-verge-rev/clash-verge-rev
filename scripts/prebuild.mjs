@@ -6,7 +6,6 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 
 import AdmZip from 'adm-zip'
-import { glob } from 'glob'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { extract } from 'tar'
 
@@ -519,7 +518,7 @@ const resolveServicePermission = async () => {
   let hasChanges = false
 
   for (const f of serviceExecutables) {
-    const files = glob.sync(path.join(SERVICE_DIR, f))
+    const files = fs.globSync(path.join(SERVICE_DIR, f))
     for (const filePath of files) {
       if (fs.existsSync(filePath)) {
         const currentHash = await calculateFileHash(filePath)

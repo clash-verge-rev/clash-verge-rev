@@ -1089,7 +1089,6 @@ dependencies = [
  "async-trait",
  "backon",
  "base64 0.23.1",
- "bitflags 2.13.2",
  "boa_engine",
  "bytes",
  "chrono",
@@ -1100,7 +1099,6 @@ dependencies = [
  "clash-verge-media-unlock",
  "clash-verge-signal",
  "clash_verge_service_ipc",
- "criterion",
  "dark-light",
  "deelevate",
  "dirs 7.0.0",
@@ -1119,7 +1117,6 @@ dependencies = [
  "open",
  "parking_lot 0.13.0",
  "percent-encoding",
- "regex",
  "reqwest 0.13.5",
  "reqwest_dav",
  "rfd",
@@ -1149,7 +1146,6 @@ dependencies = [
  "tauri-plugin-mihomo",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
- "tauri-plugin-process",
  "tauri-plugin-shell",
  "tauri-plugin-updater",
  "tauri-plugin-wdio-webdriver",
@@ -1157,7 +1153,6 @@ dependencies = [
  "tauri-specta",
  "tokio",
  "tokio-rustls",
- "tokio-stream",
  "tokio-util",
  "tracing",
  "warp",
@@ -4695,17 +4690,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "objc2-open-directory"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb82bed227edf5201dfedf072bba4015a33d3d4a98519837295a90f0a23f676d"
-dependencies = [
- "objc2",
- "objc2-core-foundation",
- "objc2-foundation",
-]
-
-[[package]]
 name = "objc2-osa-kit"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7055,7 +7039,6 @@ dependencies = [
  "ntapi",
  "objc2-core-foundation",
  "objc2-io-kit",
- "objc2-open-directory",
  "windows 0.62.2",
 ]
 
@@ -7581,16 +7564,6 @@ dependencies = [
  "url",
  "windows 0.62.2",
  "zbus",
-]
-
-[[package]]
-name = "tauri-plugin-process"
-version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74ae3d8549ae564c0397377373e262f340908eb23a5b9fbe03f2a00007dc0038"
-dependencies = [
- "tauri",
- "tauri-plugin",
 ]
 
 [[package]]
