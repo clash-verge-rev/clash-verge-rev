@@ -580,8 +580,10 @@ impl CoreManager {
             );
             return Ok(());
         }
+        #[cfg(not(target_os = "macos"))]
+        proxy_control::apply().await?;
+        #[cfg(target_os = "macos")]
         if let Err(error) = proxy_control::apply().await {
-            #[cfg(target_os = "macos")]
             if defer_until_network && proxy_control::is_missing_network_service_failure(&error) {
                 logging!(
                     debug,
