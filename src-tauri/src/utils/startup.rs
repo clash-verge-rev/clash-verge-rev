@@ -24,9 +24,7 @@ pub(crate) fn report_error(error: &anyhow::Error) {
         ),
         Err(log_error) => {
             eprintln!("[clash-verge] failed to write startup log: {log_error:#}");
-            format!(
-                "cla助手 could not start.\n\n{detail}\n\nThe diagnostic log could not be written:\n{log_error:#}"
-            )
+            format!("cla助手 could not start.\n\n{detail}\n\nThe diagnostic log could not be written:\n{log_error:#}")
         }
     };
 
