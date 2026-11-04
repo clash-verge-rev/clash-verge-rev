@@ -76,6 +76,9 @@ async fn resolve_setup() {
     #[cfg(target_os = "macos")]
     crate::core::network_watch::start();
 
+    // Watches the TUN edge for the "start hotspot with TUN" preference.
+    crate::core::hotspot::start_auto_watch();
+
     let core_init = AsyncHandler::spawn(|| async {
         init_core_manager().await;
     });
