@@ -1,0 +1,95 @@
+name: Build cla助手 Windows x64
+
+on:
+  push:
+    branches:
+      - main
+      - 'codex/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_INCREMENTAL: 0
+  HUSKY: 0
+  NODE_OPTIONS: '--max-old-space-size=4096'
+
+concurrency:
+  group: cla-windows-x64
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.99.1'
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+          key: cla-windows-x64
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - name: Install Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check changed frontend code
+        run: pnpm exec eslint --max-warnings=0 src/services/update.ts src/hooks/use-update.ts src/components/setting/mods/misc-viewer.tsx src/components/setting/setting-verge-advanced.tsx src/components/home/system-info-card.tsx src/components/layout/layout-sidebar.tsx
+
+      - name: Check architecture boundaries
+        run: node scripts/check-architecture.mjs listen emit invoke
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Prepare build resources
+        run: pnpm run prebuild x86_64-pc-windows-msvc
+
+      - name: Build installer
+        run: pnpm exec tauri build --target x86_64-pc-windows-msvc --bundles nsis
+
+      - name: Verify package and calculate checksum
+        shell: pwsh
+        run: |
+          $binary = [System.IO.File]::ReadAllBytes((Join-Path $PWD 'target/x86_64-pc-windows-msvc/release/cla-master.exe'))
+          $peOffset = [BitConverter]::ToInt32($binary, 0x3c)
+          if ([BitConverter]::ToUInt16($binary, $peOffset + 4) -ne 0x8664) {
+            throw 'The application executable is not Windows x64.'
+          }
+          Get-ChildItem -Path target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe | ForEach-Object {
+            if ($_.VersionInfo.ProductName -ne 'cla助手') {
+              throw "Unexpected installer product name: $($_.VersionInfo.ProductName)"
+            }
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)" | Set-Content -LiteralPath "$($_.FullName).sha256" -Encoding utf8
+          }
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v7
+        with:
+          name: cla-master-windows-x64
+          path: |
+            target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe
+            target/x86_64-pc-windows-msvc/release/bundle/nsis/*-setup.exe.sha256
+          if-no-files-found: error
+          retention-days: 30

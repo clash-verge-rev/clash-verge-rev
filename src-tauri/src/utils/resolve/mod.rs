@@ -173,6 +173,9 @@ async fn init_silent_updater() {
     logging!(debug, Type::Setup, "Initializing silent updater...");
 
     let app_handle = Handle::app_handle();
+    if !SilentUpdater::is_enabled(app_handle) {
+        return;
+    }
 
     // Install cached updates before starting background checks.
     if SilentUpdater::global().try_install_on_startup(app_handle).await {

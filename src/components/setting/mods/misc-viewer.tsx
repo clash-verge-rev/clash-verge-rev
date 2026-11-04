@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+import { APP_UPDATES_ENABLED } from '@/services/update'
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
@@ -25,7 +26,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     appLogMaxSize: 8,
     appLogMaxCount: 12,
     autoCloseConnection: true,
-    autoCheckUpdate: true,
+    autoCheckUpdate: false,
     enableBuiltinEnhanced: true,
     proxyLayoutColumn: 6,
     enableAutoDelayDetection: false,
@@ -43,7 +44,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         appLogMaxSize: verge?.app_log_max_size ?? 128,
         appLogMaxCount: verge?.app_log_max_count ?? 8,
         autoCloseConnection: verge?.auto_close_connection ?? true,
-        autoCheckUpdate: verge?.auto_check_update ?? true,
+        autoCheckUpdate:
+          APP_UPDATES_ENABLED && (verge?.auto_check_update ?? false),
         enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
         proxyLayoutColumn: verge?.proxy_layout_column || 6,
         enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
@@ -64,7 +66,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         app_log_max_size: values.appLogMaxSize,
         app_log_max_count: values.appLogMaxCount,
         auto_close_connection: values.autoCloseConnection,
-        auto_check_update: values.autoCheckUpdate,
+        auto_check_update: APP_UPDATES_ENABLED && values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         enable_auto_delay_detection: values.enableAutoDelayDetection,
@@ -205,6 +207,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <Switch
             edge="end"
             checked={values.autoCheckUpdate}
+            disabled={!APP_UPDATES_ENABLED}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCheckUpdate: c }))
             }

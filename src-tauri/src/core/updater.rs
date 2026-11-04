@@ -21,6 +21,17 @@ pub struct SilentUpdater {
 singleton!(SilentUpdater, SILENT_UPDATER);
 
 impl SilentUpdater {
+    pub fn is_enabled(app_handle: &tauri::AppHandle) -> bool {
+        app_handle
+            .config()
+            .plugins
+            .0
+            .get("updater")
+            .and_then(|config| config.get("endpoints"))
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|endpoints| !endpoints.is_empty())
+    }
+
     const fn new() -> Self {
         Self {
             update_ready: AtomicBool::new(false),
@@ -314,6 +325,10 @@ impl SilentUpdater {
     /// Checks the server; Windows receives `/LANG` to suppress the NSIS language dialog,
     /// see `packages/windows/installer.nsi`.
     async fn check(app_handle: &tauri::AppHandle) -> Result<Option<Update>> {
+        if !Self::is_enabled(app_handle) {
+            return Ok(None);
+        }
+
         let updater_builder = app_handle.updater_builder();
         #[cfg(target_os = "windows")]
         let updater_builder = {
@@ -330,7 +345,7 @@ impl SilentUpdater {
 
     /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
-        if !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true) {
+        if !Self::is_enabled(app_handle) || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(false) {
             Self::delete_cache();
             return false;
         }
@@ -516,7 +531,7 @@ impl SilentUpdater {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
 
         let window = match WebviewWindowBuilder::new(app_handle, "update-splash", WebviewUrl::App("index.html".into()))
-            .title("Clash Verge - Updating")
+            .title("cla助手 - Updating")
             .inner_size(300.0, 180.0)
             .resizable(false)
             .maximizable(false)
@@ -597,7 +612,7 @@ impl SilentUpdater {
         // Registered before reading the switch, so `discard_pending` either cancels it or ran first.
         let cancel = CancellationToken::new();
         *self.background_cancel.lock() = Some(cancel.clone());
-        let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
+        let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(false);
         if !auto_check {
             logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");
             return Ok(());
@@ -660,7 +675,7 @@ impl SilentUpdater {
 
         // Serialized with `discard_pending` in the verge patch, which holds the same lock.
         let _config_write = Config::lock_config_write().await;
-        if cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true) {
+        if cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(false) {
             logging!(
                 info,
                 Type::System,

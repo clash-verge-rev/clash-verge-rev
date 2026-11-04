@@ -38,11 +38,15 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增「cla助手」独立应用及配置目录
+
 
 </details>
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
+
+- 优化应用更新策略，暂时关闭应用更新检查与自动安装
 
 
 </details>

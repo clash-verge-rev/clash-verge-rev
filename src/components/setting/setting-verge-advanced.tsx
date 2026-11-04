@@ -15,7 +15,10 @@ import {
 } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
-import { checkUpdateSafe as checkUpdate } from '@/services/update'
+import {
+  APP_UPDATES_ENABLED,
+  checkUpdateSafe as checkUpdate,
+} from '@/services/update'
 import { version } from '@root/package.json'
 
 import { BackupViewer } from './mods/backup-viewer'
@@ -126,10 +129,12 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         label={t('settings.components.verge.advanced.fields.openLogsDir')}
       />
 
-      <SettingItem
-        onClick={onCheckUpdate}
-        label={t('settings.components.verge.advanced.fields.checkUpdates')}
-      />
+      {APP_UPDATES_ENABLED && (
+        <SettingItem
+          onClick={onCheckUpdate}
+          label={t('settings.components.verge.advanced.fields.checkUpdates')}
+        />
+      )}
 
       <SettingItem
         onClick={() => {

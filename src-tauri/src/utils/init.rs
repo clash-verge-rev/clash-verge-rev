@@ -557,8 +557,8 @@ pub fn init_scheme() -> Result<()> {
 
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let (clash, _) = hkcu.create_subkey("Software\\Classes\\Clash")?;
-    clash.set_value("", &"Clash Verge")?;
-    clash.set_value("URL Protocol", &"Clash Verge URL Scheme Protocol")?;
+    clash.set_value("", &"cla助手")?;
+    clash.set_value("URL Protocol", &"cla助手 URL Scheme Protocol")?;
     let (default_icon, _) = hkcu.create_subkey("Software\\Classes\\Clash\\DefaultIcon")?;
     default_icon.set_value("", &app_exe)?;
     let (command, _) = hkcu.create_subkey("Software\\Classes\\Clash\\Shell\\Open\\Command")?;

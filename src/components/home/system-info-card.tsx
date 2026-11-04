@@ -22,6 +22,7 @@ import {
 import { useVerge } from '@/hooks/use-verge'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { APP_UPDATES_ENABLED } from '@/services/update'
 import { version as appVersion } from '@root/package.json'
 
 import { EnhancedCard } from './enhanced-card'
@@ -62,7 +63,7 @@ export const SystemInfoCard = () => {
   }, [])
 
   useEffect(() => {
-    if (!verge?.auto_check_update) return
+    if (!APP_UPDATES_ENABLED || !verge?.auto_check_update) return
     if (readLastCheckTime() !== null) return
 
     updateLastCheckTime()
@@ -265,24 +266,28 @@ export const SystemInfoCard = () => {
             {getModeText()}
           </Typography>
         </Stack>
-        <Divider />
-        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="body2" color="text.secondary">
-            {t('home.components.systemInfo.fields.lastCheckUpdate')}
-          </Typography>
-          <Typography
-            variant="body2"
-            onClick={onCheckUpdate}
-            sx={{
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              fontWeight: 'medium',
-              '&:hover': { opacity: 0.7 },
-            }}
-          >
-            {lastCheckUpdateText}
-          </Typography>
-        </Stack>
+        {APP_UPDATES_ENABLED && (
+          <>
+            <Divider />
+            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+              <Typography variant="body2" color="text.secondary">
+                {t('home.components.systemInfo.fields.lastCheckUpdate')}
+              </Typography>
+              <Typography
+                variant="body2"
+                onClick={onCheckUpdate}
+                sx={{
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontWeight: 'medium',
+                  '&:hover': { opacity: 0.7 },
+                }}
+              >
+                {lastCheckUpdateText}
+              </Typography>
+            </Stack>
+          </>
+        )}
         <Divider />
         <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
