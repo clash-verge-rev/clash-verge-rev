@@ -76,7 +76,7 @@ tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.2.2"
+zip = "9.3.0"
 flate2 = "1.1.10"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
