@@ -40,6 +40,7 @@ interface IConfigData {
     'auto-redirect'?: boolean
     'auto-detect-interface': boolean
     'dns-hijack': string[]
+    'dns-mode'?: string
     'route-exclude-address'?: string[]
     'strict-route': boolean
     mtu: number
@@ -102,30 +103,6 @@ interface IProxyItem {
 
 type IProxyGroupItem = Omit<IProxyItem, 'all'> & {
   all: IProxyItem[]
-}
-
-interface IProxyProviderItem {
-  name: string
-  type: string
-  proxies: IProxyItem[]
-  updatedAt: string
-  vehicleType: string
-  subscriptionInfo?: {
-    Upload: number
-    Download: number
-    Total: number
-    Expire: number
-  }
-}
-
-interface IRuleProviderItem {
-  name: string
-  behavior: string
-  format: string
-  ruleCount: number
-  type: string
-  updatedAt: string
-  vehicleType: string
 }
 
 interface ITrafficItem {

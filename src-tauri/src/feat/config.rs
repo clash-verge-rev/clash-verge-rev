@@ -27,7 +27,7 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
 
 /// Apply a patch without post-update reconciliation.
 pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Result<()> {
-    let config_write = Config::try_lock_config_write()?;
+    let config_write = Config::lock_config_write().await;
     apply_verge_patch_locked(&config_write, patch, not_save_file).await
 }
 

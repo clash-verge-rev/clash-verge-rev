@@ -495,11 +495,13 @@
         "strictRoute": "توجيه صارم",
         "autoDetectInterface": "الكشف التلقائي عن الواجهة",
         "dnsHijack": "اختطاف DNS",
+        "dnsMode": "وضع DNS",
         "mtu": "وحدة الإرسال القصوى",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "يحافظ Auto على السلوك القديم؛ يتطلب hijack تفعيل توجيه صارم على Windows أو Auto Redirect على Linux",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

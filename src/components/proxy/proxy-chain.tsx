@@ -25,7 +25,6 @@ import {
   keyframes,
   useTheme,
 } from '@mui/material'
-import * as yaml from 'js-yaml'
 import {
   type Ref,
   useCallback,
@@ -60,18 +59,9 @@ const chainPointerSensor = PointerSensor.configure({
 
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
 
-interface ParsedChainConfig {
-  proxies?: Array<{
-    name: string
-    type: string
-    [key: string]: any
-  }>
-}
-
 interface ProxyChainProps {
   proxyChain: ProxyChainItem[]
   onUpdateChain: (chain: ProxyChainItem[]) => void
-  chainConfigData?: string | null
   onMarkUnsavedChanges?: () => void
   mode?: string
   selectedGroup?: string | null
@@ -97,21 +87,6 @@ const arrowFadeIn = keyframes`
     transform: translateY(0);
   }
 `
-
-const toChainItems = (
-  parsedConfig: ParsedChainConfig | null | undefined,
-): ProxyChainItem[] => {
-  const timestamp = Date.now()
-
-  return (
-    parsedConfig?.proxies?.map((proxy, index) => ({
-      id: `${proxy.name}_${timestamp}_${index}`,
-      name: proxy.name,
-      type: proxy.type,
-      delay: undefined,
-    })) || []
-  )
-}
 
 interface ChainCardProps {
   proxy: ProxyChainItem
@@ -328,7 +303,6 @@ const SortableProxyChainItem = ({
 export const ProxyChain = ({
   proxyChain,
   onUpdateChain,
-  chainConfigData,
   onMarkUnsavedChanges,
   mode,
   selectedGroup,
@@ -579,23 +553,6 @@ export const ProxyChain = ({
     onUpdateChain,
     recordSelection,
   ])
-
-  // 处理链式代理配置数据
-  useEffect(() => {
-    if (chainConfigData) {
-      try {
-        // JSON is valid YAML, so one parser covers both persisted formats.
-        const parsedConfig = yaml.load(chainConfigData) as ParsedChainConfig
-        const chainItems = toChainItems(parsedConfig)
-
-        if (chainItems.length > 0) {
-          onUpdateChain(chainItems)
-        }
-      } catch (error) {
-        console.error('Failed to process chain config data:', error)
-      }
-    }
-  }, [chainConfigData, onUpdateChain])
 
   return (
     <Paper

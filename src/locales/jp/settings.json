@@ -495,11 +495,13 @@
         "strictRoute": "厳格なルート",
         "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
         "dnsHijack": "DNSハイジャック",
+        "dnsMode": "DNSモード",
         "mtu": "最大転送単位",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "Auto は従来の動作を維持します。hijack には Windows で厳格なルートまたは Linux で Auto Redirect が必要です",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

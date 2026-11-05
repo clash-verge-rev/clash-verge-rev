@@ -21,6 +21,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useReducer,
   useRef,
   useState,
@@ -113,7 +114,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const setProfileLoading = useSetProfileLoading()
 
   const [showNextUpdate, setShowNextUpdate] = useState(false)
-  const showNextUpdateRef = useRef(false)
   const [nextUpdateTime, setNextUpdateTime] = useState('')
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -204,10 +204,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   }
 
   useEffect(() => {
-    showNextUpdateRef.current = showNextUpdate
-  }, [showNextUpdate])
-
-  useEffect(() => {
     if (showNextUpdate) {
       fetchNextUpdateTime()
     }
@@ -218,8 +214,10 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     updated,
   ])
 
+  const isNextUpdateShown = useEffectEvent(() => showNextUpdate)
+
   useEffect(() => {
-    if (timerUpdateRevision === 0 || !showNextUpdateRef.current) return
+    if (timerUpdateRevision === 0 || !isNextUpdateShown()) return
 
     if (refreshTimeoutRef.current !== undefined) {
       clearTimeout(refreshTimeoutRef.current)
@@ -236,7 +234,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   }, [fetchNextUpdateTime, timerUpdateRevision])
 
   useEffect(() => {
-    if (completedUpdateRevision === 0 || !showNextUpdateRef.current) return
+    if (completedUpdateRevision === 0 || !isNextUpdateShown()) return
     fetchNextUpdateTime()
   }, [completedUpdateRevision, fetchNextUpdateTime])
 

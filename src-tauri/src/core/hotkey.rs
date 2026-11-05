@@ -466,12 +466,3 @@ impl Hotkey {
         (del_list, add_list)
     }
 }
-
-impl Drop for Hotkey {
-    fn drop(&mut self) {
-        let app_handle = handle::Handle::app_handle();
-        if let Err(e) = app_handle.global_shortcut().unregister_all() {
-            logging!(error, Type::Hotkey, "Error unregistering all hotkeys: {:?}", e);
-        }
-    }
-}

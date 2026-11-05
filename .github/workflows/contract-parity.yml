@@ -1,0 +1,80 @@
+name: Contract Parity
+
+on:
+  pull_request:
+    paths:
+      - "src-tauri/**/*.rs"
+      - "crates/**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "src-tauri/Cargo.toml"
+      - "crates/**/Cargo.toml"
+      - "rust-toolchain.toml"
+      - "src-tauri/tauri.conf*.json"
+      - "src/services/bindings.ts"
+      - "scripts/gen-contract.mjs"
+      - "scripts/check-contract-changes.mjs"
+      - "biome.json"
+      - "biome.jsonc"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "scripts/contract-inputs.json"
+      - ".github/workflows/contract-parity.yml"
+      - ".husky/pre-push"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  HUSKY: 0
+
+jobs:
+  contract-parity:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-ubuntu-22.04-x86_64-unknown-linux-gnu-contract'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Provision sidecar placeholders for tauri-build
+        run: |
+          mkdir -p src-tauri/sidecar src-tauri/resources dist
+          touch dist/index.html
+          for bin in clash-verge-service clash-verge-service-install clash-verge-service-uninstall verge-mihomo verge-mihomo-alpha; do
+            touch "src-tauri/sidecar/${bin}-x86_64-unknown-linux-gnu"
+          done
+
+      - name: Check generated contract without changing the checkout
+        run: pnpm gen:contract --check

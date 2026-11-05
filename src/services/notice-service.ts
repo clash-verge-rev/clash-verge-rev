@@ -148,15 +148,6 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
       raw = extra
       continue
     }
-
-    if (!params && isPlainRecord(extra)) {
-      params = extra
-      continue
-    }
-
-    if (duration === undefined && typeof extra === 'number') {
-      duration = extra
-    }
   }
 
   return {

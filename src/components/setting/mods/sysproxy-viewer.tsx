@@ -13,13 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react'
+import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -41,6 +35,7 @@ import {
   getSystemHostname,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
@@ -87,6 +82,17 @@ const splitBypass = (value?: string) =>
     .map((item) => item.trim())
     .filter(Boolean)
 
+const buildInitialValues = (verge?: IVergeConfig | null) => ({
+  guard: verge?.enable_proxy_guard,
+  enable_bypass_check: verge?.enable_bypass_check ?? true,
+  bypass: verge?.system_proxy_bypass,
+  duration: verge?.proxy_guard_duration ?? 10,
+  use_default: verge?.use_default_bypass ?? true,
+  pac: verge?.proxy_auto_config,
+  pac_content: verge?.pac_file_content ?? DEFAULT_PAC,
+  proxy_host: verge?.proxy_host ?? '127.0.0.1',
+})
+
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
   const systemName = getSystem()
@@ -116,23 +122,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_host,
   } = verge ?? {}
 
-  const [value, setValue] = useState({
-    guard: enable_proxy_guard,
-    enable_bypass_check: enable_bypass_check ?? true,
-    bypass: system_proxy_bypass,
-    duration: proxy_guard_duration ?? 10,
-    use_default: use_default_bypass ?? true,
-    pac: proxy_auto_config,
-    pac_content: pac_file_content ?? DEFAULT_PAC,
-    proxy_host: proxy_host ?? '127.0.0.1',
+  const [value, setValue] = useState(() => buildInitialValues(null))
+  const { data: embeddedServerPort } = useQuery({
+    queryKey: ['getEmbeddedServerPort'],
+    queryFn: getEmbeddedServerPort,
   })
-  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
-    null,
-  )
-
-  useEffect(() => {
-    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
-  }, [])
 
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 
@@ -192,16 +186,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true)
-      setValue({
-        guard: enable_proxy_guard,
-        enable_bypass_check: enable_bypass_check ?? true,
-        bypass: system_proxy_bypass,
-        duration: proxy_guard_duration ?? 10,
-        use_default: use_default_bypass ?? true,
-        pac: proxy_auto_config,
-        pac_content: pac_file_content ?? DEFAULT_PAC,
-        proxy_host: proxy_host ?? '127.0.0.1',
-      })
+      setValue(buildInitialValues(verge))
       fetchNetworkInterfaces()
     },
     close: () => setOpen(false),
@@ -339,7 +324,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     Promise.resolve().then(async () => {
       try {
         if (Object.keys(patch).length > 0) {
-          mutateVerge({ ...verge, ...patch }, false)
+          mutateVerge({ ...verge, ...patch })
         }
         if (Object.keys(patch).length > 0) {
           await patchVerge(patch)

@@ -49,6 +49,7 @@ async fn reapply() {
         .enable_system_proxy
         .unwrap_or_default()
     {
+        crate::utils::resolve::dns::sync_public_dns().await;
         return;
     }
     if !proxy_control::has_network_service().await {

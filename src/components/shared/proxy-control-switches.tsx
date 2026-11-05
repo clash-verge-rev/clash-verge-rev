@@ -163,7 +163,7 @@ const ProxyControlSwitches = ({
       })
       return false
     }
-    mutateVerge({ ...verge, enable_tun_mode: value }, false)
+    mutateVerge({ ...verge, enable_tun_mode: value })
     await patchVerge({ enable_tun_mode: value })
   }
 
@@ -229,8 +229,8 @@ const ProxyControlSwitches = ({
         />
       )}
 
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
+      {isSystemProxyMode && <SysproxyViewer ref={sysproxyRef} />}
+      {isTunMode && <TunViewer ref={tunRef} />}
     </Box>
   )
 }

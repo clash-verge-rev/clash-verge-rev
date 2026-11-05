@@ -13,7 +13,7 @@ use crate::{
             CORE_REJECTED_PREFIX, OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE,
             ReadyWaitError, RunState, RunStateEnv, RunStateStore, ServiceHealth,
         },
-        runtime_bundle::{RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
+        runtime_bundle::{GEO_ASSETS, RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
         tray::Tray,
     },
     process::AsyncHandler,
@@ -101,6 +101,7 @@ struct ActiveServiceSession {
     proof: OwnerSessionProof,
     supports_runtime_staging: bool,
     supports_runtime_file_read: bool,
+    supports_runtime_geo_read: bool,
 }
 
 fn generate_service_session_token() -> Result<String> {
@@ -132,6 +133,13 @@ pub(crate) fn active_service_supports_runtime_file_read() -> bool {
         .is_some_and(|session| session.supports_runtime_file_read)
 }
 
+fn active_service_supports_runtime_geo_read() -> bool {
+    ACTIVE_SERVICE_SESSION
+        .lock()
+        .as_ref()
+        .is_some_and(|session| session.supports_runtime_geo_read)
+}
+
 pub(crate) fn clear_active_service_session() {
     ACTIVE_SERVICE_SESSION.lock().take();
 }
@@ -140,6 +148,7 @@ pub(crate) fn clear_active_service_session() {
 struct ServiceCapabilities {
     runtime_staging: bool,
     runtime_file_read: bool,
+    runtime_geo_read: bool,
 }
 
 impl ServiceCapabilities {
@@ -147,6 +156,7 @@ impl ServiceCapabilities {
         Self {
             runtime_staging: info.supports_runtime_staging(),
             runtime_file_read: info.supports_runtime_file_read(),
+            runtime_geo_read: info.supports_runtime_geo_read(),
         }
     }
 }
@@ -593,49 +603,70 @@ fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> R
 }
 
 #[cfg(target_os = "windows")]
-fn uninstall_service() -> Result<()> {
-    logging!(info, Type::Service, "uninstall service");
-
+pub(super) fn run_maybe_elevated(program: &Path, hide_window: bool) -> Result<std::process::ExitStatus> {
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt as _;
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall.exe", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
-    })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
-
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
     let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
-        _ => StdCommand::new(uninstall_path).creation_flags(0x08000000).status()?,
+        PrivilegeLevel::NotPrivileged => {
+            let mut command = RunasCommand::new(program);
+            if hide_window {
+                command.show(false);
+            }
+            command.status()?
+        }
+        _ => {
+            let mut command = StdCommand::new(program);
+            if hide_window {
+                // 0x08000000 is CREATE_NO_WINDOW, the direct counterpart of runas's show(false).
+                command.creation_flags(0x08000000);
+            }
+            command.status()?
+        }
     };
+    Ok(status)
+}
 
+fn uninstaller_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
+    let uninstall_path = packaged_service_tool_path(file_name, packaged_path)?;
+    if !uninstall_path.exists() {
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
+    }
+    Ok(uninstall_path)
+}
+
+fn ensure_uninstall_success(status: &std::process::ExitStatus) -> Result<()> {
     if !status.success() {
         bail!(
             "failed to uninstall service with status {}",
             status.code().unwrap_or(-1)
         );
     }
-
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn uninstall_service() -> Result<()> {
+    logging!(info, Type::Service, "uninstall service");
+
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
+    })?;
+
+    let status = run_maybe_elevated(&uninstall_path, true)?;
+    ensure_uninstall_success(&status)
 }
 
 #[cfg(target_os = "linux")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
         Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall"))
     })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
 
     let elevator = crate::utils::help::linux_elevator();
     let status = if linux_running_as_root() {
@@ -666,14 +697,7 @@ fn uninstall_service() -> Result<()> {
         status.code().unwrap_or(-1)
     );
 
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-
-    Ok(())
+    ensure_uninstall_success(&status)
 }
 
 #[cfg(target_os = "linux")]
@@ -688,13 +712,9 @@ fn linux_running_as_root() -> bool {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
         Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall"))
     })?;
-
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
 
     let uninstall_path = macos_service_tool_path(&uninstall_path)?;
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
@@ -711,14 +731,7 @@ fn uninstall_service() -> Result<()> {
 
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-
-    Ok(())
+    ensure_uninstall_success(&status)
 }
 
 fn install_service() -> Result<()> {
@@ -956,6 +969,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         },
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
+        supports_runtime_geo_read: capabilities.runtime_geo_read,
     });
 
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
@@ -1204,6 +1218,62 @@ async fn sync_runtime_providers_by_service() -> Result<ProviderSync> {
     tracing::Span::current().record("synced", outcome.synced);
     tracing::Span::current().record("pending", outcome.pending);
     Ok(outcome)
+}
+
+/// Pulls geo databases the service core rewrote, because validation reads the app dir.
+pub(crate) async fn sync_runtime_geo_by_service() {
+    if !active_service_supports_runtime_geo_read() {
+        return;
+    }
+    let (Ok(credentials), Ok(session), Ok(app_dir)) = (
+        current_owner_credentials(),
+        active_service_session(),
+        dirs::app_home_dir(),
+    ) else {
+        return;
+    };
+    for asset in GEO_ASSETS {
+        if let Err(error) = sync_runtime_geo(&credentials, &session, asset, &app_dir.join(asset)).await {
+            logging!(warn, Type::Service, "failed to sync geo database {asset}: {error:#}");
+        }
+    }
+}
+
+async fn sync_runtime_geo(
+    credentials: &OwnerCredentials,
+    session: &OwnerSessionProof,
+    asset: &str,
+    target: &Path,
+) -> Result<()> {
+    let Ok(local) = tokio::fs::metadata(target).await else {
+        return Ok(());
+    };
+    let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, asset, u64::MAX).await? else {
+        return Ok(());
+    };
+    // A newer local file is a change the next staging still has to copy into the runtime.
+    if UNIX_EPOCH + Duration::from_nanos(runtime_mtime_ns) <= local.modified()? {
+        return Ok(());
+    }
+    let (temp, file) = create_sync_temp(target).await?;
+    let result = async {
+        if let Fetch::Complete {
+            mtime_ns: Some(mtime_ns),
+            ..
+        } = fetch_runtime_file(credentials, session, asset, file).await?
+        {
+            // Matching the runtime copy's time lets the service skip copying these bytes straight back.
+            std::fs::File::options()
+                .write(true)
+                .open(&temp)?
+                .set_modified(UNIX_EPOCH + Duration::from_nanos(mtime_ns))?;
+            tokio::fs::rename(&temp, target).await?;
+        }
+        anyhow::Ok(())
+    }
+    .await;
+    remove_temp(&temp).await;
+    result
 }
 
 // The on-disk YAML may describe a rejected apply; use the committed runtime.
@@ -1900,7 +1970,7 @@ impl ServiceManager {
 
     async fn run_operation(&self, operation: impl Future<Output = Result<()>>) -> Result<()> {
         run_operation_and_then(&RUN_STATE, operation, || async {
-            if let Err(error) = Tray::global().update_menu().await {
+            if let Err(error) = Tray::global().update_part().await {
                 logging!(
                     warn,
                     Type::Service,

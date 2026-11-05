@@ -495,11 +495,13 @@
         "strictRoute": "Katı Yönlendirme",
         "autoDetectInterface": "Arayüzü Otomatik Algıla",
         "dnsHijack": "DNS Ele Geçirme",
+        "dnsMode": "DNS Modu",
         "mtu": "Maksimum İletim Birimi",
         "autoRedirect": "Otomatik Yönlendirme"
       },
       "tooltips": {
         "dnsHijack": "Birden fazla DNS sunucusunu ayırmak için lütfen , kullanın",
+        "dnsMode": "Auto eski davranışı korur; hijack için Windows'ta Katı Yönlendirme veya Linux'ta Otomatik Yönlendirme gerekir",
         "autoRedirect": "nftables/iptables TCP yönlendirmelerini otomatik olarak yapılandırır"
       },
       "messages": {

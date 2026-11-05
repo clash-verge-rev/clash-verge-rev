@@ -5,7 +5,7 @@ mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
-use clash_verge_logging::{LogRing, Type, logging};
+use clash_verge_logging::{LogRing, Type, logging, logging_error};
 use std::{
     fmt,
     sync::{
@@ -274,6 +274,10 @@ impl CoreManager {
 
     pub(crate) fn finish_config_update(&self) {
         self.config_update_in_progress.store(false, Ordering::Release);
+        // Spawned because the caller may still hold the config write lock this waits for.
+        crate::process::AsyncHandler::spawn(|| async {
+            logging_error!(Type::Config, crate::config::Config::sync_dns_override().await);
+        });
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]

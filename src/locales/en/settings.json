@@ -495,11 +495,13 @@
         "strictRoute": "Strict Route",
         "autoDetectInterface": "Auto Detect Interface",
         "dnsHijack": "DNS Hijack",
+        "dnsMode": "DNS Mode",
         "mtu": "Max Transmission Unit",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "Auto keeps the legacy behavior; hijack requires Strict Route on Windows or Auto Redirect on Linux",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

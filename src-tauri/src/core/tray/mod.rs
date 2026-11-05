@@ -422,12 +422,11 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<&str, &str> {
                     let mut parts = item.split(',');
                     match (parts.next(), parts.next()) {
                         (Some(func), Some(key)) => {
-                            // 托盘菜单中的 `accelerator` 属性，在 Linux/Windows 中都不支持小键盘按键的解析
-                            if key.to_uppercase().contains("NUMPAD") {
-                                None
-                            } else {
-                                Some((func, key))
-                            }
+                            // 托盘菜单的 `accelerator` 在 Linux/Windows 下不支持小键盘按键，Windows 下也不支持 Win 键（前端上报为 `CMD`）
+                            let uppercase_key = key.to_uppercase();
+                            let unsupported =
+                                uppercase_key.contains("NUMPAD") || (cfg!(windows) && uppercase_key.contains("CMD"));
+                            if unsupported { None } else { Some((func, key)) }
                         }
                         _ => None,
                     }
@@ -637,7 +636,8 @@ async fn create_tray_menu(
         .tray_proxy_groups_display_mode
         .as_deref()
         .unwrap_or("default");
-    let include_proxy_groups = options.include_proxy_groups && tray_proxy_groups_display_mode != "disable";
+    let include_proxy_groups =
+        options.include_proxy_groups && verge_settings.tray_proxy_groups_display_mode.as_deref() != Some("disable");
 
     let proxy_group_order_map = runtime_proxy_groups_order;
 

@@ -35,8 +35,8 @@ it('applies and records independent group selections while another group is pend
   const secondSuccess = vi.fn()
   const first = useProxySelection({ onSuccess: firstSuccess })
   const second = useProxySelection({ onSuccess: secondSuccess })
-  first.changeProxy('Group A', 'Node A')
-  second.changeProxy('Group B', 'Node B')
+  first.select('Group A', 'Node A')
+  second.select('Group B', 'Node B')
   await vi.waitFor(() =>
     expect(record).toHaveBeenCalledWith('Group B', 'Node B'),
   )

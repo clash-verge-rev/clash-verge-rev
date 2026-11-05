@@ -146,7 +146,12 @@ export const BackupHistoryViewer = ({
         setRows([])
         return
       }
-      if (!isLocal && webdavStatus === 'failed' && !options?.force) {
+      // Read the status here: as a dependency, the write below re-runs the fetch.
+      if (
+        !isLocal &&
+        getWebdavStatus(webdavSignature) === 'failed' &&
+        !options?.force
+      ) {
         setRows([])
         return
       }
@@ -180,7 +185,7 @@ export const BackupHistoryViewer = ({
         setLoading(false)
       }
     },
-    [buildRow, isLocal, open, shouldSkipWebDav, webdavSignature, webdavStatus],
+    [buildRow, isLocal, open, shouldSkipWebDav, webdavSignature],
   )
 
   useEffect(() => {

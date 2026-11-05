@@ -324,6 +324,7 @@ impl CoreConfigValidator {
             return Self::validate_file_syntax_outcome(config_path).await;
         }
 
+        crate::core::service::sync_runtime_geo_by_service().await;
         let is_script = match Self::is_script_file(config_path).await {
             Ok(result) => result,
             Err(err) => {
@@ -425,6 +426,8 @@ impl CoreConfigValidator {
         }
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
+        // The test run reads the app dir, which never sees updates made by a service core.
+        crate::core::service::sync_runtime_geo_by_service().await;
         let fingerprint = validation_fingerprint(yaml).await;
         if *LAST_VALIDATED.lock() == Some(fingerprint) {
             logging!(info, Type::Validate, "配置与上次通过验证的字节一致，跳过内核检查");

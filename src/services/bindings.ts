@@ -23,19 +23,26 @@ export const commands = {
     __TAURI_INVOKE<string[]>('get_network_interfaces'),
   getSystemHostname: () => __TAURI_INVOKE<string>('get_system_hostname'),
   restartApp: () => __TAURI_INVOKE<null>('restart_app'),
-  installUpdate: (version: string, onEvent: Channel<DownloadEvent>) =>
-    __TAURI_INVOKE<boolean>('install_update', { version, onEvent }),
+  installUpdate: (
+    version: string,
+    onEvent: Channel<DownloadEvent_Deserialize>,
+  ) =>
+    __TAURI_INVOKE<InstallUpdateOutcome>('install_update', {
+      version,
+      onEvent,
+    }),
   cancelUpdateDownload: () => __TAURI_INVOKE<void>('cancel_update_download'),
   restartCore: () => __TAURI_INVOKE<null>('restart_core'),
   /**  Replaces the managed core binary atomically instead of letting mihomo overwrite itself. */
   upgradeClashCore: (force: boolean) =>
     __TAURI_INVOKE<CoreUpgradeReport>('upgrade_clash_core', { force }),
   /**  Returns one coherent core/service snapshot instead of independently refreshed state. */
-  getRuntimeState: () => __TAURI_INVOKE<RunStateView>('get_runtime_state'),
+  getRuntimeState: () =>
+    __TAURI_INVOKE<RunStateView_Serialize>('get_runtime_state'),
   getPendingFailures: () =>
     __TAURI_INVOKE<PendingFailure[]>('get_pending_failures'),
   getSidecarFailure: () =>
-    __TAURI_INVOKE<SidecarFailureSnapshot>('get_sidecar_failure'),
+    __TAURI_INVOKE<SidecarFailureSnapshot_Serialize>('get_sidecar_failure'),
   entryLightweightMode: () => __TAURI_INVOKE<null>('entry_lightweight_mode'),
   installService: () =>
     __TAURI_INVOKE<ServiceInstallOutcome>('install_service'),
@@ -45,7 +52,7 @@ export const commands = {
   repairService: () => __TAURI_INVOKE<ServiceInstallOutcome>('repair_service'),
   continueWithSidecar: () => __TAURI_INVOKE<null>('continue_with_sidecar'),
   syncRuntimeProviders: () => __TAURI_INVOKE<void>('sync_runtime_providers'),
-  getClashInfo: () => __TAURI_INVOKE<ClashInfo>('get_clash_info'),
+  getClashInfo: () => __TAURI_INVOKE<ClashInfo_Serialize>('get_clash_info'),
   patchClashConfig: (payload: YamlMapping) =>
     __TAURI_INVOKE<null>('patch_clash_config', { payload }),
   patchClashMode: (payload: string) =>
@@ -53,16 +60,11 @@ export const commands = {
   /**  Reads the saved mode without depending on strict mihomo `/configs` deserialization. */
   getClashMode: () => __TAURI_INVOKE<string | null>('get_clash_mode'),
   changeClashCore: (clashCore: string) =>
-    __TAURI_INVOKE<{
-      /**  Stable frontend identifier, when classified. */
-      code?: string | null
-      /**  Human-readable diagnostic detail. */
-      detail: string
-      /**  Requested operation when known by the command. */
-      operation?: FailedOperation | null
-    } | null>('change_clash_core', { clashCore }),
+    __TAURI_INVOKE<CommandFailure_Serialize | null>('change_clash_core', {
+      clashCore,
+    }),
   getRuntimeConfig: () =>
-    __TAURI_INVOKE<{ [key in string]: JsonValue } | null>('get_runtime_config'),
+    __TAURI_INVOKE<YamlMapping | null>('get_runtime_config'),
   getProxyView: () => __TAURI_INVOKE<ProxyViewV1_Serialize>('get_proxy_view'),
   getRuntimeYaml: () => __TAURI_INVOKE<string>('get_runtime_yaml'),
   getRuntimeLogs: () => __TAURI_INVOKE<RuntimeLogs>('get_runtime_logs'),
@@ -70,7 +72,7 @@ export const commands = {
     __TAURI_INVOKE<string>('get_runtime_proxy_chain_config', {
       proxyChainExitNode,
     }),
-  updateProxyChainConfigInRuntime: (proxyChainConfig: JsonValue | null) =>
+  updateProxyChainConfigInRuntime: (proxyChainConfig: YamlValue | null) =>
     __TAURI_INVOKE<ValidationOutcome>('update_proxy_chain_config_in_runtime', {
       proxyChainConfig,
     }),
@@ -100,18 +102,11 @@ export const commands = {
   takeDnsOverrideNotice: () =>
     __TAURI_INVOKE<boolean>('take_dns_override_notice'),
   takeServiceFallbackNotice: () =>
-    __TAURI_INVOKE<
-      | { kind: 'unavailable' }
-      | { kind: 'coreRejected'; reason: string }
-      | { kind: 'notAutoStarted' }
-      | null
-    >('take_service_fallback_notice'),
+    __TAURI_INVOKE<ServiceFallbackNotice | null>(
+      'take_service_fallback_notice',
+    ),
   getCoreStartupError: () =>
-    __TAURI_INVOKE<
-      | { kind: 'startFailed'; detail: string }
-      | { kind: 'serviceCoreStopped'; detail: string }
-      | null
-    >('get_core_startup_error'),
+    __TAURI_INVOKE<CoreFailure | null>('get_core_startup_error'),
   takeServiceRepairNotice: () =>
     __TAURI_INVOKE<boolean>('take_service_repair_notice'),
   takeServiceOwnerNotice: () =>
@@ -137,10 +132,12 @@ export const commands = {
   openDevtools: () => __TAURI_INVOKE<void>('open_devtools'),
   exitApp: () => __TAURI_INVOKE<void>('exit_app'),
   getNetworkInterfacesInfo: () =>
-    __TAURI_INVOKE<NetworkInterfaceView[]>('get_network_interfaces_info'),
+    __TAURI_INVOKE<NetworkInterfaceView_Serialize[]>(
+      'get_network_interfaces_info',
+    ),
   getProfiles: () => __TAURI_INVOKE<IProfiles_Serialize>('get_profiles'),
   enhanceProfiles: () => __TAURI_INVOKE<ValidationOutcome>('enhance_profiles'),
-  patchProfilesConfig: (profiles: ProfileSelection) =>
+  patchProfilesConfig: (profiles: ProfileSelection_Deserialize) =>
     __TAURI_INVOKE<ValidationOutcome>('patch_profiles_config', { profiles }),
   viewProfile: (index: string) =>
     __TAURI_INVOKE<null>('view_profile', { index }),
@@ -148,52 +145,12 @@ export const commands = {
     __TAURI_INVOKE<null>('patch_profile', { index, profile }),
   createProfile: (item: ProfileCreate_Deserialize, fileData: string | null) =>
     __TAURI_INVOKE<null>('create_profile', { item, fileData }),
-  importProfile: (
-    url: string,
-    option: {
-      user_agent?: string | null
-      with_proxy?: boolean | null
-      self_proxy?: boolean | null
-      update_interval?: number | null
-      /**
-       *  HTTP request timeout in seconds
-       *  default is 60 seconds
-       */
-      timeout_seconds?: number | null
-      /**  default is `false` */
-      danger_accept_invalid_certs?: boolean | null
-      allow_auto_update?: boolean | null
-      merge?: string | null
-      script?: string | null
-      rules?: string | null
-      proxies?: string | null
-      groups?: string | null
-    } | null,
-  ) => __TAURI_INVOKE<null>('import_profile', { url, option }),
+  importProfile: (url: string, option: PrfOption_Deserialize | null) =>
+    __TAURI_INVOKE<null>('import_profile', { url, option }),
   reorderProfile: (activeId: string, overId: string) =>
     __TAURI_INVOKE<null>('reorder_profile', { activeId, overId }),
-  updateProfile: (
-    index: string,
-    option: {
-      user_agent?: string | null
-      with_proxy?: boolean | null
-      self_proxy?: boolean | null
-      update_interval?: number | null
-      /**
-       *  HTTP request timeout in seconds
-       *  default is 60 seconds
-       */
-      timeout_seconds?: number | null
-      /**  default is `false` */
-      danger_accept_invalid_certs?: boolean | null
-      allow_auto_update?: boolean | null
-      merge?: string | null
-      script?: string | null
-      rules?: string | null
-      proxies?: string | null
-      groups?: string | null
-    } | null,
-  ) => __TAURI_INVOKE<null>('update_profile', { index, option }),
+  updateProfile: (index: string, option: PrfOption_Deserialize | null) =>
+    __TAURI_INVOKE<null>('update_profile', { index, option }),
   deleteProfile: (index: string) =>
     __TAURI_INVOKE<null>('delete_profile', { index }),
   readProfileFile: (index: string) =>
@@ -221,11 +178,14 @@ export const commands = {
     __TAURI_INVOKE<null>('delete_webdav_backup', { filename }),
   restoreWebdavBackup: (filename: string) =>
     __TAURI_INVOKE<null>('restore_webdav_backup', { filename }),
-  getUnlockItems: () => __TAURI_INVOKE<UnlockItem[]>('get_unlock_items'),
-  checkMediaUnlock: (onComplete: Channel<UnlockItem>) =>
-    __TAURI_INVOKE<UnlockItem[]>('check_media_unlock', { onComplete }),
+  getUnlockItems: () =>
+    __TAURI_INVOKE<UnlockItem_Serialize[]>('get_unlock_items'),
+  checkMediaUnlock: (onComplete: Channel<UnlockItem_Deserialize>) =>
+    __TAURI_INVOKE<UnlockItem_Serialize[]>('check_media_unlock', {
+      onComplete,
+    }),
   checkMediaUnlockItem: (name: string) =>
-    __TAURI_INVOKE<UnlockItem>('check_media_unlock_item', { name }),
+    __TAURI_INVOKE<UnlockItem_Serialize>('check_media_unlock_item', { name }),
 }
 
 /* Types */
@@ -234,7 +194,20 @@ export type AutoProxy = {
   url: string
 }
 
-export type ClashInfo = {
+export type ClashInfo = ClashInfo_Serialize | ClashInfo_Deserialize
+
+export type ClashInfo_Deserialize = {
+  /**  clash core port */
+  mixed_port: number
+  socks_port: number
+  port: number
+  /**  same as `external-controller` */
+  server: string
+  /**  clash secret */
+  secret?: string | null
+}
+
+export type ClashInfo_Serialize = {
   /**  clash core port */
   mixed_port: number
   socks_port: number
@@ -253,21 +226,21 @@ export type CommandFailure =
 /**  Structured command failure returned to the frontend. */
 export type CommandFailure_Deserialize = {
   /**  Stable frontend identifier, when classified. */
-  code: string | null
-  /**  Human-readable diagnostic detail. */
-  detail: string
-  /**  Requested operation when known by the command. */
-  operation: FailedOperation | null
-}
-
-/**  Structured command failure returned to the frontend. */
-export type CommandFailure_Serialize = {
-  /**  Stable frontend identifier, when classified. */
   code?: string | null
   /**  Human-readable diagnostic detail. */
   detail: string
   /**  Requested operation when known by the command. */
   operation?: FailedOperation | null
+}
+
+/**  Structured command failure returned to the frontend. */
+export type CommandFailure_Serialize = {
+  /**  Stable frontend identifier, when classified. */
+  code?: string
+  /**  Human-readable diagnostic detail. */
+  detail: string
+  /**  Requested operation when known by the command. */
+  operation?: FailedOperation
 }
 
 /**  Why the Core is not running, kept until a Core starts again. */
@@ -290,7 +263,26 @@ export type DnsOverrideOutcome =
   | { status: 'confirmation_required'; source: string }
 
 /**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
-export type DownloadEvent =
+export type DownloadEvent = DownloadEvent_Serialize | DownloadEvent_Deserialize
+
+/**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
+export type DownloadEvent_Deserialize =
+  | {
+      event: 'Started'
+      data: {
+        contentLength?: number | null
+      }
+    }
+  | {
+      event: 'Progress'
+      data: {
+        chunkLength: number
+      }
+    }
+  | { event: 'Finished' }
+
+/**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
+export type DownloadEvent_Serialize =
   | {
       event: 'Started'
       data: {
@@ -330,14 +322,27 @@ export type IProfiles_Serialize = {
 /**  ### `verge.yaml` schema */
 export type IVerge = IVerge_Serialize | IVerge_Deserialize
 
-export type IVergeTestItem = {
+export type IVergeTestItem =
+  | IVergeTestItem_Serialize
+  | IVergeTestItem_Deserialize
+
+export type IVergeTestItem_Deserialize = {
   uid?: string | null
   name?: string | null
   icon?: string | null
   url?: string | null
 }
 
-export type IVergeTheme = {
+export type IVergeTestItem_Serialize = {
+  uid: string | null
+  name: string | null
+  icon: string | null
+  url: string | null
+}
+
+export type IVergeTheme = IVergeTheme_Serialize | IVergeTheme_Deserialize
+
+export type IVergeTheme_Deserialize = {
   primary_color?: string | null
   secondary_color?: string | null
   primary_text?: string | null
@@ -348,6 +353,19 @@ export type IVergeTheme = {
   success_color?: string | null
   font_family?: string | null
   css_injection?: string | null
+}
+
+export type IVergeTheme_Serialize = {
+  primary_color: string | null
+  secondary_color: string | null
+  primary_text: string | null
+  secondary_text: string | null
+  info_color: string | null
+  error_color: string | null
+  warning_color: string | null
+  success_color: string | null
+  font_family: string | null
+  css_injection: string | null
 }
 
 /**  ### `verge.yaml` schema */
@@ -365,7 +383,7 @@ export type IVerge_Deserialize = {
   start_page?: string | null
   startup_script?: string | null
   traffic_graph?: boolean | null
-  /**  show memory info (only for Clash Meta) */
+  /**  show memory info (only for Mihomo) */
   enable_memory_usage?: boolean | null
   enable_group_icon?: boolean | null
   pause_render_traffic_stats_on_blur?: boolean | null
@@ -392,7 +410,7 @@ export type IVerge_Deserialize = {
   proxy_auto_config?: boolean | null
   pac_file_content?: string | null
   proxy_host?: string | null
-  theme_setting?: IVergeTheme | null
+  theme_setting?: IVergeTheme_Deserialize | null
   web_ui_list?: string[] | null
   clash_core?: string | null
   /**  format: {func},{key} */
@@ -408,7 +426,7 @@ export type IVerge_Deserialize = {
   auto_delay_detection_interval_minutes?: number | null
   enable_builtin_enhanced?: boolean | null
   proxy_layout_column?: number | null
-  test_list?: IVergeTestItem[] | null
+  test_list?: IVergeTestItem_Deserialize[] | null
   /**  0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天 */
   auto_log_clean?: number | null
   enable_auto_backup_schedule?: boolean | null
@@ -455,15 +473,15 @@ export type IVerge_Serialize = {
   start_page: string | null
   startup_script: string | null
   traffic_graph: boolean | null
-  /**  show memory info (only for Clash Meta) */
+  /**  show memory info (only for Mihomo) */
   enable_memory_usage: boolean | null
-  enable_group_icon?: boolean | null
+  enable_group_icon?: boolean
   pause_render_traffic_stats_on_blur: boolean | null
-  common_tray_icon?: boolean | null
-  menu_icon?: string | null
-  menu_order?: string[] | null
-  proxy_group_tools_position?: string | null
-  notice_position?: string | null
+  common_tray_icon?: boolean
+  menu_icon?: string
+  menu_order?: string[]
+  proxy_group_tools_position?: string
+  notice_position?: string
   collapse_navbar: boolean | null
   sysproxy_tray_icon: boolean | null
   tun_tray_icon: boolean | null
@@ -482,11 +500,11 @@ export type IVerge_Serialize = {
   proxy_auto_config: boolean | null
   pac_file_content: string | null
   proxy_host: string | null
-  theme_setting: IVergeTheme | null
+  theme_setting: IVergeTheme_Serialize | null
   web_ui_list: string[] | null
-  clash_core?: string | null
+  clash_core?: string
   /**  format: {func},{key} */
-  hotkeys?: string[] | null
+  hotkeys?: string[]
   enable_global_hotkey: boolean | null
   home_cards: JsonValue | null
   auto_close_connection: boolean | null
@@ -498,7 +516,7 @@ export type IVerge_Serialize = {
   auto_delay_detection_interval_minutes: number | null
   enable_builtin_enhanced: boolean | null
   proxy_layout_column: number | null
-  test_list: IVergeTestItem[] | null
+  test_list: IVergeTestItem_Serialize[] | null
   /**  0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天 */
   auto_log_clean: number | null
   enable_auto_backup_schedule: boolean | null
@@ -510,10 +528,10 @@ export type IVerge_Serialize = {
   verge_socks_enabled: boolean | null
   verge_port: number | null
   verge_http_enabled: boolean | null
-  webdav_url?: string | null
-  webdav_username?: string | null
-  webdav_password?: string | null
-  tray_proxy_groups_display_mode?: string | null
+  webdav_url?: string
+  webdav_username?: string
+  webdav_password?: string
+  tray_proxy_groups_display_mode?: string
   tray_inline_outbound_modes: boolean | null
   enable_auto_light_weight_mode: boolean | null
   /**  自动进入轻量模式的延迟（分钟） */
@@ -535,6 +553,8 @@ export type IconInfo = {
   previous_t: string
   current_t: string
 }
+
+export type InstallUpdateOutcome = 'installed' | 'cancelled' | 'update_changed'
 
 export type InterfaceAddress =
   | ({ V4: IpAddress } & { V6?: never })
@@ -573,7 +593,17 @@ export type LocalBackupFile = {
   content_length: number
 }
 
-export type NetworkInterfaceView = {
+export type NetworkInterfaceView =
+  | NetworkInterfaceView_Serialize
+  | NetworkInterfaceView_Deserialize
+
+export type NetworkInterfaceView_Deserialize = {
+  name: string
+  addr: InterfaceAddress[]
+  mac_addr?: string | null
+}
+
+export type NetworkInterfaceView_Serialize = {
   name: string
   addr: InterfaceAddress[]
   mac_addr: string | null
@@ -632,7 +662,20 @@ export type PendingFailure = {
   sequence: number
 }
 
-export type PlatformVergeFields = {
+export type PlatformVergeFields =
+  | PlatformVergeFields_Serialize
+  | PlatformVergeFields_Deserialize
+
+export type PlatformVergeFields_Deserialize = {
+  tray_icon?: string | null
+  verge_redir_port?: number | null
+  verge_redir_enabled?: boolean | null
+  verge_tproxy_port?: number | null
+  verge_tproxy_enabled?: boolean | null
+  enable_tray_speed?: boolean | null
+}
+
+export type PlatformVergeFields_Serialize = {
   tray_icon?: string | null
   verge_redir_port?: number | null
   verge_redir_enabled?: boolean | null
@@ -658,7 +701,7 @@ export type PrfItem_Deserialize = {
   file?: string | null
   desc?: string | null
   url?: string | null
-  selected?: PrfSelected[] | null
+  selected?: PrfSelected_Deserialize[] | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -671,13 +714,13 @@ export type PrfItem_Serialize = {
   type: string | null
   name: string | null
   file: string | null
-  desc?: string | null
-  url?: string | null
-  selected?: PrfSelected[] | null
-  extra?: PrfExtra | null
+  desc?: string
+  url?: string
+  selected?: PrfSelected_Serialize[]
+  extra?: PrfExtra
   updated: number | null
-  option?: PrfOption_Serialize | null
-  home?: string | null
+  option?: PrfOption_Serialize
+  home?: string
 }
 
 export type PrfOption = PrfOption_Serialize | PrfOption_Deserialize
@@ -703,18 +746,18 @@ export type PrfOption_Deserialize = {
 }
 
 export type PrfOption_Serialize = {
-  user_agent?: string | null
-  with_proxy?: boolean | null
-  self_proxy?: boolean | null
-  update_interval?: number | null
+  user_agent?: string
+  with_proxy?: boolean
+  self_proxy?: boolean
+  update_interval?: number
   /**
    *  HTTP request timeout in seconds
    *  default is 60 seconds
    */
-  timeout_seconds?: number | null
+  timeout_seconds?: number
   /**  default is `false` */
-  danger_accept_invalid_certs?: boolean | null
-  allow_auto_update?: boolean | null
+  danger_accept_invalid_certs?: boolean
+  allow_auto_update?: boolean
   merge: string | null
   script: string | null
   rules: string | null
@@ -722,9 +765,16 @@ export type PrfOption_Serialize = {
   groups: string | null
 }
 
-export type PrfSelected = {
+export type PrfSelected = PrfSelected_Serialize | PrfSelected_Deserialize
+
+export type PrfSelected_Deserialize = {
   name?: string | null
   now?: string | null
+}
+
+export type PrfSelected_Serialize = {
+  name: string | null
+  now: string | null
 }
 
 export type ProfileCreate = ProfileCreate_Serialize | ProfileCreate_Deserialize
@@ -756,7 +806,7 @@ export type ProfileDnsSettings_Deserialize = {
 
 export type ProfileDnsSettings_Serialize = {
   enabled: boolean
-  confirmation?: string | null
+  confirmation?: string
 }
 
 export type ProfilePatch = ProfilePatch_Serialize | ProfilePatch_Deserialize
@@ -767,7 +817,7 @@ export type ProfilePatch_Deserialize = {
   desc?: string | null
   file?: string | null
   url?: string | null
-  selected?: PrfSelected[] | null
+  selected?: PrfSelected_Deserialize[] | null
   extra?: PrfExtra | null
   updated?: number | null
   option?: PrfOption_Deserialize | null
@@ -779,14 +829,22 @@ export type ProfilePatch_Serialize = {
   desc: string | null
   file: string | null
   url: string | null
-  selected: PrfSelected[] | null
+  selected: PrfSelected_Serialize[] | null
   extra: PrfExtra | null
   updated: number | null
   option: PrfOption_Serialize | null
 }
 
-export type ProfileSelection = {
+export type ProfileSelection =
+  | ProfileSelection_Serialize
+  | ProfileSelection_Deserialize
+
+export type ProfileSelection_Deserialize = {
   current?: string | null
+}
+
+export type ProfileSelection_Serialize = {
+  current: string | null
 }
 
 export type ProfileUpdatePayload = {
@@ -808,11 +866,11 @@ export type ProxyGroupView =
 export type ProxyGroupView_Deserialize = {
   name: string
   type: string
-  now: string | null
-  fixed: string | null
-  hidden: boolean | null
-  icon: string | null
-  testUrl: string | null
+  now?: string | null
+  fixed?: string | null
+  hidden?: boolean | null
+  icon?: string | null
+  testUrl?: string | null
   history: DelayHistory[]
   members: ProxyMemberRef[]
 } & ProxyCapabilities
@@ -820,11 +878,11 @@ export type ProxyGroupView_Deserialize = {
 export type ProxyGroupView_Serialize = {
   name: string
   type: string
-  now?: string | null
-  fixed?: string | null
-  hidden?: boolean | null
-  icon?: string | null
-  testUrl?: string | null
+  now?: string
+  fixed?: string
+  hidden?: boolean
+  icon?: string
+  testUrl?: string
   history: DelayHistory[]
   members: ProxyMemberRef[]
 } & ProxyCapabilities
@@ -850,10 +908,10 @@ export type ProxyNodeView_Deserialize = {
   name: string
   type: string
   history: DelayHistory[]
-  id: string | null
-  hidden: boolean | null
-  icon: string | null
-  testUrl: string | null
+  id?: string | null
+  hidden?: boolean | null
+  icon?: string | null
+  testUrl?: string | null
   source: ProxyNodeSource
 } & ProxyCapabilities
 
@@ -862,10 +920,10 @@ export type ProxyNodeView_Serialize = {
   name: string
   type: string
   history: DelayHistory[]
-  id?: string | null
-  hidden?: boolean | null
-  icon?: string | null
-  testUrl?: string | null
+  id?: string
+  hidden?: boolean
+  icon?: string
+  testUrl?: string
   source: ProxyNodeSource
 } & ProxyCapabilities
 
@@ -886,16 +944,16 @@ export type ProxyProviderView =
 export type ProxyProviderView_Deserialize = {
   name: string
   vehicleType: ProxyProviderVehicleType
-  updatedAt: string | null
-  subscriptionInfo: ProxySubscriptionInfo | null
+  updatedAt?: string | null
+  subscriptionInfo?: ProxySubscriptionInfo | null
   proxyRecordIds: string[]
 }
 
 export type ProxyProviderView_Serialize = {
   name: string
   vehicleType: ProxyProviderVehicleType
-  updatedAt?: string | null
-  subscriptionInfo?: ProxySubscriptionInfo | null
+  updatedAt?: string
+  subscriptionInfo?: ProxySubscriptionInfo
   proxyRecordIds: string[]
 }
 
@@ -916,8 +974,8 @@ export type ProxyViewV1_Deserialize = {
   schemaVersion: number
   orderSource: ProxyViewOrderSource
   providerState: ProxyViewProviderState
-  global: ProxyGroupView_Deserialize | null
-  direct: string | null
+  global?: ProxyGroupView_Deserialize | null
+  direct?: string | null
   groups: ProxyGroupView_Deserialize[]
   records: { [key in string]: ProxyNodeView_Deserialize }
   standalone: string[]
@@ -936,7 +994,22 @@ export type ProxyViewV1_Serialize = {
   providers: ProxyProviderView_Serialize[]
 }
 
-export type RunStateView = {
+export type RunStateView = RunStateView_Serialize | RunStateView_Deserialize
+
+export type RunStateView_Deserialize = {
+  mode: RunningMode
+  service: ServiceHealthKind
+  serviceUnavailableReason?: string | null
+  pendingAction?: PendingAction | null
+  sidecarAllowed: boolean
+  isAdmin: boolean
+  opInFlight: boolean
+  serviceUsable: boolean
+  tunCapable: boolean
+  serviceNeedsAttention: boolean
+}
+
+export type RunStateView_Serialize = {
   mode: RunningMode
   service: ServiceHealthKind
   serviceUnavailableReason: string | null
@@ -975,7 +1048,18 @@ export type ServiceInstallOutcome =
   | { status: 'sidecar'; reason: string }
 
 /**  A removal has a revision too, so a delayed read cannot restore a resolved failure. */
-export type SidecarFailureSnapshot = {
+export type SidecarFailureSnapshot =
+  | SidecarFailureSnapshot_Serialize
+  | SidecarFailureSnapshot_Deserialize
+
+/**  A removal has a revision too, so a delayed read cannot restore a resolved failure. */
+export type SidecarFailureSnapshot_Deserialize = {
+  revision: number
+  detail?: string | null
+}
+
+/**  A removal has a revision too, so a delayed read cannot restore a resolved failure. */
+export type SidecarFailureSnapshot_Serialize = {
   revision: number
   detail: string | null
 }
@@ -996,7 +1080,16 @@ export type ToggleableProxyPort = {
   port: number
 }
 
-export type UnlockItem = {
+export type UnlockItem = UnlockItem_Serialize | UnlockItem_Deserialize
+
+export type UnlockItem_Deserialize = {
+  name: string
+  status: string
+  region?: string | null
+  check_time?: string | null
+}
+
+export type UnlockItem_Serialize = {
   name: string
   status: string
   region: string | null
@@ -1022,7 +1115,11 @@ export type ValidationOutcome =
 
 export type ValidationSkipReason = 'exiting' | 'debounced'
 
-export type VergeEventPayloads = {
+export type VergeEventPayloads =
+  | VergeEventPayloads_Serialize
+  | VergeEventPayloads_Deserialize
+
+export type VergeEventPayloads_Deserialize = {
   'verge://refresh-clash-config': null
   'verge://refresh-verge-config': null
   'verge://refresh-profiles': null
@@ -1032,7 +1129,21 @@ export type VergeEventPayloads = {
   'verge://timer-updated': string
   'profile-update-started': ProfileUpdatePayload
   'profile-update-completed': ProfileUpdatePayload
-  'verge://run-state-changed': RunStateView
+  'verge://run-state-changed': RunStateView_Deserialize
+  'verge://pending-failures-changed': null
+}
+
+export type VergeEventPayloads_Serialize = {
+  'verge://refresh-clash-config': null
+  'verge://refresh-verge-config': null
+  'verge://refresh-profiles': null
+  'verge://refresh-proxy-config': null
+  'verge://notice-message': [NoticeStatus, string]
+  'profile-changed': string
+  'verge://timer-updated': string
+  'profile-update-started': ProfileUpdatePayload
+  'profile-update-completed': ProfileUpdatePayload
+  'verge://run-state-changed': RunStateView_Serialize
   'verge://pending-failures-changed': null
 }
 

@@ -434,12 +434,13 @@ for (let iteration = 0; iteration < repeat && !interrupted; iteration++) {
       devicePixelRatio,
     ])
     run.viewport = { dom: viewport, driver: await browser.getWindowRect() }
+    const driverScale = run.viewport.driver.width / 1000
     assert(
-      run.viewport.driver.width / viewport[2] === 1000 &&
-        run.viewport.driver.height / viewport[2] === 700 &&
-        viewport[0] === 1000 &&
+      viewport[0] === 1000 &&
         viewport[1] > 0 &&
-        viewport[1] <= 700,
+        viewport[1] <= 700 &&
+        (driverScale === 1 || driverScale === viewport[2]) &&
+        run.viewport.driver.height / driverScale === 700,
       `unexpected window dimensions: ${JSON.stringify(run.viewport)}`,
     )
     assert(

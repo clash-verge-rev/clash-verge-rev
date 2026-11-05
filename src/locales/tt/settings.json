@@ -495,11 +495,13 @@
         "strictRoute": "Катгый маршрутлау",
         "autoDetectInterface": "Интерфейсны автоматик ачыклау",
         "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
+        "dnsMode": "DNS режиме",
         "mtu": "MTU (макс. тапшыру берәмлеге)",
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
+        "dnsMode": "Auto иске тәртипне саклый; hijack өчен Windows'ta Катгый маршрутлау яки Linux'ta Auto Redirect кирәк",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

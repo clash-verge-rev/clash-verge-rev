@@ -28,7 +28,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.22.0'
+          node-version: '26.13.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
