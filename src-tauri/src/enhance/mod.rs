@@ -731,6 +731,34 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
     }
 }
 
+/// `respect-rules` 或 `proxy-server-nameserver-policy` 开启且缺少 `proxy-server-nameserver` 时，
+/// 回填原配置 `nameserver` 或 `default-nameserver`，避免内核拒绝配置或丢失节点域名解析器（#8431）。
+fn ensure_proxy_server_nameserver(dns: &mut Mapping, profile_nameserver: Option<&Value>) {
+    let respect_rules = dns.get("respect-rules").and_then(Value::as_bool).unwrap_or(false);
+    let has_proxy_policy = dns.get("proxy-server-nameserver-policy").is_some_and(is_set);
+
+    if !respect_rules && !has_proxy_policy {
+        return;
+    }
+
+    if dns.get("proxy-server-nameserver").is_some_and(is_set) {
+        return;
+    }
+
+    let fallback = profile_nameserver
+        .filter(|v| is_set(v))
+        .cloned()
+        .or_else(|| dns.get("default-nameserver").filter(|v| is_set(v)).cloned())
+        .unwrap_or_else(|| {
+            Value::Sequence(vec![
+                Value::from("https://doh.pub/dns-query"),
+                Value::from("https://dns.alidns.com/dns-query"),
+            ])
+        });
+
+    dns.insert(Value::from("proxy-server-nameserver"), fallback);
+}
+
 /// On, non-blank text, or non-empty list/map; anything else keeps the profile's value.
 fn is_set(value: &Value) -> bool {
     match value {
@@ -773,8 +801,10 @@ fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, M
             applied.insert("dns".into(), dns_override.clone().into());
         }
         let mut dns = take_mapping(&mut config, "dns");
+        let profile_nameserver = dns.get("nameserver").cloned();
         dns.extend(dns_override);
         ensure_fake_ip_range6(&mut dns);
+        ensure_proxy_server_nameserver(&mut dns, profile_nameserver.as_ref());
         config.insert("dns".into(), dns.into());
         logging!(debug, Type::Core, "apply dns_config.yaml");
     }
@@ -856,6 +886,11 @@ pub async fn enhance(
 
     let config = apply_builtin_scripts(config, enable_builtin);
     let config = use_tun(config, enable_tun);
+    let profile_nameserver = config
+        .get("dns")
+        .and_then(Value::as_mapping)
+        .and_then(|dns| dns.get("nameserver"))
+        .cloned();
     let (config, dns_settings) = apply_dns_settings(config, enable_dns_settings).await;
 
     let authoritative = AuthoritativeFields::capture(&config, &gui_tun_keys, dns_settings);
@@ -883,7 +918,10 @@ pub async fn enhance(
     .await;
 
     notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
-    let config = authoritative.enforce(config);
+    let mut config = authoritative.enforce(config);
+    if let Some(dns) = config.get_mut("dns").and_then(Value::as_mapping_mut) {
+        ensure_proxy_server_nameserver(dns, profile_nameserver.as_ref());
+    }
     let config = ensure_lan_bind_address(config);
 
     let config = cleanup_proxy_groups(config);
@@ -1680,6 +1718,26 @@ mod tests {
                 .and_then(|seq| seq.first())
                 .and_then(serde_yaml_ng::Value::as_str),
             Some("8.8.8.8")
+        );
+    }
+
+    #[test]
+    fn respect_rules_backfills_proxy_server_nameserver_without_claiming_ownership() {
+        let profile = mapping("dns: {nameserver: [223.5.5.5]}");
+        let settings = mapping("dns: {respect-rules: true, proxy-server-nameserver: []}");
+
+        let (merged, dns_settings) = super::merge_dns_config(profile, settings);
+        assert_eq!(
+            merged["dns"]["proxy-server-nameserver"],
+            serde_yaml_ng::Value::Sequence(vec![serde_yaml_ng::Value::from("223.5.5.5")])
+        );
+
+        let authoritative = AuthoritativeFields::capture(&merged, &[], dns_settings);
+        let overridden = mapping("dns: {respect-rules: true, proxy-server-nameserver: [8.8.8.8]}");
+        let result = authoritative.enforce(overridden);
+        assert_eq!(
+            result["dns"]["proxy-server-nameserver"],
+            serde_yaml_ng::Value::Sequence(vec![serde_yaml_ng::Value::from("8.8.8.8")])
         );
     }
 
