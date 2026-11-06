@@ -714,5 +714,12 @@
       "installing": "Instalando o Serviço...",
       "uninstalling": "Desinstalando o Serviço..."
     }
+  },
+  "search": {
+    "placeholder": "Pesquisar configurações",
+    "clear": "Limpar pesquisa",
+    "back": "Voltar aos resultados",
+    "results": "Resultados da pesquisa",
+    "empty": "Nenhuma configuração encontrada"
   }
 }

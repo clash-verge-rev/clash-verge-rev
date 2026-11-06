@@ -714,5 +714,12 @@
       "installing": "Service wird installiert...",
       "uninstalling": "Service wird deinstalliert..."
     }
+  },
+  "search": {
+    "placeholder": "Einstellungen suchen",
+    "clear": "Suche löschen",
+    "back": "Zurück zu Ergebnissen",
+    "results": "Suchergebnisse",
+    "empty": "Keine Einstellungen gefunden"
   }
 }

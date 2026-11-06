@@ -714,5 +714,12 @@
       "installing": "Hizmet Kuruluyor...",
       "uninstalling": "Hizmet Kaldırılıyor..."
     }
+  },
+  "search": {
+    "placeholder": "Ayarları ara",
+    "clear": "Aramayı temizle",
+    "back": "Sonuçlara dön",
+    "results": "Arama sonuçları",
+    "empty": "Ayar bulunamadı"
   }
 }

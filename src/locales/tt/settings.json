@@ -714,5 +714,12 @@
       "installing": "Хезмәт урнаштырыла...",
       "uninstalling": "Uninstalling Service..."
     }
+  },
+  "search": {
+    "placeholder": "Көйләүләрне эзләү",
+    "clear": "Эзләүне чистарту",
+    "back": "Нәтиҗәләргә кайту",
+    "results": "Эзләү нәтиҗәләре",
+    "empty": "Көйләүләр табылмады"
   }
 }

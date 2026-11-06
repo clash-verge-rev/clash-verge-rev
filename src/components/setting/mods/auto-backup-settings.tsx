@@ -133,7 +133,11 @@ export function AutoBackupSettings() {
 
   return (
     <Fragment>
-      <ListItem divider disableGutters>
+      <ListItem
+        data-setting-target="settings.modals.backup.auto.scheduleLabel"
+        divider
+        disableGutters
+      >
         <Stack
           direction="row"
           spacing={1}
@@ -152,7 +156,11 @@ export function AutoBackupSettings() {
         </Stack>
       </ListItem>
 
-      <ListItem divider disableGutters>
+      <ListItem
+        data-setting-target="settings.modals.backup.auto.intervalLabel"
+        divider
+        disableGutters
+      >
         <Stack
           direction="row"
           spacing={2}
@@ -194,7 +202,11 @@ export function AutoBackupSettings() {
         </Stack>
       </ListItem>
 
-      <ListItem divider disableGutters>
+      <ListItem
+        data-setting-target="settings.modals.backup.auto.changeLabel"
+        divider
+        disableGutters
+      >
         <Stack
           direction="row"
           spacing={1}

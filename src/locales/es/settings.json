@@ -714,5 +714,12 @@
       "installing": "Instalando servicio...",
       "uninstalling": "Desinstalando servicio..."
     }
+  },
+  "search": {
+    "placeholder": "Buscar ajustes",
+    "clear": "Borrar búsqueda",
+    "back": "Volver a resultados",
+    "results": "Resultados de búsqueda",
+    "empty": "No se encontraron ajustes"
   }
 }

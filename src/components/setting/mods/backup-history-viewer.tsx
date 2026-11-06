@@ -327,7 +327,13 @@ export const BackupHistoryViewer = ({
       onCancel={onClose}
       onClose={onClose}
     >
-      <Box sx={{ position: 'relative', minHeight: 320 }}>
+      <Box
+        data-settings-dialog="backup-history"
+        data-search-ready={!loading}
+        data-setting-target="backup-history"
+        tabIndex={-1}
+        sx={{ position: 'relative', minHeight: 320 }}
+      >
         <BaseLoadingOverlay isLoading={isBusy} />
         <Stack spacing={2}>
           <Stack
@@ -412,6 +418,7 @@ export const BackupHistoryViewer = ({
                             <IconButton
                               size="small"
                               disabled={isBusy}
+                              data-setting-target="backup-history-export"
                               onClick={() => handleExport(row.filename)}
                             >
                               <DownloadRounded fontSize="small" />
@@ -420,6 +427,7 @@ export const BackupHistoryViewer = ({
                           <IconButton
                             size="small"
                             disabled={isBusy}
+                            data-setting-target="backup-history-delete"
                             onClick={() => handleDelete(row.filename)}
                           >
                             <DeleteOutlined fontSize="small" />
@@ -427,6 +435,7 @@ export const BackupHistoryViewer = ({
                           <IconButton
                             size="small"
                             disabled={isBusy}
+                            data-setting-target="backup-history-restore"
                             onClick={() => handleRestore(row.filename)}
                           >
                             <RestoreRounded fontSize="small" />
