@@ -7,6 +7,8 @@ use scopeguard::{ScopeGuard, guard};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
+    borrow::Cow,
+    ops::Range,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -45,8 +47,8 @@ pub async fn read_mapping(path: &Path) -> Result<Mapping> {
 }
 
 fn parse_mapping(yaml_str: String, path: PathBuf) -> Result<Mapping> {
-    match serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&yaml_str) {
-        Ok(mut val) => {
+    match short_id_tolerant(&yaml_str, &path) {
+        Ok((_, mut val)) => {
             val.apply_merge()
                 .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
 
@@ -64,6 +66,150 @@ fn parse_mapping(yaml_str: String, path: PathBuf) -> Result<Mapping> {
             bail!("YAML syntax error: {}", err)
         }
     }
+}
+
+const SHORT_ID_KEY: &str = "short-id:";
+
+/// A float like `1234e123` loses its hex text, so quote short-ids before parsing and keep that only if nothing else changed.
+pub(crate) fn short_id_tolerant<'a>(yaml: &'a str, path: &Path) -> serde_yaml_ng::Result<(Cow<'a, str>, Value)> {
+    let original = serde_yaml_ng::from_str::<Value>(yaml)?;
+    if !has_numeric_short_id(&original) {
+        return Ok((Cow::Borrowed(yaml), original));
+    }
+    let quoted = quote_plain_short_ids(yaml);
+    if matches!(quoted, Cow::Borrowed(_)) {
+        return Ok((quoted, original));
+    }
+
+    match serde_yaml_ng::from_str::<Value>(&quoted) {
+        Ok(tolerant) if same_except_short_id_text(&original, &tolerant) => Ok((quoted, tolerant)),
+        _ => {
+            logging!(
+                warn,
+                Type::Config,
+                "kept numeric short-id in {}: quoting it would change other values",
+                path.display()
+            );
+            Ok((Cow::Borrowed(yaml), original))
+        }
+    }
+}
+
+fn has_numeric_short_id(value: &Value) -> bool {
+    match value {
+        Value::Mapping(map) => map
+            .iter()
+            .any(|(key, value)| (is_short_id_key(key) && value.is_number()) || has_numeric_short_id(value)),
+        Value::Sequence(seq) => seq.iter().any(has_numeric_short_id),
+        Value::Tagged(tagged) => has_numeric_short_id(&tagged.value),
+        _ => false,
+    }
+}
+
+fn same_except_short_id_text(original: &Value, tolerant: &Value) -> bool {
+    match (original, tolerant) {
+        (Value::Mapping(original), Value::Mapping(tolerant)) => {
+            original.len() == tolerant.len()
+                && original
+                    .iter()
+                    .zip(tolerant.iter())
+                    .all(|((key, old), (new_key, new))| {
+                        key == new_key && (same_except_short_id_text(old, new) || is_short_id_text(key, old, new))
+                    })
+        }
+        (Value::Sequence(original), Value::Sequence(tolerant)) => {
+            original.len() == tolerant.len()
+                && original
+                    .iter()
+                    .zip(tolerant.iter())
+                    .all(|(old, new)| same_except_short_id_text(old, new))
+        }
+        (Value::Tagged(original), Value::Tagged(tolerant)) => {
+            original.tag == tolerant.tag && same_except_short_id_text(&original.value, &tolerant.value)
+        }
+        _ => original == tolerant,
+    }
+}
+
+fn is_short_id_text(key: &Value, old: &Value, new: &Value) -> bool {
+    is_short_id_key(key)
+        && old.is_number()
+        && matches!(new, Value::String(text) if serde_yaml_ng::from_str::<Value>(text).ok().as_ref() == Some(old))
+}
+
+fn is_short_id_key(key: &Value) -> bool {
+    key.as_str() == Some("short-id")
+}
+
+fn quote_plain_short_ids(yaml: &str) -> Cow<'_, str> {
+    let mut quoted = String::new();
+    let mut copied = 0;
+    for (key, _) in yaml.match_indices(SHORT_ID_KEY) {
+        let Some(value) = plain_short_id_at(yaml, key) else {
+            continue;
+        };
+        let (Some(head), Some(id)) = (yaml.get(copied..value.start), yaml.get(value.clone())) else {
+            continue;
+        };
+        quoted.push_str(head);
+        quoted.push('"');
+        quoted.push_str(id);
+        quoted.push('"');
+        copied = value.end;
+    }
+
+    if copied == 0 {
+        return Cow::Borrowed(yaml);
+    }
+    quoted.push_str(yaml.get(copied..).unwrap_or_default());
+    Cow::Owned(quoted)
+}
+
+fn plain_short_id_at(yaml: &str, key: usize) -> Option<Range<usize>> {
+    let bytes = yaml.as_bytes();
+    let before = bytes.get(..key)?;
+    let flow = matches!(
+        before.iter().rev().find(|byte| !byte.is_ascii_whitespace()),
+        Some(b'{' | b',')
+    );
+    let line_start = before
+        .iter()
+        .rev()
+        .take_while(|&&byte| byte != b'\n')
+        .all(|&byte| is_blank(byte));
+    if !flow && !line_start {
+        return None;
+    }
+
+    let start = key + SHORT_ID_KEY.len();
+    let gap = bytes.get(start..)?.iter().take_while(|&&byte| is_blank(byte)).count();
+    if gap == 0 {
+        return None;
+    }
+    let start = start + gap;
+    let len = bytes
+        .get(start..)?
+        .iter()
+        .take_while(|byte| byte.is_ascii_hexdigit())
+        .count();
+    if len == 0 || !ends_plain_short_id(bytes.get(start + len..)?, flow) {
+        return None;
+    }
+    Some(start..start + len)
+}
+
+fn ends_plain_short_id(rest: &[u8], flow: bool) -> bool {
+    let blanks = rest.iter().take_while(|&&byte| is_blank(byte)).count();
+    match rest.get(blanks..) {
+        Some([] | [b'\n', ..] | [b'\r', b'\n', ..]) => true,
+        Some([b'#', ..]) => blanks > 0,
+        Some([b',' | b'}', ..]) => flow,
+        _ => false,
+    }
+}
+
+const fn is_blank(byte: u8) -> bool {
+    matches!(byte, b' ' | b'\t')
 }
 
 pub async fn save_yaml<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
@@ -318,4 +464,141 @@ pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
     })?;
 
     Ok(temp_path)
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, reason = "tests assert by panicking")]
+mod tests {
+    use super::{has_numeric_short_id, parse_mapping, quote_plain_short_ids, short_id_tolerant};
+    use serde_yaml_ng::Value;
+    use std::{
+        borrow::Cow,
+        path::{Path, PathBuf},
+    };
+
+    #[test]
+    fn quotes_plain_short_ids() {
+        let cases = [
+            ("short-id: 1234e123", "short-id: \"1234e123\""),
+            ("short-id: 0e5", "short-id: \"0e5\""),
+            ("short-id: 12345678", "short-id: \"12345678\""),
+            ("short-id: 6ba85179", "short-id: \"6ba85179\""),
+            ("short-id: \"1234e123\"", "short-id: \"1234e123\""),
+            ("short-id: '1234e123'", "short-id: '1234e123'"),
+            ("short-id: \"\"", "short-id: \"\""),
+            ("short-id:\npublic-key: k", "short-id:\npublic-key: k"),
+            ("short-id: null", "short-id: null"),
+            ("short-id: ~", "short-id: ~"),
+            ("short-id: 1234e123 # note", "short-id: \"1234e123\" # note"),
+            ("# short-id: 1234e123", "# short-id: 1234e123"),
+            (
+                "reality-opts: {public-key: k, short-id: 1234e123}",
+                "reality-opts: {public-key: k, short-id: \"1234e123\"}",
+            ),
+            (
+                "reality-opts: {short-id: 1234e123, public-key: k}",
+                "reality-opts: {short-id: \"1234e123\", public-key: k}",
+            ),
+            (
+                "{\n  public-key: k,\n  short-id: 1234e123\n}",
+                "{\n  public-key: k,\n  short-id: \"1234e123\"\n}",
+            ),
+            ("short-id: &sid 1234e123", "short-id: &sid 1234e123"),
+            ("short-id: !!str 1234e123", "short-id: !!str 1234e123"),
+            ("short-id: abc,def", "short-id: abc,def"),
+            ("short-id: 1234e123\r\n", "short-id: \"1234e123\"\r\n"),
+            ("my-short-id: 1234e123", "my-short-id: 1234e123"),
+            ("xshort-id: 1", "xshort-id: 1"),
+            ("short-id:1234e123", "short-id:1234e123"),
+            ("short-id: 1.5e3", "short-id: 1.5e3"),
+        ];
+
+        for (input, expected) in cases {
+            let output = quote_plain_short_ids(input);
+            assert_eq!(output, expected, "input: {input:?}");
+            assert_eq!(
+                matches!(output, Cow::Borrowed(_)),
+                input == expected,
+                "input: {input:?}"
+            );
+            assert_eq!(quote_plain_short_ids(&output), expected, "rerun: {input:?}");
+        }
+    }
+
+    #[test]
+    fn plain_short_id_survives_profile_parse() {
+        let profile = "\
+proxies:
+  - name: r
+    type: vless
+    reality-opts:
+      public-key: SFv3pZQdZ1fpnNg9yI2RwXKqAOz4mZHRbT2Wq4kz8Ws
+      short-id: 1234e123
+";
+        let mapping = parse_mapping(profile.into(), PathBuf::from("profile.yaml")).expect("profile should parse");
+        let short_id = mapping
+            .get("proxies")
+            .and_then(|proxies| proxies.get(0))
+            .and_then(|proxy| proxy.get("reality-opts"))
+            .and_then(|opts| opts.get("short-id"));
+        assert_eq!(short_id, Some(&Value::String("1234e123".into())));
+
+        let output = serde_yaml_ng::to_string(&mapping).expect("mapping should serialize");
+        assert!(output.contains("short-id: '1234e123'"), "{output}");
+    }
+
+    #[test]
+    fn short_id_rewrite_falls_back_to_original_parse() {
+        // (case, input, has a numeric short-id today)
+        let cases = [
+            ("B2", "proxies:\n  - name: \"node, short-id: 1234e123}\"\n", false),
+            (
+                "B3",
+                "proxies:\n  - name: \"node, short-id: 1234e123}\"\n  - name: r\n    reality-opts:\n      short-id: 1234e123\n",
+                true,
+            ),
+            (
+                "B4",
+                "payload: |\n  short-id: 1234e123\nreality-opts:\n  short-id: 1234e123\n",
+                true,
+            ),
+            ("B5", "reality-opts:\n  short-id: 1234e123\n    more\n", false),
+            ("B6", "reality-opts: {public-key: k, # c\n  short-id: 1234e123}\n", true),
+        ];
+
+        for (case, input, numeric) in cases {
+            let today = serde_yaml_ng::from_str::<Value>(input).expect("input should parse");
+            assert_eq!(has_numeric_short_id(&today), numeric, "{case}");
+            let (text, value) = short_id_tolerant(input, Path::new("b.yaml")).expect("input should parse");
+            assert!(matches!(text, Cow::Borrowed(_)), "{case}");
+            assert_eq!(value, today, "{case}");
+        }
+    }
+
+    #[test]
+    fn short_id_rewrite_keeps_every_numeric_short_id() {
+        let input = "\
+proxies:
+  - name: a
+    reality-opts:
+      short-id: 1234e123
+  - {name: b, reality-opts: {short-id: 0e5}}
+";
+        let (text, value) = short_id_tolerant(input, Path::new("b7.yaml")).expect("input should parse");
+        assert!(matches!(text, Cow::Owned(_)));
+        let short_ids: Vec<_> = value
+            .get("proxies")
+            .and_then(Value::as_sequence)
+            .expect("proxies should be a sequence")
+            .iter()
+            .map(|proxy| proxy.get("reality-opts").and_then(|opts| opts.get("short-id")).cloned())
+            .collect();
+        assert_eq!(
+            short_ids,
+            [
+                Some(Value::String("1234e123".into())),
+                Some(Value::String("0e5".into()))
+            ]
+        );
+    }
 }
