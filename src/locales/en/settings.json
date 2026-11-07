@@ -103,6 +103,7 @@
           "allowLan": "Allow LAN",
           "dnsOverwrite": "DNS Overwrite",
           "ipv6": "IPv6",
+          "certPinning": "Certificate Pinning",
           "unifiedDelay": "Unified Delay",
           "logLevel": "Log Level",
           "portConfig": "Port Config",
@@ -138,6 +139,7 @@
         },
         "tooltips": {
           "networkInterface": "Network Interface",
+          "certPinning": "When enabled, the certificate fingerprint of a node is fetched and pinned when you manually switch to it or when it is restored at startup, preventing man-in-the-middle spoofing; fingerprints are kept in memory for the current session only and re-verified on every launch; automatic switching such as url-test does not trigger this. Disabled = original behavior",
           "unifiedDelay": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
           "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
           "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction"

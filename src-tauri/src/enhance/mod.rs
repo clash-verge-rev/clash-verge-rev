@@ -1,4 +1,5 @@
 use crate::core::notify::NoticeStatus;
+pub mod cert_pin;
 mod chain;
 pub mod field;
 mod merge;
@@ -37,6 +38,7 @@ struct ConfigValues {
     clash_core: Option<String>,
     enable_tun: bool,
     enable_builtin: bool,
+    enable_cert_pinning: bool,
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
@@ -119,6 +121,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let IVerge {
         ref enable_tun_mode,
         ref enable_builtin_enhanced,
+        ref enable_cert_pinning,
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_external_controller,
@@ -128,10 +131,11 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
     let dns_settings = verge_arc.dns_settings_for(profile_uid);
     let dns_override_confirmation = dns_settings.confirmation;
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
+    let (clash_core, enable_tun, enable_builtin, enable_cert_pinning, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
         enable_tun_mode.unwrap_or(false),
         enable_builtin_enhanced.unwrap_or(true),
+        enable_cert_pinning.unwrap_or(false),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
         dns_settings.enabled,
@@ -151,6 +155,7 @@ async fn get_config_values(profile_uid: &str) -> ConfigValues {
         clash_core,
         enable_tun,
         enable_builtin,
+        enable_cert_pinning,
         socks_enabled,
         http_enabled,
         enable_dns_settings,
@@ -882,6 +887,7 @@ pub async fn enhance(
         clash_core,
         enable_tun,
         enable_builtin,
+        enable_cert_pinning,
         socks_enabled,
         http_enabled,
         enable_dns_settings,
@@ -956,6 +962,8 @@ pub async fn enhance(
         &authoritative,
     )
     .await;
+
+    let config = cert_pin::apply_cert_pins(config, enable_cert_pinning);
 
     notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
     let config = authoritative.enforce(config);

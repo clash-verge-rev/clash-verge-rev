@@ -141,6 +141,8 @@ pub struct IVerge {
 
     pub enable_builtin_enhanced: Option<bool>,
 
+    pub enable_cert_pinning: Option<bool>,
+
     pub proxy_layout_column: Option<u8>,
 
     pub test_list: Option<Vec<IVergeTestItem>>,
@@ -405,6 +407,7 @@ impl IVerge {
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
+            enable_cert_pinning: Some(false),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
             auto_backup_interval_hours: Some(24),
@@ -505,6 +508,7 @@ impl IVerge {
         patch!(enable_auto_delay_detection);
         patch!(auto_delay_detection_interval_minutes);
         patch!(enable_builtin_enhanced);
+        patch!(enable_cert_pinning);
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);

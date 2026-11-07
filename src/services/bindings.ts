@@ -407,6 +407,7 @@ export type IVerge_Deserialize = {
   /**  自动检测当前节点延迟的间隔（分钟） */
   auto_delay_detection_interval_minutes?: number | null
   enable_builtin_enhanced?: boolean | null
+  enable_cert_pinning?: boolean | null
   proxy_layout_column?: number | null
   test_list?: IVergeTestItem[] | null
   /**  0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天 */
@@ -497,6 +498,7 @@ export type IVerge_Serialize = {
   /**  自动检测当前节点延迟的间隔（分钟） */
   auto_delay_detection_interval_minutes: number | null
   enable_builtin_enhanced: boolean | null
+  enable_cert_pinning: boolean | null
   proxy_layout_column: number | null
   test_list: IVergeTestItem[] | null
   /**  0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天 */

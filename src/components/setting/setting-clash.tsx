@@ -37,7 +37,7 @@ const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
 
   const { clash, version, mutateClash, patchClash } = useClash()
-  const { verge, mutateVerge } = useVerge()
+  const { verge, mutateVerge, patchVerge } = useVerge()
   const { current: currentProfile } = useProfiles()
   const dnsEnabled = currentProfile
     ? (verge?.profile_dns_settings?.[currentProfile.uid!]?.enabled ??
@@ -53,6 +53,7 @@ const SettingClash = ({ onError }: Props) => {
     'log-level': logLevel,
     'unified-delay': unifiedDelay,
   } = clash ?? {}
+  const { enable_cert_pinning } = verge ?? {}
 
   const [dnsConfirmation, setDnsConfirmation] = useState<{
     profileUid: string
@@ -72,6 +73,9 @@ const SettingClash = ({ onError }: Props) => {
   const onSwitchFormat = (_e: any, value: boolean) => value
   const onChangeData = (patch: Partial<IConfigData>) => {
     mutateClash((old) => ({ ...old!, ...patch }), false)
+  }
+  const onChangeVergeData = (patch: Partial<IVergeConfig>) => {
+    mutateVerge({ ...verge, ...patch }, false)
   }
   const onUpdateGeo = async () => {
     try {
@@ -211,6 +215,27 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.certPinning')}
+        extra={
+          <TooltipIcon
+            title={t('settings.sections.clash.form.tooltips.certPinning')}
+            sx={{ opacity: '0.7' }}
+          />
+        }
+      >
+        <GuardState
+          value={enable_cert_pinning ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={(e) => onChangeVergeData({ enable_cert_pinning: e })}
+          onGuard={(e) => patchVerge({ enable_cert_pinning: e })}
         >
           <Switch edge="end" />
         </GuardState>

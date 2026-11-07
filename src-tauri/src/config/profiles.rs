@@ -671,6 +671,8 @@ async fn apply_activations(
             return None;
         }
     }
+    // 启动恢复的节点也纳入会话钉扎;去重在 ensure_pins_async 内部,重复上报无副作用。
+    crate::enhance::cert_pin::ensure_pins_async(completed.values().map(|node| node.to_string()).collect());
     Some(activated_count)
 }
 
@@ -715,6 +717,8 @@ where
 
 /// Records a backend-made selection so the next core start restores it.
 pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
+    // 手动选中节点时顺带钉扎其证书;fire-and-forget,不阻塞记录主流程。
+    crate::enhance::cert_pin::ensure_pins_async(vec![node.to_owned()]);
     let group_name = String::from(group_name);
     let node = String::from(node);
     persist_selected_update(true, move |mut profiles| async move {

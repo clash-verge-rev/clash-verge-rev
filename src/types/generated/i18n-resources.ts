@@ -1261,6 +1261,7 @@ export interface TranslationResources {
           form: {
             fields: {
               allowLan: string
+              certPinning: string
               clashCore: string
               dnsOverwrite: string
               external: string
@@ -1306,6 +1307,7 @@ export interface TranslationResources {
               }
             }
             tooltips: {
+              certPinning: string
               logLevel: string
               networkInterface: string
               openUwpTool: string
@@ -1589,6 +1591,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }
