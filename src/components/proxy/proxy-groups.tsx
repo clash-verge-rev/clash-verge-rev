@@ -470,9 +470,6 @@ function NormalProxyGroups(props: { mode: string }) {
   }, [handleScroll])
 
   const { select } = useProxySelection({
-    onSuccess: () => {
-      onProxies()
-    },
     onError: (error) => {
       console.error('代理切换失败', error)
       onProxies()
@@ -487,12 +484,12 @@ function NormalProxyGroups(props: { mode: string }) {
       if (group.name === globalGroupName) {
         pendingRevealRef.current =
           member.kind === 'group' ? member.ref.name : null
-        // The selection refetches the view, so skip onHeadState's refetch.
+        // The backend selection event refreshes the view.
         if (member.kind === 'group') {
           setHeadState(member.ref.name, { open: true })
         }
       }
-      select(group.name, member.ref.name, group.now!, group.fixed!)
+      select(group.name, member.ref.name, group.fixed!)
     },
     [globalGroupName, select, setHeadState],
   )
