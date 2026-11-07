@@ -2,8 +2,17 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "bundle": {
-    "targets": ["deb", "rpm"],
+    "targets": ["deb", "rpm", "appimage"],
     "linux": {
+      "appimage": {
+        "files": {
+          "usr/lib/libayatana-appindicator3.so.1": "/usr/lib/x86_64-linux-gnu/libayatana-appindicator3.so.1",
+          "usr/lib/libayatana-indicator3.so.7": "/usr/lib/x86_64-linux-gnu/libayatana-indicator3.so.7",
+          "usr/lib/libayatana-ido3-0.4.so.0": "/usr/lib/x86_64-linux-gnu/libayatana-ido3-0.4.so.0",
+          "usr/lib/libdbusmenu-gtk3.so.4": "/usr/lib/x86_64-linux-gnu/libdbusmenu-gtk3.so.4",
+          "usr/lib/libdbusmenu-glib.so.4": "/usr/lib/x86_64-linux-gnu/libdbusmenu-glib.so.4"
+        }
+      },
       "deb": {
         "depends": ["openssl", "libayatana-appindicator3-1"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",

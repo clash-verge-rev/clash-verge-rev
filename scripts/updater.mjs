@@ -97,6 +97,7 @@ async function processRelease(github, options, tag, isAlpha) {
         'linux-x86_64': { signature: '', url: '' },
         'linux-x86_64-deb': { signature: '', url: '' },
         'linux-x86_64-rpm': { signature: '', url: '' },
+        'linux-x86_64-appimage': { signature: '', url: '' },
         'linux-i686': { signature: '', url: '' },
         'linux-i686-deb': { signature: '', url: '' },
         'linux-i686-rpm': { signature: '', url: '' },
@@ -208,6 +209,16 @@ async function processRelease(github, options, tag, isAlpha) {
       if (name.endsWith('x86_64.rpm.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['linux-x86_64-rpm'].signature = sig
+      }
+
+      // The v2 updater installs the AppImage in place from the signed AppImage
+      // itself (createUpdaterArtifacts=true produces no .tar.gz wrapper).
+      if (name.endsWith('amd64.AppImage')) {
+        updateData.platforms['linux-x86_64-appimage'].url = browser_download_url
+      }
+      if (name.endsWith('amd64.AppImage.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86_64-appimage'].signature = sig
       }
 
       if (name.endsWith('arm64.deb')) {
