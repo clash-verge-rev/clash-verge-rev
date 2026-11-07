@@ -26,7 +26,7 @@ import { LiteModeViewer } from './mods/lite-mode-viewer'
 import { MiscViewer } from './mods/misc-viewer'
 import { SettingItem, SettingList } from './mods/setting-comp'
 import { ThemeViewer } from './mods/theme-viewer'
-import { UpdateViewer } from './mods/update-viewer'
+import { UpdateViewer, type UpdateViewerRef } from './mods/update-viewer'
 
 interface Props {
   onError?: (err: Error) => void
@@ -40,7 +40,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const miscRef = useRef<DialogRef>(null)
   const themeRef = useRef<DialogRef>(null)
   const layoutRef = useRef<DialogRef>(null)
-  const updateRef = useRef<DialogRef>(null)
+  const updateRef = useRef<UpdateViewerRef>(null)
   const backupRef = useRef<DialogRef>(null)
   const liteModeRef = useRef<DialogRef>(null)
 
@@ -53,7 +53,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
           'settings.components.verge.advanced.notifications.latestVersion',
         )
       } else {
-        updateRef.current?.open()
+        updateRef.current?.open(info)
       }
     } catch (err) {
       console.warn('update check failed:', err)
