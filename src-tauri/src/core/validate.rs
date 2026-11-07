@@ -1,10 +1,13 @@
 use anyhow::Result;
+use nanoid::nanoid;
 use scopeguard::defer;
 use serde::Serialize;
 use smartstring::alias::String;
 use std::{
+    borrow::Cow,
     fmt,
     hash::{DefaultHasher, Hash as _, Hasher as _},
+    path::Path,
     sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -329,7 +332,7 @@ impl CoreConfigValidator {
             Ok(result) => result,
             Err(err) => {
                 logging!(warn, Type::Validate, "无法确定文件类型: {}, 错误: {}", config_path, err);
-                return Self::validate_config_internal_outcome(config_path).await;
+                return Self::validate_profile_yaml_outcome(config_path).await;
             }
         };
 
@@ -344,7 +347,33 @@ impl CoreConfigValidator {
         }
 
         logging!(info, Type::Validate, "使用Clash内核验证配置文件: {}", config_path);
-        Self::validate_config_internal_outcome(config_path).await
+        Self::validate_profile_yaml_outcome(config_path).await
+    }
+
+    /// The user file is saved as written, so the core checks a copy carrying the tolerated short-ids.
+    async fn validate_profile_yaml_outcome(config_path: &str) -> Result<ValidationOutcome> {
+        let Some(tolerant) = Self::short_id_tolerant_text(config_path).await else {
+            return Self::validate_config_internal_outcome(config_path).await;
+        };
+        let Ok(app_dir) = dirs::app_home_dir() else {
+            return Self::validate_config_internal_outcome(config_path).await;
+        };
+        let check_path = app_dir.join(format!("short-id-check-{}.yaml", nanoid!()));
+        defer! {
+            let _ = std::fs::remove_file(&check_path);
+        }
+        if help::save_yaml_str(&check_path, &tolerant).await.is_err() {
+            return Self::validate_config_internal_outcome(config_path).await;
+        }
+        Self::validate_config_internal_outcome(dirs::path_to_str(&check_path)?).await
+    }
+
+    async fn short_id_tolerant_text(config_path: &str) -> Option<std::string::String> {
+        let yaml = fs::read_to_string(config_path).await.ok()?;
+        match help::short_id_tolerant(&yaml, Path::new(config_path)) {
+            Ok((Cow::Owned(tolerant), _)) => Some(tolerant),
+            _ => None,
+        }
     }
 
     async fn validate_config_internal_outcome(config_path: &str) -> Result<ValidationOutcome> {

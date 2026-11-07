@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "scripts/**"
       - "**/*.js"
       - "**/*.ts"
       - "**/*.tsx"
       - "**/*.css"
       - "**/*.scss"
       - "**/*.json"
-      - "**/*.md"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "vite.config.*"
@@ -40,6 +40,14 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Check generated i18n types are up to date
+        run: |
+          pnpm i18n:types
+          if ! git diff --exit-code -- src/types/generated; then
+            echo "::error::src/types/generated is stale; run pnpm i18n:types and commit the result"
+            exit 1
+          fi
 
       - name: Run Prettier check
         run: pnpm format:check

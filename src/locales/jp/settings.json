@@ -714,5 +714,12 @@
       "installing": "サービスをインストール中...",
       "uninstalling": "サービスをアンインストール中..."
     }
+  },
+  "search": {
+    "placeholder": "設定を検索",
+    "clear": "検索をクリア",
+    "back": "結果に戻る",
+    "results": "検索結果",
+    "empty": "設定が見つかりません"
   }
 }

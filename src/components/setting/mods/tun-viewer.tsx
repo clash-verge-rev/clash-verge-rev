@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
-import { useImperativeHandle, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -25,6 +25,8 @@ import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 import { areValidIpCidrs } from '@/utils/network'
+
+import { useSettingDialog } from '../settings-search-context'
 
 import { DnsModeSwitch } from './dns-mode-switch'
 import { StackModeSwitch } from './stack-mode-switch'
@@ -67,7 +69,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     ? t('settings.modals.tun.messages.invalidRouteExcludeAddress')
     : t('settings.modals.tun.messages.routeExcludeAddressHint')
 
-  useImperativeHandle(ref, () => ({
+  useSettingDialog(ref, 'tun-viewer', open, () => ({
     open: () => {
       setOpen(true)
       const nextAutoRoute = clash?.tun['auto-route'] ?? true
@@ -152,6 +154,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
           <Typography variant="h6">{t('settings.modals.tun.title')}</Typography>
           <Button
+            data-setting-target="tun-viewer-reset"
             variant="outlined"
             size="small"
             onClick={async () => {
@@ -204,8 +207,12 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
+      <span data-settings-dialog="tun-viewer" />
       <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.stack"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.stack')} />
           <StackModeSwitch
             value={values.stack}
@@ -218,7 +225,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.dnsMode"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.tun.fields.dnsMode')}
             sx={{ maxWidth: 'fit-content' }}
@@ -237,7 +247,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Box>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.device"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.device')} />
           <TextField
             autoComplete="new-password"
@@ -254,7 +267,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.autoRoute"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.autoRoute')} />
           <Switch
             edge="end"
@@ -270,7 +286,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         {OS === 'linux' && (
-          <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItem
+            data-setting-target="settings.modals.tun.fields.autoRedirect"
+            sx={{ padding: '5px 2px' }}
+          >
             <ListItemText
               primary={t('settings.modals.tun.fields.autoRedirect')}
               sx={{ maxWidth: 'fit-content' }}
@@ -294,7 +313,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </ListItem>
         )}
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.strictRoute"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.strictRoute')} />
           <Switch
             edge="end"
@@ -303,7 +325,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.autoDetectInterface"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.tun.fields.autoDetectInterface')}
           />
@@ -316,7 +341,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.dnsHijack"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.dnsHijack')} />
           <TextField
             autoComplete="new-password"
@@ -333,7 +361,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.tun.fields.mtu"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText primary={t('settings.modals.tun.fields.mtu')} />
           <TextField
             autoComplete="new-password"
@@ -365,7 +396,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             setValues((v) => ({ ...v, routeExcludeAddress: nextValue }))
           }
           renderHeader={(modeToggle) => (
-            <ListItem sx={{ padding: '5px 2px' }}>
+            <ListItem
+              data-setting-target="settings.modals.tun.fields.routeExcludeAddress"
+              sx={{ padding: '5px 2px' }}
+            >
               <ListItemText
                 primary={t('settings.modals.tun.fields.routeExcludeAddress')}
               />

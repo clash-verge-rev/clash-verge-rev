@@ -559,12 +559,13 @@ impl CoreManager {
         })?;
         #[cfg(target_os = "macos")]
         crate::utils::resolve::dns::sync_public_dns().await;
-        // At login the app usually beats the network. Leave the write to the network watcher
-        // rather than fail — only if the watcher is actually live; a user toggling while
-        // offline still fails fast.
+        // Only automatic restores can wait for the watcher; explicit requests must report failure.
         #[cfg(target_os = "macos")]
-        if crate::core::network_watch::is_armed()
-            && !crate::utils::resolve::is_resolve_done()
+        let defer_until_network = crate::core::network_watch::is_armed()
+            && crate::core::notification::what_was_asked()
+                == crate::core::notification::FailedOperation::SystemProxyRestore;
+        #[cfg(target_os = "macos")]
+        if defer_until_network
             && Config::verge()
                 .await
                 .latest_arc()
@@ -579,7 +580,20 @@ impl CoreManager {
             );
             return Ok(());
         }
+        #[cfg(not(target_os = "macos"))]
         proxy_control::apply().await?;
+        #[cfg(target_os = "macos")]
+        if let Err(error) = proxy_control::apply().await {
+            if defer_until_network && proxy_control::is_missing_network_service_failure(&error) {
+                logging!(
+                    debug,
+                    Type::Core,
+                    "network service disappeared; the system proxy waits for its return"
+                );
+                return Ok(());
+            }
+            return Err(error);
+        }
         if !expectation.is_valid(
             self.get_running_mode().as_ref(),
             self.current_core_readiness_generation(),

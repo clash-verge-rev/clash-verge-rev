@@ -220,6 +220,7 @@ const ProxyControlSwitches = ({
                   )}
                   icon={DeleteForeverRounded}
                   color="secondary"
+                  data-setting-target="service-uninstall"
                   onClick={onUninstallService}
                   sx={{ ml: 1 }}
                 />

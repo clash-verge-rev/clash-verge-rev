@@ -1251,6 +1251,13 @@ export interface TranslationResources {
         actionsGroupLabel: string
         title: string
       }
+      search: {
+        back: string
+        clear: string
+        empty: string
+        placeholder: string
+        results: string
+      }
       sections: {
         appearance: {
           dark: string
@@ -1589,6 +1596,7 @@ export interface TranslationResources {
           noDisney: string
           originalsOnly: string
           pending: string
+          risky: string
           unsupportedRegion: string
           yes: string
         }

@@ -614,6 +614,53 @@ async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<
     .with_context(|| format!("failed to select node [{node}] for group [{group_name}]"))
 }
 
+// mihomo lists these first in GLOBAL, so an unpicked GLOBAL starts on DIRECT.
+const GLOBAL_BUILTINS: [&str; 2] = ["DIRECT", "REJECT"];
+
+/// GLOBAL's first visible group, else its first node, while GLOBAL is still on a built-in.
+fn global_exit_target(proxies: &Proxies) -> Option<&str> {
+    let global = proxies.proxies.get("GLOBAL")?;
+    if !global.now.as_deref().is_some_and(|now| GLOBAL_BUILTINS.contains(&now)) {
+        return None;
+    }
+    let members = global.all.as_deref()?;
+    let is_visible_group = |name: &str| {
+        proxies.proxies.get(name).is_some_and(|proxy| {
+            proxy.hidden != Some(true)
+                && matches!(
+                    proxy.proxy_type,
+                    ProxyType::Selector | ProxyType::URLTest | ProxyType::Fallback | ProxyType::LoadBalance
+                )
+        })
+    };
+    members
+        .iter()
+        .find(|name| is_visible_group(name))
+        .or_else(|| members.iter().find(|name| !GLOBAL_BUILTINS.contains(&name.as_str())))
+        .map(|name| name.as_str())
+}
+
+/// Moves GLOBAL off a built-in unless the profile records any GLOBAL choice.
+pub(crate) async fn leave_default_global_exit() -> Result<()> {
+    let profiles = Config::profiles().await.data_arc();
+    let has_record = profiles
+        .current
+        .as_ref()
+        .and_then(|current| profiles.get_item(current).ok())
+        .and_then(|item| item.selected.as_deref())
+        .is_some_and(|selected| selected.iter().any(|item| item.name.as_deref() == Some("GLOBAL")));
+    if has_record {
+        return Ok(());
+    }
+    let snapshot = fetch_proxies_with_timeout().await?;
+    let Some(target) = global_exit_target(&snapshot) else {
+        return Ok(());
+    };
+    select_node_with_timeout(&String::from("GLOBAL"), &String::from(target)).await?;
+    logging!(info, Type::Config, "moved GLOBAL off its built-in default to {target}");
+    Ok(())
+}
+
 fn remaining_activations(
     activations: &[(String, String)],
     completed: &HashMap<String, String>,
@@ -1018,6 +1065,12 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
                 .selected
                 .clone()
                 .unwrap_or_default();
+
+            if Config::clash().await.latest_arc().get_mode().as_deref() == Some("global")
+                && let Err(err) = leave_default_global_exit().await
+            {
+                logging!(warn, Type::Config, "failed to move GLOBAL off its default: {err:#}");
+            }
 
             if selected.is_empty() {
                 if is_activation_current(generation) {

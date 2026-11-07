@@ -13,13 +13,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from 'react'
+import { forwardRef, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -41,8 +35,11 @@ import {
   getSystemHostname,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
+
+import { useSettingDialog } from '../settings-search-context'
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
@@ -128,13 +125,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   } = verge ?? {}
 
   const [value, setValue] = useState(() => buildInitialValues(null))
-  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
-    null,
-  )
-
-  useEffect(() => {
-    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
-  }, [])
+  const { data: embeddedServerPort } = useQuery({
+    queryKey: ['getEmbeddedServerPort'],
+    queryFn: getEmbeddedServerPort,
+  })
 
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 
@@ -191,7 +185,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     setPacEditorSavedValue(nextPac)
   })
 
-  useImperativeHandle(ref, () => ({
+  useSettingDialog(ref, 'sysproxy-viewer', open, () => ({
     open: () => {
       setOpen(true)
       setValue(buildInitialValues(verge))
@@ -363,41 +357,49 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       loading={saving}
       disableOk={saving}
     >
+      <span data-settings-dialog="sysproxy-viewer" />
       <List>
-        <BaseFieldset
-          label={t('settings.modals.sysproxy.fieldsets.currentStatus')}
-          padding="15px 10px"
-        >
-          <FlexBox>
-            <Typography className="label">
-              {t('settings.modals.sysproxy.fields.enableStatus')}
-            </Typography>
-            <Typography className="value">
-              {isProxyReallyEnabled
-                ? t('shared.statuses.enabled')
-                : t('shared.statuses.disabled')}
-            </Typography>
-          </FlexBox>
-          {!value.pac && (
+        <Box data-setting-target="sysproxy-status" tabIndex={-1}>
+          <BaseFieldset
+            label={t('settings.modals.sysproxy.fieldsets.currentStatus')}
+            padding="15px 10px"
+          >
             <FlexBox>
               <Typography className="label">
-                {t('settings.modals.sysproxy.fields.serverAddr')}
-              </Typography>
-              <Typography className="value">{getSystemProxyAddress}</Typography>
-            </FlexBox>
-          )}
-          {value.pac && (
-            <FlexBox>
-              <Typography className="label">
-                {t('settings.modals.sysproxy.fields.pacUrl')}
+                {t('settings.modals.sysproxy.fields.enableStatus')}
               </Typography>
               <Typography className="value">
-                {getCurrentPacUrl || '-'}
+                {isProxyReallyEnabled
+                  ? t('shared.statuses.enabled')
+                  : t('shared.statuses.disabled')}
               </Typography>
             </FlexBox>
-          )}
-        </BaseFieldset>
-        <ListItem sx={{ padding: '5px 2px' }}>
+            {!value.pac && (
+              <FlexBox>
+                <Typography className="label">
+                  {t('settings.modals.sysproxy.fields.serverAddr')}
+                </Typography>
+                <Typography className="value">
+                  {getSystemProxyAddress}
+                </Typography>
+              </FlexBox>
+            )}
+            {value.pac && (
+              <FlexBox>
+                <Typography className="label">
+                  {t('settings.modals.sysproxy.fields.pacUrl')}
+                </Typography>
+                <Typography className="value">
+                  {getCurrentPacUrl || '-'}
+                </Typography>
+              </FlexBox>
+            )}
+          </BaseFieldset>
+        </Box>
+        <ListItem
+          data-setting-target="settings.modals.sysproxy.fields.proxyHost"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.proxyHost')}
           />
@@ -424,7 +426,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             }}
           />
         </ListItem>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.sysproxy.fields.usePacMode"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.usePacMode')}
           />
@@ -436,7 +441,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.sysproxy.fields.proxyGuard"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.proxyGuard')}
             sx={{ maxWidth: 'fit-content' }}
@@ -454,7 +462,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.sysproxy.fields.guardDuration"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.guardDuration')}
           />
@@ -477,7 +488,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItem
+            data-setting-target="settings.modals.sysproxy.fields.alwaysUseDefaultBypass"
+            sx={{ padding: '5px 2px' }}
+          >
             <ListItemText
               primary={t(
                 'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
@@ -504,7 +518,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItem
+            data-setting-target="settings.modals.sysproxy.fields.enableBypassCheck"
+            sx={{ padding: '5px 2px' }}
+          >
             <ListItemText
               primary={t('settings.modals.sysproxy.fields.enableBypassCheck')}
             />
@@ -536,7 +553,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               setValue((v) => ({ ...v, bypass: nextValue }))
             }}
             renderHeader={(modeToggle) => (
-              <ListItem sx={{ padding: '5px 2px' }}>
+              <ListItem
+                data-setting-target="settings.modals.sysproxy.fields.proxyBypass"
+                sx={{ padding: '5px 2px' }}
+              >
                 <ListItemText
                   primary={t('settings.modals.sysproxy.fields.proxyBypass')}
                 />
@@ -564,12 +584,16 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         {value.pac && (
-          <ListItem sx={{ padding: '5px 2px', alignItems: 'start' }}>
+          <ListItem
+            data-setting-target="settings.modals.sysproxy.fields.pacScriptContent"
+            sx={{ padding: '5px 2px', alignItems: 'start' }}
+          >
             <ListItemText
               primary={t('settings.modals.sysproxy.fields.pacScriptContent')}
               sx={{ padding: '3px 0' }}
             />
             <Button
+              data-setting-target="settings.modals.sysproxy.actions.editPac"
               startIcon={<EditRounded />}
               variant="outlined"
               onClick={openPacEditor}

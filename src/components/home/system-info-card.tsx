@@ -8,7 +8,7 @@ import {
 } from '@mui/icons-material'
 import { Typography, Stack, Divider, Chip, IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -22,9 +22,22 @@ import {
 import { useVerge } from '@/hooks/use-verge'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { useQuery } from '@/services/query-client'
 import { version as appVersion } from '@root/package.json'
 
 import { EnhancedCard } from './enhanced-card'
+
+const getOsInfo = async () => {
+  const info = await getSystemInfo()
+  const sysName = info.system_name
+  let sysVersion = info.system_version
+
+  if (sysName && sysVersion.toLowerCase().startsWith(sysName.toLowerCase())) {
+    sysVersion = sysVersion.substring(sysName.length).trim()
+  }
+
+  return `${sysName} ${sysVersion}`
+}
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation()
@@ -36,30 +49,15 @@ export const SystemInfoCard = () => {
 
   const { checkUpdate: triggerCheckUpdate, lastCheckUpdate } = useUpdate(true)
 
-  const [osInfo, setOsInfo] = useState('')
+  const { data: osInfo = '' } = useQuery({
+    queryKey: ['getSystemInfo'],
+    queryFn: getOsInfo,
+  })
 
   const lastCheckUpdateText = useMemo(
     () => (lastCheckUpdate ? new Date(lastCheckUpdate).toLocaleString() : '-'),
     [lastCheckUpdate],
   )
-
-  useEffect(() => {
-    getSystemInfo()
-      .then((info) => {
-        const sysName = info.system_name
-        let sysVersion = info.system_version
-
-        if (
-          sysName &&
-          sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
-        ) {
-          sysVersion = sysVersion.substring(sysName.length).trim()
-        }
-
-        setOsInfo(`${sysName} ${sysVersion}`)
-      })
-      .catch(console.error)
-  }, [])
 
   useEffect(() => {
     if (!verge?.auto_check_update) return

@@ -714,5 +714,12 @@
       "installing": "Installing Service...",
       "uninstalling": "Uninstalling Service..."
     }
+  },
+  "search": {
+    "placeholder": "Search settings",
+    "clear": "Clear search",
+    "back": "Back to results",
+    "results": "Search results",
+    "empty": "No settings found"
   }
 }

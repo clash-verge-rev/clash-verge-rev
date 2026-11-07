@@ -714,5 +714,12 @@
       "installing": "جاري تثبيت الخدمة...",
       "uninstalling": "Uninstalling Service..."
     }
+  },
+  "search": {
+    "placeholder": "البحث في الإعدادات",
+    "clear": "مسح البحث",
+    "back": "العودة إلى النتائج",
+    "results": "نتائج البحث",
+    "empty": "لم يتم العثور على إعدادات"
   }
 }

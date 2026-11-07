@@ -8,12 +8,14 @@ import {
   TextField,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+
+import { useSettingDialog } from '../settings-search-context'
 
 const buildInitialValues = (verge?: IVergeConfig | null) => ({
   appLogLevel: verge?.app_log_level ?? 'warn',
@@ -38,7 +40,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState(() => buildInitialValues(null))
 
-  useImperativeHandle(ref, () => ({
+  useSettingDialog(ref, 'misc-viewer', open, () => ({
     open: () => {
       setOpen(true)
       setValues(buildInitialValues(verge))
@@ -80,8 +82,12 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
+      <span data-settings-dialog="misc-viewer" />
       <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogLevel"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogLevel')}
           />
@@ -104,7 +110,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogMaxSize"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogMaxSize')}
             sx={{ maxWidth: 'fit-content' }}
@@ -136,7 +145,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogMaxCount"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogMaxCount')}
             sx={{ maxWidth: 'fit-content' }}
@@ -168,7 +180,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoCloseConnections"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoCloseConnections')}
             sx={{ maxWidth: 'fit-content' }}
@@ -187,7 +202,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoCheckUpdate"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoCheckUpdate')}
           />
@@ -200,7 +218,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.enableBuiltinEnhanced"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.enableBuiltinEnhanced')}
             sx={{ maxWidth: 'fit-content' }}
@@ -219,7 +240,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.proxyLayoutColumns"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.proxyLayoutColumns')}
           />
@@ -245,7 +269,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoLogClean"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoLogClean')}
           />
@@ -298,7 +325,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoDelayDetection"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoDelayDetection')}
             sx={{ maxWidth: 'fit-content' }}
@@ -317,7 +347,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoDelayDetectionInterval"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t(
               'settings.modals.misc.fields.autoDelayDetectionInterval',
@@ -355,7 +388,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.defaultLatencyTest"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.defaultLatencyTest')}
             sx={{ maxWidth: 'fit-content' }}
@@ -379,7 +415,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.defaultLatencyTimeout"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.defaultLatencyTimeout')}
           />

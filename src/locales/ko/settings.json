@@ -714,5 +714,12 @@
       "installing": "서비스 설치 중...",
       "uninstalling": "서비스 제거 중..."
     }
+  },
+  "search": {
+    "placeholder": "설정 검색",
+    "clear": "검색 지우기",
+    "back": "결과로 돌아가기",
+    "results": "검색 결과",
+    "empty": "설정을 찾을 수 없습니다"
   }
 }

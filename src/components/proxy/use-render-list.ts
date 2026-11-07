@@ -79,18 +79,6 @@ const resolveOccurrences = (view: ProxyViewV1, group: ProxyGroupView) =>
     member: resolveMember(view, member),
   }))
 
-// mihomo selects DIRECT in GLOBAL by default, so the selected built-in stays visible.
-const HIDDEN_GLOBAL_BUILTINS = new Set(['DIRECT', 'REJECT'])
-
-const isHiddenGlobalBuiltin = (
-  group: ProxyGroupView,
-  { member }: ResolvedMemberOccurrence,
-) =>
-  member.kind === 'node' &&
-  member.node.source.kind === 'core' &&
-  HIDDEN_GLOBAL_BUILTINS.has(member.node.source.proxyName) &&
-  member.ref.name !== group.now
-
 const memberKey = (
   group: ProxyGroupView,
   occurrence: ResolvedMemberOccurrence,
@@ -307,11 +295,8 @@ export const useRenderList = (
       ]
 
       if (headState.open || isFlat) {
-        const resolved = resolveOccurrences(proxyView, group)
         const occurrences = filterSort(
-          isFlat
-            ? resolved.filter((item) => !isHiddenGlobalBuiltin(group, item))
-            : resolved,
+          resolveOccurrences(proxyView, group),
           group.name,
           headState.filterText,
           headState.sortType,

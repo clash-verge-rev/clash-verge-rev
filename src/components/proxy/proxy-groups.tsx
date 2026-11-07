@@ -32,6 +32,7 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
+import type { ProxyChainItem } from './proxy-chain-model'
 import { ProxyEmptyState } from './proxy-empty-state'
 import {
   resolveEmptyListReason,
@@ -68,7 +69,7 @@ function useStableCallback<T extends (...args: any[]) => any>(fn: T): T {
 interface Props {
   mode: string
   isChainMode?: boolean
-  chainConfigData?: string | null
+  chainConfigItems?: ProxyChainItem[] | null
   onExitChainMode: () => void
 }
 
@@ -192,10 +193,10 @@ function useProxyRenderState(
 
 function ChainProxyGroups(props: {
   mode: string
-  chainConfigData?: string | null
+  chainConfigItems?: ProxyChainItem[] | null
   onExitChainMode: () => void
 }) {
-  const { mode, chainConfigData, onExitChainMode } = props
+  const { mode, chainConfigItems, onExitChainMode } = props
   const { proxyView } = useProxiesData()
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
 
@@ -349,7 +350,7 @@ function ChainProxyGroups(props: {
     <Suspense fallback={<BaseLoading />}>
       <ProxyGroupsChain
         mode={mode}
-        chainConfigData={chainConfigData}
+        chainConfigItems={chainConfigItems}
         onExitChainMode={onExitChainMode}
         availableGroups={availableGroups}
         activeSelectedGroup={activeSelectedGroup}
@@ -646,7 +647,7 @@ function NormalProxyGroups(props: { mode: string }) {
 }
 
 export const ProxyGroups = (props: Props) => {
-  const { mode, isChainMode = false, chainConfigData, onExitChainMode } = props
+  const { mode, isChainMode = false, chainConfigItems, onExitChainMode } = props
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
   const { isProxyViewPending } = useProxiesData()
   const { isRunningModePending } = useSystemData()
@@ -670,7 +671,7 @@ export const ProxyGroups = (props: Props) => {
       return isChainMode ? (
         <ChainProxyGroups
           mode={mode}
-          chainConfigData={chainConfigData}
+          chainConfigItems={chainConfigItems}
           onExitChainMode={onExitChainMode}
         />
       ) : (

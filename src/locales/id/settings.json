@@ -714,5 +714,12 @@
       "installing": "Memasang Layanan...",
       "uninstalling": "Uninstalling Service..."
     }
+  },
+  "search": {
+    "placeholder": "Cari pengaturan",
+    "clear": "Hapus pencarian",
+    "back": "Kembali ke hasil",
+    "results": "Hasil pencarian",
+    "empty": "Pengaturan tidak ditemukan"
   }
 }

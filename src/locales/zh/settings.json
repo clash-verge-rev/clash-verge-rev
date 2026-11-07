@@ -714,5 +714,12 @@
       "installing": "安装服务中...",
       "uninstalling": "卸载服务中..."
     }
+  },
+  "search": {
+    "placeholder": "搜索设置",
+    "clear": "清空搜索",
+    "back": "返回结果",
+    "results": "搜索结果",
+    "empty": "未找到设置"
   }
 }

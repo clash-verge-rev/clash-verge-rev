@@ -4,16 +4,14 @@ use serde_yaml_ng::{Mapping, Value};
 use std::{
     io::Read as _,
     os::unix::process::CommandExt as _,
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::{Command, Stdio},
     time::{Duration, Instant},
 };
 use tokio::sync::Mutex;
 
-const DNS_STATE_FILE: &str = ".original_dns.txt";
-const DNS_BACKUP_DIR: &str = ".original_dns";
 // Any address routed into TUN works, since dns-hijack answers it; the value only matters if left behind.
-const PLACEHOLDER_DNS: &str = "114.114.114.114";
+const PLACEHOLDER_DNS: &str = "114.114.114.114\n223.5.5.5\n1.1.1.1";
 // Scripts run under lifecycle_lock, and networksetup waits for other preference writers without a limit.
 pub(crate) const DNS_SCRIPT_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -24,14 +22,6 @@ fn dns_state_dir() -> anyhow::Result<PathBuf> {
     let dir = crate::utils::dirs::app_home_dir()?;
     std::fs::create_dir_all(&dir).with_context(|| format!("failed to create DNS state directory {}", dir.display()))?;
     Ok(dir)
-}
-
-fn restore_dns_state_dir(resource_dir: &Path, state_dir: PathBuf) -> PathBuf {
-    if resource_dir.join(DNS_STATE_FILE).exists() || resource_dir.join(DNS_BACKUP_DIR).exists() {
-        resource_dir.to_path_buf()
-    } else {
-        state_dir
-    }
 }
 
 // Without the placeholder, a LAN resolver is reached outside TUN and fake-ip is bypassed.
@@ -79,25 +69,19 @@ pub async fn restore_public_dns() -> anyhow::Result<()> {
 
 async fn set_public_dns() {
     logging!(debug, Type::Config, "try to set system dns");
-    let result = async {
-        let script = crate::utils::dirs::app_resources_dir()?.join("set_dns.sh");
-        run_dns_script(&script, dns_state_dir()?).await
-    }
-    .await;
+    let result = run_dns_script("set_dns.sh", true).await;
     match result {
-        Ok(()) => logging!(info, Type::Config, "set system dns successfully"),
+        Ok(DnsScriptOutcome::Complete) => logging!(info, Type::Config, "set system dns successfully"),
+        Ok(DnsScriptOutcome::Deferred) => {
+            logging!(debug, Type::Config, "system DNS waits for a primary network service")
+        }
         Err(err) => logging!(error, Type::Config, "set system dns failed: {err:#}"),
     }
 }
 
 async fn unset_public_dns() -> anyhow::Result<()> {
     logging!(debug, Type::Config, "try to unset system dns");
-    let result = async {
-        let resource_dir = crate::utils::dirs::app_resources_dir()?;
-        let state_dir = restore_dns_state_dir(&resource_dir, dns_state_dir()?);
-        run_dns_script(&resource_dir.join("unset_dns.sh"), state_dir).await
-    }
-    .await;
+    let result = run_dns_script("unset_dns.sh", false).await.map(|_| ());
     match &result {
         Ok(()) => logging!(info, Type::Config, "unset system dns successfully"),
         Err(err) => logging!(error, Type::Config, "unset system dns failed: {err:#}"),
@@ -105,12 +89,21 @@ async fn unset_public_dns() -> anyhow::Result<()> {
     result
 }
 
+enum DnsScriptOutcome {
+    Complete,
+    Deferred,
+}
+
 /// On timeout the script's whole process group is killed, so no networksetup it started writes late.
-async fn run_dns_script(script: &Path, dir: PathBuf) -> anyhow::Result<()> {
+async fn run_dns_script(script_name: &str, allow_deferred: bool) -> anyhow::Result<DnsScriptOutcome> {
+    let resource_dir = crate::utils::dirs::app_resources_dir()?;
+    let script = resource_dir.join(script_name);
+    let dir = dns_state_dir()?;
     ensure!(script.exists(), "DNS script not found: {}", script.display());
     let mut child = Command::new("bash")
-        .arg(script)
+        .arg(&script)
         .arg(PLACEHOLDER_DNS)
+        .arg(resource_dir)
         .current_dir(dir)
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
@@ -134,41 +127,18 @@ async fn run_dns_script(script: &Path, dir: PathBuf) -> anyhow::Result<()> {
         if let Some(mut pipe) = child.stderr.take() {
             pipe.read_to_string(&mut stderr)?;
         }
+        // EX_TEMPFAIL is reserved by set_dns.sh for a network service that is not ready.
+        if allow_deferred && status.code() == Some(75) {
+            return Ok(DnsScriptOutcome::Deferred);
+        }
         ensure!(
             status.success(),
             "exit code {}: {}",
             status.code().unwrap_or(-1),
             stderr.trim()
         );
-        Ok(())
+        Ok(DnsScriptOutcome::Complete)
     })
     .await
     .context("DNS script task failed")?
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    #[allow(clippy::expect_used)]
-    fn restore_dns_state_dir_defaults_to_app_data_but_honors_legacy_file() {
-        use super::restore_dns_state_dir;
-
-        let root = std::env::temp_dir().join(format!("clash-verge-dns-{}", nanoid::nanoid!()));
-        let resource_dir = root.join("resources");
-        let state_dir = root.join("app-data");
-        std::fs::create_dir_all(&resource_dir).expect("create test resource directory");
-
-        assert_eq!(restore_dns_state_dir(&resource_dir, state_dir.clone()), state_dir);
-
-        std::fs::write(resource_dir.join(".original_dns.txt"), "empty").expect("create legacy DNS state");
-        assert_eq!(restore_dns_state_dir(&resource_dir, state_dir.clone()), resource_dir);
-
-        // A migrated legacy backup whose restore failed must still be retried there.
-        std::fs::remove_file(resource_dir.join(".original_dns.txt")).expect("remove legacy DNS state");
-        std::fs::create_dir(resource_dir.join(".original_dns")).expect("create migrated DNS state");
-        assert_eq!(restore_dns_state_dir(&resource_dir, state_dir), resource_dir);
-
-        std::fs::remove_dir_all(root).expect("remove test directory");
-    }
 }
