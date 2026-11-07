@@ -102,6 +102,10 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more details.
 
 To run the development server, execute the following commands after all prerequisites for **Tauri** are installed:
 
+`pnpm dev` also requires a matching `clash-verge-service-ipc` source checkout at
+`../clash-verge-service-ipc`; `pnpm prebuild` downloads binaries but does not
+provide this checkout. See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup details.
+
 ```shell
 pnpm i
 pnpm run prebuild
