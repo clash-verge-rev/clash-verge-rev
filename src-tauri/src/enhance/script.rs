@@ -34,14 +34,18 @@ pub(super) async fn use_script(script: String, config: Mapping, name: String) ->
         Err(err) => return (config, vec![], vec![("exception".into(), err.to_string().into())]),
     };
 
-    let evaluated = AsyncHandler::spawn_blocking(move || eval_script(&script, &json, &name));
-    let (outcome, mut logs) = match tokio::time::timeout(SCRIPT_TIMEOUT, evaluated).await {
+    let mut evaluated = AsyncHandler::spawn_blocking(move || eval_script(&script, &json, &name));
+    let (outcome, mut logs) = match tokio::time::timeout(SCRIPT_TIMEOUT, &mut evaluated).await {
         Ok(Ok(evaluated)) => evaluated,
         Ok(Err(join_err)) => (Err(format!("script task panicked: {join_err}")), vec![]),
-        Err(_elapsed) => (
-            Err(format!("script execution timed out after {SCRIPT_TIMEOUT:?}")),
-            vec![],
-        ),
+        Err(_elapsed) => {
+            // Aborting prevents queued work from starting; running blocking tasks cannot be stopped.
+            evaluated.abort();
+            (
+                Err(format!("script execution timed out after {SCRIPT_TIMEOUT:?}")),
+                vec![],
+            )
+        }
     };
 
     match outcome {
