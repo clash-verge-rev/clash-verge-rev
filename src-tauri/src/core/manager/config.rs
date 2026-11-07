@@ -1,5 +1,5 @@
 use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
-use crate::core::notify::NoticeStatus;
+use crate::core::notify::{NoticeStatus, Refresh, announce};
 use crate::core::service::StageRequest;
 use crate::{
     config::{Config, IProfiles, runtime::IRuntime},
@@ -10,7 +10,7 @@ use crate::{
     },
     utils::{dirs, help},
 };
-use anyhow::{Result, anyhow};
+use anyhow::{Context as _, Result, anyhow};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::StageRuntimeOutcome;
@@ -306,22 +306,51 @@ impl CoreManager {
         self.validate_and_apply(transaction).await
     }
 
-    pub(crate) async fn update_runtime_config<F>(&self, f: F) -> Result<ValidationOutcome>
-    where
-        F: FnOnce(&mut IRuntime),
-    {
-        if !self.try_start_config_update() {
-            logging!(debug, Type::Core, "Configuration update is already running");
-            return Ok(ValidationOutcome::Busy);
+    pub(crate) async fn update_proxy_chain_config(
+        &self,
+        chain: Option<Vec<std::string::String>>,
+    ) -> Result<ValidationOutcome> {
+        let profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
+        let config_write = Config::lock_config_write().await;
+        let profiles = Config::profiles().await;
+        let result = profiles
+            .with_data_modify(|mut candidate| async move {
+                let original = candidate.clone();
+                let current = candidate
+                    .current
+                    .as_ref()
+                    .context("no active profile for proxy chain")?;
+                let item = candidate
+                    .items
+                    .as_mut()
+                    .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(current)))
+                    .context("active proxy chain profile is missing")?;
+                item.proxy_chain = chain;
+                match self.update_config_forced_with_profiles(&candidate, &original).await? {
+                    Ok(guard) => Ok((candidate, Ok(guard))),
+                    Err(outcome) => Ok((original, Err(outcome))),
+                }
+            })
+            .await?;
+        match result {
+            Ok(guard) => {
+                crate::config::profiles::restore_selected_nodes().await;
+                drop(guard);
+                drop(config_write);
+                drop(profile_write);
+                if let Err(error) = Config::sync_dns_override().await {
+                    logging!(
+                        warn,
+                        Type::Config,
+                        "Failed to sync DNS settings after updating proxy chain: {error:#}"
+                    );
+                }
+                handle::Handle::refresh_clash();
+                announce(Refresh::Profiles);
+                Ok(ValidationOutcome::Valid)
+            }
+            Err(outcome) => Ok(outcome),
         }
-        defer! {
-            self.finish_config_update();
-        }
-
-        let runtime = Config::runtime().await;
-        let transaction = DraftTransaction::begin(vec![&runtime])?;
-        runtime.edit_draft(f);
-        self.validate_and_apply(transaction).await
     }
 
     /// Commits the applied runtime even if restoring the system proxy subsequently fails.
