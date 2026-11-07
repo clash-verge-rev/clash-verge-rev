@@ -6,7 +6,7 @@ use crate::{
         updater::{DownloadEvent, InstallUpdateOutcome},
     },
     feat,
-    utils::dirs,
+    utils::{dirs, resolve::window::set_native_window_theme as apply_native_window_theme},
 };
 use smartstring::alias::String;
 use tauri::{AppHandle, Manager as _, ipc::Channel};
@@ -49,6 +49,15 @@ pub fn open_devtools(app_handle: AppHandle) {
 #[specta::specta]
 pub async fn exit_app() {
     feat::quit().await;
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn set_native_window_theme(app_handle: AppHandle, theme: std::string::String) -> CmdResult<()> {
+    let window = app_handle
+        .get_webview_window("main")
+        .ok_or_else(|| "main window is not available".to_string())?;
+    apply_native_window_theme(window, &theme).map_err(Into::into)
 }
 
 #[tauri::command]

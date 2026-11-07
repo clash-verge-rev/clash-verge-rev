@@ -68,6 +68,7 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::download_icon_cache,
             cmd::open_devtools,
             cmd::exit_app,
+            cmd::set_native_window_theme,
             cmd::get_network_interfaces_info,
             cmd::get_profiles,
             cmd::enhance_profiles,
