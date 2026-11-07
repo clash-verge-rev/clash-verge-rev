@@ -78,13 +78,11 @@ export const commands = {
     }),
   invokeUwpTool: () => __TAURI_INVOKE<null>('invoke_uwp_tool'),
   copyClashEnv: () => __TAURI_INVOKE<null>('copy_clash_env'),
-  syncTrayProxySelection: () =>
-    __TAURI_INVOKE<null>('sync_tray_proxy_selection'),
   /**  Merges one selection pair into fresh backend state to avoid stale-list overwrites. */
   recordSelectedNode: (groupName: string, node: string) =>
     __TAURI_INVOKE<null>('record_selected_node', { groupName, node }),
-  forgetSelectedNode: (groupName: string) =>
-    __TAURI_INVOKE<null>('forget_selected_node', { groupName }),
+  switchProxyNode: (groupName: string, proxyName: string, unfix: boolean) =>
+    __TAURI_INVOKE<null>('switch_proxy_node', { groupName, proxyName, unfix }),
   saveDnsConfig: (dnsConfig: YamlMapping) =>
     __TAURI_INVOKE<null>('save_dns_config', { dnsConfig }),
   applyDnsConfig: (apply: boolean) =>

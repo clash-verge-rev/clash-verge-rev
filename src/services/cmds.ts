@@ -152,17 +152,17 @@ export async function patchClashMode(payload: string) {
   return commands.patchClashMode(payload)
 }
 
-export async function syncTrayProxySelection() {
-  return commands.syncTrayProxySelection()
-}
-
 /** Sends one selection pair so the backend can merge against current profile state. */
 export async function recordSelectedNode(groupName: string, node: string) {
   return commands.recordSelectedNode(groupName, node)
 }
 
-export async function forgetSelectedNode(groupName: string) {
-  return commands.forgetSelectedNode(groupName)
+export async function switchProxyNode(
+  groupName: string,
+  proxyName: string,
+  unfix: boolean,
+) {
+  return commands.switchProxyNode(groupName, proxyName, unfix)
 }
 
 export async function getProxyView(): Promise<ProxyViewV1> {
