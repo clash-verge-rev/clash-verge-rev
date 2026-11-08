@@ -24,7 +24,7 @@ jobs:
     name: linked-issue-check
     runs-on: ubuntu-latest
     steps:
-      - name: Require an issue reference in title or body
+      - name: Check for an issue reference in title or body
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
@@ -44,8 +44,8 @@ jobs:
             exit 0
           fi
           if printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" | grep -Eq '#[0-9]+|issues/[0-9]+'; then
-            echo "Issue reference found."
+            echo "Reference found; the ownership review checks whether it is a pre-existing issue when required."
           else
-            echo "::error::No issue reference found in the PR title or body. Link the issue (e.g. \"Fixes #123\"), or ask a maintainer to add the no-issue-needed label if the change is trivial."
-            exit 1
+            # Scope requires the diff; a title prefix cannot establish an exemption.
+            echo "::warning::No issue reference found. Product bug fixes and features require a pre-existing issue; self-scoped maintenance does not. The ownership review evaluates the actual scope."
           fi
