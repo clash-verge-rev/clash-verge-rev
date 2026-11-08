@@ -64,6 +64,7 @@ dunce = "1.0.5"
 nanoid = "0.5"
 chrono = { workspace = true }
 boa_engine = "0.22.0"
+http-body-util = "0.1.4"
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
