@@ -12,6 +12,9 @@
     "rust-toolchain"
   ],
   "labels": ["dependencies"],
+  "prBodyNotes": [
+    "{{#if isMinor}}<!-- renovate-update\n{{encodeURIComponent datasource}}|{{encodeURIComponent depName}}|{{#if currentVersion}}{{encodeURIComponent currentVersion}}{{else}}{{encodeURIComponent currentValue}}{{/if}}|{{encodeURIComponent newVersion}}|{{updateType}}\n-->{{/if}}"
+  ],
   "ignorePaths": [
     "**/node_modules/**",
     "**/bower_components/**",
@@ -68,10 +71,12 @@
       "enabled": false
     },
     {
-      "description": "Ignore gh-aw dependency updates in workflow files; upgrade agentic workflows with gh aw upgrade instead",
-      "matchFileNames": [".github/workflows/**"],
-      "matchPackageNames": ["/gh-aw/"],
-      "enabled": false
+      "description": "Group gh-aw compiler and setup action updates; recompile workflow locks before merging",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["github/gh-aw", "github/gh-aw-actions"],
+      "groupName": "gh-aw",
+      "groupSlug": "gh-aw",
+      "automerge": false
     },
     {
       "description": "Skip TypeScript 7.0 series",

@@ -90,6 +90,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       <LiteModeViewer ref={liteModeRef} />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.backupSetting"
         onClick={() => backupRef.current?.open()}
         label={t('settings.components.verge.advanced.fields.backupSetting')}
         extra={
@@ -101,11 +102,13 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.runtimeConfig"
         onClick={() => configRef.current?.open()}
         label={t('settings.components.verge.advanced.fields.runtimeConfig')}
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.openConfDir"
         onClick={openAppDir}
         label={t('settings.components.verge.advanced.fields.openConfDir')}
         extra={
@@ -117,21 +120,25 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.openCoreDir"
         onClick={openCoreDir}
         label={t('settings.components.verge.advanced.fields.openCoreDir')}
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.openLogsDir"
         onClick={openLogsDir}
         label={t('settings.components.verge.advanced.fields.openLogsDir')}
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.checkUpdates"
         onClick={onCheckUpdate}
         label={t('settings.components.verge.advanced.fields.checkUpdates')}
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.openDevTools"
         onClick={() => {
           void mutate(() => openDevTools(), {
             id: 'open-devtools',
@@ -142,6 +149,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.liteModeSettings"
         label={t('settings.components.verge.advanced.fields.liteModeSettings')}
         extra={
           <TooltipIcon
@@ -153,6 +161,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.exit"
         onClick={() => {
           void mutate(() => exitApp(), {
             id: 'exit-app',
@@ -163,6 +172,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       />
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.exportDiagnostics"
         label={t('settings.components.verge.advanced.fields.exportDiagnostics')}
         extra={
           <TooltipIcon
@@ -173,6 +183,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       ></SettingItem>
 
       <SettingItem
+        data-setting-target="settings.components.verge.advanced.fields.vergeVersion"
         label={t('settings.components.verge.advanced.fields.vergeVersion')}
         extra={
           <TooltipIcon

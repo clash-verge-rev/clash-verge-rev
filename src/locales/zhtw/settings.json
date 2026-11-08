@@ -714,5 +714,12 @@
       "installing": "安裝服務中...",
       "uninstalling": "服務解除安裝中..."
     }
+  },
+  "search": {
+    "placeholder": "搜尋設定",
+    "clear": "清除搜尋",
+    "back": "返回結果",
+    "results": "搜尋結果",
+    "empty": "找不到設定"
   }
 }

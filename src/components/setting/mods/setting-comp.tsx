@@ -13,6 +13,7 @@ import React, { ReactNode, useState } from 'react'
 import isAsyncFunction from '@/utils/is-async-function'
 
 interface ItemProps {
+  'data-setting-target'?: string
   label: ReactNode
   extra?: ReactNode
   children?: ReactNode
@@ -21,6 +22,7 @@ interface ItemProps {
 }
 
 export const SettingItem: React.FC<ItemProps> = ({
+  'data-setting-target': searchTarget,
   label,
   extra,
   children,
@@ -49,7 +51,7 @@ export const SettingItem: React.FC<ItemProps> = ({
   }
 
   return clickable ? (
-    <ListItem disablePadding>
+    <ListItem data-setting-target={searchTarget} disablePadding>
       <ListItemButton onClick={handleClick} disabled={isLoading}>
         <ListItemText primary={primary} secondary={secondary} />
         {isLoading ? (
@@ -60,7 +62,7 @@ export const SettingItem: React.FC<ItemProps> = ({
       </ListItemButton>
     </ListItem>
   ) : (
-    <ListItem sx={{ pt: '5px', pb: '5px' }}>
+    <ListItem data-setting-target={searchTarget} sx={{ pt: '5px', pb: '5px' }}>
       <ListItemText primary={primary} secondary={secondary} />
       {children}
     </ListItem>

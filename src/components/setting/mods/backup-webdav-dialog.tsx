@@ -76,7 +76,13 @@ export const BackupWebdavDialog = ({
       onCancel={onClose}
       onClose={onClose}
     >
-      <Box sx={{ position: 'relative' }}>
+      <Box
+        data-settings-dialog="backup-webdav"
+        data-search-ready={!loading}
+        data-setting-target="webdav-state"
+        tabIndex={-1}
+        sx={{ position: 'relative' }}
+      >
         <BaseLoadingOverlay isLoading={loading} />
         <BackupConfigViewer
           setLoading={handleLoading}
