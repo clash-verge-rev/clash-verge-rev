@@ -1,19 +1,26 @@
+use clash_verge_logging::{Type, logging};
 use serde::Serialize;
 use serde_yaml_ng::{Result, Value};
 
 pub fn to_mihomo_config_string<T: Serialize>(data: &T) -> Result<String> {
     let yaml = quote_fake_ip_filter_wildcards(&serde_yaml_ng::to_string(data)?);
     let quoted = quote_plain_timestamps(&yaml);
+    if quoted == yaml {
+        return Ok(yaml);
+    }
     // Keep the rewrite only when it changes no value.
-    if quoted != yaml
-        && let (Ok(before), Ok(after)) = (
-            serde_yaml_ng::from_str::<Value>(&yaml),
-            serde_yaml_ng::from_str::<Value>(&quoted),
-        )
-        && before == after
+    if let (Ok(before), Ok(after)) = (
+        serde_yaml_ng::from_str::<Value>(&yaml),
+        serde_yaml_ng::from_str::<Value>(&quoted),
+    ) && before == after
     {
         return Ok(quoted);
     }
+    logging!(
+        warn,
+        Type::Config,
+        "kept date-like strings unquoted in the mihomo config: quoting them would change other values"
+    );
     Ok(yaml)
 }
 
@@ -37,25 +44,42 @@ fn quote_plain_timestamps(yaml: &str) -> String {
         while line[node..].starts_with("- ") {
             node += 2;
         }
-        let (head, value, parent) = match line.rfind(": ") {
-            Some(split) => (&line[..split + 2], &line[split + 2..], node),
-            None if node > indent => (&line[..node], &line[node..], node - 2),
-            None => (line, "", indent),
+        let rest = &line[node..];
+        // A plain key cannot contain ": ", so the first one ends it; a quoted key is kept as it is.
+        let (key, separator, value) = if rest.starts_with(['\'', '"']) {
+            rest.rfind(": ")
+                .map_or(("", "", rest), |split| (&rest[..split], ": ", &rest[split + 2..]))
+        } else if let Some(split) = rest.find(": ") {
+            (&rest[..split], ": ", &rest[split + 2..])
+        } else if let Some(key) = rest.strip_suffix(':') {
+            (key, ":", "")
+        } else {
+            ("", "", rest)
         };
 
         if value.starts_with(['|', '>']) && value[1..].bytes().all(|b| b.is_ascii_digit() || b == b'-' || b == b'+') {
-            block_parent = Some(parent);
+            block_parent = Some(if separator.is_empty() && node > indent {
+                node - 2
+            } else {
+                node
+            });
         }
-        result.push_str(head);
-        if is_timestamp_like(value) {
-            result.push_str(&quote_string(value));
-        } else {
-            result.push_str(value);
-        }
+        result.push_str(&line[..node]);
+        push_scalar(&mut result, key);
+        result.push_str(separator);
+        push_scalar(&mut result, value);
         result.push('\n');
     }
 
     result
+}
+
+fn push_scalar(result: &mut String, scalar: &str) {
+    if is_timestamp_like(scalar) {
+        result.push_str(&quote_string(scalar));
+    } else {
+        result.push_str(scalar);
+    }
 }
 
 fn is_timestamp_like(value: &str) -> bool {
@@ -182,6 +206,28 @@ proxies:
         assert!(output.contains("note: '2026-09-14 10:00:00'"), "{output}");
         assert!(output.contains("    2026-1-2\n"), "{output}");
         assert!(output.contains("port: 443"), "{output}");
+    }
+
+    #[test]
+    fn quotes_date_like_keys() {
+        let input = r#"
+proxies:
+  - name: node
+    plugin-opts:
+      headers:
+        "2026-9-14": "2026-9-15"
+    "2026-9-16":
+      - "2026-9-17"
+"#;
+
+        roundtrip(input);
+
+        let value: serde_yaml_ng::Value = serde_yaml_ng::from_str(input).expect("input yaml should parse");
+        let output = to_mihomo_config_string(&value).expect("yaml should serialize");
+
+        assert!(output.contains("'2026-9-14': '2026-9-15'"), "{output}");
+        assert!(output.contains("'2026-9-16':\n"), "{output}");
+        assert!(output.contains("- '2026-9-17'"), "{output}");
     }
 
     #[test]
