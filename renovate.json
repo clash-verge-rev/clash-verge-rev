@@ -12,6 +12,9 @@
     "rust-toolchain"
   ],
   "labels": ["dependencies"],
+  "prBodyNotes": [
+    "{{#if isMinor}}<!-- renovate-update\n{{encodeURIComponent datasource}}|{{encodeURIComponent depName}}|{{#if currentVersion}}{{encodeURIComponent currentVersion}}{{else}}{{encodeURIComponent currentValue}}{{/if}}|{{encodeURIComponent newVersion}}|{{updateType}}\n-->{{/if}}"
+  ],
   "ignorePaths": [
     "**/node_modules/**",
     "**/bower_components/**",
