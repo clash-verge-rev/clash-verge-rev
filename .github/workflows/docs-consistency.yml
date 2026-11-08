@@ -17,6 +17,7 @@ on:
       - .github/skills/agentic-workflows/SKILL.md
       - .github/PULL_REQUEST_TEMPLATE.md
       - .github/workflows/pr-ai-slop-review.md
+      - .github/workflows/shared/pr-review-context.md
       - .github/workflows/docs-consistency.yml
   push:
     branches: [dev]
@@ -33,6 +34,7 @@ on:
       - .github/skills/agentic-workflows/SKILL.md
       - .github/PULL_REQUEST_TEMPLATE.md
       - .github/workflows/pr-ai-slop-review.md
+      - .github/workflows/shared/pr-review-context.md
       - .github/workflows/docs-consistency.yml
   workflow_dispatch:
 

@@ -141,7 +141,7 @@
       "biome format --write"
     ],
     "*.{css,json}": [
-      "biome format --write"
+      "biome format --write --no-errors-on-unmatched"
     ]
   },
   "type": "module",
