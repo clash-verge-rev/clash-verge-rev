@@ -697,7 +697,7 @@
         "permissionRejectedReason": "服务无法确认内核文件及所在目录是否安全，已拒绝高权限运行。",
         "permissionRepairGuide": "查看修复方法",
         "sidecarFallback": "服务无法启动内核，已降级为 Sidecar 模式运行，服务仍不可用。",
-        "upgradeStateNotRestored": "升级已重装 Clash Verge 服务，但未能恢复其原有的开机启动和运行状态（{{state}}）。重新安装服务也无法恢复该状态；请用 systemctl status clash-verge-service 检查服务状态，并用 systemctl 调整。",
+        "upgradeStateNotRestored": "升级后未能恢复 Clash Verge 服务原有的开机启动和运行状态（{{state}}）。重新安装服务也无法恢复该状态；请用 systemctl status clash-verge-service 检查服务状态，并用 systemctl 调整。",
         "uninstallSuccess": "已成功卸载服务"
       },
       "updater": {

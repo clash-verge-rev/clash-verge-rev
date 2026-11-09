@@ -697,7 +697,7 @@
         "permissionRejectedReason": "コアファイルとフォルダーを高い権限で安全に実行できるか確認できませんでした。",
         "permissionRepairGuide": "修復方法を見る",
         "sidecarFallback": "サービスでコアを起動できなかったため、Sidecar モードで動作を継続しています。サービスは引き続き利用できません。",
-        "upgradeStateNotRestored": "アップグレードで Clash Verge サービスを再インストールしましたが、以前の自動起動と実行状態（{{state}}）を復元できませんでした。サービスを再インストールしても復元されません。systemctl status clash-verge-service で状態を確認し、systemctl で調整してください。",
+        "upgradeStateNotRestored": "アップグレード後、Clash Verge サービスの以前の自動起動と実行状態（{{state}}）を復元できませんでした。サービスを再インストールしても復元されません。systemctl status clash-verge-service で状態を確認し、systemctl で調整してください。",
         "uninstallSuccess": "サービスのアンインストールに成功しました。"
       },
       "updater": {

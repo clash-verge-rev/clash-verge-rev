@@ -92,17 +92,15 @@ pub(crate) async fn notify_incomplete_service_upgrade() {
         return;
     }
     let status = SERVICE_MANAGER.current().await;
-    match service_upgrade_notice(&marker, matches!(status, ServiceStatus::Ready)) {
-        Some(ServiceUpgradeNotice::Reinstall) => {
-            logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
-            *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
-            Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
-        }
-        Some(ServiceUpgradeNotice::StateNotRestored(state)) => {
-            logging!(warn, Type::Service, "安装包升级后未能恢复服务原状态: {state}");
-            Handle::notice(NoticeStatus::ServiceCoreUpgradeStateNotRestored, state);
-        }
-        None => {}
+    let notice = service_upgrade_notice(&marker, matches!(status, ServiceStatus::Ready));
+    if notice.reinstall {
+        logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
+        *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
+        Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
+    }
+    if let Some(state) = notice.unrestored_state {
+        logging!(warn, Type::Service, "安装包升级后未能恢复服务原状态: {state}");
+        Handle::notice(NoticeStatus::ServiceCoreUpgradeStateNotRestored, state);
     }
     if let Err(error) = std::fs::write(&ack, id) {
         logging!(warn, Type::Service, "无法记录服务升级确认: {error}");
@@ -111,21 +109,18 @@ pub(crate) async fn notify_incomplete_service_upgrade() {
 
 #[cfg(target_os = "linux")]
 #[derive(Debug, PartialEq, Eq)]
-enum ServiceUpgradeNotice<'a> {
-    Reinstall,
-    /// A reinstall would enable and start the Service again, so it cannot restore this state.
-    StateNotRestored(&'a str),
+struct ServiceUpgradeNotice<'a> {
+    reinstall: bool,
+    /// Reported regardless of readiness: a reinstall enables and starts the Service, so it cannot restore this state.
+    unrestored_state: Option<&'a str>,
 }
 
 #[cfg(target_os = "linux")]
-fn service_upgrade_notice(marker: &str, ready: bool) -> Option<ServiceUpgradeNotice<'_>> {
-    if !ready {
-        return Some(ServiceUpgradeNotice::Reinstall);
+fn service_upgrade_notice(marker: &str, ready: bool) -> ServiceUpgradeNotice<'_> {
+    ServiceUpgradeNotice {
+        reinstall: !ready,
+        unrestored_state: marker.lines().find_map(|line| line.strip_prefix("restore=")),
     }
-    marker
-        .lines()
-        .find_map(|line| line.strip_prefix("restore="))
-        .map(ServiceUpgradeNotice::StateNotRestored)
 }
 
 pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
@@ -2855,21 +2850,22 @@ mod tests {
 
     #[cfg(target_os = "linux")]
     #[test]
-    fn upgrade_marker_reports_unrestored_state_only_for_a_ready_service() {
+    fn upgrade_marker_reports_unrestored_state_regardless_of_readiness() {
         let restored = "gid=995\nid=1\n";
-        let unrestored = "gid=995\nid=1\nrestore=disabled,inactive\n";
+        let unrestored = "gid=995\nid=1\nrestore=disabled,active\n";
+        let notice = |reinstall, unrestored_state| ServiceUpgradeNotice {
+            reinstall,
+            unrestored_state,
+        };
+        assert_eq!(service_upgrade_notice(restored, true), notice(false, None));
+        assert_eq!(service_upgrade_notice(restored, false), notice(true, None));
         assert_eq!(
-            service_upgrade_notice(restored, false),
-            Some(ServiceUpgradeNotice::Reinstall)
+            service_upgrade_notice(unrestored, true),
+            notice(false, Some("disabled,active"))
         );
         assert_eq!(
             service_upgrade_notice(unrestored, false),
-            Some(ServiceUpgradeNotice::Reinstall)
-        );
-        assert_eq!(service_upgrade_notice(restored, true), None);
-        assert_eq!(
-            service_upgrade_notice(unrestored, true),
-            Some(ServiceUpgradeNotice::StateNotRestored("disabled,inactive"))
+            notice(true, Some("disabled,active"))
         );
     }
 }
