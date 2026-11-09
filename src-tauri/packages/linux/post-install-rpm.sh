@@ -3,15 +3,26 @@ set -e
 
 chmod +x /usr/bin/clash-verge-service-install
 chmod +x /usr/bin/clash-verge-service-uninstall
+chmod +x /usr/lib/clash-verge-rev/clash-verge-service-uninstall
 chmod +x /usr/bin/clash-verge-service
 
 SERVICE_UNIT="clash-verge-service.service"
 SERVICE_UNIT_FILE="/etc/systemd/system/$SERVICE_UNIT"
 # Read by the app, which offers a reinstall when the package could not keep the Service.
 UPGRADE_MARKER="/run/clash-verge-service-upgrade"
+# Read by /usr/bin/clash-verge-service-uninstall to keep the Service through the previous %preun.
+TRANSACTION_RECORD="/run/clash-verge-service-rpm-upgrade"
 
 write_upgrade_marker() {
     (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
+}
+
+# Scriptlets run as children of the process running the rpm transaction; its start time
+# keeps a stale record from matching a later process that reuses the PID.
+record_transaction() {
+    local start
+    start="$(sed 's/.*) //' "/proc/$PPID/stat" | cut -d' ' -f20)"
+    (umask 022 && printf '%s %s\n' "$PPID" "$start" >"$TRANSACTION_RECORD")
 }
 
 existing_service_gid() {
@@ -52,9 +63,10 @@ reinstall_existing_service() {
 
 # Upgrades keep an existing Service current; first installs and explicit removals never add one.
 # A symlinked unit is masked or managed by the administrator and is left alone.
-# The marker is written first: a previous package whose %preun uninstalls unconditionally
-# still removes the Service after this script, and the app only acts on it if the Service is not ready.
+# The previous %preun runs after this script; the record keeps it from removing the Service.
+# The marker stays as a fallback should it still be removed; the app only acts on it if the Service is not ready.
 if [ "$1" -ge 2 ] && [ -d /run/systemd/system ] && [ -f "$SERVICE_UNIT_FILE" ] && [ ! -L "$SERVICE_UNIT_FILE" ]; then
+    record_transaction || true
     gid="$(existing_service_gid)"
     write_upgrade_marker "$gid"
     if [ -z "$gid" ]; then
