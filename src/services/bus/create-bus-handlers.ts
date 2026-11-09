@@ -105,6 +105,7 @@ export const createEventBus = (deps: BusHandlerDeps) => {
     deps.handleNotice(['service_core::sidecar_fallback', ''])
     deps.handleNotice(['service_core::repair_required', ''])
     deps.handleNotice(['service_core::app_data_not_owned', ''])
+    deps.handleNotice(['service_core::upgrade_state_not_restored', ''])
     deps.handleNotice(['core_start::error', ''])
   }
 

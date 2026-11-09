@@ -6,6 +6,7 @@ import {
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
   takeServiceRepairNotice,
+  takeServiceUpgradeStateNotice,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { revalidateQueries } from '@/services/query-client'
@@ -27,6 +28,7 @@ vi.mock('@/services/cmds', () => ({
   takeServiceFallbackNotice: vi.fn().mockResolvedValue(null),
   takeServiceRepairNotice: vi.fn().mockResolvedValue(false),
   takeServiceOwnerNotice: vi.fn().mockResolvedValue(null),
+  takeServiceUpgradeStateNotice: vi.fn().mockResolvedValue(null),
 }))
 vi.mock('@/services/service-request', () => ({ requestService: vi.fn() }))
 vi.mock('@/services/notice-service', () => ({
@@ -195,6 +197,26 @@ it('explains a startup core rejection instead of the generic fallback notice', a
   expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
     'settings.feedback.notifications.clashService.permissionFallback',
     { reason },
+    0,
+  )
+})
+
+it('replays a pending Service upgrade state warning once the frontend subscribes', async () => {
+  vi.mocked(takeServiceUpgradeStateNotice)
+    .mockResolvedValueOnce('disabled,active')
+    .mockResolvedValue(null)
+
+  const bus = await mountBus()
+  bus.onSubscribed()
+  bus.handlers['verge://notice-message']([
+    'service_core::upgrade_state_not_restored',
+    '',
+  ])
+  await flush()
+
+  expect(showNotice.warning).toHaveBeenCalledExactlyOnceWith(
+    'settings.feedback.notifications.clashService.upgradeStateNotRestored',
+    { state: 'disabled,active' },
     0,
   )
 })

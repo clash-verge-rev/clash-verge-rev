@@ -697,6 +697,7 @@
         "permissionRejectedReason": "서비스가 코어 파일과 폴더를 높은 권한으로 안전하게 실행할 수 있는지 확인하지 못했습니다.",
         "permissionRepairGuide": "해결 방법 보기",
         "sidecarFallback": "서비스가 코어를 시작하지 못해 Sidecar 모드로 계속 실행합니다. 서비스는 여전히 사용할 수 없습니다.",
+        "upgradeStateNotRestored": "업그레이드 후 Clash Verge 서비스의 이전 부팅 시 시작 및 실행 상태({{state}})를 복원하지 못했습니다. 서비스를 다시 설치해도 복원되지 않습니다. systemctl status clash-verge-service로 상태를 확인하고 systemctl로 조정하세요.",
         "uninstallSuccess": "서비스가 제거되었습니다"
       },
       "updater": {

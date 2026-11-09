@@ -7,6 +7,7 @@ import {
   takeServiceFallbackNotice,
   takeServiceOwnerNotice,
   takeServiceRepairNotice,
+  takeServiceUpgradeStateNotice,
 } from '@/services/cmds'
 import type { NoticeStatus } from '@/services/contract'
 import { hideNotice, showNotice } from '@/services/notice-service'
@@ -125,6 +126,8 @@ const handlers: Record<
           )
         } else if (notice?.kind === 'notAutoStarted') {
           requestService({ reason: 'serviceNotAutoStarted' })
+        } else if (notice?.kind === 'upgradeIncomplete') {
+          requestService({ reason: 'serviceUpgradeIncomplete' })
         } else if (notice) {
           showNotice.warning(
             'settings.feedback.notifications.clashService.sidecarFallback',
@@ -134,6 +137,24 @@ const handlers: Record<
       .catch((error) => {
         console.error(
           'Failed to read the pending service fallback notice',
+          error,
+        )
+      })
+  },
+  'service_core::upgrade_state_not_restored': () => {
+    void takeServiceUpgradeStateNotice()
+      .then((state) => {
+        if (state) {
+          showNotice.warning(
+            'settings.feedback.notifications.clashService.upgradeStateNotRestored',
+            { state },
+            0,
+          )
+        }
+      })
+      .catch((error) => {
+        console.error(
+          'Failed to read the pending service upgrade state notice',
           error,
         )
       })

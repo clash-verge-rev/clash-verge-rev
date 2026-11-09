@@ -697,6 +697,7 @@
         "permissionRejectedReason": "The service could not confirm that the core files and folders are safe to run with elevated privileges.",
         "permissionRepairGuide": "View repair instructions",
         "sidecarFallback": "The service could not start the core. Switched to Sidecar mode; the service remains unavailable.",
+        "upgradeStateNotRestored": "After the upgrade, Clash Verge could not restore the service's previous startup and running state ({{state}}). Reinstalling the service will not restore it; check it with systemctl status clash-verge-service and adjust it with systemctl.",
         "uninstallSuccess": "Service Uninstalled Successfully"
       },
       "updater": {
