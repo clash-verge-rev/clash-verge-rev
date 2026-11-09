@@ -562,16 +562,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               value={normalizeTrayHealthGroup(verge?.tray_health_group) ?? ''}
               onCatch={onError}
               onFormat={(e: any) => e.target.value}
-              onChange={(value) =>
-                onChangeData({
-                  tray_health_group: normalizeTrayHealthGroup(value),
-                })
-              }
-              onGuard={(value) =>
-                patchVerge({
-                  tray_health_group: normalizeTrayHealthGroup(value),
-                })
-              }
+              // Clear with '' rather than null: verge patches skip null fields.
+              onChange={(value) => onChangeData({ tray_health_group: value })}
+              onGuard={(value) => patchVerge({ tray_health_group: value })}
             >
               <Select
                 size="small"

@@ -328,6 +328,7 @@ async fn refresh_icon() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::IVerge;
     use tauri_plugin_mihomo::models::{DelayHistory, Extra};
 
     const URL: &str = "http://example.test/204";
@@ -395,6 +396,20 @@ mod tests {
         assert_eq!(monitored_group("rule", true, None), None);
         assert_eq!(monitored_group("direct", true, Some("Proxy")), None);
         assert_eq!(monitored_group("global", false, Some("Proxy")), None);
+    }
+
+    #[test]
+    fn clearing_rule_group_persists_through_verge_patch() {
+        let mut verge = IVerge::default();
+        verge.patch_config(&IVerge {
+            tray_health_group: Some("Proxy".into()),
+            ..IVerge::default()
+        });
+        verge.patch_config(&IVerge {
+            tray_health_group: Some("".into()),
+            ..IVerge::default()
+        });
+        assert_eq!(monitored_group("rule", true, verge.tray_health_group.as_deref()), None);
     }
 
     #[test]
