@@ -45,6 +45,7 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化连接、规则和日志筛选：切换页面后保留过滤条件
 - 优化全局模式代理列表：仅显示 `GLOBAL` 节点，选中其中的策略组时才显示该组
 
 **🍎 macOS**
