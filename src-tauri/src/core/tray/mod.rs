@@ -28,6 +28,7 @@ use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
 
+pub mod health;
 mod menu_def;
 #[cfg(target_os = "macos")]
 mod speed_task;
@@ -57,6 +58,9 @@ enum IconKind {
 
 pub struct Tray {
     limiter: SystemLimiter,
+    health_controller: health::TrayHealthController,
+    /// Serializes icon writes; holds whether the applied icon carries the health warning.
+    applied_warning: tokio::sync::Mutex<Option<bool>>,
     #[cfg(target_os = "macos")]
     speed_controller: speed_task::TraySpeedController,
 }
@@ -130,6 +134,8 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            health_controller: health::TrayHealthController::default(),
+            applied_warning: tokio::sync::Mutex::new(None),
             #[cfg(target_os = "macos")]
             speed_controller: speed_task::TraySpeedController::new(),
         }
@@ -243,6 +249,28 @@ impl Tray {
     }
 
     pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
+        // Mode, routing and Core changes all pass through here and may change the monitored target.
+        health::wake();
+        let mut applied_warning = self.applied_warning.lock().await;
+        self.apply_icon(verge, &mut applied_warning).await
+    }
+
+    /// Re-applies the icon only when the health warning changed since the last write.
+    #[allow(
+        clippy::significant_drop_tightening,
+        reason = "the guard serializes icon writes and must stay held until the write finishes"
+    )]
+    pub async fn refresh_health_icon(&self) -> Result<()> {
+        let warning = health::current_health().await == health::TrayHealth::Unhealthy;
+        let verge = Config::verge().await.latest_arc();
+        let mut applied_warning = self.applied_warning.lock().await;
+        if *applied_warning == Some(warning) {
+            return Ok(());
+        }
+        self.apply_icon(&verge, &mut applied_warning).await
+    }
+
+    async fn apply_icon(&self, verge: &IVerge, applied_warning: &mut Option<bool>) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -256,8 +284,9 @@ impl Tray {
         };
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
+        let warning = health::current_health().await == health::TrayHealth::Unhealthy;
 
-        let template = {
+        let mut template = {
             #[cfg(target_os = "macos")]
             {
                 verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome")
@@ -267,9 +296,18 @@ impl Tray {
                 false
             }
         };
-        let icon = Some(tauri::image::Image::from_bytes(&icon_bytes)?);
+        let mut icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+        if warning {
+            let (width, height) = (icon.width(), icon.height());
+            let mut rgba = icon.rgba().to_vec();
+            health::add_health_warning(&mut rgba, width, height, template);
+            icon = tauri::image::Image::new_owned(rgba, width, height);
+            // Template images are drawn monochrome, which would erase the warning color.
+            template = false;
+        }
 
-        logging_error!(Type::Tray, tray.set_icon_with_as_template(icon, template));
+        logging_error!(Type::Tray, tray.set_icon_with_as_template(Some(icon), template));
+        *applied_warning = Some(warning);
 
         Ok(())
     }
@@ -347,6 +385,7 @@ impl Tray {
             logging_error!(Type::Tray, Self::global().update_menu().await);
         });
         self.update_icon(&verge).await?;
+        self.update_health_task(verge.enable_tray_health_icon.unwrap_or(false));
         #[cfg(target_os = "macos")]
         self.update_speed_task(verge.enable_tray_speed.unwrap_or(false));
         self.update_tooltip().await?;
@@ -405,6 +444,10 @@ impl Tray {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
         allow
+    }
+
+    pub fn update_health_task(&self, enable_tray_health_icon: bool) {
+        self.health_controller.update_task(enable_tray_health_icon);
     }
 
     #[cfg(target_os = "macos")]

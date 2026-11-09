@@ -243,6 +243,8 @@
           "trayIcon": "Трей иконкасы",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "Трей халәт иконкасы",
+          "trayHealthGroup": "Тикшерү төркеме",
           "commonTrayIcon": "Гомуми трей иконкасы",
           "systemProxyTrayIcon": "Системалы прокси иконкасы",
           "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds",
+          "trayHealthIcon": "Кулланылган төеннең соңгы тоткарлык тесты уңышсыз булса, трей иконкасына кызыл кисәтү өсти. Тикшерү система прокси яки TUN кабызылганда гына башкарыла; глобаль режимда GLOBAL тикшерелә. Нәтиҗә билгесез булса, хәзерге иконка саклана.",
+          "trayHealthGroup": "Кагыйдә режимында тикшерелә торган прокси төркеме (глобаль режим һәрвакыт GLOBAL тикшерә)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "Сайланмаган",
+            "unavailable": "{{name}} (кулланып булмый)"
           }
         }
       }

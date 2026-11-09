@@ -243,6 +243,8 @@
           "trayIcon": "Tepsi Simgesi",
           "proxyGroupsDisplayMode": "Vekil Grupları Görüntüleme Modu",
           "showOutboundModesInline": "Çıkış Modlarını Satır İçinde Göster",
+          "trayHealthIcon": "Tepsi Durum Simgesi",
+          "trayHealthGroup": "Durum Kontrol Grubu",
           "commonTrayIcon": "Genel Tepsi Simgesi",
           "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
           "tunTrayIcon": "Tun Tepsi Simgesi",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Alfabe harflerinin üzerine gelindiğinde ilgili vekil grubuna otomatik olarak kaydırır",
-          "hoverNavigatorDelay": "Üzerine gelindiğinde otomatik kaydırmadan önceki gecikme, milisaniye cinsinden"
+          "hoverNavigatorDelay": "Üzerine gelindiğinde otomatik kaydırmadan önceki gecikme, milisaniye cinsinden",
+          "trayHealthIcon": "Kullanılan düğümün son gecikme testi başarısız olduğunda tepsi simgesine kırmızı bir uyarı ekler. Kontrol yalnızca Sistem Proxy veya TUN açıkken yapılır; Global modda GLOBAL kontrol edilir. Sonuç bilinmiyorsa mevcut simge korunur.",
+          "trayHealthGroup": "Kural modunda kontrol edilen proxy grubu (Global mod her zaman GLOBAL kontrol eder)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Varsayılan",
             "inline": "Satır İçi",
             "disable": "Devre Dışı"
+          },
+          "trayHealthGroup": {
+            "none": "Seçilmedi",
+            "unavailable": "{{name}} (kullanılamıyor)"
           }
         }
       }

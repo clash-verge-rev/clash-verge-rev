@@ -464,7 +464,12 @@ impl CoreManager {
     }
 
     async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
-        handle::Handle::mihomo().reload_config(true, path).await
+        // A reload clears delay history without a new readiness generation; bump on both sides
+        // so a health response fetched across the reload is discarded.
+        crate::core::tray::health::invalidate();
+        let result = handle::Handle::mihomo().reload_config(true, path).await;
+        crate::core::tray::health::invalidate();
+        result
     }
 }
 

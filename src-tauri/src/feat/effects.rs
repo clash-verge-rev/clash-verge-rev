@@ -122,6 +122,8 @@ verge_registry! {
     enable_tray_speed => [TrayIcon];
     tray_proxy_groups_display_mode => [TrayMenu];
     tray_inline_outbound_modes => [TrayMenu];
+    enable_tray_health_icon => [TrayIcon];
+    tray_health_group => [TrayIcon];
     enable_auto_light_weight_mode => [Lightweight];
     auto_light_weight_minutes => NoEffect;
     enable_hover_jump_navigator => NoEffect;

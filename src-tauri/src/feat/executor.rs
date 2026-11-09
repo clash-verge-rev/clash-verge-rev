@@ -82,6 +82,9 @@ async fn ensure_effect(
             tray::Tray::global()
                 .update_icon(&Config::verge().await.latest_arc())
                 .await?;
+            if let Some(enabled) = patch.enable_tray_health_icon {
+                tray::Tray::global().update_health_task(enabled);
+            }
             #[cfg(target_os = "macos")]
             if let Some(enabled) = patch.enable_tray_speed {
                 tray::Tray::global().update_speed_task(enabled);

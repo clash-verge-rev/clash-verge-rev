@@ -243,6 +243,8 @@
           "trayIcon": "Tray-Symbol",
           "proxyGroupsDisplayMode": "Anzeigemodus der Proxy-Gruppen",
           "showOutboundModesInline": "Ausgangsmodi direkt im Tray-Menü anzeigen",
+          "trayHealthIcon": "Tray-Statussymbol",
+          "trayHealthGroup": "Gruppe für Statusprüfung",
           "commonTrayIcon": "Standard-Tray-Symbol",
           "systemProxyTrayIcon": "Systemproxy-Tray-Symbol",
           "tunTrayIcon": "TUN-Modus-Tray-Symbol",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Beim Darüberfahren mit der Maus über die Buchstaben automatisch zur passenden Proxy-Gruppe scrollen",
-          "hoverNavigatorDelay": "Wartezeit vor dem automatischen Scrollen beim Darüberfahren, in Millisekunden"
+          "hoverNavigatorDelay": "Wartezeit vor dem automatischen Scrollen beim Darüberfahren, in Millisekunden",
+          "trayHealthIcon": "Zeigt eine rote Warnung am Tray-Symbol, wenn der letzte Latenztest des verwendeten Knotens fehlgeschlagen ist. Geprüft wird nur bei aktivem System-Proxy oder TUN; im globalen Modus wird GLOBAL geprüft. Bei unbekanntem Ergebnis bleibt das aktuelle Symbol.",
+          "trayHealthGroup": "Im Regelmodus geprüfte Proxy-Gruppe (der globale Modus prüft immer GLOBAL)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Standard",
             "inline": "Inline",
             "disable": "Deaktiviert"
+          },
+          "trayHealthGroup": {
+            "none": "Nicht ausgewählt",
+            "unavailable": "{{name}} (nicht verfügbar)"
           }
         }
       }

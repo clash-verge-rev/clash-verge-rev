@@ -762,6 +762,8 @@ export interface TranslationResources {
               systemProxyTrayIcon: string
               toastPosition: string
               trafficGraph: string
+              trayHealthGroup: string
+              trayHealthIcon: string
               trayIcon: string
               tunTrayIcon: string
             }
@@ -782,11 +784,17 @@ export interface TranslationResources {
                 topLeft: string
                 topRight: string
               }
+              trayHealthGroup: {
+                none: string
+                unavailable: string
+              }
             }
             title: string
             tooltips: {
               hoverNavigator: string
               hoverNavigatorDelay: string
+              trayHealthGroup: string
+              trayHealthIcon: string
             }
           }
           theme: {

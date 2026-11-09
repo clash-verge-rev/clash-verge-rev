@@ -44,6 +44,7 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) 
     } else {
         mihomo.select_node_for_group(group_name, proxy_name).await?;
     }
+    crate::core::tray::health::invalidate();
 
     let save_result = if unfix {
         crate::config::profiles::forget_selected_node(group_name).await
