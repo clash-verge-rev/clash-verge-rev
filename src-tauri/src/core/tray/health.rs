@@ -12,18 +12,6 @@ use tauri::async_runtime::JoinHandle;
 use tauri_plugin_mihomo::models::{Proxy, ProxyType};
 use tokio::sync::Notify;
 
-// Must match the frontend fallback in `src/services/delay.ts`, which keys the delay records Mihomo stores.
-const FRONTEND_DEFAULT_TEST_URL: &str = "http://cp.cloudflare.com/generate_204";
-const POLL_INTERVAL: Duration = Duration::from_secs(30);
-const FETCH_TIMEOUT: Duration = Duration::from_secs(3);
-const WAKE_DEBOUNCE: Duration = Duration::from_millis(300);
-// Matches the frontend delay cache TTL in `src/services/delay.ts`.
-const RECORD_TTL: TimeDelta = TimeDelta::minutes(30);
-const FUTURE_SKEW: TimeDelta = TimeDelta::minutes(5);
-const MAX_DEPTH: usize = 8;
-
-const BADGE_RED: [u8; 3] = [0xFF, 0x3B, 0x30];
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrayHealth {
     Unknown,
@@ -35,7 +23,7 @@ pub enum TrayHealth {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct HealthKey {
     group: String,
-    default_url: String,
+    default_url: Option<String>,
     core_generation: u64,
     epoch: u64,
 }
@@ -92,8 +80,7 @@ async fn current_key() -> Option<HealthKey> {
         .as_deref()
         .map(str::trim)
         .filter(|url| !url.is_empty())
-        .unwrap_or(FRONTEND_DEFAULT_TEST_URL)
-        .into();
+        .map(Into::into);
     Some(HealthKey {
         group,
         default_url,
@@ -115,22 +102,22 @@ pub async fn current_health() -> TrayHealth {
 
 struct Evaluator<'a> {
     proxies: &'a HashMap<String, Proxy>,
-    default_url: &'a str,
+    default_url: Option<&'a str>,
     now: DateTime<Utc>,
 }
 
 impl Evaluator<'_> {
-    fn group_url<'p>(&'p self, group: &'p Proxy) -> &'p str {
+    fn group_url<'p>(&'p self, group: &'p Proxy) -> Option<&'p str> {
         group
             .test_url
             .as_deref()
             .map(str::trim)
             .filter(|url| !url.is_empty())
-            .unwrap_or(self.default_url)
+            .or(self.default_url)
     }
 
-    fn node(&self, name: &str, url: &str, path: &mut Vec<String>) -> TrayHealth {
-        if path.len() >= MAX_DEPTH || path.iter().any(|visited| visited == name) {
+    fn node(&self, name: &str, url: Option<&str>, path: &mut Vec<String>) -> TrayHealth {
+        if path.len() >= 8 || path.iter().any(|visited| visited == name) {
             return TrayHealth::Unknown;
         }
         let Some(proxy) = self.proxies.get(name) else {
@@ -172,7 +159,10 @@ impl Evaluator<'_> {
         health
     }
 
-    fn leaf(&self, proxy: &Proxy, url: &str) -> TrayHealth {
+    fn leaf(&self, proxy: &Proxy, url: Option<&str>) -> TrayHealth {
+        let Some(url) = url else {
+            return TrayHealth::Unknown;
+        };
         let Some(record) = proxy.extra.get(url).and_then(|extra| extra.history.last()) else {
             return TrayHealth::Unknown;
         };
@@ -180,7 +170,8 @@ impl Evaluator<'_> {
             return TrayHealth::Unknown;
         };
         let age = self.now.signed_duration_since(time);
-        if age > RECORD_TTL || age < -FUTURE_SKEW {
+        // 30 minutes matches the frontend delay cache TTL in `src/services/delay.ts`.
+        if age > TimeDelta::minutes(30) || age < -TimeDelta::minutes(5) {
             return TrayHealth::Unknown;
         }
         if record.delay > 0 {
@@ -191,7 +182,12 @@ impl Evaluator<'_> {
     }
 }
 
-fn evaluate(proxies: &HashMap<String, Proxy>, group: &str, default_url: &str, now: DateTime<Utc>) -> TrayHealth {
+fn evaluate(
+    proxies: &HashMap<String, Proxy>,
+    group: &str,
+    default_url: Option<&str>,
+    now: DateTime<Utc>,
+) -> TrayHealth {
     Evaluator {
         proxies,
         default_url,
@@ -210,7 +206,7 @@ pub fn add_health_warning(rgba: &mut [u8], width: u32, height: u32, template: bo
     }
     if template {
         for pixel in rgba.as_chunks_mut::<4>().0.iter_mut().filter(|pixel| pixel[3] > 0) {
-            pixel[..3].copy_from_slice(&BADGE_RED);
+            pixel[..3].copy_from_slice(&[0xFF, 0x3B, 0x30]);
         }
         return;
     }
@@ -240,7 +236,7 @@ pub fn add_health_warning(rgba: &mut [u8], width: u32, height: u32, template: bo
                 && (px - cx).abs() <= bar_half_width
                 && ((py >= cy - radius * 0.55 && py <= cy + radius * 0.12)
                     || (py >= cy + radius * 0.3 && py <= cy + radius * 0.55));
-            let color = if is_mark { [0xFF; 3] } else { BADGE_RED };
+            let color = if is_mark { [0xFF; 3] } else { [0xFF, 0x3B, 0x30] };
             pixel[..3].copy_from_slice(&color);
             pixel[3] = pixel[3].max((fill * 255.0) as u8);
         }
@@ -251,8 +247,8 @@ async fn poll_once() -> bool {
     let Some(key) = current_key().await else {
         return publish(None);
     };
-    let health = match tokio::time::timeout(FETCH_TIMEOUT, handle::Handle::mihomo().get_proxies()).await {
-        Ok(Ok(proxies)) => evaluate(&proxies.proxies, &key.group, &key.default_url, Utc::now()),
+    let health = match tokio::time::timeout(Duration::from_secs(3), handle::Handle::mihomo().get_proxies()).await {
+        Ok(Ok(proxies)) => evaluate(&proxies.proxies, &key.group, key.default_url.as_deref(), Utc::now()),
         Ok(Err(err)) => {
             logging!(debug, Type::Tray, "托盘健康状态获取失败: {err}");
             TrayHealth::Unknown
@@ -313,8 +309,8 @@ impl TrayHealthController {
                     refresh_icon().await;
                 }
                 tokio::select! {
-                    _ = WAKE.notified() => tokio::time::sleep(WAKE_DEBOUNCE).await,
-                    _ = tokio::time::sleep(POLL_INTERVAL) => {}
+                    _ = WAKE.notified() => tokio::time::sleep(Duration::from_millis(300)).await,
+                    _ = tokio::time::sleep(Duration::from_secs(30)) => {}
                 }
             }
         }));
@@ -385,7 +381,7 @@ mod tests {
     }
 
     fn eval(items: Vec<Proxy>, target: &str) -> TrayHealth {
-        evaluate(&proxies(items), target, DEFAULT, now())
+        evaluate(&proxies(items), target, Some(DEFAULT), now())
     }
 
     #[test]
@@ -427,6 +423,13 @@ mod tests {
 
         let empty_url = leaf("a", ProxyType::Vmess, &[(DEFAULT, record(1, 0))]);
         assert_eq!(eval(vec![selector(""), empty_url], "S"), TrayHealth::Unhealthy);
+
+        // Without a group URL or a user default test URL there is no record to trust.
+        let no_url = proxies(vec![
+            selector(""),
+            leaf("a", ProxyType::Vmess, &[(DEFAULT, record(1, 0))]),
+        ]);
+        assert_eq!(evaluate(&no_url, "S", None, now()), TrayHealth::Unknown);
     }
 
     #[test]
@@ -531,7 +534,7 @@ mod tests {
             [rgba[index], rgba[index + 1], rgba[index + 2], rgba[index + 3]]
         };
         assert_eq!(at(0, 0), [0, 0, 0, 255]);
-        assert_eq!(at(27, 22)[..3], BADGE_RED);
+        assert_eq!(at(27, 22)[..3], [0xFF, 0x3B, 0x30]);
 
         let mut template = vec![0u8; (size * size * 4) as usize];
         template[3] = 255;
