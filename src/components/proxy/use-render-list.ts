@@ -209,7 +209,13 @@ export const useRenderList = (
 
   const renderGroups = useMemo(() => {
     if (!proxyView) return []
-    if (mode === 'rule') return proxyView.groups
+    // A profile whose only group is GLOBAL (mihomo then skips its built-in one)
+    // or that has no proxy-groups has nothing else to show in rule mode.
+    if (mode === 'rule') {
+      return proxyView.groups.length || !proxyView.global
+        ? proxyView.groups
+        : [proxyView.global]
+    }
     const { global } = proxyView
     if (!global) return []
     const current = findCurrentGroupMember(proxyView, global)?.member
