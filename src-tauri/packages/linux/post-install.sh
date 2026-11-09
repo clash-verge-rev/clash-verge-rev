@@ -1,6 +1,7 @@
 #!/bin/bash
 chmod +x /usr/bin/clash-verge-service-install
 chmod +x /usr/bin/clash-verge-service-uninstall
+# The /usr/bin uninstaller is the service-uninstall.sh wrapper; this is the real binary it runs.
 chmod +x /usr/lib/clash-verge-rev/clash-verge-service-uninstall
 chmod +x /usr/bin/clash-verge-service
 
