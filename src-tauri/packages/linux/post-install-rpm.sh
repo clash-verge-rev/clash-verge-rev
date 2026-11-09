@@ -55,6 +55,7 @@ reinstall_existing_service() {
     fi
     case "$enabled" in
         disabled) systemctl disable --quiet "$SERVICE_UNIT" ;;
+        enabled-runtime) systemctl disable --quiet "$SERVICE_UNIT" && systemctl enable --runtime --quiet "$SERVICE_UNIT" ;;
         masked-runtime) systemctl mask --runtime --quiet "$SERVICE_UNIT" ;;
     esac
     if [ "$active" = "no" ]; then
