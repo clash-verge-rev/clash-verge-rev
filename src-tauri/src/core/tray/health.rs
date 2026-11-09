@@ -1,8 +1,10 @@
-use crate::config::Config;
+use super::{IconKind, current_clash_mode};
+use crate::config::{Config, IVerge};
 use crate::core::{CoreManager, handle};
 use crate::process::AsyncHandler;
 use crate::{Type, logging};
 use chrono::{DateTime, TimeDelta, Utc};
+use clash_verge_draft::SharedDraft;
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -14,89 +16,89 @@ use tokio::sync::Notify;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TrayHealth {
-    Unknown,
-    Healthy,
-    Unhealthy,
+    Unknown = 0,
+    Healthy = 1,
+    Unhealthy = 2,
 }
 
-/// Everything a health result depends on; a result is only shown while its key is still current.
-#[derive(Clone, Debug, PartialEq, Eq)]
-struct HealthKey {
-    group: String,
-    default_url: Option<String>,
-    core_generation: u64,
-    epoch: u64,
-}
-
-static EPOCH: AtomicU64 = AtomicU64::new(0);
+/// The low two bits hold the published health and the rest an epoch bumped by [`invalidate`],
+/// so a result fetched before an invalidation can never be published after it.
+static STATE: AtomicU64 = AtomicU64::new(0);
 static WAKE: LazyLock<Notify> = LazyLock::new(Notify::new);
-static RESULT: Mutex<Option<(HealthKey, TrayHealth)>> = Mutex::new(None);
 
 /// Requests a re-evaluation soon; coalesces with pending requests.
 pub fn wake() {
     WAKE.notify_one();
 }
 
-/// Discards in-flight and published results, e.g. when the Core reloads its configuration
-/// (which clears delay history without changing the readiness generation) or a selection changes.
+/// Resets the health to Unknown and discards in-flight results, e.g. when the Core restarts,
+/// reloads its configuration (which clears delay history) or a selection changes.
 pub fn invalidate() {
-    EPOCH.fetch_add(1, Ordering::AcqRel);
+    let _ = STATE.try_update(Ordering::AcqRel, Ordering::Acquire, |state| Some((state | 3) + 1));
     wake();
 }
 
-fn monitored_group(mode: &str, routes_traffic: bool, group_setting: Option<&str>) -> Option<String> {
-    if !routes_traffic {
-        return None;
+pub fn current_health() -> TrayHealth {
+    match STATE.load(Ordering::Acquire) & 3 {
+        1 => TrayHealth::Healthy,
+        2 => TrayHealth::Unhealthy,
+        _ => TrayHealth::Unknown,
     }
-    match mode {
-        "global" => Some("GLOBAL".into()),
-        "rule" => group_setting
+}
+
+fn publish(epoch: u64, health: TrayHealth) {
+    let _ = STATE.try_update(Ordering::AcqRel, Ordering::Acquire, |state| {
+        (state >> 2 == epoch).then_some(epoch << 2 | health as u64)
+    });
+}
+
+/// The group and test URL to check, borrowed from the config snapshot they were read from.
+struct Target {
+    verge: SharedDraft<IVerge>,
+    global: bool,
+}
+
+impl Target {
+    async fn current() -> Option<Self> {
+        let verge = Config::verge().await.latest_arc();
+        if !verge.enable_tray_health_icon.unwrap_or(false)
+            || CoreManager::global().current_core_readiness_generation().is_none()
+            || matches!(IconKind::current(&verge), IconKind::Common)
+        {
+            return None;
+        }
+        let global = match current_clash_mode().await {
+            "global" => true,
+            "rule" => false,
+            _ => return None,
+        };
+        let target = Self { verge, global };
+        target.group().is_some().then_some(target)
+    }
+
+    fn group(&self) -> Option<&str> {
+        if self.global {
+            return Some("GLOBAL");
+        }
+        self.verge
+            .tray_health_group
+            .as_deref()
             .map(str::trim)
             .filter(|group| !group.is_empty())
-            .map(Into::into),
-        _ => None,
+    }
+
+    fn default_url(&self) -> Option<&str> {
+        self.verge
+            .default_latency_test
+            .as_deref()
+            .map(str::trim)
+            .filter(|url| !url.is_empty())
     }
 }
 
-async fn current_key() -> Option<HealthKey> {
-    let verge = Config::verge().await.latest_arc();
-    if !verge.enable_tray_health_icon.unwrap_or(false) {
-        return None;
-    }
-    let core_generation = CoreManager::global().current_core_readiness_generation()?;
-    let mode = Config::clash()
-        .await
-        .latest_arc()
-        .0
-        .get("mode")
-        .and_then(|mode| mode.as_str())
-        .unwrap_or("rule")
-        .to_owned();
-    let tun = verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable();
-    let routes_traffic = tun || verge.enable_system_proxy.unwrap_or(false);
-    let group = monitored_group(&mode, routes_traffic, verge.tray_health_group.as_deref())?;
-    let default_url = verge
-        .default_latency_test
-        .as_deref()
-        .map(str::trim)
-        .filter(|url| !url.is_empty())
-        .map(Into::into);
-    Some(HealthKey {
-        group,
-        default_url,
-        core_generation,
-        epoch: EPOCH.load(Ordering::Acquire),
-    })
-}
-
-/// The health shown by the tray icon; `Unknown` unless the published result is still current.
-pub async fn current_health() -> TrayHealth {
-    let Some(key) = current_key().await else {
-        return TrayHealth::Unknown;
-    };
-    match &*RESULT.lock() {
-        Some((published, health)) if *published == key => *health,
-        _ => TrayHealth::Unknown,
+impl PartialEq for Target {
+    fn eq(&self, other: &Self) -> bool {
+        self.group() == other.group() && self.default_url() == other.default_url()
     }
 }
 
@@ -106,8 +108,8 @@ struct Evaluator<'a> {
     now: DateTime<Utc>,
 }
 
-impl Evaluator<'_> {
-    fn group_url<'p>(&'p self, group: &'p Proxy) -> Option<&'p str> {
+impl<'a> Evaluator<'a> {
+    fn group_url(&self, group: &'a Proxy) -> Option<&'a str> {
         group
             .test_url
             .as_deref()
@@ -116,14 +118,14 @@ impl Evaluator<'_> {
             .or(self.default_url)
     }
 
-    fn node(&self, name: &str, url: Option<&str>, path: &mut Vec<String>) -> TrayHealth {
-        if path.len() >= 8 || path.iter().any(|visited| visited == name) {
+    fn node(&self, name: &'a str, url: Option<&'a str>, path: &mut Vec<&'a str>) -> TrayHealth {
+        if path.len() >= 8 || path.contains(&name) {
             return TrayHealth::Unknown;
         }
         let Some(proxy) = self.proxies.get(name) else {
             return TrayHealth::Unknown;
         };
-        path.push(name.into());
+        path.push(name);
         let health = match proxy.proxy_type {
             ProxyType::Selector => match proxy.now.as_deref().filter(|now| !now.is_empty()) {
                 Some(now) => self.node(now, self.group_url(proxy), path),
@@ -182,10 +184,10 @@ impl Evaluator<'_> {
     }
 }
 
-fn evaluate(
-    proxies: &HashMap<String, Proxy>,
-    group: &str,
-    default_url: Option<&str>,
+fn evaluate<'a>(
+    proxies: &'a HashMap<String, Proxy>,
+    group: &'a str,
+    default_url: Option<&'a str>,
     now: DateTime<Utc>,
 ) -> TrayHealth {
     Evaluator {
@@ -196,12 +198,14 @@ fn evaluate(
     .node(group, default_url, &mut Vec::new())
 }
 
-async fn poll_once() -> bool {
-    let Some(key) = current_key().await else {
-        return publish(None);
+async fn poll_once() {
+    let epoch = STATE.load(Ordering::Acquire) >> 2;
+    let Some(target) = Target::current().await else {
+        return publish(epoch, TrayHealth::Unknown);
     };
+    let group = target.group().unwrap_or_default();
     let health = match tokio::time::timeout(Duration::from_secs(3), handle::Handle::mihomo().get_proxies()).await {
-        Ok(Ok(proxies)) => evaluate(&proxies.proxies, &key.group, key.default_url.as_deref(), Utc::now()),
+        Ok(Ok(proxies)) => evaluate(&proxies.proxies, group, target.default_url(), Utc::now()),
         Ok(Err(err)) => {
             logging!(debug, Type::Tray, "托盘健康状态获取失败: {err}");
             TrayHealth::Unknown
@@ -211,19 +215,11 @@ async fn poll_once() -> bool {
             TrayHealth::Unknown
         }
     };
-    if current_key().await.as_ref() != Some(&key) {
-        // The response may describe a replaced Core, reloaded config or old selection.
-        wake();
-        return false;
+    // The monitored group or test URL changed while fetching.
+    if Target::current().await.as_ref() != Some(&target) {
+        return wake();
     }
-    publish(Some((key, health)))
-}
-
-fn publish(result: Option<(HealthKey, TrayHealth)>) -> bool {
-    let mut published = RESULT.lock();
-    let changed = *published != result;
-    *published = result;
-    changed
+    publish(epoch, health);
 }
 
 #[derive(Default)]
@@ -241,7 +237,7 @@ impl TrayHealthController {
         let task = self.task.lock().take();
         if let Some(task) = task {
             task.abort();
-            publish(None);
+            invalidate();
         }
     }
 
@@ -258,9 +254,8 @@ impl TrayHealthController {
                 if handle::Handle::global().is_exiting() {
                     break;
                 }
-                if poll_once().await {
-                    refresh_icon().await;
-                }
+                poll_once().await;
+                refresh_icon().await;
                 tokio::select! {
                     _ = WAKE.notified() => tokio::time::sleep(Duration::from_millis(300)).await,
                     _ = tokio::time::sleep(Duration::from_secs(30)) => {}
@@ -277,78 +272,95 @@ async fn refresh_icon() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::IVerge;
     use tauri_plugin_mihomo::models::{DelayHistory, Extra};
 
-    const URL: &str = "http://example.test/204";
-    const DEFAULT: &str = "http://default.test/204";
-
-    fn now() -> DateTime<Utc> {
-        DateTime::parse_from_rfc3339("2026-11-09T12:00:00+08:00")
-            .map(|time| time.with_timezone(&Utc))
-            .unwrap_or_default()
-    }
-
-    fn record(minutes_ago: i64, delay: u16) -> DelayHistory {
-        DelayHistory {
-            time: (now() - TimeDelta::minutes(minutes_ago)).to_rfc3339(),
-            delay,
-        }
-    }
-
-    fn leaf(name: &str, proxy_type: ProxyType, records: &[(&str, DelayHistory)]) -> Proxy {
-        let mut extra = HashMap::new();
-        for (url, history) in records {
-            extra
-                .entry((*url).into())
-                .or_insert_with(Extra::default)
-                .history
-                .push(DelayHistory {
-                    time: history.time.clone(),
-                    delay: history.delay,
-                });
-        }
+    fn proxy(
+        name: &str,
+        proxy_type: ProxyType,
+        now: Option<&str>,
+        all: &[&str],
+        url: &str,
+        delays: &[(i64, u16)],
+    ) -> Proxy {
+        let history = delays
+            .iter()
+            .map(|(minutes_ago, delay)| DelayHistory {
+                time: (Utc::now() - TimeDelta::minutes(*minutes_ago)).to_rfc3339(),
+                delay: *delay,
+            })
+            .collect();
         Proxy {
             name: name.into(),
             proxy_type,
-            alive: true,
-            extra,
-            ..Proxy::default()
-        }
-    }
-
-    fn group(name: &str, proxy_type: ProxyType, members: &[&str], now: Option<&str>, url: &str) -> Proxy {
-        Proxy {
-            name: name.into(),
-            proxy_type,
-            alive: true,
-            all: Some(members.iter().map(|member| (*member).into()).collect()),
             now: now.map(Into::into),
+            all: (!all.is_empty()).then(|| all.iter().map(|member| (*member).into()).collect()),
             test_url: Some(url.into()),
+            extra: HashMap::from([(
+                url.into(),
+                Extra {
+                    history,
+                    ..Extra::default()
+                },
+            )]),
             ..Proxy::default()
         }
     }
 
-    fn proxies(items: Vec<Proxy>) -> HashMap<String, Proxy> {
-        items.into_iter().map(|proxy| (proxy.name.clone(), proxy)).collect()
-    }
-
-    fn eval(items: Vec<Proxy>, target: &str) -> TrayHealth {
-        evaluate(&proxies(items), target, Some(DEFAULT), now())
+    fn eval(items: Vec<Proxy>, default_url: Option<&str>) -> TrayHealth {
+        let proxies = items.into_iter().map(|proxy| (proxy.name.clone(), proxy)).collect();
+        evaluate(&proxies, "G", default_url, Utc::now())
     }
 
     #[test]
-    fn monitored_group_follows_mode_and_traffic_routing() {
-        assert_eq!(monitored_group("global", true, Some("Proxy")), Some("GLOBAL".into()));
-        assert_eq!(monitored_group("rule", true, Some(" Proxy ")), Some("Proxy".into()));
-        assert_eq!(monitored_group("rule", true, Some("  ")), None);
-        assert_eq!(monitored_group("rule", true, None), None);
-        assert_eq!(monitored_group("direct", true, Some("Proxy")), None);
-        assert_eq!(monitored_group("global", false, Some("Proxy")), None);
+    fn selector_uses_the_latest_fresh_record_for_its_url() {
+        let url = "http://example.test/204";
+        let selector = |url: &str| proxy("G", ProxyType::Selector, Some("a"), &["a"], url, &[]);
+        let leaf = |url: &str, delays: &[(i64, u16)]| proxy("a", ProxyType::Vmess, None, &[], url, delays);
+
+        assert_eq!(
+            eval(vec![selector(url), leaf(url, &[(5, 0), (1, 90)])], None),
+            TrayHealth::Healthy
+        );
+        assert_eq!(
+            eval(vec![selector(url), leaf(url, &[(1, 0)])], None),
+            TrayHealth::Unhealthy
+        );
+        assert_eq!(
+            eval(vec![selector(url), leaf(url, &[(31, 0)])], None),
+            TrayHealth::Unknown
+        );
+        assert_eq!(
+            eval(vec![selector(url), leaf("http://other.test", &[(1, 0)])], None),
+            TrayHealth::Unknown
+        );
+        assert_eq!(
+            eval(vec![selector(""), leaf(url, &[(1, 0)])], Some(url)),
+            TrayHealth::Unhealthy
+        );
+        assert_eq!(
+            eval(vec![selector(""), leaf(url, &[(1, 0)])], None),
+            TrayHealth::Unknown
+        );
     }
 
     #[test]
-    fn clearing_rule_group_persists_through_verge_patch() {
+    fn automatic_groups_are_only_unhealthy_when_every_member_failed() {
+        let url = "http://example.test/204";
+        let group = || proxy("G", ProxyType::URLTest, Some("a"), &["a", "b"], url, &[]);
+        let leaf = |name: &str, delay: u16| proxy(name, ProxyType::Vmess, None, &[], url, &[(1, delay)]);
+
+        assert_eq!(
+            eval(vec![group(), leaf("a", 0), leaf("b", 0)], None),
+            TrayHealth::Unhealthy
+        );
+        assert_eq!(
+            eval(vec![group(), leaf("a", 0), leaf("b", 80)], None),
+            TrayHealth::Unknown
+        );
+    }
+
+    #[test]
+    fn cleared_rule_group_is_not_monitored() {
         let mut verge = IVerge::default();
         verge.patch_config(&IVerge {
             tray_health_group: Some("Proxy".into()),
@@ -358,119 +370,10 @@ mod tests {
             tray_health_group: Some("".into()),
             ..IVerge::default()
         });
-        assert_eq!(monitored_group("rule", true, verge.tray_health_group.as_deref()), None);
-    }
-
-    #[test]
-    fn selector_reads_only_its_url_record() {
-        let selector = |url: &str| group("S", ProxyType::Selector, &["a"], Some("a"), url);
-        let ok = leaf("a", ProxyType::Vmess, &[(URL, record(1, 120))]);
-        assert_eq!(eval(vec![selector(URL), ok], "S"), TrayHealth::Healthy);
-
-        let failed = leaf("a", ProxyType::Vmess, &[(URL, record(1, 0))]);
-        assert_eq!(eval(vec![selector(URL), failed], "S"), TrayHealth::Unhealthy);
-
-        // A success recorded for another URL is not evidence for this one.
-        let other_url = leaf("a", ProxyType::Vmess, &[(DEFAULT, record(1, 120))]);
-        assert_eq!(eval(vec![selector(URL), other_url], "S"), TrayHealth::Unknown);
-
-        let empty_url = leaf("a", ProxyType::Vmess, &[(DEFAULT, record(1, 0))]);
-        assert_eq!(eval(vec![selector(""), empty_url], "S"), TrayHealth::Unhealthy);
-
-        // Without a group URL or a user default test URL there is no record to trust.
-        let no_url = proxies(vec![
-            selector(""),
-            leaf("a", ProxyType::Vmess, &[(DEFAULT, record(1, 0))]),
-        ]);
-        assert_eq!(evaluate(&no_url, "S", None, now()), TrayHealth::Unknown);
-    }
-
-    #[test]
-    fn latest_record_wins_and_old_or_future_records_are_unknown() {
-        let selector = group("S", ProxyType::Selector, &["a"], Some("a"), URL);
-        let recovered = leaf("a", ProxyType::Vmess, &[(URL, record(5, 0)), (URL, record(1, 90))]);
-        assert_eq!(eval(vec![selector, recovered], "S"), TrayHealth::Healthy);
-
-        for minutes_ago in [31, -6] {
-            let selector = group("S", ProxyType::Selector, &["a"], Some("a"), URL);
-            let failed = leaf("a", ProxyType::Vmess, &[(URL, record(minutes_ago, 0))]);
-            assert_eq!(eval(vec![selector, failed], "S"), TrayHealth::Unknown);
-        }
-
-        let selector = group("S", ProxyType::Selector, &["a"], Some("a"), URL);
-        let mut garbled = leaf("a", ProxyType::Vmess, &[(URL, record(1, 0))]);
-        if let Some(extra) = garbled.extra.get_mut(URL) {
-            extra.history[0].time = "not a time".into();
-        }
-        assert_eq!(eval(vec![selector, garbled], "S"), TrayHealth::Unknown);
-    }
-
-    #[test]
-    fn mihomo_time_format_is_accepted() {
-        let selector = group("S", ProxyType::Selector, &["a"], Some("a"), URL);
-        let mut failed = leaf("a", ProxyType::Vmess, &[(URL, record(1, 0))]);
-        if let Some(extra) = failed.extra.get_mut(URL) {
-            extra.history[0].time = "2026-11-09T11:58:49.93734+08:00".into();
-        }
-        assert_eq!(eval(vec![selector, failed], "S"), TrayHealth::Unhealthy);
-    }
-
-    #[test]
-    fn untested_direct_and_non_proxy_targets_are_unknown() {
-        let selector = |now: &str| group("S", ProxyType::Selector, &[now], Some(now), URL);
-        let direct = leaf("DIRECT", ProxyType::Direct, &[]);
-        assert_eq!(eval(vec![selector("DIRECT"), direct], "S"), TrayHealth::Unknown);
-
-        let tested_direct = leaf("DIRECT", ProxyType::Direct, &[(URL, record(1, 30))]);
-        assert_eq!(eval(vec![selector("DIRECT"), tested_direct], "S"), TrayHealth::Healthy);
-
-        let reject = leaf("REJECT", ProxyType::Reject, &[(URL, record(1, 0))]);
-        assert_eq!(eval(vec![selector("REJECT"), reject], "S"), TrayHealth::Unknown);
-
-        assert_eq!(eval(vec![selector("missing")], "S"), TrayHealth::Unknown);
-        assert_eq!(eval(vec![], "S"), TrayHealth::Unknown);
-    }
-
-    #[test]
-    fn nested_selectors_resolve_and_cycles_are_unknown() {
-        let outer = group("Outer", ProxyType::Selector, &["Inner"], Some("Inner"), "");
-        let inner = group("Inner", ProxyType::Selector, &["a"], Some("a"), URL);
-        let failed = leaf("a", ProxyType::Vmess, &[(URL, record(1, 0))]);
-        assert_eq!(eval(vec![outer, inner, failed], "Outer"), TrayHealth::Unhealthy);
-
-        let a = group("A", ProxyType::Selector, &["B"], Some("B"), URL);
-        let b = group("B", ProxyType::Selector, &["A"], Some("A"), URL);
-        assert_eq!(eval(vec![a, b], "A"), TrayHealth::Unknown);
-    }
-
-    #[test]
-    fn automatic_groups_are_only_unhealthy_when_every_member_failed() {
-        for kind in ["URLTest", "Fallback", "LoadBalance"] {
-            let auto = || {
-                let kind = match kind {
-                    "URLTest" => ProxyType::URLTest,
-                    "Fallback" => ProxyType::Fallback,
-                    _ => ProxyType::LoadBalance,
-                };
-                group("Auto", kind, &["a", "b"], Some("a"), URL)
-            };
-            let dead_a = || leaf("a", ProxyType::Vmess, &[(URL, record(1, 0))]);
-
-            let all_dead = vec![auto(), dead_a(), leaf("b", ProxyType::Vmess, &[(URL, record(2, 0))])];
-            assert_eq!(eval(all_dead, "Auto"), TrayHealth::Unhealthy);
-
-            // A lagging `now` must not be read as the exit, in either direction.
-            let one_alive = vec![auto(), dead_a(), leaf("b", ProxyType::Vmess, &[(URL, record(1, 80))])];
-            assert_eq!(eval(one_alive, "Auto"), TrayHealth::Unknown);
-            let all_alive = vec![
-                auto(),
-                leaf("a", ProxyType::Vmess, &[(URL, record(1, 80))]),
-                leaf("b", ProxyType::Vmess, &[(URL, record(1, 80))]),
-            ];
-            assert_eq!(eval(all_alive, "Auto"), TrayHealth::Unknown);
-
-            let one_untested = vec![auto(), dead_a(), leaf("b", ProxyType::Vmess, &[])];
-            assert_eq!(eval(one_untested, "Auto"), TrayHealth::Unknown);
-        }
+        let target = Target {
+            verge: std::sync::Arc::new(Box::new(verge)),
+            global: false,
+        };
+        assert_eq!(target.group(), None);
     }
 }

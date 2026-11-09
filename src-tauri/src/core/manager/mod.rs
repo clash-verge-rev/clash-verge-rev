@@ -232,7 +232,7 @@ impl CoreManager {
                 .compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire)
             {
                 Ok(_) => {
-                    crate::core::tray::health::wake();
+                    crate::core::tray::health::invalidate();
                     return next;
                 }
                 Err(changed) => current = changed,
@@ -250,7 +250,7 @@ impl CoreManager {
             .try_update(Ordering::AcqRel, Ordering::Acquire, |current| {
                 active_core_readiness_generation(current).map(inactive_core_readiness_state)
             });
-        crate::core::tray::health::wake();
+        crate::core::tray::health::invalidate();
     }
 
     fn invalidate_core_readiness_if(&self, captured_generation: u64) -> bool {
