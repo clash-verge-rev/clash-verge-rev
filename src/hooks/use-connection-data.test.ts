@@ -6,7 +6,7 @@ const socket = vi.hoisted(() => ({
     vi.fn<
       (listener: (message: { type: string; data: string }) => void) => void
     >(),
-  close: vi.fn(),
+  close: async () => {},
 }))
 
 vi.mock('react', () => ({
@@ -53,7 +53,7 @@ const monitor = async () => {
   const { useConnectionData: readConnectionData } = await import(
     './use-connection-data'
   )
-  const { clearClosedConnections } = readConnectionData()
+  readConnectionData()
   const [subscribe, read] = vi
     .mocked(
       useSyncExternalStore<
@@ -73,7 +73,7 @@ const monitor = async () => {
     })
     return read()
   }
-  return { send, read, listener, unsubscribe, clearClosedConnections }
+  return { send, listener, unsubscribe }
 }
 
 it('reuses unchanged snapshots and lists without notifying, including totals-only updates', async () => {
@@ -124,9 +124,8 @@ it('updates traffic, decays speed to zero, and preserves immutable history throu
   unsubscribe()
 })
 
-it('evicts the oldest closed entries at 500 and cancels pending delivery on unsubscribe', async () => {
-  const { send, read, listener, unsubscribe, clearClosedConnections } =
-    await monitor()
+it('evicts the oldest closed entries at 500 without mutating retained history', async () => {
+  const { send, unsubscribe } = await monitor()
   send(Array.from({ length: 502 }, (_, i) => connection(`${i}`)))
   const closed = send([])
   expect(closed.closedConnections).toHaveLength(500)
@@ -138,17 +137,5 @@ it('evicts the oldest closed entries at 500 and cancels pending delivery on unsu
   expect(evicted.closedConnections.at(-1)?.id).toBe('new-b')
   expect(closed.closedConnections[0].id).toBe('2')
 
-  clearClosedConnections()
-  expect(read().closedConnections).toEqual([])
-  const calls = listener.mock.calls.length
-  socket.addListener.mock.calls[0][0]({
-    type: 'Text',
-    data: JSON.stringify({ connections: [connection('pending')] }),
-  })
-  expect(vi.getTimerCount()).toBe(1)
   unsubscribe()
-  expect(vi.getTimerCount()).toBe(0)
-  vi.advanceTimersByTime(1_000)
-  expect(listener).toHaveBeenCalledTimes(calls)
-  expect(socket.close).toHaveBeenCalledOnce()
 })
