@@ -750,6 +750,17 @@ impl CoreManager {
         self.controlled_stop_core_inner().await
     }
 
+    /// Stops the core only when the Service runs it, returning whether it did. Waits for an in-flight start.
+    #[cfg(target_os = "linux")]
+    pub(crate) async fn stop_service_core(&self) -> Result<bool> {
+        let _life = self.lifecycle_lock.lock().await;
+        if !matches!(*self.get_running_mode(), RunningMode::Service) {
+            return Ok(false);
+        }
+        self.controlled_stop_core_inner().await?;
+        Ok(true)
+    }
+
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
         self.controlled_stop_core_with_intent(ProxyStopIntent::Clear).await
     }

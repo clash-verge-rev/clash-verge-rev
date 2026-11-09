@@ -52,4 +52,8 @@
 
 - 优化 macOS TUN 模式的系统 DNS，增加阿里和 Cloudflare 地址
 
+**🐧 Linux**
+
+- 优化 Linux 升级安装包后自动重装已安装的服务，无需在应用内手动重装
+
 </details>
