@@ -115,13 +115,13 @@ impl TrayState {
                             Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico"))
                         }
                         (IconKind::Common, true) => {
-                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono-warning.ico"))
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-mono.ico"))
                         }
                         (IconKind::SysProxy, true) => {
-                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new-warning.ico"))
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-sys-mono-new.ico"))
                         }
                         (IconKind::Tun, true) => {
-                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new-warning.ico"))
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-tun-mono-new.ico"))
                         }
                     },
                 );
@@ -137,9 +137,11 @@ impl TrayState {
                 (IconKind::Common, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
                 (IconKind::SysProxy, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
                 (IconKind::Tun, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
-                (IconKind::Common, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-warning.ico")),
-                (IconKind::SysProxy, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-warning.ico")),
-                (IconKind::Tun, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-warning.ico")),
+                (IconKind::Common, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon.ico")),
+                (IconKind::SysProxy, true) => {
+                    Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-sys.ico"))
+                }
+                (IconKind::Tun, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-tun.ico")),
             },
         )
     }
