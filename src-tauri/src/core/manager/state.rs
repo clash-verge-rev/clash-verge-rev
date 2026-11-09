@@ -28,6 +28,7 @@ pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
 
 #[cfg(target_os = "windows")]
 fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
+    use crate::utils::yaml_emitter;
     use serde_yaml_ng::{Mapping, Value};
 
     let mut config: Mapping = serde_yaml_ng::from_str(yaml)?;
@@ -40,7 +41,7 @@ fn sidecar_config_without_tun(yaml: &str) -> Result<std::string::String> {
     tun.as_mapping_mut()
         .context("invalid Sidecar TUN configuration")?
         .insert(Value::from("enable"), Value::Bool(false));
-    Ok(serde_yaml_ng::to_string(&config)?)
+    Ok(yaml_emitter::to_mihomo_config_string(&config)?)
 }
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
