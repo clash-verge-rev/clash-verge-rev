@@ -4,7 +4,7 @@
 # %preun scripts uninstall it unconditionally through this path. Skip only that call: one
 # made by a scriptlet of the transaction that %post recorded.
 RECORD=/run/clash-verge-service-rpm-upgrade
-UNINSTALLER=/usr/lib/clash-verge-rev/clash-verge-service-uninstall
+UNINSTALLER=/usr/bin/clash-verge-service-uninstall.real
 
 # Fields after the parenthesised command name, which may itself contain spaces.
 stat_field() {

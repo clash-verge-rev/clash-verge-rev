@@ -13,7 +13,8 @@
         "postInstallScript": "./packages/linux/post-install.sh",
         "preRemoveScript": "./packages/linux/pre-remove.sh",
         "files": {
-          "/usr/lib/clash-verge-rev/clash-verge-service-uninstall": "./sidecar/clash-verge-service-uninstall-bin"
+          "/usr/bin/clash-verge-service-uninstall": "./packages/linux/service-uninstall.sh",
+          "/usr/bin/clash-verge-service-uninstall.real": "./sidecar/clash-verge-service-uninstall"
         }
       },
       "rpm": {
@@ -26,14 +27,14 @@
         "postInstallScript": "./packages/linux/post-install-rpm.sh",
         "preRemoveScript": "./packages/linux/pre-remove.sh",
         "files": {
-          "/usr/lib/clash-verge-rev/clash-verge-service-uninstall": "./sidecar/clash-verge-service-uninstall-bin"
+          "/usr/bin/clash-verge-service-uninstall": "./packages/linux/service-uninstall.sh",
+          "/usr/bin/clash-verge-service-uninstall.real": "./sidecar/clash-verge-service-uninstall"
         }
       }
     },
     "externalBin": [
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
-      "./sidecar/clash-verge-service-uninstall",
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]

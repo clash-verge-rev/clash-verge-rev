@@ -550,16 +550,13 @@ const SERVICE_BINARIES = [
   'clash-verge-service-uninstall',
 ]
 
-// Linux packages install the uninstaller under /usr/lib behind a wrapper sidecar; see
-// src-tauri/packages/linux/service-uninstall.sh and the files entries in tauri.linux.conf.json.
-const LINUX_UNINSTALLER_FILE = 'clash-verge-service-uninstall-bin'
-
 function serviceFileInfo(name) {
   const ext = platform === 'win32' ? '.exe' : ''
-  const suffix = platform === 'linux' ? `-${SIDECAR_HOST}` : ''
-  if (platform === 'linux' && name === 'clash-verge-service-uninstall') {
-    return { sourceFile: name, targetFile: LINUX_UNINSTALLER_FILE }
-  }
+  // The Linux uninstaller is packaged through `files`, whose sources cannot vary by target.
+  const suffix =
+    platform === 'linux' && name !== 'clash-verge-service-uninstall'
+      ? `-${SIDECAR_HOST}`
+      : ''
   return {
     sourceFile: `${name}${ext}`,
     targetFile: `${name}${suffix}${ext}`,
@@ -580,22 +577,6 @@ async function findExtractedFile(dir, fileName) {
 }
 
 async function resolveServiceBundle() {
-  await fetchServiceBundle()
-  if (platform === 'linux') {
-    const wrapper = path.join(
-      SERVICE_DIR,
-      `clash-verge-service-uninstall-${SIDECAR_HOST}`,
-    )
-    await fsp.copyFile(
-      path.join(cwd, 'src-tauri', 'packages', 'linux', 'service-uninstall.sh'),
-      wrapper,
-    )
-    await fsp.chmod(wrapper, 0o755)
-    await updateHashCache(wrapper)
-  }
-}
-
-async function fetchServiceBundle() {
   const files = SERVICE_BINARIES.map((name) => {
     const info = serviceFileInfo(name)
     return {
