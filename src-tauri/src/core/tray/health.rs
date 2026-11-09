@@ -7,6 +7,7 @@ use chrono::{DateTime, TimeDelta, Utc};
 use clash_verge_draft::SharedDraft;
 use parking_lot::Mutex;
 use std::collections::HashMap;
+use std::hash::{DefaultHasher, Hash as _, Hasher as _};
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
@@ -24,6 +25,8 @@ pub enum TrayHealth {
 /// The low two bits hold the published health and the rest an epoch bumped by [`invalidate`],
 /// so a result fetched before an invalidation can never be published after it.
 static STATE: AtomicU64 = AtomicU64::new(0);
+/// Fingerprint of the last monitored target seen, 0 when nothing is monitored.
+static TARGET: AtomicU64 = AtomicU64::new(0);
 static WAKE: LazyLock<Notify> = LazyLock::new(Notify::new);
 
 /// Requests a re-evaluation soon; coalesces with pending requests.
@@ -96,10 +99,27 @@ impl Target {
     }
 }
 
-impl PartialEq for Target {
-    fn eq(&self, other: &Self) -> bool {
-        self.group() == other.group() && self.default_url() == other.default_url()
+impl Target {
+    fn fingerprint(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        (self.group(), self.default_url()).hash(&mut hasher);
+        hasher.finish()
     }
+}
+
+/// Invalidates the published health if the monitored group or test URL changed since the last call.
+fn track(target: Option<&Target>) {
+    let fingerprint = target.map_or(0, Target::fingerprint);
+    if TARGET.swap(fingerprint, Ordering::AcqRel) != fingerprint {
+        invalidate();
+    }
+}
+
+/// Requests a re-evaluation after a settings or routing change, first discarding health
+/// published for a previous target.
+pub async fn sync_target() {
+    track(Target::current().await.as_ref());
+    wake();
 }
 
 struct Evaluator<'a> {
@@ -199,8 +219,10 @@ fn evaluate<'a>(
 }
 
 async fn poll_once() {
+    let target = Target::current().await;
+    track(target.as_ref());
     let epoch = STATE.load(Ordering::Acquire) >> 2;
-    let Some(target) = Target::current().await else {
+    let Some(target) = target else {
         return publish(epoch, TrayHealth::Unknown);
     };
     let group = target.group().unwrap_or_default();
@@ -215,10 +237,8 @@ async fn poll_once() {
             TrayHealth::Unknown
         }
     };
-    // The monitored group or test URL changed while fetching.
-    if Target::current().await.as_ref() != Some(&target) {
-        return wake();
-    }
+    // A target change while fetching bumps the epoch, so the stale result is not published.
+    track(Target::current().await.as_ref());
     publish(epoch, health);
 }
 
@@ -360,20 +380,33 @@ mod tests {
     }
 
     #[test]
-    fn cleared_rule_group_is_not_monitored() {
-        let mut verge = IVerge::default();
-        verge.patch_config(&IVerge {
-            tray_health_group: Some("Proxy".into()),
-            ..IVerge::default()
-        });
-        verge.patch_config(&IVerge {
-            tray_health_group: Some("".into()),
-            ..IVerge::default()
-        });
-        let target = Target {
-            verge: std::sync::Arc::new(Box::new(verge)),
-            global: false,
+    fn changing_the_monitored_group_discards_published_and_in_flight_results() {
+        let target = |group: &str| {
+            let mut verge = IVerge::default();
+            verge.patch_config(&IVerge {
+                tray_health_group: Some(group.into()),
+                ..IVerge::default()
+            });
+            Target {
+                verge: std::sync::Arc::new(Box::new(verge)),
+                global: false,
+            }
         };
-        assert_eq!(target.group(), None);
+        let epoch = || STATE.load(Ordering::Acquire) >> 2;
+
+        track(Some(&target("A")));
+        let in_flight = epoch();
+        publish(in_flight, TrayHealth::Unhealthy);
+        assert_eq!(current_health(), TrayHealth::Unhealthy);
+
+        track(Some(&target("B")));
+        assert_eq!(current_health(), TrayHealth::Unknown);
+        publish(in_flight, TrayHealth::Unhealthy);
+        assert_eq!(current_health(), TrayHealth::Unknown);
+
+        publish(epoch(), TrayHealth::Unhealthy);
+        assert_eq!(target("").group(), None);
+        track(None);
+        assert_eq!(current_health(), TrayHealth::Unknown);
     }
 }

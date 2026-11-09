@@ -280,8 +280,8 @@ impl Tray {
     }
 
     pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
-        // Mode, routing and Core changes all pass through here and may change the monitored target.
-        health::wake();
+        // Mode, routing and settings changes all pass through here and may change the monitored target.
+        health::sync_target().await;
         let mut applied_warning = self.applied_warning.lock().await;
         self.apply_icon(verge, &mut applied_warning).await
     }
