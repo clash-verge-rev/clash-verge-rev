@@ -1,132 +1,44 @@
 import { useCallback } from 'react'
-import {
-  closeConnection,
-  getConnections,
-  selectNodeForGroup,
-  unfixedProxy,
-} from 'tauri-plugin-mihomo-api'
 
-import {
-  useForgetSelection,
-  useRecordSelection,
-} from '@/hooks/use-record-selection'
-import { useVerge } from '@/hooks/use-verge'
-import { syncTrayProxySelection } from '@/services/cmds'
+import { switchProxyNode } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
-import { debugLog } from '@/utils/debug'
-
-// 缓存连接清理
-const cleanupConnections = async (previousProxy: string) => {
-  try {
-    const { connections } = await getConnections()
-    const cleanupPromises = (connections ?? [])
-      .filter((conn) => conn.chains.includes(previousProxy))
-      .map((conn) => closeConnection(conn.id))
-
-    if (cleanupPromises.length > 0) {
-      await Promise.allSettled(cleanupPromises)
-      debugLog(`[ProxySelection] 清理了 ${cleanupPromises.length} 个连接`)
-    }
-  } catch (error) {
-    console.warn('[ProxySelection] 连接清理失败:', error)
-  }
-}
 
 interface ProxySelectionOptions {
-  onSuccess?: () => void
   onError?: (error: any) => void
 }
 
 interface ProxyChangeRequest {
   groupName: string
   proxyName: string
-  previousProxy?: string
   fixed?: string
 }
 
-// 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
-  const recordSelection = useRecordSelection()
-  const forgetSelection = useForgetSelection()
-  const { verge } = useVerge()
-
-  const { onSuccess, onError } = options
-
-  const autoCloseConnection = verge?.auto_close_connection ?? false
-
-  // 切换节点
-  const syncTraySelection = useCallback(() => {
-    mutate(() => syncTrayProxySelection(), {
-      id: 'sync-tray-selection',
-      errorNotice: false,
-    }).catch((error) => {
-      console.error('[ProxySelection] 托盘状态同步失败:', error)
-    })
-  }, [])
+  const { onError } = options
 
   const executeChange = useCallback(
-    async (request: ProxyChangeRequest) => {
-      const { groupName, proxyName, previousProxy, fixed } = request
-      const isFixedProxy = fixed === proxyName
-      if (isFixedProxy) {
-        debugLog(`[ProxySelection] 代理取消固定: ${groupName} -> ${proxyName}`)
-      } else {
-        debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
-      }
-
+    async ({ groupName, proxyName, fixed }: ProxyChangeRequest) => {
       try {
-        const result = await mutate(
-          () =>
-            isFixedProxy
-              ? unfixedProxy(groupName)
-              : selectNodeForGroup(groupName, proxyName),
+        await mutate(
+          () => switchProxyNode(groupName, proxyName, fixed === proxyName),
           { id: `select-proxy-node:${groupName}`, errorNotice: false },
         )
-        if (!result.ok) return
-        onSuccess?.()
-        syncTraySelection()
-        if (isFixedProxy) {
-          await forgetSelection(groupName)
-          debugLog(`[ProxySelection] 代理和状态同步完成: ${groupName}`)
-        } else {
-          await recordSelection(groupName, proxyName)
-          debugLog(
-            `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
-          )
-        }
-
-        if (autoCloseConnection && previousProxy) {
-          void cleanupConnections(previousProxy)
-        }
       } catch (error) {
         console.error(
-          `[ProxySelection] 代理切换失败: ${groupName} -> ${proxyName}`,
+          `[ProxySelection] Failed to switch proxy: ${groupName} -> ${proxyName}`,
           error,
         )
         onError?.(error)
       }
     },
-    [
-      autoCloseConnection,
-      forgetSelection,
-      onError,
-      onSuccess,
-      recordSelection,
-      syncTraySelection,
-    ],
+    [onError],
   )
 
   const select = useCallback(
-    (
-      groupName: string,
-      proxyName: string,
-      previousProxy?: string,
-      fixed?: string,
-    ) => {
+    (groupName: string, proxyName: string, fixed?: string) => {
       void executeChange({
         groupName,
         proxyName,
-        previousProxy,
         fixed,
       })
     },

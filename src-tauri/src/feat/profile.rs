@@ -4,6 +4,7 @@ use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_update_item_safe},
     core::{CoreManager, handle, tray, validate::ValidationOutcome},
+    process::AsyncHandler,
     utils::help::{mask_err, mask_url},
 };
 use anyhow::{Result, bail};
@@ -21,37 +22,85 @@ pub async fn toggle_proxy_profile(profile_index: String) {
     }
 }
 
-/// Tell the profile which node this group is on now.
-///
-/// The core is already switched by the time this runs, so failing to record is not a reason to
-/// report the switch as failed — but it is worth a log line, because what the profile holds is
-/// what gets re-applied the next time a core starts.
-async fn record_switched_node(group_name: &str, proxy_name: &str) {
-    if let Err(error) = crate::config::profiles::record_selected_node(group_name, proxy_name).await {
+pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) -> Result<()> {
+    let mihomo = handle::Handle::mihomo();
+    let previous_proxy = if Config::verge().await.data_arc().auto_close_connection.unwrap_or(false) {
+        match mihomo.get_proxy_by_name(group_name).await {
+            Ok(group) => group.now.filter(|name| !name.is_empty()),
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "Failed to read previous proxy selection for {group_name}: {err}"
+                );
+                None
+            }
+        }
+    } else {
+        None
+    };
+    if unfix {
+        mihomo.unfixed_proxy(group_name).await?;
+    } else {
+        mihomo.select_node_for_group(group_name, proxy_name).await?;
+    }
+
+    let save_result = if unfix {
+        crate::config::profiles::forget_selected_node(group_name).await
+    } else {
+        crate::config::profiles::record_selected_node(group_name, proxy_name).await
+    };
+    // The core selection is already applied; persistence failure must not report it as failed.
+    if let Err(error) = save_result {
         logging!(
             warn,
             Type::Config,
-            "切换代理成功但未能记录到配置: {} -> {}, 错误: {error:#}",
-            group_name,
-            proxy_name
+            "Failed to persist proxy selection for {group_name}: {error:#}"
         );
     }
-}
+    announce(Refresh::Proxies);
 
-pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
-    match handle::Handle::mihomo()
-        .select_node_for_group(group_name, proxy_name)
-        .await
-    {
-        Ok(_) => {
-            record_switched_node(group_name, proxy_name).await;
-            announce(Refresh::Proxies);
-            let _ = tray::Tray::global().update_menu().await;
-        }
-        Err(err) => {
-            logging!(error, Type::Tray, "切换代理失败: {err:?}");
-        }
+    if let Some(previous_proxy) = previous_proxy {
+        AsyncHandler::spawn(move || async move {
+            let connections = match mihomo.get_connections().await {
+                Ok(connections) => connections,
+                Err(err) => {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "Failed to read connections after switching proxy: {err}"
+                    );
+                    return;
+                }
+            };
+            futures::future::join_all(
+                connections
+                    .connections
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter(|connection| connection.chains.contains(&previous_proxy))
+                    .map(|connection| async move {
+                        if let Err(err) = mihomo.close_connection(&connection.id).await {
+                            logging!(
+                                warn,
+                                Type::Core,
+                                "Failed to close connection {} after switching proxy: {err}",
+                                connection.id
+                            );
+                        }
+                    }),
+            )
+            .await;
+        });
     }
+    if let Err(err) = tray::Tray::global().update_menu().await {
+        logging!(
+            warn,
+            Type::Tray,
+            "Failed to refresh tray after switching proxy: {err:#}"
+        );
+    }
+    Ok(())
 }
 
 async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result<Option<(String, Option<PrfOption>)>> {

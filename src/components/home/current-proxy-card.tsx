@@ -606,9 +606,6 @@ export const CurrentProxyCard = () => {
   )
 
   const { select } = useProxySelection({
-    onSuccess: () => {
-      refreshProxy()
-    },
     onError: (error) => {
       console.error('代理切换失败', error)
       refreshProxy()
@@ -755,10 +752,9 @@ export const CurrentProxyCard = () => {
       if (!selectedGroup || !option || !isInteractableMember(option.member)) {
         return
       }
-      const previousProxy = selectedGroup.now
       const nextName = option.member.ref.name
       // The profile selection is the durable source across core restarts and run modes.
-      select(selectedGroup.name, nextName, previousProxy!, selectedGroup.fixed!)
+      select(selectedGroup.name, nextName, selectedGroup.fixed!)
     },
     [isDirectMode, select, selectedGroup, unsortedProxyOptions],
   )
