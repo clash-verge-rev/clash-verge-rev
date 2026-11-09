@@ -3,41 +3,75 @@ chmod +x /usr/bin/clash-verge-service-install
 chmod +x /usr/bin/clash-verge-service-uninstall
 chmod +x /usr/bin/clash-verge-service
 
-# Failures only warn: dpkg and rpm cannot restore the previous Service from a failed postinst,
-# and a failing script would leave the upgraded package unconfigured or report the update as failed.
-reinstall_existing_service() {
-    local unit="/etc/systemd/system/clash-verge-service.service"
-    # Only a unit kept by an upgrade-aware removal script shows the Service existed before this upgrade.
-    if [ ! -f "$unit" ] || [ -L "$unit" ]; then
-        return 0
-    fi
-    if [ ! -d /run/systemd/system ]; then
-        echo "Warning: systemd is not running, so Clash Verge Service was not reinstalled; reinstall it from Clash Verge." >&2
-        return 0
-    fi
-    if ! systemctl is-enabled --quiet clash-verge-service.service; then
-        echo "Clash Verge Service is disabled; leaving it unchanged." >&2
-        return 0
-    fi
-    # Package managers run without the invoking user's identity, so keep the group that may use the Service.
-    local group gid
-    group="$(sed -n 's/^Group=//p' "$unit" | head -n 1)"
-    gid=""
-    if [ -n "$group" ]; then
-        gid="$(getent group "$group" | cut -d: -f3)"
-    fi
-    if [ -z "$gid" ]; then
-        echo "Warning: the Clash Verge Service group '$group' could not be resolved, so the Service was not reinstalled; reinstall it from Clash Verge." >&2
-        return 0
-    fi
-    if ! CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
-        echo "Warning: reinstalling Clash Verge Service failed; reinstall it from Clash Verge." >&2
-    fi
+SERVICE_UNIT="clash-verge-service.service"
+SERVICE_UNIT_FILE="/etc/systemd/system/$SERVICE_UNIT"
+# Read by the app, which offers a reinstall when the package could not keep the Service.
+UPGRADE_MARKER="/run/clash-verge-service-upgrade"
+
+write_upgrade_marker() {
+    (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
 }
 
-# Upgrades keep an existing Service current; first installs never add one.
-if [ "$1" = "configure" ] && [ -n "$2" ]; then
-    reinstall_existing_service
+existing_service_gid() {
+    local group
+    group="$(sed -n 's/^Group=//p' "$SERVICE_UNIT_FILE" | head -n 1)"
+    if [ -n "$group" ]; then
+        getent group "$group" | cut -d: -f3
+    fi
+    return 0
+}
+
+# Failures only warn: dpkg and rpm cannot restore the previous Service from a failed postinst,
+# and a failing script would leave the package unconfigured or make the app report a failed update.
+# The installer always enables and starts the unit, so the previous enablement and activity are restored.
+reinstall_existing_service() {
+    local gid="$1" enabled active=no
+    enabled="$(systemctl is-enabled "$SERVICE_UNIT" 2>/dev/null)"
+    if systemctl is-active --quiet "$SERVICE_UNIT"; then
+        active=yes
+    fi
+    if [ "$enabled" = "masked-runtime" ]; then
+        systemctl unmask --runtime --quiet "$SERVICE_UNIT"
+    fi
+    local status=0
+    if ! CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
+        echo "Warning: reinstalling Clash Verge Service failed; Clash Verge will offer to reinstall it." >&2
+        status=1
+    fi
+    case "$enabled" in
+        disabled) systemctl disable --quiet "$SERVICE_UNIT" ;;
+        masked-runtime) systemctl mask --runtime --quiet "$SERVICE_UNIT" ;;
+    esac
+    if [ "$active" = "no" ]; then
+        systemctl stop "$SERVICE_UNIT"
+    fi
+    return "$status"
+}
+
+# Upgrades keep an existing Service current; first installs and explicit removals never add one.
+# A symlinked unit is masked or managed by the administrator and is left alone.
+if [ "$1" = "configure" ] && [ -n "$2" ] && [ -d /run/systemd/system ]; then
+    if [ -f "$SERVICE_UNIT_FILE" ] && [ ! -L "$SERVICE_UNIT_FILE" ]; then
+        gid="$(existing_service_gid)"
+        if [ -z "$gid" ]; then
+            echo "Warning: the Clash Verge Service group could not be resolved; Clash Verge will offer to reinstall the Service." >&2
+            write_upgrade_marker ""
+        elif reinstall_existing_service "$gid"; then
+            rm -f "$UPGRADE_MARKER"
+        else
+            write_upgrade_marker "$gid"
+        fi
+    elif [ -f "$UPGRADE_MARKER" ]; then
+        # The preinst found that the previous package's prerm removed a running Service.
+        gid="$(sed -n 's/^gid=//p' "$UPGRADE_MARKER")"
+        if [ -z "$gid" ]; then
+            echo "Warning: the previous package removed Clash Verge Service and its group is unknown; Clash Verge will offer to reinstall it." >&2
+        elif CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
+            rm -f "$UPGRADE_MARKER"
+        else
+            echo "Warning: reinstalling Clash Verge Service failed; Clash Verge will offer to reinstall it." >&2
+        fi
+    fi
 fi
 
 . /etc/os-release

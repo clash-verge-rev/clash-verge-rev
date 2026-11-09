@@ -22,7 +22,7 @@ pub enum NoticeStatus {
     #[serde(rename = "service_core::app_data_not_owned")]
     ServiceCoreAppDataNotOwned,
     #[serde(rename = "service_core::sidecar_fallback")]
-    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
+    #[cfg_attr(not(any(target_os = "windows", target_os = "linux")), allow(dead_code))]
     ServiceCoreSidecarFallback,
     #[serde(rename = "dns_override::auto_disabled")]
     DnsOverrideAutoDisabled,

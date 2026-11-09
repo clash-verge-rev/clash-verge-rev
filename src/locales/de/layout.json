@@ -23,6 +23,7 @@
     "serviceMigration": {
       "locationRefusedMessage": "Der Dienst kann den Kern nicht starten, da sein Installationspfad oder die Verzeichnisberechtigungen die Sicherheitsprüfung nicht bestanden haben. Installieren Sie den Dienst erneut, um Dateien und Berechtigungen wiederherzustellen, und versuchen Sie es erneut. Windows kann eine Administratorbestätigung anfordern.",
       "notAutoStartedMessage": "Der Starttyp des Clash-Verge-Dienstes wurde auf „Manuell“ oder „Deaktiviert“ geändert (häufig durch Optimierungsprogramme), daher startet er nicht mehr mit Windows; diese Sitzung verwendet Sidecar. Installieren Sie den Dienst erneut, um den automatischen Start wiederherzustellen. Windows kann eine Administratorbestätigung anfordern.",
+      "upgradeIncompleteMessage": "Clash Verge wurde aktualisiert, aber der zuvor installierte Clash Verge-Dienst ist nicht bereit. Installieren Sie den Dienst neu, um ihn weiter zu verwenden; das System fragt möglicherweise nach einer Administrator-Authentifizierung.",
       "title": "Dienst-Update erforderlich",
       "message": "Die Version des Clash-Verge-Dienstes passt nicht zu der Version, die diese App benötigt. Wählen Sie „Dienst neu installieren“, um den vorhandenen Dienst zu deinstallieren und die benötigte Version zu installieren, oder fahren Sie für diese Sitzung mit Sidecar fort.",
       "checkingMessage": "Der Status des Systemdienstes und der aktuelle Betriebsmodus werden geprüft. Bitte warten…",

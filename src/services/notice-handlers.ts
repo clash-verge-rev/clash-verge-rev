@@ -125,6 +125,8 @@ const handlers: Record<
           )
         } else if (notice?.kind === 'notAutoStarted') {
           requestService({ reason: 'serviceNotAutoStarted' })
+        } else if (notice?.kind === 'upgradeIncomplete') {
+          requestService({ reason: 'serviceUpgradeIncomplete' })
         } else if (notice) {
           showNotice.warning(
             'settings.feedback.notifications.clashService.sidecarFallback',

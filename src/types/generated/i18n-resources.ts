@@ -233,6 +233,7 @@ export interface TranslationResources {
           success: string
           title: string
           unavailableMessage: string
+          upgradeIncompleteMessage: string
         }
         sysproxyPrivilege: {
           alternative: string

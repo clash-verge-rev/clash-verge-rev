@@ -293,35 +293,60 @@ impl SilentUpdater {
     }
 
     async fn install(update: Update, bytes: Vec<u8>, timeout: Option<Duration>) -> Result<()> {
-        // The package scripts reinstall an existing Service, killing the core it runs and its session;
-        // stopping it first keeps the post-update restart from failing on that lost session.
         #[cfg(target_os = "linux")]
-        let stopped_service_core = crate::core::CoreManager::global()
-            .stop_service_core()
-            .await
-            .context("failed to stop the Service core before installing the update")?;
-
-        let install = tokio::task::spawn_blocking(move || update.install(&bytes));
+        let mut install = Self::install_with_core_paused(update, bytes).await?;
+        #[cfg(not(target_os = "linux"))]
+        let mut install = tokio::task::spawn_blocking(move || update.install(&bytes));
         let joined = match timeout {
-            Some(limit) => tokio::time::timeout(limit, install)
-                .await
-                .map_err(|_| anyhow::anyhow!("install timed out ({}s)", limit.as_secs())),
+            Some(limit) => match tokio::time::timeout(limit, &mut install).await {
+                Ok(joined) => Ok(joined),
+                Err(_) => {
+                    // The caller resumes the old app; once the package manager succeeds, restart on the new version.
+                    #[cfg(target_os = "linux")]
+                    tokio::spawn(async move {
+                        if matches!(install.await, Ok(Ok(()))) {
+                            crate::feat::restart_app().await;
+                        }
+                    });
+                    Err(anyhow::anyhow!("install timed out ({}s)", limit.as_secs()))
+                }
+            },
             None => Ok(install.await),
         };
-        let result = joined.and_then(|joined| Ok(joined??));
+        joined.and_then(|joined| {
+            joined??;
+            Ok(())
+        })
+    }
 
-        #[cfg(target_os = "linux")]
-        if result.is_err()
-            && stopped_service_core
-            && let Err(error) = crate::core::CoreManager::global().start_core().await
-        {
-            logging!(
-                error,
-                Type::System,
-                "Failed to restart the core after the update install failed: {error:#}"
-            );
-        }
-        result
+    /// The package scripts reinstall an existing Service, killing the core it runs and its session, so the
+    /// core stays paused until the package manager exits, even after the caller stops waiting.
+    #[cfg(target_os = "linux")]
+    async fn install_with_core_paused(update: Update, bytes: Vec<u8>) -> Result<tokio::task::JoinHandle<Result<()>>> {
+        let manager = crate::core::CoreManager::global();
+        let (lifecycle, stopped_service_core) = manager
+            .pause_for_package_install()
+            .await
+            .context("failed to stop the Service core before installing the update")?;
+        let install = tokio::task::spawn_blocking(move || update.install(&bytes));
+        Ok(tokio::spawn(async move {
+            let result = match install.await {
+                Ok(result) => result.map_err(anyhow::Error::from),
+                Err(error) => Err(error.into()),
+            };
+            drop(lifecycle);
+            if result.is_err()
+                && stopped_service_core
+                && let Err(error) = manager.start_core().await
+            {
+                logging!(
+                    error,
+                    Type::System,
+                    "Failed to restart the core after the update install failed: {error:#}"
+                );
+            }
+            result
+        }))
     }
 
     /// Installs a newer cached update before normal startup, if the user confirms.

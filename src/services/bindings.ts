@@ -1035,6 +1035,7 @@ export type ServiceFallbackNotice =
   | { kind: 'unavailable' }
   | { kind: 'coreRejected'; reason: string }
   | { kind: 'notAutoStarted' }
+  | { kind: 'upgradeIncomplete' }
 
 export type ServiceHealthKind =
   | 'unknown'

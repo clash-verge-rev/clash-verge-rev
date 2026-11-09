@@ -50,6 +50,7 @@ pub enum ServiceFallbackNotice {
     Unavailable,
     CoreRejected(String),
     NotAutoStarted,
+    UpgradeIncomplete,
 }
 
 /// The release installer registers AutoStart.
@@ -66,9 +67,46 @@ pub(crate) fn notify_service_fallback(reason: &str) {
     Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
 }
 
+/// Written by the Linux packages when an upgrade found the Service and may not have kept it.
+#[cfg(target_os = "linux")]
+const SERVICE_UPGRADE_MARKER: &str = "/run/clash-verge-service-upgrade";
+const SERVICE_UPGRADE_INCOMPLETE: &str = "the package upgrade did not keep the Service ready";
+
+/// Offers a reinstall once per package upgrade whose Service is not ready, since package script output never reaches the app.
+#[cfg(target_os = "linux")]
+pub(crate) async fn notify_incomplete_service_upgrade() {
+    let Ok(marker) = std::fs::read_to_string(SERVICE_UPGRADE_MARKER) else {
+        return;
+    };
+    let Some(id) = marker.lines().find_map(|line| line.strip_prefix("id=")) else {
+        return;
+    };
+    let ack = match dirs::app_home_dir() {
+        Ok(dir) => dir.join("service-upgrade-ack"),
+        Err(error) => {
+            logging!(warn, Type::Service, "无法定位服务升级确认文件: {error:#}");
+            return;
+        }
+    };
+    if std::fs::read_to_string(&ack).is_ok_and(|seen| seen == id) {
+        return;
+    }
+    let status = SERVICE_MANAGER.current().await;
+    if !matches!(status, ServiceStatus::Ready) {
+        logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
+        *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
+        Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
+    }
+    if let Err(error) = std::fs::write(&ack, id) {
+        logging!(warn, Type::Service, "无法记录服务升级确认: {error}");
+    }
+}
+
 pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
     let reason = PENDING_SERVICE_FALLBACK_NOTICE.lock().take()?;
-    Some(if reason.starts_with(CORE_REJECTED_PREFIX) {
+    Some(if reason == SERVICE_UPGRADE_INCOMPLETE {
+        ServiceFallbackNotice::UpgradeIncomplete
+    } else if reason.starts_with(CORE_REJECTED_PREFIX) {
         ServiceFallbackNotice::CoreRejected(reason)
     } else if is_not_auto_started(&reason) {
         ServiceFallbackNotice::NotAutoStarted
