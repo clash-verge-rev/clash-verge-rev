@@ -7,8 +7,6 @@ SERVICE_UNIT="clash-verge-service.service"
 SERVICE_UNIT_FILE="/etc/systemd/system/$SERVICE_UNIT"
 # Read by the app, which offers a reinstall when the package could not keep the Service.
 UPGRADE_MARKER="/run/clash-verge-service-upgrade"
-# Written by the preinst for this transaction only.
-UPGRADE_EVIDENCE="/run/clash-verge-service-upgrade-evidence"
 
 write_upgrade_marker() {
     (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
@@ -52,32 +50,16 @@ reinstall_existing_service() {
 
 # Upgrades keep an existing Service current; first installs and explicit removals never add one.
 # A symlinked unit is masked or managed by the administrator and is left alone.
-if [ "$1" = "configure" ] && [ -n "$2" ] && [ -d /run/systemd/system ]; then
-    if [ -f "$SERVICE_UNIT_FILE" ] && [ ! -L "$SERVICE_UNIT_FILE" ]; then
-        gid="$(existing_service_gid)"
-        if [ -z "$gid" ]; then
-            echo "Warning: the Clash Verge Service group could not be resolved; Clash Verge will offer to reinstall the Service." >&2
-            write_upgrade_marker ""
-        elif reinstall_existing_service "$gid"; then
-            rm -f "$UPGRADE_MARKER"
-        else
-            write_upgrade_marker "$gid"
-        fi
-    elif [ -f "$UPGRADE_EVIDENCE" ]; then
-        evidence="$(cat "$UPGRADE_EVIDENCE")"
-        rm -f "$UPGRADE_EVIDENCE"
-        gid="$(printf '%s\n' "$evidence" | sed -n 's/^gid=//p')"
-        if [ "$(printf '%s\n' "$evidence" | sed -n 's/^old=//p')" != "$2" ]; then
-            echo "Warning: ignoring Clash Verge Service evidence from another upgrade." >&2
-        elif [ -z "$gid" ]; then
-            echo "Warning: the previous package removed Clash Verge Service and its group is unknown; Clash Verge will offer to reinstall it." >&2
-            write_upgrade_marker ""
-        elif CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
-            rm -f "$UPGRADE_MARKER"
-        else
-            echo "Warning: reinstalling Clash Verge Service failed; Clash Verge will offer to reinstall it." >&2
-            write_upgrade_marker "$gid"
-        fi
+if [ "$1" = "configure" ] && [ -n "$2" ] && [ -d /run/systemd/system ] &&
+    [ -f "$SERVICE_UNIT_FILE" ] && [ ! -L "$SERVICE_UNIT_FILE" ]; then
+    gid="$(existing_service_gid)"
+    if [ -z "$gid" ]; then
+        echo "Warning: the Clash Verge Service group could not be resolved; Clash Verge will offer to reinstall the Service." >&2
+        write_upgrade_marker ""
+    elif reinstall_existing_service "$gid"; then
+        rm -f "$UPGRADE_MARKER"
+    else
+        write_upgrade_marker "$gid"
     fi
 fi
 
