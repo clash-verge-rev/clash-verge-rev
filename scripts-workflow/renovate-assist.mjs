@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 
 const reviewer = 'renovate-minor-review.lock.yml'
-const agents = ['copilot-swe-agent', 'copilot-swe-agent[bot]']
+const agents = ['Copilot', 'copilot-swe-agent', 'copilot-swe-agent[bot]']
 const checks = {
   '.github/workflows/frontend-check.yml': [
     'Run Prettier check',
