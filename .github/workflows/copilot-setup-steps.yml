@@ -34,3 +34,24 @@ jobs:
         uses: github/gh-aw-actions/setup-cli@406c7719e31d7fe354224d4bb8fe3d4aeb47da1c # v1.2.1
         with:
           version: v1.0.1
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          run_install: false
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.0'
+          cache: 'pnpm'
+      - name: Install frontend dependencies
+        env:
+          HUSKY: 0
+        run: pnpm install --frozen-lockfile
