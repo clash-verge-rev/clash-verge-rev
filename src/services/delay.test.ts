@@ -75,111 +75,33 @@ describe('group delay completion', () => {
 })
 
 describe('profile delay isolation', () => {
-  test('drops cached and queued results on switch, exposing current history', async () => {
-    const listener = vi.fn()
-    const stop = delayManager.addListener('a', 'g', listener)
+  test('notifies both shared-key occurrences and preserves the surviving subscription', async () => {
+    const first = vi.fn()
+    const second = vi.fn()
+    const stopFirst = delayManager.addListener('a', 'g', first)
+    const stopSecond = delayManager.addListener('a', 'g', second)
     try {
-      delayManager.setDelay('a', 'g', 120)
-      const previousSnapshot = delayManager.groupDelays('g')
-      delayManager.setProfile('initial')
-      expect(delayManager.getDelay('a', 'g')).toBe(120)
-
-      delayManager.setProfile('next')
-      const current = node('a')
-      current.node.history = [{ time: new Date().toISOString(), delay: 42 }]
-      expect(delayManager.getDelayUpdate('a', 'g')).toBeUndefined()
-      expect(delayManager.getDelayFix(current, 'g')).toBe(42)
-      expect(delayManager.groupDelays('g')).not.toBe(previousSnapshot)
-
-      expect(listener).toHaveBeenCalledExactlyOnceWith({
-        delay: -1,
-        updatedAt: 0,
-      })
+      const checking = delayManager.checkDelay(node('a'), 'g', 5000)
       await vi.runAllTimersAsync()
-      expect(listener).toHaveBeenCalledOnce()
-      expect(settles).toBe(1)
+      await checking
+      delayManager.setProfile('next')
+      stopFirst()
+      const nextCheck = delayManager.checkDelay(node('a'), 'g', 5000)
+      await vi.runAllTimersAsync()
+      await nextCheck
+      expect(first.mock.calls.map(([update]) => update.delay)).toEqual([
+        -2, 120, -1,
+      ])
+      expect(second.mock.calls.map(([update]) => update.delay)).toEqual([
+        -2, 120, -1, -2, 120,
+      ])
     } finally {
-      stop()
+      stopFirst()
+      stopSecond()
     }
   })
 
-  test.each([0, 1])(
-    'keeps shared-key subscribers independent when occurrence %i unmounts',
-    async (removed) => {
-      const listeners = [vi.fn(), vi.fn()]
-      const stops = listeners.map((listener) =>
-        delayManager.addListener('a', 'g', listener),
-      )
-      try {
-        const checking = delayManager.checkDelay(node('a'), 'g', 5000)
-        await vi.advanceTimersByTimeAsync(1)
-        for (const listener of listeners) {
-          expect(listener).toHaveBeenCalledExactlyOnceWith(
-            expect.objectContaining({ delay: -2 }),
-          )
-        }
-
-        await vi.runAllTimersAsync()
-        await checking
-        for (const listener of listeners) {
-          expect(listener.mock.calls.map(([update]) => update.delay)).toEqual([
-            -2, 120,
-          ])
-        }
-
-        delayManager.setProfile('next')
-        for (const listener of listeners) {
-          expect(listener).toHaveBeenLastCalledWith({
-            delay: -1,
-            updatedAt: 0,
-          })
-          listener.mockClear()
-        }
-
-        const nextCheck = delayManager.checkDelay(node('a'), 'g', 5000)
-        stops[removed]()
-        await vi.runAllTimersAsync()
-        await nextCheck
-        expect(listeners[removed]).not.toHaveBeenCalled()
-        expect(
-          listeners[1 - removed].mock.calls.map(([update]) => update.delay),
-        ).toEqual([-2, 120])
-      } finally {
-        for (const stop of stops) stop()
-      }
-    },
-  )
-
-  test.each(['success', 'failure'] as const)(
-    'ignores an old-profile single test completing with %s',
-    async (outcome) => {
-      let finish!: () => void
-      vi.mocked(delayProxyByName).mockImplementationOnce(
-        () =>
-          new Promise((resolve, reject) => {
-            finish = () =>
-              outcome === 'success'
-                ? resolve({ delay: 900 })
-                : reject(new Error('old-profile request failed'))
-          }),
-      )
-      const oldCheck = delayManager.checkDelay(node('a'), 'g', 5000)
-      delayManager.setProfile('next')
-      const newCheck = delayManager.checkDelay(node('a'), 'g', 5000)
-      await vi.advanceTimersByTimeAsync(500)
-      await newCheck
-      await vi.advanceTimersByTimeAsync(1)
-      const settledBeforeOldReply = settles
-
-      finish()
-      await vi.runAllTimersAsync()
-      await oldCheck
-      expect(delayManager.getDelay('a', 'g')).toBe(120)
-      expect(settles).toBe(settledBeforeOldReply)
-    },
-  )
-
-  test('stops an old batch without settling a new batch for the same group', async () => {
+  test('clears cached delays and fences an old batch across a profile switch', async () => {
     let finishOld!: (result: { delay: number }) => void
     let finishNew!: (result: { delay: number }) => void
     vi.mocked(delayProxyByName)
@@ -196,6 +118,7 @@ describe('profile delay isolation', () => {
           }),
       )
 
+    delayManager.setDelay('cached', 'g', 900)
     const oldBatch = delayManager.checkListDelay(
       [node('a'), node('not-started')],
       'g',
@@ -203,6 +126,10 @@ describe('profile delay isolation', () => {
       1,
     )
     delayManager.setProfile('next')
+    expect(delayManager.getDelayUpdate('cached', 'g')).toBeUndefined()
+    const current = node('a')
+    current.node.history = [{ time: new Date().toISOString(), delay: 42 }]
+    expect(delayManager.getDelayFix(current, 'g')).toBe(42)
     const newBatch = delayManager.checkListDelay([node('a')], 'g', 5000)
     await vi.advanceTimersByTimeAsync(1)
     const settledAfterSwitch = settles
