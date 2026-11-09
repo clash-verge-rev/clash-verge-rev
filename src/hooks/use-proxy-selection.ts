@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import {
   closeConnection,
   getConnections,
@@ -49,8 +49,6 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const recordSelection = useRecordSelection()
   const forgetSelection = useForgetSelection()
   const { verge } = useVerge()
-  const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
-  const isProcessingRef = useRef(false)
 
   const { onSuccess, onError } = options
 
@@ -118,24 +116,6 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     ],
   )
 
-  const flushChangeQueue = useCallback(async () => {
-    if (isProcessingRef.current) return
-    isProcessingRef.current = true
-
-    try {
-      while (pendingRequestRef.current) {
-        const request = pendingRequestRef.current
-        pendingRequestRef.current = null
-        await executeChange(request)
-      }
-    } finally {
-      isProcessingRef.current = false
-      if (pendingRequestRef.current) {
-        void flushChangeQueue()
-      }
-    }
-  }, [executeChange])
-
   const select = useCallback(
     (
       groupName: string,
@@ -143,15 +123,14 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
       previousProxy?: string,
       fixed?: string,
     ) => {
-      pendingRequestRef.current = {
+      void executeChange({
         groupName,
         proxyName,
         previousProxy,
         fixed,
-      }
-      void flushChangeQueue()
+      })
     },
-    [flushChangeQueue],
+    [executeChange],
   )
 
   return { select }
