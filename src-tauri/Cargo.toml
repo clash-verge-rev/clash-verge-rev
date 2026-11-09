@@ -77,7 +77,7 @@ tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.4.2"
+zip = "9.5.0"
 flate2 = "1.1.11"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
@@ -97,7 +97,7 @@ async-trait = "0.1.92"
 clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.7.7", version = "2.7.7", features = [
   "client",
 ] }
-arc-swap = "1.9.4"
+arc-swap = "1.9.5"
 tokio-rustls = "0.26.6"
 rustls = { version = "0.23.46", features = ["ring"] }
 webpki-roots = "1.0.11"
