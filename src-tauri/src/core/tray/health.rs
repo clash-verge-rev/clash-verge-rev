@@ -237,9 +237,17 @@ async fn poll_once() {
             TrayHealth::Unknown
         }
     };
-    // A target change while fetching bumps the epoch, so the stale result is not published.
-    track(Target::current().await.as_ref());
-    publish(epoch, health);
+    publish_for(&target, epoch, Target::current().await.as_ref(), health);
+}
+
+/// Publishes `health` evaluated for `target` only if it is still the monitored target. The epoch
+/// may have been read after a switch away from `target`, so the epoch check alone is not enough;
+/// a switch after this comparison bumps the epoch and fails `publish`.
+fn publish_for(target: &Target, epoch: u64, current: Option<&Target>, health: TrayHealth) {
+    track(current);
+    if current.map(Target::fingerprint) == Some(target.fingerprint()) {
+        publish(epoch, health);
+    }
 }
 
 #[derive(Default)]
@@ -404,7 +412,14 @@ mod tests {
         publish(in_flight, TrayHealth::Unhealthy);
         assert_eq!(current_health(), TrayHealth::Unknown);
 
-        publish(epoch(), TrayHealth::Unhealthy);
+        // Switching to C between tracking B and reading the epoch must not publish B's result.
+        let (b, c) = (target("B"), target("C"));
+        track(Some(&c));
+        publish_for(&b, epoch(), Some(&c), TrayHealth::Unhealthy);
+        assert_eq!(current_health(), TrayHealth::Unknown);
+        publish_for(&c, epoch(), Some(&c), TrayHealth::Unhealthy);
+        assert_eq!(current_health(), TrayHealth::Unhealthy);
+
         assert_eq!(target("").group(), None);
         track(None);
         assert_eq!(current_health(), TrayHealth::Unknown);
