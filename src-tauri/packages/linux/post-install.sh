@@ -32,21 +32,25 @@ reinstall_existing_service() {
     if systemctl is-active --quiet "$SERVICE_UNIT"; then
         active=yes
     fi
+    local status=0 restored=yes
     if [ "$enabled" = "masked-runtime" ]; then
-        systemctl unmask --runtime --quiet "$SERVICE_UNIT"
+        systemctl unmask --runtime --quiet "$SERVICE_UNIT" || restored=no
     fi
-    local status=0
     if ! CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
         echo "Warning: reinstalling Clash Verge Service failed; Clash Verge will offer to reinstall it." >&2
         status=1
     fi
     case "$enabled" in
-        disabled) systemctl disable --quiet "$SERVICE_UNIT" ;;
-        enabled-runtime) systemctl disable --quiet "$SERVICE_UNIT" && systemctl enable --runtime --quiet "$SERVICE_UNIT" ;;
-        masked-runtime) systemctl mask --runtime --quiet "$SERVICE_UNIT" ;;
+        disabled) systemctl disable --quiet "$SERVICE_UNIT" || restored=no ;;
+        enabled-runtime) { systemctl disable --quiet "$SERVICE_UNIT" && systemctl enable --runtime --quiet "$SERVICE_UNIT"; } || restored=no ;;
+        masked-runtime) systemctl mask --runtime --quiet "$SERVICE_UNIT" || restored=no ;;
     esac
     if [ "$active" = "no" ]; then
-        systemctl stop "$SERVICE_UNIT"
+        systemctl stop "$SERVICE_UNIT" || restored=no
+    fi
+    if [ "$restored" = "no" ]; then
+        echo "Warning: restoring the previous Clash Verge Service state (${enabled:-unknown}, active=$active) failed; check it with systemctl." >&2
+        status=1
     fi
     return "$status"
 }
