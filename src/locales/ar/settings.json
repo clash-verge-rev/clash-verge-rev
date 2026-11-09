@@ -697,6 +697,7 @@
         "permissionRejectedReason": "تعذّر على الخدمة التأكد من أن ملفات النواة ومجلداتها آمنة للتشغيل بصلاحيات مرتفعة.",
         "permissionRepairGuide": "عرض خطوات الإصلاح",
         "sidecarFallback": "تعذّر على الخدمة تشغيل النواة. تم التبديل إلى وضع Sidecar؛ ولا تزال الخدمة غير متاحة.",
+        "upgradeStateNotRestored": "أعادت الترقية تثبيت خدمة Clash Verge لكنها لم تتمكن من استعادة حالة بدء التشغيل والتشغيل السابقة ({{state}}). لن تؤدي إعادة تثبيت الخدمة إلى استعادتها؛ تحقق منها باستخدام systemctl status clash-verge-service واضبطها باستخدام systemctl.",
         "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
       },
       "updater": {

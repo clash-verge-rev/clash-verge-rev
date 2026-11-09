@@ -14,8 +14,19 @@ UPGRADE_MARKER="/run/clash-verge-service-upgrade"
 # Read by /usr/bin/clash-verge-service-uninstall to keep the Service through the previous %preun.
 TRANSACTION_RECORD="/run/clash-verge-service-rpm-upgrade"
 
+# Set to the previous state when restoring it fails; the app shows it even if the Service is ready.
+UNRESTORED_STATE=""
+
 write_upgrade_marker() {
-    (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
+    (
+        umask 022
+        {
+            printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)"
+            if [ -n "$UNRESTORED_STATE" ]; then
+                printf 'restore=%s\n' "$UNRESTORED_STATE"
+            fi
+        } >"$UPGRADE_MARKER"
+    )
 }
 
 # Scriptlets run as children of the process running the rpm transaction; its start time
@@ -62,7 +73,8 @@ reinstall_existing_service() {
         systemctl stop "$SERVICE_UNIT" || restored=no
     fi
     if [ "$restored" = "no" ]; then
-        echo "Warning: restoring the previous Clash Verge Service state (${enabled:-unknown}, active=$active) failed; check it with systemctl." >&2
+        UNRESTORED_STATE="${enabled:-unknown},$([ "$active" = yes ] && echo active || echo inactive)"
+        echo "Warning: restoring the previous Clash Verge Service state ($UNRESTORED_STATE) failed; check it with systemctl." >&2
         status=1
     fi
     return "$status"

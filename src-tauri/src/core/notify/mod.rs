@@ -24,6 +24,9 @@ pub enum NoticeStatus {
     #[serde(rename = "service_core::sidecar_fallback")]
     #[cfg_attr(not(any(target_os = "windows", target_os = "linux")), allow(dead_code))]
     ServiceCoreSidecarFallback,
+    #[serde(rename = "service_core::upgrade_state_not_restored")]
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    ServiceCoreUpgradeStateNotRestored,
     #[serde(rename = "dns_override::auto_disabled")]
     DnsOverrideAutoDisabled,
     #[serde(rename = "enhance::discarded_keys")]

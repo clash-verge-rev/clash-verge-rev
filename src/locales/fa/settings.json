@@ -697,6 +697,7 @@
         "permissionRejectedReason": "سرویس نتوانست ایمن بودن فایل‌ها و پوشه‌های هسته را برای اجرا با دسترسی بالا تأیید کند.",
         "permissionRepairGuide": "مشاهدهٔ راهنمای رفع مشکل",
         "sidecarFallback": "سرویس نتوانست هسته را اجرا کند. اجرا در حالت Sidecar ادامه می‌یابد؛ سرویس همچنان در دسترس نیست.",
+        "upgradeStateNotRestored": "ارتقا سرویس Clash Verge را دوباره نصب کرد اما نتوانست وضعیت قبلی راه‌اندازی خودکار و اجرای آن ({{state}}) را بازگرداند. نصب دوباره سرویس آن را بازنمی‌گرداند؛ با systemctl status clash-verge-service آن را بررسی و با systemctl تنظیم کنید.",
         "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
       },
       "updater": {

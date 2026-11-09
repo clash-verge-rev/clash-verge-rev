@@ -10,8 +10,19 @@ SERVICE_UNIT_FILE="/etc/systemd/system/$SERVICE_UNIT"
 # Read by the app, which offers a reinstall when the package could not keep the Service.
 UPGRADE_MARKER="/run/clash-verge-service-upgrade"
 
+# Set to the previous state when restoring it fails; the app shows it even if the Service is ready.
+UNRESTORED_STATE=""
+
 write_upgrade_marker() {
-    (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
+    (
+        umask 022
+        {
+            printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)"
+            if [ -n "$UNRESTORED_STATE" ]; then
+                printf 'restore=%s\n' "$UNRESTORED_STATE"
+            fi
+        } >"$UPGRADE_MARKER"
+    )
 }
 
 existing_service_gid() {
@@ -49,7 +60,8 @@ reinstall_existing_service() {
         systemctl stop "$SERVICE_UNIT" || restored=no
     fi
     if [ "$restored" = "no" ]; then
-        echo "Warning: restoring the previous Clash Verge Service state (${enabled:-unknown}, active=$active) failed; check it with systemctl." >&2
+        UNRESTORED_STATE="${enabled:-unknown},$([ "$active" = yes ] && echo active || echo inactive)"
+        echo "Warning: restoring the previous Clash Verge Service state ($UNRESTORED_STATE) failed; check it with systemctl." >&2
         status=1
     fi
     return "$status"

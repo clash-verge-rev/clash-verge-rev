@@ -140,6 +140,12 @@ const handlers: Record<
         )
       })
   },
+  'service_core::upgrade_state_not_restored': (msg) =>
+    showNotice.warning(
+      'settings.feedback.notifications.clashService.upgradeStateNotRestored',
+      { state: msg },
+      0,
+    ),
   'dns_override::auto_disabled': () => {
     void takeDnsOverrideNotice()
       .then((pending) => {

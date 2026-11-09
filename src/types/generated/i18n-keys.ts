@@ -821,6 +821,7 @@ export const translationKeys = [
   'settings.feedback.notifications.clashService.permissionRejectedReason',
   'settings.feedback.notifications.clashService.permissionRepairGuide',
   'settings.feedback.notifications.clashService.sidecarFallback',
+  'settings.feedback.notifications.clashService.upgradeStateNotRestored',
   'settings.feedback.notifications.clashService.uninstallSuccess',
   'settings.feedback.notifications.updater.withClashProxySuccess',
   'settings.feedback.notifications.updater.withClashProxyFailed',

@@ -697,6 +697,7 @@
         "permissionRejectedReason": "Layanan tidak dapat memastikan bahwa berkas dan folder inti aman dijalankan dengan hak istimewa.",
         "permissionRepairGuide": "Lihat panduan perbaikan",
         "sidecarFallback": "Layanan tidak dapat memulai inti. Beralih ke mode Sidecar; layanan masih tidak tersedia.",
+        "upgradeStateNotRestored": "Pembaruan telah memasang ulang layanan Clash Verge tetapi tidak dapat memulihkan status mulai otomatis dan berjalan sebelumnya ({{state}}). Memasang ulang layanan tidak akan memulihkannya; periksa dengan systemctl status clash-verge-service dan sesuaikan dengan systemctl.",
         "uninstallSuccess": "Layanan Berhasil Dicopot"
       },
       "updater": {

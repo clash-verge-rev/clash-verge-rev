@@ -697,6 +697,7 @@
         "permissionRejectedReason": "O serviço não conseguiu confirmar que os arquivos e pastas do núcleo são seguros para execução com privilégios elevados.",
         "permissionRepairGuide": "Ver instruções de reparo",
         "sidecarFallback": "O serviço não conseguiu iniciar o núcleo. Mudou para o modo Sidecar; o serviço continua indisponível.",
+        "upgradeStateNotRestored": "A atualização reinstalou o serviço do Clash Verge, mas não conseguiu restaurar o estado anterior de inicialização e execução ({{state}}). Reinstalar o serviço não o restaurará; verifique-o com systemctl status clash-verge-service e ajuste-o com systemctl.",
         "uninstallSuccess": "Serviço Desinstalado com Sucesso"
       },
       "updater": {

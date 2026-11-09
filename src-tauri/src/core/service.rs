@@ -92,14 +92,40 @@ pub(crate) async fn notify_incomplete_service_upgrade() {
         return;
     }
     let status = SERVICE_MANAGER.current().await;
-    if !matches!(status, ServiceStatus::Ready) {
-        logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
-        *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
-        Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
+    match service_upgrade_notice(&marker, matches!(status, ServiceStatus::Ready)) {
+        Some(ServiceUpgradeNotice::Reinstall) => {
+            logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
+            *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
+            Handle::notice(NoticeStatus::ServiceCoreSidecarFallback, "");
+        }
+        Some(ServiceUpgradeNotice::StateNotRestored(state)) => {
+            logging!(warn, Type::Service, "安装包升级后未能恢复服务原状态: {state}");
+            Handle::notice(NoticeStatus::ServiceCoreUpgradeStateNotRestored, state);
+        }
+        None => {}
     }
     if let Err(error) = std::fs::write(&ack, id) {
         logging!(warn, Type::Service, "无法记录服务升级确认: {error}");
     }
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Debug, PartialEq, Eq)]
+enum ServiceUpgradeNotice<'a> {
+    Reinstall,
+    /// A reinstall would enable and start the Service again, so it cannot restore this state.
+    StateNotRestored(&'a str),
+}
+
+#[cfg(target_os = "linux")]
+fn service_upgrade_notice(marker: &str, ready: bool) -> Option<ServiceUpgradeNotice<'_>> {
+    if !ready {
+        return Some(ServiceUpgradeNotice::Reinstall);
+    }
+    marker
+        .lines()
+        .find_map(|line| line.strip_prefix("restore="))
+        .map(ServiceUpgradeNotice::StateNotRestored)
 }
 
 pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
@@ -2167,6 +2193,8 @@ mod tests {
         generate_service_session_token, mark_service_unavailable_after_owner_loss, owner_recovery_policy,
         service_core_path_for, session_matches_status,
     };
+    #[cfg(target_os = "linux")]
+    use super::{ServiceUpgradeNotice, service_upgrade_notice};
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
     use crate::core::runstate::{FakeEnv, OwnerRecoveryReason, PendingAction, RunStateStore};
@@ -2823,5 +2851,25 @@ mod tests {
         assert!(!store.restore_sidecar_allowance());
         assert!(!store.state().sidecar_allowed);
         assert_eq!(status_of(&store), ServiceStatus::Ready);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn upgrade_marker_reports_unrestored_state_only_for_a_ready_service() {
+        let restored = "gid=995\nid=1\n";
+        let unrestored = "gid=995\nid=1\nrestore=disabled,inactive\n";
+        assert_eq!(
+            service_upgrade_notice(restored, false),
+            Some(ServiceUpgradeNotice::Reinstall)
+        );
+        assert_eq!(
+            service_upgrade_notice(unrestored, false),
+            Some(ServiceUpgradeNotice::Reinstall)
+        );
+        assert_eq!(service_upgrade_notice(restored, true), None);
+        assert_eq!(
+            service_upgrade_notice(unrestored, true),
+            Some(ServiceUpgradeNotice::StateNotRestored("disabled,inactive"))
+        );
     }
 }

@@ -697,6 +697,7 @@
         "permissionRejectedReason": "Hizmet, çekirdek dosya ve klasörlerinin yükseltilmiş yetkilerle güvenle çalıştırılabileceğini doğrulayamadı.",
         "permissionRepairGuide": "Düzeltme adımlarını görüntüle",
         "sidecarFallback": "Hizmet çekirdeği başlatamadı. Sidecar moduna geçildi; hizmet hâlâ kullanılamıyor.",
+        "upgradeStateNotRestored": "Yükseltme Clash Verge hizmetini yeniden kurdu ancak önceki açılışta başlatma ve çalışma durumunu ({{state}}) geri yükleyemedi. Hizmeti yeniden kurmak bunu geri yüklemez; systemctl status clash-verge-service ile kontrol edin ve systemctl ile ayarlayın.",
         "uninstallSuccess": "Hizmet Başarıyla Kaldırıldı"
       },
       "updater": {

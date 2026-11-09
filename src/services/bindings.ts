@@ -618,6 +618,7 @@ export type NoticeStatus =
   | 'service_core::repair_required'
   | 'service_core::app_data_not_owned'
   | 'service_core::sidecar_fallback'
+  | 'service_core::upgrade_state_not_restored'
   | 'dns_override::auto_disabled'
   | 'enhance::discarded_keys'
   | 'tun_mode::auto_disabled'

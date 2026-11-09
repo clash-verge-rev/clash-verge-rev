@@ -858,6 +858,7 @@ export interface TranslationResources {
             permissionWritableReason: string
             sidecarFallback: string
             uninstallSuccess: string
+            upgradeStateNotRestored: string
           }
           updater: {
             withClashProxyFailed: string
