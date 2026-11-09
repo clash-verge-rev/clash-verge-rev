@@ -66,7 +66,7 @@ pub struct Tray {
 }
 
 impl TrayState {
-    async fn get_tray_icon(verge: &IVerge) -> (bool, Cow<'_, [u8]>) {
+    async fn get_tray_icon(verge: &IVerge, warning: bool) -> (bool, Cow<'_, [u8]>) {
         let tun_mode = verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable();
         let system_mode = verge.enable_system_proxy.unwrap_or(false);
         let kind = if tun_mode {
@@ -76,40 +76,53 @@ impl TrayState {
         } else {
             IconKind::Common
         };
-        Self::load_icon(verge, kind).await
+        Self::load_icon(verge, kind, warning).await
     }
 
-    async fn load_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+    async fn load_icon(verge: &IVerge, kind: IconKind, warning: bool) -> (bool, Cow<'_, [u8]>) {
         let (custom_enabled, icon_name) = match kind {
             IconKind::Common => (verge.common_tray_icon.unwrap_or(false), "common"),
             IconKind::SysProxy => (verge.sysproxy_tray_icon.unwrap_or(false), "sysproxy"),
             IconKind::Tun => (verge.tun_tray_icon.unwrap_or(false), "tun"),
         };
 
+        // Custom icons have no warning variant, so the built-in one for the same mode is shown.
         if custom_enabled
+            && !warning
             && let Ok(Some(path)) = find_target_icons(icon_name)
             && let Ok(data) = fs::read(path).await
         {
             return (true, Cow::Owned(data));
         }
 
-        Self::default_icon(verge, kind)
+        Self::default_icon(verge, kind, warning)
     }
 
     #[allow(clippy::missing_const_for_fn)]
-    fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+    fn default_icon(verge: &IVerge, kind: IconKind, warning: bool) -> (bool, Cow<'_, [u8]>) {
         #[cfg(target_os = "macos")]
         {
             let is_mono = verge.tray_icon.as_deref().unwrap_or("monochrome") == "monochrome";
             if is_mono {
                 return (
                     false,
-                    match kind {
-                        IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
-                        IconKind::SysProxy => {
+                    match (kind, warning) {
+                        (IconKind::Common, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
+                        (IconKind::SysProxy, false) => {
                             Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new.ico"))
                         }
-                        IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico")),
+                        (IconKind::Tun, false) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico"))
+                        }
+                        (IconKind::Common, true) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono-warning.ico"))
+                        }
+                        (IconKind::SysProxy, true) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new-warning.ico"))
+                        }
+                        (IconKind::Tun, true) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new-warning.ico"))
+                        }
                     },
                 );
             }
@@ -120,10 +133,13 @@ impl TrayState {
 
         (
             false,
-            match kind {
-                IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
-                IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
-                IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
+            match (kind, warning) {
+                (IconKind::Common, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
+                (IconKind::SysProxy, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
+                (IconKind::Tun, false) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
+                (IconKind::Common, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-warning.ico")),
+                (IconKind::SysProxy, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-warning.ico")),
+                (IconKind::Tun, true) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-warning.ico")),
             },
         )
     }
@@ -283,10 +299,11 @@ impl Tray {
             return Ok(());
         };
 
-        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
         let warning = health::current_health().await == health::TrayHealth::Unhealthy;
+        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge, warning).await;
 
-        let mut template = {
+        // Warning icons are colored; as template images macOS would erase the red.
+        let template = !warning && {
             #[cfg(target_os = "macos")]
             {
                 verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome")
@@ -296,15 +313,7 @@ impl Tray {
                 false
             }
         };
-        let mut icon = tauri::image::Image::from_bytes(&icon_bytes)?;
-        if warning {
-            let (width, height) = (icon.width(), icon.height());
-            let mut rgba = icon.rgba().to_vec();
-            health::add_health_warning(&mut rgba, width, height, template);
-            icon = tauri::image::Image::new_owned(rgba, width, height);
-            // Template images are drawn monochrome, which would erase the warning color.
-            template = false;
-        }
+        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
         logging_error!(Type::Tray, tray.set_icon_with_as_template(Some(icon), template));
         *applied_warning = Some(warning);
@@ -408,7 +417,7 @@ impl Tray {
 
         let verge = Config::verge().await.data_arc();
 
-        let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
+        let icon_bytes = TrayState::get_tray_icon(&verge, false).await.1;
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
         #[cfg(target_os = "linux")]

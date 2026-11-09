@@ -196,53 +196,6 @@ fn evaluate(
     .node(group, default_url, &mut Vec::new())
 }
 
-/// Marks the icon unhealthy while keeping its mode glyph recognizable.
-/// Template icons are tinted instead of badged: macOS discards their colors, and a badge would
-/// cover the cut-out mode letter that distinguishes them.
-pub fn add_health_warning(rgba: &mut [u8], width: u32, height: u32, template: bool) {
-    let (w, h) = (width as usize, height as usize);
-    if w == 0 || h == 0 || rgba.len() < w * h * 4 {
-        return;
-    }
-    if template {
-        for pixel in rgba.as_chunks_mut::<4>().0.iter_mut().filter(|pixel| pixel[3] > 0) {
-            pixel[..3].copy_from_slice(&[0xFF, 0x3B, 0x30]);
-        }
-        return;
-    }
-
-    let radius = w.min(h) as f32 * 0.3;
-    let gap = (radius * 0.25).max(1.0);
-    let (cx, cy) = (w as f32 - radius, h as f32 - radius);
-    let bar_half_width = (radius * 0.14).max(0.5);
-    let show_mark = radius >= 5.0;
-    for y in 0..h {
-        for x in 0..w {
-            let (px, py) = (x as f32 + 0.5, y as f32 + 0.5);
-            let distance = ((px - cx).powi(2) + (py - cy).powi(2)).sqrt();
-            let index = (y * w + x) * 4;
-            if distance > radius + gap + 0.5 {
-                continue;
-            }
-            let pixel = &mut rgba[index..index + 4];
-            // A transparent ring separates the badge from the glyph on any menu bar color.
-            let clear = (radius + gap + 0.5 - distance).clamp(0.0, 1.0);
-            pixel[3] = (f32::from(pixel[3]) * (1.0 - clear)) as u8;
-            let fill = (radius + 0.5 - distance).clamp(0.0, 1.0);
-            if fill <= 0.0 {
-                continue;
-            }
-            let is_mark = show_mark
-                && (px - cx).abs() <= bar_half_width
-                && ((py >= cy - radius * 0.55 && py <= cy + radius * 0.12)
-                    || (py >= cy + radius * 0.3 && py <= cy + radius * 0.55));
-            let color = if is_mark { [0xFF; 3] } else { [0xFF, 0x3B, 0x30] };
-            pixel[..3].copy_from_slice(&color);
-            pixel[3] = pixel[3].max((fill * 255.0) as u8);
-        }
-    }
-}
-
 async fn poll_once() -> bool {
     let Some(key) = current_key().await else {
         return publish(None);
@@ -519,27 +472,5 @@ mod tests {
             let one_untested = vec![auto(), dead_a(), leaf("b", ProxyType::Vmess, &[])];
             assert_eq!(eval(one_untested, "Auto"), TrayHealth::Unknown);
         }
-    }
-
-    #[test]
-    fn warning_badges_colored_icons_and_tints_template_icons() {
-        let size = 32u32;
-        let mut rgba = vec![0u8; (size * size * 4) as usize];
-        for pixel in rgba.as_chunks_mut::<4>().0 {
-            *pixel = [0, 0, 0, 255];
-        }
-        add_health_warning(&mut rgba, size, size, false);
-        let at = |x: u32, y: u32| {
-            let index = ((y * size + x) * 4) as usize;
-            [rgba[index], rgba[index + 1], rgba[index + 2], rgba[index + 3]]
-        };
-        assert_eq!(at(0, 0), [0, 0, 0, 255]);
-        assert_eq!(at(27, 22)[..3], [0xFF, 0x3B, 0x30]);
-
-        let mut template = vec![0u8; (size * size * 4) as usize];
-        template[3] = 255;
-        add_health_warning(&mut template, size, size, true);
-        assert_eq!(template[..4], [0xFF, 0x3B, 0x30, 255]);
-        assert!(template[4..].iter().all(|channel| *channel == 0));
     }
 }
