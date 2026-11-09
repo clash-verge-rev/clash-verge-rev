@@ -77,6 +77,9 @@ Var VC_REDIST_URL
 Var VC_REDIST_EXE
 Var VC_RUNTIME_READY
 Var VC_RUNTIME_NEEDED
+Var ServiceExisted
+Var ServiceStartType
+Var ServiceWasRunning
 
 Name "${PRODUCTNAME}"
 BrandingText "${COPYRIGHT}"
@@ -466,6 +469,34 @@ FunctionEnd
 {{#each language_files}}
   !include "{{this}}"
 {{/each}}
+!ifdef LANG_ENGLISH
+  LangString serviceReinstallFailed ${LANG_ENGLISH} "The ${PRODUCTNAME} Service could not be reinstalled (code $0). Open ${PRODUCTNAME} and reinstall the Service to restore Service mode."
+!endif
+!ifdef LANG_SIMPCHINESE
+  LangString serviceReinstallFailed ${LANG_SIMPCHINESE} "${PRODUCTNAME} 服务重装失败（代码 $0）。请打开 ${PRODUCTNAME} 重新安装服务以恢复服务模式。"
+!endif
+!ifdef LANG_RUSSIAN
+  LangString serviceReinstallFailed ${LANG_RUSSIAN} "Не удалось переустановить службу ${PRODUCTNAME} (код $0). Откройте ${PRODUCTNAME} и переустановите службу, чтобы восстановить режим службы."
+!endif
+
+!macro RecordVergeService
+  StrCpy $ServiceExisted 0
+  StrCpy $ServiceStartType ""
+  StrCpy $ServiceWasRunning 1
+  SimpleSC::ExistsService "clash_verge_service"
+  Pop $0
+  ${If} $0 == 0
+    StrCpy $ServiceExisted 1
+    SimpleSC::GetServiceStartType "clash_verge_service"
+    Pop $0
+    Pop $1
+    ${IfThen} $0 == 0 ${|} StrCpy $ServiceStartType $1 ${|}
+    SimpleSC::ServiceIsRunning "clash_verge_service"
+    Pop $0
+    Pop $1
+    ${IfThen} $0 == 0 ${|} StrCpy $ServiceWasRunning $1 ${|}
+  ${EndIf}
+!macroend
 
 Function .onInit
   ${GetOptions} $CMDLINE "/P" $PassiveMode
@@ -482,6 +513,9 @@ Function .onInit
   ${IfNot} ${Errors}
     StrCpy $UpdateMode 1
   ${EndIf}
+
+  ; Recorded before the reinstall page can run the previous uninstaller, which removes the Service.
+  !insertmacro RecordVergeService
 
   !if "${DISPLAYLANGUAGESELECTOR}" == "true"
     ; Auto-update forwards the app's UI language as `/LANG=<NSIS-lang-id>` so
@@ -660,6 +694,36 @@ FunctionEnd
       Pop $0
       MessageBox MB_OK|MB_ICONSTOP "Check Service Status Error ($0)"
     ${EndIf}
+  ${EndIf}
+!macroend
+
+; Reinstalls the Service with the bundled cores, then restores the recorded start type and stopped state.
+!macro ReinstallVergeService
+  StrCpy $R0 '"$INSTDIR\resources\clash-verge-service-install.exe" --install-service'
+  !ifdef MIHOMO_SHA256
+    StrCpy $R0 '$R0 --install-core "$INSTDIR\verge-mihomo.exe" --sha256 "${MIHOMO_SHA256}"'
+  !endif
+  !ifdef MIHOMO_ALPHA_SHA256
+    StrCpy $R0 '$R0 --install-core "$INSTDIR\verge-mihomo-alpha.exe" --sha256 "${MIHOMO_ALPHA_SHA256}"'
+  !endif
+  DetailPrint "Reinstalling ${PRODUCTNAME} Service..."
+  nsExec::ExecToLog $R0
+  Pop $0
+  ${If} $0 == 0
+  ${AndIf} $ServiceStartType != ""
+  ${AndIf} $ServiceStartType != 2
+    SimpleSC::SetServiceStartType "clash_verge_service" $ServiceStartType
+    Pop $0
+  ${EndIf}
+  ${If} $0 == 0
+  ${AndIf} $ServiceWasRunning == 0
+    SimpleSC::StopService "clash_verge_service" 1 30
+    Pop $0
+  ${EndIf}
+  ${If} $0 != 0
+    DetailPrint "Reinstalling ${PRODUCTNAME} Service failed ($0)"
+    MessageBox MB_OK|MB_ICONEXCLAMATION "$(serviceReinstallFailed)" /SD IDOK
+    SetErrorLevel 2
   ${EndIf}
 !macroend
 
@@ -985,7 +1049,11 @@ Section Install
     ${IfThen} $0 != 0 ${|} DetailPrint "Staging verge-mihomo-alpha returned $0" ${|}
   !endif
 
-  !insertmacro StartVergeService
+  ${If} $ServiceExisted = 1
+    !insertmacro ReinstallVergeService
+  ${Else}
+    !insertmacro StartVergeService
+  ${EndIf}
 
   ; Create file associations
   {{#each file_associations as |association| ~}}
