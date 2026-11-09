@@ -111,6 +111,8 @@ export const commands = {
     __TAURI_INVOKE<boolean>('take_service_repair_notice'),
   takeServiceOwnerNotice: () =>
     __TAURI_INVOKE<string | null>('take_service_owner_notice'),
+  takeServiceUpgradeStateNotice: () =>
+    __TAURI_INVOKE<string | null>('take_service_upgrade_state_notice'),
   takeDiscardedKeysNotice: () =>
     __TAURI_INVOKE<string | null>('take_discarded_keys_notice'),
   getDnsConfigContent: () =>

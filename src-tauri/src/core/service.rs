@@ -42,6 +42,8 @@ static ACTIVE_SERVICE_SESSION: Mutex<Option<ActiveServiceSession>> = Mutex::new(
 static PENDING_SERVICE_FALLBACK_NOTICE: Mutex<Option<String>> = Mutex::new(None);
 static PENDING_SERVICE_REPAIR_NOTICE: AtomicBool = AtomicBool::new(false);
 static PENDING_SERVICE_OWNER_NOTICE: Mutex<Option<String>> = Mutex::new(None);
+#[cfg(target_os = "linux")]
+static PENDING_SERVICE_UPGRADE: Mutex<Option<PendingServiceUpgrade>> = Mutex::new(None);
 
 /// Why the Service was unavailable when the core fell back to Sidecar.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, specta::Type)]
@@ -93,6 +95,17 @@ pub(crate) async fn notify_incomplete_service_upgrade() {
     }
     let status = SERVICE_MANAGER.current().await;
     let notice = service_upgrade_notice(&marker, matches!(status, ServiceStatus::Ready));
+    if !notice.reinstall && notice.unrestored_state.is_none() {
+        acknowledge_service_upgrade(&ack, id);
+        return;
+    }
+    // Without a window (silent start) the events are dropped; the frontend replays them on subscription.
+    *PENDING_SERVICE_UPGRADE.lock() = Some(PendingServiceUpgrade {
+        ack,
+        id: id.to_owned(),
+        reinstall: notice.reinstall,
+        unrestored_state: notice.unrestored_state.map(str::to_owned),
+    });
     if notice.reinstall {
         logging!(warn, Type::Service, "安装包升级后服务未就绪: {status:?}");
         *PENDING_SERVICE_FALLBACK_NOTICE.lock() = Some(SERVICE_UPGRADE_INCOMPLETE.to_owned());
@@ -100,11 +113,49 @@ pub(crate) async fn notify_incomplete_service_upgrade() {
     }
     if let Some(state) = notice.unrestored_state {
         logging!(warn, Type::Service, "安装包升级后未能恢复服务原状态: {state}");
-        Handle::notice(NoticeStatus::ServiceCoreUpgradeStateNotRestored, state);
+        Handle::notice(NoticeStatus::ServiceCoreUpgradeStateNotRestored, "");
     }
-    if let Err(error) = std::fs::write(&ack, id) {
+}
+
+#[cfg(target_os = "linux")]
+fn acknowledge_service_upgrade(ack: &Path, id: &str) {
+    if let Err(error) = std::fs::write(ack, id) {
         logging!(warn, Type::Service, "无法记录服务升级确认: {error}");
     }
+}
+
+/// An upgrade whose notices are acknowledged on disk only after the frontend has taken all of them.
+#[cfg(target_os = "linux")]
+struct PendingServiceUpgrade {
+    ack: PathBuf,
+    id: String,
+    reinstall: bool,
+    unrestored_state: Option<String>,
+}
+
+#[cfg(target_os = "linux")]
+fn settle_service_upgrade<T>(take: impl FnOnce(&mut PendingServiceUpgrade) -> T) -> Option<T> {
+    let (taken, settled) = {
+        let mut pending = PENDING_SERVICE_UPGRADE.lock();
+        let upgrade = pending.as_mut()?;
+        let taken = take(upgrade);
+        let settled = !upgrade.reinstall && upgrade.unrestored_state.is_none();
+        (taken, if settled { pending.take() } else { None })
+    };
+    if let Some(upgrade) = settled {
+        acknowledge_service_upgrade(&upgrade.ack, &upgrade.id);
+    }
+    Some(taken)
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) fn take_service_upgrade_state_notice() -> Option<String> {
+    settle_service_upgrade(|upgrade| upgrade.unrestored_state.take()).flatten()
+}
+
+#[cfg(not(target_os = "linux"))]
+pub(crate) const fn take_service_upgrade_state_notice() -> Option<String> {
+    None
 }
 
 #[cfg(target_os = "linux")]
@@ -126,6 +177,8 @@ fn service_upgrade_notice(marker: &str, ready: bool) -> ServiceUpgradeNotice<'_>
 pub(crate) fn take_service_fallback_notice() -> Option<ServiceFallbackNotice> {
     let reason = PENDING_SERVICE_FALLBACK_NOTICE.lock().take()?;
     Some(if reason == SERVICE_UPGRADE_INCOMPLETE {
+        #[cfg(target_os = "linux")]
+        settle_service_upgrade(|upgrade| upgrade.reinstall = false);
         ServiceFallbackNotice::UpgradeIncomplete
     } else if reason.starts_with(CORE_REJECTED_PREFIX) {
         ServiceFallbackNotice::CoreRejected(reason)
@@ -2183,13 +2236,16 @@ pub static SERVICE_MANAGER: ServiceManager = ServiceManager;
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod tests {
+    #[cfg(target_os = "linux")]
+    use super::{
+        PENDING_SERVICE_UPGRADE, PendingServiceUpgrade, ServiceUpgradeNotice, service_upgrade_notice,
+        settle_service_upgrade, take_service_upgrade_state_notice,
+    };
     use super::{
         ServiceHealth, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
         generate_service_session_token, mark_service_unavailable_after_owner_loss, owner_recovery_policy,
         service_core_path_for, session_matches_status,
     };
-    #[cfg(target_os = "linux")]
-    use super::{ServiceUpgradeNotice, service_upgrade_notice};
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
     use crate::core::runstate::{FakeEnv, OwnerRecoveryReason, PendingAction, RunStateStore};
@@ -2867,5 +2923,27 @@ mod tests {
             service_upgrade_notice(unrestored, false),
             notice(true, Some("disabled,active"))
         );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn upgrade_marker_is_acknowledged_only_after_every_notice_is_taken() {
+        let ack = std::env::temp_dir().join(format!("verge-service-upgrade-ack-{}", std::process::id()));
+        let _ = std::fs::remove_file(&ack);
+        *PENDING_SERVICE_UPGRADE.lock() = Some(PendingServiceUpgrade {
+            ack: ack.clone(),
+            id: "7".to_owned(),
+            reinstall: true,
+            unrestored_state: Some("disabled,active".to_owned()),
+        });
+
+        assert_eq!(take_service_upgrade_state_notice().as_deref(), Some("disabled,active"));
+        assert!(!ack.exists());
+        assert_eq!(take_service_upgrade_state_notice(), None);
+
+        settle_service_upgrade(|upgrade| upgrade.reinstall = false);
+        assert_eq!(std::fs::read_to_string(&ack).ok().as_deref(), Some("7"));
+        assert!(PENDING_SERVICE_UPGRADE.lock().is_none());
+        let _ = std::fs::remove_file(&ack);
     }
 }

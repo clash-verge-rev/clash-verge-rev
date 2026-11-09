@@ -7,6 +7,7 @@ import {
   takeServiceFallbackNotice,
   takeServiceOwnerNotice,
   takeServiceRepairNotice,
+  takeServiceUpgradeStateNotice,
 } from '@/services/cmds'
 import type { NoticeStatus } from '@/services/contract'
 import { hideNotice, showNotice } from '@/services/notice-service'
@@ -140,12 +141,24 @@ const handlers: Record<
         )
       })
   },
-  'service_core::upgrade_state_not_restored': (msg) =>
-    showNotice.warning(
-      'settings.feedback.notifications.clashService.upgradeStateNotRestored',
-      { state: msg },
-      0,
-    ),
+  'service_core::upgrade_state_not_restored': () => {
+    void takeServiceUpgradeStateNotice()
+      .then((state) => {
+        if (state) {
+          showNotice.warning(
+            'settings.feedback.notifications.clashService.upgradeStateNotRestored',
+            { state },
+            0,
+          )
+        }
+      })
+      .catch((error) => {
+        console.error(
+          'Failed to read the pending service upgrade state notice',
+          error,
+        )
+      })
+  },
   'dns_override::auto_disabled': () => {
     void takeDnsOverrideNotice()
       .then((pending) => {
