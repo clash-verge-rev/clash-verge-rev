@@ -34,7 +34,7 @@ class DelayManager {
   private cache = new Map<string, DelayUpdate>()
   private urlMap = new Map<string, string>()
 
-  private listenerMap = new Map<string, (update: DelayUpdate) => void>()
+  private listenerMap = new Map<string, Set<(update: DelayUpdate) => void>>()
 
   private groupListenerMap = new Map<string, Set<() => void>>()
   // Consumers compare snapshot identity; replace it only when the group settles.
@@ -63,14 +63,16 @@ class DelayManager {
     this.groupSetSnapshots.clear()
 
     // Reset before a refreshed proxy snapshot can publish newer history.
-    for (const [key, listener] of this.listenerMap) {
-      try {
-        listener({ delay: -1, updatedAt: 0 })
-      } catch (error) {
-        console.error(
-          `[DelayManager] Failed to reset delay listener: ${key}`,
-          error,
-        )
+    for (const [key, listeners] of this.listenerMap) {
+      for (const listener of [...listeners]) {
+        try {
+          listener({ delay: -1, updatedAt: 0 })
+        } catch (error) {
+          console.error(
+            `[DelayManager] Failed to reset delay listener: ${key}`,
+            error,
+          )
+        }
       }
     }
     for (const group of this.groupListenerMap.keys()) {
@@ -103,17 +105,19 @@ class DelayManager {
       this.pendingItemUpdates = new Map()
 
       updates.forEach((queue, key) => {
-        const listener = this.listenerMap.get(key)
-        if (!listener) return
+        const listeners = this.listenerMap.get(key)
+        if (!listeners) return
 
         queue.forEach((update) => {
-          try {
-            listener(update)
-          } catch (error) {
-            console.error(
-              `[DelayManager] 通知节点延迟监听器失败: ${key}`,
-              error,
-            )
+          for (const listener of [...listeners]) {
+            try {
+              listener(update)
+            } catch (error) {
+              console.error(
+                `[DelayManager] 通知节点延迟监听器失败: ${key}`,
+                error,
+              )
+            }
           }
         })
       })
@@ -199,18 +203,22 @@ class DelayManager {
     return url || 'http://cp.cloudflare.com/generate_204'
   }
 
-  setListener(
+  addListener(
     name: string,
     group: string,
     listener: (update: DelayUpdate) => void,
-  ) {
+  ): () => void {
     const key = hashKey(name, group)
-    this.listenerMap.set(key, listener)
-  }
+    const listeners = this.listenerMap.get(key) ?? new Set()
+    listeners.add(listener)
+    this.listenerMap.set(key, listeners)
 
-  removeListener(name: string, group: string) {
-    const key = hashKey(name, group)
-    this.listenerMap.delete(key)
+    return () => {
+      const current = this.listenerMap.get(key)
+      if (!current) return
+      current.delete(listener)
+      if (current.size === 0) this.listenerMap.delete(key)
+    }
   }
 
   /** Multiple views may subscribe independently; notifications occur only after settle. */

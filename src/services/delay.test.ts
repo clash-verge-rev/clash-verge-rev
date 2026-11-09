@@ -77,7 +77,7 @@ describe('group delay completion', () => {
 describe('profile delay isolation', () => {
   test('drops cached and queued results on switch, exposing current history', async () => {
     const listener = vi.fn()
-    delayManager.setListener('a', 'g', listener)
+    const stop = delayManager.addListener('a', 'g', listener)
     try {
       delayManager.setDelay('a', 'g', 120)
       const previousSnapshot = delayManager.groupDelays('g')
@@ -99,9 +99,56 @@ describe('profile delay isolation', () => {
       expect(listener).toHaveBeenCalledOnce()
       expect(settles).toBe(1)
     } finally {
-      delayManager.removeListener('a', 'g')
+      stop()
     }
   })
+
+  test.each([0, 1])(
+    'keeps shared-key subscribers independent when occurrence %i unmounts',
+    async (removed) => {
+      const listeners = [vi.fn(), vi.fn()]
+      const stops = listeners.map((listener) =>
+        delayManager.addListener('a', 'g', listener),
+      )
+      try {
+        const checking = delayManager.checkDelay(node('a'), 'g', 5000)
+        await vi.advanceTimersByTimeAsync(1)
+        for (const listener of listeners) {
+          expect(listener).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ delay: -2 }),
+          )
+        }
+
+        await vi.runAllTimersAsync()
+        await checking
+        for (const listener of listeners) {
+          expect(listener.mock.calls.map(([update]) => update.delay)).toEqual([
+            -2, 120,
+          ])
+        }
+
+        delayManager.setProfile('next')
+        for (const listener of listeners) {
+          expect(listener).toHaveBeenLastCalledWith({
+            delay: -1,
+            updatedAt: 0,
+          })
+          listener.mockClear()
+        }
+
+        const nextCheck = delayManager.checkDelay(node('a'), 'g', 5000)
+        stops[removed]()
+        await vi.runAllTimersAsync()
+        await nextCheck
+        expect(listeners[removed]).not.toHaveBeenCalled()
+        expect(
+          listeners[1 - removed].mock.calls.map(([update]) => update.delay),
+        ).toEqual([-2, 120])
+      } finally {
+        for (const stop of stops) stop()
+      }
+    },
+  )
 
   test.each(['success', 'failure'] as const)(
     'ignores an old-profile single test completing with %s',
