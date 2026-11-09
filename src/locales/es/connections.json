@@ -21,6 +21,9 @@
       "uploadSpeed": "Velocidad de subida",
       "downloadSpeed": "Velocidad de descarga"
     },
+    "filter": {
+      "allNetworks": "Todas las redes"
+    },
     "actions": {
       "active": "Active",
       "closed": "Closed",

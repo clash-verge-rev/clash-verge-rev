@@ -21,6 +21,9 @@
       "uploadSpeed": "Йөкләү (чыгару) тизлеге",
       "downloadSpeed": "Йөкләү тизлеге"
     },
+    "filter": {
+      "allNetworks": "Барлык челтәрләр"
+    },
     "actions": {
       "active": "Active",
       "closed": "Closed",

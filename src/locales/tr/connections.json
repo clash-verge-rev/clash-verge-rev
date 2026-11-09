@@ -21,6 +21,9 @@
       "uploadSpeed": "Yükleme Hızı",
       "downloadSpeed": "İndirme Hızı"
     },
+    "filter": {
+      "allNetworks": "Tüm Ağlar"
+    },
     "actions": {
       "active": "Etkin",
       "closed": "Kapatılan",

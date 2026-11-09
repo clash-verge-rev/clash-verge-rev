@@ -27,6 +27,9 @@ export interface TranslationResources {
           type: string
           ulSpeed: string
         }
+        filter: {
+          allNetworks: string
+        }
         order: {
           default: string
           downloadSpeed: string

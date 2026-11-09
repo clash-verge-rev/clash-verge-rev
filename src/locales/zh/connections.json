@@ -21,6 +21,9 @@
       "uploadSpeed": "上传速度",
       "downloadSpeed": "下载速度"
     },
+    "filter": {
+      "allNetworks": "全部网络"
+    },
     "actions": {
       "active": "活跃",
       "closed": "已关闭",

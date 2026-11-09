@@ -17,6 +17,7 @@ export const translationKeys = [
   'connections.components.order.default',
   'connections.components.order.uploadSpeed',
   'connections.components.order.downloadSpeed',
+  'connections.components.filter.allNetworks',
   'connections.components.actions.active',
   'connections.components.actions.closed',
   'connections.components.actions.closeConnection',

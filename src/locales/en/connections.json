@@ -21,6 +21,9 @@
       "uploadSpeed": "Upload Speed",
       "downloadSpeed": "Download Speed"
     },
+    "filter": {
+      "allNetworks": "All Networks"
+    },
     "actions": {
       "active": "Active",
       "closed": "Closed",

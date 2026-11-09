@@ -21,6 +21,9 @@
       "uploadSpeed": "Скорость загрузки",
       "downloadSpeed": "Скорость скачивания"
     },
+    "filter": {
+      "allNetworks": "Все сети"
+    },
     "actions": {
       "active": "Активные",
       "closed": "Закрытые",

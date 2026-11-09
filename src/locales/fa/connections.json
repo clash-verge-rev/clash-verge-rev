@@ -21,6 +21,9 @@
       "uploadSpeed": "سرعت بارگذاری",
       "downloadSpeed": "سرعت دانلود"
     },
+    "filter": {
+      "allNetworks": "همه شبکه‌ها"
+    },
     "actions": {
       "active": "Active",
       "closed": "Closed",
