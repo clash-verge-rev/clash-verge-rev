@@ -228,6 +228,11 @@ impl NetworkManager {
             }
         };
 
+        let response: tauri::http::Response<reqwest::Body> = response.into();
+        let response = reqwest::Response::from(
+            response.map(|body| reqwest::Body::wrap(http_body_util::Limited::new(body, 4 * 1024 * 1024))),
+        );
+
         let status = response.status();
         let headers = response.headers().to_owned();
         let body = match response.text().await {

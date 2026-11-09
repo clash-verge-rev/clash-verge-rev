@@ -1,8 +1,8 @@
 # Agent Guidelines
 
-Instructions for AI coding agents working in this repository. Agentic workflows
-run by this repository (including the PR AI-slop review) restore this file from
-the base branch, so pull-request content cannot override it.
+Instructions for AI coding agents working in this repository. The repository's
+PR AI-slop workflow runs its policy from the default branch; other review tools
+may load instructions differently.
 
 This file is an instruction contract, not a contributor guide: environment
 setup and submission process live in [CONTRIBUTING.md](CONTRIBUTING.md), and
@@ -53,13 +53,26 @@ the ownership evidence the AI-slop review evaluates (see
    `Assisted by: GPT-5.6 High`). Effort may be omitted when the runtime does not
    report it. Human contributors are not asked to disclose AI assistance.
    Disclosure is transparency only and carries no positive or negative weight.
-10. **Compiled workflows.** The AI-slop review policy in
-    [pr-ai-slop-review.md](.github/workflows/pr-ai-slop-review.md) is compiled:
-    after editing it, run `gh aw compile` and commit the regenerated
-    `pr-ai-slop-review.lock.yml`. Never edit the lock file directly.
+10. **Compiled workflows.** Agentic workflow Markdown, including the
+    [AI-slop policy](.github/workflows/pr-ai-slop-review.md) and shared imports,
+    is compiled: after editing it, run `gh aw compile` and commit the affected
+    `.lock.yml` files. Never edit lock files directly.
 11. **Changelog.** Entries follow the rules in
     [`template/Changelog.md`](template/Changelog.md): one line per
     user-visible change, no internals.
+
+## Task Guidance
+
+- For development and bug fixes, follow the
+  [development workflow](CONTRIBUTING.md#development-workflow).
+- For code review and verification of review fixes, follow [REVIEW.md](REVIEW.md).
+  Review is read-only unless changes are authorized; findings do not expand
+  that authorization to unrelated fixes, commits, pushes, or GitHub updates.
+- When handing work between agents or review rounds, use the
+  [AI context sharing guidance](REVIEW.md#ai-context-sharing).
+- Read the relevant sections and linked module rules, expanding only when the
+  affected behavior crosses another boundary. Routine edits do not require
+  multiple agents or repeated review rounds.
 
 ## Issue and PR Workflows
 

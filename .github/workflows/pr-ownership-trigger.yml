@@ -1,0 +1,29 @@
+name: PR ownership trigger
+
+# Dispatch only identity to the default-branch reviewer; never run PR code.
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (['dependabot[bot]', 'renovate[bot]'].includes(pr.user.login)) return;
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              ...context.repo, username: pr.user.login,
+            });
+            if (['admin', 'maintain', 'write'].includes(data.permission)) return;
+            await github.rest.actions.createWorkflowDispatch({
+              ...context.repo,
+              workflow_id: 'pr-ai-slop-review.lock.yml',
+              ref: context.payload.repository.default_branch,
+              inputs: { pr_number: String(pr.number), head_sha: pr.head.sha },
+            });

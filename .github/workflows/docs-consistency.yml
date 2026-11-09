@@ -1,9 +1,7 @@
 name: docs-consistency
 
-# Guards the cross-references between the collaboration documents so the
-# written contract (CONTRIBUTING, AGENTS.md, PR template) and the enforced
-# policy (pr-ai-slop-review) cannot drift apart unnoticed. Advisory only:
-# it informs, it does not gate merges.
+# Checks routing anchors and local links in collaboration documents.
+# Wording checks do not establish semantic agreement between policies.
 on:
   pull_request:
     paths:
@@ -11,8 +9,16 @@ on:
       - AGENTS.md
       - CLAUDE.md
       - GEMINI.md
+      - REVIEW.md
+      - src/AGENTS.md
+      - src-tauri/AGENTS.md
+      - .github/ISSUE_GUIDELINES.md
+      - .github/agents/agentic-workflows.md
+      - .github/skills/agentic-workflows/SKILL.md
       - .github/PULL_REQUEST_TEMPLATE.md
       - .github/workflows/pr-ai-slop-review.md
+      - .github/workflows/pr-verify-fix.md
+      - .github/workflows/shared/pr-review-context.md
       - .github/workflows/docs-consistency.yml
   push:
     branches: [dev]
@@ -21,8 +27,17 @@ on:
       - AGENTS.md
       - CLAUDE.md
       - GEMINI.md
+      - REVIEW.md
+      - src/AGENTS.md
+      - src-tauri/AGENTS.md
+      - .github/ISSUE_GUIDELINES.md
+      - .github/agents/agentic-workflows.md
+      - .github/skills/agentic-workflows/SKILL.md
       - .github/PULL_REQUEST_TEMPLATE.md
       - .github/workflows/pr-ai-slop-review.md
+      - .github/workflows/pr-verify-fix.md
+      - .github/workflows/shared/pr-review-context.md
+      - .github/workflows/docs-consistency.yml
   workflow_dispatch:
 
 permissions:
@@ -52,17 +67,54 @@ jobs:
           check CONTRIBUTING.md 'Do not pad'
           check CLAUDE.md '@AGENTS.md'
           check GEMINI.md 'AGENTS.md'
+          check AGENTS.md 'REVIEW.md#ai-context-sharing'
+          check REVIEW.md '## AI Context Sharing'
+          check CONTRIBUTING.md '(REVIEW.md)'
           check .github/workflows/pr-ai-slop-review.md 'Linkage Laundering'
           check .github/PULL_REQUEST_TEMPLATE.md '## Problem'
           check .github/PULL_REQUEST_TEMPLATE.md '## Approach'
           check .github/PULL_REQUEST_TEMPLATE.md '## Scope'
           echo "All cross-document anchors are consistent."
+      - name: Check local documentation links
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          from urllib.parse import unquote, urlsplit
+
+          sources = [
+              "AGENTS.md", "CONTRIBUTING.md", "REVIEW.md", "CLAUDE.md", "GEMINI.md",
+              "src/AGENTS.md", "src-tauri/AGENTS.md", ".github/ISSUE_GUIDELINES.md",
+              ".github/PULL_REQUEST_TEMPLATE.md", ".github/workflows/pr-ai-slop-review.md",
+              ".github/workflows/pr-verify-fix.md",
+              ".github/agents/agentic-workflows.md", ".github/skills/agentic-workflows/SKILL.md",
+          ]
+          errors = []
+          for source in map(Path, sources):
+              text = re.sub(r"(?ms)^```.*?^```[^\n]*", "", source.read_text())
+              for href in re.findall(r"\]\(([^\s)]+)\)", text):
+                  link = urlsplit(href)
+                  if link.scheme or link.netloc:
+                      continue
+                  target = source.parent / unquote(link.path) if link.path else source
+                  if not target.exists():
+                      errors.append(f"{source}: missing target {href}")
+                  elif link.fragment and target.suffix == ".md":
+                      headings = re.findall(r"(?m)^#{1,6} +(.+?) *#*$", target.read_text())
+                      anchors = {re.sub(r"[^\w -]", "", h.lower()).replace(" ", "-") for h in headings}
+                      if unquote(link.fragment) not in anchors:
+                          errors.append(f"{source}: missing heading {href}")
+          for error in errors:
+              print(f"::error::{error}")
+          if errors:
+              raise SystemExit(1)
+          print(f"Local links checked in {len(sources)} collaboration documents.")
+          PY
       - name: How to fix a failure
         if: failure()
         run: |
           cat <<'EOF'
-          An anchor phrase moved or disappeared. If you intentionally reworded
-          one of the collaboration documents, update the other documents (and
-          this check's anchor list) in the same change so the written contract
-          and the AI-slop policy keep telling the same story.
+          A routing anchor or local link is missing. Update the reference and
+          its target together. For intentional wording changes, update this
+          check's anchor list and review policy agreement separately.
           EOF

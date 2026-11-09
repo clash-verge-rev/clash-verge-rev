@@ -1107,6 +1107,7 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.4.3",
+ "http-body-util",
  "libc",
  "log",
  "nanoid",

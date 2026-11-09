@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 
 import { switchProxyNode } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
@@ -14,8 +14,6 @@ interface ProxyChangeRequest {
 }
 
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
-  const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
-  const isProcessingRef = useRef(false)
   const { onError } = options
 
   const executeChange = useCallback(
@@ -36,34 +34,15 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     [onError],
   )
 
-  const flushChangeQueue = useCallback(async () => {
-    if (isProcessingRef.current) return
-    isProcessingRef.current = true
-
-    try {
-      while (pendingRequestRef.current) {
-        const request = pendingRequestRef.current
-        pendingRequestRef.current = null
-        await executeChange(request)
-      }
-    } finally {
-      isProcessingRef.current = false
-      if (pendingRequestRef.current) {
-        void flushChangeQueue()
-      }
-    }
-  }, [executeChange])
-
   const select = useCallback(
     (groupName: string, proxyName: string, fixed?: string) => {
-      pendingRequestRef.current = {
+      void executeChange({
         groupName,
         proxyName,
         fixed,
-      }
-      void flushChangeQueue()
+      })
     },
-    [flushChangeQueue],
+    [executeChange],
   )
 
   return { select }
