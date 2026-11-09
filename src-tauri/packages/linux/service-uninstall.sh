@@ -11,13 +11,13 @@ stat_field() {
     sed 's/.*) //' "/proc/$1/stat" 2>/dev/null | cut -d' ' -f"$2"
 }
 
-if [ -f "$RECORD" ] && [ ! -L "$RECORD" ] && read -r txn_pid txn_start <"$RECORD"; then
+if [ -f "$RECORD" ] && [ ! -L "$RECORD" ] && read -r txn_pid txn_start <"$RECORD" && [ -n "$txn_start" ]; then
     pid=$PPID
     depth=0
     while [ "$depth" -lt 4 ] && [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
         if [ "$pid" = "$txn_pid" ] && [ "$(stat_field "$pid" 20)" = "$txn_start" ]; then
             rm -f "$RECORD"
-            echo "Keeping the Clash Verge Service reinstalled by this upgrade."
+            echo "Keeping the Clash Verge Service through this upgrade."
             exit 0
         fi
         pid="$(stat_field "$pid" 2)"

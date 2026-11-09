@@ -22,6 +22,7 @@ write_upgrade_marker() {
 record_transaction() {
     local start
     start="$(sed 's/.*) //' "/proc/$PPID/stat" | cut -d' ' -f20)"
+    [ -n "$start" ] || return 1
     (umask 022 && printf '%s %s\n' "$PPID" "$start" >"$TRANSACTION_RECORD")
 }
 
@@ -64,15 +65,18 @@ reinstall_existing_service() {
 # Upgrades keep an existing Service current; first installs and explicit removals never add one.
 # A symlinked unit is masked or managed by the administrator and is left alone.
 # The previous %preun runs after this script; the record keeps it from removing the Service.
-# The marker stays as a fallback should it still be removed; the app only acts on it if the Service is not ready.
+# Without a record that %preun removes the Service, so the marker makes the app offer a reinstall.
 if [ "$1" -ge 2 ] && [ -d /run/systemd/system ] && [ -f "$SERVICE_UNIT_FILE" ] && [ ! -L "$SERVICE_UNIT_FILE" ]; then
-    record_transaction || true
+    recorded=yes
+    record_transaction || recorded=no
     gid="$(existing_service_gid)"
-    write_upgrade_marker "$gid"
     if [ -z "$gid" ]; then
         echo "Warning: the Clash Verge Service group could not be resolved; Clash Verge will offer to reinstall the Service." >&2
+        write_upgrade_marker ""
+    elif reinstall_existing_service "$gid" && [ "$recorded" = yes ]; then
+        rm -f "$UPGRADE_MARKER"
     else
-        reinstall_existing_service "$gid" || true
+        write_upgrade_marker "$gid"
     fi
 fi
 
