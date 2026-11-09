@@ -7,6 +7,8 @@ SERVICE_UNIT="clash-verge-service.service"
 SERVICE_UNIT_FILE="/etc/systemd/system/$SERVICE_UNIT"
 # Read by the app, which offers a reinstall when the package could not keep the Service.
 UPGRADE_MARKER="/run/clash-verge-service-upgrade"
+# Written by the preinst for this transaction only.
+UPGRADE_EVIDENCE="/run/clash-verge-service-upgrade-evidence"
 
 write_upgrade_marker() {
     (umask 022 && printf 'gid=%s\nid=%s\n' "$1" "$(date +%s%N)" >"$UPGRADE_MARKER")
@@ -61,15 +63,20 @@ if [ "$1" = "configure" ] && [ -n "$2" ] && [ -d /run/systemd/system ]; then
         else
             write_upgrade_marker "$gid"
         fi
-    elif [ -f "$UPGRADE_MARKER" ]; then
-        # The preinst found that the previous package's prerm removed a running Service.
-        gid="$(sed -n 's/^gid=//p' "$UPGRADE_MARKER")"
-        if [ -z "$gid" ]; then
+    elif [ -f "$UPGRADE_EVIDENCE" ]; then
+        evidence="$(cat "$UPGRADE_EVIDENCE")"
+        rm -f "$UPGRADE_EVIDENCE"
+        gid="$(printf '%s\n' "$evidence" | sed -n 's/^gid=//p')"
+        if [ "$(printf '%s\n' "$evidence" | sed -n 's/^old=//p')" != "$2" ]; then
+            echo "Warning: ignoring Clash Verge Service evidence from another upgrade." >&2
+        elif [ -z "$gid" ]; then
             echo "Warning: the previous package removed Clash Verge Service and its group is unknown; Clash Verge will offer to reinstall it." >&2
+            write_upgrade_marker ""
         elif CLASH_VERGE_SERVICE_GID="$gid" /usr/bin/clash-verge-service-install --install-service; then
             rm -f "$UPGRADE_MARKER"
         else
             echo "Warning: reinstalling Clash Verge Service failed; Clash Verge will offer to reinstall it." >&2
+            write_upgrade_marker "$gid"
         fi
     fi
 fi
