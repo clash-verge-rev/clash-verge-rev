@@ -90,8 +90,7 @@ export function useProxyDelayState(
 
   const onDelay = useLockFn(async () => {
     if (!isInteractableMember(member)) return
-    setDelayState({ delay: -2, updatedAt: Date.now() })
-    setDelayState(await delayManager.checkDelay(member, groupName, timeout))
+    await delayManager.checkDelay(member, groupName, timeout)
   })
 
   return {
