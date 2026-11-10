@@ -605,12 +605,14 @@ export const CurrentProxyCard = () => {
     [getProfileStorageKey],
   )
 
-  const { select } = useProxySelection({
-    onError: (error) => {
+  const onSelectionError = useCallback(
+    (error: unknown) => {
       console.error('代理切换失败', error)
       refreshProxy()
     },
-  })
+    [refreshProxy],
+  )
+  const { select } = useProxySelection({ onError: onSelectionError })
 
   const mode = clashConfig?.mode?.toLowerCase() || 'rule'
   const isGlobalMode = mode === 'global'
@@ -673,7 +675,6 @@ export const CurrentProxyCard = () => {
   if (proxyView && lastGroupName !== selectedGroupName) {
     setLastGroupName(selectedGroupName)
   }
-  const delays = useGroupDelays(selectedGroupName || null)
 
   const selectedGroup = useMemo<ProxyGroupView | null>(() => {
     if (!proxyView || isDirectMode) return null
@@ -767,10 +768,17 @@ export const CurrentProxyCard = () => {
   const currentProxy = currentMember ? memberDetails(currentMember) : undefined
   const selectedProxyName = currentMember?.ref.name ?? ''
 
+  const delays = useGroupDelays(
+    selectedGroupName,
+    currentMember,
+    openSelect === 'proxy',
+  )
   const currentDelay =
-    currentMember && selectedGroupName
-      ? delayManager.getDelayFix(currentMember, selectedGroupName)
-      : -1
+    typeof delays === 'number'
+      ? delays
+      : currentMember
+        ? delays.of(currentMember)
+        : -1
 
   const signalInfo =
     currentProxy && selectedGroupName
@@ -892,7 +900,7 @@ export const CurrentProxyCard = () => {
 
   const proxyOptions = useMemo(
     () =>
-      isDirectMode || openSelect !== 'proxy'
+      isDirectMode || openSelect !== 'proxy' || typeof delays === 'number'
         ? []
         : sortProxyOptions(
             unsortedProxyOptions,
