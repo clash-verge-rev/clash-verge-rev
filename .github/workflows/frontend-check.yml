@@ -58,6 +58,9 @@ jobs:
       - name: Run TypeScript typecheck
         run: pnpm typecheck
 
+      - name: Verify modern polyfill inventory against automatic discovery
+        run: pnpm polyfills:check
+
       - name: Run tests
         run: pnpm test
 

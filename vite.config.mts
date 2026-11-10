@@ -1,9 +1,10 @@
 import path from 'node:path'
 
-import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import svgr from 'vite-plugin-svgr'
+
+import { guardedLegacy } from './scripts/modern-polyfills.mjs'
 
 const svgPlugin = svgr()
 const svgLoad = svgPlugin.load
@@ -20,12 +21,9 @@ export default defineConfig({
   plugins: [
     svgPlugin,
     react(),
-    legacy({
+    guardedLegacy({
       modernTargets: ['edge>=109', 'safari>=14'],
       renderLegacyChunks: false,
-      // Auto-detected from the emitted bundle, dependencies included,
-      // so post-Safari-14 APIs never depend on extending a manual list.
-      modernPolyfills: true,
       additionalModernPolyfills: [
         path.resolve('./src/polyfills/matchMedia.js'),
         path.resolve('./src/polyfills/WeakRef.js'),

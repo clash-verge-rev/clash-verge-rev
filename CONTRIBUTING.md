@@ -101,6 +101,15 @@ For frontend-only development, use `pnpm web:dev`. It does not start the Rust ba
 
 ### Build the Project
 
+`pnpm web:build` uses a generated modern-polyfill inventory and rejects changed
+emitted module inputs, output, targets, or locked dependencies before writing
+output. Inputs include dependency code and code later removed by minification.
+When it reports a stale inventory, run `pnpm polyfills:generate` and commit
+`scripts/modern-polyfills.json`. Generation preserves automatic discovery's import
+order and requires byte-identical automatic/explicit outputs for the macOS, Linux,
+and Windows production defines. CI repeats this comparison with
+`pnpm polyfills:check`; browser targets and worker configuration stay unchanged.
+
 Standard build:
 
 ```bash
