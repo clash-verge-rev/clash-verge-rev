@@ -28,6 +28,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: none
 max-ai-credits: 60
 max-turns: 12
 max-daily-ai-credits: 500
