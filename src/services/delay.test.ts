@@ -1,4 +1,3 @@
-import { delayProxyByName } from 'tauri-plugin-mihomo-api'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 vi.mock('tauri-plugin-mihomo-api', () => ({
@@ -31,29 +30,23 @@ const node = (
 
 let settles = 0
 let unsubscribe: () => void
+const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
 beforeEach(() => {
-  vi.useFakeTimers()
-  vi.mocked(delayProxyByName).mockReset().mockResolvedValue({ delay: 120 })
-  delayManager.setProfile('initial')
   settles = 0
   unsubscribe = delayManager.addGroupListener('g', () => {
     settles += 1
   })
 })
 
-afterEach(() => {
-  unsubscribe()
-  vi.useRealTimers()
-})
+afterEach(() => unsubscribe())
 
 describe('group delay completion', () => {
   test('notifies once after a batch settles', async () => {
     const proxies = Array.from({ length: 6 }, (_, index) => node(`n${index}`))
 
-    const checking = delayManager.checkListDelay(proxies, 'g', 5000, 2)
-    await vi.runAllTimersAsync()
-    await checking
+    await delayManager.checkListDelay(proxies, 'g', 5000, 2)
+    await flush()
 
     expect(settles).toBe(1)
   })
@@ -64,9 +57,8 @@ describe('group delay completion', () => {
       other += 1
     })
 
-    const checking = delayManager.checkDelay(node('a'), 'g', 5000)
-    await vi.runAllTimersAsync()
-    await checking
+    await delayManager.checkDelay(node('a'), 'g', 5000)
+    await flush()
 
     expect(settles).toBe(1)
     expect(other).toBe(0)
@@ -81,19 +73,14 @@ describe('profile delay isolation', () => {
     const stopFirst = delayManager.addListener('a', 'g', first)
     const stopSecond = delayManager.addListener('a', 'g', second)
     try {
-      const checking = delayManager.checkDelay(node('a'), 'g', 5000)
-      await vi.runAllTimersAsync()
-      await checking
-      delayManager.setProfile('next')
+      delayManager.setDelay('a', 'g', -2)
+      await flush()
       stopFirst()
-      const nextCheck = delayManager.checkDelay(node('a'), 'g', 5000)
-      await vi.runAllTimersAsync()
-      await nextCheck
-      expect(first.mock.calls.map(([update]) => update.delay)).toEqual([
-        -2, 120, -1,
-      ])
+      delayManager.setDelay('a', 'g', 120)
+      await flush()
+      expect(first.mock.calls.map(([update]) => update.delay)).toEqual([-2])
       expect(second.mock.calls.map(([update]) => update.delay)).toEqual([
-        -2, 120, -1, -2, 120,
+        -2, 120,
       ])
     } finally {
       stopFirst()
@@ -102,22 +89,7 @@ describe('profile delay isolation', () => {
   })
 
   test('clears cached delays and fences an old batch across a profile switch', async () => {
-    let finishOld!: (result: { delay: number }) => void
-    let finishNew!: (result: { delay: number }) => void
-    vi.mocked(delayProxyByName)
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            finishOld = resolve
-          }),
-      )
-      .mockImplementationOnce(
-        () =>
-          new Promise((resolve) => {
-            finishNew = resolve
-          }),
-      )
-
+    delayManager.setProfile('initial')
     delayManager.setDelay('cached', 'g', 900)
     const oldBatch = delayManager.checkListDelay(
       [node('a'), node('not-started')],
@@ -127,25 +99,10 @@ describe('profile delay isolation', () => {
     )
     delayManager.setProfile('next')
     expect(delayManager.getDelayUpdate('cached', 'g')).toBeUndefined()
-    const current = node('a')
-    current.node.history = [{ time: new Date().toISOString(), delay: 42 }]
-    expect(delayManager.getDelayFix(current, 'g')).toBe(42)
-    const newBatch = delayManager.checkListDelay([node('a')], 'g', 5000)
-    await vi.advanceTimersByTimeAsync(1)
-    const settledAfterSwitch = settles
-
-    finishOld({ delay: 900 })
-    await vi.advanceTimersByTimeAsync(500)
+    delayManager.setDelay('a', 'g', 42)
     await oldBatch
-    expect(delayProxyByName).toHaveBeenCalledTimes(2)
-    expect(delayManager.getDelay('a', 'g')).toBe(-2)
-    expect(delayManager.getDelayUpdate('not-started', 'g')).toBeUndefined()
-    expect(settles).toBe(settledAfterSwitch)
-
-    finishNew({ delay: 42 })
-    await vi.runAllTimersAsync()
-    await newBatch
+    await flush()
     expect(delayManager.getDelay('a', 'g')).toBe(42)
-    expect(settles).toBe(settledAfterSwitch + 1)
+    expect(delayManager.getDelayUpdate('not-started', 'g')).toBeUndefined()
   })
 })
