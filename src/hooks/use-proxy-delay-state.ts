@@ -1,5 +1,5 @@
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useReducer } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager, { type DelayUpdate } from '@/services/delay'
@@ -16,13 +16,6 @@ const PRESET_PROXY_NAMES = [
   'PASS',
   'COMPATIBLE',
 ]
-
-const identity = (previous: DelayUpdate, next: DelayUpdate): DelayUpdate =>
-  previous.delay === next.delay &&
-  previous.elapsed === next.elapsed &&
-  previous.updatedAt === next.updatedAt
-    ? previous
-    : next
 
 const INITIAL_DELAY: DelayUpdate = { delay: -1, updatedAt: 0 }
 
@@ -42,48 +35,33 @@ export function useProxyDelayState(
   const details = memberDetails(member)
   const unresolved = member.kind === 'unresolved'
   const isPreset = unresolved || PRESET_PROXY_NAMES.includes(name)
-  const [delayState, setDelayState] = useReducer(identity, INITIAL_DELAY)
   const { verge } = useVerge()
   const timeout = verge?.default_latency_timeout || 10000
 
-  useEffect(() => {
-    if (isPreset) return
-    return delayManager.addListener(name, groupName, setDelayState)
-  }, [name, groupName, isPreset])
+  const subscribe = useCallback(
+    (onChange: () => void) =>
+      isPreset ? () => {} : delayManager.addListener(name, groupName, onChange),
+    [name, groupName, isPreset],
+  )
+  const read = useCallback(
+    () =>
+      unresolved ? undefined : delayManager.getDelayUpdate(name, groupName),
+    [name, groupName, unresolved],
+  )
+  const cachedUpdate = useSyncExternalStore(subscribe, read, read)
 
-  const updateDelay = useCallback(() => {
-    if (unresolved) {
-      setDelayState(INITIAL_DELAY)
-      return
-    }
-    const cachedUpdate = delayManager.getDelayUpdate(name, groupName)
-    if (cachedUpdate) {
-      setDelayState({ ...cachedUpdate })
-      return
-    }
-
-    const fallbackDelay = delayManager.getDelayFix(member, groupName)
-    if (fallbackDelay === -1) {
-      setDelayState({ delay: -1, updatedAt: 0 })
-      return
-    }
-
-    let updatedAt = 0
-    const history = details?.history
-    if (history && history.length > 0) {
-      const lastRecord = history[history.length - 1]
-      const parsed = Date.parse(lastRecord.time)
-      if (!Number.isNaN(parsed)) {
-        updatedAt = parsed
-      }
-    }
-
-    setDelayState({ delay: fallbackDelay, updatedAt })
-  }, [details?.history, groupName, member, name, unresolved])
-
-  useEffect(() => {
-    updateDelay()
-  }, [updateDelay])
+  const fallbackDelay = delayManager.getDelayFix(member, groupName)
+  const history = details?.history
+  const lastRecord = history?.[history.length - 1]
+  const parsed = lastRecord ? Date.parse(lastRecord.time) : NaN
+  const delayState =
+    cachedUpdate ??
+    (fallbackDelay === -1
+      ? INITIAL_DELAY
+      : {
+          delay: fallbackDelay,
+          updatedAt: Number.isNaN(parsed) ? 0 : parsed,
+        })
 
   const onDelay = useLockFn(async () => {
     if (!isInteractableMember(member)) return

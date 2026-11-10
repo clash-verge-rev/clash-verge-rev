@@ -274,7 +274,8 @@ class DelayManager {
       return undefined
     }
 
-    return { ...entry }
+    // React's external-store reads must retain identity until the value changes.
+    return entry
   }
 
   getDelay(name: string, group: string) {

@@ -74,9 +74,12 @@ describe('profile delay isolation', () => {
     const stopSecond = delayManager.addListener('a', 'g', second)
     try {
       delayManager.setDelay('a', 'g', -2)
+      const pending = delayManager.getDelayUpdate('a', 'g')
+      expect(delayManager.getDelayUpdate('a', 'g')).toBe(pending)
       await flush()
       stopFirst()
       delayManager.setDelay('a', 'g', 120)
+      expect(delayManager.getDelayUpdate('a', 'g')).not.toBe(pending)
       await flush()
       expect(first.mock.calls.map(([update]) => update.delay)).toEqual([-2])
       expect(second.mock.calls.map(([update]) => update.delay)).toEqual([
