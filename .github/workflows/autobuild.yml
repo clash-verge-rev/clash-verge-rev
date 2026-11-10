@@ -191,7 +191,9 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version autobuild-latest
+        run: |
+          pnpm release-version autobuild-latest
+          pnpm polyfills:generate
 
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v1
@@ -271,7 +273,9 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version autobuild-latest
+        run: |
+          pnpm release-version autobuild-latest
+          pnpm polyfills:generate
 
       - name: 'Setup for linux'
         run: |-
@@ -404,7 +408,9 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version autobuild-latest
+        run: |
+          pnpm release-version autobuild-latest
+          pnpm polyfills:generate
 
       - name: Download WebView2 Runtime
         run: |

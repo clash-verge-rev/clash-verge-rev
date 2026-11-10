@@ -109,6 +109,8 @@ When it reports a stale inventory, run `pnpm polyfills:generate` and commit
 order and requires byte-identical automatic/explicit outputs for the macOS, Linux,
 and Windows production defines. CI repeats this comparison with
 `pnpm polyfills:check`; browser targets and worker configuration stay unchanged.
+Release build jobs regenerate after rewriting versions because version data is
+also emitted in frontend modules.
 
 Standard build:
 

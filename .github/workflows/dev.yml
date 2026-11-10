@@ -115,7 +115,9 @@ jobs:
 
       - name: Release ${{ env.TAG_CHANNEL }} Version
         if: github.event.inputs[matrix.input] == 'true'
-        run: pnpm release-version ${{ env.TAG_NAME }}
+        run: |
+          pnpm release-version ${{ env.TAG_NAME }}
+          pnpm polyfills:generate
 
       - name: Add Rust Target
         if: github.event.inputs[matrix.input] == 'true'
