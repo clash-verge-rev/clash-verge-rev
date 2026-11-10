@@ -68,6 +68,7 @@ type GroupCache = {
   /// does not throw away every other group's sorted order.
   delays: DelaySnapshot | undefined
   occurrences: ResolvedMemberOccurrence[] | undefined
+  projected: ResolvedMemberOccurrence[] | undefined
   items: IRenderItem[]
 }
 
@@ -260,11 +261,15 @@ export const useRenderList = (
   const groupCacheRef = useRef<Map<string, GroupCache> | null>(null)
   const cachedViewRef = useRef(proxyView)
   const prevListRef = useRef<IRenderItem[]>([])
+  const prevGroupItemsRef = useRef<IRenderItem[][]>([])
+  const prevModeRef = useRef(mode)
 
   const renderList = useMemo<IRenderItem[]>(() => {
     const cache = (groupCacheRef.current ??= new Map())
     if (cachedViewRef.current !== proxyView) {
       cache.clear()
+      prevGroupItemsRef.current = []
+      prevListRef.current = []
       cachedViewRef.current = proxyView
     }
     if (!proxyView) return []
@@ -301,7 +306,7 @@ export const useRenderList = (
       }))
     }
 
-    const retList = renderGroups.flatMap((group) => {
+    const groupItems = renderGroups.map((group) => {
       const isFlat = group === proxyView.global
       const headState = headStates[group.name] || DEFAULT_STATE
       const cached = cache.get(group.name)
@@ -316,6 +321,51 @@ export const useRenderList = (
         return cached.items
       }
 
+      // Duplicate names share one item listener until the delay-store fix lands.
+      const refreshRepeated =
+        repeatedNameGroups.has(group.name) &&
+        cached?.delays !== groupDelays.get(group.name)
+      let resolved =
+        cached?.group === group && !refreshRepeated
+          ? cached.occurrences
+          : undefined
+      let projected: ResolvedMemberOccurrence[] | undefined
+      if (headState.open || isFlat) {
+        resolved ??= resolveOccurrences(proxyView, group)
+        projected = filterSort(
+          resolved,
+          group.name,
+          headState.filterText,
+          headState.sortType,
+          latencyTimeout!,
+          {
+            matchCase: headState.filterMatchCase,
+            matchWholeWord: headState.filterMatchWholeWord,
+            useRegularExpression: headState.filterUseRegularExpression,
+          },
+        )
+        // Repeated names still need new member props while item listeners share a key.
+        if (
+          !refreshRepeated &&
+          cached?.group === group &&
+          cached.headState === headState &&
+          cached.col === col &&
+          cached.projected?.length === projected.length &&
+          projected.every(
+            (member, index) => member === cached.projected?.[index],
+          )
+        ) {
+          cache.set(group.name, {
+            ...cached,
+            latencyTimeout,
+            delays: groupDelays.get(group.name),
+          })
+          return cached.items
+        }
+      } else {
+        resolved = undefined
+      }
+
       const ret: IRenderItem[] = [
         isFlat
           ? { type: 1, key: `head-${group.name}`, group, headState }
@@ -328,29 +378,8 @@ export const useRenderList = (
               testUrl: group.testUrl!,
             },
       ]
-
-      // Duplicate names share one item listener until the delay-store fix lands.
-      const refreshRepeated =
-        repeatedNameGroups.has(group.name) &&
-        cached?.delays !== groupDelays.get(group.name)
-      let resolved =
-        cached?.group === group && !refreshRepeated
-          ? cached.occurrences
-          : undefined
-      if (headState.open || isFlat) {
-        resolved ??= resolveOccurrences(proxyView, group)
-        const occurrences = filterSort(
-          resolved,
-          group.name,
-          headState.filterText,
-          headState.sortType,
-          latencyTimeout!,
-          {
-            matchCase: headState.filterMatchCase,
-            matchWholeWord: headState.filterMatchWholeWord,
-            useRegularExpression: headState.filterUseRegularExpression,
-          },
-        )
+      if (projected) {
+        const occurrences = projected
         if (occurrences.length === 0) {
           ret.push({ type: 3, key: `empty-${group.name}`, group, headState })
         } else if (col > 1) {
@@ -375,8 +404,6 @@ export const useRenderList = (
             })),
           )
         }
-      } else {
-        resolved = undefined
       }
 
       cache.set(group.name, {
@@ -386,11 +413,24 @@ export const useRenderList = (
         latencyTimeout: latencyTimeout!,
         delays: groupDelays.get(group.name),
         occurrences: resolved,
+        projected,
         items: ret,
       })
       return ret
     })
 
+    if (
+      prevModeRef.current === mode &&
+      prevGroupItemsRef.current.length === groupItems.length &&
+      groupItems.every(
+        (items, index) => items === prevGroupItemsRef.current[index],
+      )
+    ) {
+      return prevListRef.current
+    }
+    prevModeRef.current = mode
+    prevGroupItemsRef.current = groupItems
+    const retList = groupItems.flat()
     const filtered =
       mode === 'rule' ? retList.filter((item) => !item.group.hidden) : retList
     if (
