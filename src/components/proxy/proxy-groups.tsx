@@ -469,12 +469,14 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   }, [handleScroll])
 
-  const { select } = useProxySelection({
-    onError: (error) => {
+  const onSelectionError = useCallback(
+    (error: unknown) => {
       console.error('代理切换失败', error)
       onProxies()
     },
-  })
+    [onProxies],
+  )
+  const { select } = useProxySelection({ onError: onSelectionError })
 
   const handleChangeProxy = useCallback(
     (group: ProxyGroupView, member: ResolvedProxyMember) => {
