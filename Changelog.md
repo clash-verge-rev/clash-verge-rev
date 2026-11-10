@@ -52,5 +52,6 @@
 **🍎 macOS**
 
 - 优化 macOS TUN 模式的系统 DNS，增加阿里和 Cloudflare 地址
+- 补充 macOS TUN DNS 模式提示，便于选择 Native 并排查切网后的 DNS 问题
 
 </details>
