@@ -54,40 +54,29 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const fileDataRef = useRef<string | null>(null)
   const onCreatedRef = useRef<() => void>(undefined)
 
-  const {
-    control,
-    watch,
-    setValue,
-    reset,
-    handleSubmit,
-    getValues,
-    formState: { defaultValues },
-  } = useForm<IProfileItem>({
-    defaultValues: {
-      type: 'remote',
-      name: '',
-      desc: '',
-      url: '',
-      option: {
-        with_proxy: false,
-        self_proxy: false,
-        allow_auto_update: true,
+  const { control, watch, setValue, reset, handleSubmit, getValues } =
+    useForm<IProfileItem>({
+      defaultValues: {
+        type: 'remote',
+        name: '',
+        desc: '',
+        url: '',
+        option: {
+          with_proxy: false,
+          self_proxy: false,
+          allow_auto_update: true,
+        },
       },
-    },
-  })
+    })
 
   useImperativeHandle(ref, () => ({
     create: (url = '', option, onCreated) => {
       onCreatedRef.current = onCreated
       setShowAgeKey(false)
-      reset(
-        {
-          ...defaultValues,
-          url,
-          option: { ...defaultValues?.option, ...option },
-        },
-        { keepDefaultValues: true },
-      )
+      reset()
+      setValue('url', url)
+      setValue('option.with_proxy', !!option?.with_proxy)
+      setValue('option.self_proxy', !!option?.self_proxy)
       setOpenType('new')
       setOpen(true)
     },

@@ -233,7 +233,7 @@ const ProfilePage = () => {
       })
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
-      if (promptForAgeKey(initialErr, {})) return
+      if (promptForAgeKey(initialErr, { with_proxy: true })) return
       console.warn('[订阅导入] 首次导入失败:', initialErr)
 
       const initialDetail = errorDetail(initialErr)

@@ -1,7 +1,7 @@
 use super::patch_opt_field;
 
 use crate::{
-    config::{Config, profiles},
+    config::{Config, deserialize_encrypted, profiles, serialize_encrypted},
     utils::{
         dirs, help,
         network::{NetworkManager, ProxyType},
@@ -92,7 +92,11 @@ pub struct PrfExtra {
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(default)]
 pub struct PrfOption {
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_age_secret_key",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[specta(type = Option<std::string::String>)]
     pub age_secret_key: Option<String>,
 
@@ -137,6 +141,7 @@ impl PrfOption {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
+                patch_opt_field!(result, b_ref, age_secret_key);
                 patch_opt_field!(result, b_ref, user_agent);
                 patch_opt_field!(result, b_ref, with_proxy);
                 patch_opt_field!(result, b_ref, self_proxy);
@@ -511,6 +516,12 @@ impl PrfItem {
 
 fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {
     option.and_then(|o| o.allow_auto_update).unwrap_or(true)
+}
+
+// A key sealed by another installation cannot be opened here; drop it instead of failing the profile list.
+#[allow(clippy::unnecessary_wraps, reason = "serde fixes the signature")]
+fn deserialize_age_secret_key<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    Ok(deserialize_encrypted(deserializer).unwrap_or_default())
 }
 
 #[derive(Debug)]
