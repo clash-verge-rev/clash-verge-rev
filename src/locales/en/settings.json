@@ -243,6 +243,8 @@
           "trayIcon": "Tray Icon",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "Tray Health Icon",
+          "trayHealthGroup": "Health Check Group",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
           "tunTrayIcon": "Tun Tray Icon",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds",
+          "trayHealthIcon": "Adds a red warning to the tray icon when the latest latency test of the node in use failed. Checks run only while System Proxy or TUN is on; Global mode checks GLOBAL. Unknown results keep the current icon.",
+          "trayHealthGroup": "Proxy group checked in Rule mode (Global mode always checks GLOBAL)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "Not selected",
+            "unavailable": "{{name}} (unavailable)"
           }
         }
       }

@@ -28,9 +28,11 @@ use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
 
+pub mod health;
 mod menu_def;
 #[cfg(target_os = "macos")]
 mod speed_task;
+use health::TrayHealth;
 use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
@@ -55,57 +57,90 @@ enum IconKind {
     Tun,
 }
 
+impl IconKind {
+    fn current(verge: &IVerge) -> Self {
+        if verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable() {
+            Self::Tun
+        } else if verge.enable_system_proxy.unwrap_or(false) {
+            Self::SysProxy
+        } else {
+            Self::Common
+        }
+    }
+}
+
+async fn current_clash_mode() -> &'static str {
+    match Config::clash()
+        .await
+        .latest_arc()
+        .0
+        .get("mode")
+        .and_then(|mode| mode.as_str())
+    {
+        Some("global") => "global",
+        Some("direct") => "direct",
+        _ => "rule",
+    }
+}
+
 pub struct Tray {
     limiter: SystemLimiter,
+    health_controller: health::TrayHealthController,
+    /// Serializes icon writes; holds whether the applied icon carries the health warning.
+    applied_warning: tokio::sync::Mutex<Option<bool>>,
     #[cfg(target_os = "macos")]
     speed_controller: speed_task::TraySpeedController,
 }
 
 impl TrayState {
-    async fn get_tray_icon(verge: &IVerge) -> (bool, Cow<'_, [u8]>) {
-        let tun_mode = verge.enable_tun_mode.unwrap_or(false) && crate::core::runstate::RUN_STATE.state().tun_capable();
-        let system_mode = verge.enable_system_proxy.unwrap_or(false);
-        let kind = if tun_mode {
-            IconKind::Tun
-        } else if system_mode {
-            IconKind::SysProxy
-        } else {
-            IconKind::Common
-        };
-        Self::load_icon(verge, kind).await
+    async fn get_tray_icon(verge: &IVerge, health: TrayHealth) -> (bool, Cow<'_, [u8]>) {
+        Self::load_icon(verge, IconKind::current(verge), health).await
     }
 
-    async fn load_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+    async fn load_icon(verge: &IVerge, kind: IconKind, health: TrayHealth) -> (bool, Cow<'_, [u8]>) {
         let (custom_enabled, icon_name) = match kind {
             IconKind::Common => (verge.common_tray_icon.unwrap_or(false), "common"),
             IconKind::SysProxy => (verge.sysproxy_tray_icon.unwrap_or(false), "sysproxy"),
             IconKind::Tun => (verge.tun_tray_icon.unwrap_or(false), "tun"),
         };
 
+        // Custom icons have no warning variant, so the built-in one for the same mode is shown.
         if custom_enabled
+            && health != TrayHealth::Unhealthy
             && let Ok(Some(path)) = find_target_icons(icon_name)
             && let Ok(data) = fs::read(path).await
         {
             return (true, Cow::Owned(data));
         }
 
-        Self::default_icon(verge, kind)
+        Self::default_icon(verge, kind, health)
     }
 
     #[allow(clippy::missing_const_for_fn)]
-    fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+    fn default_icon(verge: &IVerge, kind: IconKind, health: TrayHealth) -> (bool, Cow<'_, [u8]>) {
         #[cfg(target_os = "macos")]
         {
             let is_mono = verge.tray_icon.as_deref().unwrap_or("monochrome") == "monochrome";
             if is_mono {
                 return (
                     false,
-                    match kind {
-                        IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
-                        IconKind::SysProxy => {
+                    match (kind, health) {
+                        (IconKind::Common, TrayHealth::Unhealthy) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-mono.ico"))
+                        }
+                        (IconKind::SysProxy, TrayHealth::Unhealthy) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-sys-mono-new.ico"))
+                        }
+                        (IconKind::Tun, TrayHealth::Unhealthy) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-tun-mono-new.ico"))
+                        }
+                        (IconKind::Common, _) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
+                        (IconKind::SysProxy, _) => {
                             Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new.ico"))
                         }
-                        IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico")),
+                        (IconKind::Tun, _) => {
+                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico"))
+                        }
                     },
                 );
             }
@@ -116,10 +151,19 @@ impl TrayState {
 
         (
             false,
-            match kind {
-                IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
-                IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
-                IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
+            match (kind, health) {
+                (IconKind::Common, TrayHealth::Unhealthy) => {
+                    Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon.ico"))
+                }
+                (IconKind::SysProxy, TrayHealth::Unhealthy) => {
+                    Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-sys.ico"))
+                }
+                (IconKind::Tun, TrayHealth::Unhealthy) => {
+                    Cow::Borrowed(include_bytes!("../../../icons/tray-warning/tray-icon-tun.ico"))
+                }
+                (IconKind::Common, _) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
+                (IconKind::SysProxy, _) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
+                (IconKind::Tun, _) => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
             },
         )
     }
@@ -130,6 +174,8 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            health_controller: health::TrayHealthController::default(),
+            applied_warning: tokio::sync::Mutex::new(None),
             #[cfg(target_os = "macos")]
             speed_controller: speed_task::TraySpeedController::new(),
         }
@@ -204,16 +250,7 @@ impl Tray {
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
         let tun_mode_available = crate::core::runstate::RUN_STATE.state().tun_capable();
-        let mode = {
-            Config::clash()
-                .await
-                .latest_arc()
-                .0
-                .get("mode")
-                .map(|val| val.as_str().unwrap_or("rule"))
-                .unwrap_or("rule")
-                .to_owned()
-        };
+        let mode = current_clash_mode().await;
         let profiles_config = Config::profiles().await;
         let profiles_arc = profiles_config.latest_arc();
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
@@ -224,7 +261,7 @@ impl Tray {
             tray.set_menu(Some(
                 create_tray_menu(
                     app_handle,
-                    Some(mode.as_str()),
+                    Some(mode),
                     *system_proxy,
                     *tun_mode,
                     tun_mode_available,
@@ -243,6 +280,28 @@ impl Tray {
     }
 
     pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
+        // Mode, routing and settings changes all pass through here and may change the monitored target.
+        health::sync_target().await;
+        let mut applied_warning = self.applied_warning.lock().await;
+        self.apply_icon(verge, &mut applied_warning).await
+    }
+
+    /// Re-applies the icon only when the health warning changed since the last write.
+    #[allow(
+        clippy::significant_drop_tightening,
+        reason = "the guard serializes icon writes and must stay held until the write finishes"
+    )]
+    pub async fn refresh_health_icon(&self) -> Result<()> {
+        let warning = health::current_health() == TrayHealth::Unhealthy;
+        let verge = Config::verge().await.latest_arc();
+        let mut applied_warning = self.applied_warning.lock().await;
+        if *applied_warning == Some(warning) {
+            return Ok(());
+        }
+        self.apply_icon(&verge, &mut applied_warning).await
+    }
+
+    async fn apply_icon(&self, verge: &IVerge, applied_warning: &mut Option<bool>) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -255,9 +314,12 @@ impl Tray {
             return Ok(());
         };
 
-        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
+        let health = health::current_health();
+        let warning = health == TrayHealth::Unhealthy;
+        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge, health).await;
 
-        let template = {
+        // Warning icons are colored; as template images macOS would erase the red.
+        let template = !warning && {
             #[cfg(target_os = "macos")]
             {
                 verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome")
@@ -267,9 +329,10 @@ impl Tray {
                 false
             }
         };
-        let icon = Some(tauri::image::Image::from_bytes(&icon_bytes)?);
+        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
-        logging_error!(Type::Tray, tray.set_icon_with_as_template(icon, template));
+        logging_error!(Type::Tray, tray.set_icon_with_as_template(Some(icon), template));
+        *applied_warning = Some(warning);
 
         Ok(())
     }
@@ -346,6 +409,7 @@ impl Tray {
         AsyncHandler::spawn(|| async {
             logging_error!(Type::Tray, Self::global().update_menu().await);
         });
+        self.update_health_task(verge.enable_tray_health_icon.unwrap_or(false));
         self.update_icon(&verge).await?;
         #[cfg(target_os = "macos")]
         self.update_speed_task(verge.enable_tray_speed.unwrap_or(false));
@@ -369,7 +433,7 @@ impl Tray {
 
         let verge = Config::verge().await.data_arc();
 
-        let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
+        let icon_bytes = TrayState::get_tray_icon(&verge, TrayHealth::Unknown).await.1;
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
         #[cfg(target_os = "linux")]
@@ -405,6 +469,10 @@ impl Tray {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
         allow
+    }
+
+    pub fn update_health_task(&self, enable_tray_health_icon: bool) {
+        self.health_controller.update_task(enable_tray_health_icon);
     }
 
     #[cfg(target_os = "macos")]

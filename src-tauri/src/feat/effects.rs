@@ -91,7 +91,7 @@ verge_registry! {
     home_cards => NoEffect;
     auto_close_connection => NoEffect;
     auto_check_update => NoEffect;
-    default_latency_test => NoEffect;
+    default_latency_test => [TrayIcon];
     default_latency_timeout => NoEffect;
     enable_auto_delay_detection => NoEffect;
     auto_delay_detection_interval_minutes => NoEffect;
@@ -122,6 +122,8 @@ verge_registry! {
     enable_tray_speed => [TrayIcon];
     tray_proxy_groups_display_mode => [TrayMenu];
     tray_inline_outbound_modes => [TrayMenu];
+    enable_tray_health_icon => [TrayIcon];
+    tray_health_group => [TrayIcon];
     enable_auto_light_weight_mode => [Lightweight];
     auto_light_weight_minutes => NoEffect;
     enable_hover_jump_navigator => NoEffect;

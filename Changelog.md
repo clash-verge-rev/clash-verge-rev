@@ -40,6 +40,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增托盘健康图标（默认关闭）：所监测策略组当前节点最近一次测速失败时，托盘图标显示红色警告
 
 </details>
 

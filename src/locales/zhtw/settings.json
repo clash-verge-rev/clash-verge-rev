@@ -243,6 +243,8 @@
           "trayIcon": "系統匣圖示",
           "proxyGroupsDisplayMode": "系統匣代理組顯示模式",
           "showOutboundModesInline": "將出站模式顯示在系統匣一級選單",
+          "trayHealthIcon": "系統匣健康圖示",
+          "trayHealthGroup": "健康檢測策略群組",
           "commonTrayIcon": "一般系統匣圖示",
           "systemProxyTrayIcon": "系統代理系統匣圖示",
           "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
-          "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數"
+          "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數",
+          "trayHealthIcon": "目前使用節點最近一次測速失敗時，系統匣圖示顯示紅色警告。僅在系統代理或 TUN 開啟時檢測；全域模式檢測 GLOBAL。無法判斷時保持目前圖示。",
+          "trayHealthGroup": "規則模式下檢測的策略群組（全域模式一律檢測 GLOBAL）"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "預設",
             "inline": "一級選單",
             "disable": "停用"
+          },
+          "trayHealthGroup": {
+            "none": "未選擇",
+            "unavailable": "{{name}}（不可用）"
           }
         }
       }

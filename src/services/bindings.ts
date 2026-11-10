@@ -441,6 +441,8 @@ export type IVerge_Deserialize = {
   webdav_password?: string | null
   tray_proxy_groups_display_mode?: string | null
   tray_inline_outbound_modes?: boolean | null
+  enable_tray_health_icon?: boolean | null
+  tray_health_group?: string | null
   enable_auto_light_weight_mode?: boolean | null
   /**  自动进入轻量模式的延迟（分钟） */
   auto_light_weight_minutes?: number | null
@@ -531,6 +533,8 @@ export type IVerge_Serialize = {
   webdav_password?: string
   tray_proxy_groups_display_mode?: string
   tray_inline_outbound_modes: boolean | null
+  enable_tray_health_icon: boolean | null
+  tray_health_group: string | null
   enable_auto_light_weight_mode: boolean | null
   /**  自动进入轻量模式的延迟（分钟） */
   auto_light_weight_minutes: number | null

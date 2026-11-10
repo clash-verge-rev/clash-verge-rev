@@ -466,6 +466,8 @@ const settingsCatalog: readonly SettingEntry[] = [
       'proxyGroupsDisplayMode',
     'settings.components.verge.layout.fields.showOutboundModesInline':
       'showOutboundModesInline',
+    'settings.components.verge.layout.fields.trayHealthIcon':
+      'trayHealthIcon tray health red 托盘 健康 红色 策略组',
     'settings.components.verge.layout.fields.commonTrayIcon': 'commonTrayIcon',
     'settings.components.verge.layout.fields.systemProxyTrayIcon':
       'systemProxyTrayIcon',

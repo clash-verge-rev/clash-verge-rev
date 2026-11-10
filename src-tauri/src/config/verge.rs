@@ -213,6 +213,10 @@ pub struct IVerge {
     pub tray_proxy_groups_display_mode: Option<String>,
     pub tray_inline_outbound_modes: Option<bool>,
 
+    pub enable_tray_health_icon: Option<bool>,
+    #[specta(type = Option<std::string::String>)]
+    pub tray_health_group: Option<String>,
+
     pub enable_auto_light_weight_mode: Option<bool>,
 
     /// 自动进入轻量模式的延迟（分钟）
@@ -416,6 +420,8 @@ impl IVerge {
             enable_tray_speed: Some(false),
             tray_proxy_groups_display_mode: Some("default".into()),
             tray_inline_outbound_modes: Some(false),
+            enable_tray_health_icon: Some(false),
+            tray_health_group: None,
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
@@ -511,6 +517,8 @@ impl IVerge {
         patch_opt_field!(self, patch, enable_tray_speed);
         patch_opt_field!(self, patch, tray_proxy_groups_display_mode);
         patch_opt_field!(self, patch, tray_inline_outbound_modes);
+        patch_opt_field!(self, patch, enable_tray_health_icon);
+        patch_opt_field!(self, patch, tray_health_group);
         patch_opt_field!(self, patch, enable_auto_light_weight_mode);
         patch_opt_field!(self, patch, auto_light_weight_minutes);
         patch_opt_field!(self, patch, enable_dns_settings);

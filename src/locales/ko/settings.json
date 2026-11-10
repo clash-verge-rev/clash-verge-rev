@@ -243,6 +243,8 @@
           "trayIcon": "트레이 아이콘",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "트레이 상태 아이콘",
+          "trayHealthGroup": "상태 확인 그룹",
           "commonTrayIcon": "공용 트레이 아이콘",
           "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
           "tunTrayIcon": "TUN 트레이 아이콘",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",
-          "hoverNavigatorDelay": "호버 시 자동 스크롤까지의 지연(밀리초)"
+          "hoverNavigatorDelay": "호버 시 자동 스크롤까지의 지연(밀리초)",
+          "trayHealthIcon": "사용 중인 노드의 최근 지연 테스트가 실패하면 트레이 아이콘에 빨간 경고를 표시합니다. 시스템 프록시 또는 TUN이 켜져 있을 때만 확인하며, 전역 모드에서는 GLOBAL을 확인합니다. 판단할 수 없으면 현재 아이콘을 유지합니다.",
+          "trayHealthGroup": "규칙 모드에서 확인할 프록시 그룹 (전역 모드는 항상 GLOBAL 확인)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "선택 안 함",
+            "unavailable": "{{name}} (사용 불가)"
           }
         }
       }

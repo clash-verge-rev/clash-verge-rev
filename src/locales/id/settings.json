@@ -243,6 +243,8 @@
           "trayIcon": "Ikon Tray",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "Ikon Status Tray",
+          "trayHealthGroup": "Grup Pemeriksaan",
           "commonTrayIcon": "Ikon Tray Umum",
           "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
           "tunTrayIcon": "Ikon Tray Tun",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds",
+          "trayHealthIcon": "Menambahkan peringatan merah pada ikon tray saat uji latensi terakhir node yang digunakan gagal. Pemeriksaan hanya berjalan saat Proksi Sistem atau TUN aktif; mode Global memeriksa GLOBAL. Hasil yang tidak diketahui mempertahankan ikon saat ini.",
+          "trayHealthGroup": "Grup proksi yang diperiksa dalam mode Aturan (mode Global selalu memeriksa GLOBAL)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "Tidak dipilih",
+            "unavailable": "{{name}} (tidak tersedia)"
           }
         }
       }

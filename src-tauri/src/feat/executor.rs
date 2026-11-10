@@ -79,6 +79,9 @@ async fn ensure_effect(
         }
         Effect::TrayMenu => tray::Tray::global().update_menu().await?,
         Effect::TrayIcon => {
+            if let Some(enabled) = patch.enable_tray_health_icon {
+                tray::Tray::global().update_health_task(enabled);
+            }
             tray::Tray::global()
                 .update_icon(&Config::verge().await.latest_arc())
                 .await?;

@@ -243,6 +243,8 @@
           "trayIcon": "托盘图标",
           "proxyGroupsDisplayMode": "托盘代理组显示模式",
           "showOutboundModesInline": "将出站模式显示在托盘一级菜单",
+          "trayHealthIcon": "托盘健康图标",
+          "trayHealthGroup": "健康检测策略组",
           "commonTrayIcon": "常规托盘图标",
           "systemProxyTrayIcon": "系统代理托盘图标",
           "tunTrayIcon": "TUN 模式托盘图标",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
-          "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
+          "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数",
+          "trayHealthIcon": "当前使用节点最近一次测速失败时，托盘图标显示红色警告。仅在系统代理或 TUN 开启时检测；全局模式检测 GLOBAL。无法判断时保持当前图标。",
+          "trayHealthGroup": "规则模式下检测的策略组（全局模式始终检测 GLOBAL）"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "默认",
             "inline": "一级菜单",
             "disable": "禁用"
+          },
+          "trayHealthGroup": {
+            "none": "未选择",
+            "unavailable": "{{name}}（不可用）"
           }
         }
       }

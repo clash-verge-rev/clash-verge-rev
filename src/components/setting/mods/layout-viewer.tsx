@@ -21,6 +21,7 @@ import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { DEFAULT_HOVER_DELAY } from '@/components/proxy/proxy-group-navigator'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
+import { useProxiesData } from '@/providers/app-data-context'
 import { copyIconFile, getAppDir } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
@@ -29,6 +30,10 @@ import getSystem from '@/utils/get-system'
 import { useSettingDialog } from '../settings-search-context'
 
 import { GuardState } from './guard-state'
+import {
+  getTrayHealthGroupOptions,
+  normalizeTrayHealthGroup,
+} from './tray-health-group-options'
 
 const OS = getSystem()
 
@@ -54,6 +59,12 @@ const getIcons = async (icon_dir: string, name: string) => {
 export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const { t } = useTranslation()
   const { verge, patchVerge, mutateVerge } = useVerge()
+  const { proxyView } = useProxiesData()
+  const trayHealthEnabled = verge?.enable_tray_health_icon ?? false
+  const trayHealthGroupOptions = getTrayHealthGroupOptions(
+    proxyView,
+    verge?.tray_health_group,
+  )
 
   const [open, setOpen] = useState(false)
   const [commonIcon, setCommonIcon] = useState('')
@@ -501,6 +512,84 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             <Switch edge="end" />
           </GuardState>
         </Item>
+        <Item data-setting-target="settings.components.verge.layout.fields.trayHealthIcon">
+          <ListItemText
+            primary={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <span>
+                  {t('settings.components.verge.layout.fields.trayHealthIcon')}
+                </span>
+                <TooltipIcon
+                  title={t(
+                    'settings.components.verge.layout.tooltips.trayHealthIcon',
+                  )}
+                  sx={{ opacity: '0.7' }}
+                />
+              </Box>
+            }
+          />
+          <GuardState
+            value={trayHealthEnabled}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_tray_health_icon: e })}
+            onGuard={(e) => patchVerge({ enable_tray_health_icon: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+        {trayHealthEnabled && (
+          <Item data-setting-target="settings.components.verge.layout.fields.trayHealthGroup">
+            <ListItemText
+              primary={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <span>
+                    {t(
+                      'settings.components.verge.layout.fields.trayHealthGroup',
+                    )}
+                  </span>
+                  <TooltipIcon
+                    title={t(
+                      'settings.components.verge.layout.tooltips.trayHealthGroup',
+                    )}
+                    sx={{ opacity: '0.7' }}
+                  />
+                </Box>
+              }
+            />
+            <GuardState
+              value={normalizeTrayHealthGroup(verge?.tray_health_group) ?? ''}
+              onCatch={onError}
+              onFormat={(e: any) => e.target.value}
+              // Clear with '' rather than null: verge patches skip null fields.
+              onChange={(value) => onChangeData({ tray_health_group: value })}
+              onGuard={(value) => patchVerge({ tray_health_group: value })}
+            >
+              <Select
+                size="small"
+                displayEmpty
+                sx={{ width: 140, '> div': { py: '7.5px' } }}
+              >
+                <MenuItem value="">
+                  {t(
+                    'settings.components.verge.layout.options.trayHealthGroup.none',
+                  )}
+                </MenuItem>
+                {trayHealthGroupOptions.map(({ name, unavailable }) => (
+                  <MenuItem key={name} value={name}>
+                    {unavailable
+                      ? t(
+                          'settings.components.verge.layout.options.trayHealthGroup.unavailable',
+                          { name },
+                        )
+                      : name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </GuardState>
+          </Item>
+        )}
 
         <Item data-setting-target="settings.components.verge.layout.fields.commonTrayIcon">
           <ListItemText

@@ -243,6 +243,8 @@
           "trayIcon": "آیکون سینی سیستم",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "آیکون وضعیت سینی",
+          "trayHealthGroup": "گروه بررسی سلامت",
           "commonTrayIcon": "آیکون مشترک سینی سیستم",
           "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
           "tunTrayIcon": "آیکون سینی Tun",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds",
+          "trayHealthIcon": "وقتی آخرین آزمون تأخیر گره در حال استفاده ناموفق باشد، یک هشدار قرمز به آیکون سینی اضافه می‌شود. بررسی فقط هنگام روشن بودن پروکسی سیستم یا TUN انجام می‌شود؛ حالت سراسری GLOBAL را بررسی می‌کند. اگر نتیجه نامشخص باشد، آیکون فعلی حفظ می‌شود.",
+          "trayHealthGroup": "گروه پروکسی بررسی‌شده در حالت قوانین (حالت سراسری همیشه GLOBAL را بررسی می‌کند)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "انتخاب نشده",
+            "unavailable": "{{name}} (در دسترس نیست)"
           }
         }
       }

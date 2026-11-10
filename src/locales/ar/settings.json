@@ -243,6 +243,8 @@
           "trayIcon": "أيقونة شريط المهام",
           "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
+          "trayHealthIcon": "أيقونة حالة شريط المهام",
+          "trayHealthGroup": "مجموعة الفحص",
           "commonTrayIcon": "أيقونة شريط مهام عامة",
           "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
           "tunTrayIcon": "أيقونة شريط المهام لـ TUN",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds",
+          "trayHealthIcon": "يضيف تحذيرًا أحمر إلى أيقونة شريط المهام عند فشل آخر اختبار لزمن الاستجابة للعقدة المستخدمة. يتم الفحص فقط عند تفعيل وكيل النظام أو TUN؛ ويفحص الوضع العام GLOBAL. تبقى الأيقونة الحالية عند عدم معرفة النتيجة.",
+          "trayHealthGroup": "مجموعة الوكيل التي يتم فحصها في وضع القواعد (الوضع العام يفحص GLOBAL دائمًا)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Default",
             "inline": "Inline",
             "disable": "Disable"
+          },
+          "trayHealthGroup": {
+            "none": "غير محدد",
+            "unavailable": "{{name}} (غير متاح)"
           }
         }
       }

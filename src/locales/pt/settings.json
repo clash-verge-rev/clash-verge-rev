@@ -243,6 +243,8 @@
           "trayIcon": "Ícone da Bandeja",
           "proxyGroupsDisplayMode": "Modo de Exibição dos Grupos de Proxy",
           "showOutboundModesInline": "Mostrar Modos de Saída em Linha",
+          "trayHealthIcon": "Ícone de status da bandeja",
+          "trayHealthGroup": "Grupo de verificação",
           "commonTrayIcon": "Ícone Comum da Bandeja",
           "systemProxyTrayIcon": "Ícone da Bandeja do Proxy do Sistema",
           "tunTrayIcon": "Ícone da Bandeja do Tun",
@@ -252,7 +254,9 @@
         },
         "tooltips": {
           "hoverNavigator": "Rola automaticamente até o grupo de proxy correspondente ao passar o mouse sobre as letras do alfabeto",
-          "hoverNavigatorDelay": "Atraso antes da rolagem automática ao passar o mouse, em milissegundos"
+          "hoverNavigatorDelay": "Atraso antes da rolagem automática ao passar o mouse, em milissegundos",
+          "trayHealthIcon": "Adiciona um aviso vermelho ao ícone da bandeja quando o último teste de latência do nó em uso falha. A verificação só ocorre com o proxy do sistema ou TUN ativado; o modo global verifica GLOBAL. Resultados desconhecidos mantêm o ícone atual.",
+          "trayHealthGroup": "Grupo de proxy verificado no modo Regra (o modo global sempre verifica GLOBAL)"
         },
         "options": {
           "icon": {
@@ -270,6 +274,10 @@
             "default": "Padrão",
             "inline": "Em Linha",
             "disable": "Desativar"
+          },
+          "trayHealthGroup": {
+            "none": "Não selecionado",
+            "unavailable": "{{name}} (indisponível)"
           }
         }
       }
