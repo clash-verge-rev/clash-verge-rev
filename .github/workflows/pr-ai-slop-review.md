@@ -33,6 +33,7 @@ max-daily-ai-credits: 5000
 permissions:
   issues: read
   pull-requests: read
+  copilot-requests: none
 
 pre-agent-steps:
   - name: Make Copilot quota exhaustion non-blocking
