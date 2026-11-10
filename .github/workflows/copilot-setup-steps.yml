@@ -33,7 +33,7 @@ jobs:
       - name: Install gh-aw extension
         uses: github/gh-aw-actions/setup-cli@53d0749e19424a918acd82b4d140264ce48f2f14 # v1.2.2
         with:
-          version: v1.0.1
+          version: v1.2.2
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
         with:
