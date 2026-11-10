@@ -106,14 +106,21 @@ it('skips delay-independent projections and reuses members for delay sorting', (
   }
   state.delays.set('plain', { of: () => 42 })
   state.delays.set('sorted', { of: () => 42 })
-  render()
+  const initial = render().renderList
   vi.mocked(filterSort).mockClear()
   vi.mocked(resolveMember).mockClear()
   state.delays.set('plain', { of: () => 43 })
-  render()
+  const flatMap = vi.spyOn(Array.prototype, 'flatMap')
+  const flat = vi.spyOn(Array.prototype, 'flat')
+  const unrelated = render().renderList
   expect(filterSort).toHaveBeenCalledTimes(0)
+  expect(flatMap.mock.calls.length + flat.mock.calls.length).toBe(0)
+  expect(unrelated.filter((item, i) => item !== initial[i])).toHaveLength(0)
   state.delays.set('sorted', { of: () => 43 })
-  render()
+  const settled = render().renderList
   expect(filterSort).toHaveBeenCalledTimes(1)
   expect(resolveMember).toHaveBeenCalledTimes(0)
+  expect(settled.filter((item, i) => item !== initial[i])).toHaveLength(0)
+  flatMap.mockRestore()
+  flat.mockRestore()
 })
