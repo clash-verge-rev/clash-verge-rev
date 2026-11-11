@@ -1,0 +1,10 @@
+{
+  "identifier": "desktop-macos-capability",
+  "platforms": ["macOS"],
+  "webviews": ["main"],
+  "windows": ["main"],
+  "permissions": [
+    "core:window:allow-set-background-color",
+    "core:webview:allow-set-webview-background-color"
+  ]
+}

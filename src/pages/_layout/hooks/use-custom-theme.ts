@@ -8,7 +8,11 @@ import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
+import { mutate } from '@/services/mutate'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
+import getSystem from '@/utils/get-system'
+
+const IS_MACOS = getSystem() === 'macos'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -140,6 +144,21 @@ export const useCustomTheme = () => {
       })
     }
   }, [mode, appWindow, theme_mode])
+
+  // The macOS title bar is translucent over the window and webview background,
+  // which is only set when the window is created. Updates are serialized so an
+  // overlapping one cannot leave the two layers with different colors.
+  useEffect(() => {
+    if (!IS_MACOS) return
+    const { background_color } =
+      mode === 'light' ? defaultTheme : defaultDarkTheme
+    mutate(() => appWindow.setBackgroundColor(background_color), {
+      id: `${appWindow.label}:background-color`,
+      errorNotice: false,
+    }).catch((err) => {
+      console.error('Failed to sync window background color:', err)
+    })
+  }, [mode, appWindow])
 
   const theme = useMemo(() => {
     const setting = theme_setting || {}
