@@ -5,6 +5,7 @@ export type ServiceRequestReason =
   | 'tunNeedsService'
   | 'serviceLocationRefused'
   | 'serviceNotAutoStarted'
+  | 'serviceUpgradeIncomplete'
 
 export interface ServiceRequest {
   readonly reason: ServiceRequestReason

@@ -78,6 +78,8 @@ async fn resolve_setup() {
 
     let core_init = AsyncHandler::spawn(|| async {
         init_core_manager().await;
+        #[cfg(target_os = "linux")]
+        crate::core::service::notify_incomplete_service_upgrade().await;
     });
 
     let _ = futures::join!(

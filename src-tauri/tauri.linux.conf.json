@@ -11,7 +11,11 @@
         "conflicts": ["clash-verge"],
         "replaces": ["clash-verge"],
         "postInstallScript": "./packages/linux/post-install.sh",
-        "preRemoveScript": "./packages/linux/pre-remove.sh"
+        "preRemoveScript": "./packages/linux/pre-remove.sh",
+        "files": {
+          "/usr/bin/clash-verge-service-uninstall": "./packages/linux/service-uninstall.sh",
+          "/usr/bin/clash-verge-service-uninstall.real": "./sidecar/clash-verge-service-uninstall"
+        }
       },
       "rpm": {
         "depends": ["openssl", "libayatana-appindicator-gtk3"],
@@ -21,13 +25,16 @@
         "conflicts": ["clash-verge"],
         "obsoletes": ["clash-verge"],
         "postInstallScript": "./packages/linux/post-install-rpm.sh",
-        "preRemoveScript": "./packages/linux/pre-remove.sh"
+        "preRemoveScript": "./packages/linux/pre-remove.sh",
+        "files": {
+          "/usr/bin/clash-verge-service-uninstall": "./packages/linux/service-uninstall.sh",
+          "/usr/bin/clash-verge-service-uninstall.real": "./sidecar/clash-verge-service-uninstall"
+        }
       }
     },
     "externalBin": [
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
-      "./sidecar/clash-verge-service-uninstall",
       "./sidecar/verge-mihomo",
       "./sidecar/verge-mihomo-alpha"
     ]

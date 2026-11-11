@@ -697,6 +697,7 @@
         "permissionRejectedReason": "Der Dienst konnte nicht bestätigen, dass die Kerndateien und Ordner für die Ausführung mit erhöhten Rechten sicher sind.",
         "permissionRepairGuide": "Reparaturanleitung öffnen",
         "sidecarFallback": "Der Dienst konnte den Kern nicht starten. Die Anwendung läuft im Sidecar-Modus weiter; der Dienst bleibt nicht verfügbar.",
+        "upgradeStateNotRestored": "Nach dem Upgrade konnte der vorherige Autostart- und Laufzustand des Clash Verge-Dienstes ({{state}}) nicht wiederhergestellt werden. Eine Neuinstallation des Dienstes stellt ihn nicht wieder her; prüfen Sie ihn mit systemctl status clash-verge-service und passen Sie ihn mit systemctl an.",
         "uninstallSuccess": "Service erfolgreich deinstalliert"
       },
       "updater": {

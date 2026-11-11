@@ -750,6 +750,20 @@ impl CoreManager {
         self.controlled_stop_core_inner().await
     }
 
+    /// Holds the core lifecycle for a package install, stopping a Service-run core first and returning
+    /// whether it did, so no core start or restart overlaps the package scripts reinstalling the Service.
+    #[cfg(target_os = "linux")]
+    pub(crate) async fn pause_for_package_install(
+        &'static self,
+    ) -> Result<(tokio::sync::MutexGuard<'static, ()>, bool)> {
+        let life = self.lifecycle_lock.lock().await;
+        if !matches!(*self.get_running_mode(), RunningMode::Service) {
+            return Ok((life, false));
+        }
+        self.controlled_stop_core_inner().await?;
+        Ok((life, true))
+    }
+
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
         self.controlled_stop_core_with_intent(ProxyStopIntent::Clear).await
     }

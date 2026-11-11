@@ -552,7 +552,11 @@ const SERVICE_BINARIES = [
 
 function serviceFileInfo(name) {
   const ext = platform === 'win32' ? '.exe' : ''
-  const suffix = platform === 'linux' ? `-${SIDECAR_HOST}` : ''
+  // The Linux uninstaller is packaged through `files`, whose sources cannot vary by target.
+  const suffix =
+    platform === 'linux' && name !== 'clash-verge-service-uninstall'
+      ? `-${SIDECAR_HOST}`
+      : ''
   return {
     sourceFile: `${name}${ext}`,
     targetFile: `${name}${suffix}${ext}`,
