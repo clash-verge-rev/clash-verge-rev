@@ -1,0 +1,80 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <!-- 同一 MSI 产品系列沿用 UpgradeCode，供 Windows Installer 识别旧版本。 -->
+  <Package Name="Clash Verge" Manufacturer="Clash Verge Rev" Version="$(AppVersion)" Language="1033"
+           UpgradeCode="AC155F54-9EB2-4C25-AE9A-4CBD5BE4656F" Scope="perMachine">
+    <!-- Autobuild 同版本需要 -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" IgnoreLanguage="yes" Schedule="afterInstallInitialize"
+                  DowngradeErrorMessage="A newer version of Clash Verge is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <!-- 优先使用上次安装写入的路径，首次安装则使用下方的默认目录。 -->
+    <Property Id="INSTALLFOLDER" Secure="yes">
+      <RegistrySearch Id="PreviousInstallFolder" Root="HKLM" Key="Software\Clash Verge Rev\WiX"
+                      Name="InstallDir" Type="raw" Bitness="always64" />
+    </Property>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <UIRef Id="VergeUI_InstallDir" />
+    <!-- 校验clash-verge.exe进程，确保用户安装前已安全退出 -->
+    <util:CloseApplication Id="CheckVerge" Target="clash-verge.exe" CloseMessage="no"
+                          RebootPrompt="no" PromptToContinue="yes" Property="VERGE_RUNNING"
+                          Description="Clash Verge is running. Exit Clash Verge from its tray menu, then click Retry. Abort cancels setup. Setup cannot continue while Clash Verge is running." />
+    <!-- 即使用户在提示框点 Ignore，只要主程序仍在运行，安装验证前就会报错退出。 -->
+    <CustomAction Id="RequireVergeExit" Error="Exit Clash Verge from its tray menu before running setup again." />
+    <InstallExecuteSequence>
+      <Custom Action="override Wix4CloseApplications_$(sys.BUILDARCHSHORT)" Before="InstallValidate" />
+      <Custom Action="RequireVergeExit" After="Wix4CloseApplications_$(sys.BUILDARCHSHORT)" Condition="VERGE_RUNNING" />
+    </InstallExecuteSequence>
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Clash Verge">
+        <Directory Id="ResourcesFolder" Name="resources" />
+      </Directory>
+    </StandardDirectory>
+    <ComponentGroup Id="ApplicationFiles" Directory="INSTALLFOLDER">
+      <Component Id="InstallLocation" Guid="*">
+        <RegistryValue Root="HKLM" Key="Software\Clash Verge Rev\WiX" Name="InstallDir"
+                       Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      </Component>
+      <Component Id="MainExecutable" Guid="*">
+        <File Source="$(SourceDir)\clash-verge.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="Mihomo" Guid="*">
+        <File Source="$(SourceDir)\verge-mihomo.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="MihomoAlpha" Guid="*">
+        <File Source="$(SourceDir)\verge-mihomo-alpha.exe" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="ResourceFiles" Directory="ResourcesFolder">
+      <Component Id="Service" Guid="*">
+        <File Source="$(SourceDir)\resources\clash-verge-service.exe" KeyPath="yes" />
+        <!-- 安装和卸载都等待已有服务停止 -->
+        <ServiceControl Id="StopVergeService" Name="clash_verge_service" Stop="both" Wait="yes" />
+      </Component>
+      <Component Id="ServiceInstaller" Guid="*">
+        <File Source="$(SourceDir)\resources\clash-verge-service-install.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="ServiceUninstaller" Guid="*">
+        <File Source="$(SourceDir)\resources\clash-verge-service-uninstall.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="EnableLoopback" Guid="*">
+        <File Source="$(SourceDir)\resources\enableLoopback.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="AsnDatabase" Guid="*">
+        <File Source="$(SourceDir)\resources\ASN.mmdb" KeyPath="yes" />
+      </Component>
+      <Component Id="CountryDatabase" Guid="*">
+        <File Source="$(SourceDir)\resources\Country.mmdb" KeyPath="yes" />
+      </Component>
+      <Component Id="GeoipDatabase" Guid="*">
+        <File Source="$(SourceDir)\resources\geoip.dat" KeyPath="yes" />
+      </Component>
+      <Component Id="GeositeDatabase" Guid="*">
+        <File Source="$(SourceDir)\resources\geosite.dat" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+    <Feature Id="Application" Title="Clash Verge" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentGroupRef Id="ResourceFiles" />
+    </Feature>
+  </Package>
+</Wix>

@@ -44,6 +44,10 @@
 
 - 新增连接页面按网络协议（TCP/UDP）筛选连接
 
+**🖥️ Windows**
+
+- 新增 Windows MSI 安装包支持(x64/Arm64)
+
 </details>
 
 <details>

@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <!-- 运行的该文件位置引导至仓库内容根目录 为后续提供source -->
+    <RepositoryRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', '..', '..'))</RepositoryRoot>
+    <!-- build:wix 按目标架构传入产物目录。各产物目录分别保存 WiX 中间文件(产物缓存)。 -->
+    <SourceDir Condition="'$(SourceDir)' == ''">$(RepositoryRoot)target\release</SourceDir>
+    <BaseIntermediateOutputPath>$(SourceDir)\bundle\wix7\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="WixToolset.Sdk" Version="7.0.1" />
+  <PropertyGroup>
+    <!-- WiX v7 构建工具的许可接受配置，作用于打包阶段。 -->
+    <AcceptEula>wix7</AcceptEula>
+    <InstallerPlatform Condition="'$(InstallerPlatform)' == ''">x64</InstallerPlatform>
+    <!-- MSI 内部使用三段数字版本，文件名可保留预发布标记和构建元数据。 -->
+    <AppDisplayVersion Condition="'$(AppDisplayVersion)' == ''">$(AppVersion)</AppDisplayVersion>
+    <DefineConstants>SourceDir=$(SourceDir);AppVersion=$(AppVersion)</DefineConstants>
+    <!-- 产物命名格式 -->
+    <OutputName>Clash.Verge_$(AppDisplayVersion)_$(InstallerPlatform)-setup</OutputName>
+    <OutputPath>$(SourceDir)\bundle\wix7\</OutputPath>
+    <Cultures>en-US</Cultures>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.1" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="7.0.1" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="WixToolset.Sdk" Version="7.0.1" />
+</Project>

@@ -185,6 +185,12 @@ jobs:
           node-version: '26.13.1'
           cache: 'pnpm'
 
+      - name: Install Microsoft .NET SDK
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
       - name: Pnpm install and check
         run: |
           pnpm i
@@ -215,6 +221,19 @@ jobs:
           prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
+
+      - name: Build WiX v7 MSI
+        if: matrix.os == 'windows-latest'
+        run: pnpm build:wix --target ${{ matrix.target }}
+
+      - name: Upload Release MSI Package
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
+          prerelease: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: target/${{ matrix.target }}/release/bundle/wix7/*.msi
 
   autobuild-arm-linux:
     name: Autobuild ARM Linux
