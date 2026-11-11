@@ -275,6 +275,7 @@ const ConnectionsPage = () => {
           </BaseStyledSelect>
         )}
         <BaseStyledSelect
+          style={{ width: 80 }}
           value={networkFilter}
           onChange={(e) => {
             savedNetworkFilter = e.target.value as NetworkFilter
