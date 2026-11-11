@@ -50,7 +50,7 @@ import {
   updateProfile,
 } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
-import { errorDetail, showNotice } from '@/services/notice-service'
+import { errorDetail, failureCode, showNotice } from '@/services/notice-service'
 import { revalidateQuery, useQuery } from '@/services/query-client'
 import { useThemeMode } from '@/services/states'
 import {
@@ -218,6 +218,14 @@ const ProfilePage = () => {
       setUrl('')
       await performRobustRefresh(prevCurrent)
     }
+
+    const promptForAgeKey = (error: unknown, option: IProfileOption) => {
+      if (failureCode(error) !== 'PROFILE_AGE_KEY_REQUIRED') return false
+      viewerRef.current?.create(url, option, () =>
+        handleImportSuccess('shared.feedback.notifications.importSuccess'),
+      )
+      return true
+    }
     try {
       await mutate(() => importProfile(url), {
         id: 'import-profile',
@@ -225,6 +233,7 @@ const ProfilePage = () => {
       })
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
+      if (promptForAgeKey(initialErr, { with_proxy: true })) return
       console.warn('[订阅导入] 首次导入失败:', initialErr)
 
       const initialDetail = errorDetail(initialErr)
@@ -250,6 +259,7 @@ const ProfilePage = () => {
           'shared.feedback.notifications.importWithClashProxy',
         )
       } catch (retryErr) {
+        if (promptForAgeKey(retryErr, { self_proxy: true })) return
         showNotice.error(
           'profiles.page.feedback.notifications.importFail',
           retryErr,

@@ -724,6 +724,7 @@ export type PrfItem_Serialize = {
 export type PrfOption = PrfOption_Serialize | PrfOption_Deserialize
 
 export type PrfOption_Deserialize = {
+  age_secret_key?: string | null
   user_agent?: string | null
   with_proxy?: boolean | null
   self_proxy?: boolean | null
@@ -744,6 +745,7 @@ export type PrfOption_Deserialize = {
 }
 
 export type PrfOption_Serialize = {
+  age_secret_key?: string
   user_agent?: string
   with_proxy?: boolean
   self_proxy?: boolean

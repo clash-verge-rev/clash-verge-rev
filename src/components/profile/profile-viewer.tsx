@@ -1,6 +1,8 @@
+import { VisibilityOffOutlined, VisibilityOutlined } from '@mui/icons-material'
 import {
   Box,
   FormControl,
+  IconButton,
   InputAdornment,
   InputLabel,
   MenuItem,
@@ -28,7 +30,11 @@ interface Props {
 }
 
 export interface ProfileViewerRef {
-  create: () => void
+  create: (
+    url?: string,
+    option?: IProfileOption,
+    onCreated?: () => void,
+  ) => void
   edit: (item: IProfileItem) => void
 }
 
@@ -42,9 +48,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const [open, setOpen] = useState(false)
   const [openType, setOpenType] = useState<'new' | 'edit'>('new')
   const [loading, setLoading] = useState(false)
+  const [showAgeKey, setShowAgeKey] = useState(false)
   const { profiles } = useProfiles()
 
   const fileDataRef = useRef<string | null>(null)
+  const onCreatedRef = useRef<() => void>(undefined)
 
   const { control, watch, setValue, reset, handleSubmit, getValues } =
     useForm<IProfileItem>({
@@ -62,15 +70,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     })
 
   useImperativeHandle(ref, () => ({
-    create: () => {
+    create: (url = '', option, onCreated) => {
+      onCreatedRef.current = onCreated
+      setShowAgeKey(false)
+      reset()
+      setValue('url', url)
+      setValue('option.with_proxy', !!option?.with_proxy)
+      setValue('option.self_proxy', !!option?.self_proxy)
       setOpenType('new')
       setOpen(true)
     },
     edit: (item: IProfileItem) => {
+      onCreatedRef.current = undefined
+      setShowAgeKey(false)
       if (item) {
-        Object.entries(item).forEach(([key, value]) => {
-          setValue(key as any, value)
-        })
+        reset(item, { keepDefaultValues: true })
       }
       setOpenType('edit')
       setOpen(true)
@@ -103,7 +117,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           option.user_agent = undefined
         }
 
-        const name = form.name || `${form.type} file`
+        const isRemote = form.type === 'remote'
+        const isUpdate = openType === 'edit'
+        // Unnamed, the backend names a new subscription from its response.
+        const name =
+          form.name || (isRemote && !isUpdate ? undefined : `${form.type} file`)
         const item = {
           type: form.type,
           name,
@@ -111,8 +129,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           option,
           ...(form.type === 'remote' ? { url: form.url } : {}),
         }
-        const isRemote = form.type === 'remote'
-        const isUpdate = openType === 'edit'
 
         const isActivating = isUpdate && form.uid === (profiles?.current ?? '')
 
@@ -206,8 +222,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         setOpen(false)
-        setTimeout(() => reset(), 500)
+        reset()
         fileDataRef.current = null
+        onCreatedRef.current?.()
 
         setTimeout(() => {
           onChange(isActivating)
@@ -224,7 +241,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     try {
       setOpen(false)
       fileDataRef.current = null
-      setTimeout(() => reset(), 500)
+      reset()
     } catch (e) {
       console.warn('[ProfileViewer] handleClose error:', e)
     }
@@ -323,6 +340,40 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 multiline
                 label={t('profiles.modals.profileForm.fields.subscriptionUrl')}
+              />
+            )}
+          />
+
+          <Controller
+            name="option.age_secret_key"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...text}
+                {...field}
+                value={field.value ?? ''}
+                type={showAgeKey ? 'text' : 'password'}
+                placeholder="AGE-SECRET-KEY-..."
+                label={t('profiles.modals.profileForm.fields.ageSecretKey')}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          edge="end"
+                          onClick={() => setShowAgeKey(!showAgeKey)}
+                        >
+                          {showAgeKey ? (
+                            <VisibilityOffOutlined fontSize="small" />
+                          ) : (
+                            <VisibilityOutlined fontSize="small" />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
             )}
           />

@@ -118,6 +118,7 @@
         "type": "النوع",
         "description": "الوصف",
         "subscriptionUrl": "رابط الاشتراك",
+        "ageSecretKey": "مفتاح age السري (اختياري)",
         "userAgent": "وكيل المستخدم",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "فاصل التحديث",

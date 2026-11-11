@@ -1,7 +1,7 @@
 use super::patch_opt_field;
 
 use crate::{
-    config::profiles,
+    config::{Config, deserialize_encrypted, profiles, serialize_encrypted},
     utils::{
         dirs, help,
         network::{NetworkManager, ProxyType},
@@ -12,8 +12,8 @@ use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::time::Duration;
-use tokio::fs;
+use std::{borrow::Cow, path::Path, process::Stdio, time::Duration};
+use tokio::{fs, io::AsyncWriteExt as _, process::Command};
 // TODO, use other re-export
 use reqwest_dav::re_exports::url::form_urlencoded;
 use tauri::Url;
@@ -92,6 +92,14 @@ pub struct PrfExtra {
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq, specta::Type)]
 #[serde(default)]
 pub struct PrfOption {
+    #[serde(
+        serialize_with = "serialize_encrypted",
+        deserialize_with = "deserialize_age_secret_key",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[specta(type = Option<std::string::String>)]
+    pub age_secret_key: Option<String>,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     #[specta(type = Option<std::string::String>)]
     pub user_agent: Option<String>,
@@ -133,6 +141,7 @@ impl PrfOption {
         match (one, other) {
             (Some(a_ref), Some(b_ref)) => {
                 let mut result = a_ref.clone();
+                patch_opt_field!(result, b_ref, age_secret_key);
                 patch_opt_field!(result, b_ref, user_agent);
                 patch_opt_field!(result, b_ref, with_proxy);
                 patch_opt_field!(result, b_ref, self_proxy);
@@ -374,8 +383,11 @@ impl PrfItem {
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text();
-
+        let data = decrypt_remote_profile(
+            resp.text().trim_start_matches('\u{feff}'),
+            option.and_then(|option| option.age_secret_key.as_deref()),
+        )
+        .await?;
         let data = data.trim_start_matches('\u{feff}');
 
         let yaml = serde_yaml_ng::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
@@ -396,6 +408,7 @@ impl PrfItem {
             selected: None,
             extra,
             option: Some(PrfOption {
+                age_secret_key: option.and_then(|option| option.age_secret_key.clone()),
                 update_interval,
                 merge,
                 script,
@@ -503,6 +516,61 @@ impl PrfItem {
 
 fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {
     option.and_then(|o| o.allow_auto_update).unwrap_or(true)
+}
+
+// A key sealed by another installation cannot be opened here; drop it instead of failing the profile list.
+#[allow(clippy::unnecessary_wraps, reason = "serde fixes the signature")]
+fn deserialize_age_secret_key<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    Ok(deserialize_encrypted(deserializer).unwrap_or_default())
+}
+
+#[derive(Debug)]
+pub struct AgeSecretKeyRequired;
+
+impl std::fmt::Display for AgeSecretKeyRequired {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("an age secret key is required for this subscription")
+    }
+}
+
+impl std::error::Error for AgeSecretKeyRequired {}
+
+async fn decrypt_remote_profile<'a>(data: &'a str, key: Option<&str>) -> Result<Cow<'a, str>> {
+    if !data.starts_with("-----BEGIN AGE ENCRYPTED FILE-----") {
+        return Ok(Cow::Borrowed(data));
+    }
+    let key = key.map(str::trim).filter(|key| !key.is_empty());
+    let key = key.context(AgeSecretKeyRequired)?;
+    let core = Config::verge().await.latest_arc().get_valid_clash_core();
+    let program = std::env::current_exe()?.with_file_name(format!("{core}{}", std::env::consts::EXE_SUFFIX));
+    decrypt_with_core(&program, key, data).await.map(Cow::Owned)
+}
+
+async fn decrypt_with_core(program: &Path, key: &str, data: &str) -> Result<std::string::String> {
+    let mut command = Command::new(program);
+    command
+        .args(["age", "decrypt", key, "-", "-"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .kill_on_drop(true);
+    #[cfg(windows)]
+    command.creation_flags(windows_sys::Win32::System::Threading::CREATE_NO_WINDOW);
+
+    let output = tokio::time::timeout(Duration::from_secs(30), async {
+        let mut child = command.spawn().context("failed to start Mihomo age decryption")?;
+        let mut input = child.stdin.take().context("failed to open Mihomo input")?;
+        // Close stdin after writing, while draining stdout to avoid pipe deadlocks.
+        let write = async move { input.write_all(data.as_bytes()).await };
+        let (_, output) = tokio::try_join!(write, child.wait_with_output())?;
+        Ok::<_, anyhow::Error>(output)
+    })
+    .await
+    .context("Mihomo age decryption timed out")??;
+    if !output.status.success() {
+        bail!("Mihomo could not decrypt the subscription; check the age secret key and encrypted data");
+    }
+    std::string::String::from_utf8(output.stdout).context("the decrypted subscription is not UTF-8")
 }
 
 /// Fix URLs where query parameters are incorrectly appended to the path segment
