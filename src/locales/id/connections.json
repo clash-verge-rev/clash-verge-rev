@@ -21,9 +21,6 @@
       "uploadSpeed": "Kecepatan Unggah",
       "downloadSpeed": "Kecepatan Unduh"
     },
-    "filter": {
-      "allNetworks": "Semua Jaringan"
-    },
     "actions": {
       "active": "Active",
       "closed": "Closed",

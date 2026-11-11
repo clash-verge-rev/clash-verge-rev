@@ -282,9 +282,7 @@ const ConnectionsPage = () => {
           }}
         >
           <MenuItem value="all">
-            <span style={{ fontSize: 14 }}>
-              {t('connections.components.filter.allNetworks')}
-            </span>
+            <span style={{ fontSize: 14 }}>All</span>
           </MenuItem>
           <MenuItem value="tcp">
             <span style={{ fontSize: 14 }}>TCP</span>

@@ -21,9 +21,6 @@
       "uploadSpeed": "上傳速度",
       "downloadSpeed": "下載速度"
     },
-    "filter": {
-      "allNetworks": "全部網路"
-    },
     "actions": {
       "active": "活躍",
       "closed": "已關閉",
