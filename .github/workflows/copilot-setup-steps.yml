@@ -49,7 +49,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
           cache: 'pnpm'
       - name: Install frontend dependencies
         env:
