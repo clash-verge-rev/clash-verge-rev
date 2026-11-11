@@ -74,12 +74,16 @@ impl<T: Clone> Draft<T> {
         result
     }
 
-    /// Commits and clears the draft.
+    /// Commits and clears the draft, reporting whether one was staged.
     #[inline]
-    pub fn apply(&self) {
+    pub fn apply(&self) -> bool {
         let mut guard = self.inner.data.lock();
-        if let Some(d) = guard.1.take() {
-            guard.0 = d;
+        match guard.1.take() {
+            Some(d) => {
+                guard.0 = d;
+                true
+            }
+            None => false,
         }
     }
 
