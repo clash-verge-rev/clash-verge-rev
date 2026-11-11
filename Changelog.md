@@ -40,6 +40,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增连接页面按网络协议（TCP/UDP）筛选连接
 
 </details>
 
