@@ -24,7 +24,6 @@ import {
   BasePage,
   BaseSearchBox,
   BaseStyledSelect,
-  type SearchState,
   VirtualList,
 } from '@/components/base'
 import {
@@ -39,6 +38,7 @@ import {
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
+import { usePageSearch } from '@/hooks/use-page-search'
 import { useTrafficData } from '@/hooks/use-traffic-data'
 import { useVisibility } from '@/hooks/use-visibility'
 import { mutate } from '@/services/mutate'
@@ -83,10 +83,8 @@ const EMPTY_CONNECTIONS: IConnectionsItem[] = []
 const ConnectionsPage = () => {
   const { t } = useTranslation()
   const pageVisible = useVisibility()
-  const [match, setMatch] = useState<(input: string) => boolean>(
-    () => () => true,
-  )
-  const [hasSearch, setHasSearch] = useState(false)
+  const { searchState, match, onSearch } = usePageSearch('connections')
+  const hasSearch = searchState.text.length > 0
   const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>('default')
   const [connectionsType, setConnectionsType] = useState<'active' | 'closed'>(
     'active',
@@ -160,13 +158,6 @@ const ConnectionsPage = () => {
     }),
   )
 
-  const handleSearch = useCallback(
-    (match: (content: string) => boolean, state: SearchState) => {
-      setMatch(() => match)
-      setHasSearch(state.text.length > 0)
-    },
-    [],
-  )
   const hasTableData = filterConn.length > 0
 
   return (
@@ -274,7 +265,11 @@ const ConnectionsPage = () => {
             },
           }}
         >
-          <BaseSearchBox onSearch={handleSearch} />
+          <BaseSearchBox
+            defaultValue={searchState.text}
+            {...searchState}
+            onSearch={onSearch}
+          />
         </Box>
         {isTableLayout && hasTableData && (
           <Tooltip title={t('connections.components.columnManager.title')}>

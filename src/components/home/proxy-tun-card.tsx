@@ -14,7 +14,7 @@ import {
   useTheme,
   Fade,
 } from '@mui/material'
-import { useState, useMemo, memo, FC } from 'react'
+import { useState, useMemo, useCallback, memo, FC } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
@@ -152,10 +152,15 @@ export const ProxyTunCard: FC = () => {
     showNotice.error(err)
   }
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab)
-    localStorage.setItem(LOCAL_STORAGE_TAB_KEY, tab)
-  }
+  const handleSystemTabClick = useCallback(() => {
+    setActiveTab('system')
+    localStorage.setItem(LOCAL_STORAGE_TAB_KEY, 'system')
+  }, [])
+
+  const handleTunTabClick = useCallback(() => {
+    setActiveTab('tun')
+    localStorage.setItem(LOCAL_STORAGE_TAB_KEY, 'tun')
+  }, [])
 
   const tabDescription = useMemo(() => {
     if (activeTab === 'system') {
@@ -191,17 +196,17 @@ export const ProxyTunCard: FC = () => {
       >
         <TabButton
           isActive={activeTab === 'system'}
-          onClick={() => handleTabChange('system')}
+          onClick={handleSystemTabClick}
           icon={ComputerRounded}
           label={t('settings.sections.system.toggles.systemProxy')}
           hasIndicator={systemProxyIndicator}
         />
         <TabButton
           isActive={activeTab === 'tun'}
-          onClick={() => handleTabChange('tun')}
+          onClick={handleTunTabClick}
           icon={TroubleshootRounded}
           label={t('settings.sections.system.toggles.tunMode')}
-          hasIndicator={enable_tun_mode && isTunModeAvailable}
+          hasIndicator={enable_tun_mode! && isTunModeAvailable}
         />
       </Stack>
 

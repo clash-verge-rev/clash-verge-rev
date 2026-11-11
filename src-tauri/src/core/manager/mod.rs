@@ -5,7 +5,7 @@ mod state;
 
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
-use clash_verge_logging::{LogRing, Type, logging};
+use clash_verge_logging::{LogRing, Type, logging, logging_error};
 use std::{
     fmt,
     sync::{
@@ -57,7 +57,7 @@ fn claim_core_readiness_generation(state: &AtomicU64, captured_generation: u64) 
         .is_ok()
 }
 
-#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
 pub enum RunningMode {
     Service,
     Sidecar,
@@ -75,7 +75,7 @@ impl fmt::Display for RunningMode {
 }
 
 /// Why the Core is not running, kept until a Core starts again.
-#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq, specta::Type)]
 #[serde(tag = "kind", content = "detail", rename_all = "camelCase")]
 pub enum CoreFailure {
     StartFailed(String),
@@ -274,6 +274,10 @@ impl CoreManager {
 
     pub(crate) fn finish_config_update(&self) {
         self.config_update_in_progress.store(false, Ordering::Release);
+        // Spawned because the caller may still hold the config write lock this waits for.
+        crate::process::AsyncHandler::spawn(|| async {
+            logging_error!(Type::Config, crate::config::Config::sync_dns_override().await);
+        });
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(retries = 0))]

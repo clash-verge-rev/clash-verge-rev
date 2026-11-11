@@ -36,6 +36,7 @@
       "yes": "Evet",
       "no": "Hayır",
       "failed": "Başarısız",
+      "risky": "Belirsiz",
       "completed": "Tamamlandı",
       "disallowedIsp": "İzin Verilmeyen ISP",
       "originalsOnly": "Yalnızca Orijinaller",

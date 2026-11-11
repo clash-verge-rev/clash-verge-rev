@@ -70,6 +70,8 @@
     "chain": {
       "header": "Proxy-Kette konfigurieren",
       "warning": "Eine Proxy-Kette verringert die Netzwerkgeschwindigkeit deutlich. Wenn Sie keinen klaren Bedarf haben oder diese Konfiguration nicht verstehen, lassen Sie sie deaktiviert.",
+      "confirmEnable": "Verstanden, aktivieren",
+      "keepDisabled": "Deaktiviert lassen",
       "empty": "Eine Proxy-Kette verringert die Netzwerkgeschwindigkeit deutlich. Wenn Sie keinen klaren Bedarf haben oder diese Konfiguration nicht verstehen, lassen Sie sie deaktiviert.",
       "instruction": "Klicken Sie die Knoten nacheinander an, um sie zur Proxy-Kette hinzuzufügen",
       "minimumNodes": "Eine Proxy-Kette braucht mindestens 2 Knoten",

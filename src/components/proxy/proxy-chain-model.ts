@@ -1,3 +1,5 @@
+import * as yaml from 'js-yaml'
+
 import {
   getRecord,
   rebindNode,
@@ -34,3 +36,31 @@ export const rebindProxyChainItems = (
       delay: record?.history.at(-1)?.delay,
     }
   })
+
+interface ParsedChainConfig {
+  proxies?: Array<{
+    name: string
+    type: string
+    [key: string]: any
+  }>
+}
+
+export const parseChainConfigItems = (configData: string): ProxyChainItem[] => {
+  try {
+    // JSON is valid YAML, so one parser covers both persisted formats.
+    const parsedConfig = yaml.load(configData) as ParsedChainConfig | null
+    const timestamp = Date.now()
+
+    return (
+      parsedConfig?.proxies?.map((proxy, index) => ({
+        id: `${proxy.name}_${timestamp}_${index}`,
+        name: proxy.name,
+        type: proxy.type,
+        delay: undefined,
+      })) || []
+    )
+  } catch (error) {
+    console.error('Failed to process chain config data:', error)
+    return []
+  }
+}

@@ -7,6 +7,7 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
+use futures::StreamExt as _;
 use parking_lot::{Mutex, RwLock};
 use smartstring::alias::String;
 use std::{
@@ -21,7 +22,6 @@ use tokio::{
     sync::mpsc,
     time::{sleep, timeout},
 };
-use tokio_stream::StreamExt as _;
 use tokio_util::time::{DelayQueue, delay_queue::Key};
 
 enum TimerCommand {
@@ -501,6 +501,7 @@ impl Timer {
 mod tests {
     use super::{TaskSchedule, Timer, run_timer_profile_update_transition};
     use crate::config::{PrfItem, PrfOption};
+    use futures::StreamExt as _;
     use parking_lot::Mutex;
     use smartstring::alias::String;
     use std::collections::HashMap;
@@ -513,7 +514,6 @@ mod tests {
         time::Duration,
     };
     use tokio::sync::Barrier;
-    use tokio_stream::StreamExt as _;
     use tokio_util::time::DelayQueue;
 
     struct CancellationProbe {

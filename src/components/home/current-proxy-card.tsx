@@ -1,4 +1,3 @@
-/* eslint-disable @eslint-react/set-state-in-effect */
 import {
   AccessTimeRounded,
   ArrowDropDown,
@@ -31,7 +30,15 @@ import {
   useTheme,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
@@ -47,10 +54,7 @@ import {
   useCoreDataStatus,
   useProxiesData,
 } from '@/providers/app-data-context'
-import { syncTrayProxySelection } from '@/services/cmds'
 import delayManager from '@/services/delay'
-import { mutate } from '@/services/mutate'
-import { profileTestUrls } from '@/services/proxy-test-url'
 import {
   findCurrentGroupMember,
   getRecord,
@@ -423,7 +427,7 @@ interface PersistentProxySelectProps
   value: string
   selectedName: string
   groupName: string
-  fixed?: string
+  fixed?: string | null
   selectedDelay: number
   options: ProxyOption[]
   onChange: (value: string) => void
@@ -573,19 +577,21 @@ export const CurrentProxyCard = () => {
         return profileValue
       }
 
-      if (profileKey !== baseKey) {
-        const legacyValue = localStorage.getItem(baseKey)
-        if (legacyValue != null) {
-          localStorage.removeItem(baseKey)
-          localStorage.setItem(profileKey, legacyValue)
-          return legacyValue
-        }
-      }
-
-      return null
+      return profileKey !== baseKey ? localStorage.getItem(baseKey) : null
     },
     [getProfileStorageKey],
   )
+
+  // Hand the pre-profile-scoping group key to the first profile that shows the card.
+  useEffect(() => {
+    const profileKey = getProfileStorageKey(STORAGE_KEY_GROUP)
+    if (profileKey === STORAGE_KEY_GROUP) return
+    if (localStorage.getItem(profileKey) != null) return
+    const legacyValue = localStorage.getItem(STORAGE_KEY_GROUP)
+    if (legacyValue == null) return
+    localStorage.removeItem(STORAGE_KEY_GROUP)
+    localStorage.setItem(profileKey, legacyValue)
+  }, [getProfileStorageKey])
 
   const writeProfileScopedItem = useCallback(
     (baseKey: string, value: string) => {
@@ -599,10 +605,7 @@ export const CurrentProxyCard = () => {
     [getProfileStorageKey],
   )
 
-  const { handleSelectChange } = useProxySelection({
-    onSuccess: () => {
-      refreshProxy()
-    },
+  const { select } = useProxySelection({
     onError: (error) => {
       console.error('代理切换失败', error)
       refreshProxy()
@@ -618,25 +621,17 @@ export const CurrentProxyCard = () => {
     return savedSortType ? (Number(savedSortType) as ProxySortType) : 0
   })
 
-  const [selectedGroupName, setSelectedGroupName] = useState('')
+  const [lastGroupName, setLastGroupName] = useState('')
   const [openSelect, setOpenSelect] = useState<OpenSelect>(null)
-
-  useEffect(() => {
+  const [openSelectMode, setOpenSelectMode] = useState(mode)
+  if (openSelectMode !== mode) {
+    setOpenSelectMode(mode)
     setOpenSelect(null)
-  }, [mode])
+  }
 
   const delayButtonRef = useRef<HTMLButtonElement>(null)
-  const delays = useGroupDelays(selectedGroupName || null)
 
   const autoCheckInProgressRef = useRef(false)
-  const latestTimeoutRef = useRef<number>(
-    verge?.default_latency_timeout || 10000,
-  )
-  const latestProxyMemberRef = useRef<ResolvedProxyMember | null>(null)
-
-  useEffect(() => {
-    latestTimeoutRef.current = verge?.default_latency_timeout || 10000
-  }, [verge?.default_latency_timeout])
 
   const selectableGroups = useMemo(() => {
     if (!proxyView) return []
@@ -646,6 +641,39 @@ export const CurrentProxyCard = () => {
         (group.type === 'Selector' || group.type === 'URLTest'),
     )
   }, [proxyView])
+
+  const selectedGroupName = useMemo(() => {
+    if (isDirectMode) return 'DIRECT'
+    if (!proxyView) return lastGroupName
+    if (isGlobalMode) return proxyView.global?.name ?? 'GLOBAL'
+
+    const hasGroup = (name: string | null) =>
+      !!name && selectableGroups.some((group) => group.name === name)
+    if (hasGroup(lastGroupName)) return lastGroupName
+    const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP)
+    if (hasGroup(savedGroup)) return savedGroup!
+
+    const primaryKeywords = ['auto', 'select', 'proxy', '节点选择', '自动选择']
+    const primaryGroup =
+      selectableGroups.find((group) =>
+        primaryKeywords.some((keyword) =>
+          group.name.toLowerCase().includes(keyword.toLowerCase()),
+        ),
+      ) ?? selectableGroups[0]
+    return primaryGroup?.name ?? ''
+  }, [
+    isDirectMode,
+    isGlobalMode,
+    lastGroupName,
+    proxyView,
+    readProfileScopedItem,
+    selectableGroups,
+  ])
+  // Keep the shown group, auto picks included, until it leaves the profile.
+  if (proxyView && lastGroupName !== selectedGroupName) {
+    setLastGroupName(selectedGroupName)
+  }
+  const delays = useGroupDelays(selectedGroupName || null)
 
   const selectedGroup = useMemo<ProxyGroupView | null>(() => {
     if (!proxyView || isDirectMode) return null
@@ -678,64 +706,10 @@ export const CurrentProxyCard = () => {
     [proxyView],
   )
 
-  useEffect(() => {
-    if (!selectedGroup) return
-    const customUrl = currentProfile
-      ? profileTestUrls(currentProfile)[selectedGroup.name]
-      : undefined
-    delayManager.setUrl(
-      selectedGroup.name,
-      customUrl?.trim() ||
-        selectedGroup.testUrl?.trim() ||
-        verge?.default_latency_test?.trim() ||
-        'http://cp.cloudflare.com/generate_204',
-    )
-  }, [selectedGroup, currentProfile, verge?.default_latency_test])
-
   const unsortedProxyOptions = useMemo(
     () => optionsForGroup(selectedGroup),
     [optionsForGroup, selectedGroup],
   )
-
-  useEffect(() => {
-    if (!proxyView) return
-    if (isDirectMode) {
-      setSelectedGroupName('DIRECT')
-      return
-    }
-    if (isGlobalMode) {
-      setSelectedGroupName(proxyView.global?.name ?? 'GLOBAL')
-      return
-    }
-
-    const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP)
-    const primaryKeywords = ['auto', 'select', 'proxy', '节点选择', '自动选择']
-    const primaryGroup =
-      selectableGroups.find((group) =>
-        primaryKeywords.some((keyword) =>
-          group.name.toLowerCase().includes(keyword.toLowerCase()),
-        ),
-      ) ?? selectableGroups[0]
-    const nextGroup = selectableGroups.some(
-      ({ name }) => name === selectedGroupName,
-    )
-      ? selectedGroupName
-      : selectableGroups.some(({ name }) => name === savedGroup)
-        ? savedGroup!
-        : (primaryGroup?.name ?? '')
-    if (nextGroup !== selectedGroupName) {
-      setSelectedGroupName(nextGroup)
-      if (nextGroup) writeProfileScopedItem(STORAGE_KEY_GROUP, nextGroup)
-    }
-  }, [
-    isDirectMode,
-    isGlobalMode,
-    proxyView,
-    readProfileScopedItem,
-    selectableGroups,
-    selectedGroupName,
-    writeProfileScopedItem,
-  ])
 
   const currentOption = useMemo(() => {
     if (!proxyView) return undefined
@@ -760,12 +734,10 @@ export const CurrentProxyCard = () => {
       : undefined
   }, [isDirectMode, proxyView, selectedGroup])
 
-  latestProxyMemberRef.current = currentOption?.member ?? null
-
   const handleGroupChange = useCallback(
     (newGroupName: string) => {
       if (isGlobalMode || isDirectMode) return
-      setSelectedGroupName(newGroupName)
+      setLastGroupName(newGroupName)
       writeProfileScopedItem(STORAGE_KEY_GROUP, newGroupName)
     },
     [isDirectMode, isGlobalMode, writeProfileScopedItem],
@@ -780,18 +752,11 @@ export const CurrentProxyCard = () => {
       if (!selectedGroup || !option || !isInteractableMember(option.member)) {
         return
       }
-      const previousProxy = selectedGroup.now
       const nextName = option.member.ref.name
       // The profile selection is the durable source across core restarts and run modes.
-      handleSelectChange(
-        selectedGroup.name,
-        previousProxy,
-        selectedGroup.fixed,
-      )({
-        target: { value: nextName },
-      })
+      select(selectedGroup.name, nextName, selectedGroup.fixed!)
     },
-    [handleSelectChange, isDirectMode, selectedGroup, unsortedProxyOptions],
+    [isDirectMode, select, selectedGroup, unsortedProxyOptions],
   )
 
   const goToProxies = useCallback(() => {
@@ -816,7 +781,7 @@ export const CurrentProxyCard = () => {
           color: 'text.secondary',
         }
 
-  const checkCurrentProxyDelay = useCallback(async () => {
+  const checkCurrentProxyDelay = useEffectEvent(async () => {
     if (autoCheckInProgressRef.current) return
     if (isDirectMode) return
 
@@ -825,7 +790,7 @@ export const CurrentProxyCard = () => {
 
     if (!groupName || !proxyName) return
 
-    const proxyMember = latestProxyMemberRef.current
+    const proxyMember = currentOption?.member
     if (!proxyMember || !isInteractableMember(proxyMember)) {
       debugLog(
         `[CurrentProxyCard] 自动延迟检测跳过，组: ${groupName}, 节点: ${proxyName} 未找到`,
@@ -835,7 +800,7 @@ export const CurrentProxyCard = () => {
 
     autoCheckInProgressRef.current = true
 
-    const timeout = latestTimeoutRef.current || 10000
+    const timeout = verge?.default_latency_timeout || 10000
 
     try {
       debugLog(
@@ -851,7 +816,7 @@ export const CurrentProxyCard = () => {
       autoCheckInProgressRef.current = false
       refreshProxy()
     }
-  }, [isDirectMode, refreshProxy, selectedGroupName, selectedProxyName])
+  })
 
   useEffect(() => {
     if (isDirectMode) return
@@ -881,7 +846,6 @@ export const CurrentProxyCard = () => {
       if (intervalTimer) clearTimeout(intervalTimer)
     }
   }, [
-    checkCurrentProxyDelay,
     autoDelayIntervalMs,
     isDirectMode,
     selectedGroupName,
@@ -924,12 +888,6 @@ export const CurrentProxyCard = () => {
     }
 
     refreshProxy()
-    mutate(() => syncTrayProxySelection(), {
-      id: 'sync-tray-selection',
-      errorNotice: false,
-    }).catch((error) => {
-      console.error('[CurrentProxyCard] Failed to sync tray latency:', error)
-    })
   })
 
   const proxyOptions = useMemo(
@@ -940,7 +898,7 @@ export const CurrentProxyCard = () => {
             unsortedProxyOptions,
             sortType,
             delays.of,
-            defaultLatencyTimeout,
+            defaultLatencyTimeout!,
           ),
     [
       delays,

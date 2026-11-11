@@ -1,8 +1,6 @@
 use crate::core::notify::NoticeStatus;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use anyhow::Result;
-
 use crate::{
     config::Config,
     core::{
@@ -20,7 +18,6 @@ use crate::{
     utils::{init, server, window_manager::WindowManager},
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use clash_verge_signal;
 
 #[cfg(target_os = "macos")]
 pub mod dns;
@@ -104,18 +101,6 @@ async fn resolve_setup() {
     resolve_done();
 }
 
-pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
-    CoreManager::global().stop_core().await?;
-
-    #[cfg(target_os = "macos")]
-    {
-        use dns::restore_public_dns;
-        restore_public_dns().await?;
-    }
-
-    Ok(())
-}
-
 fn init_scheme() {
     logging_error!(Type::Setup, init::init_scheme());
 }
@@ -195,6 +180,8 @@ async fn init_silent_updater() {
     logging!(info, Type::Setup, "Silent updater initialized");
 }
 
+// Upstream has no session-end signal support on Linux; see crates/clash-verge-signal.
+#[cfg(target_os = "linux")]
 pub(crate) fn init_signal() {
     logging!(debug, Type::Setup, "Initializing signal handlers...");
     clash_verge_signal::register(feat::quit);

@@ -5,4 +5,5 @@ if ! command -v "cargo-make" >/dev/null 2>&1; then
   cargo install --force cargo-make
 fi
 
+node scripts/check-contract-changes.mjs --push "$1" || exit $?
 cargo make pre-push

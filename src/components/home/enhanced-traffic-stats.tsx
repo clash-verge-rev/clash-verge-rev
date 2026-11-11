@@ -3,10 +3,14 @@ import {
   ArrowUpwardRounded,
   CloudDownloadRounded,
   CloudUploadRounded,
+  ErrorOutlineRounded,
   LinkRounded,
   MemoryRounded,
 } from '@mui/icons-material'
 import {
+  Alert,
+  Box,
+  Button,
   Grid,
   PaletteColor,
   Paper,
@@ -15,9 +19,9 @@ import {
   useTheme,
 } from '@mui/material'
 import { ReactNode, memo, useMemo, useRef } from 'react'
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 import { useTranslation } from 'react-i18next'
 
-import { TrafficErrorBoundary } from '@/components/shared/traffic-error-boundary'
 import { useConnectionSummaryData } from '@/hooks/use-connection-data'
 import { useMemoryData } from '@/hooks/use-memory-data'
 import { useTrafficData } from '@/hooks/use-traffic-data'
@@ -126,6 +130,50 @@ const CompactStatCard = memo(
 
 // 添加显示名称
 CompactStatCard.displayName = 'CompactStatCard'
+
+const fallbackSx = {
+  p: 2,
+  minHeight: 200,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  border: '1px dashed',
+  borderColor: 'error.main',
+  borderRadius: 2,
+  bgcolor: 'error.light',
+}
+
+const reloadPage = () => window.location.reload()
+
+const TrafficFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
+  const { t } = useTranslation()
+
+  return (
+    <Box sx={fallbackSx}>
+      <ErrorOutlineRounded color="error" sx={{ fontSize: 48, mb: 2 }} />
+      <Typography variant="h6" gutterBottom>
+        {t('shared.feedback.errors.trafficStats')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {t('shared.feedback.errors.trafficStatsDescription')}
+      </Typography>
+      <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
+        {error instanceof Error
+          ? error.message
+          : t('shared.feedback.errors.unknown')}
+      </Alert>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <Button variant="contained" size="small" onClick={resetErrorBoundary}>
+          {t('shared.actions.retry')}
+        </Button>
+        <Button variant="outlined" size="small" onClick={reloadPage}>
+          {t('shared.actions.refreshPage')}
+        </Button>
+      </Box>
+    </Box>
+  )
+}
 
 export const EnhancedTrafficStats = () => {
   const { t } = useTranslation()
@@ -254,10 +302,11 @@ export const EnhancedTrafficStats = () => {
   }, [t, parsedData, displayMemory])
 
   return (
-    <TrafficErrorBoundary
-      onError={(error, errorInfo) => {
-        console.error('[EnhancedTrafficStats] 组件错误:', error, errorInfo)
-      }}
+    <ErrorBoundary
+      FallbackComponent={TrafficFallback}
+      onError={(error, errorInfo) =>
+        console.error('[EnhancedTrafficStats]', error, errorInfo)
+      }
     >
       <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
         {trafficGraph && (
@@ -273,6 +322,6 @@ export const EnhancedTrafficStats = () => {
           </Grid>
         ))}
       </Grid>
-    </TrafficErrorBoundary>
+    </ErrorBoundary>
   )
 }

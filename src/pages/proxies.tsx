@@ -1,11 +1,15 @@
 import { LanOutlined, LanRounded, WarningRounded } from '@mui/icons-material'
-import { Box, Button, ButtonGroup } from '@mui/material'
+import { Box, Button, ButtonGroup, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BasePage, TooltipIcon } from '@/components/base'
+import { BaseDialog, BasePage, TooltipIcon } from '@/components/base'
 import { ProviderButton } from '@/components/proxy/provider-button'
+import {
+  parseChainConfigItems,
+  type ProxyChainItem,
+} from '@/components/proxy/proxy-chain-model'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
 import {
   useAppRefreshers,
@@ -38,18 +42,14 @@ const ProxyPage = () => {
       return false
     }
   })
+  const [chainConfirmOpen, setChainConfirmOpen] = useState(false)
 
-  const [chainConfigData, dispatchChainConfigData] = useReducer(
-    (_: string | null, action: string | null) => action,
-    null as string | null,
-  )
+  const [chainConfigItems, setChainConfigItems] = useState<
+    ProxyChainItem[] | null
+  >(null)
 
   const { clashConfig } = useClashConfigData()
   const { refreshClashConfig } = useAppRefreshers()
-
-  const updateChainConfigData = useCallback((value: string | null) => {
-    dispatchChainConfigData(value)
-  }, [])
 
   const normalizedMode = clashConfig?.mode?.toLowerCase()
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined
@@ -62,40 +62,44 @@ const ProxyPage = () => {
         id: 'patch-clash-mode',
         errorNotice: false,
       })
-      refreshClashConfig()
+      await refreshClashConfig()
     } catch (error) {
       showNotice.error(error)
     }
   })
 
-  const onToggleChainMode = useLockFn(async () => {
-    const newChainMode = !isChainMode
+  const applyChainMode = (enabled: boolean) => {
+    setIsChainMode(enabled)
+    if (!enabled) setChainConfigItems(null)
+    localStorage.setItem('proxy-chain-mode-enabled', enabled.toString())
+  }
 
-    setIsChainMode(newChainMode)
-    // 保存链式代理按钮状态到 localStorage
-    localStorage.setItem('proxy-chain-mode-enabled', newChainMode.toString())
-
-    if (!newChainMode) {
-      // 退出链式代理模式时，清除链式代理配置
-      try {
-        debugLog('Exiting chain mode, clearing chain configuration')
-        await mutate(() => updateProxyChainConfigInRuntime(null), {
-          id: 'update-proxy-chain-runtime',
-          errorNotice: false,
-        })
-        debugLog('Chain configuration cleared successfully')
-      } catch (error) {
-        console.error('Failed to clear chain configuration:', error)
-      }
+  const onExitChainMode = useLockFn(async () => {
+    // 退出链式代理模式时，清除链式代理配置
+    try {
+      debugLog('Exiting chain mode, clearing chain configuration')
+      const result = await mutate(() => updateProxyChainConfigInRuntime(null), {
+        id: 'update-proxy-chain-runtime',
+        errorNotice: false,
+      })
+      if (!result.ok) return
+      debugLog('Chain configuration cleared successfully')
+    } catch (error) {
+      console.error('Failed to clear chain configuration:', error)
+      showNotice.error(error)
+      return
     }
+    applyChainMode(false)
   })
+
+  const onToggleChainMode = () => {
+    if (isChainMode) onExitChainMode().catch(() => {})
+    else setChainConfirmOpen(true)
+  }
 
   // 当开启链式代理模式时，获取配置数据
   useEffect(() => {
-    if (!isChainMode) {
-      updateChainConfigData(null)
-      return
-    }
+    if (!isChainMode) return
 
     let cancelled = false
 
@@ -106,33 +110,35 @@ const ProxyPage = () => {
         if (!exitNode) {
           console.error('No proxy chain exit node found in localStorage')
           if (!cancelled) {
-            updateChainConfigData('')
+            setChainConfigItems([])
           }
           return
         }
 
         const configData = await getRuntimeProxyChainConfig(exitNode)
         if (!cancelled) {
-          updateChainConfigData(configData || '')
+          setChainConfigItems(
+            configData ? parseChainConfigItems(configData) : [],
+          )
         }
       } catch (error) {
         console.error('Failed to get runtime proxy chain config:', error)
         if (!cancelled) {
-          updateChainConfigData('')
+          setChainConfigItems([])
         }
       }
     }
 
-    fetchChainConfig()
+    fetchChainConfig().catch(() => {})
 
     return () => {
       cancelled = true
     }
-  }, [isChainMode, updateChainConfigData])
+  }, [isChainMode])
 
   useEffect(() => {
     if (normalizedMode && !isMode(normalizedMode)) {
-      onChangeMode('rule')
+      onChangeMode('rule').catch(() => {})
     }
   }, [normalizedMode, onChangeMode])
 
@@ -197,8 +203,24 @@ const ProxyPage = () => {
       <ProxyGroups
         mode={curMode ?? 'rule'}
         isChainMode={isChainMode}
-        chainConfigData={chainConfigData}
+        chainConfigItems={chainConfigItems}
+        onExitChainMode={onExitChainMode}
       />
+      <BaseDialog
+        open={chainConfirmOpen}
+        title={t('proxies.page.actions.toggleChain')}
+        okBtn={t('proxies.page.chain.confirmEnable')}
+        cancelBtn={t('proxies.page.chain.keepDisabled')}
+        contentSx={{ width: { xs: 320, sm: 420 } }}
+        onCancel={() => setChainConfirmOpen(false)}
+        onClose={() => setChainConfirmOpen(false)}
+        onOk={() => {
+          setChainConfirmOpen(false)
+          applyChainMode(true)
+        }}
+      >
+        <Typography variant="body2">{chainWarning}</Typography>
+      </BaseDialog>
     </BasePage>
   )
 }

@@ -6,7 +6,7 @@ use crate::{
         notification::{self, FailedOperation},
         runstate::RUN_STATE,
         service,
-        sysopt::Sysopt,
+        sysopt::{Sysopt, format_bypass},
     },
     process::AsyncHandler,
     utils::{
@@ -180,6 +180,14 @@ pub const fn is_missing_network_service(_error: &sysproxy::Error) -> bool {
     false
 }
 
+pub fn is_missing_network_service_failure(error: &anyhow::Error) -> bool {
+    !SystemProxyStateUnknown::is_in(error)
+        && SysproxyFailure::from_chain(error).is_none()
+        && error
+            .downcast_ref::<sysproxy::Error>()
+            .is_some_and(is_missing_network_service)
+}
+
 /// Distinguish a misplaced sidecar from a missing privileged service.
 async fn classify_local_apply_failure(error: anyhow::Error) -> anyhow::Error {
     if SysproxyFailure::from_chain(&error).is_some() || !was_refused_locally(&error) {
@@ -204,8 +212,6 @@ const fn refusal_classification(service_usable: Option<bool>) -> SysproxyFailure
 }
 
 const LOOPBACK_HOST: &str = "127.0.0.1";
-const MACOS_DEFAULT_BYPASS: &str =
-    "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 const MAX_SERVICE_BYPASS_LEN: usize = 8192;
 
 static SERVICE_PROXY_OPERATIONS: ServiceProxyOperations = ServiceProxyOperations::new();
@@ -327,13 +333,7 @@ fn service_bypass(verge: &IVerge) -> Result<String> {
     let custom = verge.system_proxy_bypass.as_deref().unwrap_or("");
     ensure!(!custom.contains('\0'), "system proxy bypass contains NUL");
 
-    let mut bypass = if custom.is_empty() {
-        MACOS_DEFAULT_BYPASS.to_owned()
-    } else if verge.use_default_bypass.unwrap_or(true) {
-        format!("{MACOS_DEFAULT_BYPASS},{custom}")
-    } else {
-        custom.to_owned()
-    };
+    let mut bypass: String = format_bypass(verge.use_default_bypass.unwrap_or(true), custom).into();
     truncate_utf8(&mut bypass, MAX_SERVICE_BYPASS_LEN);
     Ok(bypass)
 }
@@ -367,6 +367,13 @@ fn service_apply_result(requested: &MacosProxyConfig, outcome: ProxyApplyOutcome
         ProxyApplyOutcome::Applied | ProxyApplyOutcome::NotRequested => Ok(()),
         // Direct fallback satisfies a disable request.
         ProxyApplyOutcome::DirectFallback { .. } if matches!(requested, MacosProxyConfig::Disabled) => Ok(()),
+        // Older helpers encode a failed service lookup as fallback even when no OS write occurred.
+        #[cfg(target_os = "macos")]
+        ProxyApplyOutcome::DirectFallback { message }
+            if message == sysproxy::Error::NoActiveNetworkService.to_string() =>
+        {
+            Err(sysproxy::Error::NoActiveNetworkService.into())
+        }
         ProxyApplyOutcome::DirectFallback { message } => {
             Err(SysproxyFailure::DirectFallback { detail: message }.into())
         }
@@ -616,6 +623,10 @@ pub async fn refresh_guard() -> Result<()> {
                 Ok(false) => {
                     logging!(debug, Type::Core, "proxy guard superseded (generation {generation})");
                     break;
+                }
+                Err(error) if is_missing_network_service_failure(&error) => {
+                    consecutive_failures = 0;
+                    logging!(debug, Type::Core, "system proxy guard waits for a network service");
                 }
                 Err(error) => {
                     consecutive_failures += 1;
@@ -1118,10 +1129,11 @@ mod tests {
         .err()
         .unwrap_or_else(|| anyhow::anyhow!("an enable that never reached the OS must fail"));
 
-        assert_eq!(
-            SysproxyFailure::from_chain(&error).map(SysproxyFailure::code),
-            Some("SYSPROXY_DIRECT_FALLBACK")
-        );
+        assert!(super::is_missing_network_service_failure(&error));
+        assert!(SysproxyFailure::from_chain(&error).is_none());
+        assert!(!super::is_missing_network_service_failure(
+            &error.context(SystemProxyStateUnknown)
+        ));
     }
 
     #[cfg(target_os = "macos")]

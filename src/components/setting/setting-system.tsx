@@ -1,14 +1,13 @@
-import React, { useRef } from 'react'
+import { Box } from '@mui/material'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
-import { SysproxyViewer } from './mods/sysproxy-viewer'
-import { TunViewer } from './mods/tun-viewer'
 
 interface Props {
   onError?: (err: Error) => void
@@ -21,33 +20,34 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { enable_auto_launch, enable_silent_start } = verge ?? {}
 
-  const sysproxyRef = useRef<DialogRef>(null)
-  const tunRef = useRef<DialogRef>(null)
-
   const onSwitchFormat = (
     _e: React.ChangeEvent<HTMLInputElement>,
     value: boolean,
   ) => value
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch }, false)
+    mutateVerge({ ...verge, ...patch })
   }
 
   return (
     <SettingList title={t('settings.sections.system.title')}>
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
+      <Box data-setting-target="settings.sections.system.toggles.tunMode">
+        <ProxyControlSwitches
+          label={t('settings.sections.system.toggles.tunMode')}
+          onError={onError}
+        />
+      </Box>
 
-      <ProxyControlSwitches
-        label={t('settings.sections.system.toggles.tunMode')}
-        onError={onError}
-      />
+      <Box data-setting-target="settings.sections.system.toggles.systemProxy">
+        <ProxyControlSwitches
+          label={t('settings.sections.system.toggles.systemProxy')}
+          onError={onError}
+        />
+      </Box>
 
-      <ProxyControlSwitches
-        label={t('settings.sections.system.toggles.systemProxy')}
-        onError={onError}
-      />
-
-      <SettingItem label={t('settings.sections.system.fields.autoLaunch')}>
+      <SettingItem
+        data-setting-target="settings.sections.system.fields.autoLaunch"
+        label={t('settings.sections.system.fields.autoLaunch')}
+      >
         <GuardState
           value={enable_auto_launch ?? false}
           valueProps="checked"
@@ -58,8 +58,6 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={async (e) => {
             try {
-              // 先触发UI更新立即看到反馈
-              onChangeData({ enable_auto_launch: e })
               await patchVerge({ enable_auto_launch: e })
               return Promise.resolve()
             } catch (error) {
@@ -74,6 +72,7 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
+        data-setting-target="settings.sections.system.fields.silentStart"
         label={t('settings.sections.system.fields.silentStart')}
         extra={
           <TooltipIcon

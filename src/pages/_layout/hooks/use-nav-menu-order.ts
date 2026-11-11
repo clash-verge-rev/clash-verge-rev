@@ -1,7 +1,7 @@
 import { arrayMove } from '@dnd-kit/helpers'
 import type { DragEndEvent } from '@dnd-kit/react'
 import { isSortable } from '@dnd-kit/react/sortable'
-import { useCallback, useEffect, useMemo, useReducer } from 'react'
+import { useCallback, useMemo, useReducer, useState } from 'react'
 
 type MenuOrderAction = { type: 'sync'; payload: string[] }
 
@@ -79,9 +79,11 @@ export const useNavMenuOrder = <T extends { path: string }>({
     configMenuOrder,
   )
 
-  useEffect(() => {
+  const [syncedConfigOrder, setSyncedConfigOrder] = useState(configMenuOrder)
+  if (!areOrdersEqual(syncedConfigOrder, configMenuOrder)) {
+    setSyncedConfigOrder(configMenuOrder)
     dispatchMenuOrder({ type: 'sync', payload: configMenuOrder })
-  }, [configMenuOrder])
+  }
 
   const isDefaultOrder = useMemo(
     () => areOrdersEqual(menuOrder, defaultOrder),

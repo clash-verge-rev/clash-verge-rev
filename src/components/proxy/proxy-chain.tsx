@@ -25,7 +25,6 @@ import {
   keyframes,
   useTheme,
 } from '@mui/material'
-import * as yaml from 'js-yaml'
 import {
   type Ref,
   useCallback,
@@ -60,21 +59,13 @@ const chainPointerSensor = PointerSensor.configure({
 
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
 
-interface ParsedChainConfig {
-  proxies?: Array<{
-    name: string
-    type: string
-    [key: string]: any
-  }>
-}
-
 interface ProxyChainProps {
   proxyChain: ProxyChainItem[]
   onUpdateChain: (chain: ProxyChainItem[]) => void
-  chainConfigData?: string | null
   onMarkUnsavedChanges?: () => void
   mode?: string
   selectedGroup?: string | null
+  onExitChainMode: () => void
 }
 
 interface ProxyChainItemProps {
@@ -96,21 +87,6 @@ const arrowFadeIn = keyframes`
     transform: translateY(0);
   }
 `
-
-const toChainItems = (
-  parsedConfig: ParsedChainConfig | null | undefined,
-): ProxyChainItem[] => {
-  const timestamp = Date.now()
-
-  return (
-    parsedConfig?.proxies?.map((proxy, index) => ({
-      id: `${proxy.name}_${timestamp}_${index}`,
-      name: proxy.name,
-      type: proxy.type,
-      delay: undefined,
-    })) || []
-  )
-}
 
 interface ChainCardProps {
   proxy: ProxyChainItem
@@ -327,10 +303,10 @@ const SortableProxyChainItem = ({
 export const ProxyChain = ({
   proxyChain,
   onUpdateChain,
-  chainConfigData,
   onMarkUnsavedChanges,
   mode,
   selectedGroup,
+  onExitChainMode,
 }: ProxyChainProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
@@ -445,10 +421,14 @@ export const ProxyChain = ({
     if (isConnected) {
       setIsConnecting(true)
       try {
-        await mutate(() => updateProxyChainConfigInRuntime(null), {
-          id: 'update-proxy-chain-runtime',
-          errorNotice: false,
-        })
+        const result = await mutate(
+          () => updateProxyChainConfigInRuntime(null),
+          {
+            id: 'update-proxy-chain-runtime',
+            errorNotice: false,
+          },
+        )
+        if (!result.ok) return
 
         const targetGroup =
           mode === 'global'
@@ -461,7 +441,7 @@ export const ProxyChain = ({
               id: `select-proxy-node:${targetGroup}`,
               errorNotice: false,
             })
-            recordSelection(targetGroup, 'DIRECT')
+            await recordSelection(targetGroup, 'DIRECT')
           } catch {
             if (currentProxyChain.length >= 1) {
               try {
@@ -473,7 +453,7 @@ export const ProxyChain = ({
                     errorNotice: false,
                   },
                 )
-                recordSelection(targetGroup, currentProxyChain[0].name)
+                await recordSelection(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
               }
@@ -519,10 +499,14 @@ export const ProxyChain = ({
       // 第一步：保存链式代理配置
       const chainProxies = currentProxyChain.map((node) => node.name)
       debugLog('Saving chain config:', chainProxies)
-      await mutate(() => updateProxyChainConfigInRuntime(chainProxies), {
-        id: 'update-proxy-chain-runtime',
-        errorNotice: false,
-      })
+      const result = await mutate(
+        () => updateProxyChainConfigInRuntime(chainProxies),
+        {
+          id: 'update-proxy-chain-runtime',
+          errorNotice: false,
+        },
+      )
+      if (!result.ok) return
       debugLog('Chain configuration saved successfully')
 
       // 第二步：连接到代理链的最后一个节点
@@ -545,12 +529,12 @@ export const ProxyChain = ({
       )
       // The chain moves the group like any other selection, so the profile has to learn about
       // it: what the profile holds is what gets re-applied the next time the core starts.
-      recordSelection(targetGroup || 'GLOBAL', lastNode.name)
+      await recordSelection(targetGroup || 'GLOBAL', lastNode.name)
       localStorage.setItem('proxy-chain-group', targetGroup || 'GLOBAL')
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
       // 刷新代理信息以更新连接状态
-      refreshProxy()
+      await refreshProxy()
       debugLog('Successfully connected to proxy chain')
     } catch (error) {
       console.error('Failed to connect to proxy chain:', error)
@@ -569,23 +553,6 @@ export const ProxyChain = ({
     onUpdateChain,
     recordSelection,
   ])
-
-  // 处理链式代理配置数据
-  useEffect(() => {
-    if (chainConfigData) {
-      try {
-        // JSON is valid YAML, so one parser covers both persisted formats.
-        const parsedConfig = yaml.load(chainConfigData) as ParsedChainConfig
-        const chainItems = toChainItems(parsedConfig)
-
-        if (chainItems.length > 0) {
-          onUpdateChain(chainItems)
-        }
-      } catch (error) {
-        console.error('Failed to process chain config data:', error)
-      }
-    }
-  }, [chainConfigData, onUpdateChain])
 
   return (
     <Paper
@@ -619,14 +586,15 @@ export const ProxyChain = ({
             <IconButton
               size="small"
               onClick={() => {
-                mutate(() => updateProxyChainConfigInRuntime(null), {
+                void mutate(() => updateProxyChainConfigInRuntime(null), {
                   id: 'update-proxy-chain-runtime',
-                  errorNotice: false,
-                })
-                localStorage.removeItem('proxy-chain-group')
-                localStorage.removeItem('proxy-chain-exit-node')
-                localStorage.removeItem('proxy-chain-items')
-                onUpdateChain([])
+                  onFulfilled: () => {
+                    localStorage.removeItem('proxy-chain-group')
+                    localStorage.removeItem('proxy-chain-exit-node')
+                    localStorage.removeItem('proxy-chain-items')
+                    onUpdateChain([])
+                  },
+                }).catch(() => {})
               }}
               sx={{
                 color: theme.palette.error.main,
@@ -687,13 +655,18 @@ export const ProxyChain = ({
           <Box
             sx={{
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: 2,
               height: '100%',
               color: theme.palette.text.secondary,
             }}
           >
             <Typography>{t('proxies.page.chain.empty')}</Typography>
+            <Button size="small" variant="outlined" onClick={onExitChainMode}>
+              {t('shared.actions.close')}
+            </Button>
           </Box>
         ) : (
           <DragDropProvider

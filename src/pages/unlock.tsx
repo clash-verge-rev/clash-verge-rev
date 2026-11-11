@@ -40,6 +40,7 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   Yes: 'tests.statuses.test.yes',
   No: 'tests.statuses.test.no',
   Failed: 'tests.statuses.test.failed',
+  Risky: 'tests.statuses.test.risky',
   Completed: 'tests.statuses.test.completed',
   'Disallowed ISP': 'tests.statuses.test.disallowedIsp',
   'Originals Only': 'tests.statuses.test.originalsOnly',
@@ -196,7 +197,7 @@ const UnlockPage = () => {
     if (status === 'Pending') return 'default'
     if (status === 'Yes') return 'success'
     if (status === 'No') return 'error'
-    if (status === 'Soon') return 'warning'
+    if (status === 'Soon' || status === 'Risky') return 'warning'
     if (status.includes('Failed')) return 'error'
     if (status === 'Completed') return 'info'
     if (
@@ -222,7 +223,8 @@ const UnlockPage = () => {
   const getStatusBorderColor = (status: string) => {
     if (status === 'Yes') return theme.palette.success.main
     if (status === 'No') return theme.palette.error.main
-    if (status === 'Soon') return theme.palette.warning.main
+    if (status === 'Soon' || status === 'Risky')
+      return theme.palette.warning.main
     if (status.includes('Failed')) return theme.palette.error.main
     if (status === 'Completed') return theme.palette.info.main
     return theme.palette.divider

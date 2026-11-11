@@ -464,21 +464,6 @@ export const ConnectionTable = (props: Props) => {
     ]
   }, [t])
 
-  useEffect(() => {
-    setColumnOrder((prevValue) => {
-      const baseFields = baseColumns.map((col) => col.field)
-      const prev = Array.isArray(prevValue) ? prevValue : []
-      const reconciled = reconcileColumnOrder(prev, baseFields)
-      if (
-        reconciled.length === prev.length &&
-        reconciled.every((field, i) => field === prev[i])
-      ) {
-        return prevValue
-      }
-      return reconciled
-    })
-  }, [baseColumns, setColumnOrder])
-
   const orderedColumns = useMemo(() => {
     const baseFields = baseColumns.map((column) => column.field)
     const reconciledOrder = reconcileColumnOrder(columnOrder, baseFields)

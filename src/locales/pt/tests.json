@@ -36,6 +36,7 @@
       "yes": "Sim",
       "no": "Não",
       "failed": "Falhou",
+      "risky": "Incerto",
       "completed": "Concluído",
       "disallowedIsp": "ISP não permitido",
       "originalsOnly": "Somente originais",

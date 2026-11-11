@@ -163,7 +163,7 @@ const ProxyControlSwitches = ({
       })
       return false
     }
-    mutateVerge({ ...verge, enable_tun_mode: value }, false)
+    mutateVerge({ ...verge, enable_tun_mode: value })
     await patchVerge({ enable_tun_mode: value })
   }
 
@@ -220,6 +220,7 @@ const ProxyControlSwitches = ({
                   )}
                   icon={DeleteForeverRounded}
                   color="secondary"
+                  data-setting-target="service-uninstall"
                   onClick={onUninstallService}
                   sx={{ ml: 1 }}
                 />
@@ -229,8 +230,8 @@ const ProxyControlSwitches = ({
         />
       )}
 
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
+      {isSystemProxyMode && <SysproxyViewer ref={sysproxyRef} />}
+      {isTunMode && <TunViewer ref={tunRef} />}
     </Box>
   )
 }

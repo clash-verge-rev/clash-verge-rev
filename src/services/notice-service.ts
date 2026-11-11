@@ -148,15 +148,6 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
       raw = extra
       continue
     }
-
-    if (!params && isPlainRecord(extra)) {
-      params = extra
-      continue
-    }
-
-    if (duration === undefined && typeof extra === 'number') {
-      duration = extra
-    }
   }
 
   return {
@@ -305,11 +296,7 @@ function extractDisplayText(input: unknown): string | undefined {
   }
 }
 
-export interface CommandFailure {
-  code?: string
-  operation?: FailedOperation
-  detail: string
-}
+import type { CommandFailure_Serialize as CommandFailure } from './bindings'
 
 function isCommandFailure(input: unknown): input is CommandFailure {
   if (typeof input !== 'object' || input === null) return false
@@ -495,11 +482,11 @@ const baseShowNotice = (
 }
 
 function failureCode(input: unknown): string | undefined {
-  return isCommandFailure(input) ? input.code : undefined
+  return isCommandFailure(input) ? input.code! : undefined
 }
 
 function failureOperation(input: unknown): FailedOperation | undefined {
-  return isCommandFailure(input) ? input.operation : undefined
+  return isCommandFailure(input) ? input.operation! : undefined
 }
 
 /**

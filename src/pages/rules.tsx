@@ -12,6 +12,7 @@ import {
 import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
+import { usePageSearch } from '@/hooks/use-page-search'
 import { useVisibility } from '@/hooks/use-visibility'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 
@@ -19,16 +20,13 @@ const RulesPage = () => {
   const { t } = useTranslation()
   const { rules = [] } = useRulesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
-  const [match, setMatch] = useState(() => (_: string) => true)
+  const { searchState, match, onSearch } = usePageSearch('rules')
   const virtuosoRef = useRef<VirtualListHandle>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const pageVisible = useVisibility()
 
-  // 在组件挂载时和页面获得焦点时刷新规则数据
+  // 页面可见时刷新规则数据：挂载时可见或从隐藏恢复可见各触发一次
   useEffect(() => {
-    refreshRules()
-    refreshRuleProviders()
-
     if (pageVisible) {
       refreshRules()
       refreshRuleProviders()
@@ -79,7 +77,11 @@ const RulesPage = () => {
           alignItems: 'center',
         }}
       >
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        <BaseSearchBox
+          defaultValue={searchState.text}
+          {...searchState}
+          onSearch={onSearch}
+        />
       </Box>
 
       {filteredRules && filteredRules.length > 0 ? (

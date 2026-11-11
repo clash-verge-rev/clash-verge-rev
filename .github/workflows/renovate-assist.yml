@@ -1,0 +1,54 @@
+name: Renovate assistance
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, edited, ready_for_review]
+  workflow_run:
+    workflows: [Frontend Check, Clippy Lint, Check Formatting]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  actions: write
+
+concurrency:
+  group: renovate-assist-${{ github.event.pull_request.head.ref || github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  route:
+    if: >-
+      (github.event_name == 'pull_request_target' && github.event.pull_request.user.login == 'renovate[bot]') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure' &&
+       startsWith(github.event.workflow_run.head_branch, 'renovate/') &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: scripts-workflow
+      - name: Select Renovate work without starting an agent
+        id: route
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { route } = await import(`${process.env.GITHUB_WORKSPACE}/scripts-workflow/renovate-assist.mjs`);
+            await route({ github, context, core });
+      - name: Assign one Copilot repair task
+        if: steps.route.outputs.pr_number != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          GH_AW_AGENT_TOKEN: ${{ secrets.GH_AW_AGENT_TOKEN }}
+          PR_NUMBER: ${{ steps.route.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.route.outputs.head_sha }}
+          RUN_URL: ${{ steps.route.outputs.run_url }}
+          FAILED_CHECKS: ${{ steps.route.outputs.failed_checks }}
+        with:
+          github-token: ${{ secrets.GH_AW_AGENT_TOKEN }}
+          script: |
+            const { assignCopilot } = await import(`${process.env.GITHUB_WORKSPACE}/scripts-workflow/renovate-assist.mjs`);
+            await assignCopilot({ github, context, core });

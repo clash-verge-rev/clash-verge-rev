@@ -29,14 +29,11 @@ export interface BusHandlerDeps {
 /**
  * Pure per-event handler table for the bus. Handlers may trigger documented
  * side effects (SWR revalidation, notice toasts) but write store state only
- * through dispatched pure actions. Created exactly once per bus mount; the
- * throttles below live in the returned closure, mirroring the previous
- * scattered listeners.
+ * through dispatched pure actions. Created exactly once per bus mount.
  */
 export const createEventBus = (deps: BusHandlerDeps) => {
   let lastProfileId: string | null = null
   let lastProfileChangeTime = 0
-  let lastProxyRefreshTime = 0
   const refreshThrottle = 800
 
   const handleProfileChanged = (newProfileId: string) => {
@@ -52,13 +49,6 @@ export const createEventBus = (deps: BusHandlerDeps) => {
     deps.revalidateKeys(['getProfiles'])
   }
 
-  const handleRefreshProxyConfig = () => {
-    const now = Date.now()
-    if (now - lastProxyRefreshTime <= refreshThrottle) return
-    lastProxyRefreshTime = now
-    deps.revalidateKeys(['getProxyView'])
-  }
-
   const handlers: BusHandlers = {
     'verge://refresh-clash-config': () =>
       deps.revalidateKeys([
@@ -72,13 +62,9 @@ export const createEventBus = (deps: BusHandlerDeps) => {
         'getRuleProviders',
       ]),
     'verge://refresh-verge-config': () =>
-      deps.revalidateKeys([
-        'getVergeConfig',
-        'getSystemProxy',
-        'getAutotemProxy',
-      ]),
+      deps.revalidateKeys(['getVergeConfig', 'getSystemProxy', 'getAutoProxy']),
     'verge://refresh-profiles': () => deps.revalidateKeys(['getProfiles']),
-    'verge://refresh-proxy-config': handleRefreshProxyConfig,
+    'verge://refresh-proxy-config': () => deps.revalidateKeys(['getProxyView']),
     'verge://notice-message': (payload) => deps.handleNotice(payload),
     'profile-changed': handleProfileChanged,
     'verge://timer-updated': (uid) =>

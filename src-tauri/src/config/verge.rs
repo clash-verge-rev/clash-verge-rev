@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::{
-    config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
+    config::{DEFAULT_PAC, deserialize_encrypted, patch_opt_field, serialize_encrypted},
     constants::network,
     utils::{dirs, help},
 };
@@ -11,31 +11,35 @@ use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 
 /// ### `verge.yaml` schema
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVerge {
     /// silent | error | warn | info | debug | trace
+    #[specta(type = Option<std::string::String>)]
     pub app_log_level: Option<String>,
 
     /// Maximum app log size in KiB.
     pub app_log_max_size: Option<u64>,
 
     pub app_log_max_count: Option<usize>,
-
+    #[specta(type = Option<std::string::String>)]
     pub language: Option<String>,
 
     /// `light` or `dark` or `system`
+    #[specta(type = Option<std::string::String>)]
     pub theme_mode: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub tray_event: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub env_type: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub start_page: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub startup_script: Option<String>,
 
     pub traffic_graph: Option<bool>,
 
-    /// show memory info (only for Clash Meta)
+    /// show memory info (only for Mihomo)
     pub enable_memory_usage: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,18 +52,23 @@ pub struct IVerge {
 
     #[cfg(target_os = "macos")]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub tray_icon: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub menu_icon: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub menu_order: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub proxy_group_tools_position: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub notice_position: Option<String>,
 
     pub collapse_navbar: Option<bool>,
@@ -84,39 +93,43 @@ pub struct IVerge {
     pub enable_dns_settings: Option<bool>,
 
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[specta(type = std::collections::BTreeMap<std::string::String, super::dns::ProfileDnsSettings>)]
     pub profile_dns_settings: std::collections::BTreeMap<String, super::dns::ProfileDnsSettings>,
 
     pub use_default_bypass: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub system_proxy_bypass: Option<String>,
 
     pub proxy_guard_duration: Option<u64>,
 
     pub proxy_auto_config: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub pac_file_content: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub proxy_host: Option<String>,
 
     pub theme_setting: Option<IVergeTheme>,
-
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub web_ui_list: Option<Vec<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub clash_core: Option<String>,
 
     /// format: {func},{key}
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<Vec<std::string::String>>)]
     pub hotkeys: Option<Vec<String>>,
 
     pub enable_global_hotkey: Option<bool>,
 
+    #[specta(type = Option<crate::ipc::JsonValue>)]
     pub home_cards: Option<serde_json::Value>,
 
     pub auto_close_connection: Option<bool>,
 
     pub auto_check_update: Option<bool>,
-
+    #[specta(type = Option<std::string::String>)]
     pub default_latency_test: Option<String>,
 
     pub default_latency_timeout: Option<i16>,
@@ -171,6 +184,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_url: Option<String>,
 
     #[serde(
@@ -179,6 +193,7 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_username: Option<String>,
 
     #[serde(
@@ -187,12 +202,14 @@ pub struct IVerge {
         skip_serializing_if = "Option::is_none",
         default
     )]
+    #[specta(type = Option<std::string::String>)]
     pub webdav_password: Option<String>,
 
     #[cfg(target_os = "macos")]
     pub enable_tray_speed: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[specta(type = Option<std::string::String>)]
     pub tray_proxy_groups_display_mode: Option<String>,
     pub tray_inline_outbound_modes: Option<bool>,
 
@@ -209,27 +226,41 @@ pub struct IVerge {
     pub enable_external_controller: Option<bool>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVergeTestItem {
+    #[specta(type = Option<std::string::String>)]
     pub uid: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub icon: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
+#[serde(default)]
 pub struct IVergeTheme {
+    #[specta(type = Option<std::string::String>)]
     pub primary_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub secondary_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub primary_text: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub secondary_text: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub info_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub error_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub warning_color: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub success_color: Option<String>,
-
+    #[specta(type = Option<std::string::String>)]
     pub font_family: Option<String>,
+    #[specta(type = Option<std::string::String>)]
     pub css_injection: Option<String>,
 }
 
@@ -401,98 +432,90 @@ impl IVerge {
 
     #[allow(clippy::cognitive_complexity)]
     pub fn patch_config(&mut self, patch: &Self) {
-        macro_rules! patch {
-            ($key: tt) => {
-                if patch.$key.is_some() {
-                    self.$key = patch.$key.clone();
-                }
-            };
-        }
+        patch_opt_field!(self, patch, app_log_level);
+        patch_opt_field!(self, patch, app_log_max_size);
+        patch_opt_field!(self, patch, app_log_max_count);
 
-        patch!(app_log_level);
-        patch!(app_log_max_size);
-        patch!(app_log_max_count);
-
-        patch!(language);
-        patch!(theme_mode);
-        patch!(tray_event);
-        patch!(env_type);
-        patch!(start_page);
-        patch!(startup_script);
-        patch!(traffic_graph);
-        patch!(enable_memory_usage);
-        patch!(enable_group_icon);
-        patch!(pause_render_traffic_stats_on_blur);
+        patch_opt_field!(self, patch, language);
+        patch_opt_field!(self, patch, theme_mode);
+        patch_opt_field!(self, patch, tray_event);
+        patch_opt_field!(self, patch, env_type);
+        patch_opt_field!(self, patch, start_page);
+        patch_opt_field!(self, patch, startup_script);
+        patch_opt_field!(self, patch, traffic_graph);
+        patch_opt_field!(self, patch, enable_memory_usage);
+        patch_opt_field!(self, patch, enable_group_icon);
+        patch_opt_field!(self, patch, pause_render_traffic_stats_on_blur);
         #[cfg(target_os = "macos")]
-        patch!(tray_icon);
-        patch!(menu_icon);
-        patch!(menu_order);
-        patch!(proxy_group_tools_position);
-        patch!(notice_position);
-        patch!(collapse_navbar);
-        patch!(common_tray_icon);
-        patch!(sysproxy_tray_icon);
-        patch!(tun_tray_icon);
+        patch_opt_field!(self, patch, tray_icon);
+        patch_opt_field!(self, patch, menu_icon);
+        patch_opt_field!(self, patch, menu_order);
+        patch_opt_field!(self, patch, proxy_group_tools_position);
+        patch_opt_field!(self, patch, notice_position);
+        patch_opt_field!(self, patch, collapse_navbar);
+        patch_opt_field!(self, patch, common_tray_icon);
+        patch_opt_field!(self, patch, sysproxy_tray_icon);
+        patch_opt_field!(self, patch, tun_tray_icon);
 
-        patch!(enable_tun_mode);
-        patch!(enable_auto_launch);
-        patch!(enable_silent_start);
-        patch!(enable_hover_jump_navigator);
-        patch!(hover_jump_navigator_delay);
+        patch_opt_field!(self, patch, enable_tun_mode);
+        patch_opt_field!(self, patch, enable_auto_launch);
+        patch_opt_field!(self, patch, enable_silent_start);
+        patch_opt_field!(self, patch, enable_hover_jump_navigator);
+        patch_opt_field!(self, patch, hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_port);
+        patch_opt_field!(self, patch, verge_redir_port);
         #[cfg(not(target_os = "windows"))]
-        patch!(verge_redir_enabled);
+        patch_opt_field!(self, patch, verge_redir_enabled);
         #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_port);
+        patch_opt_field!(self, patch, verge_tproxy_port);
         #[cfg(target_os = "linux")]
-        patch!(verge_tproxy_enabled);
-        patch!(verge_mixed_port);
-        patch!(verge_socks_port);
-        patch!(verge_socks_enabled);
-        patch!(verge_port);
-        patch!(verge_http_enabled);
-        patch!(enable_system_proxy);
-        patch!(enable_proxy_guard);
-        patch!(enable_bypass_check);
-        patch!(use_default_bypass);
-        patch!(system_proxy_bypass);
-        patch!(proxy_guard_duration);
-        patch!(proxy_auto_config);
-        patch!(pac_file_content);
-        patch!(proxy_host);
-        patch!(theme_setting);
-        patch!(web_ui_list);
-        patch!(clash_core);
-        patch!(hotkeys);
-        patch!(enable_global_hotkey);
+        patch_opt_field!(self, patch, verge_tproxy_enabled);
+        patch_opt_field!(self, patch, verge_mixed_port);
+        patch_opt_field!(self, patch, verge_socks_port);
+        patch_opt_field!(self, patch, verge_socks_enabled);
+        patch_opt_field!(self, patch, verge_port);
+        patch_opt_field!(self, patch, verge_http_enabled);
+        patch_opt_field!(self, patch, enable_system_proxy);
+        patch_opt_field!(self, patch, enable_proxy_guard);
+        patch_opt_field!(self, patch, enable_bypass_check);
+        patch_opt_field!(self, patch, use_default_bypass);
+        patch_opt_field!(self, patch, system_proxy_bypass);
+        patch_opt_field!(self, patch, proxy_guard_duration);
+        patch_opt_field!(self, patch, proxy_auto_config);
+        patch_opt_field!(self, patch, pac_file_content);
+        patch_opt_field!(self, patch, proxy_host);
+        patch_opt_field!(self, patch, theme_setting);
+        patch_opt_field!(self, patch, web_ui_list);
+        patch_opt_field!(self, patch, clash_core);
+        patch_opt_field!(self, patch, hotkeys);
+        patch_opt_field!(self, patch, enable_global_hotkey);
 
-        patch!(auto_close_connection);
-        patch!(auto_check_update);
-        patch!(default_latency_test);
-        patch!(default_latency_timeout);
-        patch!(enable_auto_delay_detection);
-        patch!(auto_delay_detection_interval_minutes);
-        patch!(enable_builtin_enhanced);
-        patch!(proxy_layout_column);
-        patch!(test_list);
-        patch!(auto_log_clean);
-        patch!(enable_auto_backup_schedule);
-        patch!(auto_backup_interval_hours);
-        patch!(auto_backup_on_change);
+        patch_opt_field!(self, patch, auto_close_connection);
+        patch_opt_field!(self, patch, auto_check_update);
+        patch_opt_field!(self, patch, default_latency_test);
+        patch_opt_field!(self, patch, default_latency_timeout);
+        patch_opt_field!(self, patch, enable_auto_delay_detection);
+        patch_opt_field!(self, patch, auto_delay_detection_interval_minutes);
+        patch_opt_field!(self, patch, enable_builtin_enhanced);
+        patch_opt_field!(self, patch, proxy_layout_column);
+        patch_opt_field!(self, patch, test_list);
+        patch_opt_field!(self, patch, auto_log_clean);
+        patch_opt_field!(self, patch, enable_auto_backup_schedule);
+        patch_opt_field!(self, patch, auto_backup_interval_hours);
+        patch_opt_field!(self, patch, auto_backup_on_change);
 
-        patch!(webdav_url);
-        patch!(webdav_username);
-        patch!(webdav_password);
+        patch_opt_field!(self, patch, webdav_url);
+        patch_opt_field!(self, patch, webdav_username);
+        patch_opt_field!(self, patch, webdav_password);
         #[cfg(target_os = "macos")]
-        patch!(enable_tray_speed);
-        patch!(tray_proxy_groups_display_mode);
-        patch!(tray_inline_outbound_modes);
-        patch!(enable_auto_light_weight_mode);
-        patch!(auto_light_weight_minutes);
-        patch!(enable_dns_settings);
-        patch!(home_cards);
-        patch!(enable_external_controller);
+        patch_opt_field!(self, patch, enable_tray_speed);
+        patch_opt_field!(self, patch, tray_proxy_groups_display_mode);
+        patch_opt_field!(self, patch, tray_inline_outbound_modes);
+        patch_opt_field!(self, patch, enable_auto_light_weight_mode);
+        patch_opt_field!(self, patch, auto_light_weight_minutes);
+        patch_opt_field!(self, patch, enable_dns_settings);
+        patch_opt_field!(self, patch, home_cards);
+        patch_opt_field!(self, patch, enable_external_controller);
     }
 
     pub fn get_log_level(&self) -> LevelFilter {

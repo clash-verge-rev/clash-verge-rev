@@ -87,7 +87,7 @@ export const TestCard = () => {
         x.uid === uid ? { ...x, ...patch } : x,
       )
 
-      mutateVerge({ ...verge, test_list: newList }, false)
+      mutateVerge({ ...verge, test_list: newList })
     },
     [testList, verge, mutateVerge],
   )
@@ -96,7 +96,7 @@ export const TestCard = () => {
     (uid: string) => {
       const newList = testList.filter((x) => x.uid !== uid)
       patchVerge({ test_list: newList })
-      mutateVerge({ ...verge, test_list: newList }, false)
+      mutateVerge({ ...verge, test_list: newList })
     },
     [testList, verge, patchVerge, mutateVerge],
   )
@@ -129,7 +129,7 @@ export const TestCard = () => {
       newList.splice(newIndex, 0, removed)
 
       // 优化：先本地更新，再异步 patch，避免UI卡死
-      mutateVerge({ ...verge, test_list: newList }, false)
+      mutateVerge({ ...verge, test_list: newList })
       const patchFn = () => {
         try {
           patchVerge({ test_list: newList })
@@ -164,7 +164,7 @@ export const TestCard = () => {
         }}
       >
         {testList.map((item, index) => (
-          <SortableItem key={item.uid} id={item.uid} index={index}>
+          <SortableItem key={item.uid} id={item.uid!} index={index}>
             <TestItem
               itemData={item}
               onEdit={() => viewerRef.current?.edit(item)}

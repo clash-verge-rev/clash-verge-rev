@@ -22,6 +22,7 @@ mod platform {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn invoke_uwp_tool() -> CmdResult {
     platform::invoke_uwp_tool()
 }

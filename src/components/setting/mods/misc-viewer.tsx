@@ -8,51 +8,42 @@ import {
   TextField,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 
+import { useSettingDialog } from '../settings-search-context'
+
+const buildInitialValues = (verge?: IVergeConfig | null) => ({
+  appLogLevel: verge?.app_log_level ?? 'warn',
+  appLogMaxSize: verge?.app_log_max_size ?? 128,
+  appLogMaxCount: verge?.app_log_max_count ?? 8,
+  autoCloseConnection: verge?.auto_close_connection ?? true,
+  autoCheckUpdate: verge?.auto_check_update ?? true,
+  enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
+  proxyLayoutColumn: verge?.proxy_layout_column || 6,
+  enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
+  autoDelayDetectionIntervalMinutes:
+    verge?.auto_delay_detection_interval_minutes ?? 5,
+  defaultLatencyTest: verge?.default_latency_test || '',
+  autoLogClean: verge?.auto_log_clean || 0,
+  defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
+})
+
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
   const { verge, patchVerge } = useVerge()
 
   const [open, setOpen] = useState(false)
-  const [values, setValues] = useState({
-    appLogLevel: 'warn',
-    appLogMaxSize: 8,
-    appLogMaxCount: 12,
-    autoCloseConnection: true,
-    autoCheckUpdate: true,
-    enableBuiltinEnhanced: true,
-    proxyLayoutColumn: 6,
-    enableAutoDelayDetection: false,
-    autoDelayDetectionIntervalMinutes: 5,
-    defaultLatencyTest: '',
-    autoLogClean: 2,
-    defaultLatencyTimeout: 10000,
-  })
+  const [values, setValues] = useState(() => buildInitialValues(null))
 
-  useImperativeHandle(ref, () => ({
+  useSettingDialog(ref, 'misc-viewer', open, () => ({
     open: () => {
       setOpen(true)
-      setValues({
-        appLogLevel: verge?.app_log_level ?? 'warn',
-        appLogMaxSize: verge?.app_log_max_size ?? 128,
-        appLogMaxCount: verge?.app_log_max_count ?? 8,
-        autoCloseConnection: verge?.auto_close_connection ?? true,
-        autoCheckUpdate: verge?.auto_check_update ?? true,
-        enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
-        proxyLayoutColumn: verge?.proxy_layout_column || 6,
-        enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
-        autoDelayDetectionIntervalMinutes:
-          verge?.auto_delay_detection_interval_minutes ?? 5,
-        defaultLatencyTest: verge?.default_latency_test || '',
-        autoLogClean: verge?.auto_log_clean || 0,
-        defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
-      })
+      setValues(buildInitialValues(verge))
     },
     close: () => setOpen(false),
   }))
@@ -91,8 +82,12 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
+      <span data-settings-dialog="misc-viewer" />
       <List>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogLevel"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogLevel')}
           />
@@ -115,7 +110,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogMaxSize"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogMaxSize')}
             sx={{ maxWidth: 'fit-content' }}
@@ -147,7 +145,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.appLogMaxCount"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.appLogMaxCount')}
             sx={{ maxWidth: 'fit-content' }}
@@ -179,7 +180,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoCloseConnections"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoCloseConnections')}
             sx={{ maxWidth: 'fit-content' }}
@@ -198,7 +202,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoCheckUpdate"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoCheckUpdate')}
           />
@@ -211,7 +218,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.enableBuiltinEnhanced"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.enableBuiltinEnhanced')}
             sx={{ maxWidth: 'fit-content' }}
@@ -230,7 +240,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.proxyLayoutColumns"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.proxyLayoutColumns')}
           />
@@ -256,7 +269,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoLogClean"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoLogClean')}
           />
@@ -309,7 +325,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           </Select>
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoDelayDetection"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.autoDelayDetection')}
             sx={{ maxWidth: 'fit-content' }}
@@ -328,7 +347,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoDelayDetectionInterval"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t(
               'settings.modals.misc.fields.autoDelayDetectionInterval',
@@ -366,7 +388,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.defaultLatencyTest"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.defaultLatencyTest')}
             sx={{ maxWidth: 'fit-content' }}
@@ -390,7 +415,10 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.defaultLatencyTimeout"
+          sx={{ padding: '5px 2px' }}
+        >
           <ListItemText
             primary={t('settings.modals.misc.fields.defaultLatencyTimeout')}
           />

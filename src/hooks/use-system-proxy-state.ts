@@ -5,7 +5,7 @@ import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useVerge } from '@/hooks/use-verge'
 import { useSystemData } from '@/providers/app-data-context'
 import {
-  getAutotemProxy,
+  getAutoProxy,
   getEmbeddedServerPort,
   patchVergeConfig,
 } from '@/services/cmds'
@@ -21,8 +21,8 @@ export const useSystemProxyState = () => {
   const { sysproxy } = useSystemData()
   const displayedMixedPort = useDisplayedMixedPort()
   const { data: autoproxy } = useQuery({
-    queryKey: ['getAutotemProxy'],
-    queryFn: getAutotemProxy,
+    queryKey: ['getAutoProxy'],
+    queryFn: getAutoProxy,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
@@ -52,9 +52,8 @@ export const useSystemProxyState = () => {
   const toggleSystemProxy = async (enabled: boolean) => {
     // Roll failed optimistic writes back to the latest confirmed state.
     let confirmed = verge?.enable_system_proxy ?? false
-    mutateVerge(
-      (prev) => (prev ? { ...prev, enable_system_proxy: enabled } : prev),
-      false,
+    mutateVerge((prev) =>
+      prev ? { ...prev, enable_system_proxy: enabled } : prev,
     )
     pendingRef.current = enabled
 
@@ -78,9 +77,8 @@ export const useSystemProxyState = () => {
         }
       }
     } catch (error) {
-      mutateVerge(
-        (prev) => (prev ? { ...prev, enable_system_proxy: confirmed } : prev),
-        false,
+      mutateVerge((prev) =>
+        prev ? { ...prev, enable_system_proxy: confirmed } : prev,
       )
       // Queued requests were based on a state that never landed.
       pendingRef.current = null
@@ -99,7 +97,7 @@ export const useSystemProxyState = () => {
       }
       // Kept separate so an unreadable config cannot discard OS state that did read.
       try {
-        await revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
+        await revalidateQueries([['getSystemProxy'], ['getAutoProxy']])
       } catch (error) {
         console.warn(
           '[system-proxy] rereading the OS proxy after a toggle failed:',
@@ -109,14 +107,14 @@ export const useSystemProxyState = () => {
         // rather than stay live from a stale cache.
         await Promise.all([
           removeCacheData(['getSystemProxy']),
-          removeCacheData(['getAutotemProxy']),
+          removeCacheData(['getAutoProxy']),
         ])
       }
     }
   }
 
   const invalidateProxyState = () =>
-    revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
+    revalidateQueries([['getSystemProxy'], ['getAutoProxy']])
 
   return {
     indicator,

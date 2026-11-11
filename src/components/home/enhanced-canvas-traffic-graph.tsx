@@ -4,6 +4,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useEffectEvent,
   useImperativeHandle,
   useMemo,
   useReducer,
@@ -14,7 +15,6 @@ import { useTranslation } from 'react-i18next'
 
 import { useTrafficGraphDataEnhanced } from '@/hooks/use-traffic-monitor'
 import { useVerge } from '@/hooks/use-verge'
-import { debugLog } from '@/utils/debug'
 import parseTraffic from '@/utils/parse-traffic'
 import {
   formatTrafficHourMinute,
@@ -23,14 +23,7 @@ import {
   isSameTrafficData,
 } from '@/utils/traffic-sampler'
 
-interface ITrafficItem {
-  up: number
-  down: number
-  timestamp?: number
-}
-
 export interface EnhancedCanvasTrafficGraphRef {
-  appendData: (data: ITrafficItem) => void
   toggleStyle: () => void
 }
 
@@ -128,7 +121,6 @@ export const EnhancedCanvasTrafficGraph = memo(
     const drawFrameRef = useRef<number | undefined>(undefined)
     const hoverFrameRef = useRef<number | undefined>(undefined)
     const mouseMoveFrameRef = useRef<number | undefined>(undefined)
-    const scheduleDrawGraphRef = useRef<() => void>(() => {})
     const pendingMousePositionRef = useRef<{
       clientX: number
       clientY: number
@@ -142,7 +134,6 @@ export const EnhancedCanvasTrafficGraph = memo(
       [],
     )
     const debounceTimeoutRef = useRef<number | null>(null)
-    const [currentFPS, setCurrentFPS] = useState(GRAPH_CONFIG.targetFPS)
 
     const colors = useMemo(
       () => ({
@@ -183,8 +174,6 @@ export const EnhancedCanvasTrafficGraph = memo(
       if (displayData.length === 0) {
         lastDataTimestampRef.current = 0
         dataStaleRef.current = false
-        // eslint-disable-next-line @eslint-react/set-state-in-effect
-        setCurrentFPS(GRAPH_CONFIG.targetFPS)
         return
       }
 
@@ -200,18 +189,11 @@ export const EnhancedCanvasTrafficGraph = memo(
       }
     }, [displayData])
 
-    const handleFocusStateChange = useCallback(
-      (focused: boolean) => {
-        isWindowFocusedRef.current = focused
+    const handleFocusStateChange = useEffectEvent((focused: boolean) => {
+      isWindowFocusedRef.current = focused
 
-        if (focused || !pause_render_traffic_stats_on_blur) {
-          setCurrentFPS(GRAPH_CONFIG.targetFPS)
-        }
-
-        scheduleDrawGraphRef.current()
-      },
-      [pause_render_traffic_stats_on_blur],
-    )
+      scheduleDrawGraph()
+    })
 
     useEffect(() => {
       if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -235,7 +217,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         window.removeEventListener('blur', handleBlur)
         document.removeEventListener('visibilitychange', handleVisibilityChange)
       }
-    }, [handleFocusStateChange])
+    }, [])
 
     const calculateY = useCallback(
       (
@@ -684,19 +666,13 @@ export const EnhancedCanvasTrafficGraph = memo(
           ctx.beginPath()
           ctx.moveTo(getX(0), getY(0))
 
-          if (chartStyle === 'bezier') {
-            for (let i = 1; i < data.length; i++) {
-              const currentX = getX(i)
-              const currentY = getY(i)
-              const nextIndex = Math.min(i + 1, lastIndex)
-              const controlX = (currentX + getX(nextIndex)) / 2
-              const controlY = (currentY + getY(nextIndex)) / 2
-              ctx.quadraticCurveTo(currentX, currentY, controlX, controlY)
-            }
-          } else {
-            for (let i = 1; i < data.length; i++) {
-              ctx.lineTo(getX(i), getY(i))
-            }
+          for (let i = 1; i < data.length; i++) {
+            const currentX = getX(i)
+            const currentY = getY(i)
+            const nextIndex = Math.min(i + 1, lastIndex)
+            const controlX = (currentX + getX(nextIndex)) / 2
+            const controlY = (currentY + getY(nextIndex)) / 2
+            ctx.quadraticCurveTo(currentX, currentY, controlX, controlY)
           }
 
           ctx.lineTo(getX(lastIndex), height - padding.bottom)
@@ -930,25 +906,21 @@ export const EnhancedCanvasTrafficGraph = memo(
       scheduleDrawGraph()
     }, [scheduleDrawGraph])
 
-    useEffect(() => {
-      scheduleDrawGraphRef.current = scheduleDrawGraph
-    }, [scheduleDrawGraph])
+    const redrawGraph = useEffectEvent(() => scheduleDrawGraph())
 
     useEffect(() => {
       const canvas = canvasRef.current
       if (!canvas || typeof window === 'undefined') return
 
       if (typeof ResizeObserver === 'undefined') {
-        const handleResize = () => scheduleDrawGraphRef.current()
+        const handleResize = () => redrawGraph()
         window.addEventListener('resize', handleResize)
         return () => {
           window.removeEventListener('resize', handleResize)
         }
       }
 
-      const resizeObserver = new ResizeObserver(() =>
-        scheduleDrawGraphRef.current(),
-      )
+      const resizeObserver = new ResizeObserver(() => redrawGraph())
       resizeObserver.observe(canvas)
 
       return () => {
@@ -984,21 +956,7 @@ export const EnhancedCanvasTrafficGraph = memo(
       setChartStyle((prev) => (prev === 'bezier' ? 'line' : 'bezier'))
     }, [])
 
-    const appendData = useCallback((data: ITrafficItem) => {
-      debugLog(
-        '[EnhancedCanvasTrafficGraphV2] appendData called (using global data):',
-        data,
-      )
-    }, [])
-
-    useImperativeHandle(
-      ref,
-      () => ({
-        appendData,
-        toggleStyle,
-      }),
-      [appendData, toggleStyle],
-    )
+    useImperativeHandle(ref, () => ({ toggleStyle }), [toggleStyle])
 
     const getTimeRangeText = useCallback(() => {
       return t('home.components.traffic.patterns.minutes', {
@@ -1142,7 +1100,7 @@ export const EnhancedCanvasTrafficGraph = memo(
             {t('home.components.traffic.diagnostics', {
               points: displayData.length,
               compressed: samplerStats.compressedBufferSize,
-              fps: currentFPS,
+              fps: GRAPH_CONFIG.targetFPS,
             })}
           </Box>
 

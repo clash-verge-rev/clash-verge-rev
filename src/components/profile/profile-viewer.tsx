@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
-import { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useImperativeHandle, useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
@@ -77,17 +77,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     },
   }))
 
-  const selfProxy = watch('option.self_proxy')
-  const withProxy = watch('option.with_proxy')
-
-  useEffect(() => {
-    if (selfProxy) setValue('option.with_proxy', false)
-  }, [selfProxy, setValue])
-
-  useEffect(() => {
-    if (withProxy) setValue('option.self_proxy', false)
-  }, [setValue, withProxy])
-
   const handleOk = useLockFn(
     handleSubmit(async (form) => {
       setLoading(true)
@@ -115,7 +104,13 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         const name = form.name || `${form.type} file`
-        const item = { ...form, name, option }
+        const item = {
+          type: form.type,
+          name,
+          desc: form.desc,
+          option,
+          ...(form.type === 'remote' ? { url: form.url } : {}),
+        }
         const isRemote = form.type === 'remote'
         const isUpdate = openType === 'edit'
 
@@ -139,7 +134,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 t('profiles.modals.profileForm.errors.uidMissing'),
               )
             }
-            await mutate(() => patchProfile(form.uid, item), {
+            await mutate(() => patchProfile(form.uid!, item), {
               id: 'patch-profile',
               errorNotice: false,
             })
@@ -157,7 +152,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                   t('profiles.modals.profileForm.errors.uidMissing'),
                 )
               }
-              await mutate(() => patchProfile(form.uid, item), {
+              await mutate(() => patchProfile(form.uid!, item), {
                 id: 'patch-profile',
                 errorNotice: false,
               })
@@ -190,13 +185,13 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                   t('profiles.modals.profileForm.errors.uidMissing'),
                 )
               }
-              await mutate(() => patchProfile(form.uid, retryItem), {
+              await mutate(() => patchProfile(form.uid!, retryItem), {
                 id: 'patch-profile',
                 errorNotice: false,
               })
 
               await mutate(
-                () => patchProfile(form.uid, { option: originalOptions }),
+                () => patchProfile(form.uid!, { option: originalOptions }),
                 {
                   id: 'patch-profile',
                   errorNotice: false,
@@ -413,7 +408,15 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 <InputLabel>
                   {t('profiles.modals.profileForm.fields.useSystemProxy')}
                 </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
+                <Switch
+                  checked={field.value!}
+                  {...field}
+                  onChange={(_, checked) => {
+                    field.onChange(checked)
+                    if (checked) setValue('option.self_proxy', false)
+                  }}
+                  color="primary"
+                />
               </StyledBox>
             )}
           />
@@ -426,7 +429,15 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 <InputLabel>
                   {t('profiles.modals.profileForm.fields.useClashProxy')}
                 </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
+                <Switch
+                  checked={field.value!}
+                  {...field}
+                  onChange={(_, checked) => {
+                    field.onChange(checked)
+                    if (checked) setValue('option.with_proxy', false)
+                  }}
+                  color="primary"
+                />
               </StyledBox>
             )}
           />
@@ -439,7 +450,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 <InputLabel>
                   {t('profiles.modals.profileForm.fields.acceptInvalidCerts')}
                 </InputLabel>
-                <Switch checked={field.value} {...field} color="primary" />
+                <Switch checked={field.value!} {...field} color="primary" />
               </StyledBox>
             )}
           />
