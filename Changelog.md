@@ -24,6 +24,8 @@
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
+- 修复应用退出时无条件重写 `clash.yaml`、`verge.yaml` 和 `profiles.yaml` 导致文件创建时间丢失的问题
+
 - 修复检测更新后又发布新版时，应用内更新失败
 - 修复订阅响应过大导致内存占用过高，限制单次下载为 4 MiB
 - 修复全局模式默认停在 `DIRECT` 或 `REJECT` 导致流量未经代理，现自动切换到第一个策略组
