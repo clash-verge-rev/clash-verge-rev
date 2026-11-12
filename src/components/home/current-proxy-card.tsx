@@ -1008,8 +1008,13 @@ export const CurrentProxyCard = () => {
               border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
             }}
           >
-            <Box>
-              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                variant="body1"
+                noWrap
+                title={currentProxy?.name}
+                sx={{ fontWeight: 'medium' }}
+              >
                 {currentProxy?.name ??
                   t('home.components.currentProxy.labels.noActiveNode')}
               </Typography>
@@ -1063,6 +1068,7 @@ export const CurrentProxyCard = () => {
                 size="small"
                 label={delayManager.formatDelay(currentDelay)}
                 color={convertDelayColor(currentDelay)}
+                sx={{ flexShrink: 0, ml: 1 }}
               />
             )}
           </Box>
