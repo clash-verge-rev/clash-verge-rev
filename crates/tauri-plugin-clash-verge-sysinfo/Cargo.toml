@@ -12,7 +12,7 @@ parking_lot = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 # sysinfo 0.38.2 conflicts with dark-light
 # see https://github.com/GuillaumeGomez/sysinfo/issues/1623
-sysinfo = { version = "0.40.1", default-features = false, features = ["network", "system"] }
+sysinfo = { version = "0.40.3", default-features = false, features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
 libc = "0.2.191"
