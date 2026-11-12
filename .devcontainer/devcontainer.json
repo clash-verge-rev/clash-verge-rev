@@ -4,7 +4,7 @@
 
   "features": {
     "ghcr.io/devcontainers/features/node:2": {
-      "version": "26.13.0",
+      "version": "26.13.1",
       "pnpmVersion": "12.18.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {

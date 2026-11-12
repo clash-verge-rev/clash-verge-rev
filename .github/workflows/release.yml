@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
       - name: Validate source and publish the approved snapshot
         id: source
         env:
@@ -231,7 +231,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
           cache: 'pnpm'
 
       - name: Pnpm install and check
@@ -330,7 +330,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
           cache: 'pnpm'
 
       - name: Pnpm install and check
@@ -461,7 +461,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
           cache: 'pnpm'
 
       - name: Pnpm install and check
@@ -542,7 +542,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
       - uses: pnpm/action-setup@v6
         with:
           run_install: false
@@ -565,7 +565,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -593,7 +593,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -661,7 +661,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '26.13.0'
+          node-version: '26.13.1'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
