@@ -49,7 +49,11 @@ const ProxyPage = () => {
   >(null)
 
   const { clashConfig } = useClashConfigData()
-  const { refreshClashConfig } = useAppRefreshers()
+  const { refreshClashConfig, refreshProxy } = useAppRefreshers()
+
+  useEffect(() => {
+    refreshProxy().catch((error) => showNotice.error(error))
+  }, [refreshProxy])
 
   const normalizedMode = clashConfig?.mode?.toLowerCase()
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined

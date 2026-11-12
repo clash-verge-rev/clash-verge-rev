@@ -29,10 +29,12 @@ export interface DelayUpdate {
 const CACHE_TTL = 30 * 60 * 1000
 
 class DelayManager {
+  private profile: string | null = null
+  private generation = 0
   private cache = new Map<string, DelayUpdate>()
   private urlMap = new Map<string, string>()
 
-  private listenerMap = new Map<string, (update: DelayUpdate) => void>()
+  private listenerMap = new Map<string, Set<(update: DelayUpdate) => void>>()
 
   private groupListenerMap = new Map<string, Set<() => void>>()
   // Consumers compare snapshot identity; replace it only when the group settles.
@@ -48,6 +50,35 @@ class DelayManager {
   private pendingGroupUpdates = new Set<string>()
   private itemFlushScheduled = false
   private groupFlushScheduled = false
+
+  setProfile(profile: string | null) {
+    if (this.profile === profile) return
+    this.profile = profile
+    this.generation += 1
+    this.cache.clear()
+    this.activeBatches.clear()
+    this.pendingItemUpdates.clear()
+    this.pendingGroupUpdates.clear()
+    this.groupSnapshots.clear()
+    this.groupSetSnapshots.clear()
+
+    // Reset before a refreshed proxy snapshot can publish newer history.
+    for (const [key, listeners] of this.listenerMap) {
+      for (const listener of [...listeners]) {
+        try {
+          listener({ delay: -1, updatedAt: 0 })
+        } catch (error) {
+          console.error(
+            `[DelayManager] Failed to reset delay listener: ${key}`,
+            error,
+          )
+        }
+      }
+    }
+    for (const group of this.groupListenerMap.keys()) {
+      this.queueGroupNotification(group)
+    }
+  }
 
   private scheduleOnNextFrame(run: () => void): void {
     if (typeof window !== 'undefined') {
@@ -74,17 +105,19 @@ class DelayManager {
       this.pendingItemUpdates = new Map()
 
       updates.forEach((queue, key) => {
-        const listener = this.listenerMap.get(key)
-        if (!listener) return
+        const listeners = this.listenerMap.get(key)
+        if (!listeners) return
 
         queue.forEach((update) => {
-          try {
-            listener(update)
-          } catch (error) {
-            console.error(
-              `[DelayManager] 通知节点延迟监听器失败: ${key}`,
-              error,
-            )
+          for (const listener of [...listeners]) {
+            try {
+              listener(update)
+            } catch (error) {
+              console.error(
+                `[DelayManager] 通知节点延迟监听器失败: ${key}`,
+                error,
+              )
+            }
           }
         })
       })
@@ -170,18 +203,22 @@ class DelayManager {
     return url || 'http://cp.cloudflare.com/generate_204'
   }
 
-  setListener(
+  addListener(
     name: string,
     group: string,
     listener: (update: DelayUpdate) => void,
-  ) {
+  ): () => void {
     const key = hashKey(name, group)
-    this.listenerMap.set(key, listener)
-  }
+    const listeners = this.listenerMap.get(key) ?? new Set()
+    listeners.add(listener)
+    this.listenerMap.set(key, listeners)
 
-  removeListener(name: string, group: string) {
-    const key = hashKey(name, group)
-    this.listenerMap.delete(key)
+    return () => {
+      const current = this.listenerMap.get(key)
+      if (!current) return
+      current.delete(listener)
+      if (current.size === 0) this.listenerMap.delete(key)
+    }
   }
 
   /** Multiple views may subscribe independently; notifications occur only after settle. */
@@ -237,7 +274,8 @@ class DelayManager {
       return undefined
     }
 
-    return { ...entry }
+    // React's external-store reads must retain identity until the value changes.
+    return entry
   }
 
   getDelay(name: string, group: string) {
@@ -276,19 +314,21 @@ class DelayManager {
     member: InteractableProxyMember,
     group: string,
     timeout: number,
-  ): Promise<DelayUpdate> {
+  ): Promise<void> {
+    const generation = this.generation
     // Entry points own the pending mark; measureDelay only writes results.
     this.setDelay(member.ref.name, group, -2)
-    const update = await this.measureDelay(member, group, timeout)
-    this.queueGroupNotification(group)
-    return update
+    await this.measureDelay(member, group, timeout, generation)
+    if (generation === this.generation) this.queueGroupNotification(group)
   }
 
   private async measureDelay(
     member: InteractableProxyMember,
     group: string,
     timeout: number,
-  ): Promise<DelayUpdate> {
+    generation: number,
+  ): Promise<void> {
+    if (generation !== this.generation) return
     const name = member.ref.name
     const providerName =
       member.kind === 'node' ? providerNameOf(member.node) : undefined
@@ -324,14 +364,18 @@ class DelayManager {
       const elapsed = elapsedTime
       debugLog(`[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`)
 
-      return this.setDelay(name, group, delay, { elapsed })
+      if (generation === this.generation) {
+        this.setDelay(name, group, delay, { elapsed })
+      }
     } catch (error) {
       await new Promise((resolve) => setTimeout(resolve, 500))
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error)
       const delay = 1e6 // error
       const elapsed = Date.now() - startTime
 
-      return this.setDelay(name, group, delay, { elapsed })
+      if (generation === this.generation) {
+        this.setDelay(name, group, delay, { elapsed })
+      }
     }
   }
 
@@ -341,6 +385,7 @@ class DelayManager {
     timeout: number,
     concurrency = 36,
   ) {
+    const generation = this.generation
     debugLog(
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
@@ -354,6 +399,7 @@ class DelayManager {
     const startTime = Date.now()
 
     const help = async (): Promise<void> => {
+      if (generation !== this.generation) return
       const currMember = proxies[index++]
       if (!currMember) return
       const currName = currMember.ref.name
@@ -367,13 +413,15 @@ class DelayManager {
         }
 
         // Do not reorder a list around the pointer while batch results are arriving.
-        await this.measureDelay(currMember, group, timeout)
+        await this.measureDelay(currMember, group, timeout, generation)
       } catch (error) {
         console.error(
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
           error,
         )
-        this.setDelay(currName, group, 1e6)
+        if (generation === this.generation) {
+          this.setDelay(currName, group, 1e6)
+        }
       }
 
       return help()
@@ -391,12 +439,14 @@ class DelayManager {
       await Promise.all(promiseList)
     } finally {
       // Always release the batch and notify; otherwise failures leave stale sort state.
-      const remaining = (this.activeBatches.get(group) ?? 1) - 1
-      if (remaining > 0) {
-        this.activeBatches.set(group, remaining)
-      } else {
-        this.activeBatches.delete(group)
-        this.queueGroupNotification(group)
+      if (generation === this.generation) {
+        const remaining = (this.activeBatches.get(group) ?? 1) - 1
+        if (remaining > 0) {
+          this.activeBatches.set(group, remaining)
+        } else {
+          this.activeBatches.delete(group)
+          this.queueGroupNotification(group)
+        }
       }
     }
     const totalTime = Date.now() - startTime
