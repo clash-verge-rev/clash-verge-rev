@@ -1106,10 +1106,9 @@ export const EnhancedCanvasTrafficGraph = memo(
 
           {tooltipData.visible && (
             <Box
+              style={{ left: tooltipData.x + 8, top: tooltipData.y - 8 }}
               sx={{
                 position: 'absolute',
-                left: tooltipData.x + 8,
-                top: tooltipData.y - 8,
                 bgcolor: theme.palette.background.paper,
                 border: 1,
                 borderColor: 'divider',
