@@ -12,7 +12,7 @@
     "dev:tauri": "cross-env RUST_BACKTRACE=full tauri dev -f tauri-dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build -- --profile fast-release",
-    "build:wix": "node scripts/build-wix.mjs",
+    "build:windows:wix": "node scripts/build-windows-wix.mjs",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsrs -p . --noEmit && vite build",

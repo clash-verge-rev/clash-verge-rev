@@ -271,7 +271,7 @@ jobs:
 
       - name: Build WiX v7 MSI
         if: matrix.os == 'windows-latest'
-        run: pnpm build:wix --target ${{ matrix.target }}
+        run: pnpm build:windows:wix --target ${{ matrix.target }}
 
       - name: Attest Windows bundles
         if: matrix.os == 'windows-latest'
