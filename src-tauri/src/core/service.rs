@@ -1470,10 +1470,7 @@ async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
             .await
             .with_context(|| format!("failed to create provider cache directory {}", parent.display()))?;
     }
-    let name = target
-        .file_name()
-        .map(|name| name.to_string_lossy())
-        .unwrap_or_default();
+    let name = target.file_name().map_or_default(|name| name.to_string_lossy());
     use crate::utils::retry::{RetryError, RetryPolicy, retry};
     retry(
         RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(7), std::time::Duration::ZERO),

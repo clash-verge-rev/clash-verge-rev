@@ -18,9 +18,11 @@ use crate::{
 };
 use clash_verge_draft::{Draft, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
-use scopeguard::defer;
 use smartstring::alias::String;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    mem::DropGuard,
+    sync::atomic::{AtomicBool, Ordering},
+};
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
@@ -400,9 +402,9 @@ pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<Vali
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
         return Ok(ValidationOutcome::Busy);
     }
-    defer! {
+    let _switching_profile = DropGuard::new((), |()| {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
-    }
+    });
     let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
     let profiles = IProfiles {

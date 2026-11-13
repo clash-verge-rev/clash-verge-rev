@@ -206,10 +206,10 @@ impl Logger {
                 .map(|s| (*s).to_string())
                 .or_else(|| info.payload().downcast_ref::<String>().cloned())
                 .unwrap_or_else(|| "Unknown panic payload".to_string());
-            let location = info
-                .location()
-                .map(|loc| format!("{}:{}", loc.file(), loc.line()))
-                .unwrap_or_else(|| "Unknown location".to_string());
+            let location = info.location().map_or_else(
+                || "Unknown location".to_string(),
+                |loc| format!("{}:{}", loc.file(), loc.line()),
+            );
             logging!(error, Type::System, "Panic occurred at {}: {}", location, payload);
             Self::global().flush_logs();
             std::thread::sleep(Duration::from_millis(100));

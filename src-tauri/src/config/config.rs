@@ -191,7 +191,7 @@ impl Config {
                 }
             }
         } else {
-            let error_msg = config_result.err().map(|err| err.to_string()).unwrap_or_default();
+            let error_msg = config_result.err().map_or_default(|err| err.to_string());
             logging!(warn, Type::Config, "生成配置文件失败，使用默认配置: {error_msg}");
             CoreManager::global()
                 .use_default_config(NoticeStatus::ConfigValidateError, "")

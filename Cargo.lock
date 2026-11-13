@@ -1123,7 +1123,6 @@ dependencies = [
  "rfd 0.18.0",
  "runas",
  "rustls",
- "scopeguard",
  "serde",
  "serde_json",
  "serde_yaml_ng",

@@ -3,10 +3,10 @@ use crate::{config::with_encryption, process::AsyncHandler};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
-use scopeguard::{ScopeGuard, guard};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
+    mem::DropGuard,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -168,7 +168,7 @@ pub async fn save_yaml_str(path: &Path, yaml_str: &str) -> Result<()> {
         }
     };
 
-    let temporary = guard(temporary, |path| {
+    let temporary = DropGuard::new(temporary, |path| {
         let _ = std::fs::remove_file(path);
     });
     let mut file = tokio::fs::File::from_std(file);
@@ -195,7 +195,7 @@ pub async fn save_yaml_str(path: &Path, yaml_str: &str) -> Result<()> {
 
     std::fs::rename(temporary.as_path(), path)
         .with_context(|| format!("failed to replace file \"{}\"", path.display()))?;
-    let _ = ScopeGuard::into_inner(temporary);
+    let _ = DropGuard::dismiss(temporary);
     Ok(())
 }
 

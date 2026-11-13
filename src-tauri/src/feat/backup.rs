@@ -235,8 +235,7 @@ pub async fn import_local_backup(source: String) -> Result<String> {
     let ext = source_path
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| ext.to_ascii_lowercase())
-        .unwrap_or_default();
+        .map_or_default(|ext| ext.to_ascii_lowercase());
     if ext != "zip" {
         return Err(anyhow!("Only .zip backup files are supported"));
     }
@@ -314,8 +313,7 @@ pub async fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
         };
         let last_modified = metadata
             .modified()
-            .map(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339())
-            .unwrap_or_default();
+            .map_or_default(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339());
         backups.push(LocalBackupFile {
             filename: file_name.into(),
             path: path.to_string_lossy().into(),

@@ -8,7 +8,7 @@
       "pnpmVersion": "12.18.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "1.99.1",
+      "version": "1.100.0",
       "profile": "default"
     },
     "ghcr.io/devcontainers/features/git:1": {},

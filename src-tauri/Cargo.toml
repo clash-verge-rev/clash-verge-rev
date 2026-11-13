@@ -8,7 +8,7 @@ repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 build = "build.rs"
 edition = "2024"
-rust-version = "1.99"
+rust-version = "1.100"
 
 [lib]
 name = "app_lib"
@@ -86,7 +86,6 @@ sha2 = "0.11.1"
 getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
-scopeguard = "1.2.0"
 tauri-plugin-notification = "2.8.0"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.8.3"

@@ -83,8 +83,7 @@ fn runtime_group_scopes(config: Option<&Mapping>) -> BTreeMap<String, GroupScope
                 .get("exclude-type")
                 .and_then(|types| types.as_str())
                 .filter(|types| !types.is_empty())
-                .map(|types| types.split('|').map(str::to_owned).collect())
-                .unwrap_or_default();
+                .map_or_default(|types| types.split('|').map(str::to_owned).collect());
             Some((
                 name,
                 GroupScope {

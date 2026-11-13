@@ -7,9 +7,9 @@ use crate::{
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
-use scopeguard::defer;
 use smartstring::alias::String;
 use std::{
+    mem::DropGuard,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -541,9 +541,9 @@ impl Sysopt {
         {
             return Ok(());
         }
-        defer! {
+        let _reset_sysproxy = DropGuard::new((), |()| {
             self.reset_sysproxy.store(false, Ordering::SeqCst);
-        }
+        });
         let mut proxy_state = self.proxy_state_lock.lock().await;
         let _guard_operation = self.guard_operation_lock.lock().await;
         let drained = self.stop_proxy_guard_locked().await;
