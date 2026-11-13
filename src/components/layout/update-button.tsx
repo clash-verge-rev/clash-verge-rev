@@ -1,10 +1,12 @@
 import { Button } from '@mui/material'
 import { useRef } from 'react'
 
-import { DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
 
-import { UpdateViewer } from '../setting/mods/update-viewer'
+import {
+  UpdateViewer,
+  type UpdateViewerRef,
+} from '../setting/mods/update-viewer'
 
 interface Props {
   className?: string
@@ -12,7 +14,7 @@ interface Props {
 
 export const UpdateButton = (props: Props) => {
   const { className } = props
-  const viewerRef = useRef<DialogRef>(null)
+  const viewerRef = useRef<UpdateViewerRef>(null)
 
   const { updateInfo } = useUpdate()
 
@@ -27,7 +29,7 @@ export const UpdateButton = (props: Props) => {
         variant="contained"
         size="small"
         className={className}
-        onClick={() => viewerRef.current?.open()}
+        onClick={() => viewerRef.current?.open(updateInfo)}
       >
         New
       </Button>
