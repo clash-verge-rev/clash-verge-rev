@@ -1,9 +1,9 @@
-# Experimental WiX MSI
+# WiX MSI
 
 Build an MSI from the existing native `target/release` binaries, from the repository root:
 
 ```powershell
-pnpm build:wix
+pnpm build:windows:wix
 ```
 
 The project pins WiX SDK and its UI/Util extensions to 7.0.0. NuGet restores the
@@ -15,11 +15,11 @@ to the packaging command. This reads `target/<target>/release` and selects the
 matching MSI architecture:
 
 ```powershell
-pnpm build:wix --target x86_64-pc-windows-msvc
-pnpm build:wix --target aarch64-pc-windows-msvc
+pnpm build:windows:wix --target x86_64-pc-windows-msvc
+pnpm build:windows:wix --target aarch64-pc-windows-msvc
 ```
 
-For a Windows GitHub Actions matrix, run `pnpm build:wix --target ${{ matrix.target }}`
+For a Windows GitHub Actions matrix, run `pnpm build:windows:wix --target ${{ matrix.target }}`
 after the Tauri build. This experimental command does not publish release assets
 or run a Tauri build. Use `--source-dir <directory>` to package another output
 directory; `--target` still selects its architecture.
@@ -34,7 +34,7 @@ MSI limits are 255 for major/minor and 65535 for patch.
 Output and intermediate files go under `<source-dir>/bundle/wix7/`, separately
 for native and target-specific builds. For example, version `2.6.0-rc.1` with
 the x64 target produces
-`target/x86_64-pc-windows-msvc/release/bundle/wix7/Clash.Verge_2.6.0-rc.1_x64_experimental.msi`.
+`target/x86_64-pc-windows-msvc/release/bundle/wix7/Clash.Verge_2.6.0_x64-setup.msi`.
 
 For direct MSBuild use, supply `AppVersion` explicitly. `SourceDir`,
 `InstallerPlatform`, and `AppDisplayVersion` can also be overridden:
