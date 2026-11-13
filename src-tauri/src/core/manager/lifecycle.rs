@@ -6,9 +6,8 @@ use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
-use scopeguard::defer;
 use smartstring::alias::String;
-use std::path::Path;
+use std::{mem::DropGuard, path::Path};
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 
@@ -356,9 +355,9 @@ impl CoreManager {
         if !self.try_start_config_update() {
             anyhow::bail!("configuration update is already running");
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
         self.start_core_during_config_update().await
     }
 
@@ -383,9 +382,9 @@ impl CoreManager {
                 service_rejection,
             ));
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
         // Lock order is config then lifecycle. disable_tun_and_persist commits the shared Verge
         // draft without claiming it, so without this it can commit another transaction's staged patch.
         let config_write = Config::lock_config_write().await;
@@ -463,9 +462,9 @@ impl CoreManager {
         if !self.try_start_config_update() {
             anyhow::bail!("configuration update is already running");
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
         // Lock order is config then lifecycle, for the unclaimed draft write below.
         let _config_write = Config::lock_config_write().await;
         let _life = self.lifecycle_lock.lock().await;
@@ -795,9 +794,9 @@ impl CoreManager {
         if !self.try_start_config_update() {
             anyhow::bail!("configuration update is already running");
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
         self.restart_core_during_config_update().await
     }
 
@@ -966,9 +965,9 @@ impl CoreManager {
         if !self.try_start_config_update() {
             return HandoffOutcome::NotReady;
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
 
         // Lock order is config then lifecycle.
         let _life = self.lifecycle_lock.lock().await;

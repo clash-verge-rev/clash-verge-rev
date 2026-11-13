@@ -1,10 +1,10 @@
 use anyhow::Result;
-use scopeguard::defer;
 use serde::Serialize;
 use smartstring::alias::String;
 use std::{
     fmt,
     hash::{DefaultHasher, Hash as _, Hasher as _},
+    mem::DropGuard,
     sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -421,9 +421,9 @@ impl CoreConfigValidator {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok(ValidationOutcome::Busy);
         }
-        defer! {
+        let _validation = DropGuard::new((), |()| {
             self.finish();
-        }
+        });
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
         // The test run reads the app dir, which never sees updates made by a service core.
@@ -449,8 +449,7 @@ fn has_ext<P: AsRef<std::path::Path>>(path: P, ext: &str) -> bool {
     path.as_ref()
         .extension()
         .and_then(|s| s.to_str())
-        .map(|s| s.eq_ignore_ascii_case(ext))
-        .unwrap_or(false)
+        .is_some_and(|s| s.eq_ignore_ascii_case(ext))
 }
 
 fn contains_any_keyword<'a>(buf: &'a [u8], keywords: &'a [&str]) -> bool {

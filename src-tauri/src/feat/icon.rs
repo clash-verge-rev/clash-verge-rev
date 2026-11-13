@@ -44,7 +44,7 @@ fn ensure_icon_cache_target(icon_cache_dir: &Path, file_name: &str) -> CmdResult
 }
 
 fn normalized_text_prefix(content: &[u8]) -> std::string::String {
-    let content = content.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(content);
+    let content = content.trim_prefix(&[0xEF, 0xBB, 0xBF]);
     let start = content
         .iter()
         .position(|byte| !byte.is_ascii_whitespace())

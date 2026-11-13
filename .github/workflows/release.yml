@@ -203,7 +203,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.99.1'
+          toolchain: '1.100.0'
           targets: ${{ matrix.target }}
 
       - name: Rust Cache
@@ -308,7 +308,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.99.1'
+          toolchain: '1.100.0'
           targets: ${{ matrix.target }}
 
       - name: Rust Cache
@@ -439,7 +439,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.99.1'
+          toolchain: '1.100.0'
           targets: ${{ matrix.target }}
 
       - name: Rust Cache

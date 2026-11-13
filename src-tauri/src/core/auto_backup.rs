@@ -279,8 +279,7 @@ async fn cleanup_auto_backups() -> Result<()> {
             .and_then(|meta| meta.modified())
             .ok()
             .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
-            .map(|dur| dur.as_secs())
-            .unwrap_or(0);
+            .map_or(0, |dur| dur.as_secs());
 
         files.push((path, modified));
     }

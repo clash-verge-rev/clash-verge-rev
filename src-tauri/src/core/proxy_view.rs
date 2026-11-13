@@ -331,9 +331,7 @@ fn build_provider_records(
     providers: Option<ProxyProviders>,
     records: &mut BTreeMap<String, ProxyNodeView>,
 ) -> (Vec<ProxyProviderView>, ProviderCandidates) {
-    let providers = providers
-        .map(|providers| providers.providers.into_iter().collect::<BTreeMap<_, _>>())
-        .unwrap_or_default();
+    let providers = providers.map_or_default(|providers| providers.providers.into_iter().collect::<BTreeMap<_, _>>());
     let mut views = Vec::new();
     let mut candidates = BTreeMap::new();
 

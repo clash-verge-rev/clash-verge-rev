@@ -14,10 +14,10 @@ use anyhow::{Result, anyhow};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::StageRuntimeOutcome;
-use scopeguard::defer;
 use smartstring::alias::String;
 use std::{
     collections::HashSet,
+    mem::DropGuard,
     path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
@@ -191,9 +191,9 @@ impl CoreManager {
             logging!(debug, Type::Core, "Configuration update is already running");
             return Ok(ValidationOutcome::Busy);
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
 
         if !force && !self.should_update_config() {
             logging!(debug, Type::Core, "Skipping config update due to debounce");
@@ -314,9 +314,9 @@ impl CoreManager {
             logging!(debug, Type::Core, "Configuration update is already running");
             return Ok(ValidationOutcome::Busy);
         }
-        defer! {
+        let _config_update = DropGuard::new((), |()| {
             self.finish_config_update();
-        }
+        });
 
         let runtime = Config::runtime().await;
         let transaction = DraftTransaction::begin(vec![&runtime])?;

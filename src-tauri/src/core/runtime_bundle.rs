@@ -126,8 +126,7 @@ fn allocate_provider_destination(destination: &str, url: &str, reserved: &mut Ha
     let path = Path::new(destination);
     let extension = path
         .extension()
-        .map(|ext| format!(".{}", ext.to_string_lossy()))
-        .unwrap_or_default();
+        .map_or_default(|ext| format!(".{}", ext.to_string_lossy()));
     let mut suffix = String::new();
     let mut sequence = 0;
     loop {

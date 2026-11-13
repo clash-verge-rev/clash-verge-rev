@@ -1,2 +1,3 @@
 avoid-breaking-exported-api = true
+allow-unwrap-in-tests = true
 cognitive-complexity-threshold = 25

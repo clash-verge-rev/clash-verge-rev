@@ -634,7 +634,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     let proxy_names = config
         .get("proxies")
         .and_then(|v| v.as_sequence())
-        .map(|seq| {
+        .map_or_default(|seq| {
             seq.iter()
                 .filter_map(|item| match item {
                     Value::Mapping(map) => map
@@ -645,13 +645,12 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
                     _ => None,
                 })
                 .collect::<HashSet<String>>()
-        })
-        .unwrap_or_default();
+        });
 
     let group_names = config
         .get("proxy-groups")
         .and_then(|v| v.as_sequence())
-        .map(|seq| {
+        .map_or_default(|seq| {
             seq.iter()
                 .filter_map(|item| {
                     item.as_mapping()
@@ -660,19 +659,17 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
                         .map(std::convert::Into::into)
                 })
                 .collect::<HashSet<String>>()
-        })
-        .unwrap_or_default();
+        });
 
     let provider_names = config
         .get("proxy-providers")
         .and_then(Value::as_mapping)
-        .map(|map| {
+        .map_or_default(|map| {
             map.keys()
                 .filter_map(Value::as_str)
                 .map(std::convert::Into::into)
                 .collect::<HashSet<String>>()
-        })
-        .unwrap_or_default();
+        });
 
     let mut allowed_names = proxy_names;
     allowed_names.extend(group_names);
@@ -716,15 +713,13 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
     let is_fake_ip = dns
         .get("enhanced-mode")
         .and_then(|v| v.as_str())
-        .map(|m| m == "fake-ip")
-        .unwrap_or(true);
+        .is_none_or(|m| m == "fake-ip");
 
     // Hand-edited YAML may leave the key present but empty.
     let range6_missing = dns
         .get("fake-ip-range6")
         .and_then(|v| v.as_str())
-        .map(|s| s.trim().is_empty())
-        .unwrap_or(true);
+        .is_none_or(|s| s.trim().is_empty());
 
     if ipv6_enabled && is_fake_ip && range6_missing {
         dns.insert(Value::from("fake-ip-range6"), Value::from("2001:2::0/64"));
@@ -747,8 +742,7 @@ fn take_mapping(config: &mut Mapping, key: &str) -> Mapping {
     config
         .get_mut(key)
         .and_then(Value::as_mapping_mut)
-        .map(std::mem::take)
-        .unwrap_or_default()
+        .map_or_default(std::mem::take)
 }
 
 fn merge_dns_config(mut config: Mapping, mut dns_config: Mapping) -> (Mapping, Mapping) {
