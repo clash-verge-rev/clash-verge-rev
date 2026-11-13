@@ -162,6 +162,19 @@ fn instance_auth(token: String) -> impl warp::Filter<Extract = (), Error = warp:
         .untuple_one()
 }
 
+/// Build the PAC URL with a cache-busting query derived from the PAC content.
+///
+/// The OS caches PAC files by URL, so a content change must also change the URL
+/// or the new rules only take effect after restarting the system proxy (#8609).
+pub fn pac_auto_url(proxy_host: &str, pac_port: u16, pac_content: &str) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash as _, Hasher as _};
+
+    let mut hasher = DefaultHasher::new();
+    pac_content.hash(&mut hasher);
+    format!("http://{proxy_host}:{pac_port}/commands/pac?v={:016x}", hasher.finish())
+}
+
 fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
@@ -399,4 +412,20 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
     drop(file);
     std::fs::rename(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::pac_auto_url;
+
+    #[test]
+    fn pac_url_is_stable_for_the_same_content_and_changes_with_it() {
+        let url = pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL() {}");
+        assert!(url.starts_with("http://127.0.0.1:33333/commands/pac?v="));
+        assert_eq!(url, pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL() {}"));
+        assert_ne!(
+            url,
+            pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL(url, host) {}")
+        );
+    }
 }
