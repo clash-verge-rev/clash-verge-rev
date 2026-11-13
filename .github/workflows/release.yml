@@ -238,7 +238,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: 'latest'
 
       - name: Pnpm install and check
         run: |
