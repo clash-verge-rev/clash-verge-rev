@@ -1,43 +1,44 @@
-# Performance Harness Agent Guidelines
+# Product Measurement Adapter Guidelines
 
-Use [GUIDE.md](GUIDE.md) for the explicit external tool invocation and adapter
-boundary; the tool README owns scenario operation and evidence interpretation. This file governs harness changes under the repository rules.
+[GUIDE.md](GUIDE.md) owns the explicit external-tool invocation and the product
+adapter boundary. Tool implementation rules live in the external
+[AGENTS.md](https://github.com/clash-verge-rev/clash-verge-rev-harness/blob/main/AGENTS.md);
+its [README](https://github.com/clash-verge-rev/clash-verge-rev-harness/blob/main/README.md)
+owns running, sampling, report interpretation, comparison and owned cleanup.
 
-## Isolation And Evidence
+## Adapter Boundary And Isolation
 
-Keep measurement code behind the explicit perf build gates and out of ordinary
-builds. Never touch the daily instance, configuration, Core, Service, TUN, DNS, or
-system proxy. Preserve loopback isolation, owned-process PID/start attribution,
-nonactivation, visibility/occlusion checks, source continuity, and failure rejection.
-Do not weaken acceptance gates to make a run pass or substitute Chrome/Vite for
-native WebView evidence. Label adapters separately from native plugin/IPC paths.
-Preserve source, dependency, binary, and report identity. Measurement-contract
-changes require a schema bump and new reports.
+Keep real product component imports, initialization and the isolated native entry
+in this checkout. Reuse the product's frontend/native build dependencies and
+environment; the tool owns its automation dependencies. Do not copy components
+into the tool. Keep measurement code behind the explicit perf build gates. Ordinary product builds must not load or require the external tool.
 
-## Adaptation And Validation
+The adapter must not load or modify daily configuration or start/control the daily
+app, Core, Service, TUN, DNS or system proxy. Preserve loopback isolation, owned-process
+PID/start attribution, nonactivation, visibility/occlusion checks and source
+continuity. The tool owns read-only isolation snapshots and owned cleanup.
+Do not weaken acceptance gates or substitute Chrome/Vite for native WebView evidence.
+Label JavaScript adapters separately from native plugin/IPC paths.
 
-Reuse the runner, driver, fixtures, Worker/components, attribution, and cleanup.
-Add only the scenario fixture and validation needed for the requested boundary.
-Before expanding a scenario or running a comparison matrix, verify the smallest
-native path: isolated startup, owned WebContent attribution, expected data delivery,
-native visibility and nonactivation, and owned shutdown. Validate prerequisites
-normally supplied by the application entry. Expand only after this path passes,
-and repeat affected checks when its dependencies change.
+Adapter changes require reviewing the actual source diff, including native entry,
+initialization and build configuration, for changed measurement meaning. Matching
+interfaces alone do not prove equivalence. Preserve source, dependency and binary
+identity; coordinate measurement-contract changes with the external tool's schema
+and fresh reports. An adapter review cannot waive other acceptance conditions.
 
-For implementation changes, run scoped ESLint, both perf TypeScript projects,
-the external tool’s `node --test report.test.mjs`, formatting, and relevant production checks.
-Run scoped Rust Clippy before freezing the optimized artifact; follow the external
-README validation order. Runtime or measurement
-changes also need affected-layer native three-phase smoke, three independent runs,
-A/A, invalid/incomparable reports, and injected-failure cleanup. Verify ordinary
-build exclusion and daily-instance isolation. For documentation-only or demonstrated
-no-op changes, use proportionate checks and explain why native reruns add no
-coverage; do not claim previously measured results as fresh validation.
+## Validation
 
-## Delivery And Cleanup
+For adapter implementation changes, run scoped ESLint, both perf TypeScript projects
+(`tsconfig.json` and `tsconfig.node.json`), formatting and relevant production
+checks, including relevant Rust checks for native changes. Run scoped Rust Clippy
+before freezing the optimized artifact. Check ordinary-build exclusion and
+prerequisites normally supplied by the application entry.
 
-Temporary investigation additions do not belong in a product-fix commit unless
-harness maintenance is explicitly authorized. Existing user authorization suffices;
-do not require renewed approval at delivery. Keep reports and manifests on ignored
-paths. Retain failed evidence through diagnosis, then honor requested cleanup only
-for task-owned paths using the ownership safeguards described in the guide.
+Follow the external AGENTS.md's
+[measurement-validation requirements](https://github.com/clash-verge-rev/clash-verge-rev-harness/blob/main/AGENTS.md)
+and the README's
+[validation order](https://github.com/clash-verge-rev/clash-verge-rev-harness/blob/main/README.md#validate-before-freezing-a-build)
+for affected native coverage, from the smallest native path through comparison and
+failure cleanup. Keep the tested source and binary fixed. Documentation-only or
+demonstrated no-op changes need proportionate checks; explain evidence reuse and
+do not present previous native results as fresh validation.

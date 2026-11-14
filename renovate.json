@@ -50,12 +50,7 @@
     },
     {
       "description": "Update Tauri npm packages and Cargo crates together so frontend and backend stay in sync",
-      "matchPackageNames": [
-        "@tauri-apps/**",
-        "@wdio/tauri-service",
-        "tauri",
-        "tauri-*"
-      ],
+      "matchPackageNames": ["@tauri-apps/**", "tauri", "tauri-*"],
       "groupName": "tauri",
       "addLabels": ["tauri"]
     },

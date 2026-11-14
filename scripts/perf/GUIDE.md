@@ -7,7 +7,10 @@ owns the operating guide and scenario/evidence boundaries.
 
 For first setup only, from the product root run
 `git clone https://github.com/clash-verge-rev/clash-verge-rev-harness.git ../clash-verge-rev-harness`.
-Reuse an existing harness checkout. For subsequent calls, pass both roots explicitly:
+Reuse an existing harness checkout. In that checkout, run
+`pnpm install --frozen-lockfile` to install the tool's locked automation dependencies.
+Product frontend and native builds continue to use this checkout's dependencies.
+For subsequent calls, pass both roots explicitly:
 
 ```sh
 project=/absolute/path/to/clash-verge-rev

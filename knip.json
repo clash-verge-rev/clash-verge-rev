@@ -15,12 +15,7 @@
     "cycles"
   ],
   "ignoreBinaries": ["rustc"],
-  "ignoreDependencies": [
-    "@wdio/tauri-service",
-    "lint-staged",
-    "webdriverio",
-    "ws"
-  ],
+  "ignoreDependencies": ["lint-staged"],
   "ignoreIssues": {
     "src/types/generated/**": ["exports", "types"],
     "src/services/bindings.ts": ["types"]

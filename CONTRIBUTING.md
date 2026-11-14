@@ -147,13 +147,11 @@ evidence for the affected behavior.
 4. **Verify the result.** Use the checks below that cover the changed behavior.
    If reproduction is unavailable, explain the alternative evidence and its
    limits rather than claiming the reported problem is confirmed fixed.
-5. **Review and resolve findings.** Self-review the diff against the task and
-   applicable module rules. For changes altering concurrency, persistence, system
-   networking, or shared-contract behavior, seek an independent review with fresh
-   context. Use [REVIEW.md](REVIEW.md) for that review, an explicitly requested
-   review, or verification of review fixes; routine implementation does not require
-   loading it. Check findings against the code before changing it; return fixes to
-   the implementer when working with a separate reviewer.
+5. **Review and resolve findings.** Follow [REVIEW.md](REVIEW.md). For changes
+   altering concurrency, persistence, system networking, or shared-contract behavior,
+   seek an independent review with fresh context. Check each finding against
+   the code before changing it; return fixes to the implementer when working
+   with a separate reviewer.
 
 ### Choosing Validation
 

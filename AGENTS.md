@@ -63,25 +63,8 @@ the ownership evidence the AI-slop review evaluates (see
 
 ## Task Guidance
 
-Use instructions already present in context; do not reread them merely to record
-that they were read. For linked documents, locate the relevant heading and read
-that section first, expanding for unresolved requirements or affected boundaries.
-Links are task routes, not a list of documents to load in full.
-
-- **Reason from behavior and ownership.** Before choosing an implementation,
-  identify the required outcome, preserved behavior, and the mechanism that owns
-  each relevant effect. Separate verified facts from assumptions. Test the most
-  consequential unresolved assumption with the smallest representative check
-  before expanding the change. Prefer existing mechanisms when they satisfy the
-  contract; do not replace evidence with configuration intent or add abstractions
-  without a demonstrated need. Reuse evidence whose relevant inputs are unchanged;
-  when a check fails, revisit the assumption before retrying or changing the design.
-- Documentation-only edits: check the affected wording, links, and source of
-  truth; use [documentation validation](CONTRIBUTING.md#choosing-validation).
-- Development and bug fixes: read the
-  [development workflow](CONTRIBUTING.md#development-workflow) and applicable
-  [validation guidance](CONTRIBUTING.md#choosing-validation). Setup and submission
-  sections apply only when those operations are needed.
+- For development and bug fixes, follow the
+  [development workflow](CONTRIBUTING.md#development-workflow).
 - For code review and verification of review fixes, follow [REVIEW.md](REVIEW.md).
   Review is read-only unless changes are authorized; findings do not expand
   that authorization to unrelated fixes, commits, pushes, or GitHub updates.
@@ -89,11 +72,9 @@ Links are task routes, not a list of documents to load in full.
   [scripts/perf/AGENTS.md](scripts/perf/AGENTS.md).
 - When handing work between agents or review rounds, use the
   [AI context sharing guidance](REVIEW.md#ai-context-sharing).
-- Read applicable module rules. Routine edits need a focused self-review, not a
-  separate review workflow. Independent review remains required when requested or
-  called for by the development workflow. After required checks and review pass,
-  complete the authorized delivery; reopen only for changed inputs, failures, or
-  unresolved concerns, not to repeat unchanged evidence.
+- Read the relevant sections and linked module rules, expanding only when the
+  affected behavior crosses another boundary. Routine edits do not require
+  multiple agents or repeated review rounds.
 
 ## Issue and PR Workflows
 

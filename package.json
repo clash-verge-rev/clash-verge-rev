@@ -98,7 +98,6 @@
     "@types/validator": "^13.15.10",
     "@vitejs/plugin-legacy": "^8.2.3",
     "@vitejs/plugin-react": "^6.1.1",
-    "@wdio/tauri-service": "1.5.1",
     "adm-zip": "^0.6.1",
     "axios": "^1.20.0",
     "cli-color": "^2.0.4",
@@ -127,9 +126,7 @@
     "typescript-eslint": "^8.70.0",
     "vite": "^8.3.0",
     "vite-plugin-svgr": "^5.2.0",
-    "vitest": "^5.0.1",
-    "webdriverio": "10.2.0",
-    "ws": "8.22.2"
+    "vitest": "^5.0.1"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
