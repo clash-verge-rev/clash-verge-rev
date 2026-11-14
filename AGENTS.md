@@ -68,6 +68,8 @@ the ownership evidence the AI-slop review evaluates (see
 - For code review and verification of review fixes, follow [REVIEW.md](REVIEW.md).
   Review is read-only unless changes are authorized; findings do not expand
   that authorization to unrelated fixes, commits, pushes, or GitHub updates.
+- For macOS frontend performance or WebView memory investigations, follow
+  [scripts/perf/AGENTS.md](scripts/perf/AGENTS.md).
 - When handing work between agents or review rounds, use the
   [AI context sharing guidance](REVIEW.md#ai-context-sharing).
 - Read the relevant sections and linked module rules, expanding only when the
