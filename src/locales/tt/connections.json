@@ -46,7 +46,7 @@
     "applyFailed": "The rule could not be applied. Your selection has been kept.",
     "unsupportedValue": "This value contains characters that cannot be used in a quick rule.",
     "saved": "Rule saved and configuration applied.",
-    "noMetadata": "This connection has no domain or process information for adding a rule.",
+    "noMetadata": "This connection has no domain, process or IP information for configuring a rule.",
     "noProfile": "No active profile with an editable rule extension is available.",
     "entry": "Configure rule…",
     "modifyTitle": "Modify rule",
@@ -56,6 +56,10 @@
     "policyUnavailable": "This policy is no longer available. Choose another policy.",
     "editDestination": "Update the existing rule in “{{name}}”, keeping its position.",
     "saveAndApply": "Save and apply",
+    "sourceIp": "Source IP",
+    "destinationIp": "Destination IP",
+    "sourceHint": "Matches all requests from this IP, including requests from other applications. No port filtering.",
+    "destinationHint": "Matches this destination IP across all domains. No port filtering.",
     "fullPath": "Full path"
   }
 }

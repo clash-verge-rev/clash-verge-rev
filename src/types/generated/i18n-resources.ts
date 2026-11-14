@@ -41,6 +41,8 @@ export interface TranslationResources {
         allSubdomains: string
         applyFailed: string
         destination: string
+        destinationHint: string
+        destinationIp: string
         domain: string
         domainScope: string
         editDestination: string
@@ -59,6 +61,8 @@ export interface TranslationResources {
         ruleModeHint: string
         saveAndApply: string
         saved: string
+        sourceHint: string
+        sourceIp: string
         title: string
         unavailable: string
         unsupportedValue: string
