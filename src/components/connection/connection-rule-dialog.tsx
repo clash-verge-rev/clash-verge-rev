@@ -30,6 +30,7 @@ import {
   getConnectionRuleTargets,
   findConnectionRule,
   saveConnectionRule,
+  type ConnectionRuleKind,
 } from './connection-rule'
 
 export interface ConnectionRuleTarget {
@@ -37,9 +38,17 @@ export interface ConnectionRuleTarget {
   profileUid: string
   profileName: string
   rulesUid: string
+  preferredKind: ConnectionRuleKind
 }
 
-type ConnectionRuleKind = 'domain' | 'process'
+function getInitialKind(target: ConnectionRuleTarget) {
+  const targets = getConnectionRuleTargets(target.metadata)
+  return targets[target.preferredKind]
+    ? target.preferredKind
+    : ((['domain', 'process', 'source', 'destination'] as const).find(
+        (kind) => targets[kind],
+      ) ?? 'domain')
+}
 
 export function ConnectionRuleDialog({
   target,
@@ -52,8 +61,8 @@ export function ConnectionRuleDialog({
   const { proxyView } = useProxiesData()
   const { clashConfig } = useClashConfigData()
   const targets = getConnectionRuleTargets(target.metadata)
-  const [kind, setKind] = useState<ConnectionRuleKind>(
-    targets.domain ? 'domain' : 'process',
+  const [kind, setKind] = useState<ConnectionRuleKind>(() =>
+    getInitialKind(target),
   )
   const [policy, setPolicy] = useState<string | null>(null)
   const [scope, setScope] = useState<'DOMAIN' | 'DOMAIN-SUFFIX'>('DOMAIN')
@@ -83,6 +92,8 @@ export function ConnectionRuleDialog({
   const kindLabels = {
     domain: t('connections.ruleDialog.domain'),
     process: t('connections.components.fields.process'),
+    source: t('connections.ruleDialog.sourceIp'),
+    destination: t('connections.ruleDialog.destinationIp'),
   }
 
   const unavailablePolicy = Boolean(policy && !policies.includes(policy))
@@ -106,9 +117,15 @@ export function ConnectionRuleDialog({
           process: ruleTargets.process
             ? findConnectionRule(content, ruleTargets.process)
             : undefined,
+          source: ruleTargets.source
+            ? findConnectionRule(content, ruleTargets.source)
+            : undefined,
+          destination: ruleTargets.destination
+            ? findConnectionRule(content, ruleTargets.destination)
+            : undefined,
         }
         if (cancelled) return
-        const initialKind = ruleTargets.domain ? 'domain' : 'process'
+        const initialKind = getInitialKind(target)
         const initial =
           initialKind === 'domain'
             ? (rules.domain ?? rules.suffix)
@@ -208,13 +225,19 @@ export function ConnectionRuleDialog({
               )
             }}
           >
-            {(['domain', 'process'] as const).map((option) => (
-              <MenuItem key={option} value={option} disabled={!targets[option]}>
-                {kindLabels[option]}
-                {!targets[option] &&
-                  ` · ${t('connections.ruleDialog.unavailable')}`}
-              </MenuItem>
-            ))}
+            {(['domain', 'process', 'source', 'destination'] as const).map(
+              (option) => (
+                <MenuItem
+                  key={option}
+                  value={option}
+                  disabled={!targets[option]}
+                >
+                  {kindLabels[option]}
+                  {!targets[option] &&
+                    ` · ${t('connections.ruleDialog.unavailable')}`}
+                </MenuItem>
+              ),
+            )}
           </TextField>
           {kind === 'process' ? (
             <>
@@ -283,6 +306,15 @@ export function ConnectionRuleDialog({
               label={t('connections.ruleDialog.allSubdomains')}
             />
           </RadioGroup>
+        )}
+        {(kind === 'source' || kind === 'destination') && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            {t(
+              kind === 'source'
+                ? 'connections.ruleDialog.sourceHint'
+                : 'connections.ruleDialog.destinationHint',
+            )}
+          </Typography>
         )}
         {kind === 'process' && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

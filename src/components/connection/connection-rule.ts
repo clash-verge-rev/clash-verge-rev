@@ -2,10 +2,27 @@ import { dump, load } from 'js-yaml'
 import isFQDN from 'validator/es/lib/isFQDN'
 import isIP from 'validator/es/lib/isIP'
 
+export type ConnectionRuleKind = 'domain' | 'process' | 'source' | 'destination'
+
+function getAddressRule(address: string | undefined, source: boolean) {
+  const ip = address?.trim()
+  if (!ip || !isIP(ip)) return undefined
+  const ipv4 = isIP(ip, 4)
+  return {
+    type: source ? 'SRC-IP-CIDR' : ipv4 ? 'IP-CIDR' : 'IP-CIDR6',
+    value: `${ip}/${ipv4 ? 32 : 128}`,
+  }
+}
+
 export function getConnectionRuleTargets(
   metadata: Pick<
     IConnectionsItem['metadata'],
-    'host' | 'process' | 'processPath'
+    | 'host'
+    | 'process'
+    | 'processPath'
+    | 'sourceIP'
+    | 'destinationIP'
+    | 'remoteDestination'
   >,
 ) {
   const host = metadata.host?.trim() ?? ''
@@ -20,7 +37,11 @@ export function getConnectionRuleTargets(
     : name?.trim()
       ? { type: 'PROCESS-NAME', value: name }
       : undefined
-  return { domain, process }
+  const source = getAddressRule(metadata.sourceIP, true)
+  const destination =
+    getAddressRule(metadata.destinationIP, false) ??
+    getAddressRule(metadata.remoteDestination, false)
+  return { domain, process, source, destination }
 }
 
 function parseRuleExtension(content: string) {
@@ -55,7 +76,11 @@ interface RuleCondition {
 
 function matchesConnectionRule(raw: string, target: RuleCondition) {
   const parts = raw.split(',').map((part) => part.trim())
-  if (parts.length !== 3) return false
+  const hasNoResolve =
+    (target.type === 'IP-CIDR' || target.type === 'IP-CIDR6') &&
+    parts.length === 4 &&
+    parts[3] === 'no-resolve'
+  if (parts.length !== 3 && !hasNoResolve) return false
   if (target.type === 'DOMAIN' || target.type === 'DOMAIN-SUFFIX') {
     return (
       parts[0] === target.type &&
@@ -92,7 +117,7 @@ export function saveConnectionRule(
       if (!matchesConnectionRule(raw, target)) return [raw]
       if (replaced) return []
       replaced = true
-      return [rule]
+      return [raw.split(',').length === 4 ? `${rule},no-resolve` : rule]
     })
   }
   if (!replaced) {

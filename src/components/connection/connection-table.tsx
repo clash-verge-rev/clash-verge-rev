@@ -29,6 +29,7 @@ import {
   getConnectionStartTime,
   getConnectionTypeLabel,
 } from './connection-row-view'
+import type { ConnectionRuleKind } from './connection-rule'
 
 const ROW_HEIGHT = 40
 const RESIZE_HANDLE_WIDTH = 6
@@ -247,7 +248,7 @@ const renderCell = (
 interface RowComponentProps {
   row: IConnectionsItem
   columns: DisplayColumn[]
-  onShowDetail: (id: string) => void
+  onShowDetail: (id: string, preferredKind?: ConnectionRuleKind) => void
   getSnapshot: (row: IConnectionsItem) => TableRowSnapshot
   borderColor: string
   virtualTop: number
@@ -263,7 +264,22 @@ const RowComponent = memo(
     virtualTop,
   }: RowComponentProps) {
     const handleClick = useCallback(
-      () => onShowDetail(row.id),
+      (event: ReactMouseEvent<HTMLDivElement>) => {
+        const field =
+          event.target instanceof Element
+            ? event.target.closest<HTMLElement>('[data-connection-field]')
+                ?.dataset.connectionField
+            : undefined
+        const preferredKind =
+          field === 'process'
+            ? 'process'
+            : field === 'source'
+              ? 'source'
+              : field === 'remoteDestination'
+                ? 'destination'
+                : 'domain'
+        onShowDetail(row.id, preferredKind)
+      },
       [onShowDetail, row.id],
     )
     const snapshot = getSnapshot(row)
@@ -285,6 +301,7 @@ const RowComponent = memo(
         {columns.map((column) => (
           <div
             key={column.field}
+            data-connection-field={column.field}
             style={{
               boxSizing: 'border-box',
               flex: `0 0 ${column.size}px`,
@@ -318,7 +335,7 @@ const RowComponent = memo(
 
 interface Props {
   connections: IConnectionsItem[]
-  onShowDetail: (id: string) => void
+  onShowDetail: (id: string, preferredKind?: ConnectionRuleKind) => void
   columnManagerOpen: boolean
   onCloseColumnManager: () => void
 }
@@ -333,7 +350,8 @@ export const ConnectionTable = (props: Props) => {
   const onShowDetailRef = useRef(rawOnShowDetail)
   onShowDetailRef.current = rawOnShowDetail
   const onShowDetail = useCallback(
-    (id: string) => onShowDetailRef.current(id),
+    (id: string, preferredKind?: ConnectionRuleKind) =>
+      onShowDetailRef.current(id, preferredKind),
     [],
   )
   const { t } = useTranslation()

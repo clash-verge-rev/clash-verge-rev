@@ -46,7 +46,7 @@
     "applyFailed": "规则未能应用，已保留当前选择。",
     "unsupportedValue": "此内容包含快捷规则不支持的字符。",
     "saved": "规则已保存，配置已应用。",
-    "noMetadata": "此连接没有可用于添加规则的域名或进程信息。",
+    "noMetadata": "此连接没有可用于设置规则的域名、进程或 IP 信息。",
     "noProfile": "当前没有可编辑规则扩展的活动订阅。",
     "entry": "设置规则…",
     "modifyTitle": "修改规则",
@@ -56,6 +56,10 @@
     "policyUnavailable": "此策略已不可用，请选择其他策略。",
     "editDestination": "修改「{{name}}」中的现有规则，保留排序。",
     "saveAndApply": "保存并应用",
+    "sourceIp": "源 IP",
+    "destinationIp": "目标 IP",
+    "sourceHint": "匹配来自此 IP 的所有请求，可能包含其他应用，不限定端口。",
+    "destinationHint": "匹配访问此目标 IP 的请求，覆盖所有域名，不限定端口。",
     "fullPath": "完整路径"
   }
 }

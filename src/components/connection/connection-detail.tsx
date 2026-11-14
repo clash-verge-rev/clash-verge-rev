@@ -8,14 +8,21 @@ import { closeConnection } from 'tauri-plugin-mihomo-api'
 import { useProfiles } from '@/hooks/use-profiles'
 import parseTraffic from '@/utils/parse-traffic'
 
-import { getConnectionRuleTargets } from './connection-rule'
+import {
+  getConnectionRuleTargets,
+  type ConnectionRuleKind,
+} from './connection-rule'
 import {
   ConnectionRuleDialog,
   type ConnectionRuleTarget,
 } from './connection-rule-dialog'
 
 export interface ConnectionDetailRef {
-  open: (detail: IConnectionsItem, closed: boolean) => void
+  open: (
+    detail: IConnectionsItem,
+    closed: boolean,
+    preferredKind?: ConnectionRuleKind,
+  ) => void
   close: () => void
 }
 
@@ -23,6 +30,8 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<IConnectionsItem | null>(null)
   const [closed, setClosed] = useState(false)
+  const [preferredKind, setPreferredKind] =
+    useState<ConnectionRuleKind>('domain')
   const theme = useTheme()
   const [ruleTarget, setRuleTarget] = useState<ConnectionRuleTarget | null>(
     null,
@@ -35,11 +44,16 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   }, [])
 
   useImperativeHandle(ref, () => ({
-    open: (detail: IConnectionsItem, closed: boolean) => {
+    open: (
+      detail: IConnectionsItem,
+      closed: boolean,
+      preferredKind = 'domain',
+    ) => {
       if (open) return
       setOpen(true)
       setDetail(detail)
       setClosed(closed)
+      setPreferredKind(preferredKind)
     },
     close: onClose,
   }))
@@ -67,6 +81,7 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
             <InnerConnectionDetail
               data={detail}
               closed={closed}
+              preferredKind={preferredKind}
               onClose={onClose}
               onAddRule={(target) => {
                 setRuleTarget(target)
@@ -89,6 +104,7 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
 interface InnerProps {
   data: IConnectionsItem
   closed: boolean
+  preferredKind: ConnectionRuleKind
   onClose?: () => void
   onAddRule: (target: ConnectionRuleTarget) => void
 }
@@ -96,6 +112,7 @@ interface InnerProps {
 const InnerConnectionDetail = ({
   data,
   closed,
+  preferredKind,
   onClose,
   onAddRule,
 }: InnerProps) => {
@@ -106,7 +123,10 @@ const InnerConnectionDetail = ({
   const canAddRule = Boolean(
     current?.uid &&
       current.option?.rules &&
-      (targets.domain || targets.process),
+      (targets.domain ||
+        targets.process ||
+        targets.source ||
+        targets.destination),
   )
   const theme = useTheme()
   const chains = [...data.chains].reverse().join(' / ')
@@ -211,6 +231,7 @@ const InnerConnectionDetail = ({
               profileUid: current.uid,
               profileName: current.name || current.uid,
               rulesUid: current.option.rules,
+              preferredKind,
             })
           }}
         >
@@ -232,7 +253,10 @@ const InnerConnectionDetail = ({
       {!canAddRule && (
         <Box sx={{ mt: 1, typography: 'caption' }}>
           {t(
-            targets.domain || targets.process
+            targets.domain ||
+              targets.process ||
+              targets.source ||
+              targets.destination
               ? 'connections.ruleDialog.noProfile'
               : 'connections.ruleDialog.noMetadata',
           )}
