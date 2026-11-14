@@ -8,7 +8,7 @@ let timerId: number | null = null
 const listeners = new Set<RelativeTimeListener>()
 
 const startTimer = () => {
-  if (timerId !== null) return
+  if (timerId !== null || document.hidden || listeners.size === 0) return
 
   currentTime = Date.now()
   timerId = window.setInterval(() => {
@@ -18,19 +18,34 @@ const startTimer = () => {
 }
 
 const stopTimer = () => {
-  if (listeners.size > 0 || timerId === null) return
+  if (timerId === null) return
 
   window.clearInterval(timerId)
   timerId = null
 }
 
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    stopTimer()
+  } else {
+    startTimer()
+    listeners.forEach((listener) => listener())
+  }
+}
+
 const subscribeRelativeTime = (listener: RelativeTimeListener) => {
   listeners.add(listener)
+  if (listeners.size === 1) {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+  }
   startTimer()
 
   return () => {
     listeners.delete(listener)
-    stopTimer()
+    if (listeners.size === 0) {
+      stopTimer()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }
 }
 
