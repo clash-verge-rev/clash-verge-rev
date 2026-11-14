@@ -60,6 +60,9 @@
     "destinationIp": "Destination IP",
     "sourceHint": "Matches all requests from this IP, including requests from other applications. No port filtering.",
     "destinationHint": "Matches this destination IP across all domains. No port filtering.",
-    "fullPath": "Full path"
+    "fullPath": "Full path",
+    "connectionHost": "Current connection domain: {{host}}",
+    "invalidDomain": "Enter the current domain or a parent domain with at least two labels.",
+    "matchingDomain": "Matching domain"
   }
 }

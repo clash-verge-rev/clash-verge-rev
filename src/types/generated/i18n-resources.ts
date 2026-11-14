@@ -40,6 +40,7 @@ export interface TranslationResources {
         addAndApply: string
         allSubdomains: string
         applyFailed: string
+        connectionHost: string
         destination: string
         destinationHint: string
         destinationIp: string
@@ -49,7 +50,9 @@ export interface TranslationResources {
         entry: string
         exactDomain: string
         fullPath: string
+        invalidDomain: string
         matchBy: string
+        matchingDomain: string
         modifyTitle: string
         newConnections: string
         noMetadata: string

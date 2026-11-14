@@ -60,6 +60,9 @@
     "destinationIp": "目标 IP",
     "sourceHint": "匹配来自此 IP 的所有请求，可能包含其他应用，不限定端口。",
     "destinationHint": "匹配访问此目标 IP 的请求，覆盖所有域名，不限定端口。",
-    "fullPath": "完整路径"
+    "fullPath": "完整路径",
+    "connectionHost": "当前连接域名：{{host}}",
+    "invalidDomain": "请输入当前连接域名或其父域名，父域名至少包含两级。",
+    "matchingDomain": "匹配域名"
   }
 }
