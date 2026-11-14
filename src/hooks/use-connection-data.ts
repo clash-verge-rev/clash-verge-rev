@@ -363,6 +363,8 @@ const handleSummaryText = (messageData: string) => {
     return
   }
 
+  if (connectionSummary.activeConnectionCount === (payload.count ?? 0)) return
+
   connectionSummary = mergeConnectionSummary(payload)
   notifySummaryListeners()
 }
