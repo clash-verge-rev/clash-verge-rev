@@ -277,9 +277,13 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/attest-build-provenance@v4
         with:
-          subject-path: | 
-            target/${{ matrix.target }}/release/bundle/nsis/*setup*
-            target/${{ matrix.target }}/release/bundle/wix7/*.msi
+          subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
+        
+      - name: Attest Windows MSI bundles
+        if: matrix.os == 'windows-latest'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: target/${{ matrix.target }}/release/bundle/wix7/*.msi
 
       - name: Attest macOS bundles
         if: matrix.os == 'macos-latest'
