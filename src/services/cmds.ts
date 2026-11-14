@@ -248,6 +248,10 @@ export async function takeServiceOwnerNotice() {
   return commands.takeServiceOwnerNotice()
 }
 
+export async function takeServiceUpgradeStateNotice() {
+  return commands.takeServiceUpgradeStateNotice()
+}
+
 export async function takeDiscardedKeysNotice() {
   return commands.takeDiscardedKeysNotice()
 }

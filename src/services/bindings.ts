@@ -109,6 +109,8 @@ export const commands = {
     __TAURI_INVOKE<boolean>('take_service_repair_notice'),
   takeServiceOwnerNotice: () =>
     __TAURI_INVOKE<string | null>('take_service_owner_notice'),
+  takeServiceUpgradeStateNotice: () =>
+    __TAURI_INVOKE<string | null>('take_service_upgrade_state_notice'),
   takeDiscardedKeysNotice: () =>
     __TAURI_INVOKE<string | null>('take_discarded_keys_notice'),
   getDnsConfigContent: () =>
@@ -616,6 +618,7 @@ export type NoticeStatus =
   | 'service_core::repair_required'
   | 'service_core::app_data_not_owned'
   | 'service_core::sidecar_fallback'
+  | 'service_core::upgrade_state_not_restored'
   | 'dns_override::auto_disabled'
   | 'enhance::discarded_keys'
   | 'tun_mode::auto_disabled'
@@ -1033,6 +1036,7 @@ export type ServiceFallbackNotice =
   | { kind: 'unavailable' }
   | { kind: 'coreRejected'; reason: string }
   | { kind: 'notAutoStarted' }
+  | { kind: 'upgradeIncomplete' }
 
 export type ServiceHealthKind =
   | 'unknown'

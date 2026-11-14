@@ -28,7 +28,9 @@ import getSystem from '@/utils/get-system'
 type Remedy = 'installAndRestart' | 'reinstallAndRestart' | 'restartOnly'
 
 const remedyFor = (reason: ServiceRequestReason): Remedy =>
-  reason === 'serviceLocationRefused' || reason === 'serviceNotAutoStarted'
+  reason === 'serviceLocationRefused' ||
+  reason === 'serviceNotAutoStarted' ||
+  reason === 'serviceUpgradeIncomplete'
     ? 'reinstallAndRestart'
     : reason === 'sysproxySidecarReady'
       ? 'restartOnly'
@@ -43,6 +45,8 @@ const EXPLANATION = {
     'layout.components.serviceMigration.locationRefusedMessage',
   serviceNotAutoStarted:
     'layout.components.serviceMigration.notAutoStartedMessage',
+  serviceUpgradeIncomplete:
+    'layout.components.serviceMigration.upgradeIncompleteMessage',
 } as const
 
 const TITLE = {
@@ -51,6 +55,7 @@ const TITLE = {
   tunNeedsService: 'layout.components.sysproxyPrivilege.tunTitle',
   serviceLocationRefused: 'layout.components.serviceMigration.repair',
   serviceNotAutoStarted: 'layout.components.serviceMigration.repair',
+  serviceUpgradeIncomplete: 'layout.components.serviceMigration.reinstall',
 } as const
 
 const stateToRestore = (
