@@ -13,6 +13,8 @@
        first (Windows/macOS/Linux) when the change is platform-specific;
        merge sub-symptoms as 主题：症状、症状; full-width punctuation,
        「」 for UI labels, backticks for config keys and commands
+     - omit the redundant suffix 「的问题」; end with the concrete symptom
+       or outcome instead
      - platform entries sit under their platform heading (bold, emoji
        prefixed, ordered Windows/macOS/Linux, combined for pairs like
        macOS/Linux) at the end of their section;
