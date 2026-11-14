@@ -70,6 +70,8 @@ pub mod files {
 pub mod tun {
     pub const DEFAULT_STACK: &str = "mips";
 
+    pub const DEFAULT_MTU: u16 = 1500;
+
     pub const DNS_HIJACK: &[&str] = &["any:53"];
 
     /// Saved dialog fields; `enable` belongs to the verge switch.

@@ -459,7 +459,7 @@ fn gui_tun_keys(clash_config: &Mapping) -> Vec<Value> {
         keys.extend(
             constants::tun::GUI_KEYS
                 .iter()
-                .filter(|key| tun.contains_key(**key))
+                .filter(|key| tun.get(**key).is_some_and(|value| !value.is_null()))
                 .map(|key| Value::from(*key)),
         );
     }
@@ -531,6 +531,16 @@ fn ensure_lan_bind_address(mut config: Mapping) -> Mapping {
     config
 }
 
+fn ensure_tun_default_mtu(mut config: Mapping) -> Mapping {
+    if let Some(Value::Mapping(tun)) = config.get_mut("tun")
+        && matches!(tun.get("mtu"), None | Some(Value::Null))
+    {
+        tun.insert(Value::from("mtu"), Value::from(constants::tun::DEFAULT_MTU));
+    }
+
+    config
+}
+
 /// Merges the app's clash config over the profile; switches are parameters to keep it pure.
 fn merge_default_config(
     mut config: Mapping,
@@ -548,7 +558,9 @@ fn merge_default_config(
             });
             let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
             for (key, value) in patch_tun.into_iter() {
-                tun.insert(key, value);
+                if !value.is_null() {
+                    tun.insert(key, value);
+                }
             }
             config.insert("tun".into(), tun.into());
         } else {
@@ -878,6 +890,7 @@ pub async fn enhance(
 
     notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
     let config = authoritative.enforce(config);
+    let config = ensure_tun_default_mtu(config);
     let config = ensure_lan_bind_address(config);
 
     let config = cleanup_proxy_groups(config);
