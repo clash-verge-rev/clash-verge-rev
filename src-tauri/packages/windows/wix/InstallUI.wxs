@@ -1,0 +1,62 @@
+<!-- Adapted from WiX v7 WixUI_InstallDir.wxs under the Microsoft Reciprocal License.
+     Copyright (c) .NET Foundation and contributors. All rights reserved.
+     https://github.com/wixtoolset/wix/blob/v7.0.0/LICENSE.TXT -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI Id="VergeUI_InstallDir">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Arial" Size="10" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Arial" Size="12" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Arial" Size="10" Bold="yes" />
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="ARPNOMODIFY" Value="1" />
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+      <Dialog Id="UpgradeConfirmDlg" Width="370" Height="270" Title="[ProductName] Setup">
+        <Control Id="Title" Type="Text" X="15" Y="20" Width="340" Height="25"
+                 Text="{\WixUI_Font_Title}Update Clash Verge Rev?" />
+        <Control Id="Description" Type="Text" X="15" Y="65" Width="340" Height="80"
+                 Text="An existing Clash Verge Rev MSI installation was found. Continue to replace it with version [ProductVersion]. Your application settings will be kept. Exit Clash Verge Rev before continuing." />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back">
+          <Publish Event="NewDialog" Value="WelcomeDlg" />
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Continue">
+          <Publish Event="NewDialog" Value="InstallDirDlg" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999" />
+      <!-- 检测到同系列 MSI 时先确认更新，首次安装直接进入目录选择。返回时沿原路回退。 -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="UpgradeConfirmDlg" Condition="NOT Installed AND WIX_UPGRADE_DETECTED" />
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Condition="NOT Installed AND NOT WIX_UPGRADE_DETECTED" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="UpgradeConfirmDlg" Condition="WIX_UPGRADE_DETECTED" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Condition="NOT WIX_UPGRADE_DETECTED" />
+      <!-- Order 保证先校验路径，再设置目标目录，最后进入安装确认页。 -->
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="CheckTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="3" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="CheckTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SetTargetPath" Value="[_BrowseProperty]" Order="3" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="EndDialog" Value="Return" Order="4" />
+      <!-- 再次打开已安装的同一个 MSI 时，确认页返回修复或卸载选择页。 -->
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Condition="NOT Installed" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Condition="Installed" />
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
+    </UI>
+    <UIRef Id="WixUI_Common" />
+  </Fragment>
+</Wix>

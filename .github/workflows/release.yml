@@ -234,6 +234,12 @@ jobs:
           node-version: '26.13.1'
           cache: 'pnpm'
 
+      - name: Install Microsoft .NET SDK
+        if: matrix.os == 'windows-latest'
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 'latest'
+
       - name: Pnpm install and check
         run: |
           pnpm i
@@ -263,11 +269,21 @@ jobs:
           args: --target ${{ matrix.target }}
           uploadUpdaterJson: ${{ needs.prepare_release.outputs.channel == 'stable' }}
 
+      - name: Build WiX v7 MSI
+        if: matrix.os == 'windows-latest'
+        run: pnpm build:windows:wix --target ${{ matrix.target }}
+
       - name: Attest Windows bundles
         if: matrix.os == 'windows-latest'
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
+        
+      - name: Attest Windows MSI bundles
+        if: matrix.os == 'windows-latest'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: target/${{ matrix.target }}/release/bundle/wix7/*.msi
 
       - name: Attest macOS bundles
         if: matrix.os == 'macos-latest'
