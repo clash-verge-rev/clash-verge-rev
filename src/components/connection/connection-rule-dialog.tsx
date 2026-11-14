@@ -28,6 +28,8 @@ import { showNotice } from '@/services/notice-service'
 
 import {
   getConnectionRuleTargets,
+  getConnectionRules,
+  isConnectionRuleDomain,
   findConnectionRule,
   saveConnectionRule,
   type ConnectionRuleKind,
@@ -66,20 +68,28 @@ export function ConnectionRuleDialog({
   )
   const [policy, setPolicy] = useState<string | null>(null)
   const [scope, setScope] = useState<'DOMAIN' | 'DOMAIN-SUFFIX'>('DOMAIN')
-  const [existing, setExisting] = useState<Record<
-    ConnectionRuleKind | 'suffix',
-    ReturnType<typeof findConnectionRule>
-  > | null>(null)
+  const [domainValue, setDomainValue] = useState(targets.domain?.value ?? '')
+  const [rules, setRules] = useState<string[] | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const selected = targets[kind]
-  const modifying = Boolean(
-    existing?.[
-      kind === 'domain' && scope === 'DOMAIN-SUFFIX' ? 'suffix' : kind
-    ],
-  )
+  const editingDomain = kind === 'domain' && scope === 'DOMAIN-SUFFIX'
+  const invalidDomain =
+    editingDomain &&
+    !isConnectionRuleDomain(domainValue, targets.domain?.value ?? '')
+  const condition = selected
+    ? {
+        type: kind === 'domain' ? scope : selected.type,
+        value: editingDomain ? domainValue.trim() : selected.value,
+      }
+    : undefined
+  const existing =
+    rules && condition && !invalidDomain
+      ? findConnectionRule(rules, condition)
+      : undefined
+  const modifying = Boolean(existing)
   const groups = proxyView
     ? proxyView.groups.length || !proxyView.global
       ? proxyView.groups
@@ -97,40 +107,27 @@ export function ConnectionRuleDialog({
   }
 
   const unavailablePolicy = Boolean(policy && !policies.includes(policy))
-  const blocked = loading || saving || !existing
+  const blocked = loading || saving || rules === null
 
   useEffect(() => {
     let cancelled = false
     readProfileFile(target.rulesUid)
       .then((content) => {
+        const loadedRules = getConnectionRules(content)
         const ruleTargets = getConnectionRuleTargets(target.metadata)
-        const rules = {
-          domain: ruleTargets.domain
-            ? findConnectionRule(content, ruleTargets.domain)
-            : undefined,
-          suffix: ruleTargets.domain
-            ? findConnectionRule(content, {
-                ...ruleTargets.domain,
-                type: 'DOMAIN-SUFFIX',
-              })
-            : undefined,
-          process: ruleTargets.process
-            ? findConnectionRule(content, ruleTargets.process)
-            : undefined,
-          source: ruleTargets.source
-            ? findConnectionRule(content, ruleTargets.source)
-            : undefined,
-          destination: ruleTargets.destination
-            ? findConnectionRule(content, ruleTargets.destination)
-            : undefined,
-        }
-        if (cancelled) return
         const initialKind = getInitialKind(target)
-        const initial =
-          initialKind === 'domain'
-            ? (rules.domain ?? rules.suffix)
-            : rules[initialKind]
-        setExisting(rules)
+        const selectedTarget = ruleTargets[initialKind]
+        const initial = selectedTarget
+          ? (findConnectionRule(loadedRules, selectedTarget) ??
+            (initialKind === 'domain'
+              ? findConnectionRule(loadedRules, {
+                  ...selectedTarget,
+                  type: 'DOMAIN-SUFFIX',
+                })
+              : undefined))
+          : undefined
+        if (cancelled) return
+        setRules(loadedRules)
         setPolicy(initial?.policy ?? null)
         setScope(initial?.type === 'DOMAIN-SUFFIX' ? 'DOMAIN-SUFFIX' : 'DOMAIN')
       })
@@ -147,8 +144,15 @@ export function ConnectionRuleDialog({
   }, [target, loadAttempt])
 
   const handleSave = useLockFn(async () => {
-    if (blocked || !selected || !policy || !policies.includes(policy)) return
-    if (/[\r\n,]/u.test(selected.value) || /[\r\n,]/u.test(policy)) {
+    if (
+      blocked ||
+      !condition ||
+      invalidDomain ||
+      !policy ||
+      !policies.includes(policy)
+    )
+      return
+    if (/[\r\n,]/u.test(condition.value) || /[\r\n,]/u.test(policy)) {
       setError(t('connections.ruleDialog.unsupportedValue'))
       return
     }
@@ -171,11 +175,7 @@ export function ConnectionRuleDialog({
           }
           await checkProfile()
           const content = await readProfileFile(target.rulesUid)
-          const updated = saveConnectionRule(
-            content,
-            { ...selected, type: kind === 'domain' ? scope : selected.type },
-            policy,
-          )
+          const updated = saveConnectionRule(content, condition, policy)
           await checkProfile()
           return saveProfileFile(target.rulesUid, updated)
         },
@@ -214,10 +214,18 @@ export function ConnectionRuleDialog({
             disabled={blocked}
             onChange={(event) => {
               const next = event.target.value as ConnectionRuleKind
+              const nextTarget = targets[next]
               const rule =
-                next === 'domain'
-                  ? (existing?.domain ?? existing?.suffix)
-                  : existing?.[next]
+                rules && nextTarget
+                  ? (findConnectionRule(rules, nextTarget) ??
+                    (next === 'domain'
+                      ? findConnectionRule(rules, {
+                          ...nextTarget,
+                          type: 'DOMAIN-SUFFIX',
+                        })
+                      : undefined))
+                  : undefined
+              setDomainValue(targets.domain?.value ?? '')
               setKind(next)
               setPolicy(rule?.policy ?? null)
               setScope(
@@ -270,11 +278,47 @@ export function ConnectionRuleDialog({
             <TextField
               fullWidth
               size="small"
-              label={kindLabels[kind]}
-              value={selected?.value ?? ''}
+              label={
+                editingDomain
+                  ? t('connections.ruleDialog.matchingDomain')
+                  : kindLabels[kind]
+              }
+              value={editingDomain ? domainValue : (selected?.value ?? '')}
+              disabled={editingDomain && blocked}
+              onChange={(event) => {
+                const value = event.target.value
+                setDomainValue(value)
+                const match =
+                  rules &&
+                  isConnectionRuleDomain(value, targets.domain?.value ?? '')
+                    ? findConnectionRule(rules, {
+                        type: 'DOMAIN-SUFFIX',
+                        value: value.trim(),
+                      })
+                    : undefined
+                if (match) setPolicy(match.policy)
+              }}
+              error={invalidDomain}
+              helperText={
+                editingDomain ? (
+                  <>
+                    {t('connections.ruleDialog.connectionHost', {
+                      host: targets.domain?.value,
+                    })}
+                    {invalidDomain && (
+                      <>
+                        <br />
+                        {t('connections.ruleDialog.invalidDomain')}
+                      </>
+                    )}
+                  </>
+                ) : undefined
+              }
               slotProps={{
-                input: { readOnly: true },
-                htmlInput: { title: selected?.value },
+                input: { readOnly: !editingDomain },
+                htmlInput: {
+                  title: editingDomain ? domainValue : selected?.value,
+                },
               }}
             />
           )}
@@ -285,11 +329,17 @@ export function ConnectionRuleDialog({
             aria-label={t('connections.ruleDialog.domainScope')}
             value={scope}
             onChange={(_, value) => {
-              setScope(value as 'DOMAIN' | 'DOMAIN-SUFFIX')
-              setPolicy(
-                existing?.[value === 'DOMAIN-SUFFIX' ? 'suffix' : 'domain']
-                  ?.policy ?? null,
-              )
+              const nextScope = value as 'DOMAIN' | 'DOMAIN-SUFFIX'
+              setScope(nextScope)
+              setDomainValue(targets.domain?.value ?? '')
+              const match =
+                rules && targets.domain
+                  ? findConnectionRule(rules, {
+                      ...targets.domain,
+                      type: nextScope,
+                    })
+                  : undefined
+              setPolicy(match?.policy ?? null)
             }}
             sx={{ mt: 0.5 }}
           >
@@ -363,7 +413,7 @@ export function ConnectionRuleDialog({
           <Box sx={{ mt: 2 }}>
             <Alert severity="error">
               {error}
-              {!existing && (
+              {rules === null && (
                 <Button
                   onClick={() => {
                     setLoading(true)
@@ -407,7 +457,11 @@ export function ConnectionRuleDialog({
           variant="contained"
           loading={saving}
           disabled={
-            blocked || !selected || !policy || !policies.includes(policy)
+            blocked ||
+            !condition ||
+            invalidDomain ||
+            !policy ||
+            !policies.includes(policy)
           }
           onClick={handleSave}
         >

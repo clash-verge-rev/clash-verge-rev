@@ -44,6 +44,18 @@ export function getConnectionRuleTargets(
   return { domain, process, source, destination }
 }
 
+export function isConnectionRuleDomain(value: string, host: string) {
+  const domain = value.trim()
+  if (!domain || isIP(domain) || !isFQDN(domain, { require_tld: false }))
+    return false
+  const normalized = domain.toLowerCase()
+  const current = host.toLowerCase()
+  return (
+    normalized === current ||
+    (domain.split('.').length >= 2 && current.endsWith(`.${normalized}`))
+  )
+}
+
 function parseRuleExtension(content: string) {
   const parsed: unknown = load(content)
   if (
@@ -90,14 +102,19 @@ function matchesConnectionRule(raw: string, target: RuleCondition) {
   return parts[0] === target.type && parts[1] === target.value
 }
 
-export function findConnectionRule(content: string, target: RuleCondition) {
+export function getConnectionRules(content: string): string[] {
   const config = parseRuleExtension(content)
-  for (const key of ['prepend', 'append']) {
-    for (const raw of (config[key] ?? []) as string[]) {
-      if (matchesConnectionRule(raw, target)) {
-        const [type, , policy] = raw.split(',').map((part) => part.trim())
-        return { type, policy }
-      }
+  return [
+    ...((config.prepend ?? []) as string[]),
+    ...((config.append ?? []) as string[]),
+  ]
+}
+
+export function findConnectionRule(rules: string[], target: RuleCondition) {
+  for (const raw of rules) {
+    if (matchesConnectionRule(raw, target)) {
+      const [type, , policy] = raw.split(',').map((part) => part.trim())
+      return { type, policy }
     }
   }
   return undefined
