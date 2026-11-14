@@ -36,6 +36,33 @@ export interface TranslationResources {
       page: {
         title: string
       }
+      ruleDialog: {
+        addAndApply: string
+        allSubdomains: string
+        applyFailed: string
+        destination: string
+        domain: string
+        domainScope: string
+        editDestination: string
+        entry: string
+        exactDomain: string
+        fullPath: string
+        matchBy: string
+        modifyTitle: string
+        newConnections: string
+        noMetadata: string
+        noProfile: string
+        policyUnavailable: string
+        processNameHint: string
+        processPathHint: string
+        profileChanged: string
+        ruleModeHint: string
+        saveAndApply: string
+        saved: string
+        title: string
+        unavailable: string
+        unsupportedValue: string
+      }
     }
     home: {
       components: {
