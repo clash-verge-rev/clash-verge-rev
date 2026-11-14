@@ -120,20 +120,34 @@ const selectRuntimeStandaloneNodes = (
   view: ProxyViewV1,
   runtimeProxies: unknown,
 ) => {
+  const orderedNames: string[] = []
   const runtimeProxyNames = new Set(
     (Array.isArray(runtimeProxies) ? runtimeProxies : []).flatMap((proxy) => {
       const name =
         typeof proxy === 'object' && proxy !== null && 'name' in proxy
           ? proxy.name
           : undefined
-      return typeof name === 'string' && name.length > 0 ? [name] : []
+      if (typeof name === 'string' && name.length > 0) {
+        orderedNames.push(name)
+        return [name]
+      }
+      return []
     }),
   )
-  return resolveStandaloneNodes(view).filter(
-    (node) =>
-      node.source.kind === 'core' &&
-      runtimeProxyNames.has(node.source.proxyName),
+  const orderIndex = new Map(
+    orderedNames.map((name, index) => [name, index] as const),
   )
+  return resolveStandaloneNodes(view)
+    .filter(
+      (node) =>
+        node.source.kind === 'core' &&
+        runtimeProxyNames.has(node.source.proxyName),
+    )
+    .sort(
+      (a, b) =>
+        (orderIndex.get(a.source.proxyName) ?? Number.MAX_SAFE_INTEGER) -
+        (orderIndex.get(b.source.proxyName) ?? Number.MAX_SAFE_INTEGER),
+    )
 }
 
 export const selectGlobalChainNodes = (
