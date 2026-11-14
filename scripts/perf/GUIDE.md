@@ -1,8 +1,13 @@
 # Product measurement adapter
 
 The reusable runner, collector, reports, comparator and owned-artifact cleanup
-live in the separate `clash-verge-rev-harness` checkout. Its `README.md` owns the
-operating guide and scenario/evidence boundaries. Pass both roots explicitly:
+live in the separate [clash-verge-rev-harness](https://github.com/clash-verge-rev/clash-verge-rev-harness) checkout.
+Its [README](https://github.com/clash-verge-rev/clash-verge-rev-harness/blob/main/README.md)
+owns the operating guide and scenario/evidence boundaries.
+
+For first setup only, from the product root run
+`git clone https://github.com/clash-verge-rev/clash-verge-rev-harness.git ../clash-verge-rev-harness`.
+Reuse an existing harness checkout. For subsequent calls, pass both roots explicitly:
 
 ```sh
 project=/absolute/path/to/clash-verge-rev
