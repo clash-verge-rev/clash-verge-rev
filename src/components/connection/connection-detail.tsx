@@ -41,12 +41,15 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
       onClose={onClose}
       sx={{
         '.MuiSnackbarContent-root': {
-          maxWidth: '520px',
+          width: '520px',
+          maxWidth: 'calc(100vw - 32px)',
+          boxSizing: 'border-box',
           maxHeight: '480px',
           overflowY: 'auto',
           backgroundColor: theme.palette.background.paper,
           color: theme.palette.text.primary,
         },
+        '.MuiSnackbarContent-message': { width: '100%', minWidth: 0 },
       }}
       message={
         detail ? (
@@ -132,7 +135,14 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const onDelete = useLockFn(async () => closeConnection(data.id))
 
   return (
-    <Box sx={{ userSelect: 'text', color: theme.palette.text.secondary }}>
+    <Box
+      sx={{
+        width: '100%',
+        minWidth: 0,
+        userSelect: 'text',
+        color: theme.palette.text.secondary,
+      }}
+    >
       {information.map((each) => (
         <div key={each.label}>
           <b>{each.label}</b>
@@ -148,7 +158,15 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
       ))}
 
       {!closed && (
-        <Box sx={{ textAlign: 'right' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 1,
+            flexWrap: 'wrap',
+            mt: 1,
+          }}
+        >
           <Button
             variant="contained"
             title={t('connections.components.actions.closeConnection')}
