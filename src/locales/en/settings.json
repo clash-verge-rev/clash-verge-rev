@@ -501,7 +501,7 @@
       },
       "tooltips": {
         "dnsHijack": "Please use , to separate multiple DNS servers",
-        "dnsMode": "Auto keeps the legacy behavior; hijack requires Strict Route on Windows or Auto Redirect on Linux",
+        "dnsMode": "Auto keeps the legacy behavior. On macOS, Native lets Mihomo register a TUN DNS resolver and can help keep system DNS queries in TUN when switching networks. Application-managed DoH/DoT is configured separately. Hijack requires Strict Route on Windows or Auto Redirect on Linux",
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {

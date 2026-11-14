@@ -501,7 +501,7 @@
       },
       "tooltips": {
         "dnsHijack": "多个 DNS 服务器请使用 , 分隔",
-        "dnsMode": "Auto 保持旧行为；hijack 需 Windows 开启严格路由或 Linux 开启自动重定向",
+        "dnsMode": "Auto 保持旧行为。macOS 可选 Native，让 Mihomo 注册 TUN DNS 解析器，有助于避免切换网络时系统 DNS 绕过 TUN。应用自带的 DoH/DoT 需单独配置。Hijack 需 Windows 开启严格路由或 Linux 开启自动重定向",
         "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
       },
       "messages": {
