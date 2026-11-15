@@ -1,4 +1,4 @@
-import { dump, load } from 'js-yaml'
+import { dump, loadAll } from 'js-yaml'
 import isFQDN from 'validator/es/lib/isFQDN'
 import isIP from 'validator/es/lib/isIP'
 
@@ -65,7 +65,11 @@ export async function getConnectionRootDomain(host: string) {
 }
 
 function parseRuleExtension(content: string) {
-  const parsed: unknown = load(content)
+  const documents = loadAll(content)
+  if (documents.length > 1) {
+    throw new Error('The rule extension must contain a single YAML document.')
+  }
+  const parsed = documents[0]
   if (
     parsed !== undefined &&
     parsed !== null &&
