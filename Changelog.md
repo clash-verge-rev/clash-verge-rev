@@ -23,6 +23,8 @@
      GitHub, so they never reach users. -->
 ## v2.6.0
 
+- **Mihomo 内核升级至 v1.19.34**
+
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
 
