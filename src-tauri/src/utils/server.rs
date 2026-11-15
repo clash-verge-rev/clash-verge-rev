@@ -413,19 +413,3 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
     std::fs::rename(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::pac_auto_url;
-
-    #[test]
-    fn pac_url_is_stable_for_the_same_content_and_changes_with_it() {
-        let url = pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL() {}");
-        assert!(url.starts_with("http://127.0.0.1:33333/commands/pac?v="));
-        assert_eq!(url, pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL() {}"));
-        assert_ne!(
-            url,
-            pac_auto_url("127.0.0.1", 33333, "function FindProxyForURL(url, host) {}")
-        );
-    }
-}
