@@ -56,7 +56,7 @@ serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 socket2 = { workspace = true }
-warp = { version = "0.4.3", features = ["server"] }
+warp = { version = "0.4.4", features = ["server"] }
 open = "5.4.5"
 rfd = { version = "0.18.0", default-features = false, features = ["common-controls-v6", "xdg-portal"] }
 dirs = "7.0.0"
@@ -153,7 +153,7 @@ tauri-plugin-updater = "2.14.1"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
-warp = { version = "0.4.3", features = ["test"] }
+warp = { version = "0.4.4", features = ["test"] }
 
 [lints]
 workspace = true
