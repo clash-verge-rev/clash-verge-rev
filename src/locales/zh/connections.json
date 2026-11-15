@@ -53,6 +53,7 @@
     "domainScope": "域名匹配范围",
     "exactDomain": "仅此域名",
     "allSubdomains": "此域名及所有子域名",
+    "rootDomain": "主域名及所有子域名（{{domain}}）",
     "policyUnavailable": "此策略已不可用，请选择其他策略。",
     "editDestination": "修改「{{name}}」中的现有规则，保留排序。",
     "saveAndApply": "保存并应用",

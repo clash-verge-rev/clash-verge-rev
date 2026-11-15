@@ -53,6 +53,7 @@
     "domainScope": "Domain scope",
     "exactDomain": "Only this domain",
     "allSubdomains": "This domain and all its subdomains",
+    "rootDomain": "Основной домен и все его поддомены ({{domain}})",
     "policyUnavailable": "This policy is no longer available. Choose another policy.",
     "editDestination": "Update the existing rule in “{{name}}”, keeping its position.",
     "saveAndApply": "Save and apply",

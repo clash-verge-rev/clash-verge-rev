@@ -61,6 +61,7 @@ export interface TranslationResources {
         processNameHint: string
         processPathHint: string
         profileChanged: string
+        rootDomain: string
         ruleModeHint: string
         saveAndApply: string
         saved: string

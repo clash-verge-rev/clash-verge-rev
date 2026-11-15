@@ -56,6 +56,14 @@ export function isConnectionRuleDomain(value: string, host: string) {
   )
 }
 
+export async function getConnectionRootDomain(host: string) {
+  const { parse } = await import('tldts')
+  const { domain, isIcann, isPrivate } = parse(host, {
+    allowPrivateDomains: true,
+  })
+  return domain && (isIcann || isPrivate) ? domain : undefined
+}
+
 function parseRuleExtension(content: string) {
   const parsed: unknown = load(content)
   if (

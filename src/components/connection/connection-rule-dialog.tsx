@@ -29,6 +29,7 @@ import { showNotice } from '@/services/notice-service'
 import {
   getConnectionRuleTargets,
   getConnectionRules,
+  getConnectionRootDomain,
   isConnectionRuleDomain,
   findConnectionRule,
   saveConnectionRule,
@@ -42,6 +43,8 @@ export interface ConnectionRuleTarget {
   rulesUid: string
   preferredKind: ConnectionRuleKind
 }
+
+type DomainScope = 'DOMAIN' | 'DOMAIN-SUFFIX' | 'ROOT-DOMAIN'
 
 function getInitialKind(target: ConnectionRuleTarget) {
   const targets = getConnectionRuleTargets(target.metadata)
@@ -63,11 +66,12 @@ export function ConnectionRuleDialog({
   const { proxyView } = useProxiesData()
   const { clashConfig } = useClashConfigData()
   const targets = getConnectionRuleTargets(target.metadata)
+  const [rootDomain, setRootDomain] = useState<string>()
   const [kind, setKind] = useState<ConnectionRuleKind>(() =>
     getInitialKind(target),
   )
   const [policy, setPolicy] = useState<string | null>(null)
-  const [scope, setScope] = useState<'DOMAIN' | 'DOMAIN-SUFFIX'>('DOMAIN')
+  const [scope, setScope] = useState<DomainScope>('DOMAIN')
   const [domainValue, setDomainValue] = useState(targets.domain?.value ?? '')
   const [rules, setRules] = useState<string[] | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
@@ -75,14 +79,23 @@ export function ConnectionRuleDialog({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const selected = targets[kind]
+  const matchingRoot = kind === 'domain' && scope === 'ROOT-DOMAIN'
   const editingDomain = kind === 'domain' && scope === 'DOMAIN-SUFFIX'
+  const matchingValue = matchingRoot
+    ? (rootDomain ?? '')
+    : editingDomain
+      ? domainValue
+      : (selected?.value ?? '')
   const invalidDomain =
     editingDomain &&
     !isConnectionRuleDomain(domainValue, targets.domain?.value ?? '')
   const condition = selected
     ? {
-        type: kind === 'domain' ? scope : selected.type,
-        value: editingDomain ? domainValue.trim() : selected.value,
+        type:
+          kind === 'domain' && scope !== 'DOMAIN'
+            ? 'DOMAIN-SUFFIX'
+            : selected.type,
+        value: kind === 'domain' ? matchingValue.trim() : selected.value,
       }
     : undefined
   const existing =
@@ -111,10 +124,15 @@ export function ConnectionRuleDialog({
 
   useEffect(() => {
     let cancelled = false
-    readProfileFile(target.rulesUid)
-      .then((content) => {
+    const ruleTargets = getConnectionRuleTargets(target.metadata)
+    Promise.all([
+      readProfileFile(target.rulesUid),
+      ruleTargets.domain
+        ? getConnectionRootDomain(ruleTargets.domain.value)
+        : undefined,
+    ])
+      .then(([content, root]) => {
         const loadedRules = getConnectionRules(content)
-        const ruleTargets = getConnectionRuleTargets(target.metadata)
         const initialKind = getInitialKind(target)
         const selectedTarget = ruleTargets[initialKind]
         const initial = selectedTarget
@@ -127,6 +145,7 @@ export function ConnectionRuleDialog({
               : undefined))
           : undefined
         if (cancelled) return
+        setRootDomain(root)
         setRules(loadedRules)
         setPolicy(initial?.policy ?? null)
         setScope(initial?.type === 'DOMAIN-SUFFIX' ? 'DOMAIN-SUFFIX' : 'DOMAIN')
@@ -279,11 +298,11 @@ export function ConnectionRuleDialog({
               fullWidth
               size="small"
               label={
-                editingDomain
+                editingDomain || matchingRoot
                   ? t('connections.ruleDialog.matchingDomain')
                   : kindLabels[kind]
               }
-              value={editingDomain ? domainValue : (selected?.value ?? '')}
+              value={matchingValue}
               disabled={editingDomain && blocked}
               onChange={(event) => {
                 const value = event.target.value
@@ -300,7 +319,7 @@ export function ConnectionRuleDialog({
               }}
               error={invalidDomain}
               helperText={
-                editingDomain ? (
+                editingDomain || matchingRoot ? (
                   <>
                     {t('connections.ruleDialog.connectionHost', {
                       host: targets.domain?.value,
@@ -317,7 +336,7 @@ export function ConnectionRuleDialog({
               slotProps={{
                 input: { readOnly: !editingDomain },
                 htmlInput: {
-                  title: editingDomain ? domainValue : selected?.value,
+                  title: condition?.value,
                 },
               }}
             />
@@ -329,14 +348,17 @@ export function ConnectionRuleDialog({
             aria-label={t('connections.ruleDialog.domainScope')}
             value={scope}
             onChange={(_, value) => {
-              const nextScope = value as 'DOMAIN' | 'DOMAIN-SUFFIX'
+              const nextScope = value as DomainScope
               setScope(nextScope)
               setDomainValue(targets.domain?.value ?? '')
               const match =
                 rules && targets.domain
                   ? findConnectionRule(rules, {
-                      ...targets.domain,
-                      type: nextScope,
+                      type: nextScope === 'DOMAIN' ? 'DOMAIN' : 'DOMAIN-SUFFIX',
+                      value:
+                        nextScope === 'ROOT-DOMAIN'
+                          ? (rootDomain ?? '')
+                          : targets.domain.value,
                     })
                   : undefined
               setPolicy(match?.policy ?? null)
@@ -355,6 +377,18 @@ export function ConnectionRuleDialog({
               disabled={blocked}
               label={t('connections.ruleDialog.allSubdomains')}
             />
+            {rootDomain &&
+              rootDomain.toLowerCase() !==
+                targets.domain?.value.toLowerCase() && (
+                <FormControlLabel
+                  value="ROOT-DOMAIN"
+                  control={<Radio size="small" />}
+                  disabled={blocked}
+                  label={t('connections.ruleDialog.rootDomain', {
+                    domain: rootDomain,
+                  })}
+                />
+              )}
           </RadioGroup>
         )}
         {(kind === 'source' || kind === 'destination') && (

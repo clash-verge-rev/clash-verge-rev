@@ -43,6 +43,7 @@ export const translationKeys = [
   'connections.ruleDialog.domainScope',
   'connections.ruleDialog.exactDomain',
   'connections.ruleDialog.allSubdomains',
+  'connections.ruleDialog.rootDomain',
   'connections.ruleDialog.policyUnavailable',
   'connections.ruleDialog.editDestination',
   'connections.ruleDialog.saveAndApply',
