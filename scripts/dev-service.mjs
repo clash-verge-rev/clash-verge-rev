@@ -46,8 +46,58 @@ function run(command, args, options = {}) {
   })
 }
 
+async function checkDevelopmentServiceVersion() {
+  const [guiOutput, daemonOutput] = await Promise.all([
+    run(
+      'cargo',
+      [
+        'metadata',
+        '--locked',
+        '--format-version=1',
+        '--manifest-path',
+        join(repositoryRoot, 'Cargo.toml'),
+      ],
+      { stdio: ['inherit', 'pipe', 'inherit'] },
+    ),
+    run(
+      'cargo',
+      [
+        'metadata',
+        '--locked',
+        '--no-deps',
+        '--format-version=1',
+        '--manifest-path',
+        serviceManifest,
+      ],
+      { stdio: ['inherit', 'pipe', 'inherit'] },
+    ),
+  ])
+  const gui = JSON.parse(guiOutput)
+  const daemon = JSON.parse(daemonOutput).packages.find(
+    (pkg) => resolve(pkg.manifest_path) === serviceManifest,
+  )
+  const app = gui.packages.find(
+    (pkg) =>
+      resolve(pkg.manifest_path) ===
+      join(repositoryRoot, 'src-tauri', 'Cargo.toml'),
+  )
+  const dependency = gui.resolve?.nodes
+    .find((node) => node.id === app?.id)
+    ?.deps.find((dep) => dep.name === 'clash_verge_service_ipc')
+  const sdk = gui.packages.find((pkg) => pkg.id === dependency?.pkg)
+  if (!daemon || !sdk)
+    throw new Error('Cargo did not resolve the development Service and GUI SDK')
+  if (daemon.version !== sdk.version) {
+    throw new Error(
+      `Development Service ${daemon.version} does not match the resolved GUI SDK ${sdk.version} (${sdk.manifest_path}). ` +
+        'Align the GUI dependency explicitly before starting development. Building the sibling daemon does not update the SDK.',
+    )
+  }
+}
+
 export async function prepareDevelopmentService() {
   await access(serviceManifest)
+  await checkDevelopmentServiceVersion()
   const output = await run(
     'cargo',
     [
