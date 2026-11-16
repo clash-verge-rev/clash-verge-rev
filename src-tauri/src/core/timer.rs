@@ -458,7 +458,7 @@ impl Timer {
         }
     }
 
-    fn emit_update_event(uid: &String, is_start: bool) {
+    fn emit_update_event(uid: &str, is_start: bool) {
         if is_start {
             super::handle::Handle::notify_profile_update_started(uid);
         } else {

@@ -220,6 +220,16 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
     })
 }
 
+pub fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for &byte in bytes {
+        out.push(HEX[usize::from(byte >> 4)] as char);
+        out.push(HEX[usize::from(byte & 0x0f)] as char);
+    }
+    out
+}
+
 /// Masks query values and token-like path segments for logging.
 pub fn mask_url(url: &str) -> String {
     let (path_part, query_part) = match url.find('?') {

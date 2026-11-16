@@ -1,5 +1,6 @@
 use super::NoticeStatus;
 use crate::{APP_HANDLE, singleton};
+#[cfg(target_os = "macos")]
 use smartstring::alias::String;
 use std::sync::{
     Arc,
@@ -55,21 +56,21 @@ impl Handle {
         Self::send_event(FrontendEvent::RunStateChanged { state: state.clone() });
     }
 
-    pub fn notify_profile_changed(profile_id: &String) {
+    pub fn notify_profile_changed(profile_id: &str) {
         Self::send_event(FrontendEvent::ProfileChanged {
             current_profile_id: profile_id,
         });
     }
 
-    pub fn notify_timer_updated(profile_index: &String) {
+    pub fn notify_timer_updated(profile_index: &str) {
         Self::send_event(FrontendEvent::TimerUpdated { profile_index });
     }
 
-    pub fn notify_profile_update_started(uid: &String) {
+    pub fn notify_profile_update_started(uid: &str) {
         Self::send_event(FrontendEvent::ProfileUpdateStarted { uid });
     }
 
-    pub fn notify_profile_update_completed(uid: &String) {
+    pub fn notify_profile_update_completed(uid: &str) {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
     }
 

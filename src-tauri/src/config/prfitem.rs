@@ -26,7 +26,7 @@ pub(super) fn normalize_profile_home_url(raw: &str) -> Option<String> {
     }
 
     url.host_str()?;
-    Some(url.to_string().into())
+    Some(url.as_str().into())
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, specta::Type)]

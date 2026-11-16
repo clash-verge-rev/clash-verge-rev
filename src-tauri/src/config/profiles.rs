@@ -605,7 +605,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
     .map_err(Into::into)
 }
 
-async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
+async fn select_node_with_timeout(group_name: &str, node: &str) -> Result<()> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
         handle::Handle::mihomo().select_node_for_group(group_name, node).await
     })
@@ -809,7 +809,7 @@ pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
 }
 
 async fn persist_reconciled_selected(
-    profile_uid: &String,
+    profile_uid: &str,
     original_selected: &[PrfSelected],
     selected: Vec<PrfSelected>,
     generation: u64,
@@ -818,7 +818,7 @@ async fn persist_reconciled_selected(
         return Ok(());
     }
 
-    let profile_uid = profile_uid.clone();
+    let profile_uid = String::from(profile_uid);
     let original_selected = original_selected.to_vec();
     persist_selected_update(false, move |mut profiles| async move {
         if !is_activation_current(generation) || profiles.current.as_ref() != Some(&profile_uid) {

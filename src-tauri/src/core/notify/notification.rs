@@ -20,16 +20,16 @@ pub enum FrontendEvent<'a> {
         message: Arc<str>,
     },
     ProfileChanged {
-        current_profile_id: &'a String,
+        current_profile_id: &'a str,
     },
     TimerUpdated {
-        profile_index: &'a String,
+        profile_index: &'a str,
     },
     ProfileUpdateStarted {
-        uid: &'a String,
+        uid: &'a str,
     },
     ProfileUpdateCompleted {
-        uid: &'a String,
+        uid: &'a str,
     },
     RunStateChanged {
         state: crate::core::runstate::RunStateView,
@@ -369,7 +369,7 @@ mod wire_tests {
 
 /// One sample per `FrontendEvent` variant, paired with its wire name and payload.
 #[cfg(test)]
-fn sample_frontend_events(uid: &String) -> Vec<(FrontendEvent<'_>, &'static str, serde_json::Value)> {
+fn sample_frontend_events(uid: &str) -> Vec<(FrontendEvent<'_>, &'static str, serde_json::Value)> {
     let state = crate::core::runstate::RunState {
         health: Default::default(),
         pending: None,

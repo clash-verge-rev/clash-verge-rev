@@ -1,4 +1,5 @@
 use crate::core::notify::NoticeStatus;
+use crate::utils::help;
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
 use serde::{Deserialize, Serialize};
@@ -49,9 +50,7 @@ pub(crate) fn dns_override_source(profile_uid: &str, config: &Mapping) -> Result
     digest.update(profile_uid.as_bytes());
     digest.update([0]);
     digest.update(serde_json::to_vec(&canonical)?);
-    Ok(Some(
-        digest.finalize().iter().map(|byte| format!("{byte:02x}")).collect(),
-    ))
+    Ok(Some(help::hex_encode(&digest.finalize()).into()))
 }
 
 #[derive(Debug, Clone)]

@@ -210,10 +210,10 @@ pub async fn delete_profile(index: std::string::String) -> CmdResult {
     Ok(())
 }
 
-async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
+async fn restore_previous_profile(prev_profile: &str) -> CmdResult<()> {
     logging!(info, Type::Cmd, "尝试恢复到之前的配置: {}", prev_profile);
     let restore_profiles = IProfiles {
-        current: Some(prev_profile.to_owned()),
+        current: Some(prev_profile.into()),
         items: None,
     };
     Config::profiles()
