@@ -27,6 +27,7 @@ import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
 
 import {
+  getConnectionIPRule,
   getConnectionRuleTargets,
   getConnectionRules,
   getConnectionRootDomain,
@@ -72,7 +73,9 @@ export function ConnectionRuleDialog({
   )
   const [policy, setPolicy] = useState<string | null>(null)
   const [scope, setScope] = useState<DomainScope>('DOMAIN')
-  const [domainValue, setDomainValue] = useState(targets.domain?.value ?? '')
+  const [matchingInput, setMatchingInput] = useState(
+    () => targets[getInitialKind(target)]?.value ?? '',
+  )
   const [rules, setRules] = useState<string[] | null>(null)
   const [loadAttempt, setLoadAttempt] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -81,25 +84,33 @@ export function ConnectionRuleDialog({
   const selected = targets[kind]
   const matchingRoot = kind === 'domain' && scope === 'ROOT-DOMAIN'
   const editingDomain = kind === 'domain' && scope === 'DOMAIN-SUFFIX'
+  const editingIP = kind === 'source' || kind === 'destination'
   const matchingValue = matchingRoot
     ? (rootDomain ?? '')
-    : editingDomain
-      ? domainValue
+    : editingDomain || editingIP
+      ? matchingInput
       : (selected?.value ?? '')
   const invalidDomain =
     editingDomain &&
-    !isConnectionRuleDomain(domainValue, targets.domain?.value ?? '')
-  const condition = selected
-    ? {
-        type:
-          kind === 'domain' && scope !== 'DOMAIN'
-            ? 'DOMAIN-SUFFIX'
-            : selected.type,
-        value: kind === 'domain' ? matchingValue.trim() : selected.value,
-      }
+    !isConnectionRuleDomain(matchingInput, targets.domain?.value ?? '')
+  const ipRule = editingIP
+    ? getConnectionIPRule(matchingInput, kind === 'source')
     : undefined
+  const invalidIP = editingIP && !ipRule
+  const invalidValue = invalidDomain || invalidIP
+  const condition = editingIP
+    ? ipRule
+    : selected
+      ? {
+          type:
+            kind === 'domain' && scope !== 'DOMAIN'
+              ? 'DOMAIN-SUFFIX'
+              : selected.type,
+          value: kind === 'domain' ? matchingValue.trim() : selected.value,
+        }
+      : undefined
   const existing =
-    rules && condition && !invalidDomain
+    rules && condition && !invalidValue
       ? findConnectionRule(rules, condition)
       : undefined
   const modifying = Boolean(existing)
@@ -166,7 +177,7 @@ export function ConnectionRuleDialog({
     if (
       blocked ||
       !condition ||
-      invalidDomain ||
+      invalidValue ||
       !policy ||
       !policies.includes(policy)
     )
@@ -244,7 +255,7 @@ export function ConnectionRuleDialog({
                         })
                       : undefined))
                   : undefined
-              setDomainValue(targets.domain?.value ?? '')
+              setMatchingInput(nextTarget?.value ?? '')
               setKind(next)
               setPolicy(rule?.policy ?? null)
               setScope(
@@ -303,21 +314,22 @@ export function ConnectionRuleDialog({
                   : kindLabels[kind]
               }
               value={matchingValue}
-              disabled={editingDomain && blocked}
+              disabled={(editingDomain || editingIP) && blocked}
               onChange={(event) => {
                 const value = event.target.value
-                setDomainValue(value)
+                setMatchingInput(value)
+                const nextCondition = editingIP
+                  ? getConnectionIPRule(value, kind === 'source')
+                  : isConnectionRuleDomain(value, targets.domain?.value ?? '')
+                    ? { type: 'DOMAIN-SUFFIX', value: value.trim() }
+                    : undefined
                 const match =
-                  rules &&
-                  isConnectionRuleDomain(value, targets.domain?.value ?? '')
-                    ? findConnectionRule(rules, {
-                        type: 'DOMAIN-SUFFIX',
-                        value: value.trim(),
-                      })
+                  rules && nextCondition
+                    ? findConnectionRule(rules, nextCondition)
                     : undefined
                 if (match) setPolicy(match.policy)
               }}
-              error={invalidDomain}
+              error={invalidValue}
               helperText={
                 editingDomain || matchingRoot ? (
                   <>
@@ -331,10 +343,12 @@ export function ConnectionRuleDialog({
                       </>
                     )}
                   </>
+                ) : invalidIP ? (
+                  t('connections.ruleDialog.invalidIp')
                 ) : undefined
               }
               slotProps={{
-                input: { readOnly: !editingDomain },
+                input: { readOnly: !editingDomain && !editingIP },
                 htmlInput: {
                   title: condition?.value,
                 },
@@ -350,7 +364,7 @@ export function ConnectionRuleDialog({
             onChange={(_, value) => {
               const nextScope = value as DomainScope
               setScope(nextScope)
-              setDomainValue(targets.domain?.value ?? '')
+              setMatchingInput(targets.domain?.value ?? '')
               const match =
                 rules && targets.domain
                   ? findConnectionRule(rules, {
@@ -493,7 +507,7 @@ export function ConnectionRuleDialog({
           disabled={
             blocked ||
             !condition ||
-            invalidDomain ||
+            invalidValue ||
             !policy ||
             !policies.includes(policy)
           }

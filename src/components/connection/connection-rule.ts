@@ -1,16 +1,23 @@
 import { dump, loadAll } from 'js-yaml'
 import isFQDN from 'validator/es/lib/isFQDN'
 import isIP from 'validator/es/lib/isIP'
+import isIPRange from 'validator/es/lib/isIPRange'
 
 export type ConnectionRuleKind = 'domain' | 'process' | 'source' | 'destination'
 
 function getAddressRule(address: string | undefined, source: boolean) {
   const ip = address?.trim()
   if (!ip || !isIP(ip)) return undefined
-  const ipv4 = isIP(ip, 4)
+  return getConnectionIPRule(`${ip}/${isIP(ip, 4) ? 32 : 128}`, source)
+}
+
+export function getConnectionIPRule(value: string, source: boolean) {
+  const cidr = value.trim()
+  if (cidr.includes('%') || !isIPRange(cidr)) return undefined
+  const ipv4 = isIP(cidr.split('/')[0], 4)
   return {
     type: source ? 'SRC-IP-CIDR' : ipv4 ? 'IP-CIDR' : 'IP-CIDR6',
-    value: `${ip}/${ipv4 ? 32 : 128}`,
+    value: cidr,
   }
 }
 

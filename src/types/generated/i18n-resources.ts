@@ -51,6 +51,7 @@ export interface TranslationResources {
         exactDomain: string
         fullPath: string
         invalidDomain: string
+        invalidIp: string
         matchBy: string
         matchingDomain: string
         modifyTitle: string

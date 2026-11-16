@@ -59,11 +59,12 @@
     "saveAndApply": "Save and apply",
     "sourceIp": "Source IP",
     "destinationIp": "Destination IP",
-    "sourceHint": "Matches all requests from this IP, including requests from other applications. No port filtering.",
-    "destinationHint": "Matches this destination IP across all domains. No port filtering.",
+    "sourceHint": "Matches all requests from this IP or subnet, including requests from other applications. No port filtering.",
+    "destinationHint": "Matches this destination IP or subnet across all domains. No port filtering.",
     "fullPath": "Full path",
     "connectionHost": "Current connection domain: {{host}}",
     "invalidDomain": "Enter the current domain or a parent domain with at least two labels.",
-    "matchingDomain": "Matching domain"
+    "matchingDomain": "Matching domain",
+    "invalidIp": "Enter a valid IP/prefix length: 0–32 for IPv4 or 0–128 for IPv6."
   }
 }

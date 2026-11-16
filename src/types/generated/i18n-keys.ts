@@ -55,6 +55,7 @@ export const translationKeys = [
   'connections.ruleDialog.connectionHost',
   'connections.ruleDialog.invalidDomain',
   'connections.ruleDialog.matchingDomain',
+  'connections.ruleDialog.invalidIp',
   'home.page.tooltips.lightweightMode',
   'home.page.tooltips.manual',
   'home.page.tooltips.settings',
