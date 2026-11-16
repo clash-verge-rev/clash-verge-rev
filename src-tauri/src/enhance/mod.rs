@@ -1447,7 +1447,10 @@ mod tests {
                 vec![],
                 HashMap::new(),
                 merge_item("global-merge"),
-                ChainItem::to_script("global-script", script),
+                ChainItem {
+                    uid: "global-script".into(),
+                    data: ChainType::Script(script.into()),
+                },
                 profile_name,
                 &authoritative,
             )
@@ -1457,7 +1460,10 @@ mod tests {
                 keys,
                 logs,
                 merge_item("profile-merge"),
-                ChainItem::to_script("profile-script", script),
+                ChainItem {
+                    uid: "profile-script".into(),
+                    data: ChainType::Script(script.into()),
+                },
                 profile_name,
                 &authoritative,
             )
