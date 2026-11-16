@@ -439,7 +439,9 @@ impl Sysopt {
             auto.url = server::pac_auto_url(
                 proxy_host,
                 pac_port,
-                verge.pac_file_content.as_deref().unwrap_or(crate::config::DEFAULT_PAC),
+                // Hash the rendered script, not the raw template: `%mixed-port%` expansion and
+                // the default-PAC fallback both change what the endpoint serves.
+                &server::pac_script(verge.pac_file_content.as_deref()).await,
             );
 
             // `enable_system_proxy` is the master switch.
