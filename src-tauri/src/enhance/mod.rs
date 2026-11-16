@@ -28,6 +28,7 @@ use parking_lot::Mutex;
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash as _, Hasher as _};
 use tokio::fs;
 
 type ResultLog = Vec<(String, String)>;
@@ -236,13 +237,13 @@ async fn process_override_items(
     mut result_map: HashMap<String, ResultLog>,
     merge_item: ChainItem,
     script_item: ChainItem,
-    profile_name: &String,
+    profile_name: &str,
     authoritative: &AuthoritativeFields,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
         let before = authoritative.current(&config);
-        config = use_merge(&merge, config);
+        config = use_merge(merge, config);
         let notes: ResultLog = authoritative
             .overridden(&before, &authoritative.current(&config))
             .into_iter()
@@ -255,7 +256,7 @@ async fn process_override_items(
 
     if let ChainType::Script(script) = script_item.data {
         let before = authoritative.current(&config);
-        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.clone()).await;
+        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.into()).await;
         exists_keys.extend(changed_keys);
         config = res_config;
         logs.extend(
@@ -320,15 +321,45 @@ struct AuthoritativeFields {
     tun: Mapping,
     dns: Mapping,
     hosts: Option<Value>,
+    fingerprints: FieldFingerprints,
+}
+
+#[derive(Default)]
+struct FieldFingerprints {
+    control_plane: Vec<Option<u64>>,
+    tun: Vec<Option<u64>>,
+    dns: Vec<Option<u64>>,
+    hosts: Option<u64>,
+}
+
+fn fingerprint(value: Option<&Value>) -> Option<u64> {
+    let value = value?;
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    value.hash(&mut hasher);
+    Some(hasher.finish())
 }
 
 impl AuthoritativeFields {
     fn capture(config: &Mapping, gui_tun_keys: &[Value], mut dns_settings: Mapping) -> Self {
+        let control_plane = snapshot_control_plane(config);
+        let tun = snapshot_tun(config, gui_tun_keys);
+        let dns = take_mapping(&mut dns_settings, "dns");
+        let hosts = dns_settings.remove("hosts");
+        let fingerprints = FieldFingerprints {
+            control_plane: CONTROL_PLANE_KEYS
+                .iter()
+                .map(|&key| fingerprint(control_plane.get(Value::from(key))))
+                .collect(),
+            tun: tun.iter().map(|(_, value)| fingerprint(Some(value))).collect(),
+            dns: dns.iter().map(|(_, value)| fingerprint(Some(value))).collect(),
+            hosts: fingerprint(hosts.as_ref()),
+        };
         Self {
-            control_plane: snapshot_control_plane(config),
-            tun: snapshot_tun(config, gui_tun_keys),
-            dns: take_mapping(&mut dns_settings, "dns"),
-            hosts: dns_settings.remove("hosts"),
+            control_plane,
+            tun,
+            dns,
+            hosts,
+            fingerprints,
         }
     }
 
@@ -346,43 +377,50 @@ impl AuthoritativeFields {
         config
     }
 
-    /// The owned values as `config` holds them now, for diffing one override.
-    fn current(&self, config: &Mapping) -> Self {
-        let tun_keys: Vec<Value> = self.tun.keys().cloned().collect();
+    /// What `config` holds now, for diffing one override.
+    fn current(&self, config: &Mapping) -> FieldFingerprints {
+        let tun = config.get("tun").and_then(Value::as_mapping);
         let dns = config.get("dns").and_then(Value::as_mapping);
-        Self {
-            control_plane: snapshot_control_plane(config),
-            tun: snapshot_tun(config, &tun_keys),
+        FieldFingerprints {
+            control_plane: CONTROL_PLANE_KEYS
+                .iter()
+                .map(|&key| fingerprint(config.get(key)))
+                .collect(),
+            tun: self
+                .tun
+                .keys()
+                .map(|key| fingerprint(tun.and_then(|map| map.get(key))))
+                .collect(),
             dns: self
                 .dns
                 .keys()
-                .filter_map(|key| Some((key.clone(), dns?.get(key)?.clone())))
+                .map(|key| fingerprint(dns.and_then(|map| map.get(key))))
                 .collect(),
-            hosts: self.hosts.as_ref().and_then(|_| config.get("hosts")).cloned(),
+            hosts: self.hosts.as_ref().and_then(|_| fingerprint(config.get("hosts"))),
         }
     }
 
     /// Owned keys an override moved off the app value; `enforce` discards those writes.
-    fn overridden(&self, before: &Self, after: &Self) -> Vec<String> {
+    fn overridden(&self, before: &FieldFingerprints, after: &FieldFingerprints) -> Vec<String> {
         let mut keys = Vec::new();
-        for &key in CONTROL_PLANE_KEYS {
-            if before.control_plane.get(key) != after.control_plane.get(key)
-                && after.control_plane.get(key) != self.control_plane.get(key)
+        for (index, &key) in CONTROL_PLANE_KEYS.iter().enumerate() {
+            if before.control_plane[index] != after.control_plane[index]
+                && after.control_plane[index] != self.fingerprints.control_plane[index]
             {
                 keys.push(key.into());
             }
         }
-        for key in self.tun.keys() {
-            if before.tun.get(key) != after.tun.get(key) && after.tun.get(key) != self.tun.get(key) {
+        for (index, key) in self.tun.keys().enumerate() {
+            if before.tun[index] != after.tun[index] && after.tun[index] != self.fingerprints.tun[index] {
                 keys.push(format!("tun.{}", key.as_str().unwrap_or_default()).into());
             }
         }
-        for key in self.dns.keys() {
-            if before.dns.get(key) != after.dns.get(key) && after.dns.get(key) != self.dns.get(key) {
+        for (index, key) in self.dns.keys().enumerate() {
+            if before.dns[index] != after.dns[index] && after.dns[index] != self.fingerprints.dns[index] {
                 keys.push(format!("dns.{}", key.as_str().unwrap_or_default()).into());
             }
         }
-        if self.hosts.is_some() && before.hosts != after.hosts && after.hosts != self.hosts {
+        if self.hosts.is_some() && before.hosts != after.hosts && after.hosts != self.fingerprints.hosts {
             keys.push("hosts".into());
         }
         keys
@@ -540,6 +578,7 @@ fn ensure_tun_default_mtu(mut config: Mapping) -> Mapping {
 
     config
 }
+}
 
 /// Merges the app's clash config over the profile; switches are parameters to keep it pure.
 fn merge_default_config(
@@ -553,16 +592,16 @@ fn merge_default_config(
 ) -> Mapping {
     for (key, value) in clash_config.into_iter() {
         if key.as_str() == Some("tun") {
-            let mut tun = config.get_mut("tun").map_or_else(Mapping::new, |val| {
-                val.as_mapping().cloned().unwrap_or_else(Mapping::new)
-            });
-            let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
-            for (key, value) in patch_tun.into_iter() {
-                if !value.is_null() {
-                    tun.insert(key, value);
+            if let Value::Mapping(patch_tun) = value {
+                let mut tun = take_mapping(&mut config, "tun");
+                for (key, value) in patch_tun {
+                    if !value.is_null() {
+                        tun.insert(key, value);
+                    }
                 }
+                config.insert(Value::from("tun"), Value::Mapping(tun));
             }
-            config.insert("tun".into(), tun.into());
+            }
         } else {
             if key.as_str() == Some("socks-port") && !socks_enabled {
                 config.remove("socks-port");
@@ -649,11 +688,8 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
         .map_or_default(|seq| {
             seq.iter()
                 .filter_map(|item| match item {
-                    Value::Mapping(map) => map
-                        .get("name")
-                        .and_then(Value::as_str)
-                        .map(|name| name.to_owned().into()),
-                    Value::String(name) => Some(name.to_owned().into()),
+                    Value::Mapping(map) => map.get("name").and_then(Value::as_str).map(Into::into),
+                    Value::String(name) => Some(name.as_str().into()),
                     _ => None,
                 })
                 .collect::<HashSet<String>>()
@@ -872,7 +908,7 @@ pub async fn enhance(
         result_map,
         global_merge,
         global_script,
-        &profile_name,
+        profile_name.as_str(),
         &authoritative,
     )
     .await;
@@ -883,12 +919,12 @@ pub async fn enhance(
         result_map,
         merge_item,
         script_item,
-        &profile_name,
+        profile_name.as_str(),
         &authoritative,
     )
     .await;
 
-    notify_discarded_keys(authoritative.overridden(&authoritative, &authoritative.current(&config)));
+    notify_discarded_keys(authoritative.overridden(&authoritative.fingerprints, &authoritative.current(&config)));
     let config = authoritative.enforce(config);
     let config = ensure_tun_default_mtu(config);
     let config = ensure_lan_bind_address(config);
@@ -1407,17 +1443,14 @@ mod tests {
                 uid: uid.into(),
                 data: ChainType::Merge(merge.clone()),
             };
-            let profile_name = "test-profile".into();
+            let profile_name = "test-profile";
             let (config, keys, logs) = process_override_items(
                 config,
                 vec![],
                 HashMap::new(),
                 merge_item("global-merge"),
-                ChainItem {
-                    uid: "global-script".into(),
-                    data: ChainType::Script(script.into()),
-                },
-                &profile_name,
+                ChainItem::to_script("global-script", script),
+                profile_name,
                 &authoritative,
             )
             .await;
@@ -1426,11 +1459,8 @@ mod tests {
                 keys,
                 logs,
                 merge_item("profile-merge"),
-                ChainItem {
-                    uid: "profile-script".into(),
-                    data: ChainType::Script(script.into()),
-                },
-                &profile_name,
+                ChainItem::to_script("profile-script", script),
+                profile_name,
                 &authoritative,
             )
             .await;
@@ -1506,7 +1536,7 @@ mod tests {
             ),
         };
 
-        let profile_name = "test-profile".into();
+        let profile_name = "test-profile";
         let authoritative = AuthoritativeFields::capture(&config, &[], Mapping::new());
         let (config, exists_keys, result_map) = process_override_items(
             config,
@@ -1514,7 +1544,7 @@ mod tests {
             HashMap::new(),
             global_merge,
             global_script,
-            &profile_name,
+            profile_name,
             &authoritative,
         )
         .await;
@@ -1524,7 +1554,7 @@ mod tests {
             result_map,
             profile_merge,
             profile_script,
-            &profile_name,
+            profile_name,
             &authoritative,
         )
         .await;

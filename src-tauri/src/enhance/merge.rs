@@ -16,7 +16,7 @@ fn deep_merge(a: &mut Value, b: Value) {
     }
 }
 
-pub fn use_merge(merge: &Mapping, mut config: Mapping) -> Mapping {
+pub fn use_merge(merge: Mapping, mut config: Mapping) -> Mapping {
     for (key, value) in use_lowercase(merge) {
         match (config.get_mut(&key), value) {
             (Some(Value::Mapping(existing)), Value::Mapping(overlay)) if key.as_str() == Some("dns") => {
@@ -79,7 +79,7 @@ fn test_merge() -> anyhow::Result<()> {
     let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
     let config = serde_yaml_ng::from_str::<Mapping>(config)?;
 
-    let result = use_merge(&merge, config);
+    let result = use_merge(merge.clone(), config);
     assert_eq!(result["dns"]["nameserver-policy"], merge["dns"]["nameserver-policy"]);
     assert_eq!(result["dns"]["fallback-filter"], merge["dns"]["fallback-filter"]);
     assert_eq!(result["hosts"], merge["hosts"]);
@@ -91,7 +91,7 @@ fn test_merge() -> anyhow::Result<()> {
     let cleared = serde_yaml_ng::from_str::<Mapping>(
         "dns: {enable: false, nameserver-policy: {}, fallback-filter: {}, nameserver: []}\nhosts: {}",
     )?;
-    let result = use_merge(&cleared, result);
+    let result = use_merge(cleared.clone(), result);
     assert_eq!(result["dns"], cleared["dns"]);
     assert_eq!(result["hosts"], cleared["hosts"]);
 
