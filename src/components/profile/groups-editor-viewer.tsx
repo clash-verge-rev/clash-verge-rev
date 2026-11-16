@@ -115,6 +115,49 @@ const normalizeDeleteSeq = (input?: unknown): string[] => {
   return Array.from(new Set(names))
 }
 
+const NUMERIC_GROUP_FIELDS = [
+  'interval',
+  'timeout',
+  'max-failed-times',
+  'routing-mark',
+  'expected-status',
+] as const
+
+// Defaults of the numeric fields that have one, mirroring the form's
+// defaultValues below.
+const NUMERIC_FIELD_DEFAULTS = {
+  interval: 300,
+  timeout: 5000,
+  'max-failed-times': 5,
+}
+
+// The form stores an emptied numeric field as NaN (parseInt of an empty
+// string), which js-yaml would write as .nan, a value Clash cannot
+// parse. Normalize at the single point where the lists are serialized:
+// an emptied field that has a default falls back to it, and one without
+// a default (routing-mark, expected-status) is omitted from the saved
+// config.
+const normalizeNumericFields = (
+  group: IProxyGroupConfig,
+): IProxyGroupConfig => {
+  const cleaned = { ...group }
+  for (const key of NUMERIC_GROUP_FIELDS) {
+    const value = cleaned[key]
+    if (value === '' || (typeof value === 'number' && Number.isNaN(value))) {
+      if (
+        key === 'interval' ||
+        key === 'timeout' ||
+        key === 'max-failed-times'
+      ) {
+        cleaned[key] = NUMERIC_FIELD_DEFAULTS[key]
+      } else {
+        delete cleaned[key]
+      }
+    }
+  }
+  return cleaned
+}
+
 const buildGroupsYaml = (
   prepend: IProxyGroupConfig[],
   append: IProxyGroupConfig[],
@@ -122,13 +165,20 @@ const buildGroupsYaml = (
 ) => {
   return yaml.dump(
     {
-      prepend,
-      append,
+      prepend: prepend.map(normalizeNumericFields),
+      append: append.map(normalizeNumericFields),
       delete: deleteList,
     },
     { forceQuotes: true },
   )
 }
+
+const displayNumberValue = (
+  value: number | string | undefined,
+): string | number =>
+  value === undefined || (typeof value === 'number' && Number.isNaN(value))
+    ? ''
+    : value
 
 const findRealIndex = (
   list: IProxyGroupConfig[],
@@ -184,6 +234,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const [editingName, setEditingName] = useState<string | null>(null)
   const hasLoadedSeqConfigRef = useRef(false)
 
   const filteredPrependSeq = useMemo(
@@ -235,6 +286,10 @@ export const GroupsEditorViewer = (props: Props) => {
         <GroupItem
           type="prepend"
           group={item}
+          onEdit={() => {
+            setEditingName(item.name)
+            formIns.reset(item)
+          }}
           onDelete={() => {
             setPrependSeq((prev) => prev.filter((v) => v.name !== item.name))
           }}
@@ -246,6 +301,10 @@ export const GroupsEditorViewer = (props: Props) => {
       <GroupItem
         type="append"
         group={item}
+        onEdit={() => {
+          setEditingName(item.name)
+          formIns.reset(item)
+        }}
         onDelete={() => {
           setAppendSeq((prev) => prev.filter((v) => v.name !== item.name))
         }}
@@ -281,6 +340,7 @@ export const GroupsEditorViewer = (props: Props) => {
     const data = await readProfileFile(property)
     const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
 
+    setEditingName(null)
     setPrevData(data)
     setCurrData(data)
 
@@ -305,6 +365,7 @@ export const GroupsEditorViewer = (props: Props) => {
   }, [property])
 
   const handleVisualizationToggle = () => {
+    setEditingName(null)
     if (visualization) {
       setVisualization(false)
       return
@@ -478,8 +539,40 @@ export const GroupsEditorViewer = (props: Props) => {
 
   const handleSave = useLockFn(async () => {
     try {
+      let nextPrependSeq = prependSeq
+      let nextAppendSeq = appendSeq
+
+      // A group loaded into the form via the edit button is written back
+      // in place when the dialog is saved, without a prepend/append step.
+      if (visualization && editingName) {
+        validateGroup()
+        const values = formIns.getValues()
+        const inPrepend = prependSeq.some((item) => item.name === editingName)
+        const inAppend = appendSeq.some((item) => item.name === editingName)
+        if (inPrepend || inAppend) {
+          if (
+            values.name !== editingName &&
+            [...prependSeq, ...appendSeq, ...groupList].some(
+              (item) => item.name === values.name,
+            )
+          ) {
+            throw new Error(t('profiles.modals.groupsEditor.errors.nameExists'))
+          }
+          const replaceEdited = (list: IProxyGroupConfig[]) =>
+            list.map((item) => (item.name === editingName ? values : item))
+          if (inPrepend) {
+            nextPrependSeq = replaceEdited(prependSeq)
+            setPrependSeq(nextPrependSeq)
+          }
+          if (inAppend) {
+            nextAppendSeq = replaceEdited(appendSeq)
+            setAppendSeq(nextAppendSeq)
+          }
+        }
+      }
+
       const nextData = visualization
-        ? buildGroupsYaml(prependSeq, appendSeq, deleteSeq)
+        ? buildGroupsYaml(nextPrependSeq, nextAppendSeq, deleteSeq)
         : currData
 
       if (visualization) {
@@ -638,6 +731,7 @@ export const GroupsEditorViewer = (props: Props) => {
                           width: 'calc(100% - 150px)',
                         }}
                         multiple
+                        value={field.value ?? []}
                         options={proxyPolicyList}
                         disableCloseOnSelect
                         onChange={(_, value) => value && field.onChange(value)}
@@ -673,6 +767,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
                         multiple
+                        value={field.value ?? []}
                         options={proxyProviderList}
                         disableCloseOnSelect
                         onChange={(_, value) => value && field.onChange(value)}
@@ -716,6 +811,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         placeholder="*"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+                        value={displayNumberValue(field.value)}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value, 10))
                         }}
@@ -739,6 +835,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         type="number"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+                        value={displayNumberValue(field.value)}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value, 10))
                         }}
@@ -767,6 +864,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         type="number"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+                        value={displayNumberValue(field.value)}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value, 10))
                         }}
@@ -799,6 +897,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         type="number"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+                        value={displayNumberValue(field.value)}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value, 10))
                         }}
@@ -842,6 +941,7 @@ export const GroupsEditorViewer = (props: Props) => {
                         type="number"
                         size="small"
                         sx={{ width: 'calc(100% - 150px)' }}
+                        value={displayNumberValue(field.value)}
                         onChange={(e) => {
                           field.onChange(parseInt(e.target.value, 10))
                         }}
@@ -1030,6 +1130,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignTopRounded />}
                   onClick={() => {
+                    setEditingName(null)
                     try {
                       validateGroup()
                       const values = formIns.getValues()
@@ -1060,6 +1161,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   variant="contained"
                   startIcon={<VerticalAlignBottomRounded />}
                   onClick={() => {
+                    setEditingName(null)
                     try {
                       validateGroup()
                       const values = formIns.getValues()
