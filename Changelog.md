@@ -46,7 +46,7 @@
 
 **🐧 Linux**
 
-- 修复 Linux OpenRC 环境下服务安装失败及反复提示修复
+- 修复 Linux OpenRC 环境下服务安装失败
 
 </details>
 
