@@ -912,7 +912,7 @@ checksum = "82f4b26e751e711a5302649417f2da046dce6391b2ea30a4820f37462314f0b9"
 dependencies = [
  "semver 1.0.28",
  "serde",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
 ]
 
 [[package]]
@@ -1223,8 +1223,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.7.7"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.7.7#3ed29700b093190b5e7addcaa892e77f172af544"
+version = "2.8.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.8.0#3fef20ae0896d83f1ab578cb89ff8e5fe16ff6fb"
 dependencies = [
  "anyhow",
  "kode-bridge",
@@ -1712,7 +1712,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d045de693cb712d0b22c6a64be5b953f67b3ce00ab5ad3dd5d8b441886ab8e1a"
 dependencies = [
  "quote",
- "syn 3.0.5",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -2202,7 +2202,7 @@ dependencies = [
  "cc",
  "memchr",
  "rustc_version 0.4.1",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
  "vswhom",
  "winreg 0.55.0",
 ]
@@ -3877,16 +3877,16 @@ dependencies = [
 
 [[package]]
 name = "kode-bridge"
-version = "0.5.2"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdb14ea1ba42eebb57b46bcdd67a20f11a3f076d846ddf772c68d7439f6c6eca"
+checksum = "b17456ae84ba9c0da0f189bf00d13019805b89563ba846cd15ccd8c4bd6a2713"
 dependencies = [
  "bytes",
  "futures",
  "http",
  "httparse",
  "libc",
- "parking_lot 0.12.5",
+ "parking_lot 0.13.0",
  "path-tree",
  "pin-project-lite",
  "rand 0.10.2",
@@ -3896,7 +3896,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "tokio-util",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
  "tracing",
  "url",
  "windows-sys 0.61.2",
@@ -6521,9 +6521,9 @@ dependencies = [
 
 [[package]]
 name = "serde_spanned"
-version = "1.1.1"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6662b5879511e06e8999a8a235d848113e942c9124f211511b16466ee2995f26"
+checksum = "9c187e0a369471c550af028cba56d4f4fa2a489ad28151ae95a4d340a2a8b782"
 dependencies = [
  "serde_core",
 ]
@@ -7086,11 +7086,12 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.7.1"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?branch=main#89ad876a0942c049ae72e1472f9fc3ed62023c5e"
+version = "0.7.2"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs.git?rev=2c9d0a538052aac6e44ad413156a6e848da262b9#2c9d0a538052aac6e44ad413156a6e848da262b9"
 dependencies = [
  "iptools",
  "log",
+ "serde",
  "system-configuration",
  "thiserror 2.0.20",
  "tokio",
@@ -7144,7 +7145,7 @@ dependencies = [
  "cfg-expr 0.20.9",
  "heck 0.5.0",
  "pkg-config",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
  "version-compare",
 ]
 
@@ -7498,7 +7499,7 @@ dependencies = [
  "tauri-plugin",
  "tauri-utils",
  "thiserror 2.0.20",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
  "url",
 ]
 
@@ -7828,7 +7829,7 @@ dependencies = [
  "serde_with",
  "swift-rs",
  "thiserror 2.0.20",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
  "url",
  "urlpattern",
  "uuid",
@@ -7843,7 +7844,7 @@ checksum = "cc65d45c68858bfe420dd29e834b5d15dbecf8a07a8a16cf4d532c7b1f69d4b6"
 dependencies = [
  "dunce",
  "embed-resource",
- "toml 1.1.6+spec-1.1.0",
+ "toml 1.2.1+spec-1.1.0",
 ]
 
 [[package]]
@@ -8209,14 +8210,14 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "1.1.6+spec-1.1.0"
+version = "1.2.1+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "920602543f0911ab71da12c50d59701da54c196d1a2bf5cb4b75667f137a406a"
+checksum = "d5755c51863cdac711f1956baf8eb9588e060755f7d3c4c979e70ea1e1f32cd7"
 dependencies = [
  "indexmap 2.14.0",
  "serde_core",
- "serde_spanned 1.1.1",
- "toml_datetime 1.1.1+spec-1.1.0",
+ "serde_spanned 1.1.3",
+ "toml_datetime 1.1.3+spec-1.1.0",
  "toml_parser",
  "toml_writer",
  "winnow 1.0.4",
@@ -8233,9 +8234,9 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "1.1.1+spec-1.1.0"
+version = "1.1.3+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3165f65f62e28e0115a00b2ebdd37eb6f3b641855f9d636d3cd4103767159ad7"
+checksum = "173f25c883cd2176a2d8212155638c0a60d484a9d84546d270866f40f56b6e49"
 dependencies = [
  "serde_core",
 ]
@@ -8283,16 +8284,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6975367e4d2ef766d86af01ffad14b622fecc8d4357a998fbc4deb6e9bacaf9b"
 dependencies = [
  "indexmap 2.14.0",
- "toml_datetime 1.1.1+spec-1.1.0",
+ "toml_datetime 1.1.3+spec-1.1.0",
  "toml_parser",
  "winnow 1.0.4",
 ]
 
 [[package]]
 name = "toml_parser"
-version = "1.1.3+spec-1.1.0"
+version = "1.1.5+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d38ac1cf9b95face32296c0a3ede1fdc270627c9d9c02a7274dd6d960dc4d56"
+checksum = "baa693a8032d7e1cada7d0041e96126df243179ff061456783ac7f12bda4744c"
 dependencies = [
  "winnow 1.0.4",
 ]
@@ -8305,9 +8306,9 @@ checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
 name = "toml_writer"
-version = "1.1.2+spec-1.1.0"
+version = "1.2.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
+checksum = "009dbb7700f11c55ef83aebbe4c0e9cf1f1ac0844bd8d6f00dc38f302026e13a"
 
 [[package]]
 name = "tonic"
