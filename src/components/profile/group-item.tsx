@@ -1,4 +1,8 @@
-import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
+import {
+  DeleteForeverRounded,
+  EditRounded,
+  UndoRounded,
+} from '@mui/icons-material'
 import {
   Box,
   IconButton,
@@ -13,10 +17,11 @@ interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   group: IProxyGroupConfig
   onDelete: () => void
+  onEdit?: () => void
 }
 
 export const GroupItem = (props: Props) => {
-  const { type, group, onDelete } = props
+  const { type, group, onDelete, onEdit } = props
   const isSortable = type === 'prepend' || type === 'append'
 
   const iconCachePath = useIconCache({
@@ -99,6 +104,11 @@ export const GroupItem = (props: Props) => {
           },
         }}
       />
+      {onEdit && (
+        <IconButton onClick={onEdit}>
+          <EditRounded />
+        </IconButton>
+      )}
       <IconButton onClick={onDelete}>
         {type === 'delete' ? <UndoRounded /> : <DeleteForeverRounded />}
       </IconButton>
