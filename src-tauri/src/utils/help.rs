@@ -137,16 +137,11 @@ fn is_short_id(key: &Value) -> bool {
 pub async fn save_yaml<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
     let data_str = with_encryption(|| async { serde_yaml_ng::to_string(data) }).await?;
 
-    let yaml_str = match prefix {
-        Some(prefix) => format!("{prefix}\n\n{data_str}"),
-        None => data_str,
-    };
-
-    save_yaml_str(path, &yaml_str).await
+    save_yaml_str(path, &data_str, prefix).await
 }
 
 /// Atomic replace with pre-serialized content; the payload must not need the encryption scope.
-pub async fn save_yaml_str(path: &Path, yaml_str: &str) -> Result<()> {
+pub async fn save_yaml_str(path: &Path, yaml_str: &str, prefix: Option<&str>) -> Result<()> {
     let (temporary, file) = loop {
         let temporary = path.with_extension(format!("tmp-{}-{}", std::process::id(), nanoid!()));
         match std::fs::OpenOptions::new()
@@ -172,9 +167,16 @@ pub async fn save_yaml_str(path: &Path, yaml_str: &str) -> Result<()> {
         let _ = std::fs::remove_file(path);
     });
     let mut file = tokio::fs::File::from_std(file);
-    file.write_all(yaml_str.as_bytes())
-        .await
-        .with_context(|| format!("failed to write temporary file for \"{}\"", path.display()))?;
+    async fn write_chunk(file: &mut tokio::fs::File, bytes: &[u8], path: &Path) -> Result<()> {
+        file.write_all(bytes)
+            .await
+            .with_context(|| format!("failed to write temporary file for \"{}\"", path.display()))
+    }
+    if let Some(prefix) = prefix {
+        write_chunk(&mut file, prefix.as_bytes(), path).await?;
+        write_chunk(&mut file, b"\n\n", path).await?;
+    }
+    write_chunk(&mut file, yaml_str.as_bytes(), path).await?;
     file.flush()
         .await
         .with_context(|| format!("failed to flush temporary file for \"{}\"", path.display()))?;

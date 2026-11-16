@@ -761,7 +761,7 @@ pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result
             return Ok((profiles, false));
         };
 
-        let mut selected = item.selected.clone().unwrap_or_default();
+        let selected = item.selected.get_or_insert_with(Vec::new);
         match selected
             .iter_mut()
             .find(|entry| entry.name.as_ref() == Some(&group_name))
@@ -770,14 +770,13 @@ pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result
                 if entry.now.as_ref() == Some(&node) {
                     return Ok((profiles, false));
                 }
-                entry.now = Some(node);
+                entry.now = Some(node.clone());
             }
             None => selected.push(PrfSelected {
                 name: Some(group_name),
                 now: Some(node),
             }),
         }
-        item.selected = Some(selected);
         profiles.save_file().await?;
         Ok((profiles, true))
     })
@@ -796,12 +795,17 @@ pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
             return Ok((profiles, false));
         };
 
-        let mut selected = item.selected.clone().unwrap_or_default();
+        let Some(mut selected) = item.selected.take() else {
+            return Ok((profiles, false));
+        };
         if !remove_selected_node(&mut selected, group_name) {
+            item.selected = Some(selected);
             return Ok((profiles, false));
         }
 
-        item.selected = (!selected.is_empty()).then_some(selected);
+        if !selected.is_empty() {
+            item.selected = Some(selected);
+        }
         profiles.save_file().await?;
         Ok((profiles, true))
     })

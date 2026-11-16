@@ -578,7 +578,6 @@ fn ensure_tun_default_mtu(mut config: Mapping) -> Mapping {
 
     config
 }
-}
 
 /// Merges the app's clash config over the profile; switches are parameters to keep it pure.
 fn merge_default_config(
@@ -600,7 +599,6 @@ fn merge_default_config(
                     }
                 }
                 config.insert(Value::from("tun"), Value::Mapping(tun));
-            }
             }
         } else {
             if key.as_str() == Some("socks-port") && !socks_enabled {
@@ -656,7 +654,7 @@ fn merge_default_config(
 fn apply_builtin_scripts(mut config: Mapping, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         // The JS path saw a lowercased view; lowercase once, only when the builtin runs.
-        config = use_lowercase(&config);
+        config = use_lowercase(config);
         logging!(debug, Type::Core, "run builtin script verge_hy_alpn");
         config = builtin_hy_alpn(config);
     }
