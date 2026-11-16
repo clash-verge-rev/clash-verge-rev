@@ -346,11 +346,9 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
     if verge.proxy_auto_config.unwrap_or_default() {
         ensure!(pac_port != 0, "embedded PAC server port must not be zero");
         Ok(MacosProxyConfig::Pac {
-            url: server::pac_auto_url(
-                LOOPBACK_HOST,
-                pac_port,
-                verge.pac_file_content.as_deref().unwrap_or(crate::config::DEFAULT_PAC),
-            ),
+            // Bare URL: the pinned `clash_verge_service_ipc` `validate_pac_url` rejects query
+            // strings, so cache-busting can only ride on the direct sysproxy path (#8609).
+            url: format!("http://{LOOPBACK_HOST}:{pac_port}/commands/pac"),
         })
     } else {
         ensure!(mixed_port != 0, "system proxy port must not be zero");
@@ -1004,7 +1002,7 @@ mod tests {
         assert_eq!(
             service_proxy_config(&pac_verge, 7897, 3333).unwrap_or_else(|_| unreachable!()),
             MacosProxyConfig::Pac {
-                url: crate::utils::server::pac_auto_url("127.0.0.1", 3333, crate::config::DEFAULT_PAC)
+                url: "http://127.0.0.1:3333/commands/pac".to_owned()
             }
         );
     }
