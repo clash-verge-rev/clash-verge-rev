@@ -93,7 +93,7 @@ tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.2.3", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "e49bbedcc67d60da2c10e81bc6433b0f8e8fa232" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.8.0", version = "2.8.0", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.8.1", version = "2.8.1", features = [
   "client",
 ] }
 arc-swap = "1.9.5"
