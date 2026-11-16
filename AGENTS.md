@@ -48,16 +48,11 @@ the ownership evidence the AI-slop review evaluates (see
 8. **Minimal diffs.** Match the surrounding code's style, naming, and comment
    density. Do not introduce new dependencies or restructure working code unless
    the linked issue or stated task demands it.
-9. **Disclose AI automation.** When an agent creates or co-creates a PR or Issue,
-   append a final body line with the model and effort used (e.g.
-   `Assisted by: GPT-5.6 High`). Effort may be omitted when the runtime does not
-   report it. Human contributors are not asked to disclose AI assistance.
-   Disclosure is transparency only and carries no positive or negative weight.
-10. **Compiled workflows.** Agentic workflow Markdown, including the
+9. **Compiled workflows.** Agentic workflow Markdown, including the
     [AI-slop policy](.github/workflows/pr-ai-slop-review.md) and shared imports,
     is compiled: after editing it, run `gh aw compile` and commit the affected
     `.lock.yml` files. Never edit lock files directly.
-11. **Changelog.** Entries follow the rules in
+10. **Changelog.** Entries follow the rules in
     [`template/Changelog.md`](template/Changelog.md): one line per
     user-visible change, no internals.
 
@@ -78,8 +73,5 @@ the ownership evidence the AI-slop review evaluates (see
 
 ## Issue and PR Workflows
 
-When drafting, triaging, splitting, or implementing from a community issue, use
-the conditional checklist in [`.github/ISSUE_GUIDELINES.md`](.github/ISSUE_GUIDELINES.md).
-Do not make GitHub issue changes without explicit authorization. For PRs, follow
-the directly loaded [PR template](.github/PULL_REQUEST_TEMPLATE.md); do not
-duplicate its prompts here.
+For Issue and PR work, read [`.github/AGENTS.md`](.github/AGENTS.md), including
+when using `gh` or an API without editing files under `.github/`.

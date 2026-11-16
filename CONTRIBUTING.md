@@ -168,9 +168,10 @@ to run every command for every change. Run commands from the repository root.
 
 Tie results to the code reviewed: identify the base/head commits for branch
 comparisons and include task-relevant staged, unstaged, and untracked files in a
-local review. Report
-the command or interaction, observed result, and material gaps in the existing
-conversation or PR; no separate verification report is required. Static checks,
+local review. Keep command-level results in the working conversation. For PR
+descriptions, follow the [PR template](.github/PULL_REQUEST_TEMPLATE.md): include
+behavioral evidence and material gaps relevant to review, omitting routine check
+pass lists. No separate verification report is required. Static checks,
 mocks, browser previews, native runs, and remote CI establish different things.
 When code changes after verification, repeat affected checks. Attribute a failure
 to the baseline only after comparing the same check on the base revision.
