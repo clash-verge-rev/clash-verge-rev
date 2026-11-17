@@ -7,7 +7,7 @@ use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, OnceLock};
+use std::sync::LazyLock;
 use std::time::SystemTime;
 use tokio::fs;
 use tristr::alias::String;
@@ -30,14 +30,10 @@ pub enum ChainType {
 struct CachedChain {
     mtime: SystemTime,
     len: u64,
-    item: Arc<ChainItem>,
+    item: ChainItem,
 }
 
-static CHAIN_CACHE: OnceLock<Mutex<HashMap<PathBuf, CachedChain>>> = OnceLock::new();
-
-fn chain_cache() -> &'static Mutex<HashMap<PathBuf, CachedChain>> {
-    CHAIN_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
-}
+static CHAIN_CACHE: LazyLock<Mutex<HashMap<PathBuf, CachedChain>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 // Helper trait to allow async conversion
 pub trait AsyncChainItemFrom {
@@ -53,11 +49,11 @@ impl AsyncChainItemFrom for Option<ChainItem> {
 
         let meta = fs::metadata(&path).await.ok()?;
         let (mtime, len) = (meta.modified().ok()?, meta.len());
-        if let Some(cached) = chain_cache().lock().get(&path)
+        if let Some(cached) = CHAIN_CACHE.lock().get(&path)
             && cached.mtime == mtime
             && cached.len == len
         {
-            return Some((*cached.item).clone());
+            return Some(cached.item.clone());
         }
 
         let loaded = match itype {
@@ -81,12 +77,12 @@ impl AsyncChainItemFrom for Option<ChainItem> {
             _ => None,
         }?;
 
-        chain_cache().lock().insert(
+        CHAIN_CACHE.lock().insert(
             path,
             CachedChain {
                 mtime,
                 len,
-                item: Arc::new(loaded.clone()),
+                item: loaded.clone(),
             },
         );
         Some(loaded)
