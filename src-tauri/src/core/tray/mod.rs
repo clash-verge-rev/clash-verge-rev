@@ -19,7 +19,6 @@ use tokio::fs;
 
 use super::handle;
 use anyhow::Result;
-use smartstring::alias::String;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -27,6 +26,7 @@ use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
+use tristr::alias::String;
 
 mod menu_def;
 #[cfg(target_os = "macos")]
@@ -454,7 +454,7 @@ impl Tray {
     }
 }
 
-fn create_hotkeys(hotkeys: &Option<Vec<tristr::alias::String>>) -> HashMap<&str, &str> {
+fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<&str, &str> {
     hotkeys.as_ref().map_or_default(|h| {
         h.iter()
             .filter_map(|item| {

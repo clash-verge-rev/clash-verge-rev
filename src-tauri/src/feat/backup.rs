@@ -124,14 +124,17 @@ pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
 
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
     let name = filename.clone();
-    backup::WebDavClient::global().delete(filename).await.map_err(|err| {
-        logging!(
-            error,
-            Type::Backup,
-            "Failed to delete WebDAV backup file {name}: {err:#}"
-        );
-        err
-    })
+    backup::WebDavClient::global()
+        .delete(filename.as_str().into())
+        .await
+        .map_err(|err| {
+            logging!(
+                error,
+                Type::Backup,
+                "Failed to delete WebDAV backup file {name}: {err:#}"
+            );
+            err
+        })
 }
 
 /// Backup creation strips the WebDAV credentials, so the live ones are kept.
@@ -167,7 +170,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .join(filename.as_str());
     let name = filename.clone();
     backup::WebDavClient::global()
-        .download(filename, backup_storage_path.clone())
+        .download(filename.as_str().into(), backup_storage_path.clone())
         .await
         .map_err(|err| {
             logging!(

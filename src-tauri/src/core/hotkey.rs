@@ -17,6 +17,7 @@ use std::{
     },
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt as _, ShortcutState};
+use tristr::alias::String;
 
 /// Enum representing all available hotkey functions
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -104,7 +105,7 @@ impl SystemHotkey {
 }
 
 pub struct Hotkey {
-    current: ArcSwap<Vec<tristr::alias::String>>,
+    current: ArcSwap<Vec<String>>,
 }
 
 impl Hotkey {
@@ -399,7 +400,7 @@ impl Hotkey {
         Ok(())
     }
 
-    pub async fn update(&self, new_hotkeys: Vec<tristr::alias::String>) -> Result<()> {
+    pub async fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
         // Extract current hotkeys before async operations
         let current_hotkeys = &*self.current.load();
         let old_map = Self::get_map_from_vec(current_hotkeys);
@@ -420,7 +421,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_map_from_vec(hotkeys: &[tristr::alias::String]) -> HashMap<&str, &str> {
+    fn get_map_from_vec(hotkeys: &[String]) -> HashMap<&str, &str> {
         let mut map = HashMap::new();
 
         hotkeys.iter().for_each(|hotkey| {

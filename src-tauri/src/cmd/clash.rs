@@ -54,7 +54,7 @@ pub async fn get_clash_mode() -> CmdResult<Option<std::string::String>> {
 #[tauri::command]
 #[specta::specta]
 pub async fn change_clash_core(clash_core: std::string::String) -> CmdResult<Option<CommandFailure>> {
-    let clash_core: smartstring::alias::String = clash_core.into();
+    let clash_core: String = clash_core.into();
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global().change_core(&clash_core).await {

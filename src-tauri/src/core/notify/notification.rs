@@ -3,11 +3,11 @@ use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 #[cfg(test)]
 use serde_json::json;
-use smartstring::alias::String;
 use std::sync::Arc;
 use std::sync::LazyLock;
 use std::{collections::HashMap, future::Future};
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
+use tristr::alias::String;
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent<'a> {
@@ -77,10 +77,8 @@ impl FailedOperation {
 #[serde(rename_all = "camelCase")]
 pub struct PendingFailure {
     /// Stable code used as the table key.
-    #[specta(type = std::string::String)]
     pub code: String,
     /// Full diagnostic context chain.
-    #[specta(type = std::string::String)]
     pub detail: String,
     pub operation: FailedOperation,
     /// Monotonic identity for repeated failures under the same code.
@@ -247,7 +245,6 @@ static PENDING_FAILURES: LazyLock<FailureTable> = LazyLock::new(FailureTable::de
 #[derive(Debug, Default, Clone, serde::Serialize, specta::Type)]
 pub struct SidecarFailureSnapshot {
     pub revision: u64,
-    #[specta(type = Option<std::string::String>)]
     pub detail: Option<String>,
 }
 
