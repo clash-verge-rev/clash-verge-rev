@@ -1127,7 +1127,6 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "sha2 0.11.1",
- "smartstring",
  "socket2",
  "specta",
  "specta-typescript",
@@ -6800,18 +6799,6 @@ dependencies = [
  "objc2-foundation",
  "objc2-service-management",
  "thiserror 2.0.20",
-]
-
-[[package]]
-name = "smartstring"
-version = "2.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a155190f9c039a1e9b6e92efbfa50ae68daad98a0fd6d5521a5a09ef782383e8"
-dependencies = [
- "autocfg",
- "serde",
- "static_assertions",
- "version_check",
 ]
 
 [[package]]
