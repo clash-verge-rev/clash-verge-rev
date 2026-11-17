@@ -7,11 +7,12 @@ import { closeConnection } from 'tauri-plugin-mihomo-api'
 
 import { RelativeTime } from './connection-relative-time'
 import type { ConnectionRowView } from './connection-row-view'
+import type { ConnectionRuleKind } from './connection-rule'
 
 interface Props {
   row: ConnectionRowView
   closed: boolean
-  onShowDetail: (id: string) => void
+  onShowDetail: (id: string, preferredKind?: ConnectionRuleKind) => void
 }
 
 const tagStyle = {
@@ -86,7 +87,17 @@ export const ConnectionRowItem = memo(
           <div style={tagsStyle}>
             <span style={tagStyle}>{row.network}</span>
             <span style={tagStyle}>{row.type}</span>
-            {row.process && <span style={tagStyle}>{row.process}</span>}
+            {row.process && (
+              <span
+                style={tagStyle}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onShowDetail(row.id, 'process')
+                }}
+              >
+                {row.process}
+              </span>
+            )}
             {row.chains && <span style={tagStyle}>{row.chains}</span>}
             <span style={tagStyle}>
               <RelativeTime start={row.time} />
