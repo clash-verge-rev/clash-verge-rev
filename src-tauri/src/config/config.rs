@@ -215,7 +215,18 @@ impl Config {
                 .as_ref()
                 .or_else(|| runtime_data.config.as_ref())
                 .ok_or_else(|| anyhow!("failed to generate runtime config, might need to restart application"))?;
+            static RUNTIME_YAML_CACHE: parking_lot::Mutex<Option<(u64, std::sync::Arc<str>)>> =
+                parking_lot::Mutex::new(None);
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            std::hash::Hash::hash(config, &mut hasher);
+            let key = std::hash::Hasher::finish(&hasher);
+            if let Some((cached_key, cached)) = RUNTIME_YAML_CACHE.lock().as_ref()
+                && *cached_key == key
+            {
+                return Ok(cached.to_string());
+            }
             let yaml_str = serde_yaml_ng::to_string(config)?;
+            *RUNTIME_YAML_CACHE.lock() = Some((key, std::sync::Arc::from(yaml_str.as_str())));
             Ok(yaml_str)
         })
         .await
