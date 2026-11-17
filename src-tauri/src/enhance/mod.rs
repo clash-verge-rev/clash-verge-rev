@@ -28,6 +28,7 @@ use parking_lot::Mutex;
 use serde_yaml_ng::{Mapping, Value};
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash as _, Hasher as _};
+use std::sync::Arc;
 use tokio::fs;
 use tristr::alias::String;
 
@@ -51,13 +52,13 @@ struct ConfigValues {
 #[derive(Debug)]
 struct ProfileItems {
     config: Mapping,
-    merge_item: ChainItem,
-    script_item: ChainItem,
-    rules_item: ChainItem,
-    proxies_item: ChainItem,
-    groups_item: ChainItem,
-    global_merge: ChainItem,
-    global_script: ChainItem,
+    merge_item: Arc<ChainItem>,
+    script_item: Arc<ChainItem>,
+    rules_item: Arc<ChainItem>,
+    proxies_item: Arc<ChainItem>,
+    groups_item: Arc<ChainItem>,
+    global_merge: Arc<ChainItem>,
+    global_script: Arc<ChainItem>,
     profile_name: String,
 }
 
@@ -66,41 +67,46 @@ impl Default for ProfileItems {
         Self {
             config: Default::default(),
             profile_name: Default::default(),
-            merge_item: ChainItem {
+            merge_item: Arc::new(ChainItem {
                 uid: "".into(),
                 data: ChainType::Merge(Mapping::new()),
-            },
-            script_item: ChainItem {
+            }),
+            script_item: Arc::new(ChainItem {
                 uid: "".into(),
                 data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-            },
-            rules_item: ChainItem {
+            }),
+            rules_item: Arc::new(ChainItem {
                 uid: "".into(),
                 data: ChainType::Rules(SeqMap::default()),
-            },
-            proxies_item: ChainItem {
+            }),
+            proxies_item: Arc::new(ChainItem {
                 uid: "".into(),
                 data: ChainType::Proxies(SeqMap::default()),
-            },
-            groups_item: ChainItem {
+            }),
+            groups_item: Arc::new(ChainItem {
                 uid: "".into(),
                 data: ChainType::Groups(SeqMap::default()),
-            },
-            global_merge: ChainItem {
+            }),
+            global_merge: Arc::new(ChainItem {
                 uid: "Merge".into(),
                 data: ChainType::Merge(Mapping::new()),
-            },
-            global_script: ChainItem {
+            }),
+            global_script: Arc::new(ChainItem {
                 uid: "Script".into(),
                 data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-            },
+            }),
         }
     }
 }
 
-async fn chain_item_or_default(item: Option<&PrfItem>, default_item: impl FnOnce() -> ChainItem) -> ChainItem {
+async fn chain_item_or_default(
+    item: Option<&PrfItem>,
+    default_item: impl FnOnce() -> Arc<ChainItem>,
+) -> Arc<ChainItem> {
     if let Some(item) = item {
-        <Option<ChainItem>>::from_async(item).await.unwrap_or_else(default_item)
+        <Option<Arc<ChainItem>>>::from_async(item)
+            .await
+            .unwrap_or_else(default_item)
     } else {
         default_item()
     }
@@ -235,28 +241,28 @@ async fn process_override_items(
     mut config: Mapping,
     mut exists_keys: Vec<String>,
     mut result_map: HashMap<String, ResultLog>,
-    merge_item: ChainItem,
-    script_item: ChainItem,
+    merge_item: Arc<ChainItem>,
+    script_item: Arc<ChainItem>,
     profile_name: &str,
     authoritative: &AuthoritativeFields,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    if let ChainType::Merge(merge) = merge_item.data {
-        exists_keys.extend(use_keys(&merge));
+    if let ChainType::Merge(merge) = &merge_item.data {
+        exists_keys.extend(use_keys(merge));
         let before = authoritative.current(&config);
-        config = use_merge(merge, config);
+        config = use_merge(merge.clone(), config);
         let notes: ResultLog = authoritative
             .overridden(&before, &authoritative.current(&config))
             .into_iter()
             .map(discarded_note)
             .collect();
         if !notes.is_empty() {
-            result_map.entry(merge_item.uid).or_default().extend(notes);
+            result_map.entry(merge_item.uid.clone()).or_default().extend(notes);
         }
     }
 
-    if let ChainType::Script(script) = script_item.data {
+    if let ChainType::Script(script) = &script_item.data {
         let before = authoritative.current(&config);
-        let (res_config, changed_keys, mut logs) = use_script(script, config, profile_name.into()).await;
+        let (res_config, changed_keys, mut logs) = use_script(script.clone(), config, profile_name.into()).await;
         exists_keys.extend(changed_keys);
         config = res_config;
         logs.extend(
@@ -265,7 +271,7 @@ async fn process_override_items(
                 .into_iter()
                 .map(discarded_note),
         );
-        result_map.insert(script_item.uid, logs);
+        result_map.insert(script_item.uid.clone(), logs);
     }
 
     (config, exists_keys, result_map)
@@ -273,20 +279,20 @@ async fn process_override_items(
 
 fn process_seq_items(
     mut config: Mapping,
-    rules_item: ChainItem,
-    proxies_item: ChainItem,
-    groups_item: ChainItem,
+    rules_item: Arc<ChainItem>,
+    proxies_item: Arc<ChainItem>,
+    groups_item: Arc<ChainItem>,
 ) -> Mapping {
-    if let ChainType::Rules(rules) = rules_item.data {
-        config = use_seq(rules, config, "rules");
+    if let ChainType::Rules(rules) = &rules_item.data {
+        config = use_seq(rules.clone(), config, "rules");
     }
 
-    if let ChainType::Proxies(proxies) = proxies_item.data {
-        config = use_seq(proxies, config, "proxies");
+    if let ChainType::Proxies(proxies) = &proxies_item.data {
+        config = use_seq(proxies.clone(), config, "proxies");
     }
 
-    if let ChainType::Groups(groups) = groups_item.data {
-        config = use_seq(groups, config, "proxy-groups");
+    if let ChainType::Groups(groups) = &groups_item.data {
+        config = use_seq(groups.clone(), config, "proxy-groups");
     }
 
     config
@@ -1397,6 +1403,7 @@ mod tests {
         process_override_items, use_keys,
     };
     use std::collections::HashMap;
+    use std::sync::Arc;
 
     fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
         serde_yaml_ng::from_str(yaml).expect("test config should be valid")
@@ -1437,9 +1444,11 @@ mod tests {
                 (profile.clone(), Mapping::new())
             };
             let authoritative = AuthoritativeFields::capture(&config, &[], dns_settings);
-            let merge_item = |uid: &str| ChainItem {
-                uid: uid.into(),
-                data: ChainType::Merge(merge.clone()),
+            let merge_item = |uid: &str| {
+                Arc::new(ChainItem {
+                    uid: uid.into(),
+                    data: ChainType::Merge(merge.clone()),
+                })
             };
             let profile_name = "test-profile";
             let (config, keys, logs) = process_override_items(
@@ -1447,10 +1456,10 @@ mod tests {
                 vec![],
                 HashMap::new(),
                 merge_item("global-merge"),
-                ChainItem {
+                Arc::new(ChainItem {
                     uid: "global-script".into(),
                     data: ChainType::Script(script.into()),
-                },
+                }),
                 profile_name,
                 &authoritative,
             )
@@ -1460,10 +1469,10 @@ mod tests {
                 keys,
                 logs,
                 merge_item("profile-merge"),
-                ChainItem {
+                Arc::new(ChainItem {
                     uid: "profile-script".into(),
                     data: ChainType::Script(script.into()),
-                },
+                }),
                 profile_name,
                 &authoritative,
             )
@@ -1500,15 +1509,15 @@ mod tests {
         let exists_keys = use_keys(&config).collect();
         config.insert("application-only".into(), true.into());
 
-        let global_merge = ChainItem {
+        let global_merge = Arc::new(ChainItem {
             uid: "Merge".into(),
             data: ChainType::Merge(mapping(
                 r"{global-merge-wins: global-merge, global-script-wins: global-merge,
                    profile-merge-wins: global-merge, profile-script-wins: global-merge,
                    nested: {winner: global-merge}, dns: {enable: false}, tun: {enable: false}}",
             )),
-        };
-        let global_script = ChainItem {
+        });
+        let global_script = Arc::new(ChainItem {
             uid: "Script".into(),
             data: ChainType::Script(
                 r#"function main(config) {
@@ -1520,15 +1529,15 @@ mod tests {
             }"#
                 .into(),
             ),
-        };
-        let profile_merge = ChainItem {
+        });
+        let profile_merge = Arc::new(ChainItem {
             uid: "profile-merge".into(),
             data: ChainType::Merge(mapping(
                 r"{profile-merge-wins: profile-merge, profile-script-wins: profile-merge,
                    nested: {winner: profile-merge}}",
             )),
-        };
-        let profile_script = ChainItem {
+        });
+        let profile_script = Arc::new(ChainItem {
             uid: "profile-script".into(),
             data: ChainType::Script(
                 r#"function main(config) {
@@ -1538,7 +1547,7 @@ mod tests {
             }"#
                 .into(),
             ),
-        };
+        });
 
         let profile_name = "test-profile";
         let authoritative = AuthoritativeFields::capture(&config, &[], Mapping::new());

@@ -34,6 +34,9 @@ pub(crate) struct Config {
 
 static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
+static RUNTIME_YAML_CACHE: parking_lot::Mutex<Option<(u64, std::sync::Arc<std::string::String>)>> =
+    parking_lot::Mutex::new(None);
+
 impl Config {
     async fn global() -> &'static Self {
         static CONFIG: OnceCell<Config> = OnceCell::const_new();
@@ -205,7 +208,7 @@ impl Config {
         Self::write_runtime_file(&yaml).await
     }
 
-    pub(crate) async fn runtime_config_yaml() -> Result<std::string::String> {
+    pub(crate) async fn runtime_config_yaml() -> Result<std::sync::Arc<std::string::String>> {
         let runtime = Self::runtime().await;
         AsyncHandler::spawn_blocking(move || {
             let runtime_lastest = runtime.latest_arc();
@@ -215,7 +218,16 @@ impl Config {
                 .as_ref()
                 .or_else(|| runtime_data.config.as_ref())
                 .ok_or_else(|| anyhow!("failed to generate runtime config, might need to restart application"))?;
-            let yaml_str = serde_yaml_ng::to_string(config)?;
+            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            std::hash::Hash::hash(config, &mut hasher);
+            let key = std::hash::Hasher::finish(&hasher);
+            if let Some((cached_key, cached)) = RUNTIME_YAML_CACHE.lock().as_ref()
+                && *cached_key == key
+            {
+                return Ok(std::sync::Arc::clone(cached));
+            }
+            let yaml_str = std::sync::Arc::new(serde_yaml_ng::to_string(config)?);
+            *RUNTIME_YAML_CACHE.lock() = Some((key, std::sync::Arc::clone(&yaml_str)));
             Ok(yaml_str)
         })
         .await
