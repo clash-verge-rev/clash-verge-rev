@@ -38,7 +38,7 @@ pub async fn patch_clash_config(payload: crate::ipc::YamlMapping) -> CmdResult {
 #[tauri::command]
 #[specta::specta]
 pub async fn patch_clash_mode(payload: std::string::String) -> CmdResult {
-    let payload: smartstring::alias::String = payload.into();
+    let payload: String = payload.into();
     feat::change_clash_mode(payload)
         .await
         .with_error_code("CLASH_MODE_UPDATE_FAILED")
@@ -113,7 +113,7 @@ pub async fn upgrade_clash_core(force: bool) -> CmdResult<feat::CoreUpgradeRepor
 #[tauri::command]
 #[specta::specta]
 pub async fn test_delay(url: std::string::String) -> CmdResult<u32> {
-    let url: smartstring::alias::String = url.into();
+    let url: String = url.into();
     let result = match feat::test_delay(url).await {
         Ok(delay) => delay,
         Err(e) => {

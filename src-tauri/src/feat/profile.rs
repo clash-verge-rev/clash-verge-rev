@@ -9,10 +9,10 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
+use tristr::alias::String;
 
 /// Toggle proxy profile
-pub async fn toggle_proxy_profile(profile_index: tristr::alias::String) {
+pub async fn toggle_proxy_profile(profile_index: String) {
     if let Err(err) = cmd::patch_profiles_config_by_profile_index(profile_index.clone()).await {
         logging!(
             error,
@@ -130,10 +130,7 @@ async fn should_update_profile(uid: &str, ignore_auto_update: bool) -> Result<Op
             )
         );
         Ok(Some((
-            item.url
-                .clone()
-                .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))
-                .map(|u| u.as_str().into())?,
+            item.url.clone().ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?,
             item.option.clone(),
         )))
     }
@@ -154,7 +151,7 @@ async fn perform_profile_update(
         .get_item(uid)
         .ok()
         .and_then(|item| item.name.clone())
-        .unwrap_or_else(|| tristr::alias::String::from("UnKnown Profile"));
+        .unwrap_or_else(|| String::from("UnKnown Profile"));
 
     #[derive(Clone, Copy)]
     enum Strategy {

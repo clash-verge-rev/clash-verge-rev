@@ -92,14 +92,14 @@ pub async fn download_icon_cache(
     url: std::string::String,
     name: std::string::String,
 ) -> CmdResult<std::string::String> {
-    let url: smartstring::alias::String = url.into();
-    let name: smartstring::alias::String = name.into();
+    let url: String = url.into();
+    let name: String = name.into();
     feat::download_icon_cache(url, name).await.map(Into::into)
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn copy_icon_file(path: std::string::String, icon_info: feat::IconInfo) -> CmdResult<std::string::String> {
-    let path: smartstring::alias::String = path.into();
+    let path: String = path.into();
     feat::copy_icon_file(path, icon_info).await.map(Into::into)
 }

@@ -12,26 +12,23 @@ use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
-use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::fs;
+use tristr::alias::String;
 
 #[derive(Debug, Serialize, specta::Type)]
 pub struct LocalBackupFile {
-    #[specta(type = std::string::String)]
     pub filename: String,
-    #[specta(type = std::string::String)]
     pub path: String,
-    #[specta(type = std::string::String)]
     pub last_modified: String,
     pub content_length: u64,
 }
 
 /// Reloads restored configs into memory while preserving WebDAV credentials.
 async fn finalize_restored_verge_config(
-    webdav_url: Option<tristr::alias::String>,
-    webdav_username: Option<tristr::alias::String>,
-    webdav_password: Option<tristr::alias::String>,
+    webdav_url: Option<String>,
+    webdav_username: Option<String>,
+    webdav_password: Option<String>,
 ) -> Result<()> {
     let config_write = Config::lock_config_write().await;
 
@@ -124,17 +121,14 @@ pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
 
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
     let name = filename.clone();
-    backup::WebDavClient::global()
-        .delete(filename.as_str().into())
-        .await
-        .map_err(|err| {
-            logging!(
-                error,
-                Type::Backup,
-                "Failed to delete WebDAV backup file {name}: {err:#}"
-            );
-            err
-        })
+    backup::WebDavClient::global().delete(filename).await.map_err(|err| {
+        logging!(
+            error,
+            Type::Backup,
+            "Failed to delete WebDAV backup file {name}: {err:#}"
+        );
+        err
+    })
 }
 
 /// Backup creation strips the WebDAV credentials, so the live ones are kept.
@@ -170,7 +164,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .join(filename.as_str());
     let name = filename.clone();
     backup::WebDavClient::global()
-        .download(filename.as_str().into(), backup_storage_path.clone())
+        .download(filename, backup_storage_path.clone())
         .await
         .map_err(|err| {
             logging!(

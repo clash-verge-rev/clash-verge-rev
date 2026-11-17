@@ -49,14 +49,14 @@ pub async fn list_webdav_backup() -> CmdResult<Vec<crate::ipc::WebDavFile>> {
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_webdav_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: smartstring::alias::String = filename.into();
+    let filename: String = filename.into();
     feat::delete_webdav_backup(filename).await.stringify_err()
 }
 
 #[tauri::command]
 #[specta::specta]
 pub async fn restore_webdav_backup(filename: std::string::String) -> CmdResult<()> {
-    let filename: smartstring::alias::String = filename.into();
+    let filename: String = filename.into();
     feat::restore_webdav_backup(filename)
         .await
         .map_err(|error| super::proxy_aware_error(&error))
