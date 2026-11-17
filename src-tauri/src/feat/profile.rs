@@ -12,7 +12,7 @@ use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 
 /// Toggle proxy profile
-pub async fn toggle_proxy_profile(profile_index: String) {
+pub async fn toggle_proxy_profile(profile_index: tristr::alias::String) {
     if let Err(err) = cmd::patch_profiles_config_by_profile_index(profile_index.clone()).await {
         logging!(
             error,

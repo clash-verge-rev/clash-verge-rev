@@ -11,8 +11,8 @@ use crate::{
     utils::dirs,
 };
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 /// 保存profiles的配置
 #[tauri::command]
@@ -66,7 +66,7 @@ pub async fn save_profile_file(
         .await
         .stringify_err()?
     } else {
-        tristr::alias::String::new()
+        String::new()
     };
 
     // 保存新的配置文件
@@ -116,11 +116,11 @@ fn profile_affects_runtime(profiles: &IProfiles, index: &str) -> bool {
         return false;
     };
     [
-        item.current_merge().map_or("Merge", |s| s.as_str()),
-        item.current_script().map_or("Script", |s| s.as_str()),
-        item.current_rules().map_or("Rules", |s| s.as_str()),
-        item.current_proxies().map_or("Proxies", |s| s.as_str()),
-        item.current_groups().map_or("Groups", |s| s.as_str()),
+        item.current_merge().map_or("Merge", String::as_str),
+        item.current_script().map_or("Script", String::as_str),
+        item.current_rules().map_or("Rules", String::as_str),
+        item.current_proxies().map_or("Proxies", String::as_str),
+        item.current_groups().map_or("Groups", String::as_str),
     ]
     .contains(&index)
 }

@@ -12,8 +12,8 @@ use crate::{
     },
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -38,7 +38,7 @@ pub async fn patch_clash_config(payload: crate::ipc::YamlMapping) -> CmdResult {
 #[tauri::command]
 #[specta::specta]
 pub async fn patch_clash_mode(payload: std::string::String) -> CmdResult {
-    let payload: String = payload.into();
+    let payload: smartstring::alias::String = payload.into();
     feat::change_clash_mode(payload)
         .await
         .with_error_code("CLASH_MODE_UPDATE_FAILED")
@@ -54,7 +54,7 @@ pub async fn get_clash_mode() -> CmdResult<Option<std::string::String>> {
 #[tauri::command]
 #[specta::specta]
 pub async fn change_clash_core(clash_core: std::string::String) -> CmdResult<Option<CommandFailure>> {
-    let clash_core: String = clash_core.into();
+    let clash_core: smartstring::alias::String = clash_core.into();
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global().change_core(&clash_core).await {
@@ -113,7 +113,7 @@ pub async fn upgrade_clash_core(force: bool) -> CmdResult<feat::CoreUpgradeRepor
 #[tauri::command]
 #[specta::specta]
 pub async fn test_delay(url: std::string::String) -> CmdResult<u32> {
-    let url: String = url.into();
+    let url: smartstring::alias::String = url.into();
     let result = match feat::test_delay(url).await {
         Ok(delay) => delay,
         Err(e) => {
@@ -152,8 +152,8 @@ pub async fn set_dns_override(
     enabled: bool,
     confirmation: Option<std::string::String>,
 ) -> CmdResult<feat::DnsOverrideOutcome> {
-    let profile_uid: tristr::alias::String = profile_uid.into();
-    let confirmation = confirmation.map(tristr::alias::String::from);
+    let profile_uid: String = profile_uid.into();
+    let confirmation = confirmation.map(String::from);
     feat::set_dns_override(profile_uid, enabled, confirmation)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))

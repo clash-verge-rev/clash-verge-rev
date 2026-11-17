@@ -18,11 +18,11 @@ use crate::{
 };
 use clash_verge_draft::{Draft, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
-use smartstring::alias::String;
 use std::{
     mem::DropGuard,
     sync::atomic::{AtomicBool, Ordering},
 };
+use tristr::alias::String;
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
@@ -125,7 +125,7 @@ pub async fn reorder_profile(active_id: std::string::String, over_id: std::strin
 #[specta::specta]
 pub async fn create_profile(item: ProfileCreate, file_data: Option<std::string::String>) -> CmdResult {
     let item: PrfItem = item.into();
-    let file_data = file_data.map(tristr::alias::String::from);
+    let file_data = file_data.map(String::from);
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             profiles_save_file_safe()
@@ -228,10 +228,7 @@ async fn restore_previous_profile(prev_profile: &str) -> CmdResult<()> {
     Ok(())
 }
 
-async fn commit_current_profile(
-    profiles: &Draft<IProfiles>,
-    current: Option<tristr::alias::String>,
-) -> anyhow::Result<()> {
+async fn commit_current_profile(profiles: &Draft<IProfiles>, current: Option<String>) -> anyhow::Result<()> {
     profiles.discard();
     let Some(current) = current else {
         return Ok(());
@@ -248,7 +245,7 @@ async fn commit_current_profile(
         .await
 }
 
-async fn handle_success(current_value: Option<&tristr::alias::String>) -> CmdResult<ValidationOutcome> {
+async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationOutcome> {
     commit_current_profile(&Config::profiles().await, current_value.cloned())
         .await
         .stringify_err()?;
@@ -268,7 +265,7 @@ async fn handle_success(current_value: Option<&tristr::alias::String>) -> CmdRes
     Ok(ValidationOutcome::Valid)
 }
 
-async fn discard_and_restore(current_profile: Option<&tristr::alias::String>) -> CmdResult<()> {
+async fn discard_and_restore(current_profile: Option<&String>) -> CmdResult<()> {
     Config::profiles().await.discard();
     if let Some(prev_profile) = current_profile {
         restore_previous_profile(prev_profile).await?;
@@ -278,7 +275,7 @@ async fn discard_and_restore(current_profile: Option<&tristr::alias::String>) ->
 
 async fn handle_validation_failure(
     outcome: ValidationOutcome,
-    current_profile: Option<&tristr::alias::String>,
+    current_profile: Option<&String>,
 ) -> CmdResult<ValidationOutcome> {
     logging!(warn, Type::Cmd, "配置验证失败: {}", outcome);
     discard_and_restore(current_profile).await?;
@@ -290,11 +287,11 @@ async fn handle_validation_failure(
 
 async fn handle_update_error<E: std::fmt::Display>(
     e: E,
-    current_profile: Option<&tristr::alias::String>,
+    current_profile: Option<&String>,
 ) -> CmdResult<ValidationOutcome> {
     logging!(warn, Type::Cmd, "更新过程发生错误: {}", e,);
     discard_and_restore(current_profile).await?;
-    let message: String = e.to_string().into();
+    let message: smartstring::alias::String = e.to_string().into();
     handle::Handle::notice(NoticeStatus::ConfigValidateBootError, message.as_str());
     Ok(ValidationOutcome::invalid_from_message(message))
 }
@@ -310,8 +307,8 @@ where
 }
 
 async fn perform_config_update(
-    current_value: Option<&tristr::alias::String>,
-    current_profile: Option<&tristr::alias::String>,
+    current_value: Option<&String>,
+    current_profile: Option<&String>,
 ) -> CmdResult<ValidationOutcome> {
     let update_result = run_profile_config_update_transition(|| CoreManager::global().update_config_forced()).await;
 
@@ -325,7 +322,6 @@ async fn perform_config_update(
 #[derive(Default, serde::Deserialize, specta::Type)]
 #[serde(default)]
 pub struct ProfileSelection {
-    #[specta(type = Option<std::string::String>)]
     pub current: Option<String>,
 }
 
@@ -333,13 +329,9 @@ pub struct ProfileSelection {
 #[serde(default)]
 pub struct ProfileCreate {
     #[serde(rename = "type")]
-    #[specta(type = Option<std::string::String>)]
     pub itype: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub desc: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
     pub option: Option<PrfOption>,
 }
@@ -347,10 +339,10 @@ pub struct ProfileCreate {
 impl From<ProfileCreate> for PrfItem {
     fn from(item: ProfileCreate) -> Self {
         Self {
-            itype: item.itype.map(|v| v.as_str().into()),
-            name: item.name.map(|v| v.as_str().into()),
-            desc: item.desc.map(|v| v.as_str().into()),
-            url: item.url.map(|v| v.as_str().into()),
+            itype: item.itype,
+            name: item.name,
+            desc: item.desc,
+            url: item.url,
             option: item.option,
             ..Self::default()
         }
@@ -361,15 +353,10 @@ impl From<ProfileCreate> for PrfItem {
 #[serde(default)]
 pub struct ProfilePatch {
     #[serde(rename = "type")]
-    #[specta(type = Option<std::string::String>)]
     pub itype: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub name: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub desc: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub file: Option<String>,
-    #[specta(type = Option<std::string::String>)]
     pub url: Option<String>,
     pub selected: Option<Vec<crate::config::PrfSelected>>,
     pub extra: Option<crate::config::PrfExtra>,
@@ -380,11 +367,11 @@ pub struct ProfilePatch {
 impl From<ProfilePatch> for PrfItem {
     fn from(patch: ProfilePatch) -> Self {
         Self {
-            itype: patch.itype.map(|v| v.as_str().into()),
-            name: patch.name.map(|v| v.as_str().into()),
-            desc: patch.desc.map(|v| v.as_str().into()),
-            file: patch.file.map(|v| v.as_str().into()),
-            url: patch.url.map(|v| v.as_str().into()),
+            itype: patch.itype,
+            name: patch.name,
+            desc: patch.desc,
+            file: patch.file,
+            url: patch.url,
             selected: patch.selected,
             extra: patch.extra,
             updated: patch.updated,
@@ -411,7 +398,7 @@ pub async fn patch_profiles_config(profiles: ProfileSelection) -> CmdResult<Vali
     let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
     let profiles = IProfiles {
-        current: profiles.current.map(|c| c.as_str().into()),
+        current: profiles.current,
         items: None,
     };
     let target_profile = profiles.current.as_ref();
