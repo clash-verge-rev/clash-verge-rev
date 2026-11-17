@@ -20,10 +20,10 @@ use backon::{ExponentialBuilder, Retryable as _};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
-use smartstring::alias::String;
 use std::{collections::HashSet, path::PathBuf};
 use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
+use tristr::alias::String;
 
 pub(crate) struct Config {
     clash_config: Draft<IClashTemp>,

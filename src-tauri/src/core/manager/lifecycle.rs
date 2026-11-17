@@ -826,7 +826,7 @@ impl CoreManager {
         }
 
         Config::verge().await.edit_draft(|d| {
-            d.clash_core = Some(clash_core.to_owned());
+            d.clash_core = Some(clash_core.as_str().into());
         });
         Config::verge().await.apply();
 

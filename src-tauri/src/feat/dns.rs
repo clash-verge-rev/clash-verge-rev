@@ -2,7 +2,6 @@ use crate::core::notify::{Refresh, announce};
 use anyhow::{Result, ensure};
 use clash_verge_draft::DraftTransaction;
 use serde::Serialize;
-use smartstring::alias::String;
 
 use crate::{
     config::{
@@ -21,14 +20,14 @@ pub enum DnsOverrideOutcome {
     Applied,
     ConfirmationRequired {
         #[specta(type = std::string::String)]
-        source: String,
+        source: tristr::alias::String,
     },
 }
 
 pub async fn set_dns_override(
-    profile_uid: String,
+    profile_uid: tristr::alias::String,
     enabled: bool,
-    confirmation: Option<String>,
+    confirmation: Option<tristr::alias::String>,
 ) -> Result<DnsOverrideOutcome> {
     let _profile_write = PROFILE_WRITE_LOCK.lock().await;
     let _config_write = Config::lock_config_write().await;

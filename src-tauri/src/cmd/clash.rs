@@ -152,8 +152,8 @@ pub async fn set_dns_override(
     enabled: bool,
     confirmation: Option<std::string::String>,
 ) -> CmdResult<feat::DnsOverrideOutcome> {
-    let profile_uid: String = profile_uid.into();
-    let confirmation = confirmation.map(String::from);
+    let profile_uid: tristr::alias::String = profile_uid.into();
+    let confirmation = confirmation.map(tristr::alias::String::from);
     feat::set_dns_override(profile_uid, enabled, confirmation)
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "DNS_OVERRIDE_UPDATE_FAILED"))

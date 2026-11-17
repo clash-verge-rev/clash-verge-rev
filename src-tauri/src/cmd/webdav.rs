@@ -13,9 +13,9 @@ pub async fn save_webdav_config(
     username: std::string::String,
     password: std::string::String,
 ) -> CmdResult<()> {
-    let url: String = url.into();
-    let username: String = username.into();
-    let password: String = password.into();
+    let url: tristr::alias::String = url.into();
+    let username: tristr::alias::String = username.into();
+    let password: tristr::alias::String = password.into();
     let patch = IVerge {
         webdav_url: Some(url),
         webdav_username: Some(username),

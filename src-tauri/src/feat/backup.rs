@@ -29,9 +29,9 @@ pub struct LocalBackupFile {
 
 /// Reloads restored configs into memory while preserving WebDAV credentials.
 async fn finalize_restored_verge_config(
-    webdav_url: Option<String>,
-    webdav_username: Option<String>,
-    webdav_password: Option<String>,
+    webdav_url: Option<tristr::alias::String>,
+    webdav_username: Option<tristr::alias::String>,
+    webdav_password: Option<tristr::alias::String>,
 ) -> Result<()> {
     let config_write = Config::lock_config_write().await;
 

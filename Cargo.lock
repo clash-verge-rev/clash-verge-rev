@@ -1155,6 +1155,7 @@ dependencies = [
  "tokio-rustls",
  "tokio-util",
  "tracing",
+ "tristr",
  "warp",
  "webpki-roots",
  "windows 0.62.2",
@@ -8575,6 +8576,15 @@ dependencies = [
  "arc-swap",
  "serde",
  "stable_deref_trait",
+]
+
+[[package]]
+name = "tristr"
+version = "0.1.0"
+source = "git+https://github.com/Tunglies/tristr?rev=3756ed1a77dc930cae1192e9cd5223154e22d5bc#3756ed1a77dc930cae1192e9cd5223154e22d5bc"
+dependencies = [
+ "serde",
+ "specta",
 ]
 
 [[package]]

@@ -454,7 +454,7 @@ impl Tray {
     }
 }
 
-fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<&str, &str> {
+fn create_hotkeys(hotkeys: &Option<Vec<tristr::alias::String>>) -> HashMap<&str, &str> {
     hotkeys.as_ref().map_or_default(|h| {
         h.iter()
             .filter_map(|item| {

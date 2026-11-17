@@ -26,10 +26,10 @@ use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::{Mapping, Value};
-use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash as _, Hasher as _};
 use tokio::fs;
+use tristr::alias::String;
 
 type ResultLog = Vec<(String, String)>;
 #[derive(Debug)]

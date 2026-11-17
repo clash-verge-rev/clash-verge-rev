@@ -164,7 +164,7 @@ impl Timer {
                     && cur_timestamp - (updated as i64) >= (interval as i64) * 60
                 {
                     logging!(info, Type::Timer, "Running overdue timer task immediately: uid={}", uid);
-                    let _ = self.command_tx.send(TimerCommand::RunNow(uid.clone()));
+                    let _ = self.command_tx.send(TimerCommand::RunNow(uid.as_str().into()));
                 }
             }
         }
@@ -221,7 +221,7 @@ impl Timer {
                 && option.allow_auto_update.unwrap_or(true)
                 && interval > 0
             {
-                new_map.insert(uid.clone(), TaskSchedule::new(interval, item.updated, now));
+                new_map.insert(uid.as_str().into(), TaskSchedule::new(interval, item.updated, now));
             }
         }
 

@@ -92,8 +92,8 @@ impl WebDavClient {
                         .unwrap_or_default()
                         .trim_end_matches('/')
                         .into(),
-                    username: verge.webdav_username.clone().unwrap_or_default(),
-                    password: verge.webdav_password.clone().unwrap_or_default(),
+                    username: verge.webdav_username.clone().unwrap_or_default().as_str().into(),
+                    password: verge.webdav_password.clone().unwrap_or_default().as_str().into(),
                 };
 
                 self.config.store(Some(Arc::new(config.clone())));

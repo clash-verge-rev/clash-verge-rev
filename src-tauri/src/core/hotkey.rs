@@ -7,7 +7,6 @@ use crate::{config::Config, core::handle, core::lightweight::entry_lightweight_m
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use std::{
     collections::HashMap,
     fmt,
@@ -105,7 +104,7 @@ impl SystemHotkey {
 }
 
 pub struct Hotkey {
-    current: ArcSwap<Vec<String>>,
+    current: ArcSwap<Vec<tristr::alias::String>>,
 }
 
 impl Hotkey {
@@ -400,7 +399,7 @@ impl Hotkey {
         Ok(())
     }
 
-    pub async fn update(&self, new_hotkeys: Vec<String>) -> Result<()> {
+    pub async fn update(&self, new_hotkeys: Vec<tristr::alias::String>) -> Result<()> {
         // Extract current hotkeys before async operations
         let current_hotkeys = &*self.current.load();
         let old_map = Self::get_map_from_vec(current_hotkeys);
@@ -421,7 +420,7 @@ impl Hotkey {
         Ok(())
     }
 
-    fn get_map_from_vec(hotkeys: &[String]) -> HashMap<&str, &str> {
+    fn get_map_from_vec(hotkeys: &[tristr::alias::String]) -> HashMap<&str, &str> {
         let mut map = HashMap::new();
 
         hotkeys.iter().for_each(|hotkey| {

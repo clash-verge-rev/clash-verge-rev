@@ -130,7 +130,10 @@ async fn should_update_profile(uid: &str, ignore_auto_update: bool) -> Result<Op
             )
         );
         Ok(Some((
-            item.url.clone().ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?,
+            item.url
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))
+                .map(|u| u.as_str().into())?,
             item.option.clone(),
         )))
     }
@@ -151,7 +154,7 @@ async fn perform_profile_update(
         .get_item(uid)
         .ok()
         .and_then(|item| item.name.clone())
-        .unwrap_or_else(|| String::from("UnKnown Profile"));
+        .unwrap_or_else(|| tristr::alias::String::from("UnKnown Profile"));
 
     #[derive(Clone, Copy)]
     enum Strategy {

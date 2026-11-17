@@ -38,7 +38,7 @@ pub async fn get_runtime_logs() -> CmdResult<RuntimeLogs> {
 #[serde(transparent)]
 pub struct RuntimeLogs(
     #[specta(type = HashMap<std::string::String, Vec<(std::string::String, std::string::String)>>)]
-    HashMap<String, Vec<(String, String)>>,
+    HashMap<tristr::alias::String, Vec<(tristr::alias::String, tristr::alias::String)>>,
 );
 
 #[tauri::command]
