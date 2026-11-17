@@ -42,9 +42,12 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
         }
         NotificationEvent::ClashModeChanged { mode } => {
             let title = clash_verge_i18n::t!("notifications.clashModeChanged.title");
-            let body = clash_verge_i18n::t!("notifications.clashModeChanged.body")
-                .replace("{mode}", mode)
-                .into();
+            let body = clash_verge_i18n::t!("notifications.clashModeChanged.body");
+            let body = if body.contains("{mode}") {
+                body.replace("{mode}", mode).into()
+            } else {
+                body
+            };
             notify(title, body);
         }
         NotificationEvent::SystemProxyToggled(enabled) => {

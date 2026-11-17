@@ -342,9 +342,6 @@ impl Tray {
         let verge = Config::verge().await.data_arc();
         let app_handle = handle::Handle::app_handle();
         self.update_menu_internal(app_handle, false).await?;
-        AsyncHandler::spawn(|| async {
-            logging_error!(Type::Tray, Self::global().update_menu().await);
-        });
         self.update_icon(&verge).await?;
         #[cfg(target_os = "macos")]
         self.update_speed_task(verge.enable_tray_speed.unwrap_or(false));

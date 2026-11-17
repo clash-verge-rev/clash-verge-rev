@@ -123,7 +123,7 @@ pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
 }
 
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
-    let name = filename.to_string();
+    let name = filename.clone();
     backup::WebDavClient::global().delete(filename).await.map_err(|err| {
         logging!(
             error,
@@ -165,7 +165,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let backup_storage_path = app_home_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get app home dir: {e}"))?
         .join(filename.as_str());
-    let name = filename.to_string();
+    let name = filename.clone();
     backup::WebDavClient::global()
         .download(filename, backup_storage_path.clone())
         .await
