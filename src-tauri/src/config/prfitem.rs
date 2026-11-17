@@ -273,7 +273,7 @@ impl PrfItem {
                 url.as_str(),
                 proxy_type,
                 Some(timeout),
-                user_agent.as_ref().map(|ua| ua.as_str().into()),
+                user_agent.clone(),
                 accept_invalid_certs,
             )
             .await

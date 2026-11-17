@@ -1,8 +1,8 @@
 use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
-use smartstring::alias::String;
 use tauri::Url;
+use tristr::alias::String;
 
 use crate::{
     config::{Config, PrfItem, profiles},
@@ -113,8 +113,7 @@ async fn import_subscription(url: &str, name: Option<&String>) {
 }
 
 async fn fetch_profile_item(url: &str, name: Option<&String>) -> Option<PrfItem> {
-    let name = name.map(|n| tristr::alias::String::from(n.as_str()));
-    match PrfItem::from_url(url, name.as_ref(), None, None).await {
+    match PrfItem::from_url(url, name, None, None).await {
         Ok(item) => Some(item),
         Err(e) => {
             logging!(error, Type::Config, "failed to parse profile from url: {:?}", e);
