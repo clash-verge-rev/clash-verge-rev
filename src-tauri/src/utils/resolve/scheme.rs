@@ -1,8 +1,8 @@
 use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
-use smartstring::alias::String;
 use tauri::Url;
+use tristr::alias::String;
 
 use crate::{
     config::{Config, PrfItem, profiles},

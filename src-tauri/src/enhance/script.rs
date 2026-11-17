@@ -6,8 +6,8 @@ use boa_engine::{Context, JsString, JsValue, Source, js_string, native_function:
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use std::sync::Arc;
+use tristr::alias::String;
 
 const MAX_OUTPUTS: usize = 1000;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024; // 1MB

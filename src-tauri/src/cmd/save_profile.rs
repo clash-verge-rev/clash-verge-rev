@@ -11,8 +11,8 @@ use crate::{
     utils::dirs,
 };
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 /// 保存profiles的配置
 #[tauri::command]

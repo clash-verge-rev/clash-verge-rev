@@ -1,13 +1,13 @@
 use super::NoticeStatus;
 use crate::{APP_HANDLE, singleton};
-#[cfg(target_os = "macos")]
-use smartstring::alias::String;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
 use tauri::AppHandle;
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
+#[cfg(target_os = "macos")]
+use tristr::alias::String;
 
 use super::notification::{FrontendEvent, NotificationSystem};
 

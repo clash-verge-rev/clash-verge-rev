@@ -84,9 +84,8 @@ reqwest = { version = "0.13.5", features = [
 ] }
 rust_iso3166 = "0.2.0"
 
-smartstring = { version = "2.0.0" }
-
 serde = { version = "1.0.229" }
+tristr = { git = "https://github.com/Tunglies/tristr", rev = "3738d8c5785d609674c5f4f05def26b94724200c", default-features = false, features = ["serde", "specta"] }
 serde_json = { version = "1.0.154" }
 serde_yaml_ng = { version = "0.10.0" }
 socket2 = "0.6.5"

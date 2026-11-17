@@ -7,7 +7,6 @@ use crate::{
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
-use smartstring::alias::String;
 use std::{
     mem::DropGuard,
     sync::{
@@ -18,6 +17,7 @@ use std::{
 };
 use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tokio::sync::Mutex as TokioMutex;
+use tristr::alias::String;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum ProxyApplyStep {
