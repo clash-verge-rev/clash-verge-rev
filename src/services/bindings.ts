@@ -83,6 +83,8 @@ export const commands = {
     __TAURI_INVOKE<null>('record_selected_node', { groupName, node }),
   switchProxyNode: (groupName: string, proxyName: string, unfix: boolean) =>
     __TAURI_INVOKE<null>('switch_proxy_node', { groupName, proxyName, unfix }),
+  followProxyGroup: (groupName: string) =>
+    __TAURI_INVOKE<void>('follow_proxy_group', { groupName }),
   saveDnsConfig: (dnsConfig: YamlMapping) =>
     __TAURI_INVOKE<null>('save_dns_config', { dnsConfig }),
   applyDnsConfig: (apply: boolean) =>

@@ -137,6 +137,21 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) 
     {
         stale_proxies.push(left);
     }
+    finish_proxy_switch(stale_proxies).await;
+    Ok(())
+}
+
+/// Lets a `url-test`/`fallback` group carry rule traffic without fixing a node in it.
+pub async fn follow_proxy_group(group_name: &str) {
+    let Some(left) = follow_group_selection(group_name).await else {
+        return;
+    };
+    let auto_close = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
+    finish_proxy_switch(auto_close.then_some(left).into_iter().collect()).await;
+}
+
+async fn finish_proxy_switch(stale_proxies: Vec<std::string::String>) {
+    let mihomo = handle::Handle::mihomo();
     announce(Refresh::Proxies);
 
     if !stale_proxies.is_empty() {
@@ -179,7 +194,6 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) 
             "Failed to refresh tray after switching proxy: {err:#}"
         );
     }
-    Ok(())
 }
 
 async fn should_update_profile(uid: &str, ignore_auto_update: bool) -> Result<Option<(String, Option<PrfOption>)>> {
