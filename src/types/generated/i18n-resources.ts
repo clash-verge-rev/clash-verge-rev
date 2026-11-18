@@ -1123,6 +1123,7 @@ export interface TranslationResources {
             autoDelayDetection: string
             autoDelayDetectionInterval: string
             autoLogClean: string
+            autoSwitchSelectorGroup: string
             defaultLatencyTest: string
             defaultLatencyTimeout: string
             enableBuiltinEnhanced: string
@@ -1141,6 +1142,7 @@ export interface TranslationResources {
           tooltips: {
             autoCloseConnections: string
             autoDelayDetection: string
+            autoSwitchSelectorGroup: string
             defaultLatencyTest: string
             enableBuiltinEnhanced: string
           }

@@ -55,6 +55,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 新增连接页面按网络协议（TCP/UDP）筛选连接
+- 新增规则模式下在 `url-test` 或 `fallback` 代理组选节点时，自动将首个包含该组的 `select` 代理组切换到该组，可在「杂项设置」关闭
 
 </details>
 
