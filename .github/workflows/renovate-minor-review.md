@@ -33,7 +33,9 @@ max-ai-credits: 60
 max-turns: 12
 max-daily-ai-credits: 500
 network:
-  allowed: [github, docs.rs, doc.rust-lang.org, nodejs.org, www.typescriptlang.org]
+  # GitHub CLI recommend using ecosystem identifiers instead of individual domain names for better maintainability,
+  # hence "node" is prefer than "nodejs.org"
+  allowed: [github, docs.rs, doc.rust-lang.org, node, www.typescriptlang.org]
 steps:
   - name: Load trusted metadata parser
     uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
