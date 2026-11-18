@@ -30,6 +30,10 @@ max-ai-credits: 60
 max-turns: 12
 max-daily-ai-credits: 5000
 
+# Routine, low-risk tasks such as triage, labeling, and summaries.
+# See https://github.github.com/gh-aw/reference/model-routing/#setting-the-level-yourself
+model: router/economy
+
 permissions:
   issues: read
   pull-requests: read
