@@ -418,13 +418,15 @@
         "autoDelayDetection": "자동 지연 감지",
         "autoDelayDetectionInterval": "자동 지연 감지 간격",
         "defaultLatencyTest": "기본 지연 테스트",
-        "defaultLatencyTimeout": "기본 지연 제한시간"
+        "defaultLatencyTimeout": "기본 지연 제한시간",
+        "testFilteredNodesOnly": "필터링된 노드만 테스트"
       },
       "tooltips": {
         "autoCloseConnections": "프록시 그룹 선택 또는 프록시 모드 변경 시 기존 연결을 종료합니다",
         "enableBuiltinEnhanced": "구성 파일에 대한 호환성 처리를 수행합니다",
         "autoDelayDetection": "백그라운드에서 현재 노드의 지연을 주기적으로 검사합니다",
-        "defaultLatencyTest": "HTTP 클라이언트 요청 테스트에만 사용되며 구성 파일에는 영향을 주지 않습니다"
+        "defaultLatencyTest": "HTTP 클라이언트 요청 테스트에만 사용되며 구성 파일에는 영향을 주지 않습니다",
+        "testFilteredNodesOnly": "수동 지연 시간 테스트는 필터와 일치하는 노드만 대상으로 합니다. 필터가 없으면 그룹 전체를 테스트합니다."
       },
       "options": {
         "proxyLayoutColumns": {

@@ -418,13 +418,15 @@
         "autoDelayDetection": "Deteksi Latensi Otomatis",
         "autoDelayDetectionInterval": "Interval Deteksi Latensi Otomatis",
         "defaultLatencyTest": "Tes Latensi Default",
-        "defaultLatencyTimeout": "Waktu Habis Latensi Default"
+        "defaultLatencyTimeout": "Waktu Habis Latensi Default",
+        "testFilteredNodesOnly": "Uji Hanya Node Terfilter"
       },
       "tooltips": {
         "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
         "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
         "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
-        "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"
+        "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi",
+        "testFilteredNodesOnly": "Uji latensi manual hanya mencakup node yang sesuai dengan filter. Tanpa filter, seluruh grup diuji."
       },
       "options": {
         "proxyLayoutColumns": {

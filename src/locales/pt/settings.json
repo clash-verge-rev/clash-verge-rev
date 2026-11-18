@@ -418,13 +418,15 @@
         "autoDelayDetection": "Detecção Automática de Atraso",
         "autoDelayDetectionInterval": "Intervalo da Detecção Automática de Atraso",
         "defaultLatencyTest": "Teste de Latência Padrão",
-        "defaultLatencyTimeout": "Tempo Limite de Latência Padrão"
+        "defaultLatencyTimeout": "Tempo Limite de Latência Padrão",
+        "testFilteredNodesOnly": "Testar apenas nós filtrados"
       },
       "tooltips": {
         "autoCloseConnections": "Encerra as conexões estabelecidas quando a seleção do grupo de proxy ou o modo de proxy muda",
         "enableBuiltinEnhanced": "Tratamento de compatibilidade para o arquivo de configuração",
         "autoDelayDetection": "Testa periodicamente a latência do nó atual em segundo plano",
-        "defaultLatencyTest": "Usado apenas para testes de requisição do cliente HTTP e não afeta o arquivo de configuração"
+        "defaultLatencyTest": "Usado apenas para testes de requisição do cliente HTTP e não afeta o arquivo de configuração",
+        "testFilteredNodesOnly": "Os testes manuais de latência incluem apenas os nós filtrados. Sem filtro, todo o grupo é testado."
       },
       "options": {
         "proxyLayoutColumns": {

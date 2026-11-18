@@ -114,6 +114,8 @@ pub struct IVerge {
 
     pub default_latency_timeout: Option<i16>,
 
+    pub proxy_test_filtered_nodes_only: Option<bool>,
+
     pub enable_auto_delay_detection: Option<bool>,
 
     /// 自动检测当前节点延迟的间隔（分钟）
@@ -369,6 +371,7 @@ impl IVerge {
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
+            proxy_test_filtered_nodes_only: Some(false),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
@@ -459,6 +462,7 @@ impl IVerge {
         patch_opt_field!(self, patch, auto_check_update);
         patch_opt_field!(self, patch, default_latency_test);
         patch_opt_field!(self, patch, default_latency_timeout);
+        patch_opt_field!(self, patch, proxy_test_filtered_nodes_only);
         patch_opt_field!(self, patch, enable_auto_delay_detection);
         patch_opt_field!(self, patch, auto_delay_detection_interval_minutes);
         patch_opt_field!(self, patch, enable_builtin_enhanced);
