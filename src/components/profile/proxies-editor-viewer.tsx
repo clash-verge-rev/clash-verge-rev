@@ -123,7 +123,7 @@ export const ProxiesEditorViewer = (props: Props) => {
           proxy={item}
           onDelete={() => {
             if (isDeleted) {
-              setDeleteSeq(deleteSeq.filter((v) => v !== item.name))
+              setDeleteSeq((prev) => prev.filter((v) => v !== item.name))
             } else {
               setDeleteSeq((prev) => [...prev, item.name])
             }
@@ -138,7 +138,7 @@ export const ProxiesEditorViewer = (props: Props) => {
           type="prepend"
           proxy={item}
           onDelete={() => {
-            setPrependSeq(prependSeq.filter((v) => v.name !== item.name))
+            setPrependSeq((prev) => prev.filter((v) => v.name !== item.name))
           }}
         />
       )
@@ -149,7 +149,7 @@ export const ProxiesEditorViewer = (props: Props) => {
         type="append"
         proxy={item}
         onDelete={() => {
-          setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+          setAppendSeq((prev) => prev.filter((v) => v.name !== item.name))
         }}
       />
     )
@@ -160,21 +160,22 @@ export const ProxiesEditorViewer = (props: Props) => {
     activeIndex: number,
     overIndex: number,
   ) => {
-    const list = category === 'prepend' ? prependSeq : appendSeq
-    const filtered =
-      category === 'prepend' ? filteredPrependSeq : filteredAppendSeq
     const setList = category === 'prepend' ? setPrependSeq : setAppendSeq
-    const activeRealIndex = findRealIndex(list, filtered, activeIndex)
-    const overRealIndex = findRealIndex(list, filtered, overIndex)
-    if (
-      activeRealIndex < 0 ||
-      overRealIndex < 0 ||
-      activeRealIndex === overRealIndex
-    ) {
-      return
-    }
+    // Recompute inside the updater: two writes in one batch must not read the same pre-batch array.
+    setList((prev) => {
+      const filtered = prev.filter((v) => hasValidName(v) && match(v.name))
+      const activeRealIndex = findRealIndex(prev, filtered, activeIndex)
+      const overRealIndex = findRealIndex(prev, filtered, overIndex)
+      if (
+        activeRealIndex < 0 ||
+        overRealIndex < 0 ||
+        activeRealIndex === overRealIndex
+      ) {
+        return prev
+      }
 
-    setList(arrayMove(list, activeRealIndex, overRealIndex))
+      return arrayMove(prev, activeRealIndex, overRealIndex)
+    })
   }
 
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
