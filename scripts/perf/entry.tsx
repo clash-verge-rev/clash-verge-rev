@@ -2,6 +2,8 @@ import { layer, scenario, startReplay } from './replay'
 
 if (scenario === 'traffic') {
   await import('./traffic')
+} else if (scenario === 'proxy') {
+  await import('./proxy')
 } else {
   const root = document.getElementById('root')!
   document.body.style.cssText = 'margin:0;font:14px -apple-system,sans-serif'
