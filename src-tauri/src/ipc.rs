@@ -75,6 +75,8 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::patch_profile,
             cmd::create_profile,
             cmd::import_profile,
+            cmd::export_profile_bundle,
+            cmd::import_profile_bundle,
             cmd::reorder_profile,
             cmd::update_profile,
             cmd::delete_profile,

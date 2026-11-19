@@ -11,6 +11,7 @@ import {
   ClearRounded,
   ContentPasteRounded,
   DeleteRounded,
+  FolderZipOutlined,
   IndeterminateCheckBoxRounded,
   LocalFireDepartmentRounded,
   RefreshRounded,
@@ -32,6 +33,7 @@ import {
   BaseStyledTextField,
   type DialogRef,
 } from '@/components/base'
+import { ProfileBundleDialog } from '@/components/profile/profile-bundle-dialog'
 import { ProfileItem } from '@/components/profile/profile-item'
 import { ProfileMore } from '@/components/profile/profile-more'
 import {
@@ -83,6 +85,7 @@ const ProfilePage = () => {
   const { t } = useTranslation()
   const location = useLocation()
   const [url, setUrl] = useState('')
+  const [bundleOpen, setBundleOpen] = useState(false)
   const [profileDndRevision, setProfileDndRevision] = useState(0)
   const [activatings, setActivatings] = useState<string[]>([])
   const [switchTarget, setSwitchTarget] = useState<string | null>(null)
@@ -686,7 +689,11 @@ const ProfilePage = () => {
     <BasePage
       full
       title={t('profiles.page.title')}
-      contentStyle={{ height: '100%' }}
+      contentStyle={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
       header={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {!batchMode ? (
@@ -798,16 +805,19 @@ const ProfilePage = () => {
       <Stack
         direction="row"
         spacing={1}
+        useFlexGap
         sx={{
           pt: 1,
           mb: 0.5,
           mx: '10px',
-          height: '36px',
-          display: 'flex',
+          minHeight: '36px',
+          flexShrink: 0,
+          flexWrap: 'wrap',
           alignItems: 'center',
         }}
       >
         <BaseStyledTextField
+          style={{ flex: '1 1 200px', width: 'auto', minWidth: 0 }}
           value={url}
           variant="outlined"
           onChange={(e) => setUrl(e.target.value)}
@@ -847,31 +857,43 @@ const ProfilePage = () => {
             },
           }}
         />
-        <Button
-          disabled={!url}
-          loading={loading}
-          variant="contained"
-          size="small"
-          sx={{ borderRadius: '6px' }}
-          onClick={onImport}
-        >
-          {t('profiles.page.actions.import')}
-        </Button>
-        <Button
-          variant="contained"
-          size="small"
-          sx={{ borderRadius: '6px' }}
-          onClick={() => viewerRef.current?.create()}
-        >
-          {t('shared.actions.new')}
-        </Button>
+        <Stack direction="row" spacing={1} sx={{ flexShrink: 0, ml: 'auto' }}>
+          <Button
+            variant="contained"
+            size="small"
+            disabled={!url}
+            loading={loading}
+            onClick={onImport}
+            sx={{ borderRadius: '6px', px: 2, whiteSpace: 'nowrap' }}
+          >
+            {t('profiles.page.actions.import')}
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ borderRadius: '6px', px: 2, whiteSpace: 'nowrap' }}
+            onClick={() => viewerRef.current?.create()}
+          >
+            {t('shared.actions.new')}
+          </Button>
+        </Stack>
       </Stack>
+      <Button
+        variant="text"
+        size="small"
+        startIcon={<FolderZipOutlined />}
+        sx={{ alignSelf: 'flex-end', mr: '10px', mb: 0.5, flexShrink: 0 }}
+        onClick={() => setBundleOpen(true)}
+      >
+        {t('profiles.bundle.import')}
+      </Button>
 
       <Box
         sx={{
           pl: '10px',
           pr: '10px',
-          height: 'calc(100% - 48px)',
+          flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
         }}
       >
@@ -970,6 +992,9 @@ const ProfilePage = () => {
           }
         }}
       />
+      {bundleOpen && (
+        <ProfileBundleDialog onClose={() => setBundleOpen(false)} />
+      )}
       <ConfigViewer ref={configRef} />
     </BasePage>
   )

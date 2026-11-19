@@ -36,6 +36,25 @@ fn profile_import_error(err: &anyhow::Error) -> std::string::String {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn export_profile_bundle(index: std::string::String, destination: std::string::String) -> CmdResult {
+    crate::config::profile_bundle::export_profile_bundle(&index, std::path::Path::new(&destination))
+        .await
+        .with_error_code("PROFILE_EXPORT_FAILED")
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn import_profile_bundle(source: std::string::String) -> CmdResult {
+    crate::config::profile_bundle::import_profile_bundle(std::path::Path::new(&source))
+        .await
+        .with_error_code("PROFILE_IMPORT_FAILED")?;
+    logging_error!(Type::Timer, Timer::global().refresh().await);
+    crate::core::notify::announce(crate::core::notify::Refresh::Profiles);
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn get_profiles() -> CmdResult<SharedDraft<IProfiles>> {
     let draft = Config::profiles().await;
     let data = draft.data_arc();

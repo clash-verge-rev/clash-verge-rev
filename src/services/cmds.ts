@@ -78,6 +78,14 @@ export async function importProfile(url: string, option?: IProfileOption) {
   return commands.importProfile(url, option || { with_proxy: true })
 }
 
+export async function exportProfileBundle(index: string, destination: string) {
+  return commands.exportProfileBundle(index, destination)
+}
+
+export async function importProfileBundle(source: string) {
+  return commands.importProfileBundle(source)
+}
+
 export async function reorderProfile(activeId: string, overId: string) {
   return commands.reorderProfile(activeId, overId)
 }

@@ -55,6 +55,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 新增连接页面按网络协议（TCP/UDP）筛选连接
+- 新增单个订阅及其绑定扩展的导出与导入，方便在设备间迁移
 
 </details>
 

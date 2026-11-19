@@ -217,5 +217,15 @@
     "qrViewer": {
       "title": "Subscription QR Code"
     }
+  },
+  "bundle": {
+    "import": "匯入訂閱包",
+    "export": "匯出訂閱包",
+    "fileType": "訂閱包",
+    "credentialsNotice": "訂閱包包含訂閱網址、節點憑證及綁定擴充（包括指令碼）。請妥善保管，並僅匯入可信來源的訂閱包。",
+    "activationNotice": "匯入只會新增訂閱，不會切換。手動啟用時，其指令碼會與本機全域擴充一起參與組態產生。包內不含引用的外部檔案。",
+    "imported": "訂閱包已匯入，可手動選擇新訂閱使用",
+    "exported": "訂閱包已匯出",
+    "exportFailed": "匯出訂閱包失敗"
   }
 }

@@ -145,6 +145,10 @@ export const commands = {
     __TAURI_INVOKE<null>('create_profile', { item, fileData }),
   importProfile: (url: string, option: PrfOption_Deserialize | null) =>
     __TAURI_INVOKE<null>('import_profile', { url, option }),
+  exportProfileBundle: (index: string, destination: string) =>
+    __TAURI_INVOKE<null>('export_profile_bundle', { index, destination }),
+  importProfileBundle: (source: string) =>
+    __TAURI_INVOKE<null>('import_profile_bundle', { source }),
   reorderProfile: (activeId: string, overId: string) =>
     __TAURI_INVOKE<null>('reorder_profile', { activeId, overId }),
   updateProfile: (index: string, option: PrfOption_Deserialize | null) =>

@@ -28,6 +28,8 @@ pub async fn save_profile_file(
         None => return Ok(ValidationOutcome::Valid),
     };
 
+    let _profile_write_guard = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
+
     let backup_trigger = match index.as_str() {
         "Merge" => Some(AutoBackupTrigger::GlobalMerge),
         "Script" => Some(AutoBackupTrigger::GlobalScript),

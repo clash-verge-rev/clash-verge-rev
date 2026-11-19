@@ -264,6 +264,16 @@ export interface TranslationResources {
       }
     }
     profiles: {
+      bundle: {
+        activationNotice: string
+        credentialsNotice: string
+        export: string
+        exported: string
+        exportFailed: string
+        fileType: string
+        import: string
+        imported: string
+      }
       components: {
         card: {
           labels: {

@@ -54,6 +54,7 @@ import parseTraffic from '@/utils/parse-traffic'
 
 import { EnhanceHint } from './enhance-hint'
 import { ProfileBox } from './profile-box'
+import { ProfileBundleDialog } from './profile-bundle-dialog'
 import { ProxiesEditorViewer } from './proxies-editor-viewer'
 import { QrViewer } from './qr-viewer'
 const round = keyframes`
@@ -108,6 +109,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   })
 
   const { t } = useTranslation()
+  const [bundleOpen, setBundleOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const loadingCache = useProfileLoadingCache()
@@ -435,6 +437,15 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     delete: 'shared.actions.delete',
   } as const
 
+  const exportMenuItem: ContextMenuItem = {
+    label: 'profiles.bundle.export',
+    handler: () => {
+      setAnchorEl(null)
+      setBundleOpen(true)
+    },
+    disabled: false,
+  }
+
   const urlModeMenu: ContextMenuItem[] = [
     ...(hasHome
       ? [
@@ -490,6 +501,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       handler: onEditScript,
       disabled: !option?.script,
     },
+    exportMenuItem,
     {
       label: menuLabels.openFile,
       handler: onOpenFile,
@@ -561,6 +573,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       handler: onEditScript,
       disabled: !option?.script,
     },
+    exportMenuItem,
     {
       label: menuLabels.openFile,
       handler: onOpenFile,
@@ -877,6 +890,12 @@ const ProfileItemBase = (props: ProfileItemProps) => {
           </MenuItem>
         ))}
       </Menu>
+      {bundleOpen && (
+        <ProfileBundleDialog
+          profile={{ uid: uid!, name: name ?? 'Profile' }}
+          onClose={() => setBundleOpen(false)}
+        />
+      )}
       {fileOpen && (
         <EditorViewer
           open={true}

@@ -6,6 +6,7 @@ mod encrypt;
 mod mixed_port;
 mod port;
 mod prfitem;
+pub(crate) mod profile_bundle;
 pub mod profiles;
 pub mod runtime;
 pub(crate) mod snapshot;

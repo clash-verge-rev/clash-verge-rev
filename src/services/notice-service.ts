@@ -72,6 +72,7 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   PROFILE_DELETE_FAILED: 'profiles.page.feedback.errors.deleteFailed',
   PROFILE_ENHANCE_FAILED: 'profiles.page.feedback.errors.enhanceFailed',
   PROFILE_IMPORT_FAILED: 'profiles.page.feedback.errors.importFailed',
+  PROFILE_EXPORT_FAILED: 'profiles.bundle.exportFailed',
   PROFILE_OPEN_FAILED: 'profiles.page.feedback.errors.openFailed',
   PROFILE_READ_FAILED: 'profiles.page.feedback.errors.readFailed',
   PROFILE_REORDER_FAILED: 'profiles.page.feedback.errors.reorderFailed',

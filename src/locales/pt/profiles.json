@@ -217,5 +217,15 @@
     "qrViewer": {
       "title": "QR Code da assinatura"
     }
+  },
+  "bundle": {
+    "import": "Import Bundle",
+    "export": "Export Bundle",
+    "fileType": "Subscription Bundle",
+    "credentialsNotice": "The bundle includes the subscription URL, node credentials and bound extensions, including scripts. Keep it private and only import bundles you trust.",
+    "activationNotice": "The subscription is added without switching. Its scripts run when you activate it, together with this device's global extensions. External files are not included.",
+    "imported": "Subscription bundle imported. Select the new subscription when ready.",
+    "exported": "Subscription bundle exported",
+    "exportFailed": "Failed to export subscription bundle"
   }
 }
