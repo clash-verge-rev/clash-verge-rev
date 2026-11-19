@@ -1,6 +1,13 @@
 import { styled } from '@mui/material/styles'
 import { default as MuiSwitch, SwitchProps } from '@mui/material/Switch'
 
+/**
+ * MUI Switch delivers the boolean as the second onChange argument, so
+ * switch handlers use this adapter to stay boolean-only.
+ */
+export const switchChangeValue = (_event: unknown, value: boolean): boolean =>
+  value
+
 export const Switch = styled((props: SwitchProps) => (
   <MuiSwitch
     focusVisibleClassName=".Mui-focusVisible"
