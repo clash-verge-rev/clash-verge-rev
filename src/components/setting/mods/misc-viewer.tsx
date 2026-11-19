@@ -22,6 +22,7 @@ const buildInitialValues = (verge?: IVergeConfig | null) => ({
   appLogMaxSize: verge?.app_log_max_size ?? 128,
   appLogMaxCount: verge?.app_log_max_count ?? 8,
   autoCloseConnection: verge?.auto_close_connection ?? true,
+  autoSwitchSelectorGroup: verge?.auto_switch_selector_group ?? true,
   autoCheckUpdate: verge?.auto_check_update ?? true,
   enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
   proxyLayoutColumn: verge?.proxy_layout_column || 6,
@@ -55,6 +56,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         app_log_max_size: values.appLogMaxSize,
         app_log_max_count: values.appLogMaxCount,
         auto_close_connection: values.autoCloseConnection,
+        auto_switch_selector_group: values.autoSwitchSelectorGroup,
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
@@ -197,6 +199,28 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             checked={values.autoCloseConnection}
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCloseConnection: c }))
+            }
+            sx={{ marginLeft: 'auto' }}
+          />
+        </ListItem>
+
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.autoSwitchSelectorGroup"
+          sx={{ padding: '5px 2px' }}
+        >
+          <ListItemText
+            primary={t('settings.modals.misc.fields.autoSwitchSelectorGroup')}
+            sx={{ maxWidth: 'fit-content' }}
+          />
+          <TooltipIcon
+            title={t('settings.modals.misc.tooltips.autoSwitchSelectorGroup')}
+            sx={{ opacity: '0.7' }}
+          />
+          <Switch
+            edge="end"
+            checked={values.autoSwitchSelectorGroup}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, autoSwitchSelectorGroup: c }))
             }
             sx={{ marginLeft: 'auto' }}
           />

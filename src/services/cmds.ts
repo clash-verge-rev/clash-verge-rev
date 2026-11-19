@@ -173,6 +173,10 @@ export async function switchProxyNode(
   return commands.switchProxyNode(groupName, proxyName, unfix)
 }
 
+export async function followProxyGroup(groupName: string) {
+  return commands.followProxyGroup(groupName)
+}
+
 export async function getProxyView(): Promise<ProxyViewV1> {
   const view = await commands.getProxyView()
   if (view.schemaVersion !== 1) {
