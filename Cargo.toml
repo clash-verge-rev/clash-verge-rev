@@ -84,9 +84,8 @@ reqwest = { version = "0.13.5", features = [
 ] }
 rust_iso3166 = "0.2.0"
 
-smartstring = { version = "2.0.0" }
-
 serde = { version = "1.0.229" }
+tristr = { git = "https://github.com/Tunglies/tristr", rev = "3738d8c5785d609674c5f4f05def26b94724200c", default-features = false, features = ["serde", "specta"] }
 serde_json = { version = "1.0.154" }
 serde_yaml_ng = { version = "0.10.0" }
 socket2 = "0.6.5"
@@ -132,6 +131,7 @@ large_const_arrays = "warn"
 large_futures = "deny"
 large_stack_arrays = "warn"
 large_types_passed_by_value = "deny"
+map_unwrap_or = "deny"
 missing_const_for_fn = "deny"
 mutex_atomic = "deny"
 mutex_integer = "deny"

@@ -1,18 +1,15 @@
 use anyhow::Result;
-use nanoid::nanoid;
-use scopeguard::defer;
 use serde::Serialize;
-use smartstring::alias::String;
 use std::{
-    borrow::Cow,
     fmt,
     hash::{DefaultHasher, Hash as _, Hasher as _},
-    path::Path,
+    mem::DropGuard,
     sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
 };
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
+use tristr::alias::String;
 
 use crate::config::Config;
 use crate::core::handle;
@@ -117,14 +114,8 @@ impl fmt::Display for ValidationSkipReason {
 #[serde(tag = "status", rename_all = "camelCase")]
 pub enum ValidationOutcome {
     Valid,
-    Invalid {
-        kind: ValidationErrorKind,
-        #[specta(type = std::string::String)]
-        message: String,
-    },
-    Skipped {
-        reason: ValidationSkipReason,
-    },
+    Invalid { kind: ValidationErrorKind, message: String },
+    Skipped { reason: ValidationSkipReason },
     Busy,
 }
 
@@ -332,7 +323,7 @@ impl CoreConfigValidator {
             Ok(result) => result,
             Err(err) => {
                 logging!(warn, Type::Validate, "无法确定文件类型: {}, 错误: {}", config_path, err);
-                return Self::validate_profile_yaml_outcome(config_path).await;
+                return Self::validate_config_internal_outcome(config_path).await;
             }
         };
 
@@ -347,33 +338,7 @@ impl CoreConfigValidator {
         }
 
         logging!(info, Type::Validate, "使用Clash内核验证配置文件: {}", config_path);
-        Self::validate_profile_yaml_outcome(config_path).await
-    }
-
-    /// The user file is saved as written, so the core checks a copy carrying the tolerated short-ids.
-    async fn validate_profile_yaml_outcome(config_path: &str) -> Result<ValidationOutcome> {
-        let Some(tolerant) = Self::short_id_tolerant_text(config_path).await else {
-            return Self::validate_config_internal_outcome(config_path).await;
-        };
-        let Ok(app_dir) = dirs::app_home_dir() else {
-            return Self::validate_config_internal_outcome(config_path).await;
-        };
-        let check_path = app_dir.join(format!("short-id-check-{}.yaml", nanoid!()));
-        defer! {
-            let _ = std::fs::remove_file(&check_path);
-        }
-        if help::save_yaml_str(&check_path, &tolerant).await.is_err() {
-            return Self::validate_config_internal_outcome(config_path).await;
-        }
-        Self::validate_config_internal_outcome(dirs::path_to_str(&check_path)?).await
-    }
-
-    async fn short_id_tolerant_text(config_path: &str) -> Option<std::string::String> {
-        let yaml = fs::read_to_string(config_path).await.ok()?;
-        match help::short_id_tolerant(&yaml, Path::new(config_path)) {
-            Ok((Cow::Owned(tolerant), _)) => Some(tolerant),
-            _ => None,
-        }
+        Self::validate_config_internal_outcome(config_path).await
     }
 
     async fn validate_config_internal_outcome(config_path: &str) -> Result<ValidationOutcome> {
@@ -450,9 +415,9 @@ impl CoreConfigValidator {
             logging!(info, Type::Validate, "验证已在进行中，跳过新的验证请求");
             return Ok(ValidationOutcome::Busy);
         }
-        defer! {
+        let _validation = DropGuard::new((), |()| {
             self.finish();
-        }
+        });
         logging!(info, Type::Validate, "生成临时配置文件用于验证");
 
         // The test run reads the app dir, which never sees updates made by a service core.
@@ -464,7 +429,7 @@ impl CoreConfigValidator {
         }
 
         let check_path = dirs::app_home_dir()?.join(crate::constants::files::CHECK_CONFIG);
-        help::save_yaml_str(&check_path, yaml).await?;
+        help::save_yaml_str(&check_path, yaml, None).await?;
         let outcome = Self::validate_config_internal_outcome(dirs::path_to_str(&check_path)?).await?;
         if outcome.is_valid() {
             *LAST_VALIDATED.lock() = Some(fingerprint);
@@ -478,8 +443,7 @@ fn has_ext<P: AsRef<std::path::Path>>(path: P, ext: &str) -> bool {
     path.as_ref()
         .extension()
         .and_then(|s| s.to_str())
-        .map(|s| s.eq_ignore_ascii_case(ext))
-        .unwrap_or(false)
+        .is_some_and(|s| s.eq_ignore_ascii_case(ext))
 }
 
 fn contains_any_keyword<'a>(buf: &'a [u8], keywords: &'a [&str]) -> bool {

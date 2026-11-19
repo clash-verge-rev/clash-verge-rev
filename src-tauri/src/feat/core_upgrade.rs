@@ -487,8 +487,8 @@ mod tests {
 
     #[test]
     fn package_urls_pin_the_resolved_version() {
-        let release = package_url(false, "v1.19.30").unwrap_or_default();
-        let alpha = package_url(true, "alpha-c0e43eb").unwrap_or_default();
+        let release = package_url(false, "v1.19.30").unwrap();
+        let alpha = package_url(true, "alpha-c0e43eb").unwrap();
         assert!(release.contains("/releases/download/v1.19.30/"), "{release}");
         assert!(
             release.ends_with("-v1.19.30.gz") || release.ends_with("-v1.19.30.zip"),

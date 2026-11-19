@@ -1,52 +1,29 @@
-import { ThemeProvider, createTheme } from '@mui/material'
-import { useEffect } from 'react'
-import { createRoot } from 'react-dom/client'
-import { SWRConfig } from 'swr'
+import { layer, scenario, startReplay } from './replay'
 
-import { EnhancedCanvasTrafficGraph } from '../../src/components/home/enhanced-canvas-traffic-graph'
-import { useTrafficMonitorEnhanced } from '../../src/hooks/use-traffic-monitor'
-import { initializeLanguage } from '../../src/services/i18n'
-import { setPreloadConfig } from '../../src/services/preload'
-
-setPreloadConfig({
-  pause_render_traffic_stats_on_blur: false,
-} as IVergeConfig)
-await initializeLanguage('en')
-export function Replay() {
-  const {
-    graphData: { appendData },
-  } = useTrafficMonitorEnhanced({ subscribe: false })
-  useEffect(() => {
-    let received = 0,
-      previous = 0,
-      gaps = 0
-    const socket = new WebSocket(
-      `ws://127.0.0.1:${new URLSearchParams(location.search).get('port')}`,
-    )
-    socket.onmessage = ({ data }) => {
-      const point = JSON.parse(data)
-      appendData(point)
-      if (previous && point.sequence !== previous + 1) gaps++
-      previous = point.sequence
-      document.documentElement.dataset.perfReceived = String(++received)
-      document.documentElement.dataset.perfGaps = String(gaps)
-      document.documentElement.dataset.perfSourceTime = String(point.timestamp)
+if (scenario === 'traffic') {
+  await import('./traffic')
+} else {
+  const root = document.getElementById('root')!
+  document.body.style.cssText = 'margin:0;font:14px -apple-system,sans-serif'
+  root.style.cssText = 'width:1000px;height:700px;overflow:hidden'
+  new MutationObserver(() => {
+    document.documentElement.dataset.perfDraw = String(Date.now())
+  }).observe(root, { childList: true, characterData: true, subtree: true })
+  window.addEventListener('error', (event) => {
+    document.documentElement.dataset.perfError = event.message
+  })
+  window.addEventListener('unhandledrejection', (event) => {
+    document.documentElement.dataset.perfError = String(event.reason)
+  })
+  if (layer === 'dom') {
+    const { mount } = await import('./minimal')
+    mount(root)
+  } else {
+    if (layer === 'page') {
+      const { installAdapter } = await import('./adapter')
+      installAdapter()
     }
-    return () => socket.close()
-  }, [appendData])
-  return (
-    <main
-      aria-label="Home traffic graph replay"
-      style={{ width: 920, height: 360, margin: 32 }}
-    >
-      <EnhancedCanvasTrafficGraph />
-    </main>
-  )
+    await import('./scenes')
+  }
+  startReplay()
 }
-createRoot(document.getElementById('root')!).render(
-  <SWRConfig value={{ revalidateOnFocus: false, revalidateOnReconnect: false }}>
-    <ThemeProvider theme={createTheme()}>
-      <Replay />
-    </ThemeProvider>
-  </SWRConfig>,
-)

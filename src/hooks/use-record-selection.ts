@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { forgetSelectedNode, recordSelectedNode } from '@/services/cmds'
+import { recordSelectedNode } from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 
 /**
@@ -16,19 +16,6 @@ export const useRecordSelection = () => {
       })
     } catch (error) {
       console.error('[Selection] 保存代理选择失败:', error)
-    }
-  }, [])
-}
-
-export const useForgetSelection = () => {
-  return useCallback(async (groupName: string) => {
-    try {
-      await mutate(() => forgetSelectedNode(groupName), {
-        id: `persist-selected-node:${groupName}`,
-        errorNotice: false,
-      })
-    } catch (error) {
-      console.error('[Selection] 清除代理选择失败:', error)
     }
   }, [])
 }

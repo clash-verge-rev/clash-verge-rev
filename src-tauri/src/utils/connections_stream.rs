@@ -63,7 +63,7 @@ pub async fn connect_traffic_stream() -> Result<MihomoWsEventStream<TrafficSpeed
         .ws_traffic({
             let message_tx = message_tx.clone();
             move |message| {
-                if let Some(event) = parse_traffic_event(&message) {
+                if let Some(event) = parse_traffic_event(message.as_bytes()) {
                     try_send_internal_event(&message_tx, event);
                 }
             }

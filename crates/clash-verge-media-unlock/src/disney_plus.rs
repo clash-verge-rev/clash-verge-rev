@@ -157,11 +157,10 @@ async fn is_unavailable(client: &Client) -> bool {
         .get("https://disneyplus.com")
         .send()
         .await
-        .map(|response| {
+        .map_or(true, |response| {
             let url = response.url().as_str();
             url.contains("preview") || url.contains("unavailable")
         })
-        .unwrap_or(true)
 }
 
 async fn fallback_region(client: &Client) -> Option<UnlockItem> {

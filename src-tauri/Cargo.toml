@@ -8,7 +8,7 @@ repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 build = "build.rs"
 edition = "2024"
-rust-version = "1.99"
+rust-version = "1.100"
 
 [lib]
 name = "app_lib"
@@ -54,31 +54,31 @@ log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
-smartstring = { workspace = true, features = ["serde"] }
+tristr = { workspace = true }
 socket2 = { workspace = true }
-warp = { version = "0.4.3", features = ["server"] }
+warp = { version = "0.4.4", features = ["server"] }
 open = "5.4.5"
-rfd = { version = "0.17.2", default-features = false, features = ["common-controls-v6"] }
+rfd = { version = "0.18.0", default-features = false, features = ["common-controls-v6", "xdg-portal"] }
 dirs = "7.0.0"
 dunce = "1.0.5"
 nanoid = "0.5"
 chrono = { workspace = true }
 boa_engine = "0.22.0"
-http-body-util = "0.1.4"
+http-body-util = "0.1.5"
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", rev = "2c9d0a538052aac6e44ad413156a6e848da262b9", version = "0.7.2", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.6.0"
-tauri-plugin-opener = "2.7.2"
+tauri-plugin-opener = "2.7.3"
 tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.3.0"
-flate2 = "1.1.10"
+zip = "9.6.0"
+flate2 = "1.1.11"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
 base64 = "0.23.1"
@@ -86,21 +86,20 @@ sha2 = "0.11.1"
 getrandom = "0.4.3"
 futures = "0.3.34"
 gethostname = "1.1.0"
-scopeguard = "1.2.0"
-tauri-plugin-notification = "2.8.0"
+tauri-plugin-notification = "2.8.1"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
-tauri-plugin-http = "2.8.3"
+tauri-plugin-http = "2.9.0"
 tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.2.3", optional = true }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "7a03d16f4d39b1bb885b7babe66b9e153e34b615" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "7e4fa8642cf6c394ed88b5a969420d8eab60087f" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.7.7", version = "2.7.7", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.8.1", version = "2.8.1", features = [
   "client",
 ] }
-arc-swap = "1.9.3"
+arc-swap = "1.9.5"
 tokio-rustls = "0.26.6"
 rustls = { version = "0.23.46", features = ["ring"] }
-webpki-roots = "1.0.11"
+webpki-roots = "1.0.12"
 dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.20", features = ["time"] }
@@ -154,7 +153,7 @@ tauri-plugin-updater = "2.14.1"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
-warp = { version = "0.4.3", features = ["test"] }
+warp = { version = "0.4.4", features = ["test"] }
 
 [lints]
 workspace = true

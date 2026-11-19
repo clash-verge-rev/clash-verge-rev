@@ -1,0 +1,113 @@
+name: Sync Mihomo Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Preview the Changelog diff without creating a PR
+        type: boolean
+        default: true
+  schedule:
+    # UTC+8 Monday 11:30
+    - cron: '30 3 * * 1'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: sync-mihomo-changelog
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.13.1'
+
+      - name: Sync Mihomo version
+        id: sync
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          args=()
+          if [[ "$DRY_RUN" == 'true' ]]; then args+=(--dry-run); fi
+          node scripts/sync-mihomo-version.mjs "${args[@]}"
+
+      - name: Create labeled PR and enqueue
+        if: steps.sync.outputs.changed == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+        uses: actions/github-script@v9
+        env:
+          MIHOMO_VERSION: ${{ steps.sync.outputs.version }}
+        with:
+          script: |
+            const { readFileSync } = await import('node:fs');
+            const { execFileSync } = await import('node:child_process');
+            const { owner, repo } = context.repo;
+            const base = context.payload.repository.default_branch;
+            const version = process.env.MIHOMO_VERSION;
+            const appVersion = JSON.parse(readFileSync('package.json', 'utf8')).version;
+            const branch = `chore/sync-mihomo-${appVersion}-${version}`;
+            const title = `chore: sync Mihomo changelog to ${version}`;
+            const pulls = await github.rest.pulls.list({
+              owner, repo, base, head: `${owner}:${branch}`, state: 'all',
+            });
+            let pr = pulls.data[0];
+            if (pr && (pr.state !== 'open' || pr.user.login !== 'github-actions[bot]')) {
+              throw new Error(`Existing candidate needs maintainer attention: ${pr.html_url}`);
+            }
+            if (!pr) {
+              const sha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+              await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${branch}`, sha });
+              await github.graphql(`mutation($input: CreateCommitOnBranchInput!) {
+                createCommitOnBranch(input: $input) { commit { oid } }
+              }`, {
+                input: {
+                  branch: { repositoryNameWithOwner: `${owner}/${repo}`, branchName: branch },
+                  expectedHeadOid: sha,
+                  message: { headline: title },
+                  fileChanges: { additions: [{
+                    path: 'Changelog.md',
+                    contents: readFileSync('Changelog.md').toString('base64'),
+                  }] },
+                },
+              });
+              ({ data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head: branch, title,
+                body: `## Problem\n\nChangelog.md needs to record the latest stable Mihomo version.\n\n` +
+                  `## Approach\n\nRead the same upstream version.txt used by the core download script.\n\n` +
+                  `## Scope\n\nOnly the Mihomo version line in Changelog.md changes to ${version}.`,
+              }));
+            }
+            for (let attempt = 0; attempt < 10; attempt++) {
+              ({ data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: pr.number }));
+              if (pr.mergeable !== null) break;
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            if (!pr.mergeable) throw new Error(`Sync PR is not mergeable: ${pr.html_url}`);
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: pr.number,
+            });
+            if (files.length !== 1 || files[0].filename !== 'Changelog.md') {
+              throw new Error('The sync PR must change only Changelog.md.');
+            }
+            await github.rest.issues.addLabels({
+              owner, repo, issue_number: pr.number, labels: ['dependencies', 'upstream'],
+            });
+            const result = await github.graphql(`query($id: ID!) {
+              node(id: $id) { ... on PullRequest { mergeQueueEntry { id } } }
+            }`, { id: pr.node_id });
+            if (!result.node.mergeQueueEntry) {
+              await github.graphql(`mutation($input: EnqueuePullRequestInput!) {
+                enqueuePullRequest(input: $input) { mergeQueueEntry { id } }
+              }`, { input: { pullRequestId: pr.node_id, expectedHeadOid: pr.head.sha } });
+            }
+            await core.summary.addRaw(`Queued Mihomo sync PR: ${pr.html_url}\n`).write();

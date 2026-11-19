@@ -43,7 +43,7 @@ interface RenderProps {
   onGroupToggle?: (group: IRenderItem['group']) => void
 }
 
-export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
+const ProxyGroupHeader = (props: RenderProps) => {
   const { t } = useTranslation()
   const {
     item,
@@ -51,11 +51,9 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     onLocation,
     onCheckAll,
     onHeadState,
-    onChangeProxy,
     onGroupToggle,
-    isChainMode: _ = false,
   } = props
-  const { type, group, headState, member, memberCol } = item
+  const { group, headState } = item
   const { verge } = useVerge()
   const enable_group_icon = verge?.enable_group_icon ?? true
   const toolsOnLeft = verge?.proxy_group_tools_position === 'left'
@@ -69,11 +67,187 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     enabled: enable_group_icon,
   })
 
+  const nameBlock = (
+    <ProxyGroupHeaderBlock
+      key="name"
+      group={headerId}
+      block="name"
+      sx={{ flex: '0 1 auto', mr: toolsOnLeft ? 1 : 0 }}
+    >
+      {enable_group_icon && group.icon?.trim().startsWith('http') && (
+        <img
+          src={iconCachePath === '' ? group.icon : iconCachePath}
+          alt={group.name}
+          width="32px"
+          style={{ marginRight: '12px', borderRadius: '6px' }}
+        />
+      )}
+      {enable_group_icon && group.icon?.trim().startsWith('data') && (
+        <img
+          src={group.icon}
+          alt={group.name}
+          width="32px"
+          style={{ marginRight: '12px', borderRadius: '6px' }}
+        />
+      )}
+      {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
+        <img
+          src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
+          alt={group.name}
+          width="32px"
+        />
+      )}
+      <ListItemText
+        sx={{ flex: '0 1 auto', minWidth: 0 }}
+        primary={<StyledPrimary>{group.name}</StyledPrimary>}
+        secondary={
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              pt: '2px',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <Box
+              component="span"
+              sx={{
+                marginTop: '2px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              <StyledTypeBox>{group.type}</StyledTypeBox>
+              <StyledSubtitle sx={{ color: 'text.secondary' }}>
+                {group.now}
+              </StyledSubtitle>
+            </Box>
+          </Box>
+        }
+        slotProps={{
+          secondary: {
+            component: 'div',
+            sx: {
+              display: 'flex',
+              alignItems: 'center',
+              color: '#ccc',
+            },
+          },
+        }}
+      />
+    </ProxyGroupHeaderBlock>
+  )
+
+  const proxyCount = (
+    <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
+      <div
+        style={{
+          minWidth: '50px',
+          display: 'flex',
+          justifyContent: toolsOnLeft ? 'start' : 'end',
+          alignItems: 'center',
+        }}
+      >
+        <Chip
+          size="small"
+          label={`${group.members.length}`}
+          sx={{
+            mr: toolsOnLeft ? 0 : 1,
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
+            color: (theme) => theme.palette.primary.main,
+          }}
+        />
+      </div>
+    </Tooltip>
+  )
+
+  const toolsBlock = (
+    <ProxyGroupHeaderBlock
+      key="tools"
+      group={headerId}
+      block="tools"
+      sx={{
+        flex: '1 1 auto',
+        justifyContent: toolsOnLeft ? 'start' : 'end',
+        mr: toolsOnLeft ? 2 : 0,
+      }}
+    >
+      {toolsOnLeft && proxyCount}
+      <ProxyGroupTools
+        side={toolsOnLeft ? 'left' : 'right'}
+        url={group.testUrl!}
+        groupName={group.name}
+        headState={headState!}
+        onLocation={() => onLocation(group)}
+        onCheckDelay={() => onCheckAll(group.name)}
+        onHeadState={(p) => onHeadState(group.name, p)}
+      />
+      {!toolsOnLeft && proxyCount}
+    </ProxyGroupHeaderBlock>
+  )
+
+  return (
+    <div style={{ padding: '4px 8px' }}>
+      <ListItemButton
+        dense
+        sx={{
+          boxShadow:
+            stickyed && headState?.open
+              ? '0 4px 8px rgba(0, 0, 0, 0.2) !important'
+              : undefined,
+        }}
+        style={{
+          background: itembackgroundcolor,
+          height: '100%',
+          borderRadius: '8px',
+        }}
+        onClick={() => {
+          if (headState?.open) {
+            onGroupToggle?.(group)
+          }
+          onHeadState?.(group.name, { open: !headState?.open })
+        }}
+      >
+        <Box sx={{ width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+            {toolsOnLeft ? toolsBlock : nameBlock}
+            {toolsOnLeft ? nameBlock : toolsBlock}
+            {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+          </Box>
+        </Box>
+      </ListItemButton>
+    </div>
+  )
+}
+
+const ProxyEmptyRow = () => {
+  const { t } = useTranslation()
+  return (
+    <Box
+      sx={{
+        py: 2,
+        pl: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <InboxRounded sx={{ fontSize: '2.5em', color: 'inherit' }} />
+      <Typography sx={{ color: 'inherit' }}>
+        {t('proxies.page.empty.noProxies')}
+      </Typography>
+    </Box>
+  )
+}
+
+export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
+  const { item, onLocation, onCheckAll, onHeadState, onChangeProxy } = props
+  const { type, group, headState, member, memberCol } = item
   const showType = headState?.showType
   const memberColItemsMemo = useMemo(() => {
-    if (type !== 4 || !memberCol) {
-      return null
-    }
+    if (type !== 4 || !memberCol) return null
 
     return memberCol.map((occurrence) => (
       <ProxyItemMini
@@ -87,161 +261,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     ))
   }, [type, memberCol, item.key, group, showType, onChangeProxy])
 
-  if (type === 0) {
-    const nameBlock = (
-      <ProxyGroupHeaderBlock
-        key="name"
-        group={headerId}
-        block="name"
-        sx={{ flex: '0 1 auto', mr: toolsOnLeft ? 1 : 0 }}
-      >
-        {enable_group_icon && group.icon?.trim().startsWith('http') && (
-          <img
-            src={iconCachePath === '' ? group.icon : iconCachePath}
-            alt={group.name}
-            width="32px"
-            style={{ marginRight: '12px', borderRadius: '6px' }}
-          />
-        )}
-        {enable_group_icon && group.icon?.trim().startsWith('data') && (
-          <img
-            src={group.icon}
-            alt={group.name}
-            width="32px"
-            style={{ marginRight: '12px', borderRadius: '6px' }}
-          />
-        )}
-        {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
-          <img
-            src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(group.icon)}`}
-            alt={group.name}
-            width="32px"
-          />
-        )}
-        <ListItemText
-          sx={{ flex: '0 1 auto', minWidth: 0 }}
-          primary={<StyledPrimary>{group.name}</StyledPrimary>}
-          secondary={
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                pt: '2px',
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              <Box
-                component="span"
-                sx={{
-                  marginTop: '2px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                <StyledTypeBox>{group.type}</StyledTypeBox>
-                <StyledSubtitle sx={{ color: 'text.secondary' }}>
-                  {group.now}
-                </StyledSubtitle>
-              </Box>
-            </Box>
-          }
-          slotProps={{
-            secondary: {
-              component: 'div',
-              sx: {
-                display: 'flex',
-                alignItems: 'center',
-                color: '#ccc',
-              },
-            },
-          }}
-        />
-      </ProxyGroupHeaderBlock>
-    )
-
-    const proxyCount = (
-      <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
-        <div
-          style={{
-            minWidth: '50px',
-            display: 'flex',
-            justifyContent: toolsOnLeft ? 'start' : 'end',
-            alignItems: 'center',
-          }}
-        >
-          <Chip
-            size="small"
-            label={`${group.members.length}`}
-            sx={{
-              mr: toolsOnLeft ? 0 : 1,
-              backgroundColor: (theme) =>
-                alpha(theme.palette.primary.main, 0.1),
-              color: (theme) => theme.palette.primary.main,
-            }}
-          />
-        </div>
-      </Tooltip>
-    )
-
-    const toolsBlock = (
-      <ProxyGroupHeaderBlock
-        key="tools"
-        group={headerId}
-        block="tools"
-        sx={{
-          flex: '1 1 auto',
-          justifyContent: toolsOnLeft ? 'start' : 'end',
-          mr: toolsOnLeft ? 2 : 0,
-        }}
-      >
-        {toolsOnLeft && proxyCount}
-        <ProxyGroupTools
-          side={toolsOnLeft ? 'left' : 'right'}
-          url={group.testUrl!}
-          groupName={group.name}
-          headState={headState!}
-          onLocation={() => onLocation(group)}
-          onCheckDelay={() => onCheckAll(group.name)}
-          onHeadState={(p) => onHeadState(group.name, p)}
-        />
-        {!toolsOnLeft && proxyCount}
-      </ProxyGroupHeaderBlock>
-    )
-
-    return (
-      <div style={{ padding: '4px 8px' }}>
-        <ListItemButton
-          dense
-          sx={{
-            boxShadow:
-              stickyed && headState?.open
-                ? '0 4px 8px rgba(0, 0, 0, 0.2) !important'
-                : undefined,
-          }}
-          style={{
-            background: itembackgroundcolor,
-            height: '100%',
-            borderRadius: '8px',
-          }}
-          onClick={() => {
-            if (headState?.open) {
-              onGroupToggle?.(group)
-            }
-            onHeadState?.(group.name, { open: !headState?.open })
-          }}
-        >
-          <Box sx={{ width: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-              {toolsOnLeft ? toolsBlock : nameBlock}
-              {toolsOnLeft ? nameBlock : toolsBlock}
-              {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
-            </Box>
-          </Box>
-        </ListItemButton>
-      </div>
-    )
-  }
+  if (type === 0) return <ProxyGroupHeader {...props} />
 
   if (type === 1) {
     return (
@@ -271,23 +291,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
   }
 
   if (type === 3) {
-    return (
-      <Box
-        sx={{
-          py: 2,
-          pl: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <InboxRounded sx={{ fontSize: '2.5em', color: 'inherit' }} />
-        <Typography sx={{ color: 'inherit' }}>
-          {t('proxies.page.empty.noProxies')}
-        </Typography>
-      </Box>
-    )
+    return <ProxyEmptyRow />
   }
 
   if (type === 4) {

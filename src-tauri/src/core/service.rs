@@ -334,6 +334,12 @@ pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
 
 #[cfg(target_os = "linux")]
 pub(crate) fn trusted_service_evidence() -> Result<bool> {
+    // Without systemd, the installer registers an OpenRC script instead of a unit.
+    if !Path::new("/run/systemd/system").exists() && Path::new("/run/openrc").exists() {
+        return Ok(Path::new("/etc/init.d")
+            .join(clash_verge_service_ipc::SERVICE_SLUG)
+            .exists());
+    }
     let unit = format!("{}.service", clash_verge_service_ipc::SERVICE_SLUG);
     let output = StdCommand::new("systemctl")
         .args(["show", "--property=LoadState", "--value", &unit])
@@ -1470,10 +1476,7 @@ async fn create_sync_temp(target: &Path) -> Result<(PathBuf, tokio::fs::File)> {
             .await
             .with_context(|| format!("failed to create provider cache directory {}", parent.display()))?;
     }
-    let name = target
-        .file_name()
-        .map(|name| name.to_string_lossy())
-        .unwrap_or_default();
+    let name = target.file_name().map_or_default(|name| name.to_string_lossy());
     use crate::utils::retry::{RetryError, RetryPolicy, retry};
     retry(
         RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(7), std::time::Duration::ZERO),

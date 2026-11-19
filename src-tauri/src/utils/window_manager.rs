@@ -234,15 +234,15 @@ impl WindowManager {
     }
 
     pub fn is_main_window_visible(window: Option<&WebviewWindow<Wry>>) -> bool {
-        window.map(|w| w.is_visible().unwrap_or(false)).unwrap_or(false)
+        window.is_some_and(|w| w.is_visible().unwrap_or(false))
     }
 
     pub fn is_main_window_focused(window: Option<&WebviewWindow<Wry>>) -> bool {
-        window.map(|w| w.is_focused().unwrap_or(false)).unwrap_or(false)
+        window.is_some_and(|w| w.is_focused().unwrap_or(false))
     }
 
     fn is_main_window_minimized(window: Option<&WebviewWindow<Wry>>) -> bool {
-        window.map(|w| w.is_minimized().unwrap_or(false)).unwrap_or(false)
+        window.is_some_and(|w| w.is_minimized().unwrap_or(false))
     }
 
     /// Keep new windows hidden until the frontend overlay renders, avoiding a theme flash.

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use smartstring::alias::String;
+use tristr::alias::String;
 
 pub type CmdResult<T = ()> = Result<T, CommandFailure>;
 

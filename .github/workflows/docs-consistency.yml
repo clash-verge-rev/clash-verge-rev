@@ -12,6 +12,7 @@ on:
       - REVIEW.md
       - src/AGENTS.md
       - src-tauri/AGENTS.md
+      - .github/AGENTS.md
       - .github/ISSUE_GUIDELINES.md
       - .github/agents/agentic-workflows.md
       - .github/skills/agentic-workflows/SKILL.md
@@ -30,6 +31,7 @@ on:
       - REVIEW.md
       - src/AGENTS.md
       - src-tauri/AGENTS.md
+      - .github/AGENTS.md
       - .github/ISSUE_GUIDELINES.md
       - .github/agents/agentic-workflows.md
       - .github/skills/agentic-workflows/SKILL.md
@@ -57,7 +59,8 @@ jobs:
           check AGENTS.md 'Issue first'
           check AGENTS.md 'Author accountability'
           check AGENTS.md 'pr-ai-slop-review'
-          check AGENTS.md 'Disclose AI automation'
+          check AGENTS.md '(.github/AGENTS.md)'
+          check .github/AGENTS.md '## AI Disclosure'
           check CONTRIBUTING.md 'Assisted by:'
           check .github/workflows/pr-ai-slop-review.md '(../../CONTRIBUTING.md)'
           check .github/workflows/pr-ai-slop-review.md '(../../AGENTS.md)'
@@ -84,7 +87,7 @@ jobs:
 
           sources = [
               "AGENTS.md", "CONTRIBUTING.md", "REVIEW.md", "CLAUDE.md", "GEMINI.md",
-              "src/AGENTS.md", "src-tauri/AGENTS.md", ".github/ISSUE_GUIDELINES.md",
+              "src/AGENTS.md", "src-tauri/AGENTS.md", ".github/AGENTS.md", ".github/ISSUE_GUIDELINES.md",
               ".github/PULL_REQUEST_TEMPLATE.md", ".github/workflows/pr-ai-slop-review.md",
               ".github/workflows/pr-verify-fix.md",
               ".github/agents/agentic-workflows.md", ".github/skills/agentic-workflows/SKILL.md",

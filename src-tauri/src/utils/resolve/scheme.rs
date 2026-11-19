@@ -1,8 +1,8 @@
 use crate::core::notify::NoticeStatus;
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
-use smartstring::alias::String;
 use tauri::Url;
+use tristr::alias::String;
 
 use crate::{
     config::{Config, PrfItem, profiles},
@@ -47,7 +47,7 @@ fn extract_subscription_info(link_parsed: &Url) -> Option<(std::string::String, 
     let name = link_parsed
         .query_pairs()
         .find(|(key, _)| key == "name")
-        .map(|(_, value)| value.into_owned().into());
+        .map(|(_, value)| value.into());
     let url = extract_subscription_url(link_parsed)?;
     Some((url, name))
 }
@@ -123,7 +123,7 @@ async fn fetch_profile_item(url: &str, name: Option<&String>) -> Option<PrfItem>
     }
 }
 
-async fn post_import_updates(uid: &String, had_current_profile: bool) {
+async fn post_import_updates(uid: &str, had_current_profile: bool) {
     handle::Handle::refresh_verge();
     handle::Handle::notify_profile_changed(uid);
 
@@ -131,7 +131,7 @@ async fn post_import_updates(uid: &String, had_current_profile: bool) {
         false
     } else {
         let profiles = Config::profiles().await;
-        profiles.latest_arc().current.as_ref() == Some(uid)
+        profiles.latest_arc().current.as_deref() == Some(uid)
     };
 
     if should_update_core {

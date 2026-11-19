@@ -1,5 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
-use smartstring::alias::String;
+use tristr::alias::String;
 
 pub const HANDLE_FIELDS: [&str; 12] = [
     "mode",
@@ -24,12 +24,12 @@ fn lowercase_key(key: &str) -> Value {
     Value::from(key.as_str())
 }
 
-pub fn use_lowercase(config: &Mapping) -> Mapping {
+pub fn use_lowercase(config: Mapping) -> Mapping {
     let mut lowercased = Mapping::new();
 
-    for (key, value) in config.iter() {
+    for (key, value) in config {
         if let Some(key_str) = key.as_str() {
-            lowercased.insert(lowercase_key(key_str), value.clone());
+            lowercased.insert(lowercase_key(key_str), value);
         }
     }
     lowercased

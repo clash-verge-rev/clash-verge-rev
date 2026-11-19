@@ -19,7 +19,7 @@ use crate::{
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
-use scopeguard::{ScopeGuard, defer, guard};
+use std::mem::DropGuard;
 
 pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutcome> {
     AsyncHandler::spawn_blocking(move || probe_listener_sync(&request))
@@ -35,9 +35,9 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     if !manager.try_start_config_update() {
         bail!("configuration update is already running");
     }
-    defer! {
+    let _config_update = DropGuard::new((), |()| {
         manager.finish_config_update();
-    }
+    });
 
     // Read first because transaction rollback discards all claimed drafts.
     let current = current_runtime_mapping().await?;
@@ -52,13 +52,13 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     // Hide PAC while the staged ports are not yet serving traffic.
     manager.core_starting();
     // Recompute PAC state after every exit path.
-    defer! {
+    let _core_start = DropGuard::new((), |()| {
         manager.core_start_settled();
-    }
+    });
     // A user-picked port ends the startup fallback, but only once the save lands: until then the
     // Core still serves the borrowed port, so every failing exit must put it back or the system
     // proxy and PAC point at a dead port. Declared after the PAC guard so it restores first.
-    let borrowed_port = guard(MixedPort::session_fallback(), restore_borrowed_port);
+    let borrowed_port = DropGuard::new(MixedPort::session_fallback(), restore_borrowed_port);
     MixedPort::clear_session_fallback();
     Config::generate()
         .await
@@ -125,7 +125,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
 
     transaction.commit();
     // The save landed, so the port the app had borrowed is now irrelevant.
-    let _ = ScopeGuard::into_inner(borrowed_port);
+    let _ = DropGuard::dismiss(borrowed_port);
     announce(Refresh::Clash);
     announce(Refresh::Verge);
     logging!(info, Type::Config, "Proxy port configuration applied and persisted");

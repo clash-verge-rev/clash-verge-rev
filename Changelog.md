@@ -13,6 +13,8 @@
        first (Windows/macOS/Linux) when the change is platform-specific;
        merge sub-symptoms as 主题：症状、症状; full-width punctuation,
        「」 for UI labels, backticks for config keys and commands
+     - omit the redundant suffix 「的问题」; end with the concrete symptom
+       or outcome instead
      - platform entries sit under their platform heading (bold, emoji
        prefixed, ordered Windows/macOS/Linux, combined for pairs like
        macOS/Linux) at the end of their section;
@@ -20,6 +22,8 @@
      HTML comments are stripped by the update dialog's sanitizer and hidden on
      GitHub, so they never reach users. -->
 ## v2.6.0
+
+- **Mihomo 内核升级至 v1.19.34**
 
 <details>
 <summary><strong> 🐞 修复问题 </strong></summary>
@@ -29,24 +33,41 @@
 - 修复全局模式默认停在 `DIRECT` 或 `REJECT` 导致流量未经代理，现自动切换到第一个策略组
 - 修复订阅中未加引号的 REALITY `short-id`（如 `1234e123`）被误读为数字，导致订阅无法启用
 - 修复订阅中形似日期的字符串（如密码 `2026-9-14`）被内核读成时间，导致订阅无法启用
+- 修复订阅中唯一的代理组名为 `GLOBAL` 或没有代理组时，规则模式下代理页面显示「未获取到代理信息」
+- 修复窗口较窄时，首页「当前节点」卡片中过长的节点名把延迟标签挤出卡片
+- 修复断开链式代理时清空已选节点，导致再次连接需要重新选择
+- 修复「连接」页表格排序时表头换行、标题位置跳动
+- 修复「TUN 设置」未手动保存时，界面显示的默认 MTU 1500 未生效
+- 修复「链式代理」节点列表按名称排序，未保持订阅中的节点顺序
+- 修复规则模式下 Muse AI 解锁检测显示错误的出口地区
 
 **🍎 macOS**
 
 - 修复 macOS TUN 模式下原有 DNS 被清除、关闭后 DNS 未恢复及联网后设置未生效
 - 修复 macOS 断网时误报代理已回退直连，恢复联网后自动重试系统代理
+- 修复 macOS 切换主题后标题栏保留原有深浅色
+
+**🐧 Linux**
+
+- 修复 Linux OpenRC 环境下服务安装失败
 
 </details>
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增连接页面按网络协议（TCP/UDP）筛选连接
+- 新增规则模式下在 `url-test` 或 `fallback` 代理组选节点时，自动将首个包含该组的 `select` 代理组切换到该组，可在「杂项设置」关闭
 
 </details>
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化连接、规则和日志筛选：切换页面后保留过滤条件
 - 优化全局模式代理列表：仅显示 `GLOBAL` 节点，选中其中的策略组时才显示该组
+- 优化设置页开关和选项所在行的鼠标悬停高亮，便于对应说明与控件
+- 优化首页「当前节点」卡片：代理组列表加入 `fallback` 代理组，切换到 `url-test` 或 `fallback` 代理组时同样联动 `select` 代理组
 
 **🍎 macOS**
 

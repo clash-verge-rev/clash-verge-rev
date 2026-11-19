@@ -15,3 +15,6 @@ default = []
 tokio-trace = ["tracing-estuary/tokio-trace"]
 chrome-trace = ["tracing-estuary/chrome-trace"]
 color = ["tracing-estuary/color"]
+
+[lints]
+workspace = true

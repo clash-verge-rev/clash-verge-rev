@@ -12,6 +12,7 @@ import {
 import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
+import { usePageSearch } from '@/hooks/use-page-search'
 import { useVisibility } from '@/hooks/use-visibility'
 import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 
@@ -19,7 +20,7 @@ const RulesPage = () => {
   const { t } = useTranslation()
   const { rules = [] } = useRulesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
-  const [match, setMatch] = useState(() => (_: string) => true)
+  const { searchState, match, onSearch } = usePageSearch('rules')
   const virtuosoRef = useRef<VirtualListHandle>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const pageVisible = useVisibility()
@@ -33,13 +34,11 @@ const RulesPage = () => {
   }, [refreshRules, refreshRuleProviders, pageVisible])
 
   const filteredRules = useMemo(() => {
-    const rulesWithLineNo = rules.map((item, index) => ({
-      ...item,
-      // UI-only derived data; keep app context/SWR data immutable
-      lineNo: index + 1,
-    }))
-
-    return rulesWithLineNo.filter((item) => match(item.payload ?? ''))
+    const indices: number[] = []
+    for (let i = 0; i < rules.length; i++) {
+      if (match(rules[i].payload ?? '')) indices.push(i)
+    }
+    return indices
   }, [rules, match])
 
   const handleScroll = useCallback((e: Event) => {
@@ -76,7 +75,11 @@ const RulesPage = () => {
           alignItems: 'center',
         }}
       >
-        <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+        <BaseSearchBox
+          defaultValue={searchState.text}
+          {...searchState}
+          onSearch={onSearch}
+        />
       </Box>
 
       {filteredRules && filteredRules.length > 0 ? (
@@ -85,7 +88,12 @@ const RulesPage = () => {
             ref={virtuosoRef}
             count={filteredRules.length}
             estimateSize={40}
-            renderItem={(i) => <RuleItem value={filteredRules[i]} />}
+            renderItem={(i) => (
+              <RuleItem
+                value={rules[filteredRules[i]]}
+                lineNo={filteredRules[i] + 1}
+              />
+            )}
             style={{ flex: 1 }}
             onScroll={handleScroll}
           />

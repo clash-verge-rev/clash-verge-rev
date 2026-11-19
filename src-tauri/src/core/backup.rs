@@ -5,7 +5,6 @@ use arc_swap::{ArcSwap, ArcSwapOption};
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
 use reqwest_dav::list_cmd::{ListEntity, ListFile, ListMultiStatus};
-use smartstring::alias::String;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
@@ -15,6 +14,7 @@ use std::{
     time::Duration,
 };
 use tokio::{fs, time::timeout};
+use tristr::alias::String;
 use zip::write::SimpleFileOptions;
 
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");

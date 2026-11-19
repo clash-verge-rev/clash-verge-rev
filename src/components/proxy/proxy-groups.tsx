@@ -469,15 +469,14 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   }, [handleScroll])
 
-  const { select } = useProxySelection({
-    onSuccess: () => {
-      onProxies()
-    },
-    onError: (error) => {
+  const onSelectionError = useCallback(
+    (error: unknown) => {
       console.error('代理切换失败', error)
       onProxies()
     },
-  })
+    [onProxies],
+  )
+  const { select } = useProxySelection({ onError: onSelectionError })
 
   const handleChangeProxy = useCallback(
     (group: ProxyGroupView, member: ResolvedProxyMember) => {
@@ -487,12 +486,12 @@ function NormalProxyGroups(props: { mode: string }) {
       if (group.name === globalGroupName) {
         pendingRevealRef.current =
           member.kind === 'group' ? member.ref.name : null
-        // The selection refetches the view, so skip onHeadState's refetch.
+        // The backend selection event refreshes the view.
         if (member.kind === 'group') {
           setHeadState(member.ref.name, { open: true })
         }
       }
-      select(group.name, member.ref.name, group.now!, group.fixed!)
+      select(group.name, member.ref.name, group.fixed!)
     },
     [globalGroupName, select, setHeadState],
   )
@@ -572,6 +571,17 @@ function NormalProxyGroups(props: { mode: string }) {
     [renderList],
   )
 
+  const onStickyHeadState = useCallback(
+    async (groupName: string, patch: Partial<HeadState>) => {
+      if (patch.filterText !== undefined) {
+        handleGroupLocationByName(groupName)
+        await stickyListRef.current?.waitForScrollEnd()
+      }
+      onHeadState(groupName, patch)
+    },
+    [handleGroupLocationByName, onHeadState],
+  )
+
   const renderGroupItem = useCallback(
     (item: IRenderItem, _index: number, stickyed: boolean) => (
       <ProxyRender
@@ -579,13 +589,7 @@ function NormalProxyGroups(props: { mode: string }) {
         stickyed={stickyed}
         onLocation={handleLocation}
         onCheckAll={handleCheckAll}
-        onHeadState={async (groupName, patch) => {
-          if (stickyed && patch.filterText !== undefined) {
-            handleGroupLocationByName(groupName)
-            await stickyListRef.current?.waitForScrollEnd()
-          }
-          onHeadState(groupName, patch)
-        }}
+        onHeadState={stickyed ? onStickyHeadState : onHeadState}
         onChangeProxy={handleChangeProxy}
         onGroupToggle={handleGroupToggle}
       />
@@ -596,7 +600,7 @@ function NormalProxyGroups(props: { mode: string }) {
       onHeadState,
       handleLocation,
       handleGroupToggle,
-      handleGroupLocationByName,
+      onStickyHeadState,
     ],
   )
 

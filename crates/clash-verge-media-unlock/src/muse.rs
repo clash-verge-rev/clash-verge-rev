@@ -1,28 +1,23 @@
 use reqwest::Client;
 
-use crate::utils::{classify_restricted_status, get_trace_location};
+use crate::utils::classify_restricted_status;
 
 use super::UnlockItem;
 
 pub(crate) const MUSE_AI_NAME: &str = "Muse AI";
 
 const MUSE_URL: &str = "https://muse.ai";
-const CLOUDFLARE_TRACE_URL: &str = "https://www.cloudflare.com/cdn-cgi/trace";
 
 // The aymh ("Are You a Human") gateway answers plain HTTP requests with a
 // generic Meta error page that always contains the Facebook logo asset.
 const AYMH_ERROR_MARKERS: &[&str] = &["Sorry, something went wrong", "static.facebook.com/images/logos"];
 
 pub(super) async fn check_muse_ai(client: &Client) -> UnlockItem {
-    // muse.ai itself is served by Vercel, so resolve the exit region through
-    // the generic Cloudflare trace endpoint instead of a service-specific one.
-    let region = get_trace_location(client, CLOUDFLARE_TRACE_URL)
-        .await
-        .map(|code| code.trim().to_ascii_uppercase())
-        .map(|code| UnlockItem::region_label(&code));
-
+    // muse.ai is served by Vercel and does not expose a service-specific region trace endpoint.
+    // Querying a generic third-party domain (e.g. www.cloudflare.com/cdn-cgi/trace) would report
+    // that domain's proxy group rather than muse.ai's actual exit in Rule mode, so leave region as None.
     let Ok(response) = client.get(MUSE_URL).send().await else {
-        return UnlockItem::checked(MUSE_AI_NAME, "Failed (Network Connection)", region);
+        return UnlockItem::checked(MUSE_AI_NAME, "Failed (Network Connection)", None);
     };
 
     let status = response.status();
@@ -44,5 +39,5 @@ pub(super) async fn check_muse_ai(client: &Client) -> UnlockItem {
         classify_restricted_status(status).unwrap_or("Failed")
     };
 
-    UnlockItem::checked(MUSE_AI_NAME, result, region)
+    UnlockItem::checked(MUSE_AI_NAME, result, None)
 }

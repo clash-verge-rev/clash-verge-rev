@@ -1,0 +1,13 @@
+{
+  "configRoots": [
+    "Library/Application Support/io.github.clash-verge-rev.clash-verge-rev",
+    "Library/Application Support/io.github.clash-verge-rev.clash-verge-rev.dev"
+  ],
+  "configDirectories": ["profiles"],
+  "configExtensions": [".yaml", ".yml", ".json", ".js"],
+  "processNames": {
+    "app": "clash-verge",
+    "core": "verge-mihomo",
+    "service": "clash-verge-service"
+  }
+}

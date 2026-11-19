@@ -12,17 +12,14 @@ use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
-use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::fs;
+use tristr::alias::String;
 
 #[derive(Debug, Serialize, specta::Type)]
 pub struct LocalBackupFile {
-    #[specta(type = std::string::String)]
     pub filename: String,
-    #[specta(type = std::string::String)]
     pub path: String,
-    #[specta(type = std::string::String)]
     pub last_modified: String,
     pub content_length: u64,
 }
@@ -123,7 +120,7 @@ pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
 }
 
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
-    let name = filename.to_string();
+    let name = filename.clone();
     backup::WebDavClient::global().delete(filename).await.map_err(|err| {
         logging!(
             error,
@@ -165,7 +162,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let backup_storage_path = app_home_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get app home dir: {e}"))?
         .join(filename.as_str());
-    let name = filename.to_string();
+    let name = filename.clone();
     backup::WebDavClient::global()
         .download(filename, backup_storage_path.clone())
         .await
@@ -235,8 +232,7 @@ pub async fn import_local_backup(source: String) -> Result<String> {
     let ext = source_path
         .extension()
         .and_then(|ext| ext.to_str())
-        .map(|ext| ext.to_ascii_lowercase())
-        .unwrap_or_default();
+        .map_or_default(|ext| ext.to_ascii_lowercase());
     if ext != "zip" {
         return Err(anyhow!("Only .zip backup files are supported"));
     }
@@ -314,8 +310,7 @@ pub async fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
         };
         let last_modified = metadata
             .modified()
-            .map(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339())
-            .unwrap_or_default();
+            .map_or_default(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339());
         backups.push(LocalBackupFile {
             filename: file_name.into(),
             path: path.to_string_lossy().into(),

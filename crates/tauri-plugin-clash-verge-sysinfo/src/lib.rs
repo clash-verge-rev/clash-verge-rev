@@ -118,8 +118,7 @@ fn is_binary_admin() -> bool {
     #[cfg(windows)]
     Token::with_current_process()
         .and_then(|token| token.privilege_level())
-        .map(|level| level != PrivilegeLevel::NotPrivileged)
-        .unwrap_or(false)
+        .is_ok_and(|level| level != PrivilegeLevel::NotPrivileged)
 }
 
 #[inline]

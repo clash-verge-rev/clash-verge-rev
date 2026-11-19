@@ -9,6 +9,7 @@ import { useEffect, useMemo } from 'react'
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
+import getSystem from '@/utils/get-system'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -137,6 +138,12 @@ export const useCustomTheme = () => {
     } else if (mode) {
       appWindow.setTheme(mode as TauriOsTheme).catch((err) => {
         console.error(`Failed to set window theme to ${mode}:`, err)
+      })
+    }
+    if (getSystem() === 'macos' && mode) {
+      const background = mode === 'light' ? defaultTheme : defaultDarkTheme
+      appWindow.setBackgroundColor(background.background_color).catch((err) => {
+        console.error('Failed to set window background:', err)
       })
     }
   }, [mode, appWindow, theme_mode])

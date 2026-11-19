@@ -17,7 +17,6 @@ use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use std::num::NonZeroUsize;
 use std::{
     collections::{HashMap, HashSet},
@@ -30,6 +29,7 @@ use std::{
 };
 use tauri_plugin_mihomo::models::{Proxies, ProxyType};
 use tokio::{fs, task::JoinHandle};
+use tristr::alias::String;
 
 pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
@@ -51,7 +51,6 @@ const SELECTED_NODES_FIRST_PASS_BUDGET: Duration = Duration::from_secs(3);
 #[derive(Default, Debug, Clone, Deserialize, Serialize, specta::Type)]
 #[serde(default)]
 pub struct IProfiles {
-    #[specta(type = Option<std::string::String>)]
     pub current: Option<String>,
 
     pub items: Option<Vec<PrfItem>>,
@@ -605,7 +604,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
     .map_err(Into::into)
 }
 
-async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
+async fn select_node_with_timeout(group_name: &str, node: &str) -> Result<()> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
         handle::Handle::mihomo().select_node_for_group(group_name, node).await
     })
@@ -761,7 +760,7 @@ pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result
             return Ok((profiles, false));
         };
 
-        let mut selected = item.selected.clone().unwrap_or_default();
+        let selected = item.selected.get_or_insert_with(Vec::new);
         match selected
             .iter_mut()
             .find(|entry| entry.name.as_ref() == Some(&group_name))
@@ -770,14 +769,13 @@ pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result
                 if entry.now.as_ref() == Some(&node) {
                     return Ok((profiles, false));
                 }
-                entry.now = Some(node);
+                entry.now = Some(node.clone());
             }
             None => selected.push(PrfSelected {
                 name: Some(group_name),
                 now: Some(node),
             }),
         }
-        item.selected = Some(selected);
         profiles.save_file().await?;
         Ok((profiles, true))
     })
@@ -796,12 +794,17 @@ pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
             return Ok((profiles, false));
         };
 
-        let mut selected = item.selected.clone().unwrap_or_default();
+        let Some(mut selected) = item.selected.take() else {
+            return Ok((profiles, false));
+        };
         if !remove_selected_node(&mut selected, group_name) {
+            item.selected = Some(selected);
             return Ok((profiles, false));
         }
 
-        item.selected = (!selected.is_empty()).then_some(selected);
+        if !selected.is_empty() {
+            item.selected = Some(selected);
+        }
         profiles.save_file().await?;
         Ok((profiles, true))
     })
@@ -809,7 +812,7 @@ pub(crate) async fn forget_selected_node(group_name: &str) -> Result<()> {
 }
 
 async fn persist_reconciled_selected(
-    profile_uid: &String,
+    profile_uid: &str,
     original_selected: &[PrfSelected],
     selected: Vec<PrfSelected>,
     generation: u64,
@@ -818,7 +821,7 @@ async fn persist_reconciled_selected(
         return Ok(());
     }
 
-    let profile_uid = profile_uid.clone();
+    let profile_uid = String::from(profile_uid);
     let original_selected = original_selected.to_vec();
     persist_selected_update(false, move |mut profiles| async move {
         if !is_activation_current(generation) || profiles.current.as_ref() != Some(&profile_uid) {

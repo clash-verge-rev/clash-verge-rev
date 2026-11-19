@@ -12,8 +12,8 @@ use crate::{
     },
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use smartstring::alias::String;
 use tokio::fs;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]

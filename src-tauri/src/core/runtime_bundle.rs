@@ -124,12 +124,11 @@ fn allocate_provider_destination(destination: &str, url: &str, reserved: &mut Ha
     digest.update(destination.as_bytes());
     digest.update([0]);
     digest.update(url.as_bytes());
-    let digest: String = digest.finalize().iter().map(|byte| format!("{byte:02x}")).collect();
+    let digest: String = crate::utils::help::hex_encode(&digest.finalize());
     let path = Path::new(destination);
     let extension = path
         .extension()
-        .map(|ext| format!(".{}", ext.to_string_lossy()))
-        .unwrap_or_default();
+        .map_or_default(|ext| format!(".{}", ext.to_string_lossy()));
     let mut suffix = String::new();
     let mut sequence = 0;
     loop {

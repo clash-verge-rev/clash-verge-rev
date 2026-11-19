@@ -19,6 +19,7 @@ fn make_draft() -> Draft<IVerge> {
 }
 
 pub fn bench_draft(c: &mut Criterion) {
+    #[allow(clippy::panic, reason = "bench setup cannot proceed without a runtime")]
     let rt = Runtime::new().unwrap_or_else(|e| panic!("Tokio runtime init failed: {e}"));
 
     let mut group = c.benchmark_group("draft");

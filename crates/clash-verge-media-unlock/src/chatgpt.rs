@@ -13,14 +13,13 @@ pub(super) async fn check_chatgpt(client: &Client) -> UnlockItem {
 
     let web_status = get_text(client, "https://api.openai.com/compliance/cookie_requirements")
         .await
-        .map(|body| {
+        .map_or("Failed", |body| {
             if body.to_ascii_lowercase().contains("unsupported_country") {
                 "Unsupported Country/Region"
             } else {
                 "Yes"
             }
-        })
-        .unwrap_or("Failed");
+        });
 
     UnlockItem::checked(CHATGPT_WEB_NAME, web_status, region)
 }

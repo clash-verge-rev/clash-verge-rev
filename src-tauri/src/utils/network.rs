@@ -5,10 +5,10 @@ use reqwest::{
     Client, Proxy, StatusCode,
     header::{HeaderMap, HeaderValue, USER_AGENT},
 };
-use smartstring::alias::String;
 use std::{sync::Arc, time::Duration};
 use sysproxy::Sysproxy;
 use tauri::Url;
+use tristr::alias::String;
 
 #[derive(Debug)]
 pub struct HttpResponse {

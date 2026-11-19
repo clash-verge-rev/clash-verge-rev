@@ -114,11 +114,10 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
     }
 
     match response.json::<FastResponse>().await {
-        Ok(data) => data
-            .targets
-            .first()
-            .map(|target| UnlockItem::checked_region(NETFLIX_NAME, "Yes", &target.location.country))
-            .unwrap_or_else(|| item("Unknown")),
+        Ok(data) => data.targets.first().map_or_else(
+            || item("Unknown"),
+            |target| UnlockItem::checked_region(NETFLIX_NAME, "Yes", &target.location.country),
+        ),
         Err(e) => {
             logging!(error, Type::Network, "解析 Fast.com API 响应失败: {e}");
             item("Failed (解析错误)")

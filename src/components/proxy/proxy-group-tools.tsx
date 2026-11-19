@@ -226,9 +226,9 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         }}
       >
         {textState === 'url' ? (
-          <WifiTetheringRounded fontSize="inherit" />
-        ) : (
           <WifiTetheringOffRounded fontSize="inherit" />
+        ) : (
+          <WifiTetheringRounded fontSize="inherit" />
         )}
       </IconButton>
 

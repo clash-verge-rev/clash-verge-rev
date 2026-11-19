@@ -135,9 +135,9 @@ export const ProxyHead = ({
         }
       >
         {textState === 'url' ? (
-          <WifiTetheringRounded />
-        ) : (
           <WifiTetheringOffRounded />
+        ) : (
+          <WifiTetheringRounded />
         )}
       </IconButton>
 

@@ -160,7 +160,7 @@ pub struct Logger {
 static LOGGER: OnceLock<Logger> = OnceLock::new();
 
 impl Logger {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             pipeline: OnceLock::new(),
             sidecar_file_writer: RwLock::new(None),
@@ -185,7 +185,7 @@ impl Logger {
         self.store_config(cfg);
         let pipeline = tracing_estuary::PipelineBuilder::new()
             .default_level(log_level)
-            .file_writer(self.generate_file_log_writer()?)
+            .file_writer(self.generate_file_log_writer())
             .init()?;
         self.pipeline.set(pipeline).ok();
         Ok(())
@@ -206,10 +206,10 @@ impl Logger {
                 .map(|s| (*s).to_string())
                 .or_else(|| info.payload().downcast_ref::<String>().cloned())
                 .unwrap_or_else(|| "Unknown panic payload".to_string());
-            let location = info
-                .location()
-                .map(|loc| format!("{}:{}", loc.file(), loc.line()))
-                .unwrap_or_else(|| "Unknown location".to_string());
+            let location = info.location().map_or_else(
+                || "Unknown location".to_string(),
+                |loc| format!("{}:{}", loc.file(), loc.line()),
+            );
             logging!(error, Type::System, "Panic occurred at {}: {}", location, payload);
             Self::global().flush_logs();
             std::thread::sleep(Duration::from_millis(100));
@@ -225,11 +225,11 @@ impl Logger {
         self.log_max_count.store(cfg.max_count, Ordering::SeqCst);
     }
 
-    fn generate_file_log_writer(&self) -> Result<FileLogWriterBuilder> {
+    fn generate_file_log_writer(&self) -> FileLogWriterBuilder {
         let log_dir = self.log_dir.get().cloned().unwrap_or_default();
         let log_max_size = self.log_max_size.load(Ordering::SeqCst);
         let log_max_count = self.log_max_count.load(Ordering::SeqCst);
-        let flwb = FileLogWriter::builder(FileSpec::default().directory(log_dir).basename(""))
+        FileLogWriter::builder(FileSpec::default().directory(log_dir).basename(""))
             .format(tracing_estuary::file_format_with_level)
             .write_mode(flexi_logger::WriteMode::BufferAndFlushWith(
                 WRITE_BUFFER_CAPACITY,
@@ -239,8 +239,7 @@ impl Logger {
                 Criterion::Size(log_max_size * 1024),
                 ROTATE_NAMING,
                 Cleanup::KeepLogFiles(log_max_count),
-            );
-        Ok(flwb)
+            )
     }
 
     /// Ensures the sidecar writer exists and points at `builder`'s config:
@@ -311,7 +310,7 @@ impl Logger {
         self.log_max_size.store(log_max_size, Ordering::SeqCst);
         self.log_max_count.store(log_max_count, Ordering::SeqCst);
         if let Some(pipeline) = self.pipeline.get() {
-            let log_file_writer = self.generate_file_log_writer()?;
+            let log_file_writer = self.generate_file_log_writer();
             if let Some(sink) = pipeline.sink.as_ref() {
                 sink.reset(log_file_writer)
                     .map_err(|error| anyhow::anyhow!("failed to reset log writer: {error}"))?;

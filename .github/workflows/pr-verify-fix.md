@@ -26,10 +26,14 @@ imports:
 max-ai-credits: 60
 max-turns: 12
 max-daily-ai-credits: 500
+# Routine, low-risk tasks such as triage, labeling, and summaries.
+# See https://github.github.com/gh-aw/reference/model-routing/#setting-the-level-yourself
+model: router/economy
 permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: none
 steps:
   - name: Load review rules from the base revision
     uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

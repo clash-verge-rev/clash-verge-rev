@@ -223,6 +223,16 @@ const compareConnectionCellValue = (
   right: IConnectionsItem,
   getSnapshot: (row: IConnectionsItem) => TableRowSnapshot,
 ) => {
+  switch (field) {
+    case 'download':
+      return (left.download ?? 0) - (right.download ?? 0)
+    case 'upload':
+      return (left.upload ?? 0) - (right.upload ?? 0)
+    case 'dlSpeed':
+      return (left.curDownload ?? 0) - (right.curDownload ?? 0)
+    case 'ulSpeed':
+      return (left.curUpload ?? 0) - (right.curUpload ?? 0)
+  }
   const leftValue = getConnectionCellValue(field, getSnapshot(left))
   const rightValue = getConnectionCellValue(field, getSnapshot(right))
 
@@ -389,7 +399,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'download',
         headerName: t('shared.labels.downloaded'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.downloadText,
@@ -397,7 +407,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'upload',
         headerName: t('shared.labels.uploaded'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.uploadText,
@@ -405,7 +415,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'dlSpeed',
         headerName: t('connections.components.fields.dlSpeed'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.downloadSpeedText,
@@ -413,7 +423,7 @@ export const ConnectionTable = (props: Props) => {
       {
         field: 'ulSpeed',
         headerName: t('connections.components.fields.ulSpeed'),
-        width: 76,
+        width: 96,
         minWidth: 60,
         align: 'right',
         cell: (_, snapshot) => snapshot.uploadSpeedText,
@@ -491,6 +501,8 @@ export const ConnectionTable = (props: Props) => {
   const [sorting, setSorting] = useState<SortingState | null>(null)
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 })
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const resizeCleanupRef = useRef<(() => void) | null>(null)
+  useEffect(() => () => resizeCleanupRef.current?.(), [])
   const rowSnapshotCacheRef = useRef(new Map<string, TableRowSnapshot>())
   const getRowSnapshot = useCallback((row: IConnectionsItem) => {
     const cache = rowSnapshotCacheRef.current
@@ -664,6 +676,7 @@ export const ConnectionTable = (props: Props) => {
       minWidth: number,
       maxWidth: number | undefined,
     ) => {
+      resizeCleanupRef.current?.()
       const handleMove = (clientX: number) => {
         const nextWidth = Math.max(
           minWidth,
@@ -686,8 +699,10 @@ export const ConnectionTable = (props: Props) => {
         window.removeEventListener('touchmove', handleTouchMove)
         window.removeEventListener('touchend', cleanup)
         window.removeEventListener('touchcancel', cleanup)
+        resizeCleanupRef.current = null
       }
 
+      resizeCleanupRef.current = cleanup
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('mouseup', cleanup)
       window.addEventListener('touchmove', handleTouchMove, { passive: true })
@@ -798,6 +813,7 @@ export const ConnectionTable = (props: Props) => {
                       onClick={() => toggleSorting(column.field)}
                       style={{
                         flex: 1,
+                        minWidth: 0,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent:
@@ -809,15 +825,33 @@ export const ConnectionTable = (props: Props) => {
                         color: 'inherit',
                         font: 'inherit',
                         textAlign: column.align === 'right' ? 'right' : 'left',
+                        whiteSpace: 'nowrap',
                         cursor: 'pointer',
                       }}
                     >
-                      {column.headerName}
-                      {sorting?.id === column.field
-                        ? sorting.desc
-                          ? '▼'
-                          : '▲'
-                        : null}
+                      <span
+                        style={{
+                          minWidth: 0,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {column.headerName}
+                      </span>
+                      {sorting?.id === column.field ? (
+                        <span style={{ flexShrink: 0 }}>
+                          {sorting.desc ? '▼' : '▲'}
+                        </span>
+                      ) : column.align === 'right' ? (
+                        // Reserve the indicator's space so right-aligned labels
+                        // don't shift when sorting is toggled.
+                        <span
+                          aria-hidden
+                          style={{ flexShrink: 0, visibility: 'hidden' }}
+                        >
+                          ▲
+                        </span>
+                      ) : null}
                     </button>
                     <div
                       onMouseDown={(event) =>
