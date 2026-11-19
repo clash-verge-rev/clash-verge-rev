@@ -237,7 +237,9 @@ class DelayManager {
       return undefined
     }
 
-    return { ...entry }
+    // Entries are replaced, never mutated, so the cached object is shared
+    // directly; readers treat it as immutable.
+    return entry
   }
 
   getDelay(name: string, group: string) {
