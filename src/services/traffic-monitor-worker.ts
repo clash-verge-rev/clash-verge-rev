@@ -19,6 +19,13 @@ let currentRangeMinutes!: number
 let throttleTimer: ReturnType<typeof setTimeout> | null = null
 let lastTimestamp: number | undefined
 let lastBroadcast: ITrafficDataPoint[] = []
+let lastSamplerVersion = 0
+
+// The slice for `minutes` can only change without new samples when its oldest
+// point ages past the range cutoff.
+const agedPastRange = (reference: ITrafficDataPoint[], minutes: number) =>
+  reference.length > 0 &&
+  Date.now() - reference[0].timestamp >= minutes * 60 * 1000
 
 const broadcastSnapshot = () => {
   const dataPoints = sampler.getDataForTimeRange(currentRangeMinutes)
@@ -33,6 +40,7 @@ const broadcastSnapshot = () => {
 
   ctx.postMessage(message)
   lastBroadcast = dataPoints
+  lastSamplerVersion = sampler.getVersion()
 }
 
 const scheduleSnapshot = () => {
@@ -55,9 +63,18 @@ ctx.onmessage = (event: MessageEvent<TrafficWorkerRequestMessage>) => {
       // no handle needed, worker teardown (terminate) drops pending timers
       ctx.setInterval(() => {
         if (throttleTimer !== null) return
+        const version = sampler.getVersion()
+        if (
+          version === lastSamplerVersion &&
+          !agedPastRange(lastBroadcast, currentRangeMinutes)
+        ) {
+          return
+        }
         const slice = sampler.getDataForTimeRange(currentRangeMinutes)
         if (!isSameTrafficData(lastBroadcast, slice)) {
           broadcastSnapshot()
+        } else {
+          lastSamplerVersion = version
         }
       }, 1000)
       broadcastSnapshot()
