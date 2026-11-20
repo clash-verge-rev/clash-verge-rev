@@ -143,6 +143,13 @@ pub fn take_service_repair_notice() -> bool {
 
 #[tauri::command]
 #[specta::specta]
+#[cfg_attr(not(target_os = "linux"), allow(clippy::missing_const_for_fn))]
+pub fn take_service_upgrade_state_notice() -> Option<String> {
+    crate::core::service::take_service_upgrade_state_notice()
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn take_service_owner_notice() -> Option<String> {
     crate::core::service::take_service_owner_notice()
 }
