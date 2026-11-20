@@ -40,6 +40,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
     verge?.enable_external_controller ?? false,
   )
 
+  // A reopen within the window must not replay the previous session's toast.
+  const closeDialog = () => {
+    clearTimeout(copySuccessTimerRef.current)
+    copySuccessTimerRef.current = undefined
+    setCopySuccess(null)
+    setOpen(false)
+  }
+
   // 对话框打开时初始化配置
   useSettingDialog(ref, 'controller-viewer', open, () => ({
     open: async () => {
@@ -48,7 +56,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setSecret(clashInfo?.secret || '')
       setEnableController(verge?.enable_external_controller ?? false)
     },
-    close: () => setOpen(false),
+    close: closeDialog,
   }))
 
   // 保存配置
@@ -82,7 +90,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       showNotice.success('shared.feedback.notifications.common.saveSuccess')
-      setOpen(false)
+      closeDialog()
     } catch (err) {
       showNotice.error(
         'shared.feedback.notifications.common.saveFailed',
@@ -130,8 +138,8 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         )
       }
       cancelBtn={t('shared.actions.cancel')}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      onClose={closeDialog}
+      onCancel={closeDialog}
       onOk={onSave}
     >
       <span data-settings-dialog="controller-viewer" />
