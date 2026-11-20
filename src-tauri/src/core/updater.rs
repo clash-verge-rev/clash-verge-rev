@@ -292,8 +292,61 @@ impl SilentUpdater {
         Ok(updater_builder.build()?.check().await?)
     }
 
-    async fn install(update: Update, bytes: Vec<u8>) -> Result<()> {
-        Ok(tokio::task::spawn_blocking(move || update.install(&bytes)).await??)
+    async fn install(update: Update, bytes: Vec<u8>, timeout: Option<Duration>) -> Result<()> {
+        #[cfg(target_os = "linux")]
+        let mut install = Self::install_with_core_paused(update, bytes).await?;
+        #[cfg(not(target_os = "linux"))]
+        let mut install = tokio::task::spawn_blocking(move || update.install(&bytes));
+        let joined = match timeout {
+            Some(limit) => match tokio::time::timeout(limit, &mut install).await {
+                Ok(joined) => Ok(joined),
+                Err(_) => {
+                    // The caller resumes the old app; once the package manager succeeds, restart on the new version.
+                    #[cfg(target_os = "linux")]
+                    tokio::spawn(async move {
+                        if matches!(install.await, Ok(Ok(()))) {
+                            crate::feat::restart_app().await;
+                        }
+                    });
+                    Err(anyhow::anyhow!("install timed out ({}s)", limit.as_secs()))
+                }
+            },
+            None => Ok(install.await),
+        };
+        joined.and_then(|joined| {
+            joined??;
+            Ok(())
+        })
+    }
+
+    /// The package scripts reinstall an existing Service, killing the core it runs and its session, so the
+    /// core stays paused until the package manager exits, even after the caller stops waiting.
+    #[cfg(target_os = "linux")]
+    async fn install_with_core_paused(update: Update, bytes: Vec<u8>) -> Result<tokio::task::JoinHandle<Result<()>>> {
+        let manager = crate::core::CoreManager::global();
+        let (lifecycle, stopped_service_core) = manager
+            .pause_for_package_install()
+            .await
+            .context("failed to stop the Service core before installing the update")?;
+        let install = tokio::task::spawn_blocking(move || update.install(&bytes));
+        Ok(tokio::spawn(async move {
+            let result = match install.await {
+                Ok(result) => result.map_err(anyhow::Error::from),
+                Err(error) => Err(error.into()),
+            };
+            drop(lifecycle);
+            if result.is_err()
+                && stopped_service_core
+                && let Err(error) = manager.start_core().await
+            {
+                logging!(
+                    error,
+                    Type::System,
+                    "Failed to restart the core after the update install failed: {error:#}"
+                );
+            }
+            result
+        }))
     }
 
     /// Installs a newer cached update before normal startup, if the user confirms.
@@ -369,11 +422,7 @@ impl SilentUpdater {
         Self::show_update_splash(app_handle, &version);
 
         // `install()` may hang (#2558); on Windows NSIS can take over without returning.
-        let install = tokio::time::timeout(std::time::Duration::from_secs(30), Self::install(update, bytes));
-        match install
-            .await
-            .unwrap_or_else(|_| Err(anyhow::anyhow!("install timed out (30s)")))
-        {
+        match Self::install(update, bytes, Some(Duration::from_secs(30))).await {
             Ok(()) => {
                 logging!(info, Type::System, "Update v{version} install triggered at startup");
                 Self::delete_cache();
@@ -417,7 +466,7 @@ impl SilentUpdater {
         };
 
         logging!(info, Type::System, "Installing update v{version}...");
-        Self::install(update, bytes).await?;
+        Self::install(update, bytes, None).await?;
         Self::delete_cache();
         Ok(InstallUpdateOutcome::Installed)
     }
