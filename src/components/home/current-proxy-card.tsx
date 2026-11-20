@@ -56,7 +56,6 @@ import {
   useProxiesData,
   useRulesData,
 } from '@/providers/app-data-context'
-import { followProxyGroup } from '@/services/cmds'
 import delayManager from '@/services/delay'
 import {
   findCurrentGroupMember,
@@ -832,7 +831,6 @@ export const CurrentProxyCard = () => {
       if (isGlobalMode || isDirectMode) return
       setPickedGroupName(newGroupName)
       writeProfileScopedItem(STORAGE_KEY_GROUP, newGroupName)
-      void followProxyGroup(newGroupName)
     },
     [isDirectMode, isGlobalMode, writeProfileScopedItem],
   )
