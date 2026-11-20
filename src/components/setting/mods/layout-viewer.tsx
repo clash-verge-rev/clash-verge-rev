@@ -14,7 +14,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { join } from '@tauri-apps/api/path'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { exists } from '@tauri-apps/plugin-fs'
-import { forwardRef, useEffect, useState } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
@@ -62,9 +62,16 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
   const { decorated, toggleDecorations } = useWindowDecorations()
 
+  // Icon paths are only reachable from the open dialog; both settings sections
+  // mount this viewer, so an eager read would double ~11 IPC calls per visit.
+  // Loaded once per mount, deferred to the first open.
+  const iconsLoadedRef = useRef(false)
+
   useEffect(() => {
+    if (!open || iconsLoadedRef.current) return
+    iconsLoadedRef.current = true
     initIconPath()
-  }, [])
+  }, [open])
 
   async function initIconPath() {
     const appDir = await getAppDir()
