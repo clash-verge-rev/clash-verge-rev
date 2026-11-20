@@ -1131,6 +1131,7 @@ dependencies = [
  "specta",
  "specta-typescript",
  "sysproxy",
+ "system-configuration",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",

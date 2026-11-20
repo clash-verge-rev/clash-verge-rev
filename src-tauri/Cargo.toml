@@ -115,6 +115,7 @@ libc = "0.2.191"
 clash-verge-signal = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+system-configuration = "0.7"
 tauri-plugin-wdio-webdriver = { version = "=1.5.1", optional = true }
 objc2 = "0.6.5"
 objc2-foundation = { version = "0.3.2", features = [

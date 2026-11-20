@@ -546,8 +546,15 @@ impl CoreManager {
         .await
     }
 
-    #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode(), readiness_generation = self.current_core_readiness_generation(), owner_generation = crate::core::service::owner_monitor_generation()))]
     pub(crate) async fn apply_proxy_after_start(&self) -> Result<()> {
+        #[cfg(target_os = "macos")]
+        crate::core::network_watch::invalidate();
+        self.restore_system_proxy().await.map(|_| ())
+    }
+
+    /// Returns false when the network watcher must finish a deferred restore.
+    #[tracing::instrument(skip_all, level = "info", fields(mode = ?*self.get_running_mode(), readiness_generation = self.current_core_readiness_generation(), owner_generation = crate::core::service::owner_monitor_generation()))]
+    pub(crate) async fn restore_system_proxy(&self) -> Result<bool> {
         let expectation = ProxyRestoreExpectation::capture(
             *self.get_running_mode(),
             self.current_core_readiness_generation(),
@@ -577,7 +584,7 @@ impl CoreManager {
                 Type::Core,
                 "no network service yet; the system proxy is applied once one appears"
             );
-            return Ok(());
+            return Ok(false);
         }
         #[cfg(not(target_os = "macos"))]
         proxy_control::apply().await?;
@@ -589,7 +596,7 @@ impl CoreManager {
                     Type::Core,
                     "network service disappeared; the system proxy waits for its return"
                 );
-                return Ok(());
+                return Ok(false);
             }
             return Err(error);
         }
@@ -621,7 +628,7 @@ impl CoreManager {
         // tell the window when a background apply lands
         Handle::refresh_verge();
         crate::core::notification::retire_sidecar_failure();
-        Ok(())
+        Ok(true)
     }
 
     #[tracing::instrument(skip_all, level = "info", fields(decision = tracing::field::Empty))]

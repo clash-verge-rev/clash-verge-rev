@@ -479,6 +479,8 @@ fn table_effect(result: &Result<()>) -> TableEffect<'_> {
 
 #[tracing::instrument(skip_all, level = "info", fields(route = tracing::field::Empty))]
 pub async fn apply() -> Result<()> {
+    #[cfg(target_os = "macos")]
+    crate::core::network_watch::invalidate();
     let running_mode = CoreManager::global().get_running_mode();
     let verge = Config::verge().await.latest_arc();
     let route = proxy_backend_route(cfg!(target_os = "macos"), &running_mode);
@@ -515,6 +517,8 @@ pub async fn apply() -> Result<()> {
 }
 
 pub async fn clear() -> Result<()> {
+    #[cfg(target_os = "macos")]
+    crate::core::network_watch::invalidate();
     let result = clear_with_retry().await;
     // Clear failures must be filed even when a restart aborts before apply.
     settle_table(
