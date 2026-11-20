@@ -443,6 +443,13 @@ const PersistentSelect = ({
               role="listbox"
               aria-labelledby={labelId}
               variant="selectedMenu"
+              onClick={(event) => {
+                // A disabled option passes its click to the list itself.
+                if (!(event.target as Element).closest('[role="option"]'))
+                  return
+                onOpenChange(false)
+                anchorRef.current?.focus({ preventScroll: true })
+              }}
             >
               {open && renderOptions()}
             </MenuList>
