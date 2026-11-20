@@ -4,6 +4,7 @@ import { asyncRetry } from 'foxts/async-retry'
 import { extractErrorMessage } from 'foxts/extract-error-message'
 import { once } from 'foxts/once'
 import i18n from 'i18next'
+import { getBaseConfig } from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
 
@@ -137,6 +138,29 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
   },
 ]
 
+const getProxyHost = (allowLan: boolean, bindAddress: string) => {
+  const address = bindAddress.trim().replace(/^\[|\]$/g, '')
+  const normalizedAddress = address.toLowerCase()
+  const isIpv6 = normalizedAddress.includes(':')
+  const isIpv6Wildcard =
+    isIpv6 &&
+    normalizedAddress
+      .split(':')
+      .every((part) => part === '' || /^0+$/.test(part))
+  const isWildcard =
+    normalizedAddress === '*' ||
+    normalizedAddress === '0.0.0.0' ||
+    isIpv6Wildcard
+
+  if (!allowLan) return '127.0.0.1'
+
+  if (!address || isWildcard || normalizedAddress === 'localhost') {
+    return isIpv6Wildcard ? '[::1]' : '127.0.0.1'
+  }
+
+  return isIpv6 ? `[${address}]` : address
+}
+
 // 获取当前IP和地理位置信息
 export const getIpInfo = async (): Promise<
   IpInfo & { lastFetchTs: number }
@@ -150,6 +174,28 @@ export const getIpInfo = async (): Promise<
   )
   let lastError: unknown | null = null
   const userAgent = await getUserAgentPromise()
+  const { mixedPort, allowLan, bindAddress, authentication } =
+    await getBaseConfig()
+  const proxyUrl = `http://${getProxyHost(allowLan, bindAddress)}:${mixedPort}`
+  const proxyAuthentication = authentication?.[0]
+  const authSeparator = proxyAuthentication?.indexOf(':') ?? -1
+
+  if (proxyAuthentication !== undefined && authSeparator < 0) {
+    throw new Error('Invalid mixed proxy authentication configuration')
+  }
+
+  const proxy = {
+    all:
+      proxyAuthentication === undefined
+        ? proxyUrl
+        : {
+            url: proxyUrl,
+            basicAuth: {
+              username: proxyAuthentication.slice(0, authSeparator),
+              password: proxyAuthentication.slice(authSeparator + 1),
+            },
+          },
+  }
   console.debug('User-Agent for IP detection:', userAgent)
 
   for (const service of shuffledServices) {
@@ -168,6 +214,7 @@ export const getIpInfo = async (): Promise<
           try {
             const response = await fetch(service.url, {
               method: 'GET',
+              proxy,
               signal: timeoutController.signal,
               connectTimeout: serviceTimeout,
               headers: {
