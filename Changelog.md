@@ -51,6 +51,10 @@
 
 - 修复 Linux OpenRC 环境下服务安装失败
 
+**🐧 Linux**
+
+- 修复 Linux 套件升级时服务被移除的问题
+
 </details>
 
 <details>
