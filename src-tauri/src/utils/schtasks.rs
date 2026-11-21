@@ -1,21 +1,38 @@
-use crate::utils::dirs::{self, PathBufExec as _};
-use anyhow::{Context as _, Result, anyhow};
+use crate::{
+    core::owner_identity::{account_sid, current_user_sid},
+    utils::dirs::PathBufExec as _,
+};
+use anyhow::{Context as _, Result, anyhow, bail, ensure};
 use clash_verge_logging::{Type, logging};
-use std::fs;
-use std::os::windows::process::CommandExt as _;
+use quick_xml::escape::escape;
+use std::ffi::OsString;
+use std::io::ErrorKind;
+use std::os::windows::ffi::OsStrExt as _;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
-use windows::Win32::Globalization::{GetACP, GetOEMCP, MULTI_BYTE_TO_WIDE_CHAR_FLAGS, MultiByteToWideChar};
+use windows::{
+    Win32::{
+        Foundation::{E_ACCESSDENIED, ERROR_FILE_NOT_FOUND},
+        System::{
+            Com::{CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoUninitialize},
+            TaskScheduler::{
+                ITaskFolder, ITaskService, TASK_CREATE, TASK_CREATION, TASK_LOGON_INTERACTIVE_TOKEN, TASK_UPDATE,
+                TaskScheduler,
+            },
+            Variant::VARIANT,
+        },
+    },
+    core::{BSTR, Error as WindowsError},
+};
+use winreg::{
+    RegKey,
+    enums::{HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE},
+};
 
-const CREATE_NO_WINDOW: u32 = 0x08000000;
-const TASK_NAME_USER: &str = "Clash Verge";
-const TASK_NAME_ADMIN: &str = "Clash Verge (Admin)";
-const TASK_XML_DIR: &str = "tasks";
-const TASK_XML_USER: &str = "clash-verge-task-user.xml";
-const TASK_XML_ADMIN: &str = "clash-verge-task-admin.xml";
+const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+const RUN_VALUE: &str = "Clash Verge Auto Launch";
 
-#[derive(Clone, Copy)]
-pub enum TaskMode {
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TaskMode {
     User,
     Admin,
 }
@@ -23,15 +40,8 @@ pub enum TaskMode {
 impl TaskMode {
     const fn name(self) -> &'static str {
         match self {
-            Self::User => TASK_NAME_USER,
-            Self::Admin => TASK_NAME_ADMIN,
-        }
-    }
-
-    const fn label(self) -> &'static str {
-        match self {
-            Self::User => "user",
-            Self::Admin => "admin",
+            Self::User => "Clash Verge",
+            Self::Admin => "Clash Verge (Admin)",
         }
     }
 
@@ -41,42 +51,6 @@ impl TaskMode {
             Self::Admin => "HighestAvailable",
         }
     }
-
-    const fn xml_file_name(self) -> &'static str {
-        match self {
-            Self::User => TASK_XML_USER,
-            Self::Admin => TASK_XML_ADMIN,
-        }
-    }
-}
-
-fn get_exe_path() -> Result<PathBuf> {
-    let exe_path = std::env::current_exe().map_err(|e| anyhow!("failed to get exe path: {}", e))?;
-    Ok(exe_path)
-}
-
-fn get_task_user_id() -> Result<String> {
-    let username = std::env::var_os("USERNAME")
-        .or_else(|| std::env::var_os("USER"))
-        .ok_or_else(|| anyhow!("failed to get current user name"))?;
-    let username = username.to_string_lossy();
-    let username = username.trim();
-    if username.is_empty() {
-        return Err(anyhow!("current user name is empty"));
-    }
-
-    let domain = std::env::var_os("USERDOMAIN")
-        .or_else(|| std::env::var_os("COMPUTERNAME"))
-        .map(|value| value.to_string_lossy().to_string());
-
-    if let Some(domain) = domain {
-        let domain = domain.trim();
-        if !domain.is_empty() {
-            return Ok(format!("{domain}\\{username}"));
-        }
-    }
-
-    Ok(username.to_string())
 }
 
 fn get_startup_dir() -> Result<PathBuf> {
@@ -111,45 +85,23 @@ async fn cleanup_legacy_shortcuts() -> Result<()> {
     Ok(())
 }
 
-fn task_xml_path(mode: TaskMode) -> Result<PathBuf> {
-    let dir = dirs::app_home_dir()?.join(TASK_XML_DIR);
-    fs::create_dir_all(&dir).map_err(|e| anyhow!("failed to create task xml dir: {}", e))?;
-    Ok(dir.join(mode.xml_file_name()))
-}
-
-fn xml_escape(value: &str) -> String {
-    let mut escaped = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '&' => escaped.push_str("&amp;"),
-            '<' => escaped.push_str("&lt;"),
-            '>' => escaped.push_str("&gt;"),
-            '"' => escaped.push_str("&quot;"),
-            '\'' => escaped.push_str("&apos;"),
-            _ => escaped.push(ch),
-        }
-    }
-    escaped
-}
-
-fn build_task_xml(mode: TaskMode) -> Result<String> {
-    let exe_path = get_exe_path()?.to_string_lossy().to_string();
-    let exe_path = xml_escape(&exe_path);
-    let user_id = xml_escape(&get_task_user_id()?);
-    Ok(format!(
+fn build_task_xml(mode: TaskMode, user_sid: &str, exe: &Path) -> String {
+    let exe_path = escape(exe.to_string_lossy());
+    let run_level = mode.xml_run_level();
+    format!(
         r#"<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
-      <UserId>{}</UserId>
+      <UserId>{user_sid}</UserId>
     </LogonTrigger>
   </Triggers>
   <Principals>
     <Principal id="Author">
-      <UserId>{}</UserId>
+      <UserId>{user_sid}</UserId>
       <LogonType>InteractiveToken</LogonType>
-      <RunLevel>{}</RunLevel>
+      <RunLevel>{run_level}</RunLevel>
     </Principal>
   </Principals>
   <Settings>
@@ -173,209 +125,262 @@ fn build_task_xml(mode: TaskMode) -> Result<String> {
   </Settings>
   <Actions Context="Author">
     <Exec>
-      <Command>{}</Command>
+      <Command>{exe_path}</Command>
     </Exec>
   </Actions>
 </Task>
-"#,
-        user_id,
-        user_id,
-        mode.xml_run_level(),
-        exe_path
-    ))
+"#
+    )
 }
 
-fn encode_utf16le_with_bom(content: &str) -> Vec<u8> {
-    let mut bytes = Vec::with_capacity(2 + content.len() * 2);
-    bytes.extend_from_slice(&[0xFF, 0xFE]);
-    for unit in content.encode_utf16() {
-        bytes.extend_from_slice(&unit.to_le_bytes());
-    }
-    bytes
-}
+struct ComApartment;
 
-fn write_task_xml(mode: TaskMode) -> Result<PathBuf> {
-    let task_xml = build_task_xml(mode)?;
-    let task_xml_path = task_xml_path(mode)?;
-    let encoded = encode_utf16le_with_bom(&task_xml);
-    fs::write(&task_xml_path, encoded).map_err(|e| anyhow!("failed to write task xml: {}", e))?;
-    Ok(task_xml_path)
-}
-
-fn decode_with_code_page(bytes: &[u8], code_page: u32) -> Option<String> {
-    if bytes.is_empty() {
-        return Some(String::new());
-    }
-
-    let len = bytes.len();
-    if len > i32::MAX as usize {
-        return None;
-    }
-
-    let required = unsafe { MultiByteToWideChar(code_page, MULTI_BYTE_TO_WIDE_CHAR_FLAGS(0), bytes, None) };
-
-    if required <= 0 {
-        return None;
-    }
-
-    let mut wide = vec![0u16; required as usize];
-    let written = unsafe { MultiByteToWideChar(code_page, MULTI_BYTE_TO_WIDE_CHAR_FLAGS(0), bytes, Some(&mut wide)) };
-
-    if written <= 0 {
-        return None;
-    }
-
-    wide.truncate(written as usize);
-    Some(String::from_utf16_lossy(&wide))
-}
-
-fn decode_console_output(bytes: &[u8]) -> String {
-    if let Ok(text) = std::str::from_utf8(bytes) {
-        return text.to_string();
-    }
-
-    let oem = unsafe { GetOEMCP() };
-    if let Some(text) = decode_with_code_page(bytes, oem) {
-        return text;
-    }
-
-    let acp = unsafe { GetACP() };
-    if let Some(text) = decode_with_code_page(bytes, acp) {
-        return text;
-    }
-
-    String::from_utf8_lossy(bytes).to_string()
-}
-
-fn output_message(output: &Output) -> String {
-    let stdout = decode_console_output(&output.stdout);
-    let stderr = decode_console_output(&output.stderr);
-    let stdout = stdout.trim();
-    let stderr = stderr.trim();
-
-    match (stdout.is_empty(), stderr.is_empty()) {
-        (true, true) => "unknown error".to_string(),
-        (false, true) => stdout.to_string(),
-        (true, false) => stderr.to_string(),
-        (false, false) => format!("{stdout} | {stderr}"),
+impl ComApartment {
+    fn initialize() -> Result<Self> {
+        unsafe { CoInitializeEx(None, COINIT_MULTITHREADED).ok() }.context("failed to initialize COM")?;
+        Ok(Self)
     }
 }
 
-fn schtasks_output(mut cmd: Command) -> Result<Output> {
-    cmd.creation_flags(CREATE_NO_WINDOW)
-        .output()
-        .map_err(|e| anyhow!("failed to execute schtasks: {}", e))
+impl Drop for ComApartment {
+    fn drop(&mut self) {
+        unsafe { CoUninitialize() };
+    }
 }
 
-pub fn is_task_enabled(mode: TaskMode) -> Result<bool> {
-    let output = schtasks_output({
-        let mut cmd = Command::new("schtasks");
-        cmd.args(["/Query", "/TN", mode.name()]);
-        cmd
-    })?;
-
-    Ok(output.status.success())
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TaskOwner {
+    Missing,
+    CurrentUser,
+    OtherUser,
 }
 
-pub fn create_task(mode: TaskMode) -> Result<()> {
-    let task_xml_path = write_task_xml(mode)?;
-    let output = schtasks_output({
-        let mut cmd = Command::new("schtasks");
-        cmd.args(["/Create", "/TN", mode.name(), "/XML"]);
-        cmd.arg(&task_xml_path);
-        cmd.arg("/F");
-        cmd
-    })?;
+struct ScheduledTasks {
+    folder: ITaskFolder,
+    user_sid: String,
+    // Drop the COM interface before uninitializing the apartment.
+    _com: ComApartment,
+}
 
-    if !output.status.success() {
-        return Err(anyhow!(
-            "failed to create {} task: {}",
-            mode.label(),
-            output_message(&output)
-        ));
+impl ScheduledTasks {
+    fn connect() -> Result<Self> {
+        let com = ComApartment::initialize()?;
+        let service: ITaskService = unsafe { CoCreateInstance(&TaskScheduler, None, CLSCTX_INPROC_SERVER) }
+            .context("failed to open Task Scheduler")?;
+        let empty = VARIANT::default();
+        unsafe { service.Connect(&empty, &empty, &empty, &empty) }.context("failed to connect to Task Scheduler")?;
+        let folder =
+            unsafe { service.GetFolder(&BSTR::from(r"\")) }.context("failed to open the Task Scheduler root folder")?;
+        Ok(Self {
+            folder,
+            user_sid: current_user_sid()?,
+            _com: com,
+        })
     }
 
-    logging!(info, Type::Setup, "Created {} auto-launch task", mode.label());
+    fn owner(&self, mode: TaskMode) -> Result<TaskOwner> {
+        let task = match unsafe { self.folder.GetTask(&BSTR::from(mode.name())) } {
+            Ok(task) => task,
+            Err(error) if task_missing(&error) => return Ok(TaskOwner::Missing),
+            Err(error) => return Err(error).with_context(|| format!("failed to find the {} task", mode.name())),
+        };
+        let principal_sid = (|| {
+            let principal = unsafe { task.Definition()?.Principal()? };
+            let mut user = BSTR::new();
+            unsafe { principal.UserId(&mut user)? };
+            let user = String::try_from(&user)?;
+            if user.starts_with("S-1-") {
+                return Ok(user);
+            }
+            account_sid(&user)
+        })()
+        .with_context(|| format!("failed to identify the owner of the {} task", mode.name()))?;
+
+        Ok(if principal_sid == self.user_sid {
+            TaskOwner::CurrentUser
+        } else {
+            TaskOwner::OtherUser
+        })
+    }
+
+    fn has_current_user_task(&self) -> Result<bool> {
+        let user_task = self.owner(TaskMode::User)?;
+        let admin_task = self.owner(TaskMode::Admin)?;
+        Ok(user_task == TaskOwner::CurrentUser || admin_task == TaskOwner::CurrentUser)
+    }
+
+    fn register(&self, mode: TaskMode, exe: &Path, flags: TASK_CREATION) -> windows::core::Result<()> {
+        let xml = BSTR::from(build_task_xml(mode, &self.user_sid, exe));
+        let empty = VARIANT::default();
+        unsafe {
+            self.folder.RegisterTask(
+                &BSTR::from(mode.name()),
+                &xml,
+                flags.0,
+                &empty,
+                &empty,
+                TASK_LOGON_INTERACTIVE_TOKEN,
+                &empty,
+            )
+        }
+        .map(drop)
+    }
+
+    fn remove(&self, mode: TaskMode) -> Result<()> {
+        match unsafe { self.folder.DeleteTask(&BSTR::from(mode.name()), 0) } {
+            Ok(()) => {
+                logging!(info, Type::Setup, "Removed the {} auto-launch task", mode.name());
+                Ok(())
+            }
+            Err(error) if task_missing(&error) => Ok(()),
+            Err(error) => Err(error).with_context(|| format!("failed to remove the {} task", mode.name())),
+        }
+    }
+}
+
+fn task_missing(error: &WindowsError) -> bool {
+    error.code() == ERROR_FILE_NOT_FOUND.to_hresult()
+}
+
+fn write_startup_entry(exe: &Path) -> Result<()> {
+    let mut command = OsString::from("\"");
+    command.push(exe);
+    command.push("\"");
+    ensure!(
+        command.encode_wide().count() <= 260,
+        "the startup command exceeds the Windows Run entry limit"
+    );
+
+    let (key, _) = RegKey::predef(HKEY_CURRENT_USER)
+        .create_subkey_with_flags(RUN_KEY, KEY_SET_VALUE)
+        .context("failed to open the current user's Run key for writing")?;
+    key.set_value(RUN_VALUE, &command)
+        .context("failed to write the per-user startup entry")
+}
+
+fn startup_entry_for_removal() -> Result<Option<RegKey>> {
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let entry = hkcu
+        .open_subkey_with_flags(RUN_KEY, KEY_QUERY_VALUE)
+        .and_then(|key| key.get_raw_value(RUN_VALUE));
+    match entry {
+        Ok(_) => hkcu
+            .open_subkey_with_flags(RUN_KEY, KEY_SET_VALUE)
+            .map(Some)
+            .context("failed to open the current user's Run key for cleanup"),
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error).context("failed to inspect the per-user startup entry"),
+    }
+}
+
+fn remove_startup_entry(key: Option<RegKey>) -> Result<()> {
+    if let Some(key) = key {
+        match key.delete_value(RUN_VALUE) {
+            Ok(()) => (),
+            Err(error) if error.kind() == ErrorKind::NotFound => (),
+            Err(error) => return Err(error).context("failed to remove the per-user startup entry"),
+        }
+    }
     Ok(())
 }
 
-pub fn remove_task(mode: TaskMode) -> Result<()> {
-    let output = schtasks_output({
-        let mut cmd = Command::new("schtasks");
-        cmd.args(["/Delete", "/TN", mode.name(), "/F"]);
-        cmd
-    })?;
+fn enable_auto_launch(
+    tasks: &ScheduledTasks,
+    mode: TaskMode,
+    user_task: TaskOwner,
+    admin_task: TaskOwner,
+) -> Result<()> {
+    let target = match mode {
+        TaskMode::User => user_task,
+        TaskMode::Admin => admin_task,
+    };
 
-    if output.status.success() {
-        logging!(info, Type::Setup, "Removed {} auto-launch task", mode.label());
-        return Ok(());
+    ensure!(
+        target != TaskOwner::OtherUser,
+        "the {} auto-launch task belongs to another Windows account",
+        mode.name()
+    );
+    let exe = std::env::current_exe().context("failed to get the app executable path")?;
+    let exe = dunce::simplified(&exe);
+    let fallback = startup_entry_for_removal()?;
+    let is_new_task = target == TaskOwner::Missing;
+    let flags = if is_new_task { TASK_CREATE } else { TASK_UPDATE };
+    if let Err(error) = tasks.register(mode, exe, flags) {
+        let can_fallback = mode == TaskMode::User && is_new_task && error.code() == E_ACCESSDENIED;
+        // A task could have appeared after the first lookup and may already launch the app.
+        if can_fallback && !tasks.has_current_user_task()? {
+            write_startup_entry(exe).with_context(|| format!("Task Scheduler denied registration ({error})"))?;
+            logging!(
+                info,
+                Type::Setup,
+                "Using the per-user startup entry after Task Scheduler denied registration"
+            );
+            return Ok(());
+        }
+        return Err(error).with_context(|| format!("failed to register the {} task", mode.name()));
     }
 
-    if !is_task_enabled(mode)? {
-        logging!(
-            info,
-            Type::Setup,
-            "{} auto-launch task not found, skipping removal",
-            mode.label()
-        );
-        return Ok(());
+    let cleanup = (|| {
+        if mode == TaskMode::Admin && user_task == TaskOwner::CurrentUser {
+            tasks.remove(TaskMode::User)?;
+        }
+        remove_startup_entry(fallback)
+    })();
+    if let Err(error) = cleanup {
+        if is_new_task && let Err(rollback) = tasks.remove(mode) {
+            return Err(error.context(format!(
+                "failed to roll back the new {} task: {rollback:#}",
+                mode.name()
+            )));
+        }
+        return Err(error);
     }
-
-    Err(anyhow!(
-        "failed to remove {} task: {}",
-        mode.label(),
-        output_message(&output)
-    ))
+    logging!(info, Type::Setup, "Registered the {} auto-launch task", mode.name());
+    Ok(())
 }
 
-pub async fn set_auto_launch(is_enable: bool, is_admin: bool) -> Result<()> {
-    let target = if is_admin { TaskMode::Admin } else { TaskMode::User };
-    let other = if is_admin { TaskMode::User } else { TaskMode::Admin };
-
-    if let Err(err) = cleanup_legacy_shortcuts().await {
-        logging!(warn, Type::Setup, "Failed to cleanup legacy startup shortcuts: {err:#}");
+fn configure_auto_launch(enabled: bool, mode: TaskMode) -> Result<()> {
+    let tasks = ScheduledTasks::connect()?;
+    let admin_task = tasks.owner(TaskMode::Admin)?;
+    if mode == TaskMode::User && admin_task == TaskOwner::CurrentUser {
+        bail!("run Clash Verge as administrator to manage its existing elevated auto-launch task");
+    }
+    let user_task = tasks.owner(TaskMode::User)?;
+    if enabled {
+        return enable_auto_launch(&tasks, mode, user_task, admin_task);
     }
 
-    if is_enable {
-        if is_admin {
-            create_task(target)?;
-            if let Err(err) = remove_task(other) {
-                let _ = remove_task(target);
-                return Err(err);
-            }
+    let fallback = startup_entry_for_removal()?;
+    if admin_task == TaskOwner::CurrentUser {
+        tasks.remove(TaskMode::Admin)?;
+    }
+    if user_task == TaskOwner::CurrentUser {
+        tasks.remove(TaskMode::User)?;
+    }
+    remove_startup_entry(fallback)
+}
+
+pub async fn set_auto_launch(enabled: bool, is_admin: bool) -> Result<()> {
+    let mode = if is_admin { TaskMode::Admin } else { TaskMode::User };
+    let result = tokio::task::spawn_blocking(move || configure_auto_launch(enabled, mode)).await?;
+    result.map_err(|error| {
+        if mode == TaskMode::User
+            && error
+                .downcast_ref::<WindowsError>()
+                .is_some_and(|error| error.code() == E_ACCESSDENIED)
+        {
+            error.context("run Clash Verge as administrator to manage its scheduled auto-launch tasks")
         } else {
-            if is_task_enabled(other)? {
-                return Err(anyhow!(
-                    "admin auto-launch task exists; run the app as administrator to remove it before creating a user task"
-                ));
-            }
-            create_task(target)?;
+            error
         }
-        return Ok(());
+    })?;
+
+    if let Err(error) = cleanup_legacy_shortcuts().await {
+        logging!(
+            warn,
+            Type::Setup,
+            "Failed to clean up legacy startup shortcuts: {error:#}"
+        );
     }
-
-    if is_admin {
-        let mut errors = Vec::new();
-        if let Err(err) = remove_task(TaskMode::User) {
-            errors.push(err);
-        }
-        if let Err(err) = remove_task(TaskMode::Admin) {
-            errors.push(err);
-        }
-
-        if let Some(err) = errors.into_iter().next() {
-            return Err(err);
-        }
-
-        return Ok(());
-    }
-
-    remove_task(TaskMode::User)?;
-    if is_task_enabled(TaskMode::Admin)? {
-        return Err(anyhow!(
-            "admin auto-launch task exists; run the app as administrator to remove it"
-        ));
-    }
-
     Ok(())
 }
