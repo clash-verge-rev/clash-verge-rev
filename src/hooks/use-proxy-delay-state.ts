@@ -61,7 +61,7 @@ export function useProxyDelayState(
     }
     const cachedUpdate = delayManager.getDelayUpdate(name, groupName)
     if (cachedUpdate) {
-      setDelayState({ ...cachedUpdate })
+      setDelayState(cachedUpdate)
       return
     }
 

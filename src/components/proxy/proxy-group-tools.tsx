@@ -31,9 +31,9 @@ interface Props {
   url?: string
   groupName: string
   headState: HeadState
-  onLocation: () => void
-  onCheckDelay: () => void
-  onHeadState: (val: Partial<HeadState>) => void
+  onLocation: (groupName: string) => void
+  onCheckDelay: (groupName: string) => void
+  onHeadState: (groupName: string, val: Partial<HeadState>) => void
 }
 
 export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
@@ -76,7 +76,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   // 因此对写入 headState 的动作做防抖，避免每输入一个字符就过滤一次。
   const { run: applyFilter, flush: flushFilter } = useDebounceFn(
     (state: SearchState) => {
-      onHeadState({
+      onHeadState(groupName, {
         filterText: state.text,
         filterMatchCase: state.matchCase,
         filterMatchWholeWord: state.matchWholeWord,
@@ -125,7 +125,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             e.preventDefault()
             e.stopPropagation()
           }}
-          onChange={(e) => onHeadState({ testUrl: e.target.value })}
+          onChange={(e) => onHeadState(groupName, { testUrl: e.target.value })}
           sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
@@ -155,8 +155,8 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           e.stopPropagation()
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
-          onLocation()
+            flushSync(() => onHeadState(groupName, { open: true }))
+          onLocation(groupName)
         }}
       >
         <MyLocationRounded fontSize="inherit" />
@@ -171,16 +171,16 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           e.stopPropagation()
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
+            flushSync(() => onHeadState(groupName, { open: true }))
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== 'filter') {
-            onHeadState({ textState: 'url' })
+            onHeadState(groupName, { textState: 'url' })
           }
           if (testUrl?.trim() && !isValidUrl(testUrl)) {
             showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
             return
           }
-          onCheckDelay()
+          onCheckDelay(groupName)
         }}
       >
         <NetworkCheckRounded fontSize="inherit" />
@@ -201,8 +201,8 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           e.stopPropagation()
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
-          onHeadState({
+            flushSync(() => onHeadState(groupName, { open: true }))
+          onHeadState(groupName, {
             sortType: ((sortType + 1) % 3) as ProxySortType,
           })
         }}
@@ -219,7 +219,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          onHeadState({
+          onHeadState(groupName, {
             textState: textState === 'url' ? null : 'url',
           })
           setTimeout(() => inputRef.current?.focus())
@@ -245,8 +245,8 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           e.stopPropagation()
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
-          onHeadState({ showType: !showType })
+            flushSync(() => onHeadState(groupName, { open: true }))
+          onHeadState(groupName, { showType: !showType })
         }}
       >
         {showType ? (
@@ -265,8 +265,10 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           e.stopPropagation()
           if (!headState.open && textState !== 'filter')
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
-          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
+            flushSync(() => onHeadState(groupName, { open: true }))
+          onHeadState(groupName, {
+            textState: textState === 'filter' ? null : 'filter',
+          })
           setTimeout(() => inputRef.current?.focus())
         }}
       >

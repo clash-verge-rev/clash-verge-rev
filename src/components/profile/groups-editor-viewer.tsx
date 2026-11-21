@@ -176,7 +176,10 @@ export const GroupsEditorViewer = (props: Props) => {
     },
   })
   const [groupList, setGroupList] = useState<IProxyGroupConfig[]>([])
-  const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([])
+  const [originPolicy, setOriginPolicy] = useState<{
+    proxyNames: string[]
+    groupNames: string[]
+  }>({ proxyNames: [], groupNames: [] })
   const [proxyProviderList, setProxyProviderList] = useState<string[]>([])
   const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([])
@@ -353,6 +356,9 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   }, [prependSeq, appendSeq, deleteSeq])
 
+  // Origin policy names come from profile files that this dialog never
+  // rewrites while open, so they are read once per open; the live seq states
+  // are folded in by the derived proxyPolicyList below.
   const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const proxiesData = await readProfileFile(proxiesUid)
@@ -388,17 +394,13 @@ export const GroupsEditorViewer = (props: Props) => {
         (name): name is string => typeof name === 'string' && name.length > 0,
       )
 
-    const computedPolicyList = builtinProxyPolicies.concat(
-      prependSeq.map((group: IProxyGroupConfig) => group.name),
-      (originGroupsObj?.['proxy-groups'] || [])
-        .map((group: IProxyGroupConfig) => group.name)
-        .filter((name) => !deleteSeq.includes(name)),
-      appendSeq.map((group: IProxyGroupConfig) => group.name),
+    setOriginPolicy({
       proxyNames,
-    )
-
-    setProxyPolicyList(Array.from(new Set(computedPolicyList)))
-  }, [appendSeq, deleteSeq, prependSeq, profileUid, proxiesUid])
+      groupNames: (originGroupsObj?.['proxy-groups'] || []).map(
+        (group) => group.name,
+      ),
+    })
+  }, [profileUid, proxiesUid])
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const mergeData = await readProfileFile(mergeUid)
@@ -441,6 +443,16 @@ export const GroupsEditorViewer = (props: Props) => {
     if (!open) return
     fetchProxyPolicy()
   }, [fetchProxyPolicy, open])
+
+  const proxyPolicyList = useMemo(() => {
+    const computedPolicyList = builtinProxyPolicies.concat(
+      prependSeq.map((group) => group.name),
+      originPolicy.groupNames.filter((name) => !deleteSeq.includes(name)),
+      appendSeq.map((group) => group.name),
+      originPolicy.proxyNames,
+    )
+    return Array.from(new Set(computedPolicyList))
+  }, [appendSeq, deleteSeq, originPolicy, prependSeq])
 
   useEffect(() => {
     if (!open) return

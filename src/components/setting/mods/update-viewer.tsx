@@ -114,6 +114,84 @@ const getAlertTypeFromClassName = (
   return match?.[1] as GitHubAlertType | null
 }
 
+const openUrlWithNotice = (url: string) => {
+  void openExternalUrl(url).catch(showNotice.error)
+}
+
+// Renderer map is static; a per-render identity would remount every link and
+// blockquote subtree while download progress re-renders the dialog.
+const MARKDOWN_COMPONENTS: ReactMarkdownOptions['components'] = {
+  a: ({ href, children, ...props }) => {
+    const isFragment = href?.startsWith('#') ?? false
+    const renderedHref = isFragment
+      ? `#${UPDATE_MARKDOWN_ID_PREFIX}${href?.slice(1)}`
+      : href
+        ? '#'
+        : undefined
+
+    return (
+      <a
+        {...props}
+        href={renderedHref}
+        target={undefined}
+        rel={undefined}
+        onClick={(event) => {
+          if (isFragment) return
+          event.preventDefault()
+          if (!href) return
+          openUrlWithNotice(href)
+        }}
+        onAuxClick={(event) => {
+          if (isFragment) return
+          event.preventDefault()
+          if (event.button === 1 && href) {
+            openUrlWithNotice(href)
+          }
+        }}
+      >
+        {children}
+      </a>
+    )
+  },
+  blockquote: ({ className, children }) => {
+    const alertType = getAlertTypeFromClassName(className)
+
+    if (!alertType) {
+      return <blockquote className={className}>{children}</blockquote>
+    }
+
+    return (
+      <Box
+        component="blockquote"
+        className={className}
+        sx={(theme) => {
+          const color = GITHUB_ALERTS[alertType].color
+          return {
+            m: '12px 0 18px',
+            px: 2,
+            py: 1,
+            borderLeft: `4px solid ${color}`,
+            borderRadius: 1,
+            bgcolor: alpha(color, theme.palette.mode === 'dark' ? 0.16 : 0.08),
+            '& p': {
+              my: 0.75,
+            },
+            '& .markdown-alert-title': {
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.75,
+              fontWeight: 700,
+              lineHeight: 1.4,
+            },
+          }
+        }}
+      >
+        {children}
+      </Box>
+    )
+  },
+}
+
 const findFirstTextNode = (node: MarkdownNode): MarkdownNode | null => {
   if (node.type === 'text') return node
   for (const child of node.children ?? []) {
@@ -185,10 +263,6 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   })
   const { downloaded, total } = download
 
-  const openUrlWithNotice = (url: string) => {
-    void openExternalUrl(url).catch(showNotice.error)
-  }
-
   const progress = useMemo(() => {
     if (total <= 0) return 0
     return Math.min((downloaded / total) * 100, 100)
@@ -212,8 +286,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       ) as Record<GitHubAlertType, string>,
     [t],
   )
-  const remarkGitHubAlertsPlugin = useMemo(
-    () => () => remarkGitHubAlerts(githubAlertLabels),
+  const remarkPlugins = useMemo(
+    () => [() => remarkGitHubAlerts(githubAlertLabels)],
     [githubAlertLabels],
   )
 
@@ -475,83 +549,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {open && (
           <Suspense fallback={<LinearProgress />}>
             <LazyReactMarkdown
-              remarkPlugins={[remarkGitHubAlertsPlugin]}
-              components={{
-                a: ({ href, children, ...props }) => {
-                  const isFragment = href?.startsWith('#') ?? false
-                  const renderedHref = isFragment
-                    ? `#${UPDATE_MARKDOWN_ID_PREFIX}${href?.slice(1)}`
-                    : href
-                      ? '#'
-                      : undefined
-
-                  return (
-                    <a
-                      {...props}
-                      href={renderedHref}
-                      target={undefined}
-                      rel={undefined}
-                      onClick={(event) => {
-                        if (isFragment) return
-                        event.preventDefault()
-                        if (!href) return
-                        openUrlWithNotice(href)
-                      }}
-                      onAuxClick={(event) => {
-                        if (isFragment) return
-                        event.preventDefault()
-                        if (event.button === 1 && href) {
-                          openUrlWithNotice(href)
-                        }
-                      }}
-                    >
-                      {children}
-                    </a>
-                  )
-                },
-                blockquote: ({ className, children }) => {
-                  const alertType = getAlertTypeFromClassName(className)
-
-                  if (!alertType) {
-                    return (
-                      <blockquote className={className}>{children}</blockquote>
-                    )
-                  }
-
-                  return (
-                    <Box
-                      component="blockquote"
-                      className={className}
-                      sx={(theme) => {
-                        const color = GITHUB_ALERTS[alertType].color
-                        return {
-                          m: '12px 0 18px',
-                          px: 2,
-                          py: 1,
-                          borderLeft: `4px solid ${color}`,
-                          borderRadius: 1,
-                          bgcolor: alpha(
-                            color,
-                            theme.palette.mode === 'dark' ? 0.16 : 0.08,
-                          ),
-                          '& p': {
-                            my: 0.75,
-                          },
-                          '& .markdown-alert-title': {
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 0.75,
-                            fontWeight: 700,
-                            lineHeight: 1.4,
-                          },
-                        }
-                      }}
-                    >
-                      {children}
-                    </Box>
-                  )
-                },
-              }}
+              remarkPlugins={remarkPlugins}
+              components={MARKDOWN_COMPONENTS}
             >
               {markdownContent}
             </LazyReactMarkdown>

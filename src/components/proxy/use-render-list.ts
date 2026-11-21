@@ -175,15 +175,19 @@ export const useRenderList = (
   chainOccurrencesRef.current = chainOccurrences
   const chainDelayGroup =
     mode === 'rule' && selectedGroup ? selectedGroup : CHAIN_DELAY_GROUP
-  const chainDelayKey = chainOccurrences
-    .map(({ member }) => {
-      if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
-      const source = member.node.source
-      return source.kind === 'provider'
-        ? `provider:${source.providerName}:${source.proxyName}`
-        : `core:${source.proxyName}`
-    })
-    .join('\u0000')
+  const chainDelayKey = useMemo(
+    () =>
+      chainOccurrences
+        .map(({ member }) => {
+          if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
+          const source = member.node.source
+          return source.kind === 'provider'
+            ? `provider:${source.providerName}:${source.proxyName}`
+            : `core:${source.proxyName}`
+        })
+        .join('\u0000'),
+    [chainOccurrences],
+  )
 
   useEffect(() => {
     if (!isChainMode || !chainDelayKey) return
