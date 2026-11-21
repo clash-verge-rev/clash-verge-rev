@@ -162,6 +162,30 @@ fn instance_auth(token: String) -> impl warp::Filter<Extract = (), Error = warp:
         .untuple_one()
 }
 
+/// The PAC script as actually served: default fallback plus `%mixed-port%` expansion.
+/// The cache-busting URL hash must be derived from this exact content, not the raw template,
+/// or a port change would serve a different script under an unchanged URL.
+pub async fn pac_script(pac_content: Option<&str>) -> String {
+    // Port changes disable PAC, so the draft port avoids per-request Core queries.
+    let pac_port = MixedPort::desired().await;
+    pac_content
+        .unwrap_or(DEFAULT_PAC)
+        .replace("%mixed-port%", &format!("{pac_port}"))
+}
+
+/// Build the PAC URL with a cache-busting query derived from the PAC content.
+///
+/// The OS caches PAC files by URL, so a content change must also change the URL
+/// or the new rules only take effect after restarting the system proxy (#8609).
+pub fn pac_auto_url(proxy_host: &str, pac_port: u16, pac_content: &str) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash as _, Hasher as _};
+
+    let mut hasher = DefaultHasher::new();
+    pac_content.hash(&mut hasher);
+    format!("http://{proxy_host}:{pac_port}/commands/pac?v={:016x}", hasher.finish())
+}
+
 fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
@@ -204,15 +228,14 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
             );
         }
         let verge_config = Config::verge().await;
-        let verge_data = verge_config.data_arc();
-        let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
-        // Port changes disable PAC, so the draft port avoids per-request Core queries.
-        let pac_port = MixedPort::desired().await;
-        let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        // Draft-aware: `executor::apply` runs `Effect::SystemProxy` (which hashes the new content
+        // into the OS PAC URL) before `transaction.commit()`, so `data_arc()` would still serve
+        // the stale script and let the OS cache it under the fresh URL.
+        let pac_content = pac_script(verge_config.latest_arc().pac_file_content.as_deref()).await;
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
-                .body(processed_content)
+                .body(pac_content)
                 .unwrap_or_default(),
         )
     });

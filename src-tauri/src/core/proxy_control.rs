@@ -346,6 +346,8 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
     if verge.proxy_auto_config.unwrap_or_default() {
         ensure!(pac_port != 0, "embedded PAC server port must not be zero");
         Ok(MacosProxyConfig::Pac {
+            // Bare URL: the pinned `clash_verge_service_ipc` `validate_pac_url` rejects query
+            // strings, so cache-busting can only ride on the direct sysproxy path (#8609).
             url: format!("http://{LOOPBACK_HOST}:{pac_port}/commands/pac"),
         })
     } else {
