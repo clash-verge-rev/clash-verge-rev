@@ -173,13 +173,15 @@ export async function getProxyView(): Promise<ProxyViewV1> {
   return view
 }
 
+// getClashLogs matches both patterns against every log line.
+const CLASH_LOG_REGEX = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
+const CLASH_LOG_NEW_REGEX = /(.+?)\s+(.+?)\s+(.+)/
+
 export async function getClashLogs() {
-  const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
-  const newRegex = /(.+?)\s+(.+?)\s+(.+)/
   const logs = await commands.getClashLogs()
 
   return logs.reduce<ILogItem[]>((acc, log) => {
-    const result = log.match(regex)
+    const result = log.match(CLASH_LOG_REGEX)
     if (result) {
       const [_, _time, type, payload] = result
       const time = dayjs(_time).format('MM-DD HH:mm:ss')
@@ -187,7 +189,7 @@ export async function getClashLogs() {
       return acc
     }
 
-    const result2 = log.match(newRegex)
+    const result2 = log.match(CLASH_LOG_NEW_REGEX)
     if (result2) {
       const [_, time, type, payload] = result2
       acc.push({ time, type, payload })
