@@ -167,7 +167,11 @@ const remarkGitHubAlerts = (labels: Record<GitHubAlertType, string>) => {
   return visit
 }
 
-export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
+export interface UpdateViewerRef extends DialogRef {
+  open: (update?: Update | null) => void
+}
+
+export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
   const { t, i18n } = useTranslation()
 
   const [open, setOpen] = useState(false)
@@ -195,8 +199,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   }, [downloaded, total])
 
   useImperativeHandle(ref, () => ({
-    open: () => {
-      setRefreshedUpdate(undefined)
+    open: (update) => {
+      setRefreshedUpdate(update)
       setOpen(true)
     },
     close: () => setOpen(false),
