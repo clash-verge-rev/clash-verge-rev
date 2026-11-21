@@ -79,7 +79,7 @@ export const SystemInfoCard = () => {
     try {
       await patchVerge({ enable_auto_launch: !verge.enable_auto_launch })
     } catch (err) {
-      console.error('切换开机自启动状态失败:', err)
+      showNotice.error(err)
     }
   }, [verge, patchVerge])
 
