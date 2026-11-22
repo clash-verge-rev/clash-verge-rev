@@ -186,6 +186,12 @@ fn skip_without_network_service(enabling: bool, outcome: sysproxy::Result<()>) -
             logging!(warn, Type::Core, "no active network service, nothing to turn off");
             Ok(false)
         }
+        // Without the desktop's proxy tool the app could never have turned the proxy on.
+        #[cfg(target_os = "linux")]
+        Err(sysproxy::Error::MissingCommand(command)) if !enabling => {
+            logging!(warn, Type::Core, "`{command}` is not installed, nothing to turn off");
+            Ok(false)
+        }
         other => other.map(|()| true).map_err(anyhow::Error::from),
     }
 }
@@ -585,7 +591,7 @@ mod tests {
     use std::collections::VecDeque;
     use sysproxy::{Autoproxy, Sysproxy};
 
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     use super::skip_without_network_service;
 
     #[cfg(target_os = "macos")]
@@ -624,6 +630,14 @@ mod tests {
     fn turning_the_proxy_on_without_a_network_service_still_fails() {
         assert!(skip_without_network_service(true, Err(sysproxy::Error::NoActiveNetworkService)).is_err());
         assert!(skip_without_network_service(true, Err(sysproxy::Error::NetworkInterface)).is_err());
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn a_desktop_without_its_proxy_tool_has_nothing_to_turn_off() {
+        let missing = || Err(sysproxy::Error::MissingCommand("gsettings".into()));
+        assert_eq!(skip_without_network_service(false, missing()).ok(), Some(false));
+        assert!(skip_without_network_service(true, missing()).is_err());
     }
 
     #[test]
