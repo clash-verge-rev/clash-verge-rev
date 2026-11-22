@@ -28,6 +28,7 @@ export const LayoutItem = (props: Props) => {
 
   const effectiveMenuIcon =
     navCollapsed && menu_icon === 'disable' ? 'monochrome' : menu_icon
+  const expandedColorful = !navCollapsed && effectiveMenuIcon === 'colorful'
 
   return (
     <ListItem
@@ -50,6 +51,11 @@ export const LayoutItem = (props: Props) => {
               color: 'text.primary',
               fontWeight: '700',
             },
+          },
+          expandedColorful && {
+            '--icon-space': '40px', // 36px icon plus 4px clearance
+            '& .MuiListItemIcon-root': { minWidth: 'var(--icon-space)' },
+            '&::after': { content: '""', flex: '0 1 var(--icon-space)' },
           },
           ({ palette: { mode, primary } }) => {
             const bgcolor =
@@ -85,7 +91,17 @@ export const LayoutItem = (props: Props) => {
         <ListItemText
           sx={{
             textAlign: 'center',
-            marginLeft: effectiveMenuIcon === 'disable' ? '' : '-35px',
+            marginLeft:
+              expandedColorful || effectiveMenuIcon === 'disable' ? 0 : '-35px',
+            ...(expandedColorful && {
+              flex: '1 0 auto',
+              maxWidth: 'calc(100% - var(--icon-space))',
+              '& .MuiListItemText-primary': {
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              },
+            }),
           }}
           primary={children}
         />
