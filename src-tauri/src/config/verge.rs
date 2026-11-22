@@ -112,6 +112,10 @@ pub struct IVerge {
     pub auto_switch_selector_group: Option<bool>,
 
     pub auto_check_update: Option<bool>,
+
+    /// `auto`, `github` or `github_proxy`
+    pub update_channel: Option<String>,
+
     pub default_latency_test: Option<String>,
 
     pub default_latency_timeout: Option<i16>,
@@ -461,6 +465,7 @@ impl IVerge {
         patch_opt_field!(self, patch, auto_close_connection);
         patch_opt_field!(self, patch, auto_switch_selector_group);
         patch_opt_field!(self, patch, auto_check_update);
+        patch_opt_field!(self, patch, update_channel);
         patch_opt_field!(self, patch, default_latency_test);
         patch_opt_field!(self, patch, default_latency_timeout);
         patch_opt_field!(self, patch, enable_auto_delay_detection);

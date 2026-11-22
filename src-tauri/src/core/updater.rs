@@ -1,4 +1,8 @@
-use crate::{config::Config, singleton, utils::dirs};
+use crate::{
+    config::{Config, MixedPort},
+    singleton,
+    utils::dirs,
+};
 use anyhow::{Context as _, Result};
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
@@ -197,16 +201,40 @@ pub enum DownloadEvent {
 }
 
 const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"];
+const GITHUB_ENDPOINT: &str =
+    "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json";
 /// A source delivering less than this per window is dropped for the next one.
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
 
-/// The manifest's URL, then the other mirror, then GitHub itself.
-fn download_sources(url: &tauri::Url) -> Vec<tauri::Url> {
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum UpdateChannel {
+    /// The configured endpoints with mirror fallbacks.
+    Auto,
+    Github,
+    /// GitHub through the Core's mixed port.
+    GithubProxy,
+}
+
+impl UpdateChannel {
+    async fn current() -> Self {
+        match Config::verge().await.latest_arc().update_channel.as_deref() {
+            Some("github") => Self::Github,
+            Some("github_proxy") => Self::GithubProxy,
+            _ => Self::Auto,
+        }
+    }
+}
+
+/// The manifest's URL, then the other mirror, then GitHub itself; only GitHub outside `Auto`.
+fn download_sources(url: &tauri::Url, channel: UpdateChannel) -> Vec<tauri::Url> {
     let origin = MIRRORS
         .iter()
         .find_map(|mirror| url.as_str().strip_prefix(mirror))
         .unwrap_or(url.as_str());
+    if channel != UpdateChannel::Auto {
+        return vec![tauri::Url::parse(origin).unwrap_or_else(|_| url.clone())];
+    }
     let mut sources = vec![url.clone()];
     if origin.starts_with("https://github.com/") {
         let candidates = MIRRORS.iter().map(|mirror| format!("{mirror}{origin}"));
@@ -224,7 +252,7 @@ fn download_sources(url: &tauri::Url) -> Vec<tauri::Url> {
 /// Tries every source with a throughput floor, then again stopping only on a stall, so a link
 /// that is slow everywhere still finishes.
 async fn download(update: &Update, on_event: impl Fn(DownloadEvent) + Sync) -> Result<Vec<u8>> {
-    let sources = download_sources(&update.download_url);
+    let sources = download_sources(&update.download_url, UpdateChannel::current().await);
     let mut last_error = None;
     for floor in [MIN_PROGRESS, 1] {
         for url in &sources {
@@ -282,7 +310,16 @@ impl SilentUpdater {
     /// Checks the server; Windows receives `/LANG` to suppress the NSIS language dialog,
     /// see `packages/windows/installer.nsi`.
     async fn check(app_handle: &tauri::AppHandle) -> Result<Option<Update>> {
-        let updater_builder = app_handle.updater_builder();
+        let channel = UpdateChannel::current().await;
+        let mut updater_builder = app_handle.updater_builder();
+        if channel != UpdateChannel::Auto {
+            updater_builder = updater_builder.endpoints(vec![tauri::Url::parse(GITHUB_ENDPOINT)?])?;
+        }
+        if channel == UpdateChannel::GithubProxy {
+            let port = MixedPort::desired().await;
+            // The resulting `Update` keeps this proxy for its download.
+            updater_builder = updater_builder.proxy(tauri::Url::parse(&format!("http://127.0.0.1:{port}"))?);
+        }
         #[cfg(target_os = "windows")]
         let updater_builder = {
             let verge_lang = Config::verge().await.latest_arc().language.clone();
@@ -583,8 +620,7 @@ impl SilentUpdater {
 
         logging!(info, Type::System, "Silent updater: checking for updates...");
 
-        let updater = app_handle.updater()?;
-        let update = match updater.check().await {
+        let update = match Self::check(app_handle).await {
             Ok(Some(update)) => update,
             Ok(None) => {
                 logging!(info, Type::System, "Silent updater: no update available");
@@ -592,7 +628,7 @@ impl SilentUpdater {
             }
             Err(e) => {
                 logging!(warn, Type::System, "Silent updater: check failed: {e}");
-                return Err(e.into());
+                return Err(e);
             }
         };
 
