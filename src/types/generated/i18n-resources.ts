@@ -1167,6 +1167,7 @@ export interface TranslationResources {
             defaultLatencyTimeout: string
             enableBuiltinEnhanced: string
             proxyLayoutColumns: string
+            updateChannel: string
           }
           options: {
             autoLogClean: {
@@ -1175,6 +1176,11 @@ export interface TranslationResources {
             }
             proxyLayoutColumns: {
               auto: string
+            }
+            updateChannel: {
+              auto: string
+              github: string
+              githubProxy: string
             }
           }
           title: string

@@ -483,6 +483,7 @@ const settingsCatalog: readonly SettingEntry[] = [
     'settings.modals.misc.fields.autoSwitchSelectorGroup':
       'auto switch select group',
     'settings.modals.misc.fields.autoCheckUpdate': 'auto check update',
+    'settings.modals.misc.fields.updateChannel': 'update channel source',
     'settings.modals.misc.fields.enableBuiltinEnhanced':
       'enable builtin enhanced',
     'settings.modals.misc.fields.proxyLayoutColumns': 'proxy layout columns',

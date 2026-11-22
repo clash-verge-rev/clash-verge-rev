@@ -413,6 +413,7 @@
         "autoCloseConnections": "Автоматическое закрытие соединений",
         "autoSwitchSelectorGroup": "Автопереключение группы select",
         "autoCheckUpdate": "Автоматическая проверка обновлений",
+        "updateChannel": "Канал обновлений",
         "enableBuiltinEnhanced": "Включить встроенные улучшения",
         "proxyLayoutColumns": "Количество столбцов в макете прокси",
         "autoLogClean": "Автоматическая очистка логов",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "Никогда не очищать",
           "retainDays": "Хранить {{n}} дней"
+        },
+        "updateChannel": {
+          "auto": "Авто (зеркала)",
+          "github": "GitHub",
+          "githubProxy": "GitHub через прокси"
         }
       }
     },

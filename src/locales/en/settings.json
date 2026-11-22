@@ -413,6 +413,7 @@
         "autoCloseConnections": "Auto Close Connections",
         "autoSwitchSelectorGroup": "Auto Switch Select Group",
         "autoCheckUpdate": "Auto Check Update",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Enable Builtin Enhanced",
         "proxyLayoutColumns": "Proxy Layout Columns",
         "autoLogClean": "Auto Log Clean",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "Never Clean",
           "retainDays": "Retain {{n}} Days"
+        },
+        "updateChannel": {
+          "auto": "Auto (Mirrors)",
+          "github": "GitHub",
+          "githubProxy": "GitHub via Proxy"
         }
       }
     },

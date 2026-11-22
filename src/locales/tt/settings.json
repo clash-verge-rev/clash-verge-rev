@@ -413,6 +413,7 @@
         "autoCloseConnections": "Тоташуларны автоматик ябу",
         "autoSwitchSelectorGroup": "Select төркемен автоматик күчерү",
         "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
+        "updateChannel": "Яңарту каналы",
         "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
         "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
         "autoLogClean": "Логларны автоматик чистарту",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "Беркайчан чистартмаска",
           "retainDays": "{{n}} көн саклау"
+        },
+        "updateChannel": {
+          "auto": "Автоматик (көзгеләр)",
+          "github": "GitHub",
+          "githubProxy": "Прокси аша GitHub"
         }
       }
     },

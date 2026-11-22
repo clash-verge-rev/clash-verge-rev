@@ -413,6 +413,7 @@
         "autoCloseConnections": "自动关闭连接",
         "autoSwitchSelectorGroup": "选择节点时联动代理组",
         "autoCheckUpdate": "自动检查更新",
+        "updateChannel": "更新通道",
         "enableBuiltinEnhanced": "内置增强功能",
         "proxyLayoutColumns": "代理页布局列数",
         "autoLogClean": "自动清理日志",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "不清理",
           "retainDays": "保留 {{n}} 天"
+        },
+        "updateChannel": {
+          "auto": "自动（镜像）",
+          "github": "GitHub",
+          "githubProxy": "GitHub（经代理）"
         }
       }
     },

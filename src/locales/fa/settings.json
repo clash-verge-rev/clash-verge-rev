@@ -413,6 +413,7 @@
         "autoCloseConnections": "بستن خودکار اتصالات",
         "autoSwitchSelectorGroup": "تغییر خودکار گروه select",
         "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
+        "updateChannel": "کانال به‌روزرسانی",
         "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
         "proxyLayoutColumns": "ستون چیدمان پراکسی",
         "autoLogClean": "پاکسازی خودکار لاگ",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "هرگز پاک نکن",
           "retainDays": "نگهداری به مدت {{n}} روز"
+        },
+        "updateChannel": {
+          "auto": "خودکار (آینه‌ها)",
+          "github": "GitHub",
+          "githubProxy": "GitHub از طریق پروکسی"
         }
       }
     },

@@ -413,6 +413,7 @@
         "autoCloseConnections": "연결 자동 종료",
         "autoSwitchSelectorGroup": "노드 선택 시 그룹 연동",
         "autoCheckUpdate": "업데이트 자동 확인",
+        "updateChannel": "업데이트 채널",
         "enableBuiltinEnhanced": "내장 향상 기능 사용",
         "proxyLayoutColumns": "프록시 레이아웃 열 수",
         "autoLogClean": "로그 자동 정리",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "정리 안 함",
           "retainDays": "{{n}}일 보관"
+        },
+        "updateChannel": {
+          "auto": "자동 (미러)",
+          "github": "GitHub",
+          "githubProxy": "GitHub (프록시 경유)"
         }
       }
     },

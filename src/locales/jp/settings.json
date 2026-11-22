@@ -413,6 +413,7 @@
         "autoCloseConnections": "接続を自動的に閉じる",
         "autoSwitchSelectorGroup": "ノード選択時にグループを連動",
         "autoCheckUpdate": "自動更新チェック",
+        "updateChannel": "アップデートチャネル",
         "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
         "proxyLayoutColumns": "プロキシページのレイアウト列数",
         "autoLogClean": "ログを自動的にクリーンアップ",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "クリーンアップしない",
           "retainDays": "{{n}}日間保持"
+        },
+        "updateChannel": {
+          "auto": "自動（ミラー）",
+          "github": "GitHub",
+          "githubProxy": "GitHub（プロキシ経由）"
         }
       }
     },

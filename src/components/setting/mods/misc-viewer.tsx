@@ -38,6 +38,7 @@ const buildInitialValues = (verge?: IVergeConfig | null) => ({
   autoCloseConnection: verge?.auto_close_connection ?? true,
   autoSwitchSelectorGroup: verge?.auto_switch_selector_group ?? true,
   autoCheckUpdate: verge?.auto_check_update ?? true,
+  updateChannel: verge?.update_channel || 'auto',
   enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
   proxyLayoutColumn: verge?.proxy_layout_column || 6,
   enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
@@ -106,6 +107,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         auto_close_connection: values.autoCloseConnection,
         auto_switch_selector_group: values.autoSwitchSelectorGroup,
         auto_check_update: values.autoCheckUpdate,
+        update_channel: values.updateChannel,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
         proxy_layout_column: values.proxyLayoutColumn,
         enable_auto_delay_detection: values.enableAutoDelayDetection,
@@ -288,6 +290,36 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
               setValues((v) => ({ ...v, autoCheckUpdate: c }))
             }
           />
+        </ListItem>
+
+        <ListItem
+          data-setting-target="settings.modals.misc.fields.updateChannel"
+          sx={{ padding: '5px 2px' }}
+        >
+          <ListItemText
+            primary={t('settings.modals.misc.fields.updateChannel')}
+          />
+          <Select
+            size="small"
+            sx={{ width: 160, '> div': { py: '7.5px' } }}
+            value={values.updateChannel}
+            onChange={(e) =>
+              setValues((v) => ({
+                ...v,
+                updateChannel: e.target.value as string,
+              }))
+            }
+          >
+            <MenuItem value="auto">
+              {t('settings.modals.misc.options.updateChannel.auto')}
+            </MenuItem>
+            <MenuItem value="github">
+              {t('settings.modals.misc.options.updateChannel.github')}
+            </MenuItem>
+            <MenuItem value="github_proxy">
+              {t('settings.modals.misc.options.updateChannel.githubProxy')}
+            </MenuItem>
+          </Select>
         </ListItem>
 
         <ListItem

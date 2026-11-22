@@ -413,6 +413,7 @@
         "autoCloseConnections": "Tutup Koneksi Otomatis",
         "autoSwitchSelectorGroup": "Alihkan Grup Select Otomatis",
         "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+        "updateChannel": "Saluran Pembaruan",
         "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
         "proxyLayoutColumns": "Kolom Tata Letak Proksi",
         "autoLogClean": "Pembersihan Log Otomatis",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "Jangan Pernah Bersihkan",
           "retainDays": "Simpan {{n}} Hari"
+        },
+        "updateChannel": {
+          "auto": "Otomatis (Mirror)",
+          "github": "GitHub",
+          "githubProxy": "GitHub melalui Proxy"
         }
       }
     },

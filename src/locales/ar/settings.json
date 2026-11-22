@@ -413,6 +413,7 @@
         "autoCloseConnections": "إغلاق الاتصالات تلقائيًا",
         "autoSwitchSelectorGroup": "تبديل مجموعة select تلقائيًا",
         "autoCheckUpdate": "فحص التحديث تلقائيًا",
+        "updateChannel": "قناة التحديث",
         "enableBuiltinEnhanced": "تفعيل التحسين المدمج",
         "proxyLayoutColumns": "أعمدة عرض الوكيل",
         "autoLogClean": "تنظيف السجلات تلقائيًا",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "عدم التنظيف أبدًا",
           "retainDays": "الاحتفاظ لمدة {{n}} يومًا"
+        },
+        "updateChannel": {
+          "auto": "تلقائي (مرايا)",
+          "github": "GitHub",
+          "githubProxy": "GitHub عبر الوكيل"
         }
       }
     },

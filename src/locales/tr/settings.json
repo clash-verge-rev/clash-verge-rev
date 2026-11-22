@@ -413,6 +413,7 @@
         "autoCloseConnections": "Bağlantıları Otomatik Kapat",
         "autoSwitchSelectorGroup": "Select Grubunu Otomatik Değiştir",
         "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
+        "updateChannel": "Güncelleme Kanalı",
         "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
         "proxyLayoutColumns": "Vekil Düzeni Sütunları",
         "autoLogClean": "Otomatik Günlük Temizleme",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "Asla Temizleme",
           "retainDays": "{{n}} Gün Sakla"
+        },
+        "updateChannel": {
+          "auto": "Otomatik (Yansılar)",
+          "github": "GitHub",
+          "githubProxy": "Proxy üzerinden GitHub"
         }
       }
     },

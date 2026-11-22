@@ -413,6 +413,7 @@
         "autoCloseConnections": "Cerrar conexiones automáticamente",
         "autoSwitchSelectorGroup": "Cambiar grupo select automáticamente",
         "autoCheckUpdate": "Comprobar actualizaciones automáticamente",
+        "updateChannel": "Canal de actualización",
         "enableBuiltinEnhanced": "Habilitar funciones mejoradas integradas",
         "proxyLayoutColumns": "Número de columnas en la disposición de la página de proxy",
         "autoLogClean": "Limpiar registros automáticamente",
@@ -435,6 +436,11 @@
         "autoLogClean": {
           "never": "No limpiar",
           "retainDays": "Retener {{n}} días"
+        },
+        "updateChannel": {
+          "auto": "Automático (espejos)",
+          "github": "GitHub",
+          "githubProxy": "GitHub mediante proxy"
         }
       }
     },
