@@ -34,8 +34,8 @@ async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str)
         SERVICE_MANAGER.handle_service_status(status).await
     };
     #[cfg(windows)]
-    return finish_service_installation(result, error_code, |reason| async move {
-        manager.continue_with_sidecar(Some(&reason)).await
+    return finish_service_installation(result, error_code, async |reason| {
+        manager.continue_with_sidecar(Some(reason)).await
     })
     .await;
 
@@ -46,14 +46,13 @@ async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str)
 }
 
 #[cfg(any(windows, test))]
-async fn finish_service_installation<Fallback, FallbackFuture>(
+async fn finish_service_installation<Fallback>(
     installation: anyhow::Result<()>,
     error_code: &str,
     fallback: Fallback,
 ) -> CmdResult<ServiceInstallOutcome>
 where
-    Fallback: FnOnce(String) -> FallbackFuture,
-    FallbackFuture: std::future::Future<Output = anyhow::Result<()>>,
+    Fallback: AsyncFnOnce(&str) -> anyhow::Result<()>,
 {
     let Err(error) = installation else {
         return Ok(ServiceInstallOutcome::Installed);
@@ -75,7 +74,7 @@ where
         return Err(proxy_aware_coded_error(&error, error_code));
     }
     let reason = reasons.join("\n");
-    fallback(reason.clone())
+    fallback(reason.as_str())
         .await
         .map_err(|error| proxy_aware_coded_error(&error, "SERVICE_SIDECAR_FAILED"))?;
     Ok(ServiceInstallOutcome::Sidecar { reason })
@@ -191,7 +190,7 @@ mod tests {
                 None => anyhow::anyhow!("{reason}"),
             }
             .context("install service failed");
-            let result = finish_service_installation(Err(error), "SERVICE_INSTALL_FAILED", |_| async {
+            let result = finish_service_installation(Err(error), "SERVICE_INSTALL_FAILED", async |_| {
                 fallback_called.set(true);
                 anyhow::ensure!(fallback_ready, "another core is running");
                 Ok(())
