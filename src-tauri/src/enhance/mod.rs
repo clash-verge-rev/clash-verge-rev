@@ -526,11 +526,7 @@ fn enforce_tun(mut config: Mapping, snapshot: Mapping) -> Mapping {
     if snapshot.is_empty() {
         return config;
     }
-    let mut tun = config
-        .get("tun")
-        .and_then(Value::as_mapping)
-        .cloned()
-        .unwrap_or_default();
+    let mut tun = take_mapping(&mut config, "tun");
     tun.extend(snapshot);
     config.insert(Value::from("tun"), Value::Mapping(tun));
     config
@@ -673,8 +669,14 @@ fn builtin_hy_alpn(mut config: Mapping) -> Mapping {
         for proxy in proxies.iter_mut() {
             let Some(proxy) = proxy.as_mapping_mut() else { continue };
             let is_hysteria = proxy.get("type").and_then(Value::as_str) == Some("hysteria");
-            if is_hysteria && let Some(Value::String(alpn)) = proxy.get("alpn").cloned() {
-                proxy.insert("alpn".into(), Value::Sequence(vec![Value::String(alpn)]));
+            // take in place: `remove` would drop a non-string `alpn` (e.g. an
+            // already converted sequence) when the pattern below rejects it
+            if is_hysteria
+                && let Some(alpn) = proxy.get_mut("alpn")
+                && let Value::String(text) = alpn
+            {
+                let text = std::mem::take(text);
+                *alpn = Value::Sequence(vec![Value::String(text)]);
             }
         }
     }
