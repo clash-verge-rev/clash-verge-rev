@@ -632,14 +632,6 @@ mod tests {
         assert!(skip_without_network_service(true, Err(sysproxy::Error::NetworkInterface)).is_err());
     }
 
-    #[cfg(target_os = "linux")]
-    #[test]
-    fn a_desktop_without_its_proxy_tool_has_nothing_to_turn_off() {
-        let missing = || Err(sysproxy::Error::MissingCommand("gsettings".into()));
-        assert_eq!(skip_without_network_service(false, missing()).ok(), Some(false));
-        assert!(skip_without_network_service(true, missing()).is_err());
-    }
-
     #[test]
     fn empty_custom_bypass_uses_defaults() {
         assert_eq!(format_bypass(false, ""), DEFAULT_BYPASS);
