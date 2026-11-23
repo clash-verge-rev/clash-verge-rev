@@ -591,7 +591,7 @@ mod tests {
     use std::collections::VecDeque;
     use sysproxy::{Autoproxy, Sysproxy};
 
-    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    #[cfg(target_os = "macos")]
     use super::skip_without_network_service;
 
     #[cfg(target_os = "macos")]
