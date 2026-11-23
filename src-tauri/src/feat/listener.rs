@@ -67,7 +67,6 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     let candidate = Arc::new(latest_runtime_mapping().await?);
 
     let was_running = !matches!(*manager.get_running_mode(), RunningMode::NotRunning);
-    // Shared with the post-failure re-probe below, so this clone is refcount-only.
     let assessment = probe_proxy_ports(Arc::clone(&current), Arc::clone(&candidate), was_running).await?;
     if let Some(outcome) = rejected_save_outcome(assessment)? {
         return Ok(outcome);
