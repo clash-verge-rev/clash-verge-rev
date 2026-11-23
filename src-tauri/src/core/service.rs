@@ -27,6 +27,8 @@ use clash_verge_service_ipc::{
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
 use parking_lot::Mutex;
+#[cfg(target_os = "macos")]
+use std::sync::LazyLock;
 use std::{
     collections::HashMap,
     env::current_exe,
@@ -34,7 +36,7 @@ use std::{
     path::{Path, PathBuf},
     process::Command as StdCommand,
     sync::{
-        Arc, LazyLock,
+        Arc,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
