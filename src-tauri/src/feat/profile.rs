@@ -9,7 +9,8 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging};
-use tauri_plugin_mihomo::models::ProxyType;
+use std::collections::{HashMap, HashSet};
+use tauri_plugin_mihomo::models::{Proxy, ProxyType, Rule};
 use tristr::alias::String;
 
 /// Toggle proxy profile
@@ -23,13 +24,9 @@ pub async fn toggle_proxy_profile(profile_index: String) {
     }
 }
 
-/// First `select` group in config order that lists `group_name`, when that group is `url-test` or `fallback`.
+/// First `select` group in config order that lists `group_name`.
 fn parent_selector<'a>(groups: &'a [serde_yaml_ng::Value], group_name: &str) -> Option<&'a str> {
     let field = |group: &'a serde_yaml_ng::Value, key: &str| group.get(key)?.as_str();
-    let group = groups.iter().find(|group| field(group, "name") == Some(group_name))?;
-    if !matches!(field(group, "type"), Some("url-test" | "fallback")) {
-        return None;
-    }
     groups
         .iter()
         .filter(|group| field(group, "type") == Some("select"))
@@ -43,9 +40,24 @@ fn parent_selector<'a>(groups: &'a [serde_yaml_ng::Value], group_name: &str) -> 
         .find(|name| *name != "GLOBAL")
 }
 
-/// Rule traffic enters through `select` groups, so a pick inside a `url-test`/`fallback` group only
-/// carries traffic once the first `select` group listing that group points at it.
-/// Returns the node that group left.
+/// Whether rule traffic passes through `group_name`, following each group's current selection.
+fn rules_reach(groups: &[Proxy], rules: &[Rule], group_name: &str) -> bool {
+    let by_name: HashMap<&str, &Proxy> = groups.iter().map(|group| (group.name.as_str(), group)).collect();
+    let mut seen = HashSet::new();
+    rules.iter().any(|rule| {
+        let mut hop = by_name.get(rule.proxy.as_str()).copied();
+        while let Some(group) = hop.filter(|group| seen.insert(group.name.as_str())) {
+            if group.name == group_name {
+                return true;
+            }
+            hop = group.now.as_deref().and_then(|now| by_name.get(now).copied());
+        }
+        false
+    })
+}
+
+/// A pick in a group no rule reaches only carries traffic once the first `select` group listing that group
+/// points at it. Returns that `select` group, whose connections are then stale.
 async fn follow_group_selection(group_name: &str) -> Option<std::string::String> {
     if !Config::verge()
         .await
@@ -70,13 +82,15 @@ async fn follow_group_selection(group_name: &str) -> Option<std::string::String>
     };
 
     let mihomo = handle::Handle::mihomo();
-    let current = mihomo.get_proxy_by_name(&selector).await.ok()?;
+    let groups = mihomo.get_groups().await.ok()?.proxies;
+    let current = groups.iter().find(|group| group.name == selector)?;
     // The runtime config can lag the core, which alone knows what this group is now.
     if current.proxy_type != ProxyType::Selector {
         return None;
     }
-    let previous = current.now?;
-    if previous == group_name {
+    if current.now.as_deref() == Some(group_name)
+        || rules_reach(&groups, &mihomo.get_rules().await.ok()?.rules, group_name)
+    {
         return None;
     }
     if let Err(err) = mihomo.select_node_for_group(&selector, group_name).await {
@@ -90,7 +104,7 @@ async fn follow_group_selection(group_name: &str) -> Option<std::string::String>
             "Failed to persist proxy selection for {selector}: {error:#}"
         );
     }
-    Some(previous)
+    Some(selector)
 }
 
 pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) -> Result<()> {
@@ -132,22 +146,13 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str, unfix: bool) 
     }
     let mut stale_proxies: Vec<_> = previous_proxy.into_iter().collect();
     if !unfix
-        && let Some(left) = follow_group_selection(group_name).await
+        && let Some(followed) = follow_group_selection(group_name).await
         && auto_close
     {
-        stale_proxies.push(left);
+        stale_proxies.push(followed);
     }
     finish_proxy_switch(stale_proxies).await;
     Ok(())
-}
-
-/// Lets a `url-test`/`fallback` group carry rule traffic without fixing a node in it.
-pub async fn follow_proxy_group(group_name: &str) {
-    let Some(left) = follow_group_selection(group_name).await else {
-        return;
-    };
-    let auto_close = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
-    finish_proxy_switch(auto_close.then_some(left).into_iter().collect()).await;
 }
 
 async fn finish_proxy_switch(stale_proxies: Vec<std::string::String>) {
@@ -379,7 +384,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_first_select_group_follows_an_auto_group() -> Result<()> {
+    fn only_the_first_select_group_follows_a_group() -> Result<()> {
         let groups: Vec<serde_yaml_ng::Value> = serde_yaml_ng::from_str(
             "
 - { name: GLOBAL, type: select, proxies: [Auto, Proxy, Direct] }
@@ -391,6 +396,22 @@ mod tests {
 
         assert_eq!(parent_selector(&groups, "Auto"), Some("Proxy"));
         assert_eq!(parent_selector(&groups, "Proxy"), None);
+        Ok(())
+    }
+
+    #[test]
+    fn rules_reach_the_groups_on_their_current_path() -> Result<()> {
+        let groups: Vec<Proxy> = serde_yaml_ng::from_str(
+            "
+- { name: Proxy, type: Selector, now: Auto }
+- { name: Auto, type: URLTest, now: Node }
+- { name: Spare, type: Selector, now: Node }
+",
+        )?;
+        let rules: Vec<Rule> = serde_yaml_ng::from_str("[{ proxy: DIRECT }, { proxy: Proxy }]")?;
+
+        assert!(rules_reach(&groups, &rules, "Auto"));
+        assert!(!rules_reach(&groups, &rules, "Spare"));
         Ok(())
     }
 }

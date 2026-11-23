@@ -98,6 +98,9 @@
         "directMode": "직접 모드",
         "group": "그룹",
         "proxy": "프록시",
+        "ruleTarget": "규칙 대상",
+        "defaultRoute": "기본",
+        "ruleCount": "규칙 {{count}}개",
         "noActiveNode": "활성 프록시 노드 없음"
       },
       "status": {

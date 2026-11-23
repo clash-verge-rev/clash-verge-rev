@@ -98,6 +98,9 @@
         "directMode": "Direktmodus",
         "group": "Proxy-Gruppe",
         "proxy": "Knoten",
+        "ruleTarget": "Regelziel",
+        "defaultRoute": "Standard",
+        "ruleCount": "{{count}} Regeln",
         "noActiveNode": "Kein aktiver Proxy-Knoten"
       },
       "status": {

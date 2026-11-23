@@ -48,9 +48,12 @@ fn windows_owner_credentials(app_data_root: &Path) -> Result<(OwnerIdentity, Opt
 #[cfg(windows)]
 fn windows_current_identity() -> Result<OwnerIdentity> {
     Ok(OwnerIdentity::Windows {
-        sid: windows_owner::current_sid()?,
+        sid: current_user_sid()?,
     })
 }
+
+#[cfg(windows)]
+pub(crate) use windows_owner::{account_sid, current_sid as current_user_sid};
 
 #[cfg(windows)]
 pub(crate) fn create_private_current_user_file(path: &Path) -> Result<std::fs::File> {
@@ -93,8 +96,8 @@ mod windows_owner {
     use std::os::windows::io::{AsRawHandle as _, FromRawHandle as _};
     use std::path::Path;
     use windows_sys::Win32::Foundation::{
-        CloseHandle, ERROR_ACCESS_DENIED, ERROR_FILE_EXISTS, ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, GENERIC_READ,
-        GENERIC_WRITE, GetLastError, INVALID_HANDLE_VALUE, LocalFree,
+        CloseHandle, ERROR_ACCESS_DENIED, ERROR_FILE_EXISTS, ERROR_FILE_NOT_FOUND, ERROR_INSUFFICIENT_BUFFER,
+        ERROR_PATH_NOT_FOUND, GENERIC_READ, GENERIC_WRITE, GetLastError, INVALID_HANDLE_VALUE, LocalFree,
     };
     use windows_sys::Win32::Security::Authorization::{
         ConvertSidToStringSidW, ConvertStringSecurityDescriptorToSecurityDescriptorW, GetSecurityInfo, SDDL_REVISION_1,
@@ -103,8 +106,9 @@ mod windows_owner {
     use windows_sys::Win32::Security::{
         ACCESS_ALLOWED_ACE, ACL, DACL_SECURITY_INFORMATION, EqualSid, GetAce, GetSecurityDescriptorControl,
         GetSecurityDescriptorDacl, GetSecurityDescriptorOwner, GetTokenInformation, IsValidSid, IsWellKnownSid,
-        OWNER_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID, SE_DACL_PROTECTED,
-        SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER, TokenUser, WinBuiltinAdministratorsSid, WinLocalSystemSid,
+        LookupAccountNameW, OWNER_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR,
+        PSID, SE_DACL_PROTECTED, SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER, TokenUser, WinBuiltinAdministratorsSid,
+        WinLocalSystemSid,
     };
     use windows_sys::Win32::Storage::FileSystem::{
         BY_HANDLE_FILE_INFORMATION, CREATE_NEW, CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_DIRECTORY,
@@ -123,7 +127,7 @@ mod windows_owner {
         crate::utils::server::INSTANCE_LOCK_FILE,
     ];
 
-    pub(super) fn current_sid() -> Result<String> {
+    pub(crate) fn current_sid() -> Result<String> {
         let mut token = std::ptr::null_mut();
         if unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) } == 0 {
             return Err(std::io::Error::last_os_error()).context("failed to open process token");
@@ -143,6 +147,44 @@ mod windows_owner {
         }
         let token_user = unsafe { &*buffer.as_ptr().cast::<TOKEN_USER>() };
         sid_to_string(token_user.User.Sid)
+    }
+
+    pub(crate) fn account_sid(account: &str) -> Result<String> {
+        let wide_account: Vec<_> = account.encode_utf16().chain([0]).collect();
+        let mut sid_size = 0;
+        let mut domain_len = 0;
+        let mut account_type = 0;
+        unsafe {
+            LookupAccountNameW(
+                std::ptr::null(),
+                wide_account.as_ptr(),
+                std::ptr::null_mut(),
+                &mut sid_size,
+                std::ptr::null_mut(),
+                &mut domain_len,
+                &mut account_type,
+            );
+        }
+        if unsafe { GetLastError() } != ERROR_INSUFFICIENT_BUFFER {
+            return Err(std::io::Error::last_os_error()).context("failed to size account SID buffer");
+        }
+        let mut sid = vec![0_usize; (sid_size as usize).div_ceil(std::mem::size_of::<usize>())];
+        let mut domain = vec![0_u16; domain_len as usize];
+        if unsafe {
+            LookupAccountNameW(
+                std::ptr::null(),
+                wide_account.as_ptr(),
+                sid.as_mut_ptr().cast(),
+                &mut sid_size,
+                domain.as_mut_ptr(),
+                &mut domain_len,
+                &mut account_type,
+            )
+        } == 0
+        {
+            return Err(std::io::Error::last_os_error()).context("failed to look up account SID");
+        }
+        sid_to_string(sid.as_mut_ptr().cast())
     }
 
     pub(super) fn load_or_create_token(app_data_root: &Path, sid: &str) -> Result<String> {
@@ -640,12 +682,12 @@ mod windows_owner {
     fn sid_to_string(sid: PSID) -> Result<String> {
         let mut value = std::ptr::null_mut();
         if unsafe { ConvertSidToStringSidW(sid, &mut value) } == 0 || value.is_null() {
-            return Err(std::io::Error::last_os_error()).context("failed to format process SID");
+            return Err(std::io::Error::last_os_error()).context("failed to format Windows SID");
         }
         let value = LocalWideString(value);
         let length = (0..).take_while(|index| unsafe { *value.0.add(*index) } != 0).count();
         String::from_utf16(unsafe { std::slice::from_raw_parts(value.0, length) })
-            .context("process SID is not valid UTF-16")
+            .context("Windows SID is not valid UTF-16")
     }
 
     fn encode_token(token: &[u8; TOKEN_BYTES]) -> String {

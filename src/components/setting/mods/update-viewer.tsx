@@ -263,10 +263,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   })
   const { downloaded, total } = download
 
-  const progress = useMemo(() => {
-    if (total <= 0) return 0
-    return Math.min((downloaded / total) * 100, 100)
-  }, [downloaded, total])
+  const progress = total <= 0 ? 0 : Math.min((downloaded / total) * 100, 100)
 
   useImperativeHandle(ref, () => ({
     open: () => {

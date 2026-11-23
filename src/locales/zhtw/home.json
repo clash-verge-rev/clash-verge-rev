@@ -98,6 +98,9 @@
         "directMode": "直連模式",
         "group": "代理組",
         "proxy": "節點",
+        "ruleTarget": "規則入口",
+        "defaultRoute": "預設",
+        "ruleCount": "{{count}} 條規則",
         "noActiveNode": "暫無作用中的代理節點"
       },
       "status": {

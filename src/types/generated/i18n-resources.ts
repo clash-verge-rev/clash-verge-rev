@@ -69,11 +69,14 @@ export interface TranslationResources {
             refreshDelay: string
           }
           labels: {
+            defaultRoute: string
             directMode: string
             globalMode: string
             group: string
             noActiveNode: string
             proxy: string
+            ruleCount: string
+            ruleTarget: string
           }
           status: {
             error: string

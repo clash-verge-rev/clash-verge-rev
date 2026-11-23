@@ -514,9 +514,21 @@ export function hideNotice(id: number) {
 }
 
 function hideNoticesByCode(code: string) {
-  notices
-    .filter((notice) => notice.code === code)
-    .forEach(({ id }) => hideNotice(id))
+  // One subscriber notification for the whole batch; per-notice removal
+  // would notify once per item.
+  const remaining: NoticeItem[] = []
+  let removed = false
+  for (const notice of notices) {
+    if (notice.code === code) {
+      removed = true
+      if (notice.timerId) clearTimeout(notice.timerId)
+    } else {
+      remaining.push(notice)
+    }
+  }
+  if (!removed) return
+  notices = remaining
+  notifySubscribers()
 }
 
 export function syncSidecarFailure(snapshot: SidecarFailureSnapshot) {

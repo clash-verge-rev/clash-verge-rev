@@ -1,8 +1,7 @@
 import { Box } from '@mui/material'
-import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { Switch, TooltipIcon } from '@/components/base'
+import { Switch, TooltipIcon, switchChangeValue } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
 
@@ -20,10 +19,6 @@ const SettingSystem = ({ onError }: Props) => {
 
   const { enable_auto_launch, enable_silent_start } = verge ?? {}
 
-  const onSwitchFormat = (
-    _e: React.ChangeEvent<HTMLInputElement>,
-    value: boolean,
-  ) => value
   const onChangeData = (patch: Partial<IVergeConfig>) => {
     mutateVerge((prev) => ({ ...prev, ...patch }))
   }
@@ -52,7 +47,7 @@ const SettingSystem = ({ onError }: Props) => {
           value={enable_auto_launch ?? false}
           valueProps="checked"
           onCatch={onError}
-          onFormat={onSwitchFormat}
+          onFormat={switchChangeValue}
           onChange={(e) => {
             onChangeData({ enable_auto_launch: e })
           }}
@@ -85,7 +80,7 @@ const SettingSystem = ({ onError }: Props) => {
           value={enable_silent_start ?? false}
           valueProps="checked"
           onCatch={onError}
-          onFormat={onSwitchFormat}
+          onFormat={switchChangeValue}
           onChange={(e) => onChangeData({ enable_silent_start: e })}
           onGuard={(e) => patchVerge({ enable_silent_start: e })}
         >

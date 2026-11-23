@@ -423,7 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
-        "autoSwitchSelectorGroup": "In rule mode, selecting a node in a url-test or fallback group also switches the first select group containing it to that group",
+        "autoSwitchSelectorGroup": "In rule mode, selecting a node in a group that rule traffic does not reach also switches the first select group containing it to that group",
         "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
         "autoDelayDetection": "Periodically test the current node latency in the background",
         "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"

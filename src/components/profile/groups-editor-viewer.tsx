@@ -221,7 +221,7 @@ export const GroupsEditorViewer = (props: Props) => {
           group={item}
           onDelete={() => {
             if (isDeleted) {
-              setDeleteSeq(deleteSeq.filter((v) => v !== item.name))
+              setDeleteSeq((prev) => prev.filter((v) => v !== item.name))
             } else {
               setDeleteSeq((prev) => [...prev, item.name])
             }
@@ -236,7 +236,7 @@ export const GroupsEditorViewer = (props: Props) => {
           type="prepend"
           group={item}
           onDelete={() => {
-            setPrependSeq(prependSeq.filter((v) => v.name !== item.name))
+            setPrependSeq((prev) => prev.filter((v) => v.name !== item.name))
           }}
         />
       )
@@ -247,7 +247,7 @@ export const GroupsEditorViewer = (props: Props) => {
         type="append"
         group={item}
         onDelete={() => {
-          setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+          setAppendSeq((prev) => prev.filter((v) => v.name !== item.name))
         }}
       />
     )
@@ -258,21 +258,22 @@ export const GroupsEditorViewer = (props: Props) => {
     activeIndex: number,
     overIndex: number,
   ) => {
-    const list = category === 'prepend' ? prependSeq : appendSeq
-    const filtered =
-      category === 'prepend' ? filteredPrependSeq : filteredAppendSeq
     const setList = category === 'prepend' ? setPrependSeq : setAppendSeq
-    const activeRealIndex = findRealIndex(list, filtered, activeIndex)
-    const overRealIndex = findRealIndex(list, filtered, overIndex)
-    if (
-      activeRealIndex < 0 ||
-      overRealIndex < 0 ||
-      activeRealIndex === overRealIndex
-    ) {
-      return
-    }
+    // Recompute inside the updater: two writes in one batch must not read the same pre-batch array.
+    setList((prev) => {
+      const filtered = prev.filter((v) => match(v.name))
+      const activeRealIndex = findRealIndex(prev, filtered, activeIndex)
+      const overRealIndex = findRealIndex(prev, filtered, overIndex)
+      if (
+        activeRealIndex < 0 ||
+        overRealIndex < 0 ||
+        activeRealIndex === overRealIndex
+      ) {
+        return prev
+      }
 
-    setList(arrayMove(list, activeRealIndex, overRealIndex))
+      return arrayMove(prev, activeRealIndex, overRealIndex)
+    })
   }
 
   const fetchContent = useCallback(async () => {
@@ -1031,14 +1032,20 @@ export const GroupsEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       validateGroup()
+                      const values = formIns.getValues()
                       for (const item of [...prependSeq, ...groupList]) {
-                        if (item.name === formIns.getValues().name) {
+                        if (item.name === values.name) {
                           throw new Error(
                             t('profiles.modals.groupsEditor.errors.nameExists'),
                           )
                         }
                       }
-                      setPrependSeq([formIns.getValues(), ...prependSeq])
+                      // Recheck inside the updater so a same-batch second click cannot duplicate the entry.
+                      setPrependSeq((prev) =>
+                        prev.some((v) => v.name === values.name)
+                          ? prev
+                          : [values, ...prev],
+                      )
                     } catch (err) {
                       showNotice.error(err)
                     }
@@ -1055,14 +1062,20 @@ export const GroupsEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       validateGroup()
+                      const values = formIns.getValues()
                       for (const item of [...appendSeq, ...groupList]) {
-                        if (item.name === formIns.getValues().name) {
+                        if (item.name === values.name) {
                           throw new Error(
                             t('profiles.modals.groupsEditor.errors.nameExists'),
                           )
                         }
                       }
-                      setAppendSeq([...appendSeq, formIns.getValues()])
+                      // Recheck inside the updater so a same-batch second click cannot duplicate the entry.
+                      setAppendSeq((prev) =>
+                        prev.some((v) => v.name === values.name)
+                          ? prev
+                          : [...prev, values],
+                      )
                     } catch (err) {
                       showNotice.error(err)
                     }

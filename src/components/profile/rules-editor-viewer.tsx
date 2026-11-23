@@ -318,7 +318,7 @@ export const RulesEditorViewer = (props: Props) => {
           ruleRaw={item}
           onDelete={() => {
             if (isDeleted) {
-              setDeleteSeq(deleteSeq.filter((v) => v !== item))
+              setDeleteSeq((prev) => prev.filter((v) => v !== item))
             } else {
               setDeleteSeq((prev) => [...prev, item])
             }
@@ -333,13 +333,13 @@ export const RulesEditorViewer = (props: Props) => {
           type="prepend"
           ruleRaw={item}
           onDelete={() => {
-            setPrependSeq(prependSeq.filter((v) => v !== item))
+            setPrependSeq((prev) => prev.filter((v) => v !== item))
           }}
           onAppend={() => {
             setAppendSeq((prev) =>
               prev.includes(item) ? prev : [...prev, item],
             )
-            setPrependSeq(prependSeq.filter((v) => v !== item))
+            setPrependSeq((prev) => prev.filter((v) => v !== item))
           }}
         />
       )
@@ -350,13 +350,13 @@ export const RulesEditorViewer = (props: Props) => {
         type="append"
         ruleRaw={item}
         onDelete={() => {
-          setAppendSeq(appendSeq.filter((v) => v !== item))
+          setAppendSeq((prev) => prev.filter((v) => v !== item))
         }}
         onPrepend={() => {
           setPrependSeq((prev) =>
             prev.includes(item) ? prev : [...prev, item],
           )
-          setAppendSeq(appendSeq.filter((v) => v !== item))
+          setAppendSeq((prev) => prev.filter((v) => v !== item))
         }}
       />
     )
@@ -367,21 +367,22 @@ export const RulesEditorViewer = (props: Props) => {
     activeIndex: number,
     overIndex: number,
   ) => {
-    const list = category === 'prepend' ? prependSeq : appendSeq
-    const filtered =
-      category === 'prepend' ? filteredPrependSeq : filteredAppendSeq
     const setList = category === 'prepend' ? setPrependSeq : setAppendSeq
-    const activeRealIndex = findRealIndex(list, filtered, activeIndex)
-    const overRealIndex = findRealIndex(list, filtered, overIndex)
-    if (
-      activeRealIndex < 0 ||
-      overRealIndex < 0 ||
-      activeRealIndex === overRealIndex
-    ) {
-      return
-    }
+    // Recompute inside the updater: two writes in one batch must not read the same pre-batch array.
+    setList((prev) => {
+      const filtered = prev.filter(match)
+      const activeRealIndex = findRealIndex(prev, filtered, activeIndex)
+      const overRealIndex = findRealIndex(prev, filtered, overIndex)
+      if (
+        activeRealIndex < 0 ||
+        overRealIndex < 0 ||
+        activeRealIndex === overRealIndex
+      ) {
+        return prev
+      }
 
-    setList(arrayMove(list, activeRealIndex, overRealIndex))
+      return arrayMove(prev, activeRealIndex, overRealIndex)
+    })
   }
 
   const fetchContent = useCallback(async () => {
@@ -748,8 +749,9 @@ export const RulesEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       const raw = validateRule()
-                      if (prependSeq.includes(raw)) return
-                      setPrependSeq([raw, ...prependSeq])
+                      setPrependSeq((prev) =>
+                        prev.includes(raw) ? prev : [raw, ...prev],
+                      )
                     } catch (err: any) {
                       showNotice.error(err)
                     }
@@ -766,8 +768,9 @@ export const RulesEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       const raw = validateRule()
-                      if (appendSeq.includes(raw)) return
-                      setAppendSeq([...appendSeq, raw])
+                      setAppendSeq((prev) =>
+                        prev.includes(raw) ? prev : [...prev, raw],
+                      )
                     } catch (err: any) {
                       showNotice.error(err)
                     }
