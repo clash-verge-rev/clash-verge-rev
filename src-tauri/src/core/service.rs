@@ -27,13 +27,18 @@ use clash_verge_service_ipc::{
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
 use parking_lot::Mutex;
+#[cfg(target_os = "macos")]
+use std::sync::LazyLock;
 use std::{
     collections::HashMap,
     env::current_exe,
     future::Future,
     path::{Path, PathBuf},
     process::Command as StdCommand,
-    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -98,23 +103,29 @@ fn app_data_owner_command(credentials: &OwnerCredentials) -> Option<String> {
 /// They are discarded with that session rather than cached across service upgrades.
 #[derive(Clone)]
 struct ActiveServiceSession {
-    proof: OwnerSessionProof,
+    proof: Arc<OwnerSessionProof>,
     supports_runtime_staging: bool,
     supports_runtime_file_read: bool,
     supports_runtime_geo_read: bool,
 }
 
 fn generate_service_session_token() -> Result<String> {
+    use std::fmt::Write as _;
+
     let mut bytes = [0_u8; 32];
     getrandom::fill(&mut bytes).context("failed to generate service owner session")?;
-    Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
+    let mut token = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(token, "{byte:02x}");
+    }
+    Ok(token)
 }
 
-pub(crate) fn active_service_session() -> Result<OwnerSessionProof> {
+pub(crate) fn active_service_session() -> Result<Arc<OwnerSessionProof>> {
     ACTIVE_SERVICE_SESSION
         .lock()
         .as_ref()
-        .map(|session| session.proof.clone())
+        .map(|session| Arc::clone(&session.proof))
         .context("service owner session is not active")
 }
 
@@ -248,7 +259,7 @@ fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
 }
 
 #[cfg(target_os = "macos")]
-fn macos_service_install_markers() -> Vec<String> {
+static MACOS_SERVICE_INSTALL_MARKERS: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         format!(
             "/Library/LaunchDaemons/{}.plist",
@@ -263,11 +274,11 @@ fn macos_service_install_markers() -> Vec<String> {
         #[cfg(not(feature = "verge-dev"))]
         "/Library/PrivilegedHelperTools/io.github.clashverge.helper".to_owned(),
     ]
-}
+});
 
 #[cfg(target_os = "macos")]
 fn macos_service_install_marker_exists() -> std::io::Result<bool> {
-    for marker in macos_service_install_markers() {
+    for marker in MACOS_SERVICE_INSTALL_MARKERS.iter() {
         if path_entry_exists_without_follow(Path::new(&marker))? {
             return Ok(true);
         }
@@ -735,7 +746,7 @@ fn uninstall_service() -> Result<()> {
 
     // logging!(debug, Type::Service, "uninstall command: {}", command);
 
-    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
+    let status = StdCommand::new("osascript").args(["-e", command.as_str()]).status()?;
 
     ensure_uninstall_success(&status)
 }
@@ -917,10 +928,9 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
 
     let credentials = current_owner_credentials()?;
     let runtime = collect_service_runtime_bundle(config_file).await?;
-    let proposed_session_token = generate_service_session_token()?;
     let request = StartClashRequest {
         runtime,
-        proposed_session_token: proposed_session_token.clone(),
+        proposed_session_token: generate_service_session_token()?,
         macos_proxy: None,
     };
 
@@ -969,10 +979,10 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let capabilities = probe_service_capabilities().await;
     tracing::Span::current().record("staging", capabilities.runtime_staging);
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
-        proof: OwnerSessionProof {
+        proof: Arc::new(OwnerSessionProof {
             generation: result.session.generation,
-            token: proposed_session_token,
-        },
+            token: request.proposed_session_token,
+        }),
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
         supports_runtime_geo_read: capabilities.runtime_geo_read,
@@ -1254,7 +1264,11 @@ async fn sync_runtime_geo(
     let Ok(local) = tokio::fs::metadata(target).await else {
         return Ok(());
     };
-    let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, asset, u64::MAX).await? else {
+    let request = RuntimeFileRequest {
+        destination: asset.to_owned(),
+        offset: u64::MAX,
+    };
+    let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, &request).await? else {
         return Ok(());
     };
     // A newer local file is a change the next staging still has to copy into the runtime.
@@ -1301,7 +1315,7 @@ async fn publish_fetched(
     let manager = CoreManager::global();
     let _lifecycle = manager.lifecycle_lock.lock().await;
     let unchanged = matches!(*manager.get_running_mode(), RunningMode::Service)
-        && active_service_session().is_ok_and(|current| current == *session);
+        && active_service_session().is_ok_and(|current| *current == *session);
     let declared = if unchanged {
         match applied_remote_providers(runtime, app_dir) {
             Ok(declared) => declared,
@@ -1354,8 +1368,13 @@ async fn fetch_runtime_file(
 
     let mut written = 0_u64;
     let mut identity = None;
+    let mut request = RuntimeFileRequest {
+        destination: destination.to_owned(),
+        offset: 0,
+    };
     loop {
-        let (hex, len, mtime_ns) = match read_chunk(credentials, session, destination, written).await? {
+        request.offset = written;
+        let (hex, len, mtime_ns) = match read_chunk(credentials, session, &request).await? {
             Some(chunk) => chunk,
             None => return Ok(Fetch::SessionLost),
         };
@@ -1386,8 +1405,11 @@ async fn recheck_identity(
     session: &OwnerSessionProof,
     cache: &FetchedCache,
 ) -> Result<Fetch> {
-    let destination = &cache.declared.provider.destination;
-    Ok(match read_chunk(credentials, session, destination, cache.len).await? {
+    let request = RuntimeFileRequest {
+        destination: cache.declared.provider.destination.to_owned(),
+        offset: cache.len,
+    };
+    Ok(match read_chunk(credentials, session, &request).await? {
         None => Fetch::SessionLost,
         Some((Some(hex), len, mtime_ns)) if hex.is_empty() && (len, mtime_ns) == (cache.len, cache.mtime_ns) => {
             Fetch::Complete { len, mtime_ns }
@@ -1400,14 +1422,9 @@ async fn recheck_identity(
 async fn read_chunk(
     credentials: &OwnerCredentials,
     session: &OwnerSessionProof,
-    destination: &str,
-    offset: u64,
+    request: &RuntimeFileRequest,
 ) -> Result<Option<(Option<String>, u64, Option<u64>)>> {
-    let request = RuntimeFileRequest {
-        destination: destination.to_owned(),
-        offset,
-    };
-    let response = clash_verge_service_ipc::read_runtime_file(credentials, session, &request)
+    let response = clash_verge_service_ipc::read_runtime_file(credentials, session, request)
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code == ServiceErrorCode::NotActive as u16
@@ -1997,8 +2014,9 @@ impl ServiceManager {
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
         // Use the caller's action; a racing observation may clear the stored pending action.
         let Some(action) = requested_action(&status) else {
-            self.set_status(status.clone());
-            return report_non_actionable_status(status);
+            let reported = report_non_actionable_status(&status);
+            self.set_status(status);
+            return reported;
         };
         // Atomically record the request and capture the Sidecar allowance it clears.
         let sidecar_allowed_before = RUN_STATE.request_action(action);
@@ -2033,7 +2051,7 @@ async fn run_action_restoring_sidecar<E: RunStateEnv>(
 }
 
 /// Explain a status that asks for no privileged action, refusing the ones we cannot act on.
-fn report_non_actionable_status(status: ServiceStatus) -> Result<()> {
+fn report_non_actionable_status(status: &ServiceStatus) -> Result<()> {
     match status {
         ServiceStatus::Checking => bail!("service status is still being checked"),
         ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
@@ -2553,7 +2571,7 @@ mod tests {
     #[test]
     fn legacy_socket_alone_is_not_install_evidence() {
         assert!(
-            !super::macos_service_install_markers()
+            !super::MACOS_SERVICE_INSTALL_MARKERS
                 .iter()
                 .any(|marker| marker == "/tmp/verge/clash-verge-service.sock")
         );
