@@ -47,14 +47,14 @@ pre-agent-steps:
       const harnessPath = `${process.env.RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs`;
       const harness = fs.readFileSync(harnessPath, 'utf8');
       const quotaBranch = [
-        '          if (isQuotaExceeded) {',
+        '          if (isQuotaExceeded && (result.retryAfterMs == null || /\\bquota exceeded\\b/i.test(result.output))) {',
         '            log(`attempt ${attempt + 1}: Copilot quota exceeded — not retrying`);',
         '            return { action: "stop" };',
         '          }',
       ].join('\n');
       const nonBlockingQuotaBranch = [
         '          let quotaErrorMsg = null;',
-        '          if (isQuotaExceeded) {',
+        '          if (isQuotaExceeded && (result.retryAfterMs == null || /\\bquota exceeded\\b/i.test(result.output))) {',
         '            log(`attempt ${attempt + 1}: Copilot quota exceeded — not retrying`);',
         '            quotaErrorMsg = { action: "stop" };',
         '          }',
