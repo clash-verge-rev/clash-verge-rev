@@ -98,6 +98,9 @@
         "directMode": "Прямой режим",
         "group": "Группа",
         "proxy": "Прокси",
+        "ruleTarget": "Цель правил",
+        "defaultRoute": "По умолчанию",
+        "ruleCount": "Правил: {{count}}",
         "noActiveNode": "Нет активного прокси"
       },
       "status": {

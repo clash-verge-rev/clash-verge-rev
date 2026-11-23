@@ -12,7 +12,7 @@ import {
   Tooltip,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useState, type Ref } from 'react'
+import { useRef, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
@@ -26,6 +26,10 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [copySuccess, setCopySuccess] = useState<null | string>(null)
+  // A second copy within the window must not be hidden by the first timer.
+  const copySuccessTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
   const [isSaving, setIsSaving] = useState(false)
 
   const { clashInfo, patchInfo } = useClashInfo()
@@ -36,6 +40,14 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
     verge?.enable_external_controller ?? false,
   )
 
+  // A reopen within the window must not replay the previous session's toast.
+  const closeDialog = () => {
+    clearTimeout(copySuccessTimerRef.current)
+    copySuccessTimerRef.current = undefined
+    setCopySuccess(null)
+    setOpen(false)
+  }
+
   // 对话框打开时初始化配置
   useSettingDialog(ref, 'controller-viewer', open, () => ({
     open: async () => {
@@ -44,7 +56,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setSecret(clashInfo?.secret || '')
       setEnableController(verge?.enable_external_controller ?? false)
     },
-    close: () => setOpen(false),
+    close: closeDialog,
   }))
 
   // 保存配置
@@ -78,7 +90,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       showNotice.success('shared.feedback.notifications.common.saveSuccess')
-      setOpen(false)
+      closeDialog()
     } catch (err) {
       showNotice.error(
         'shared.feedback.notifications.common.saveFailed',
@@ -96,7 +108,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       try {
         await navigator.clipboard.writeText(text)
         setCopySuccess(type)
-        setTimeout(() => setCopySuccess(null))
+        clearTimeout(copySuccessTimerRef.current)
+        copySuccessTimerRef.current = setTimeout(
+          () => setCopySuccess(null),
+          2000,
+        )
       } catch (err) {
         console.warn('[ControllerViewer] copy to clipboard failed:', err)
         showNotice.error(
@@ -122,8 +138,8 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         )
       }
       cancelBtn={t('shared.actions.cancel')}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
+      onClose={closeDialog}
+      onCancel={closeDialog}
       onOk={onSave}
     >
       <span data-settings-dialog="controller-viewer" />

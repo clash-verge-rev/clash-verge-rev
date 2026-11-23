@@ -47,7 +47,6 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::copy_clash_env,
             cmd::record_selected_node,
             cmd::switch_proxy_node,
-            cmd::follow_proxy_group,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::set_dns_override,

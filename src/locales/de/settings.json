@@ -423,7 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Wenn der ausgewählte Knoten in der Proxy-Gruppe oder der Proxy-Modus geändert wird, werden die bestehenden Verbindungen geschlossen.",
-        "autoSwitchSelectorGroup": "Wird im Regelmodus ein Knoten in einer url-test- oder fallback-Gruppe gewählt, wechselt auch die erste select-Gruppe, die diese Gruppe enthält, auf diese Gruppe.",
+        "autoSwitchSelectorGroup": "Wird im Regelmodus ein Knoten in einer Gruppe gewählt, die kein Regelverkehr erreicht, wechselt auch die erste select-Gruppe, die diese Gruppe enthält, auf diese Gruppe.",
         "enableBuiltinEnhanced": "Kompatibilitätsbehandlung der Konfigurationsdatei",
         "autoDelayDetection": "Überprüft regelmäßig im Hintergrund die Latenz des aktuellen Knotens",
         "defaultLatencyTest": "Dies wird nur für HTTP-Client-Anfragentests verwendet und hat keine Auswirkungen auf die Konfigurationsdatei."

@@ -23,6 +23,8 @@ import { emitTestAll } from '@/services/bus'
 
 import { EnhancedCard } from './enhanced-card'
 
+const TEST_LIST_SENSORS = [PointerSensor]
+
 // 自定义滚动条样式
 const ScrollBox = styled(Box)(({ theme }) => ({
   maxHeight: '180px',
@@ -205,7 +207,7 @@ export const TestCard = () => {
       }
     >
       <ScrollBox>
-        <DragDropProvider sensors={[PointerSensor]} onDragEnd={onDragEnd}>
+        <DragDropProvider sensors={TEST_LIST_SENSORS} onDragEnd={onDragEnd}>
           {renderTestItems}
         </DragDropProvider>
       </ScrollBox>

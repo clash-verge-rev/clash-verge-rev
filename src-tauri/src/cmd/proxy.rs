@@ -27,12 +27,6 @@ pub async fn switch_proxy_node(group_name: String, proxy_name: String, unfix: bo
         .stringify_err()
 }
 
-#[tauri::command]
-#[specta::specta]
-pub async fn follow_proxy_group(group_name: String) {
-    crate::feat::follow_proxy_group(&group_name).await;
-}
-
 fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
     let mut seen = HashSet::new();
 
