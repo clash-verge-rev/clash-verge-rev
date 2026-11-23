@@ -29,7 +29,6 @@
         "biomejs.biome"
       ],
       "settings": {
-        "rust-analyzer.cargo.features": ["verge-dev"],
         "rust-analyzer.check.command": "clippy",
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "biomejs.biome",
