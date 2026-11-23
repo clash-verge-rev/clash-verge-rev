@@ -20,6 +20,12 @@ import { showNotice } from '@/services/notice-service'
 
 import { useSettingDialog } from '../settings-search-context'
 
+const textProps = {
+  size: 'small',
+  autoComplete: 'off',
+  sx: { width: 135 },
+} as const
+
 export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const { ref } = props
   const { t } = useTranslation()
@@ -44,12 +50,6 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     },
     close: () => setOpen(false),
   }))
-
-  const textProps = {
-    size: 'small',
-    autoComplete: 'off',
-    sx: { width: 135 },
-  } as const
 
   const handleChange = (field: keyof typeof theme) => (e: any) => {
     setTheme((t) => ({ ...t, [field]: e.target.value }))

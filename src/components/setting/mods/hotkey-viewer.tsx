@@ -42,6 +42,8 @@ const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
   reactivate_profiles: 'settings.modals.hotkey.functions.reactivateProfiles',
 }
 
+const EMPTY_KEYS: string[] = []
+
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -132,7 +134,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
         <ItemWrapper key={func} data-setting-target={HOTKEY_FUNC_LABELS[func]}>
           <Typography>{t(HOTKEY_FUNC_LABELS[func])}</Typography>
           <HotkeyInput
-            value={hotkeyMap[func] ?? []}
+            value={hotkeyMap[func] ?? EMPTY_KEYS}
             onChange={(v) => setHotkeyMap((m) => ({ ...m, [func]: v }))}
           />
         </ItemWrapper>

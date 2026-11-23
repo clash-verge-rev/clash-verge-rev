@@ -8,6 +8,8 @@ import { getBaseConfig } from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
 
+import { getRuntimeConfig } from './cmds'
+
 const getUserAgentPromise = once(async () => {
   try {
     const [name, version] = await Promise.all([getName(), getVersion()])
@@ -161,6 +163,72 @@ const getProxyHost = (allowLan: boolean, bindAddress: string) => {
   return isIpv6 ? `[${address}]` : address
 }
 
+interface ProxyBasicAuth {
+  username: string
+  password: string
+}
+
+const parseProxyBasicAuth = (entry: string): ProxyBasicAuth | undefined => {
+  const separator = entry.indexOf(':')
+  if (separator < 0) return undefined
+  return {
+    username: entry.slice(0, separator),
+    password: entry.slice(separator + 1),
+  }
+}
+
+// `/configs` only exposes usernames, so the password has to come from the
+// generated runtime config.
+const resolveProxyBasicAuth = async (
+  enabledAuthentication: string[],
+): Promise<ProxyBasicAuth | undefined> => {
+  const inline = enabledAuthentication
+    .map(parseProxyBasicAuth)
+    .find((auth) => auth !== undefined)
+  if (inline) return inline
+
+  try {
+    const runtimeConfig = (await getRuntimeConfig()) as
+      | (IConfigData & { authentication?: unknown })
+      | null
+    const runtimeAuthentication = Array.isArray(runtimeConfig?.authentication)
+      ? runtimeConfig.authentication
+      : []
+    const storedAuthentication = runtimeAuthentication
+      .filter((entry): entry is string => typeof entry === 'string')
+      .map(parseProxyBasicAuth)
+      .filter((auth): auth is ProxyBasicAuth => auth !== undefined)
+
+    return (
+      storedAuthentication.find((auth) =>
+        enabledAuthentication.includes(auth.username),
+      ) ?? storedAuthentication[0]
+    )
+  } catch (error) {
+    debugLog(
+      'Failed to read the runtime config for local proxy authentication',
+      error,
+    )
+    return undefined
+  }
+}
+
+const resolveIpProxy = async () => {
+  const { mixedPort, allowLan, bindAddress, authentication } =
+    await getBaseConfig()
+  const proxyUrl = `http://${getProxyHost(allowLan, bindAddress)}:${mixedPort}`
+  const enabledAuthentication = authentication ?? []
+
+  if (enabledAuthentication.length === 0) {
+    return { all: proxyUrl }
+  }
+
+  const basicAuth = await resolveProxyBasicAuth(enabledAuthentication)
+  return {
+    all: basicAuth ? { url: proxyUrl, basicAuth } : proxyUrl,
+  }
+}
+
 // 获取当前IP和地理位置信息
 export const getIpInfo = async (): Promise<
   IpInfo & { lastFetchTs: number }
@@ -174,28 +242,7 @@ export const getIpInfo = async (): Promise<
   )
   let lastError: unknown | null = null
   const userAgent = await getUserAgentPromise()
-  const { mixedPort, allowLan, bindAddress, authentication } =
-    await getBaseConfig()
-  const proxyUrl = `http://${getProxyHost(allowLan, bindAddress)}:${mixedPort}`
-  const proxyAuthentication = authentication?.[0]
-  const authSeparator = proxyAuthentication?.indexOf(':') ?? -1
-
-  if (proxyAuthentication !== undefined && authSeparator < 0) {
-    throw new Error('Invalid mixed proxy authentication configuration')
-  }
-
-  const proxy = {
-    all:
-      proxyAuthentication === undefined
-        ? proxyUrl
-        : {
-            url: proxyUrl,
-            basicAuth: {
-              username: proxyAuthentication.slice(0, authSeparator),
-              password: proxyAuthentication.slice(authSeparator + 1),
-            },
-          },
-  }
+  const proxy = await resolveIpProxy()
   console.debug('User-Agent for IP detection:', userAgent)
 
   for (const service of shuffledServices) {
