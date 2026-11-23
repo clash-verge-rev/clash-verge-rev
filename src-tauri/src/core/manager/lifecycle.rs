@@ -6,10 +6,10 @@ use crate::core::proxy_control::{self, SysproxyFailure};
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
-use smartstring::alias::String;
 use std::{mem::DropGuard, path::Path};
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+use tristr::alias::String;
 
 #[cfg(any(target_os = "windows", test))]
 const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admin: bool) -> bool {

@@ -112,9 +112,12 @@ export const ProfileMore = (props: Props) => {
     document.markSaved(currentValue)
   })
 
+  // document gets a fresh identity every render; setValue is the stable
+  // useState setter, so the callback keys on it instead.
+  const { setValue } = document
   const handleResetToDefault = useCallback(() => {
-    document.setValue(DEFAULT_SCRIPT)
-  }, [document])
+    setValue(DEFAULT_SCRIPT)
+  }, [setValue])
 
   return (
     <>

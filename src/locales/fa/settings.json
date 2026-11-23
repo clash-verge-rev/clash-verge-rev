@@ -411,6 +411,7 @@
         "appLogMaxSize": "App Log Max Size",
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "بستن خودکار اتصالات",
+        "autoSwitchSelectorGroup": "تغییر خودکار گروه select",
         "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
         "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
         "proxyLayoutColumns": "ستون چیدمان پراکسی",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "اتصالات برقرار شده را هنگام تغییر انتخاب گروه پروکسی یا حالت پروکسی خاتمه دهید",
+        "autoSwitchSelectorGroup": "در حالت قانون، با انتخاب یک گره در گروهی که ترافیک قوانین از آن عبور نمی‌کند، اولین گروه select شامل آن نیز به همان گروه تغییر می‌کند",
         "enableBuiltinEnhanced": "مدیریت سازگاری برای فایل پیکربندی",
         "autoDelayDetection": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
         "defaultLatencyTest": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت"

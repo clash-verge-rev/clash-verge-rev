@@ -411,6 +411,7 @@
         "appLogMaxSize": "App Log Max Size",
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Auto Close Connections",
+        "autoSwitchSelectorGroup": "Auto Switch Select Group",
         "autoCheckUpdate": "Auto Check Update",
         "enableBuiltinEnhanced": "Enable Builtin Enhanced",
         "proxyLayoutColumns": "Proxy Layout Columns",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
+        "autoSwitchSelectorGroup": "In rule mode, selecting a node in a group that rule traffic does not reach also switches the first select group containing it to that group",
         "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
         "autoDelayDetection": "Periodically test the current node latency in the background",
         "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"

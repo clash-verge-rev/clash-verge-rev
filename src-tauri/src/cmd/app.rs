@@ -8,8 +8,8 @@ use crate::{
     feat,
     utils::dirs,
 };
-use smartstring::alias::String;
 use tauri::{AppHandle, Manager as _, ipc::Channel};
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]

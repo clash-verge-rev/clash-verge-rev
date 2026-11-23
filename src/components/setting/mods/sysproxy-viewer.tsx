@@ -84,6 +84,19 @@ const splitBypass = (value?: string) =>
     .map((item) => item.trim())
     .filter(Boolean)
 
+const OS = getSystem()
+
+const DEFAULT_BYPASS =
+  OS === 'windows'
+    ? 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;*.local;<local>'
+    : OS === 'linux'
+      ? 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1'
+      : '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
+
+const DEFAULT_BYPASS_CHIPS = splitBypass(DEFAULT_BYPASS)
+
+const BYPASS_SEPARATOR = OS === 'windows' ? ';' : ','
+
 const buildInitialValues = (verge?: IVergeConfig | null) => ({
   guard: verge?.enable_proxy_guard,
   enable_bypass_check: verge?.enable_bypass_check ?? true,
@@ -97,8 +110,7 @@ const buildInitialValues = (verge?: IVergeConfig | null) => ({
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
-  const systemName = getSystem()
-  const isWindows = systemName === 'windows'
+  const isWindows = OS === 'windows'
   const validReg = useMemo(() => getValidReg(isWindows), [isWindows])
 
   const [open, setOpen] = useState(false)
@@ -130,17 +142,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     queryFn: getEmbeddedServerPort,
   })
 
-  const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
-
-  const defaultBypass = () => {
-    if (isWindows) {
-      return 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;*.local;<local>'
-    }
-    if (systemName === 'linux') {
-      return 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1'
-    }
-    return '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
-  }
+  const separator = BYPASS_SEPARATOR
 
   const { systemProxyAddress } = useSystemData()
   const displayedMixedPort = useDisplayedMixedPort()
@@ -326,7 +328,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     Promise.resolve().then(async () => {
       try {
         if (Object.keys(patch).length > 0) {
-          mutateVerge({ ...verge, ...patch })
+          mutateVerge((prev) => ({ ...prev, ...patch }))
         }
         if (Object.keys(patch).length > 0) {
           await patchVerge(patch)
@@ -503,7 +505,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               checked={value.use_default}
               onChange={(_, e) => {
                 if (!e && !value.bypass) {
-                  const nextBypass = defaultBypass()
+                  const nextBypass = DEFAULT_BYPASS
                   setValue((v) => ({
                     ...v,
                     use_default: e,
@@ -575,7 +577,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             />
             <Box sx={{ padding: '0 2px 5px' }}>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {splitBypass(defaultBypass()).map((item) => (
+                {DEFAULT_BYPASS_CHIPS.map((item) => (
                   <Chip key={item} label={item} size="small" />
                 ))}
               </Box>

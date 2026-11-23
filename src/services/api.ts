@@ -4,8 +4,11 @@ import { asyncRetry } from 'foxts/async-retry'
 import { extractErrorMessage } from 'foxts/extract-error-message'
 import { once } from 'foxts/once'
 import i18n from 'i18next'
+import { getBaseConfig } from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
+
+import { getRuntimeConfig } from './cmds'
 
 const getUserAgentPromise = once(async () => {
   try {
@@ -137,6 +140,95 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
   },
 ]
 
+const getProxyHost = (allowLan: boolean, bindAddress: string) => {
+  const address = bindAddress.trim().replace(/^\[|\]$/g, '')
+  const normalizedAddress = address.toLowerCase()
+  const isIpv6 = normalizedAddress.includes(':')
+  const isIpv6Wildcard =
+    isIpv6 &&
+    normalizedAddress
+      .split(':')
+      .every((part) => part === '' || /^0+$/.test(part))
+  const isWildcard =
+    normalizedAddress === '*' ||
+    normalizedAddress === '0.0.0.0' ||
+    isIpv6Wildcard
+
+  if (!allowLan) return '127.0.0.1'
+
+  if (!address || isWildcard || normalizedAddress === 'localhost') {
+    return isIpv6Wildcard ? '[::1]' : '127.0.0.1'
+  }
+
+  return isIpv6 ? `[${address}]` : address
+}
+
+interface ProxyBasicAuth {
+  username: string
+  password: string
+}
+
+const parseProxyBasicAuth = (entry: string): ProxyBasicAuth | undefined => {
+  const separator = entry.indexOf(':')
+  if (separator < 0) return undefined
+  return {
+    username: entry.slice(0, separator),
+    password: entry.slice(separator + 1),
+  }
+}
+
+// `/configs` only exposes usernames, so the password has to come from the
+// generated runtime config.
+const resolveProxyBasicAuth = async (
+  enabledAuthentication: string[],
+): Promise<ProxyBasicAuth | undefined> => {
+  const inline = enabledAuthentication
+    .map(parseProxyBasicAuth)
+    .find((auth) => auth !== undefined)
+  if (inline) return inline
+
+  try {
+    const runtimeConfig = (await getRuntimeConfig()) as
+      | (IConfigData & { authentication?: unknown })
+      | null
+    const runtimeAuthentication = Array.isArray(runtimeConfig?.authentication)
+      ? runtimeConfig.authentication
+      : []
+    const storedAuthentication = runtimeAuthentication
+      .filter((entry): entry is string => typeof entry === 'string')
+      .map(parseProxyBasicAuth)
+      .filter((auth): auth is ProxyBasicAuth => auth !== undefined)
+
+    return (
+      storedAuthentication.find((auth) =>
+        enabledAuthentication.includes(auth.username),
+      ) ?? storedAuthentication[0]
+    )
+  } catch (error) {
+    debugLog(
+      'Failed to read the runtime config for local proxy authentication',
+      error,
+    )
+    return undefined
+  }
+}
+
+const resolveIpProxy = async () => {
+  const { mixedPort, allowLan, bindAddress, authentication } =
+    await getBaseConfig()
+  const proxyUrl = `http://${getProxyHost(allowLan, bindAddress)}:${mixedPort}`
+  const enabledAuthentication = authentication ?? []
+
+  if (enabledAuthentication.length === 0) {
+    return { all: proxyUrl }
+  }
+
+  const basicAuth = await resolveProxyBasicAuth(enabledAuthentication)
+  return {
+    all: basicAuth ? { url: proxyUrl, basicAuth } : proxyUrl,
+  }
+}
+
 // 获取当前IP和地理位置信息
 export const getIpInfo = async (): Promise<
   IpInfo & { lastFetchTs: number }
@@ -150,6 +242,7 @@ export const getIpInfo = async (): Promise<
   )
   let lastError: unknown | null = null
   const userAgent = await getUserAgentPromise()
+  const proxy = await resolveIpProxy()
   console.debug('User-Agent for IP detection:', userAgent)
 
   for (const service of shuffledServices) {
@@ -168,6 +261,7 @@ export const getIpInfo = async (): Promise<
           try {
             const response = await fetch(service.url, {
               method: 'GET',
+              proxy,
               signal: timeoutController.signal,
               connectTimeout: serviceTimeout,
               headers: {

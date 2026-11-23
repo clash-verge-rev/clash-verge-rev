@@ -31,9 +31,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Install gh-aw extension
-        uses: github/gh-aw-actions/setup-cli@862164f9ffbcce2e24e5397da938e3b19f839dce # v1.2.3
+        uses: github/gh-aw-actions/setup-cli@dfe97a19c8249d41e2adfc95f92db2b8facea58f # v1.3.1
         with:
-          version: v1.2.2
+          version: v1.3.1
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
         with:

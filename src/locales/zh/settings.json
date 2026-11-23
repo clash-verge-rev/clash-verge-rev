@@ -411,6 +411,7 @@
         "appLogMaxSize": "应用日志最大大小",
         "appLogMaxCount": "应用日志最大数量",
         "autoCloseConnections": "自动关闭连接",
+        "autoSwitchSelectorGroup": "选择节点时联动代理组",
         "autoCheckUpdate": "自动检查更新",
         "enableBuiltinEnhanced": "内置增强功能",
         "proxyLayoutColumns": "代理页布局列数",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
+        "autoSwitchSelectorGroup": "规则模式下，在规则流量未经过的代理组中选择节点时，将首个包含该组的 select 代理组切换到该组",
         "enableBuiltinEnhanced": "配置文件的兼容性处理",
         "autoDelayDetection": "后台定时检测当前节点延迟",
         "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响"

@@ -411,6 +411,7 @@
         "appLogMaxSize": "App Log Max Size",
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Тоташуларны автоматик ябу",
+        "autoSwitchSelectorGroup": "Select төркемен автоматик күчерү",
         "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
         "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
         "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
+        "autoSwitchSelectorGroup": "Кагыйдәләр режимында кагыйдәләр трафигы үтми торган төркемдә төен сайлаганда, аны эченә алган беренче select төркеме дә шул төркемгә күчә",
         "enableBuiltinEnhanced": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
         "autoDelayDetection": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
         "defaultLatencyTest": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый"

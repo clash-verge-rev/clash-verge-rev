@@ -8,18 +8,10 @@ macro_rules! revise {
 }
 
 pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
-    let tun_key = Value::from("tun");
-    let tun_val = config.get(&tun_key);
-    let mut tun_val = tun_val.map_or_else(Mapping::new, |val| {
-        val.as_mapping().cloned().unwrap_or_else(Mapping::new)
-    });
+    let mut tun_val = super::take_mapping(&mut config, "tun");
 
     if enable {
-        let dns_key = Value::from("dns");
-        let dns_val = config.get(&dns_key);
-        let mut dns_val = dns_val.map_or_else(Mapping::new, |val| {
-            val.as_mapping().cloned().unwrap_or_else(Mapping::new)
-        });
+        let mut dns_val = super::take_mapping(&mut config, "dns");
         let ipv6_key = Value::from("ipv6");
         let ipv6_val = config.get(&ipv6_key).and_then(|v| v.as_bool()).unwrap_or(false);
 

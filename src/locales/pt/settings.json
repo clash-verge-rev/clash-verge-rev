@@ -411,6 +411,7 @@
         "appLogMaxSize": "Tamanho Máximo do Log do Aplicativo",
         "appLogMaxCount": "Quantidade Máxima de Logs do Aplicativo",
         "autoCloseConnections": "Fechar Conexões Automaticamente",
+        "autoSwitchSelectorGroup": "Alternar Grupo Select Automaticamente",
         "autoCheckUpdate": "Verificar Atualizações Automaticamente",
         "enableBuiltinEnhanced": "Ativar Aprimoramento Integrado",
         "proxyLayoutColumns": "Colunas do Layout de Proxy",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Encerra as conexões estabelecidas quando a seleção do grupo de proxy ou o modo de proxy muda",
+        "autoSwitchSelectorGroup": "No modo de regras, ao escolher um nó em um grupo que o tráfego das regras não alcança, o primeiro grupo select que o contém também muda para esse grupo",
         "enableBuiltinEnhanced": "Tratamento de compatibilidade para o arquivo de configuração",
         "autoDelayDetection": "Testa periodicamente a latência do nó atual em segundo plano",
         "defaultLatencyTest": "Usado apenas para testes de requisição do cliente HTTP e não afeta o arquivo de configuração"

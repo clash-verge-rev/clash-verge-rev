@@ -411,6 +411,7 @@
         "appLogMaxSize": "App Log Max Size",
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Tutup Koneksi Otomatis",
+        "autoSwitchSelectorGroup": "Alihkan Grup Select Otomatis",
         "autoCheckUpdate": "Periksa Pembaruan Otomatis",
         "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
         "proxyLayoutColumns": "Kolom Tata Letak Proksi",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
+        "autoSwitchSelectorGroup": "Dalam mode aturan, memilih node di grup yang tidak dilalui lalu lintas aturan juga mengalihkan grup select pertama yang memuatnya ke grup tersebut",
         "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
         "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
         "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"

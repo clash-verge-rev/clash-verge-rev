@@ -416,6 +416,7 @@ export type IVerge_Deserialize = {
   enable_global_hotkey?: boolean | null
   home_cards?: JsonValue | null
   auto_close_connection?: boolean | null
+  auto_switch_selector_group?: boolean | null
   auto_check_update?: boolean | null
   default_latency_test?: string | null
   default_latency_timeout?: number | null
@@ -506,6 +507,7 @@ export type IVerge_Serialize = {
   enable_global_hotkey: boolean | null
   home_cards: JsonValue | null
   auto_close_connection: boolean | null
+  auto_switch_selector_group: boolean | null
   auto_check_update: boolean | null
   default_latency_test: string | null
   default_latency_timeout: number | null

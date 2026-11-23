@@ -98,6 +98,9 @@
         "directMode": "Direct Mode",
         "group": "Grupo de proxy",
         "proxy": "Nodo",
+        "ruleTarget": "Destino de reglas",
+        "defaultRoute": "Predeterminado",
+        "ruleCount": "{{count}} reglas",
         "noActiveNode": "No hay nodos de proxy activos"
       },
       "status": {

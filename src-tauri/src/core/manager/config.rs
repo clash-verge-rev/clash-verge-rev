@@ -14,7 +14,6 @@ use anyhow::{Result, anyhow};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::StageRuntimeOutcome;
-use smartstring::alias::String;
 use std::{
     collections::HashSet,
     mem::DropGuard,
@@ -23,6 +22,7 @@ use std::{
     time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::Error as MihomoError;
+use tristr::alias::String;
 
 /// A staging result separated from the policy that acts on it.
 #[derive(Debug, Clone, PartialEq, Eq)]

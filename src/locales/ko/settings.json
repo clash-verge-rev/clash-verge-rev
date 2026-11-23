@@ -411,6 +411,7 @@
         "appLogMaxSize": "앱 로그 최대 크기",
         "appLogMaxCount": "앱 로그 최대 개수",
         "autoCloseConnections": "연결 자동 종료",
+        "autoSwitchSelectorGroup": "노드 선택 시 그룹 연동",
         "autoCheckUpdate": "업데이트 자동 확인",
         "enableBuiltinEnhanced": "내장 향상 기능 사용",
         "proxyLayoutColumns": "프록시 레이아웃 열 수",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "프록시 그룹 선택 또는 프록시 모드 변경 시 기존 연결을 종료합니다",
+        "autoSwitchSelectorGroup": "규칙 모드에서 규칙 트래픽이 지나지 않는 그룹의 노드를 선택하면 해당 그룹을 포함하는 첫 번째 select 그룹도 그 그룹으로 전환합니다",
         "enableBuiltinEnhanced": "구성 파일에 대한 호환성 처리를 수행합니다",
         "autoDelayDetection": "백그라운드에서 현재 노드의 지연을 주기적으로 검사합니다",
         "defaultLatencyTest": "HTTP 클라이언트 요청 테스트에만 사용되며 구성 파일에는 영향을 주지 않습니다"

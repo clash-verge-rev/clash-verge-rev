@@ -98,6 +98,9 @@
         "directMode": "Doğrudan Mod",
         "group": "Grup",
         "proxy": "Vekil",
+        "ruleTarget": "Kural Hedefi",
+        "defaultRoute": "Varsayılan",
+        "ruleCount": "{{count}} kural",
         "noActiveNode": "Aktif vekil düğümü yok"
       },
       "status": {

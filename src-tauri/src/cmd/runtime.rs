@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
-use smartstring::alias::String;
 use std::collections::HashMap;
+use tristr::alias::String;
 
 #[tauri::command]
 #[specta::specta]
@@ -36,10 +36,7 @@ pub async fn get_runtime_logs() -> CmdResult<RuntimeLogs> {
 
 #[derive(serde::Serialize, specta::Type)]
 #[serde(transparent)]
-pub struct RuntimeLogs(
-    #[specta(type = HashMap<std::string::String, Vec<(std::string::String, std::string::String)>>)]
-    HashMap<String, Vec<(String, String)>>,
-);
+pub struct RuntimeLogs(HashMap<String, Vec<(String, String)>>);
 
 #[tauri::command]
 #[specta::specta]

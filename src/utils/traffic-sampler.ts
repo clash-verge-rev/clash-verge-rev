@@ -7,14 +7,33 @@ interface ICompressedDataPoint {
 
 const pad2 = (value: number) => value.toString().padStart(2, '0')
 
+// Time labels are derived once per 1Hz timestamp and redrawn several times per
+// second; the bounded cache keeps axis drawing allocation-free in steady state.
+const TIME_LABEL_CACHE_LIMIT = 1024
+const hourMinuteLabels = new Map<number, string>()
+const minuteSecondLabels = new Map<number, string>()
+
 export const formatTrafficHourMinute = (timestamp: number) => {
+  const cached = hourMinuteLabels.get(timestamp)
+  if (cached !== undefined) return cached
+
   const date = new Date(timestamp)
-  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+  const label = `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+  if (hourMinuteLabels.size >= TIME_LABEL_CACHE_LIMIT) hourMinuteLabels.clear()
+  hourMinuteLabels.set(timestamp, label)
+  return label
 }
 
 export const formatTrafficMinuteSecond = (timestamp: number) => {
+  const cached = minuteSecondLabels.get(timestamp)
+  if (cached !== undefined) return cached
+
   const date = new Date(timestamp)
-  return `${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+  const label = `${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+  if (minuteSecondLabels.size >= TIME_LABEL_CACHE_LIMIT)
+    minuteSecondLabels.clear()
+  minuteSecondLabels.set(timestamp, label)
+  return label
 }
 
 export const formatTrafficName = (timestamp: number) => {
@@ -53,10 +72,12 @@ export class TrafficDataSampler {
   private compressedBuffer: ICompressedDataPoint[] = []
   private compressedHead = 0
   private compressionQueue: ITrafficDataPoint[] = []
+  private version = 0
 
   constructor(private config: ISamplingConfig) {}
 
   addDataPoint(point: ITrafficDataPoint) {
+    this.version++
     this.rawBuffer.push(point)
 
     const rawCutoff = Date.now() - this.config.rawDataMinutes * 60 * 1000
@@ -124,10 +145,10 @@ export class TrafficDataSampler {
     ) {
       rawStart++
     }
-    const rawData = this.rawBuffer.slice(rawStart)
+    const rawCount = this.rawBuffer.length - rawStart
 
     if (minutes <= this.config.rawDataMinutes) {
-      return rawData
+      return this.rawBuffer.slice(rawStart)
     }
 
     const compressedCutoffUpper =
@@ -140,19 +161,40 @@ export class TrafficDataSampler {
     ) {
       compressedStart++
     }
+    let compressedEnd = compressedStart
+    while (
+      compressedEnd < this.compressedBuffer.length &&
+      this.compressedBuffer[compressedEnd].timestamp <= compressedCutoffUpper
+    ) {
+      compressedEnd++
+    }
 
-    const compressedData = this.compressedBuffer
-      .slice(compressedStart)
-      .filter((p) => p.timestamp <= compressedCutoffUpper)
-      .map((p) => ({
-        up: p.up,
-        down: p.down,
-        timestamp: p.timestamp,
-      }))
+    // Single preallocated result; raw entries keep their stored identity.
+    const compressedCount = compressedEnd - compressedStart
+    const result: ITrafficDataPoint[] = new Array(compressedCount + rawCount)
+    for (let i = 0; i < compressedCount; i++) {
+      const point = this.compressedBuffer[compressedStart + i]
+      result[i] = {
+        up: point.up,
+        down: point.down,
+        timestamp: point.timestamp,
+      }
+    }
+    for (let i = 0; i < rawCount; i++) {
+      result[compressedCount + i] = this.rawBuffer[rawStart + i]
+    }
 
-    return [...compressedData, ...rawData].sort(
-      (a, b) => a.timestamp - b.timestamp,
-    )
+    // Compressed points precede raw ones except across the trim boundary;
+    // sort only when the two ranges actually interleave.
+    if (
+      compressedCount > 0 &&
+      rawCount > 0 &&
+      this.compressedBuffer[compressedEnd - 1].timestamp >
+        this.rawBuffer[rawStart].timestamp
+    ) {
+      result.sort((a, b) => a.timestamp - b.timestamp)
+    }
+    return result
   }
 
   getStats(): ISamplerStats {
@@ -167,7 +209,13 @@ export class TrafficDataSampler {
     }
   }
 
+  /** Bumped by every mutation (added points, compression, aging trims, clear). */
+  getVersion(): number {
+    return this.version
+  }
+
   clear() {
+    this.version++
     this.rawBuffer = []
     this.rawHead = 0
     this.compressedBuffer = []

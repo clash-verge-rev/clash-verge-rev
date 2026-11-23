@@ -29,6 +29,9 @@ export function filterSort(
 const regex1 = /delay([=<>])(\d+|timeout|error)/i
 const regex2 = /type=(.*)/i
 
+export const isDelayFilter = (filterText: string) =>
+  regex1.test(filterText.trim())
+
 function filterProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,

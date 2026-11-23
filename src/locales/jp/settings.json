@@ -411,6 +411,7 @@
         "appLogMaxSize": "App Log Max Size",
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "接続を自動的に閉じる",
+        "autoSwitchSelectorGroup": "ノード選択時にグループを連動",
         "autoCheckUpdate": "自動更新チェック",
         "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
         "proxyLayoutColumns": "プロキシページのレイアウト列数",
@@ -422,6 +423,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
+        "autoSwitchSelectorGroup": "ルールモードで、ルールの通信が通らないグループのノードを選択すると、そのグループを含む最初の select グループも当該グループに切り替えます。",
         "enableBuiltinEnhanced": "設定ファイルの互換性処理",
         "autoDelayDetection": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
         "defaultLatencyTest": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。"

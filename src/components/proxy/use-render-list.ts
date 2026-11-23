@@ -17,7 +17,7 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-import { filterSort } from './use-filter-sort'
+import { filterSort, isDelayFilter } from './use-filter-sort'
 import {
   DEFAULT_STATE,
   useHeadStateNew,
@@ -60,14 +60,15 @@ export const hasRenderableItems = (
 ): boolean => renderList.some((item) => item.type !== 0 || !item.group.hidden)
 
 type GroupCache = {
-  now: string | undefined
-  members: ProxyGroupView['members']
+  group: ProxyGroupView
   headState: HeadState
   col: number
   latencyTimeout: number | undefined
   /// This group's own delays. Compared by identity so that a test settling in one group
   /// does not throw away every other group's sorted order.
   delays: DelaySnapshot | undefined
+  occurrences: ResolvedMemberOccurrence[] | undefined
+  projected: ResolvedMemberOccurrence[] | undefined
   items: IRenderItem[]
 }
 
@@ -174,15 +175,19 @@ export const useRenderList = (
   chainOccurrencesRef.current = chainOccurrences
   const chainDelayGroup =
     mode === 'rule' && selectedGroup ? selectedGroup : CHAIN_DELAY_GROUP
-  const chainDelayKey = chainOccurrences
-    .map(({ member }) => {
-      if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
-      const source = member.node.source
-      return source.kind === 'provider'
-        ? `provider:${source.providerName}:${source.proxyName}`
-        : `core:${source.proxyName}`
-    })
-    .join('\u0000')
+  const chainDelayKey = useMemo(
+    () =>
+      chainOccurrences
+        .map(({ member }) => {
+          if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
+          const source = member.node.source
+          return source.kind === 'provider'
+            ? `provider:${source.providerName}:${source.proxyName}`
+            : `core:${source.proxyName}`
+        })
+        .join('\u0000'),
+    [chainOccurrences],
+  )
 
   useEffect(() => {
     if (!isChainMode || !chainDelayKey) return
@@ -222,19 +227,55 @@ export const useRenderList = (
     return current?.kind === 'group' ? [global, current.group] : [global]
   }, [mode, proxyView])
 
-  // Every group this list draws, so a test settling in any of them re-sorts that group.
+  const repeatedNameGroups = useMemo(() => {
+    const repeated = new Set<string>()
+    if (isChainMode) return repeated
+    for (const group of renderGroups) {
+      const names = new Set<string>()
+      if (
+        group.members.some(({ name }) => {
+          if (names.has(name)) return true
+          names.add(name)
+          return false
+        })
+      ) {
+        repeated.add(group.name)
+      }
+    }
+    return repeated
+  }, [isChainMode, renderGroups])
+
+  // Rows own delay updates unless repeated names share the current item listener.
   const renderedGroupNames = useMemo(() => {
-    if (!proxyView) return []
-    if (isChainMode)
-      return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
-    return renderGroups.map(({ name }) => name)
-  }, [isChainMode, proxyView, renderGroups, selectedGroup])
+    if (!proxyView || isChainMode) return []
+    return renderGroups
+      .filter((group) => {
+        const state = headStates[group.name] || DEFAULT_STATE
+        return (
+          (state.open || group === proxyView.global) &&
+          (state.sortType === 1 ||
+            isDelayFilter(state.filterText) ||
+            repeatedNameGroups.has(group.name))
+        )
+      })
+      .map(({ name }) => name)
+  }, [headStates, isChainMode, proxyView, renderGroups, repeatedNameGroups])
   const groupDelays = useGroupsDelays(renderedGroupNames)
 
-  const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
+  const groupCacheRef = useRef<Map<string, GroupCache> | null>(null)
+  const cachedViewRef = useRef(proxyView)
   const prevListRef = useRef<IRenderItem[]>([])
+  const prevGroupItemsRef = useRef<IRenderItem[][]>([])
+  const prevModeRef = useRef(mode)
 
   const renderList = useMemo<IRenderItem[]>(() => {
+    const cache = (groupCacheRef.current ??= new Map())
+    if (cachedViewRef.current !== proxyView) {
+      cache.clear()
+      prevGroupItemsRef.current = []
+      prevListRef.current = []
+      cachedViewRef.current = proxyView
+    }
     if (!proxyView) return []
 
     if (isChainMode) {
@@ -269,22 +310,64 @@ export const useRenderList = (
       }))
     }
 
-    const cache = groupCacheRef.current
-
-    const retList = renderGroups.flatMap((group) => {
+    const groupItems = renderGroups.map((group) => {
       const isFlat = group === proxyView.global
       const headState = headStates[group.name] || DEFAULT_STATE
       const cached = cache.get(group.name)
       if (
         cached &&
-        cached.now === group.now &&
-        cached.members === group.members &&
+        cached.group === group &&
         cached.headState === headState &&
         cached.col === col &&
         cached.latencyTimeout === latencyTimeout &&
         cached.delays === groupDelays.get(group.name)
       ) {
         return cached.items
+      }
+
+      // Duplicate names share one item listener until the delay-store fix lands.
+      const refreshRepeated =
+        repeatedNameGroups.has(group.name) &&
+        cached?.delays !== groupDelays.get(group.name)
+      let resolved =
+        cached?.group === group && !refreshRepeated
+          ? cached.occurrences
+          : undefined
+      let projected: ResolvedMemberOccurrence[] | undefined
+      if (headState.open || isFlat) {
+        resolved ??= resolveOccurrences(proxyView, group)
+        projected = filterSort(
+          resolved,
+          group.name,
+          headState.filterText,
+          headState.sortType,
+          latencyTimeout!,
+          {
+            matchCase: headState.filterMatchCase,
+            matchWholeWord: headState.filterMatchWholeWord,
+            useRegularExpression: headState.filterUseRegularExpression,
+          },
+        )
+        // Repeated names still need new member props while item listeners share a key.
+        if (
+          !refreshRepeated &&
+          cached?.group === group &&
+          cached.headState === headState &&
+          cached.col === col &&
+          cached.projected?.length === projected.length &&
+          projected.every(
+            (member, index) => member === cached.projected?.[index],
+          )
+        ) {
+          cache.set(group.name, {
+            ...cached,
+            latencyTimeout,
+            delays: groupDelays.get(group.name),
+          })
+          return cached.items
+        }
+      } else {
+        resolved = undefined
       }
 
       const ret: IRenderItem[] = [
@@ -299,20 +382,8 @@ export const useRenderList = (
               testUrl: group.testUrl!,
             },
       ]
-
-      if (headState.open || isFlat) {
-        const occurrences = filterSort(
-          resolveOccurrences(proxyView, group),
-          group.name,
-          headState.filterText,
-          headState.sortType,
-          latencyTimeout!,
-          {
-            matchCase: headState.filterMatchCase,
-            matchWholeWord: headState.filterMatchWholeWord,
-            useRegularExpression: headState.filterUseRegularExpression,
-          },
-        )
+      if (projected) {
+        const occurrences = projected
         if (occurrences.length === 0) {
           ret.push({ type: 3, key: `empty-${group.name}`, group, headState })
         } else if (col > 1) {
@@ -340,17 +411,30 @@ export const useRenderList = (
       }
 
       cache.set(group.name, {
-        now: group.now!,
-        members: group.members,
+        group,
         headState,
         col,
         latencyTimeout: latencyTimeout!,
         delays: groupDelays.get(group.name),
+        occurrences: resolved,
+        projected,
         items: ret,
       })
       return ret
     })
 
+    if (
+      prevModeRef.current === mode &&
+      prevGroupItemsRef.current.length === groupItems.length &&
+      groupItems.every(
+        (items, index) => items === prevGroupItemsRef.current[index],
+      )
+    ) {
+      return prevListRef.current
+    }
+    prevModeRef.current = mode
+    prevGroupItemsRef.current = groupItems
+    const retList = groupItems.flat()
     const filtered =
       mode === 'rule' ? retList.filter((item) => !item.group.hidden) : retList
     if (
@@ -371,6 +455,7 @@ export const useRenderList = (
     mode,
     proxyView,
     renderGroups,
+    repeatedNameGroups,
     selectedGroup,
   ])
 

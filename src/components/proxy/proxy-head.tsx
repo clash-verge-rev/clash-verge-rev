@@ -30,9 +30,9 @@ interface Props {
   url?: string
   groupName: string
   headState: HeadState
-  onLocation: () => void
-  onCheckDelay: () => void
-  onHeadState: (val: Partial<HeadState>) => void
+  onLocation: (groupName: string) => void
+  onCheckDelay: (groupName: string) => void
+  onHeadState: (groupName: string, val: Partial<HeadState>) => void
 }
 
 const defaultSx: SxProps = {}
@@ -81,7 +81,7 @@ export const ProxyHead = ({
         size="small"
         color="inherit"
         title={t('proxies.page.tooltips.locate')}
-        onClick={onLocation}
+        onClick={() => onLocation(groupName)}
       >
         <MyLocationRounded />
       </IconButton>
@@ -95,13 +95,13 @@ export const ProxyHead = ({
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== 'filter') {
             debugLog(`[ProxyHead] 使用自定义测试URL: ${testUrl}`)
-            onHeadState({ textState: 'url' })
+            onHeadState(groupName, { textState: 'url' })
           }
           if (testUrl?.trim() && !isValidUrl(testUrl)) {
             showNotice.warning('proxies.feedback.warnings.invalidTestUrl')
             return
           }
-          onCheckDelay()
+          onCheckDelay(groupName)
         }}
       >
         <NetworkCheckRounded />
@@ -118,7 +118,9 @@ export const ProxyHead = ({
           ][sortType]
         }
         onClick={() =>
-          onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
+          onHeadState(groupName, {
+            sortType: ((sortType + 1) % 3) as ProxySortType,
+          })
         }
       >
         {sortType !== 1 && sortType !== 2 && <SortRounded />}
@@ -131,7 +133,9 @@ export const ProxyHead = ({
         color="inherit"
         title={t('proxies.page.tooltips.delayCheckUrl')}
         onClick={() =>
-          onHeadState({ textState: textState === 'url' ? null : 'url' })
+          onHeadState(groupName, {
+            textState: textState === 'url' ? null : 'url',
+          })
         }
       >
         {textState === 'url' ? (
@@ -149,7 +153,7 @@ export const ProxyHead = ({
             ? t('proxies.page.tooltips.showBasic')
             : t('proxies.page.tooltips.showDetail')
         }
-        onClick={() => onHeadState({ showType: !showType })}
+        onClick={() => onHeadState(groupName, { showType: !showType })}
       >
         {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
       </IconButton>
@@ -159,7 +163,9 @@ export const ProxyHead = ({
         color="inherit"
         title={t('proxies.page.tooltips.filter')}
         onClick={() =>
-          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
+          onHeadState(groupName, {
+            textState: textState === 'filter' ? null : 'filter',
+          })
         }
       >
         {textState === 'filter' ? <SearchOffRounded /> : <SearchRounded />}
@@ -176,7 +182,7 @@ export const ProxyHead = ({
               useRegularExpression: filterUseRegularExpression,
             }}
             onSearch={(_, state) =>
-              onHeadState({
+              onHeadState(groupName, {
                 filterText: state.text,
                 filterMatchCase: state.matchCase,
                 filterMatchWholeWord: state.matchWholeWord,
@@ -197,7 +203,7 @@ export const ProxyHead = ({
           size="small"
           variant="outlined"
           placeholder={t('proxies.page.placeholders.delayCheckUrl')}
-          onChange={(e) => onHeadState({ testUrl: e.target.value })}
+          onChange={(e) => onHeadState(groupName, { testUrl: e.target.value })}
           sx={{ ml: 0.5, flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}

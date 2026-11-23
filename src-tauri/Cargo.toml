@@ -29,7 +29,7 @@ perf-harness = ["dep:tauri-plugin-wdio-webdriver"]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.7.4", features = [] }
+tauri-build = { version = "2.7.6", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -54,7 +54,7 @@ log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
-smartstring = { workspace = true, features = ["serde"] }
+tristr = { workspace = true }
 socket2 = { workspace = true }
 warp = { version = "0.4.4", features = ["server"] }
 open = "5.4.5"
@@ -67,7 +67,7 @@ boa_engine = "0.22.0"
 http-body-util = "0.1.5"
 percent-encoding = "2.3.2"
 reqwest = { workspace = true }
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", branch = "main", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", rev = "2c9d0a538052aac6e44ad413156a6e848da262b9", version = "0.7.2", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
@@ -77,7 +77,7 @@ tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.5.1"
+zip = "9.6.0"
 flate2 = "1.1.11"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.11.1" }
@@ -91,9 +91,9 @@ backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.9.0"
 tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.2.3", optional = true }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "e49bbedcc67d60da2c10e81bc6433b0f8e8fa232" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "7e4fa8642cf6c394ed88b5a969420d8eab60087f" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.7.7", version = "2.7.7", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.8.1", version = "2.8.1", features = [
   "client",
 ] }
 arc-swap = "1.9.5"
@@ -140,10 +140,16 @@ objc2-app-kit = { version = "0.3.2", features = [
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }
+quick-xml = "0.42.0"
 runas = "=1.2.0"
 winreg = "0.56.0"
 windows-service = "0.8.1"
-windows = { version = "0.62.2", features = ["Win32_Globalization"] }
+windows = { version = "0.62.2", features = [
+  "Win32_System_Com",
+  "Win32_System_Ole",
+  "Win32_System_TaskScheduler",
+  "Win32_System_Variant",
+] }
 windows-sys.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

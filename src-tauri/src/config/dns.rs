@@ -1,11 +1,12 @@
 use crate::core::notify::NoticeStatus;
+use crate::utils::help;
 use anyhow::Result;
 use clash_verge_draft::DraftTransaction;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use sha2::{Digest as _, Sha256};
-use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
+use tristr::alias::String;
 
 use super::{Config, IVerge};
 use crate::core::handle::Handle;
@@ -49,9 +50,7 @@ pub(crate) fn dns_override_source(profile_uid: &str, config: &Mapping) -> Result
     digest.update(profile_uid.as_bytes());
     digest.update([0]);
     digest.update(serde_json::to_vec(&canonical)?);
-    Ok(Some(
-        digest.finalize().iter().map(|byte| format!("{byte:02x}")).collect(),
-    ))
+    Ok(Some(help::hex_encode(&digest.finalize()).into()))
 }
 
 #[derive(Debug, Clone)]
@@ -110,7 +109,6 @@ impl DnsOverrideState {
 pub struct ProfileDnsSettings {
     pub enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[specta(type = Option<std::string::String>)]
     pub confirmation: Option<String>,
 }
 

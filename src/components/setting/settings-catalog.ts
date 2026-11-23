@@ -480,6 +480,8 @@ const settingsCatalog: readonly SettingEntry[] = [
     'settings.modals.misc.fields.appLogMaxCount': 'app log max count',
     'settings.modals.misc.fields.autoCloseConnections':
       'auto close connections',
+    'settings.modals.misc.fields.autoSwitchSelectorGroup':
+      'auto switch select group',
     'settings.modals.misc.fields.autoCheckUpdate': 'auto check update',
     'settings.modals.misc.fields.enableBuiltinEnhanced':
       'enable builtin enhanced',

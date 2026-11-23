@@ -1,13 +1,13 @@
 use crate::{process::AsyncHandler, utils::tmpl};
 
 use super::field::use_lowercase;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use boa_engine::{Context, JsString, JsValue, Source, js_string, native_function::NativeFunction, property::Attribute};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
-use smartstring::alias::String;
 use std::sync::Arc;
+use tristr::alias::String;
 
 const MAX_OUTPUTS: usize = 1000;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024; // 1MB
@@ -22,14 +22,26 @@ type EvalOutcome = (Result<Mapping, std::string::String>, Vec<(String, String)>)
 pub(super) async fn use_script(script: String, config: Mapping, name: String) -> ScriptResult {
     // The template is identity-plus-lowercasing; skip the Boa round-trip.
     if script == tmpl::ITEM_SCRIPT {
-        return (use_lowercase(&config), vec![], vec![]);
+        return (use_lowercase(config), vec![], vec![]);
     }
 
-    let json = match serde_json::to_string(&use_lowercase(&config)) {
-        Ok(json) if json.len() <= MAX_JSON_SIZE => json,
-        Ok(_) => {
-            let message = "Configuration size exceeds maximum allowed size";
-            return (config, vec![], vec![("exception".into(), message.into())]);
+    let json = match serde_json::to_value(&config) {
+        Ok(mut json) => {
+            if let Some(map) = json.as_object_mut() {
+                let mut lowered = serde_json::Map::with_capacity(map.len());
+                for (key, value) in std::mem::take(map) {
+                    let mut key = key;
+                    key.make_ascii_lowercase();
+                    lowered.insert(key, value);
+                }
+                *map = lowered;
+            }
+            if json_approx_size(&json) <= MAX_JSON_SIZE {
+                json
+            } else {
+                let message = "Configuration size exceeds maximum allowed size";
+                return (config, vec![], vec![("exception".into(), message.into())]);
+            }
         }
         Err(err) => return (config, vec![], vec![("exception".into(), err.to_string().into())]),
     };
@@ -66,7 +78,7 @@ pub(super) async fn use_script(script: String, config: Mapping, name: String) ->
 }
 
 /// Console logs survive every failure path.
-fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
+fn eval_script(script: &str, config_json: &serde_json::Value, name: &String) -> EvalOutcome {
     let mut context = Context::default();
 
     context
@@ -131,12 +143,11 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
       });"#,
     ));
 
-    // Bind the JSON instead of embedding it in program source; Boa's parser never chews it.
-    if let Err(err) = context.register_global_property(
-        js_string!("__verge_config__"),
-        JsValue::from(JsString::from(config_json)),
-        Attribute::all(),
-    ) {
+    let config_value = match JsValue::from_json(config_json, &mut context) {
+        Ok(value) => value,
+        Err(err) => return bail(format!("failed to bind config for script: {err}")),
+    };
+    if let Err(err) = context.register_global_property(js_string!("__verge_config__"), config_value, Attribute::all()) {
         return bail(format!("failed to bind config for script: {err}"));
     }
 
@@ -149,31 +160,61 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
     let code = format!(
         r"try{{
         {script};
-        JSON.stringify(main(JSON.parse(globalThis.__verge_config__),'{safe_name}')||'')
+        main(globalThis.__verge_config__,'{safe_name}')
       }} catch(err) {{
         `__error_flag__ ${{err.toString()}}`
       }}"
     );
 
     let result = match context.eval(Source::from_bytes(code.as_str())) {
-        Ok(result) if result.is_string() => result,
-        _ => return bail("main function should return object".to_owned()),
-    };
-    let result = match result.to_string(&mut context) {
         Ok(result) => result,
-        Err(e) => return bail(format!("Failed to convert JS result to string: {e}")),
+        Err(err) => {
+            logging!(
+                error,
+                Type::Config,
+                "Script execution error: {err}. Script name: {name}"
+            );
+            return bail("Script execution failed".to_owned());
+        }
     };
-    let result = match result.to_std_string() {
-        Ok(result) => result,
-        Err(_) => return bail("Failed to convert JS string to std string".to_owned()),
+    // The JS wrapper funnels exceptions into a marker string; surface its text.
+    if result.is_string() {
+        let text = result
+            .to_string(&mut context)
+            .ok()
+            .and_then(|text| text.to_std_string().ok())
+            .unwrap_or_default();
+        if text.trim_start().starts_with("__error_flag__") {
+            logging!(
+                error,
+                Type::Config,
+                "Script execution error: {}. Script name: {name}",
+                text.trim_start()["__error_flag__".len()..].trim()
+            );
+            return bail("Script execution failed".to_owned());
+        }
+    }
+    if !result.is_object() {
+        return bail("main function should return object".to_owned());
+    }
+    let result = match result.to_json(&mut context) {
+        Ok(Some(result)) => result,
+        Ok(None) => return bail("main function should return object".to_owned()),
+        Err(err) => {
+            logging!(
+                error,
+                Type::Config,
+                "Script execution error: {err}. Script name: {name}"
+            );
+            return bail("Script execution failed".to_owned());
+        }
     };
-
-    if result.len() > MAX_JSON_SIZE {
+    if json_approx_size(&result) > MAX_JSON_SIZE {
         return bail("Script result exceeds maximum allowed size".to_owned());
     }
 
-    match parse_json_safely(&result) {
-        Ok(config) => (Ok(use_lowercase(&config)), outputs.lock().to_vec()),
+    match serde_json::from_value::<Mapping>(result) {
+        Ok(config) => (Ok(use_lowercase(config)), outputs.lock().to_vec()),
         Err(err) => {
             logging!(
                 error,
@@ -185,27 +226,17 @@ fn eval_script(script: &str, config_json: &str, name: &String) -> EvalOutcome {
     }
 }
 
-fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
-    if json_str.len() > MAX_JSON_SIZE {
-        anyhow::bail!("JSON string too large");
-    }
-
-    let json_str = strip_outer_quotes(json_str);
-    Ok(serde_json::from_str::<Mapping>(json_str)?)
-}
-
-// 安全地移除外层引号
-fn strip_outer_quotes(s: &str) -> &str {
-    let s = s.trim();
-
-    if s.len() < 2 {
-        return s;
-    }
-
-    if (s.starts_with('"') && s.ends_with('"')) || (s.starts_with('\'') && s.ends_with('\'')) {
-        &s[1..s.len() - 1]
-    } else {
-        s
+/// Serialized-size estimate without building the serialized string; a DoS guard, not an exact byte count.
+fn json_approx_size(value: &serde_json::Value) -> usize {
+    match value {
+        serde_json::Value::String(s) => s.len() + 2,
+        serde_json::Value::Object(map) => map
+            .iter()
+            .map(|(key, value)| key.len() + 4 + json_approx_size(value))
+            .sum(),
+        serde_json::Value::Array(items) => items.iter().map(json_approx_size).sum(),
+        serde_json::Value::Number(n) => n.to_string().len(),
+        serde_json::Value::Bool(_) | serde_json::Value::Null => 4,
     }
 }
 

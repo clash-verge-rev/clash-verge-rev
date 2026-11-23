@@ -53,6 +53,15 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
   },
 }))
 
+const iconStyle = {
+  style: {
+    height: '24px',
+    width: '24px',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+  inheritViewBox: true,
+}
+
 const useControllableState = <T,>(options: {
   controlled: T | undefined
   defaultValue: T
@@ -118,15 +127,6 @@ export const BaseSearchBox = ({
       controlled: searchState?.useRegularExpression,
       defaultValue: defaultUseRegularExpression,
     })
-
-  const iconStyle = {
-    style: {
-      height: '24px',
-      width: '24px',
-      cursor: 'pointer',
-    } as React.CSSProperties,
-    inheritViewBox: true,
-  }
 
   useEffect(() => {
     onSearchRef.current = onSearch
