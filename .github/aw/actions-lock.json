@@ -124,8 +124,8 @@
     },
     "ghcr.io/github/gh-aw-node": {
       "image": "ghcr.io/github/gh-aw-node",
-      "digest": "sha256:1fe145873f46e4dded511319d2a91dbaed5bb4d9c43d93fdc383198d1bf02b7f",
-      "pinned_image": "ghcr.io/github/gh-aw-node@sha256:1fe145873f46e4dded511319d2a91dbaed5bb4d9c43d93fdc383198d1bf02b7f"
+      "digest": "sha256:8735428c2d4e602f90781ba0c571c400e8ff93c7ee1508a75d71f87e34e415cc",
+      "pinned_image": "ghcr.io/github/gh-aw-node@sha256:8735428c2d4e602f90781ba0c571c400e8ff93c7ee1508a75d71f87e34e415cc"
     },
     "ghcr.io/github/github-mcp-server:v2.1.0": {
       "image": "ghcr.io/github/github-mcp-server:v2.1.0",
