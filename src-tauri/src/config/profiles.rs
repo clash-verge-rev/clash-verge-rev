@@ -753,8 +753,6 @@ fn current_item_mut(profiles: &mut IProfiles) -> Option<&mut PrfItem> {
 
 /// Records a backend-made selection so the next core start restores it.
 pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
-    let group_name = String::from(group_name);
-    let node = String::from(node);
     persist_selected_update(true, move |mut profiles| async move {
         let Some(item) = current_item_mut(&mut profiles) else {
             return Ok((profiles, false));
@@ -763,17 +761,17 @@ pub(crate) async fn record_selected_node(group_name: &str, node: &str) -> Result
         let selected = item.selected.get_or_insert_with(Vec::new);
         match selected
             .iter_mut()
-            .find(|entry| entry.name.as_ref() == Some(&group_name))
+            .find(|entry| entry.name.as_deref() == Some(group_name))
         {
             Some(entry) => {
-                if entry.now.as_ref() == Some(&node) {
+                if entry.now.as_deref() == Some(node) {
                     return Ok((profiles, false));
                 }
-                entry.now = Some(node.clone());
+                entry.now = Some(node.into());
             }
             None => selected.push(PrfSelected {
-                name: Some(group_name),
-                now: Some(node),
+                name: Some(group_name.into()),
+                now: Some(node.into()),
             }),
         }
         profiles.save_file().await?;
@@ -821,19 +819,17 @@ async fn persist_reconciled_selected(
         return Ok(());
     }
 
-    let profile_uid = String::from(profile_uid);
-    let original_selected = original_selected.to_vec();
     persist_selected_update(false, move |mut profiles| async move {
-        if !is_activation_current(generation) || profiles.current.as_ref() != Some(&profile_uid) {
+        if !is_activation_current(generation) || profiles.current.as_deref() != Some(profile_uid) {
             return Ok((profiles, false));
         }
 
         let profile = profiles
             .items
             .as_mut()
-            .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&profile_uid)))
+            .and_then(|items| items.iter_mut().find(|item| item.uid.as_deref() == Some(profile_uid)))
             .with_context(|| format!("failed to find the profile item \"uid:{profile_uid}\""))?;
-        if profile.selected.as_deref().unwrap_or(&[]) != original_selected.as_slice() {
+        if profile.selected.as_deref().unwrap_or(&[]) != original_selected {
             return Ok((profiles, false));
         }
 
