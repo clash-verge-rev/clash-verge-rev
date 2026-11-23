@@ -17,7 +17,13 @@ import { exists } from '@tauri-apps/plugin-fs'
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import {
+  BaseDialog,
+  DialogRef,
+  Switch,
+  TooltipIcon,
+  switchChangeValue,
+} from '@/components/base'
 import { DEFAULT_HOVER_DELAY } from '@/components/proxy/proxy-group-navigator'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
@@ -111,7 +117,6 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
     close: () => setOpen(false),
   }))
 
-  const onSwitchFormat = (_e: any, value: boolean) => value
   const onError = (err: any) => {
     showNotice.error(err)
   }
@@ -141,7 +146,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={decorated}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={async () => {
               await toggleDecorations()
             }}
@@ -158,7 +163,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.traffic_graph ?? true}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ traffic_graph: e })}
             onGuard={(e) => patchVerge({ traffic_graph: e })}
           >
@@ -174,7 +179,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.enable_memory_usage ?? true}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ enable_memory_usage: e })}
             onGuard={(e) => patchVerge({ enable_memory_usage: e })}
           >
@@ -192,7 +197,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.enable_group_icon ?? true}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ enable_group_icon: e })}
             onGuard={(e) => patchVerge({ enable_group_icon: e })}
           >
@@ -210,7 +215,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.pause_render_traffic_stats_on_blur ?? true}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) =>
               onChangeData({ pause_render_traffic_stats_on_blur: e })
             }
@@ -278,7 +283,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.enable_hover_jump_navigator ?? true}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ enable_hover_jump_navigator: e })}
             onGuard={(e) => patchVerge({ enable_hover_jump_navigator: e })}
           >
@@ -380,7 +385,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.collapse_navbar ?? false}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ collapse_navbar: e })}
             onGuard={(e) => patchVerge({ collapse_navbar: e })}
           >
@@ -427,7 +432,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               value={verge?.enable_tray_speed ?? false}
               valueProps="checked"
               onCatch={onError}
-              onFormat={onSwitchFormat}
+              onFormat={switchChangeValue}
               onChange={(e) => onChangeData({ enable_tray_speed: e })}
               onGuard={(e) => patchVerge({ enable_tray_speed: e })}
             >
@@ -447,7 +452,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }
               valueProps="checked"
               onCatch={onError}
-              onFormat={onSwitchFormat}
+              onFormat={switchChangeValue}
               onChange={(e) => onChangeData({ enable_tray_icon: e })}
               onGuard={(e) => patchVerge({ enable_tray_icon: e })}
             >
@@ -501,7 +506,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             value={verge?.tray_inline_outbound_modes ?? false}
             valueProps="checked"
             onCatch={onError}
-            onFormat={onSwitchFormat}
+            onFormat={switchChangeValue}
             onChange={(e) => onChangeData({ tray_inline_outbound_modes: e })}
             onGuard={(e) => patchVerge({ tray_inline_outbound_modes: e })}
           >

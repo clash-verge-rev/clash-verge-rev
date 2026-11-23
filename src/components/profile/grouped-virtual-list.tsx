@@ -56,6 +56,8 @@ interface GroupedVirtualListProps<T> {
   style?: CSSProperties
 }
 
+const GROUPED_LIST_SENSORS = [PointerSensor, KeyboardSensor]
+
 /**
  * 用于编辑规则/节点/代理组功能的 prepend/original/append 分组虚拟化列表
  */
@@ -141,7 +143,7 @@ export function GroupedVirtualList<T>(props: GroupedVirtualListProps<T>) {
 
   return (
     <DragDropProvider
-      sensors={[PointerSensor, KeyboardSensor]}
+      sensors={GROUPED_LIST_SENSORS}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}

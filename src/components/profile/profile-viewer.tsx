@@ -61,21 +61,26 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       },
     })
 
-  useImperativeHandle(ref, () => ({
-    create: () => {
-      setOpenType('new')
-      setOpen(true)
-    },
-    edit: (item: IProfileItem) => {
-      if (item) {
-        Object.entries(item).forEach(([key, value]) => {
-          setValue(key as any, value)
-        })
-      }
-      setOpenType('edit')
-      setOpen(true)
-    },
-  }))
+  // The handle only closes over stable form/state setters.
+  useImperativeHandle(
+    ref,
+    () => ({
+      create: () => {
+        setOpenType('new')
+        setOpen(true)
+      },
+      edit: (item: IProfileItem) => {
+        if (item) {
+          Object.entries(item).forEach(([key, value]) => {
+            setValue(key as any, value)
+          })
+        }
+        setOpenType('edit')
+        setOpen(true)
+      },
+    }),
+    [setValue],
+  )
 
   const handleOk = useLockFn(
     handleSubmit(async (form) => {

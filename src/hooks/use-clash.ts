@@ -1,5 +1,6 @@
 import { useLockFn } from 'ahooks'
 import i18n from 'i18next'
+import { useCallback } from 'react'
 import { getVersion } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -86,23 +87,29 @@ export const useClashMode = (shouldFetch: boolean = true) => {
 }
 
 export const useClash = () => {
-  const { data: clash, refetch } = useRuntimeConfig()
+  const { data: clash } = useRuntimeConfig()
 
   const { data: versionData, refetch: mutateVersion } = useQuery({
     queryKey: ['getVersion'],
     queryFn: getVersion,
   })
 
-  const mutateClash = (updater?: MutateClashUpdater, revalidate?: boolean) => {
-    if (updater === undefined) {
-      return refetch()
-    }
-    void setCacheData<IConfigData>(['getRuntimeConfig'], updater)
-    if (revalidate !== false) {
-      return refetch()
-    }
-    return Promise.resolve()
-  }
+  // Stable identity: consumers pass mutateClash into their own callbacks.
+  // revalidateQuery hits the same cache key refetch would, without capturing
+  // the per-render refetch closure.
+  const mutateClash = useCallback(
+    (updater?: MutateClashUpdater, revalidate?: boolean) => {
+      if (updater === undefined) {
+        return revalidateQuery(['getRuntimeConfig'])
+      }
+      void setCacheData<IConfigData>(['getRuntimeConfig'], updater)
+      if (revalidate !== false) {
+        return revalidateQuery(['getRuntimeConfig'])
+      }
+      return Promise.resolve()
+    },
+    [],
+  )
 
   const patchClash = useLockFn(async (patch: Partial<IConfigData>) => {
     await mutate(() => patchClashConfig(patch), {
@@ -143,7 +150,10 @@ export const useClashInfo = () => {
     })
   })
 
-  const invalidateClashConfig = () => revalidateQuery(['getClashConfig'])
+  const invalidateClashConfig = useCallback(
+    () => revalidateQuery(['getClashConfig']),
+    [],
+  )
 
   return {
     clashInfo,
