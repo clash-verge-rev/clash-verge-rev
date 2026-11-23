@@ -20,6 +20,7 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use std::mem::DropGuard;
+use std::sync::Arc;
 
 pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutcome> {
     AsyncHandler::spawn_blocking(move || probe_listener_sync(&request))
@@ -40,7 +41,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     });
 
     // Read first because transaction rollback discards all claimed drafts.
-    let current = current_runtime_mapping().await?;
+    let current = Arc::new(current_runtime_mapping().await?);
 
     let clash = Config::clash().await;
     let verge = Config::verge().await;
@@ -63,10 +64,11 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     Config::generate()
         .await
         .context("failed to generate candidate proxy port configuration")?;
-    let candidate = latest_runtime_mapping().await?;
+    let candidate = Arc::new(latest_runtime_mapping().await?);
 
     let was_running = !matches!(*manager.get_running_mode(), RunningMode::NotRunning);
-    let assessment = probe_proxy_ports(current.clone(), candidate.clone(), was_running).await?;
+    // Shared with the post-failure re-probe below, so this clone is refcount-only.
+    let assessment = probe_proxy_ports(Arc::clone(&current), Arc::clone(&candidate), was_running).await?;
     if let Some(outcome) = rejected_save_outcome(assessment)? {
         return Ok(outcome);
     }
@@ -159,8 +161,8 @@ async fn latest_runtime_mapping() -> Result<serde_yaml_ng::Mapping> {
 }
 
 async fn probe_proxy_ports(
-    current: serde_yaml_ng::Mapping,
-    candidate: serde_yaml_ng::Mapping,
+    current: Arc<serde_yaml_ng::Mapping>,
+    candidate: Arc<serde_yaml_ng::Mapping>,
     current_core_is_running: bool,
 ) -> Result<ListenerProbeOutcome> {
     AsyncHandler::spawn_blocking(move || probe_proxy_port_change(&current, &candidate, current_core_is_running))
