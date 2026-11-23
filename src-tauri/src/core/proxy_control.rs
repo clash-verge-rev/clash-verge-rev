@@ -19,6 +19,7 @@ use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
 use std::{
+    borrow::Borrow,
     future::Future,
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
@@ -271,7 +272,7 @@ impl ServiceProxyOperations {
         .await
     }
 
-    async fn run_guard_request<Mode, ActiveProof, Request, RequestFuture>(
+    async fn run_guard_request<Mode, ActiveProof, Proof, Request, RequestFuture>(
         &self,
         captured_generation: u64,
         captured_proof: &OwnerSessionProof,
@@ -282,14 +283,15 @@ impl ServiceProxyOperations {
     ) -> Result<bool>
     where
         Mode: FnOnce() -> bool,
-        ActiveProof: FnOnce() -> Result<OwnerSessionProof>,
+        ActiveProof: FnOnce() -> Result<Proof>,
+        Proof: Borrow<OwnerSessionProof>,
         Request: FnOnce() -> RequestFuture,
         RequestFuture: Future<Output = Result<ProxyApplyOutcome>>,
     {
         self.run_service_operation(|| async move {
             if !guard_generation_is_current(&self.guard_generation, captured_generation)
                 || !is_service_mode()
-                || !active_proof().is_ok_and(|active| active == *captured_proof)
+                || !active_proof().is_ok_and(|active| active.borrow() == captured_proof)
             {
                 return Ok(false);
             }
