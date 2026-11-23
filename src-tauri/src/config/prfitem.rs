@@ -269,7 +269,7 @@ impl PrfItem {
         let url = fix_dirty_url(url)?;
 
         let resp = match NetworkManager::new()
-            .get(
+            .get_profile(
                 url.as_str(),
                 proxy_type,
                 Some(timeout),

@@ -18,7 +18,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
+    pub(super) const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
         Self { status, headers, body }
     }
 
@@ -43,9 +43,25 @@ pub enum ProxyType {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum TlsRootMode {
+pub(super) enum TlsRootMode {
     PlatformVerifier,
     StaticWebpkiRoots,
+}
+
+pub(super) fn extract_basic_auth_header(parsed: &Url) -> Result<Option<HeaderValue>> {
+    if parsed.username().is_empty() {
+        return Ok(None);
+    }
+
+    let username = percent_encoding::percent_decode_str(parsed.username())
+        .decode_utf8_lossy()
+        .into_owned();
+    let password = percent_encoding::percent_decode_str(parsed.password().unwrap_or_default())
+        .decode_utf8_lossy()
+        .into_owned();
+    let auth_str = format!("{username}:{password}");
+    let encoded = general_purpose::STANDARD.encode(auth_str);
+    Ok(Some(HeaderValue::from_str(&format!("Basic {encoded}"))?))
 }
 
 /// ALPN stays unset: raw TLS connectors offer none, while reqwest needs the h2 offer.
@@ -119,7 +135,7 @@ impl NetworkManager {
         Ok(config)
     }
 
-    fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
+    pub(super) fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
         if err.chain().any(Self::is_legacy_tls_protocol_error) {
             return false;
         }
@@ -189,16 +205,8 @@ impl NetworkManager {
         let mut parsed = Url::parse(url)?;
         let mut extra_headers = HeaderMap::new();
 
-        if !parsed.username().is_empty() {
-            let username = percent_encoding::percent_decode_str(parsed.username())
-                .decode_utf8_lossy()
-                .into_owned();
-            let password = percent_encoding::percent_decode_str(parsed.password().unwrap_or_default())
-                .decode_utf8_lossy()
-                .into_owned();
-            let auth_str = format!("{}:{}", username, password);
-            let encoded = general_purpose::STANDARD.encode(auth_str);
-            extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
+        if let Some(auth_header) = extract_basic_auth_header(&parsed)? {
+            extra_headers.insert("Authorization", auth_header);
         }
 
         parsed.set_username("").ok();
@@ -281,6 +289,30 @@ impl NetworkManager {
         }
 
         self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs, tls_root_mode)
+    }
+
+    pub async fn get_profile(
+        &self,
+        url: &str,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        user_agent: Option<String>,
+        accept_invalid_certs: bool,
+    ) -> Result<HttpResponse> {
+        if let Some(response) = super::network_h3::try_get_profile(
+            url,
+            proxy_type,
+            timeout_secs,
+            user_agent.as_deref(),
+            accept_invalid_certs,
+        )
+        .await
+        {
+            return Ok(response);
+        }
+
+        self.get(url, proxy_type, timeout_secs, user_agent, accept_invalid_certs)
+            .await
     }
 
     pub async fn get(

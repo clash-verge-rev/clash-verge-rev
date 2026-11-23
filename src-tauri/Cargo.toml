@@ -99,7 +99,13 @@ clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verg
 arc-swap = "1.9.5"
 tokio-rustls = "0.26.6"
 rustls = { version = "0.23.46", features = ["ring"] }
+rustls-platform-verifier = "0.7.0"
 webpki-roots = "1.0.12"
+http = "1.5.0"
+quinn = { version = "0.11.11", default-features = false, features = ["runtime-tokio", "rustls-ring", "platform-verifier"] }
+h3 = "0.0.8"
+h3-quinn = "0.0.10"
+hickory-resolver = "0.26.3"
 dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.20", features = ["time"] }
@@ -158,6 +164,7 @@ tauri-plugin-global-shortcut = "2.4.1"
 tauri-plugin-updater = "2.14.1"
 
 [dev-dependencies]
+rcgen = "0.14.10"
 tokio = { workspace = true, features = ["test-util"] }
 warp = { version = "0.4.4", features = ["test"] }
 
