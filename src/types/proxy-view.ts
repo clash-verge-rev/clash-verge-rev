@@ -156,7 +156,7 @@ export const selectRuleChainMembers = (
   })
 }
 
-const sameSource = (
+export const sameSource = (
   left: ProxyNodeView['source'],
   right: ProxyNodeView['source'],
 ) =>

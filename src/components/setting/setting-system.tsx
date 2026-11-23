@@ -20,7 +20,7 @@ const SettingSystem = ({ onError }: Props) => {
   const { enable_auto_launch, enable_silent_start } = verge ?? {}
 
   const onChangeData = (patch: Partial<IVergeConfig>) => {
-    mutateVerge({ ...verge, ...patch })
+    mutateVerge((prev) => ({ ...prev, ...patch }))
   }
 
   return (

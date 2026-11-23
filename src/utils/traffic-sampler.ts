@@ -145,10 +145,10 @@ export class TrafficDataSampler {
     ) {
       rawStart++
     }
-    const rawData = this.rawBuffer.slice(rawStart)
+    const rawCount = this.rawBuffer.length - rawStart
 
     if (minutes <= this.config.rawDataMinutes) {
-      return rawData
+      return this.rawBuffer.slice(rawStart)
     }
 
     const compressedCutoffUpper =
@@ -161,19 +161,40 @@ export class TrafficDataSampler {
     ) {
       compressedStart++
     }
+    let compressedEnd = compressedStart
+    while (
+      compressedEnd < this.compressedBuffer.length &&
+      this.compressedBuffer[compressedEnd].timestamp <= compressedCutoffUpper
+    ) {
+      compressedEnd++
+    }
 
-    const compressedData = this.compressedBuffer
-      .slice(compressedStart)
-      .filter((p) => p.timestamp <= compressedCutoffUpper)
-      .map((p) => ({
-        up: p.up,
-        down: p.down,
-        timestamp: p.timestamp,
-      }))
+    // Single preallocated result; raw entries keep their stored identity.
+    const compressedCount = compressedEnd - compressedStart
+    const result: ITrafficDataPoint[] = new Array(compressedCount + rawCount)
+    for (let i = 0; i < compressedCount; i++) {
+      const point = this.compressedBuffer[compressedStart + i]
+      result[i] = {
+        up: point.up,
+        down: point.down,
+        timestamp: point.timestamp,
+      }
+    }
+    for (let i = 0; i < rawCount; i++) {
+      result[compressedCount + i] = this.rawBuffer[rawStart + i]
+    }
 
-    return [...compressedData, ...rawData].sort(
-      (a, b) => a.timestamp - b.timestamp,
-    )
+    // Compressed points precede raw ones except across the trim boundary;
+    // sort only when the two ranges actually interleave.
+    if (
+      compressedCount > 0 &&
+      rawCount > 0 &&
+      this.compressedBuffer[compressedEnd - 1].timestamp >
+        this.rawBuffer[rawStart].timestamp
+    ) {
+      result.sort((a, b) => a.timestamp - b.timestamp)
+    }
+    return result
   }
 
   getStats(): ISamplerStats {

@@ -181,7 +181,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
   const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
     const proxies: IProxyConfig[] = []
-    const names: string[] = []
+    const names = new Set<string>()
     let uris: string
     try {
       uris = atob(proxyUri)
@@ -199,9 +199,9 @@ export const ProxiesEditorViewer = (props: Props) => {
         const uri = lines[idx]
         try {
           const proxy = parseUri(uri.trim())
-          if (!names.includes(proxy.name)) {
+          if (!names.has(proxy.name)) {
             proxies.push(proxy)
-            names.push(proxy.name)
+            names.add(proxy.name)
           }
         } catch (err) {
           console.warn(

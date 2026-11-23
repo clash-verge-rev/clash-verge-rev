@@ -339,16 +339,20 @@ function ChainProxyGroups(props: {
     scrollTopRef.current = 0
   }, [])
 
-  const handleLocation = useStableCallback((group: ProxyGroupView) => {
-    if (!group) return
-    const { name, now } = group
+  const handleLocation = useStableCallback((groupName: string) => {
+    // Flat (type 1) headers such as GLOBAL carry the same live group.
+    const headerIndex = renderList.findIndex(
+      (e) => (e.type === 0 || e.type === 1) && e.group?.name === groupName,
+    )
+    const now = renderList[headerIndex]?.group?.now
+    if (!now) return
 
     const index = renderList.findIndex(
-      (item) =>
-        item.group?.name === name &&
-        ((item.type === 2 && item.member?.member.ref.name === now) ||
-          (item.type === 4 &&
-            item.memberCol?.some(({ member }) => member.ref.name === now))),
+      (e) =>
+        e.group?.name === groupName &&
+        ((e.type === 2 && e.member?.member.ref.name === now) ||
+          (e.type === 4 &&
+            e.memberCol?.some(({ member }) => member.ref.name === now))),
     )
 
     if (index >= 0) {
@@ -511,13 +515,17 @@ function NormalProxyGroups(props: { mode: string }) {
     [globalGroupName, select, setHeadState],
   )
 
-  const handleLocation = useStableCallback((group: ProxyGroupView) => {
-    if (!group) return
-    const { name, now } = group
+  const handleLocation = useStableCallback((groupName: string) => {
+    // Flat (type 1) headers such as GLOBAL carry the same live group.
+    const headerIndex = renderList.findIndex(
+      (e) => (e.type === 0 || e.type === 1) && e.group?.name === groupName,
+    )
+    const now = renderList[headerIndex]?.group?.now
+    if (!now) return
 
     const index = renderList.findIndex(
       (e) =>
-        e.group?.name === name &&
+        e.group?.name === groupName &&
         ((e.type === 2 && e.member?.member.ref.name === now) ||
           (e.type === 4 &&
             e.memberCol?.some(({ member }) => member.ref.name === now))),
@@ -531,21 +539,20 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   })
 
-  const handleGroupLocationByName = useCallback(
-    (groupName: string) => {
-      const index = renderList.findIndex(
-        (item) => item.type === 0 && item.group?.name === groupName,
-      )
+  // Stable identity: this feeds the sticky-header render callback; a
+  // [renderList] dep would re-create it on every list rebuild.
+  const handleGroupLocationByName = useStableCallback((groupName: string) => {
+    const index = renderList.findIndex(
+      (item) => item.type === 0 && item.group?.name === groupName,
+    )
 
-      if (index >= 0) {
-        stickyListRef.current?.scrollToIndex(index, {
-          align: 'start',
-          behavior: 'smooth',
-        })
-      }
-    },
-    [renderList],
-  )
+    if (index >= 0) {
+      stickyListRef.current?.scrollToIndex(index, {
+        align: 'start',
+        behavior: 'smooth',
+      })
+    }
+  })
 
   const proxyGroupNames = useMemo(() => {
     const names = renderList
