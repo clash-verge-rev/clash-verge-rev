@@ -42,6 +42,39 @@ const TrafficUnavailableFallback = () => {
   )
 }
 
+// Stable identities keep the emotion sx cache effective across the ~1Hz
+// traffic-driven re-renders of LayoutTraffic.
+const boxStyle: Pick<BoxProps, 'sx'> = {
+  sx: {
+    display: 'flex',
+    alignItems: 'center',
+    whiteSpace: 'nowrap',
+  },
+}
+const memoryBoxStyle: Pick<BoxProps, 'sx'> = {
+  sx: {
+    ...boxStyle.sx,
+    cursor: 'auto',
+  },
+}
+const iconStyle: Pick<SvgIconProps, 'sx'> = {
+  sx: { mr: '8px', fontSize: 16 },
+}
+const valStyle: Pick<TypographyProps, 'component' | 'sx'> = {
+  component: 'span',
+  sx: { flex: '1 1 56px', userSelect: 'none', textAlign: 'center' },
+}
+const unitStyle: Pick<TypographyProps, 'component' | 'color' | 'sx'> = {
+  component: 'span',
+  color: 'grey.500',
+  sx: {
+    flex: '0 1 27px',
+    userSelect: 'none',
+    fontSize: '12px',
+    textAlign: 'right',
+  },
+}
+
 export const LayoutTraffic = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
@@ -74,31 +107,6 @@ export const LayoutTraffic = () => {
   const [down, downUnit] = parseTraffic(traffic?.down || 0)
   const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
 
-  const boxStyle: Pick<BoxProps, 'sx'> = {
-    sx: {
-      display: 'flex',
-      alignItems: 'center',
-      whiteSpace: 'nowrap',
-    },
-  }
-  const iconStyle: Pick<SvgIconProps, 'sx'> = {
-    sx: { mr: '8px', fontSize: 16 },
-  }
-  const valStyle: Pick<TypographyProps, 'component' | 'sx'> = {
-    component: 'span',
-    sx: { flex: '1 1 56px', userSelect: 'none', textAlign: 'center' },
-  }
-  const unitStyle: Pick<TypographyProps, 'component' | 'color' | 'sx'> = {
-    component: 'span',
-    color: 'grey.500',
-    sx: {
-      flex: '0 1 27px',
-      userSelect: 'none',
-      fontSize: '12px',
-      textAlign: 'right',
-    },
-  }
-
   return (
     <ErrorBoundary
       FallbackComponent={TrafficUnavailableFallback}
@@ -120,9 +128,6 @@ export const LayoutTraffic = () => {
           <Box
             title={`${t('home.components.traffic.metrics.uploadSpeed')}`}
             {...boxStyle}
-            sx={{
-              ...boxStyle.sx,
-            }}
           >
             <ArrowUpwardRounded
               {...iconStyle}
@@ -137,9 +142,6 @@ export const LayoutTraffic = () => {
           <Box
             title={`${t('home.components.traffic.metrics.downloadSpeed')}`}
             {...boxStyle}
-            sx={{
-              ...boxStyle.sx,
-            }}
           >
             <ArrowDownwardRounded
               {...iconStyle}
@@ -154,11 +156,7 @@ export const LayoutTraffic = () => {
           {displayMemory && (
             <Box
               title={`${t('home.components.traffic.metrics.memoryUsage')} `}
-              {...boxStyle}
-              sx={{
-                ...boxStyle.sx,
-                cursor: 'auto',
-              }}
+              {...memoryBoxStyle}
               color={'disabled'}
             >
               <MemoryRounded {...iconStyle} />

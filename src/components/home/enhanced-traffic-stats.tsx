@@ -131,6 +131,15 @@ const CompactStatCard = memo(
 // 添加显示名称
 CompactStatCard.displayName = 'CompactStatCard'
 
+// Element identity is stable, so CompactStatCard's memo comparison holds
+// across per-second parsedData updates.
+const uploadSpeedIcon = <ArrowUpwardRounded fontSize="small" />
+const downloadSpeedIcon = <ArrowDownwardRounded fontSize="small" />
+const activeConnectionsIcon = <LinkRounded fontSize="small" />
+const uploadedIcon = <CloudUploadRounded fontSize="small" />
+const downloadedIcon = <CloudDownloadRounded fontSize="small" />
+const memoryUsageIcon = <MemoryRounded fontSize="small" />
+
 const fallbackSx = {
   p: 2,
   minHeight: 200,
@@ -252,35 +261,35 @@ export const EnhancedTrafficStats = () => {
   const statCards = useMemo(() => {
     const cards: StatCardProps[] = [
       {
-        icon: <ArrowUpwardRounded fontSize="small" />,
+        icon: uploadSpeedIcon,
         title: t('home.components.traffic.metrics.uploadSpeed'),
         value: parsedData.up,
         unit: `${parsedData.upUnit}/s`,
         color: 'secondary' as const,
       },
       {
-        icon: <ArrowDownwardRounded fontSize="small" />,
+        icon: downloadSpeedIcon,
         title: t('home.components.traffic.metrics.downloadSpeed'),
         value: parsedData.down,
         unit: `${parsedData.downUnit}/s`,
         color: 'primary' as const,
       },
       {
-        icon: <LinkRounded fontSize="small" />,
+        icon: activeConnectionsIcon,
         title: t('home.components.traffic.metrics.activeConnections'),
         value: parsedData.connectionsCount,
         unit: '',
         color: 'success' as const,
       },
       {
-        icon: <CloudUploadRounded fontSize="small" />,
+        icon: uploadedIcon,
         title: t('shared.labels.uploaded'),
         value: parsedData.uploadTotal,
         unit: parsedData.uploadTotalUnit,
         color: 'secondary' as const,
       },
       {
-        icon: <CloudDownloadRounded fontSize="small" />,
+        icon: downloadedIcon,
         title: t('shared.labels.downloaded'),
         value: parsedData.downloadTotal,
         unit: parsedData.downloadTotalUnit,
@@ -290,7 +299,7 @@ export const EnhancedTrafficStats = () => {
 
     if (displayMemory) {
       cards.push({
-        icon: <MemoryRounded fontSize="small" />,
+        icon: memoryUsageIcon,
         title: t('home.components.traffic.metrics.memoryUsage'),
         value: parsedData.inuse,
         unit: parsedData.inuseUnit,

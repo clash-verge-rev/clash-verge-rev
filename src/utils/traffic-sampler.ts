@@ -7,14 +7,33 @@ interface ICompressedDataPoint {
 
 const pad2 = (value: number) => value.toString().padStart(2, '0')
 
+// Time labels are derived once per 1Hz timestamp and redrawn several times per
+// second; the bounded cache keeps axis drawing allocation-free in steady state.
+const TIME_LABEL_CACHE_LIMIT = 1024
+const hourMinuteLabels = new Map<number, string>()
+const minuteSecondLabels = new Map<number, string>()
+
 export const formatTrafficHourMinute = (timestamp: number) => {
+  const cached = hourMinuteLabels.get(timestamp)
+  if (cached !== undefined) return cached
+
   const date = new Date(timestamp)
-  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+  const label = `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+  if (hourMinuteLabels.size >= TIME_LABEL_CACHE_LIMIT) hourMinuteLabels.clear()
+  hourMinuteLabels.set(timestamp, label)
+  return label
 }
 
 export const formatTrafficMinuteSecond = (timestamp: number) => {
+  const cached = minuteSecondLabels.get(timestamp)
+  if (cached !== undefined) return cached
+
   const date = new Date(timestamp)
-  return `${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+  const label = `${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+  if (minuteSecondLabels.size >= TIME_LABEL_CACHE_LIMIT)
+    minuteSecondLabels.clear()
+  minuteSecondLabels.set(timestamp, label)
+  return label
 }
 
 export const formatTrafficName = (timestamp: number) => {
@@ -53,10 +72,12 @@ export class TrafficDataSampler {
   private compressedBuffer: ICompressedDataPoint[] = []
   private compressedHead = 0
   private compressionQueue: ITrafficDataPoint[] = []
+  private version = 0
 
   constructor(private config: ISamplingConfig) {}
 
   addDataPoint(point: ITrafficDataPoint) {
+    this.version++
     this.rawBuffer.push(point)
 
     const rawCutoff = Date.now() - this.config.rawDataMinutes * 60 * 1000
@@ -167,7 +188,13 @@ export class TrafficDataSampler {
     }
   }
 
+  /** Bumped by every mutation (added points, compression, aging trims, clear). */
+  getVersion(): number {
+    return this.version
+  }
+
   clear() {
+    this.version++
     this.rawBuffer = []
     this.rawHead = 0
     this.compressedBuffer = []
