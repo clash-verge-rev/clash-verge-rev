@@ -7,7 +7,7 @@ description: Route gh-aw design, creation, diagnosis, patching, active debugging
 
 Use this skill when a user asks to design, create, update, debug, or upgrade GitHub Agentic Workflows in this repository, or prepare a substantial issue for a local, self-contained SDLC.
 
-This skill is a dispatcher: identify the task type, load the matching workflow prompt/skill file, and follow it directly. Keep responses concise and ask a clarifying question if the correct prompt is unclear.
+Load and follow the matching prompt or skill. Keep responses concise; ask if the route is unclear.
 
 For debugging sessions needing CLI setup or run-URL scoping, first load
 `https://raw.githubusercontent.com/github/gh-aw/main/.github/aw/debug-bootstrap.md`; it bootstraps
@@ -32,9 +32,11 @@ Use a local guidance checkout only when its repository/ref matches the requested
 If GitHub API, `gh api`, or GitHub MCP downloads return HTTP 403 (including a token SAML-authorized for a different organization), do not retry with the same token. Fetch the public file without authentication from `https://raw.githubusercontent.com/github/gh-aw/main/<path>` instead, preserving its repository-relative path (including `.github/`). For example: `curl --fail --silent --show-error --location 'https://raw.githubusercontent.com/github/gh-aw/main/.github/aw/create-agentic-workflow.md'`. Use the same fallback for referenced instructions and `SKILL.md` files; never send an Authorization header or token to the raw URL. If the public download fails, report that error rather than proceeding without the required instructions. This fallback is for public `github/gh-aw` content only, not private or enterprise repositories.
 After loading the matching workflow prompt or skill, follow it directly:
 - Design workflows from scratch via interview: `.github/aw/designer.md`
+- Repo Factory: `.github/aw/repo-factory.md`
 - Create new workflows: `.github/aw/create-agentic-workflow.md`
 - Configure scheduled dreaming or consolidate persistent memory: `.github/aw/create-agentic-workflow.md`, then `.github/aw/memory.md#scheduled-dreaming`; load `.github/aw/dreaming.md` only when the decision and input scope justify implementation
-- Configure or add declarative engines: `.github/aw/configure-agentic-engine.md`
+- Select engine and inference: `.github/aw/agentic-engine.md`
+- Define a custom engine: `.github/aw/custom-declarative-agentic-engine.md`
 - Consume, author, or document third-party connectors: `.github/aw/connectors.md`
 - Create a new connector: `.github/aw/connectors.md#author-or-extend-a-declaration`, then the repository's `.github/skills/create-connector/SKILL.md` when available
 - Update existing workflows: `.github/aw/update-agentic-workflow.md`
