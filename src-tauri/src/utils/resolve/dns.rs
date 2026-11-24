@@ -24,21 +24,51 @@ fn dns_state_dir() -> anyhow::Result<PathBuf> {
     Ok(dir)
 }
 
-// Without the placeholder, a LAN resolver is reached outside TUN and fake-ip is bypassed.
 fn needs_public_dns(config: &Mapping) -> bool {
     let section = |name: &str| config.get(name).and_then(Value::as_mapping);
-    let enabled = |name: &str| {
-        section(name)
-            .and_then(|map| map.get("enable"))
-            .and_then(Value::as_bool)
-            .unwrap_or(false)
+    let (Some(tun), Some(dns)) = (section("tun"), section("dns")) else {
+        return false;
     };
-    enabled("tun")
-        && enabled("dns")
-        && section("dns")
-            .and_then(|dns| dns.get("enhanced-mode"))
-            .and_then(Value::as_str)
-            == Some("fake-ip")
+    let enabled = |section: &Mapping| section.get("enable").and_then(Value::as_bool) == Some(true);
+    if !enabled(tun) || !enabled(dns) {
+        return false;
+    }
+
+    match dns.get("enhanced-mode").and_then(Value::as_str) {
+        Some("fake-ip") => true,
+        Some("redir-host") => uses_legacy_tun_dns_hijack(tun),
+        _ => false,
+    }
+}
+
+fn uses_legacy_tun_dns_hijack(tun: &Mapping) -> bool {
+    // Leave explicit TUN DNS modes to Mihomo. Without routing and interception,
+    // the public DNS placeholders would be contacted directly instead.
+    let legacy_mode = tun.get("dns-mode").is_none_or(|value| value.as_str() == Some(""));
+    let auto_route = tun.get("auto-route").is_none_or(|value| value.as_bool() == Some(true));
+    let hijacks_public_dns = match tun.get("dns-hijack") {
+        // Mihomo defaults to the IPv4 wildcard when this setting is absent.
+        None => true,
+        Some(rules) => rules.as_sequence().is_some_and(|rules| {
+            rules.iter().filter_map(Value::as_str).any(|rule| {
+                let address = rule.split_once("://").map_or(rule, |(_, address)| address);
+                matches!(address, "any:53" | "0.0.0.0:53")
+            })
+        }),
+    };
+    // Custom routes can send the public placeholders outside TUN.
+    let default_routes = [
+        "route-address",
+        "route-exclude-address",
+        "inet4-route-address",
+        "inet4-route-exclude-address",
+    ]
+    .iter()
+    .all(|key| {
+        tun.get(*key)
+            .is_none_or(|routes| routes.as_sequence().is_some_and(Vec::is_empty))
+    });
+    legacy_mode && auto_route && hijacks_public_dns && default_routes
 }
 
 /// Sets the placeholder DNS while the running config needs it, and restores the system DNS otherwise.
@@ -141,4 +171,51 @@ async fn run_dns_script(script_name: &str, allow_deferred: bool) -> anyhow::Resu
     })
     .await
     .context("DNS script task failed")?
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn public_dns_follows_tun_and_dns_for_both_modes() {
+        for mode in ["fake-ip", "redir-host"] {
+            for (tun_enabled, dns_enabled) in [(true, true), (true, false), (false, true), (false, false)] {
+                let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(&format!(
+                    "tun:\n  enable: {tun_enabled}\ndns:\n  enable: {dns_enabled}\n  enhanced-mode: {mode}\n"
+                ))
+                .expect("valid DNS configuration");
+
+                assert_eq!(
+                    super::needs_public_dns(&config),
+                    tun_enabled && dns_enabled,
+                    "TUN={tun_enabled}, DNS={dns_enabled}, mode={mode}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    #[allow(clippy::expect_used)]
+    fn redir_host_only_uses_the_placeholder_with_legacy_tun_dns() {
+        for (tun_options, expected) in [
+            ("  dns-mode: ''\n  auto-route: true\n  dns-hijack: ['any:53']\n", true),
+            ("  dns-mode: disabled\n", false),
+            ("  dns-mode: native\n", false),
+            ("  dns-mode: hijack\n", false),
+            ("  auto-route: false\n", false),
+            ("  route-exclude-address: []\n", true),
+            ("  route-exclude-address: ['1.1.1.1/32']\n", false),
+            ("  inet4-route-address: ['192.168.0.0/16']\n", false),
+            ("  dns-hijack: []\n", false),
+            ("  dns-hijack: ['udp://0.0.0.0:53']\n", true),
+            ("  dns-hijack: ['192.168.1.1:53']\n", false),
+        ] {
+            let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(&format!(
+                "tun:\n  enable: true\n{tun_options}dns:\n  enable: true\n  enhanced-mode: redir-host\n"
+            ))
+            .expect("valid DNS configuration");
+
+            assert_eq!(super::needs_public_dns(&config), expected, "{tun_options}");
+        }
+    }
 }
