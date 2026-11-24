@@ -81,23 +81,20 @@ pnpm run prebuild
 pnpm run prebuild --force  # Re-download and overwrite Mihomo core and service binaries
 ```
 
-### Prepare the Development Service Source
+### Service Development
 
-`pnpm dev` builds the development service from a sibling checkout of [`clash-verge-service-ipc`](https://github.com/clash-verge-rev/clash-verge-service-ipc). The binaries downloaded by `pnpm prebuild` do not replace this source checkout.
-
-Check the `clash_verge_service_ipc` dependency in [`src-tauri/Cargo.toml`](src-tauri/Cargo.toml), then clone the service repository alongside `clash-verge-rev` and check out the matching tag. If the sibling directory already exists, reuse it and check its version rather than overwriting it. Without this checkout, `pnpm dev` fails when it tries to access `../clash-verge-service-ipc/Cargo.toml`.
+The app consumes the published `clash_verge_service_ipc` crate from its git tag (see [`src-tauri/Cargo.toml`](src-tauri/Cargo.toml)). To work on the Service itself, clone [`clash-verge-service-ipc`](https://github.com/clash-verge-rev/clash-verge-service-ipc) alongside `clash-verge-rev`, check out the matching tag, and temporarily point the dependency at the local path before building.
 
 ### Run the Development Server
 
 Run these commands from the root of `clash-verge-rev`:
 
 ```bash
-pnpm dev           # Build the development service and start the desktop app
-pnpm dev:diff      # Alias of pnpm dev
+pnpm dev           # Start the desktop app in debug mode
 pnpm dev:tauri     # Run Tauri directly with the tauri-dev feature
 ```
 
-For frontend-only development, use `pnpm web:dev`. It does not start the Rust backend or build the development service.
+For frontend-only development, use `pnpm web:dev`. It does not start the Rust backend.
 
 ### Build the Project
 

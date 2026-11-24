@@ -13,7 +13,8 @@ const upLineWidth = 4
 const downLineAlpha = 1
 const downLineWidth = 4
 const sampleIntervalMs = 1000
-const animationDurationMs = sampleIntervalMs
+const animationDurationMs = 150
+const scrollTransform = `translateX(${-100 / (maxPoint + 1)}%)`
 
 const zeroTraffic: Traffic = { up: 0, down: 0, upTotal: 0, downTotal: 0 }
 const createDefaultList = () =>
@@ -203,12 +204,8 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
               performance.now() - animationStartRef.current,
               animationDurationMs,
             )
-      const step = canvas.getBoundingClientRect().width / (maxPoint + 1)
       animation = canvas.animate(
-        [
-          { transform: 'translateX(0)' },
-          { transform: `translateX(${-step}px)` },
-        ],
+        [{ transform: 'translateX(0)' }, { transform: scrollTransform }],
         { duration: animationDurationMs, easing: 'linear', fill: 'forwards' },
       )
       animation.currentTime = elapsed
