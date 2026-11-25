@@ -59,6 +59,7 @@
 **🐧 Linux**
 
 - 修复 Linux OpenRC 环境下服务安装失败
+- 修复 Linux 安装版 Mihomo 内核升级因权限不足而失败
 
 </details>
 

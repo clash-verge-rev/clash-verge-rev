@@ -5,11 +5,20 @@
 //! (clash-verge-rev#6834). Verge downloads the release itself instead, stages a verified
 //! copy beside the managed core and renames it into place: `rename` never touches the inode
 //! the running core is executing from, so no page validation can fail.
+//!
+//! Package installs break that assumption: distribution packages put the core beside the app in
+//! a root-owned directory such as `/usr/bin`, which the desktop user cannot write. Those stage in
+//! user data and publish through the elevated helper, which keeps the same copy-then-rename shape.
 
+#[cfg(not(windows))]
+use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use crate::{
     config::Config,
     core::{CoreManager, manager::RunningMode},
-    utils::network::{NetworkManager, ProxyType},
+    utils::{
+        dirs,
+        network::{NetworkManager, ProxyType},
+    },
 };
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
@@ -29,6 +38,8 @@ const VERSION_TIMEOUT_SECS: u64 = 20;
 const PACKAGE_TIMEOUT_SECS: u64 = 300;
 /// Well above any real core package, low enough that a wrong response cannot exhaust memory.
 const MAX_PACKAGE_BYTES: usize = 64 * 1024 * 1024;
+/// User data root for the staging and rollback copies of a core the app cannot write in place.
+const CORE_STAGING_DIR: &str = "core-upgrade";
 
 static STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 /// `.rollback` and `.old` are fixed paths, so two upgrades must not overlap.
@@ -65,34 +76,31 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
 
     let package = download_package(proxy, alpha, &latest).await?;
     let staged = stage_core(&target, &package, &latest)?;
+    let elevated = staged.elevated;
 
     // A hard link keeps the previous core reachable without touching the inode the running
-    // core executes from, so publishing below stays one atomic rename.
-    let rollback = target.with_file_name(format!(".{core}.rollback"));
+    // core executes from, so publishing below stays one atomic rename. A root-owned target
+    // cannot take a link beside it, so those installs keep the copy in user data instead.
+    let rollback = rollback_path(&target, elevated)?;
     let _ = std::fs::remove_file(&rollback);
     // Nothing to roll back to when the core we are replacing could not report a version.
-    let restorable = !installed.is_empty() && std::fs::hard_link(&target, &rollback).is_ok();
+    let restorable = !installed.is_empty() && stage_rollback(&target, &rollback, elevated);
 
     // Decided before anything can crash: after a failed restart the mode reads NotRunning, which
     // says nothing about whether this upgrade went through the Service.
     let service_mode = matches!(*CoreManager::global().get_running_mode(), RunningMode::Service);
+    // A sidecar session still owes the Service its copy when one is installed, or a later switch
+    // would keep running the core this upgrade replaced while the app reports the new version.
+    // Windows keeps its previous behaviour: staging there would add a UAC prompt to an upgrade
+    // that never asked for one.
+    #[cfg(windows)]
+    let service_present = service_mode;
+    #[cfg(not(windows))]
+    let service_present = service_mode || service_installed().await;
 
-    let mut result = staged.publish(&target);
     // The Service executes its own administrator-approved copy, never this file; hand the new
-    // bytes over before the restart below asks for them, or a service-mode restart would keep
-    // running the previous core while the app reports the new version. Sidecar mode runs the
-    // file directly and gets no elevation prompt.
-    let service_staging = if result.is_ok() && service_mode {
-        result =
-            crate::core::service::stage_approved_core(&target).context("core replaced but not accepted by the service");
-        if result.is_ok() {
-            ServiceStaging::Succeeded
-        } else {
-            ServiceStaging::Refused
-        }
-    } else {
-        ServiceStaging::NotAttempted
-    };
+    // bytes over before the restart below asks for them.
+    let (mut result, service_staging) = publish_core(&staged, &target, service_present);
     if result.is_ok() {
         result = CoreManager::global()
             .restart_core()
@@ -106,18 +114,19 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
         // new core also restores: leaving the new file would make a retry read the new version
         // and report nothing to do while the service keeps running the old core.
         let core_is_down = matches!(*CoreManager::global().get_running_mode(), RunningMode::NotRunning);
+        let restore_service = matches!(service_staging, ServiceStaging::Succeeded);
         if restorable
             && (matches!(service_staging, ServiceStaging::Refused) || core_is_down || !target.exists())
-            && std::fs::rename(&rollback, &target).is_ok()
+            && restore_core(&rollback, &target, elevated, restore_service)
         {
             logging!(warn, Type::Core, "core upgrade: rolled back to {installed:?}");
-            // Only a staging that SUCCEEDED left the failing bytes in the approved copy, and only
-            // then must the restore reach it too — otherwise the restart below would spawn the
-            // very core that just failed. Refused or never-attempted staging left the approved
-            // copy untouched, and re-staging would raise an elevation prompt for a no-op. This is
-            // deliberately not gated on the current running mode, which reads NotRunning after
-            // the very crash being rolled back.
-            if matches!(service_staging, ServiceStaging::Succeeded)
+            // The elevated restore already wrote the Service copy in the same run; a local one
+            // only touched the file beside the app, and re-staging would raise an elevation
+            // prompt for a no-op when nothing was published. This is deliberately not gated on
+            // the current running mode, which reads NotRunning after the very crash being
+            // rolled back.
+            if !elevated
+                && restore_service
                 && let Err(stage_error) = crate::core::service::stage_approved_core(&target)
             {
                 logging!(
@@ -149,16 +158,28 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
 
 /// Whether this upgrade handed bytes to the Service's approved core directory.
 ///
-/// Three states matter, not two: a staging that never ran (publish failed, or sidecar mode) left
-/// the approved copy alone just like a refused one, but only a SUCCEEDED staging obliges the
-/// rollback path to restore that copy as well. A user who upgrades in sidecar mode and later
-/// switches to service mode runs the previously approved core until the next elevated
-/// (re)install or upgrade; the Service logs that drift on every spawn.
+/// Three states matter, not two: a staging that never ran (publish failed, or no Service is
+/// installed) left the approved copy alone just like a refused one, but only a SUCCEEDED staging
+/// obliges the rollback path to restore that copy as well. A sidecar session with an installed
+/// Service stages too, so switching back cannot run the core this upgrade replaced.
 #[derive(Clone, Copy)]
 enum ServiceStaging {
     NotAttempted,
     Succeeded,
     Refused,
+}
+
+/// True when a Service is registered, whatever its current health: its approved copy outlives
+/// this session, so an upgrade in sidecar mode still has to refresh it.
+#[cfg(not(windows))]
+async fn service_installed() -> bool {
+    !matches!(
+        SERVICE_MANAGER.current().await,
+        ServiceStatus::Checking
+            | ServiceStatus::NotInstalled
+            | ServiceStatus::InstallRequired
+            | ServiceStatus::SidecarAllowed
+    )
 }
 
 /// The sidecar next to the app executable. On macOS development builds the Service runs a
@@ -291,6 +312,8 @@ async fn download_package(proxy: ProxyType, alpha: bool, version: &str) -> Resul
 /// A staged core that is removed unless publishing renamed it away.
 struct StagedCore {
     path: PathBuf,
+    /// The target directory is root-owned, so publishing has to go through the elevated helper.
+    elevated: bool,
 }
 
 impl Drop for StagedCore {
@@ -311,15 +334,14 @@ impl Drop for StagedCore {
 /// Unpacks, permits, signs and runs the new core before it is allowed anywhere near the
 /// live path, so a bad download can never replace a working core.
 fn stage_core(target: &Path, package: &[u8], version: &str) -> Result<StagedCore> {
-    let directory = target
-        .parent()
-        .with_context(|| format!("the managed core has no parent directory: {}", target.display()))?;
+    let elevated = publish_requires_elevation(target);
+    let directory = staging_directory(target, elevated)?;
     let core_name = target
         .file_name()
         .with_context(|| format!("the managed core has no file name: {}", target.display()))?;
 
-    let (path, mut file) = create_staging_file(directory, core_name)?;
-    let staged = StagedCore { path };
+    let (path, mut file) = create_staging_file(&directory, core_name)?;
+    let staged = StagedCore { path, elevated };
 
     unpack(package, &mut file).with_context(|| format!("failed to unpack the core package for {version}"))?;
 
@@ -393,13 +415,14 @@ fn unpack(package: &[u8], out: &mut File) -> Result<()> {
 
 impl StagedCore {
     #[cfg(not(windows))]
-    fn publish(self, target: &Path) -> Result<()> {
+    fn publish(&self, target: &Path) -> Result<()> {
         std::fs::rename(&self.path, target)
             .with_context(|| format!("failed to publish the core to {}", target.display()))
     }
 
     #[cfg(windows)]
-    fn publish(self, target: &Path) -> Result<()> {
+    fn publish(&self, target: &Path) -> Result<()> {
+        debug_assert!(!self.elevated);
         if std::fs::rename(&self.path, target).is_ok() {
             return Ok(());
         }
@@ -426,6 +449,174 @@ impl StagedCore {
 
         let _ = std::fs::remove_file(&displaced);
         Ok(())
+    }
+}
+
+/// Publishing next to the target needs write access to its directory. Distribution packages
+/// install the core in a root-owned directory such as `/usr/bin`, so those publish through the
+/// elevated helper.
+#[cfg(target_os = "linux")]
+fn publish_requires_elevation(target: &Path) -> bool {
+    target
+        .parent()
+        .is_some_and(|directory| !directory_is_writable(directory))
+}
+
+/// Only Linux installs the core into a directory the desktop user cannot write.
+#[cfg(not(target_os = "linux"))]
+const fn publish_requires_elevation(_target: &Path) -> bool {
+    false
+}
+
+#[cfg(target_os = "linux")]
+fn directory_is_writable(path: &Path) -> bool {
+    use std::os::unix::ffi::OsStrExt as _;
+
+    let Ok(path) = std::ffi::CString::new(path.as_os_str().as_bytes()) else {
+        return false;
+    };
+    // SAFETY: a valid NUL-terminated path is readable for the duration of the call.
+    unsafe { libc::access(path.as_ptr(), libc::W_OK) == 0 }
+}
+
+fn staging_directory(target: &Path, elevated: bool) -> Result<PathBuf> {
+    if !elevated {
+        return target
+            .parent()
+            .map(Path::to_path_buf)
+            .with_context(|| format!("the managed core has no parent directory: {}", target.display()));
+    }
+
+    let directory = dirs::app_home_dir()?.join(CORE_STAGING_DIR);
+    std::fs::create_dir_all(&directory)
+        .with_context(|| format!("failed to create the core staging directory {}", directory.display()))?;
+    Ok(directory)
+}
+
+fn rollback_path(target: &Path, elevated: bool) -> Result<PathBuf> {
+    let name = target
+        .file_name()
+        .with_context(|| format!("the managed core has no file name: {}", target.display()))?;
+    let name = format!(".{}.rollback", name.to_string_lossy());
+
+    if elevated {
+        Ok(dirs::app_home_dir()?.join(CORE_STAGING_DIR).join(name))
+    } else {
+        Ok(target.with_file_name(name))
+    }
+}
+
+/// Keeps the previous bytes reachable for the rollback. A hard link cannot be created beside a
+/// root-owned target, so those copies are read into user data instead.
+fn stage_rollback(target: &Path, rollback: &Path, elevated: bool) -> bool {
+    if elevated {
+        std::fs::copy(target, rollback).is_ok()
+    } else {
+        std::fs::hard_link(target, rollback).is_ok()
+    }
+}
+
+/// Publishes the verified core, then the Service's approved copy when one is installed.
+///
+/// A refused Service copy leaves the new core on disk, so it is reported apart from a replacement
+/// that never happened: only the former restores the Service copy during rollback.
+fn publish_core(staged: &StagedCore, target: &Path, service_present: bool) -> (Result<()>, ServiceStaging) {
+    if staged.elevated {
+        return match publish_elevated(&staged.path, target, service_present) {
+            Ok(ElevatedOutcome::Published) => (
+                Ok(()),
+                if service_present {
+                    ServiceStaging::Succeeded
+                } else {
+                    ServiceStaging::NotAttempted
+                },
+            ),
+            Ok(ElevatedOutcome::ServiceFailed(error)) => (
+                Err(error.context("core replaced but not accepted by the service")),
+                ServiceStaging::Refused,
+            ),
+            Err(error) => (Err(error), ServiceStaging::NotAttempted),
+        };
+    }
+
+    if let Err(error) = staged.publish(target) {
+        return (Err(error), ServiceStaging::NotAttempted);
+    }
+    if !service_present {
+        return (Ok(()), ServiceStaging::NotAttempted);
+    }
+
+    match crate::core::service::stage_approved_core(target) {
+        Ok(()) => (Ok(()), ServiceStaging::Succeeded),
+        Err(error) => (
+            Err(error.context("core replaced but not accepted by the service")),
+            ServiceStaging::Refused,
+        ),
+    }
+}
+
+/// How far an elevated replacement got, without tying the upgrade to the platform's module.
+///
+/// Only Linux reaches this path: elsewhere the core never lands in a directory the user cannot
+/// write, so neither variant is ever constructed.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+enum ElevatedOutcome {
+    Published,
+    ServiceFailed(anyhow::Error),
+}
+
+#[cfg(target_os = "linux")]
+fn publish_elevated(staged: &Path, target: &Path, publish_service: bool) -> Result<ElevatedOutcome> {
+    logging!(
+        info,
+        Type::Core,
+        "core upgrade: requesting elevation to replace {}",
+        target.display()
+    );
+    Ok(
+        match crate::utils::elevated::replace_root_owned_file(staged, target, publish_service)? {
+            crate::utils::elevated::Outcome::Published => ElevatedOutcome::Published,
+            crate::utils::elevated::Outcome::ServiceFailed(error) => ElevatedOutcome::ServiceFailed(error),
+        },
+    )
+}
+
+#[cfg(not(target_os = "linux"))]
+fn publish_elevated(staged: &Path, target: &Path, _publish_service: bool) -> Result<ElevatedOutcome> {
+    bail!(
+        "replacing the root-owned core {} is not supported on this platform (staged at {})",
+        target.display(),
+        staged.display()
+    )
+}
+
+fn restore_core(rollback: &Path, target: &Path, elevated: bool, publish_service: bool) -> bool {
+    if !elevated {
+        return std::fs::rename(rollback, target).is_ok();
+    }
+
+    match publish_elevated(rollback, target, publish_service) {
+        Ok(ElevatedOutcome::Published) => true,
+        // The previous core is back in place; only the Service copy is stale, and the next
+        // successful publish repairs it.
+        Ok(ElevatedOutcome::ServiceFailed(error)) => {
+            logging!(
+                warn,
+                Type::Core,
+                "core upgrade: restored {} but not the service copy: {error:#}",
+                target.display()
+            );
+            true
+        }
+        Err(error) => {
+            logging!(
+                warn,
+                Type::Core,
+                "core upgrade: failed to restore {}: {error:#}",
+                target.display()
+            );
+            false
+        }
     }
 }
 
