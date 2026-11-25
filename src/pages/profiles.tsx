@@ -25,7 +25,6 @@ import { throttle } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
-import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import {
   BasePage,
@@ -40,6 +39,7 @@ import {
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { fetchProfilesIntoCache, useProfiles } from '@/hooks/use-profiles'
+import { useProfileSwitch } from '@/providers/profile-switch-context'
 import {
   createProfile,
   deleteProfile,
@@ -63,21 +63,9 @@ import { isValidUrl } from '@/utils/network'
 
 // 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
 const PROFILE_UPDATE_WORKER_LIMIT = 8
-const PROFILE_SWITCH_LOADING_DELAY = 400
 const profilePointerSensor = PointerSensor.configure({
   activationConstraints: () => undefined,
 })
-
-interface ProfileSwitchRequest {
-  profile: string
-  notifySuccess: boolean
-  force: boolean
-}
-
-const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
-  const timestamp = new Date().toISOString().substring(11, 23)
-  debugLog(`[Profile-Debug][${timestamp}] ${action}: ${profile}`, extra || '')
-}
 
 const ProfilePage = () => {
   const { t } = useTranslation()
@@ -85,10 +73,6 @@ const ProfilePage = () => {
   const [url, setUrl] = useState('')
   const [profileDndRevision, setProfileDndRevision] = useState(0)
   const [activatings, setActivatings] = useState<string[]>([])
-  const [switchTarget, setSwitchTarget] = useState<string | null>(null)
-  const [visibleSwitchingProfile, setVisibleSwitchingProfile] = useState<
-    string | null
-  >(null)
   const [loading, setLoading] = useState(false)
 
   const [batchMode, setBatchMode] = useState(false)
@@ -96,28 +80,15 @@ const ProfilePage = () => {
     () => new Set(),
   )
 
-  // Profile 切换在前端串行执行；队列中只保留用户最后一次选择。
-  const latestSwitchTargetRef = useRef<string | null>(null)
-  const queuedSwitchRef = useRef<ProfileSwitchRequest | null>(null)
-  const switchRunnerRef = useRef<Promise<void> | null>(null)
-  const switchLoadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  )
-  const currentProfileRef = useRef<string | undefined>(undefined)
-  const profilePageMountedRef = useRef(true)
   const { current } = location.state || {}
 
+  const { profiles = {}, mutateProfiles, error, isStale } = useProfiles()
   const {
-    profiles = {},
-    patchProfiles,
-    mutateProfiles,
-    error,
-    isStale,
-  } = useProfiles()
-
-  useEffect(() => {
-    currentProfileRef.current = profiles.current!
-  }, [profiles])
+    activateProfile,
+    getSwitchTarget,
+    switchTarget,
+    visibleSwitchingProfile,
+  } = useProfileSwitch()
 
   useEffect(() => {
     const unlisten = getCurrentWindow().onDragDropEvent(async (event) => {
@@ -340,128 +311,6 @@ const ProfilePage = () => {
     }
   }
 
-  const executeProfileSwitch = useCallback(
-    async ({ profile, notifySuccess, force }: ProfileSwitchRequest) => {
-      if (!force && currentProfileRef.current === profile) {
-        debugProfileSwitch('ALREADY_CURRENT_IGNORED', profile)
-        return
-      }
-
-      debugProfileSwitch('SWITCH_START', profile)
-
-      try {
-        const outcome = await patchProfiles({ current: profile })
-        if (outcome.status === 'busy') {
-          debugProfileSwitch('SWITCH_BUSY', profile)
-          showNotice.info(
-            'profiles.page.feedback.notifications.switchBusy',
-            2000,
-          )
-          return
-        }
-
-        if (outcome.status === 'valid') {
-          currentProfileRef.current = profile
-          void mutateLogs().catch(() => {})
-          void mutate(() => closeAllConnections(), {
-            id: 'close-all-connections',
-            errorNotice: false,
-          }).catch(() => {})
-
-          if (
-            notifySuccess &&
-            latestSwitchTargetRef.current === profile &&
-            queuedSwitchRef.current === null
-          ) {
-            showNotice.success(
-              'profiles.page.feedback.notifications.profileSwitched',
-              1000,
-            )
-          }
-          debugProfileSwitch('SWITCH_SUCCESS', profile)
-        } else {
-          debugProfileSwitch('SWITCH_REJECTED', profile, outcome)
-        }
-      } catch (err: any) {
-        console.error(`[Profile] 切换失败:`, err)
-        showNotice.error(err, 4000)
-      } finally {
-        debugProfileSwitch('SWITCH_END', profile)
-      }
-    },
-    [mutateLogs, patchProfiles],
-  )
-
-  const runProfileSwitchQueue = useCallback(async () => {
-    while (profilePageMountedRef.current && queuedSwitchRef.current) {
-      const request = queuedSwitchRef.current
-      queuedSwitchRef.current = null
-      await executeProfileSwitch(request)
-    }
-  }, [executeProfileSwitch])
-
-  const activateProfile = useCallback(
-    (profile: string, notifySuccess: boolean, force = false) => {
-      if (!profilePageMountedRef.current) return Promise.resolve()
-
-      if (
-        !force &&
-        currentProfileRef.current === profile &&
-        switchRunnerRef.current === null
-      ) {
-        debugProfileSwitch('ALREADY_CURRENT_IGNORED', profile)
-        return Promise.resolve()
-      }
-
-      if (
-        latestSwitchTargetRef.current === profile &&
-        switchRunnerRef.current
-      ) {
-        debugProfileSwitch('DUPLICATE_SWITCH_IGNORED', profile)
-        return switchRunnerRef.current
-      }
-
-      latestSwitchTargetRef.current = profile
-      queuedSwitchRef.current = { profile, notifySuccess, force }
-      setSwitchTarget(profile)
-      setVisibleSwitchingProfile(null)
-      if (switchLoadingTimerRef.current) {
-        window.clearTimeout(switchLoadingTimerRef.current)
-      }
-      switchLoadingTimerRef.current = window.setTimeout(() => {
-        if (
-          profilePageMountedRef.current &&
-          latestSwitchTargetRef.current === profile
-        ) {
-          setVisibleSwitchingProfile(profile)
-        }
-      }, PROFILE_SWITCH_LOADING_DELAY)
-
-      if (switchRunnerRef.current) {
-        debugProfileSwitch('SWITCH_QUEUED', profile)
-        return switchRunnerRef.current
-      }
-
-      const runner = runProfileSwitchQueue().finally(() => {
-        if (switchRunnerRef.current === runner) {
-          switchRunnerRef.current = null
-          latestSwitchTargetRef.current = null
-          if (switchLoadingTimerRef.current) {
-            window.clearTimeout(switchLoadingTimerRef.current)
-            switchLoadingTimerRef.current = null
-          }
-          if (profilePageMountedRef.current) {
-            setSwitchTarget(null)
-            setVisibleSwitchingProfile(null)
-          }
-        }
-      })
-      switchRunnerRef.current = runner
-      return runner
-    },
-    [runProfileSwitchQueue],
-  )
-
   const onSelect = useCallback(
     async (profile: string, force: boolean) => {
       await activateProfile(profile, true, force)
@@ -484,9 +333,10 @@ const ProfilePage = () => {
   }, [current, activateProfile, mutateProfiles])
 
   const onEnhance = useLockFn(async (notifySuccess: boolean) => {
-    if (switchRunnerRef.current) {
+    const pendingProfile = getSwitchTarget()
+    if (pendingProfile !== null) {
       debugLog(
-        `[Profile] 有profile正在切换中(${latestSwitchTargetRef.current})，跳过enhance操作`,
+        `[Profile] Skipping reactivation while switching to ${pendingProfile}`,
       )
       return
     }
@@ -703,20 +553,6 @@ const ProfilePage = () => {
   const dividercolor = isLight
     ? 'rgba(0, 0, 0, 0.06)'
     : 'rgba(255, 255, 255, 0.06)'
-
-  // 卸载后不再执行尚未发送的切换意图。
-  useEffect(() => {
-    profilePageMountedRef.current = true
-    return () => {
-      profilePageMountedRef.current = false
-      queuedSwitchRef.current = null
-      latestSwitchTargetRef.current = null
-      if (switchLoadingTimerRef.current) {
-        window.clearTimeout(switchLoadingTimerRef.current)
-        switchLoadingTimerRef.current = null
-      }
-    }
-  }, [])
 
   return (
     <BasePage

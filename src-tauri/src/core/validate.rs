@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use serde::Serialize;
 use std::{
     fmt,
@@ -6,8 +6,12 @@ use std::{
     mem::DropGuard,
     sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
 };
-use tauri_plugin_shell::ShellExt as _;
+use tauri_plugin_shell::{
+    ShellExt as _,
+    process::{Command, CommandEvent},
+};
 use tokio::fs;
 use tristr::alias::String;
 
@@ -18,6 +22,8 @@ use crate::utils::{dirs, help};
 use clash_verge_logging::{Type, logging};
 
 const SYNTAX_CHECK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
+// A single Mihomo geo-asset download can take up to 90 seconds without output.
+const CORE_VALIDATION_IDLE_TIMEOUT: Duration = Duration::from_secs(120);
 
 static LAST_VALIDATED: LazyLock<parking_lot::Mutex<Option<u64>>> = LazyLock::new(|| parking_lot::Mutex::new(None));
 
@@ -363,19 +369,52 @@ impl CoreConfigValidator {
             anyhow::anyhow!("failed to build validation command for core {clash_core:?}: {error:#}")
         })?;
         let command = command.args(["-t", "-d", app_dir_str, "-f", config_path]);
-        let output = command.output().await.map_err(|error| {
-            anyhow::anyhow!(
-                "failed to run validation core {clash_core:?} for config {config_path:?} in data directory {}: {error:#}",
-                app_dir.display()
-            )
-        })?;
+        Self::validate_core_command(command, CORE_VALIDATION_IDLE_TIMEOUT)
+            .await
+            .with_context(|| {
+                format!(
+                    "failed to run validation core {clash_core:?} for config {config_path:?} in data directory {}",
+                    app_dir.display()
+                )
+            })
+    }
 
-        let status = &output.status;
-        let stderr = &output.stderr;
-        let stdout = &output.stdout;
+    async fn validate_core_command(command: Command, idle_timeout: Duration) -> Result<ValidationOutcome> {
+        // Parallel GeoSite validation can stall on Windows. This setting is local to the -t child.
+        #[cfg(windows)]
+        let command = if std::env::var_os("GOMAXPROCS").is_none() {
+            command.env("GOMAXPROCS", "1")
+        } else {
+            command
+        };
+        let (mut events, child) = command.spawn()?;
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        let code = loop {
+            let (buffer, line) = match tokio::time::timeout(idle_timeout, events.recv()).await {
+                Ok(Some(CommandEvent::Stdout(line))) => (&mut stdout, line),
+                Ok(Some(CommandEvent::Stderr(line))) => (&mut stderr, line),
+                Ok(Some(CommandEvent::Terminated(status))) => break status.code,
+                Ok(None) => break None,
+                Ok(Some(_)) => continue,
+                Err(_) => {
+                    // kill() also waits for this validation sidecar to exit.
+                    tokio::task::spawn_blocking(move || child.kill()).await??;
+                    return Ok(ValidationOutcome::invalid(
+                        ValidationErrorKind::Timeout,
+                        format!(
+                            "Configuration validation timed out after {} seconds without output",
+                            idle_timeout.as_secs()
+                        ),
+                    ));
+                }
+            };
+            buffer.extend(line);
+            buffer.push(b'\n');
+        };
 
         let error_keywords = ["FATA", "fatal", "Parse config error", "level=fatal"];
-        let has_error = !status.success() || contains_any_keyword(stderr, &error_keywords);
+        let has_error = code != Some(0) || contains_any_keyword(&stderr, &error_keywords);
 
         logging!(info, Type::Validate, "-------- 验证结果 --------");
 
@@ -386,17 +425,17 @@ impl CoreConfigValidator {
         if has_error {
             logging!(info, Type::Validate, "发现错误，开始处理错误信息");
             let error_msg: String = if !stdout.is_empty() {
-                str::from_utf8(stdout).unwrap_or_default().into()
+                str::from_utf8(&stdout).unwrap_or_default().into()
             } else if !stderr.is_empty() {
-                str::from_utf8(stderr).unwrap_or_default().into()
-            } else if let Some(code) = status.code() {
+                str::from_utf8(&stderr).unwrap_or_default().into()
+            } else if let Some(code) = code {
                 format!("验证进程异常退出，退出码: {code}").into()
             } else {
                 "验证进程被终止，请检查是否有安全软件阻止了内核运行，或电脑 CPU/运行环境是否支持该内核程序。".into()
             };
 
             logging!(info, Type::Validate, "-------- 验证结束 --------");
-            let outcome = if status.code().is_none() {
+            let outcome = if code.is_none() {
                 ValidationOutcome::invalid(ValidationErrorKind::ProcessTerminated, error_msg)
             } else {
                 ValidationOutcome::invalid_from_message(error_msg)
