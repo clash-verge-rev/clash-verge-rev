@@ -1192,7 +1192,7 @@ name = "clash-verge-logging"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "flexi_logger 0.32.0",
+ "flexi_logger",
  "log",
  "parking_lot 0.13.0",
  "tracing-estuary",
@@ -2411,19 +2411,6 @@ dependencies = [
  "crc32fast",
  "miniz_oxide 0.9.1",
  "zlib-rs",
-]
-
-[[package]]
-name = "flexi_logger"
-version = "0.31.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4945fa9cdfd7571192cf559c186d45ab36c8034482a2d217a19bdc566f190cc"
-dependencies = [
- "chrono",
- "log",
- "nu-ansi-term",
- "regex",
- "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -8547,12 +8534,12 @@ dependencies = [
 [[package]]
 name = "tracing-estuary"
 version = "0.1.0"
-source = "git+https://github.com/Tunglies/tracing-estuary.git?branch=main#dbfce033fa4cff8f936f3e7c2282af1277546f3c"
+source = "git+https://github.com/Tunglies/tracing-estuary.git?branch=main#14c3a1e98a21f19b70a92cbe9a7a731cdfea612d"
 dependencies = [
  "anyhow",
  "compact_str",
  "console-subscriber",
- "flexi_logger 0.31.10",
+ "flexi_logger",
  "log",
  "nu-ansi-term",
  "parking_lot 0.12.5",
