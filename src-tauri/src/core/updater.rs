@@ -207,22 +207,27 @@ const GITHUB_ENDPOINT: &str =
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
 enum UpdateChannel {
     /// The configured endpoints with mirror fallbacks.
-    Auto,
-    Github,
+    Auto = 0,
+    Github = 1,
     /// GitHub through the Core's mixed port.
-    GithubProxy,
+    GithubProxy = 2,
 }
 
 impl UpdateChannel {
-    async fn current() -> Self {
-        match Config::verge().await.latest_arc().update_channel.as_deref() {
-            Some("github") => Self::Github,
-            Some("github_proxy") => Self::GithubProxy,
+    const fn from_code(code: Option<u8>) -> Self {
+        match code {
+            Some(1) => Self::Github,
+            Some(2) => Self::GithubProxy,
             _ => Self::Auto,
         }
+    }
+
+    async fn current() -> Self {
+        Self::from_code(Config::verge().await.latest_arc().update_channel)
     }
 }
 

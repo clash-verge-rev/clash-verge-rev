@@ -113,8 +113,8 @@ pub struct IVerge {
 
     pub auto_check_update: Option<bool>,
 
-    /// `auto`, `github` or `github_proxy`
-    pub update_channel: Option<String>,
+    /// 0: automatic mirrors; 1: GitHub; 2: GitHub through the proxy.
+    pub update_channel: Option<u8>,
 
     pub default_latency_test: Option<String>,
 

@@ -418,8 +418,8 @@ export type IVerge_Deserialize = {
   auto_close_connection?: boolean | null
   auto_switch_selector_group?: boolean | null
   auto_check_update?: boolean | null
-  /**  `auto`, `github` or `github_proxy` */
-  update_channel?: string | null
+  /**  0: automatic mirrors; 1: GitHub; 2: GitHub through the proxy. */
+  update_channel?: number | null
   default_latency_test?: string | null
   default_latency_timeout?: number | null
   enable_auto_delay_detection?: boolean | null
@@ -511,8 +511,8 @@ export type IVerge_Serialize = {
   auto_close_connection: boolean | null
   auto_switch_selector_group: boolean | null
   auto_check_update: boolean | null
-  /**  `auto`, `github` or `github_proxy` */
-  update_channel: string | null
+  /**  0: automatic mirrors; 1: GitHub; 2: GitHub through the proxy. */
+  update_channel: number | null
   default_latency_test: string | null
   default_latency_timeout: number | null
   enable_auto_delay_detection: boolean | null
