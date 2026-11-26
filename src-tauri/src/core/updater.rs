@@ -181,7 +181,8 @@ fn nsis_language_id(app_language: &str) -> &'static str {
     }
 }
 
-/// Same wire shape as the updater plugin's JS `DownloadEvent`.
+/// Same wire shape as the updater plugin's JS `DownloadEvent`, plus `Installing` when the
+/// install starts.
 #[derive(Clone, Serialize, specta::Type)]
 #[serde(tag = "event", content = "data")]
 pub enum DownloadEvent {
@@ -194,12 +195,17 @@ pub enum DownloadEvent {
         chunk_length: usize,
     },
     Finished,
+    Installing,
 }
 
 const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"];
 /// A source delivering less than this per window is dropped for the next one.
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
+#[cfg(target_os = "windows")]
+const INSTALL_TIMEOUT: Duration = Duration::from_secs(30);
+#[cfg(not(target_os = "windows"))]
+const INSTALL_TIMEOUT: Duration = Duration::from_secs(120);
 
 /// The manifest's URL, then the other mirror, then GitHub itself.
 fn download_sources(url: &tauri::Url) -> Vec<tauri::Url> {
@@ -292,8 +298,18 @@ impl SilentUpdater {
         Ok(updater_builder.build()?.check().await?)
     }
 
+    /// Installs verified bytes, dropping the cache first so a failure leaves nothing to
+    /// re-trigger. A timeout abandons the await, not the detached install task; a successful
+    /// Windows install exits the process inside the plugin (#2558).
     async fn install(update: Update, bytes: Vec<u8>) -> Result<()> {
-        Ok(tokio::task::spawn_blocking(move || update.install(&bytes)).await??)
+        Self::delete_cache();
+        let install = tokio::task::spawn_blocking(move || update.install(&bytes));
+        match tokio::time::timeout(INSTALL_TIMEOUT, install).await {
+            Ok(result) => Ok(result??),
+            Err(_) => Err(anyhow::anyhow!(
+                "install timed out after {INSTALL_TIMEOUT:?}; it may still finish in the background"
+            )),
+        }
     }
 
     /// Installs a newer cached update before normal startup, if the user confirms.
@@ -368,23 +384,13 @@ impl SilentUpdater {
 
         Self::show_update_splash(app_handle, &version);
 
-        // `install()` may hang (#2558); on Windows NSIS can take over without returning.
-        let install = tokio::time::timeout(std::time::Duration::from_secs(30), Self::install(update, bytes));
-        match install
-            .await
-            .unwrap_or_else(|_| Err(anyhow::anyhow!("install timed out (30s)")))
-        {
+        match Self::install(update, bytes).await {
             Ok(()) => {
-                logging!(info, Type::System, "Update v{version} install triggered at startup");
-                Self::delete_cache();
+                logging!(info, Type::System, "Update v{version} installed at startup");
                 true
             }
             Err(e) => {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Startup install failed: {e:#}, will retry next launch"
-                );
+                logging!(warn, Type::System, "Startup install failed: {e:#}");
                 Self::close_update_splash(app_handle);
                 false
             }
@@ -402,7 +408,7 @@ impl SilentUpdater {
         let cancel = CancellationToken::new();
         *self.manual_cancel.lock() = Some(cancel.clone());
         let prepared = tokio::select! {
-            prepared = Self::prepare_install(app_handle, version, on_event) => Some(prepared),
+            prepared = Self::prepare_install(app_handle, version, &on_event) => Some(prepared),
             () = cancel.cancelled() => None,
         };
         // `cancel_download` cancels under the lock, so once the token is taken back its state is
@@ -417,15 +423,15 @@ impl SilentUpdater {
         };
 
         logging!(info, Type::System, "Installing update v{version}...");
+        on_event(DownloadEvent::Installing);
         Self::install(update, bytes).await?;
-        Self::delete_cache();
         Ok(InstallUpdateOutcome::Installed)
     }
 
     async fn prepare_install(
         app_handle: &tauri::AppHandle,
         version: &str,
-        on_event: impl Fn(DownloadEvent) + Sync,
+        on_event: &(impl Fn(DownloadEvent) + Sync),
     ) -> Result<Option<(Update, Vec<u8>)>> {
         let Some(update) = Self::check(app_handle)
             .await?
