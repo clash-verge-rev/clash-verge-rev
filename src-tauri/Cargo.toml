@@ -17,8 +17,6 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash-verge-logging/color", "clash_verge_service_ipc/development-channel"]
-dev-sidecar = ["verge-dev"]
 tauri-dev = ["dep:tauri-plugin-devtools"]
 tokio-trace = ["clash-verge-logging/tokio-trace"]
 chrome-trace = ["clash-verge-logging/chrome-trace"]
@@ -77,9 +75,9 @@ tauri-plugin-dialog = "2.8.4"
 tauri-plugin-fs = "2.7.1"
 tauri-plugin-deep-link = "2.6.3"
 tauri-plugin-window-state = "2.5.0"
-zip = "9.6.0"
+zip = "9.8.2"
 flate2 = "1.1.11"
-reqwest_dav = "0.3.3"
+reqwest_dav = "0.4.0"
 aes-gcm = { version = "0.11.1" }
 base64 = "0.23.1"
 sha2 = "0.11.1"
@@ -93,7 +91,7 @@ tracing = { workspace = true }
 tauri-plugin-devtools = { version = "2.2.3", optional = true }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "7e4fa8642cf6c394ed88b5a969420d8eab60087f" }
 async-trait = "0.1.92"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.8.1", version = "2.8.1", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", branch = "main", version = "2.8.2", features = [
   "client",
 ] }
 arc-swap = "1.9.5"
@@ -101,7 +99,7 @@ tokio-rustls = "0.26.6"
 rustls = { version = "0.23.46", features = ["ring"] }
 webpki-roots = "1.0.12"
 dark-light = "3.0.0"
-bytes = "1.12.1"
+bytes = "1.12.2"
 tokio-util = { version = "0.7.20", features = ["time"] }
 specta = { version = "=2.0.0-rc.26", features = ["derive", "function", "serde_json"] }
 tauri-specta = { version = "=2.0.0-rc.26", features = ["derive", "typescript"] }

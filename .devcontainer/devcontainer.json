@@ -5,7 +5,7 @@
   "features": {
     "ghcr.io/devcontainers/features/node:2": {
       "version": "26.13.1",
-      "pnpmVersion": "12.21.0"
+      "pnpmVersion": "12.23.0"
     },
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "1.100.0",
@@ -29,7 +29,6 @@
         "biomejs.biome"
       ],
       "settings": {
-        "rust-analyzer.cargo.features": ["verge-dev"],
         "rust-analyzer.check.command": "clippy",
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "biomejs.biome",

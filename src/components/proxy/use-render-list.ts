@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useGroupsDelays } from '@/hooks/use-group-delays'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
-import delayManager, { type DelaySnapshot } from '@/services/delay'
+import { type DelaySnapshot } from '@/services/delay'
 import {
   findCurrentGroupMember,
-  isInteractableMember,
   resolveMember,
   selectGlobalChainNodes,
   selectRuleChainMembers,
@@ -15,7 +14,6 @@ import {
   type ProxyViewV1,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
-import { debugLog } from '@/utils/debug'
 
 import { filterSort, isDelayFilter } from './use-filter-sort'
 import {
@@ -169,47 +167,6 @@ export const useRenderList = (
     runtimeConfig,
     runtimeProxies,
     selectedGroup,
-  ])
-
-  const chainOccurrencesRef = useRef(chainOccurrences)
-  chainOccurrencesRef.current = chainOccurrences
-  const chainDelayGroup =
-    mode === 'rule' && selectedGroup ? selectedGroup : CHAIN_DELAY_GROUP
-  const chainDelayKey = useMemo(
-    () =>
-      chainOccurrences
-        .map(({ member }) => {
-          if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
-          const source = member.node.source
-          return source.kind === 'provider'
-            ? `provider:${source.providerName}:${source.proxyName}`
-            : `core:${source.proxyName}`
-        })
-        .join('\u0000'),
-    [chainOccurrences],
-  )
-
-  useEffect(() => {
-    if (!isChainMode || !chainDelayKey) return
-    const interactable = chainOccurrencesRef.current
-      .map(({ member }) => member)
-      .filter(isInteractableMember)
-    if (interactable.length === 0) return
-
-    const handle = setTimeout(() => {
-      const timeout = verge?.default_latency_timeout || 10000
-      debugLog(`[ChainMode] 开始计算 ${interactable.length} 个节点的延迟`)
-      void delayManager.checkListDelay(interactable, chainDelayGroup, timeout)
-    }, 100)
-
-    return () => {
-      clearTimeout(handle)
-    }
-  }, [
-    chainDelayGroup,
-    chainDelayKey,
-    isChainMode,
-    verge?.default_latency_timeout,
   ])
 
   const renderGroups = useMemo(() => {
