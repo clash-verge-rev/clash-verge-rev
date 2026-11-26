@@ -306,19 +306,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
     return updateInfo?.body
   }, [activeLanguage, t, updateInfo])
 
-  const breakChangeFlag = useMemo(() => {
-    if (!updateInfo?.body) {
-      return false
-    }
-    return updateInfo?.body.toLowerCase().includes('break change')
-  }, [updateInfo])
-
   const onUpdate = useLockFn(async () => {
     if (!updateInfo?.body) return
-    if (breakChangeFlag) {
-      showNotice.error('settings.modals.update.messages.breakChangeError')
-      return
-    }
     if (updateState) return
     setUpdateState(true)
     setDownload({ downloaded: 0, total: 0 })

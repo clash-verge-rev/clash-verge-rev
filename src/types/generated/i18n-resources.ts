@@ -1263,7 +1263,6 @@ export interface TranslationResources {
           }
           messages: {
             available: string
-            breakChangeError: string
           }
           title: string
         }
