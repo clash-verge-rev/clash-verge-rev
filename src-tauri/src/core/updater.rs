@@ -485,6 +485,26 @@ impl SilentUpdater {
     fn show_update_splash(app_handle: &tauri::AppHandle, version: &str) {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
 
+        let window = match WebviewWindowBuilder::new(app_handle, "update-splash", WebviewUrl::App("index.html".into()))
+            .title("Clash Verge - Updating")
+            .inner_size(300.0, 180.0)
+            .resizable(false)
+            .maximizable(false)
+            .minimizable(false)
+            .closable(false)
+            .decorations(false)
+            .center()
+            .always_on_top(true)
+            .visible(true)
+            .build()
+        {
+            Ok(w) => w,
+            Err(e) => {
+                logging!(warn, Type::System, "Failed to create update splash: {e}");
+                return;
+            }
+        };
+
         let js = format!(
             r#"
             document.documentElement.innerHTML = `
@@ -518,27 +538,17 @@ impl SilentUpdater {
             "#
         );
 
-        let Ok(url) = tauri::Url::parse("about:blank") else {
-            logging!(warn, Type::System, "Failed to parse the splash URL");
-            return;
-        };
-        if let Err(e) = WebviewWindowBuilder::new(app_handle, "update-splash", WebviewUrl::CustomProtocol(url))
-            .initialization_script(&js)
-            .title("Clash Verge - Updating")
-            .inner_size(300.0, 180.0)
-            .resizable(false)
-            .maximizable(false)
-            .minimizable(false)
-            .closable(false)
-            .decorations(false)
-            .center()
-            .always_on_top(true)
-            .visible(true)
-            .build()
-        {
-            logging!(warn, Type::System, "Failed to create update splash: {e}");
-            return;
-        }
+        // The new webview may not accept evaluation immediately.
+        std::thread::spawn(move || {
+            use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
+            let _ = retry_sync(
+                RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(9), std::time::Duration::ZERO),
+                |index| {
+                    std::thread::sleep(std::time::Duration::from_millis(100 * (index as u64 + 1)));
+                    window.eval(&js).map_err(RetryError::Retry)
+                },
+            );
+        });
 
         logging!(info, Type::System, "Update splash window shown");
     }
