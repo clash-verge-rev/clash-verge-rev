@@ -272,6 +272,7 @@ export interface TranslationResources {
           success: string
           title: string
           unavailableMessage: string
+          upgradeIncompleteMessage: string
         }
         sysproxyPrivilege: {
           alternative: string
@@ -896,6 +897,7 @@ export interface TranslationResources {
             permissionWritableReason: string
             sidecarFallback: string
             uninstallSuccess: string
+            upgradeStateNotRestored: string
           }
           updater: {
             withClashProxyFailed: string
