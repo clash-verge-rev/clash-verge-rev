@@ -621,7 +621,6 @@ export type NetworkInterfaceView_Serialize = {
 }
 
 export type NoticeStatus =
-  | 'info'
   | 'import_sub_url::ok'
   | 'import_sub_url::error'
   | 'set_config::error'

@@ -64,6 +64,7 @@ chrono = { workspace = true }
 boa_engine = "0.22.0"
 http-body-util = "0.1.5"
 percent-encoding = "2.3.2"
+semver = "1.0"
 reqwest = { workspace = true }
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs.git", rev = "2c9d0a538052aac6e44ad413156a6e848da262b9", version = "0.7.2", features = [
   "guard",

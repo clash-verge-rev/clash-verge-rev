@@ -6,16 +6,16 @@ use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
-    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
 use tauri_plugin_updater::{Update, UpdaterExt as _};
 use tokio_util::sync::CancellationToken;
 
 pub struct SilentUpdater {
-    update_ready: AtomicBool,
     manual_cancel: Mutex<Option<CancellationToken>>,
     background_cancel: Mutex<Option<CancellationToken>>,
+    download_lock: tokio::sync::Mutex<()>,
 }
 
 #[derive(Serialize, specta::Type)]
@@ -31,14 +31,10 @@ singleton!(SilentUpdater, SILENT_UPDATER);
 impl SilentUpdater {
     const fn new() -> Self {
         Self {
-            update_ready: AtomicBool::new(false),
             manual_cancel: Mutex::new(None),
             background_cancel: Mutex::new(None),
+            download_lock: tokio::sync::Mutex::const_new(()),
         }
-    }
-
-    pub fn is_update_ready(&self) -> bool {
-        self.update_ready.load(Ordering::Acquire)
     }
 }
 
@@ -142,33 +138,13 @@ pub fn is_build_to_stable(current: &str, remote: &str) -> bool {
     !build.is_empty() && !base.contains('-') && base == remote.trim_start_matches('v')
 }
 
-/// Compares numeric version components after stripping version suffixes.
+/// Order by semver; versions that fail to parse order only by exact match.
 fn version_lte(a: &str, b: &str) -> bool {
-    let parse = |v: &str| -> Vec<u64> {
-        v.trim_start_matches('v')
-            .split(['-', '+'])
-            .next()
-            .unwrap_or("0")
-            .split('.')
-            .filter_map(|part| part.parse::<u64>().ok())
-            .collect()
-    };
-
-    let a_parts = parse(a);
-    let b_parts = parse(b);
-    let len = a_parts.len().max(b_parts.len());
-
-    for i in 0..len {
-        let av = a_parts.get(i).copied().unwrap_or(0);
-        let bv = b_parts.get(i).copied().unwrap_or(0);
-        if av < bv {
-            return true;
-        }
-        if av > bv {
-            return false;
-        }
+    let parse = |v: &str| semver::Version::parse(v.trim_start_matches('v'));
+    match (parse(a), parse(b)) {
+        (Ok(a), Ok(b)) => a <= b,
+        _ => a == b,
     }
-    true // equal
 }
 
 /// Maps UI language to one of the three NSIS translations, defaulting to English.
@@ -202,6 +178,8 @@ const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"
 /// A source delivering less than this per window is dropped for the next one.
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
+/// Bounds the startup check so a black-holed endpoint cannot stall startup.
+const CHECK_TIMEOUT: Duration = Duration::from_secs(30);
 #[cfg(target_os = "windows")]
 const INSTALL_TIMEOUT: Duration = Duration::from_secs(30);
 #[cfg(not(target_os = "windows"))]
@@ -343,20 +321,17 @@ impl SilentUpdater {
         logging!(
             info,
             Type::System,
-            "Update cache version ({}) > current ({}), asking user to install",
+            "Update cache version ({}) > current ({}), checking the server",
             cached_version,
             current_version
         );
 
-        // Preserve the cache when skipped so the next launch asks again.
-        if !Self::ask_user_to_install(app_handle, cached_version).await {
-            logging!(info, Type::System, "User skipped update install, starting normally");
-            return false;
-        }
-
-        let update = match Self::check(app_handle).await {
-            Ok(Some(u)) => u,
-            Ok(None) => {
+        // Installing requires the server manifest's signature, so an offline launch keeps
+        // the cache and waits for a connected one.
+        let checked = tokio::time::timeout(CHECK_TIMEOUT, Self::check(app_handle)).await;
+        let update = match checked {
+            Ok(Ok(Some(u))) => u,
+            Ok(Ok(None)) => {
                 logging!(
                     info,
                     Type::System,
@@ -365,13 +340,21 @@ impl SilentUpdater {
                 Self::delete_cache();
                 return false;
             }
-            Err(e) => {
+            Ok(Err(e)) => {
                 logging!(
                     warn,
                     Type::System,
                     "Failed to check for update at startup: {e:#}, will retry next launch"
                 );
-                return false; // Keep cache for next attempt
+                return false;
+            }
+            Err(_) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Startup update check timed out, will retry next launch"
+                );
+                return false;
             }
         };
 
@@ -380,6 +363,13 @@ impl SilentUpdater {
         };
 
         let version = update.version.clone();
+
+        // Preserve the cache when skipped so the next launch asks again.
+        if !Self::ask_user_to_install(app_handle, &version).await {
+            logging!(info, Type::System, "User skipped update install, starting normally");
+            return false;
+        }
+
         logging!(info, Type::System, "Installing cached update v{version} at startup...");
 
         Self::show_update_splash(app_handle, &version);
@@ -408,7 +398,7 @@ impl SilentUpdater {
         let cancel = CancellationToken::new();
         *self.manual_cancel.lock() = Some(cancel.clone());
         let prepared = tokio::select! {
-            prepared = Self::prepare_install(app_handle, version, &on_event) => Some(prepared),
+            prepared = self.prepare_install(app_handle, version, &on_event) => Some(prepared),
             () = cancel.cancelled() => None,
         };
         // `cancel_download` cancels under the lock, so once the token is taken back its state is
@@ -429,6 +419,7 @@ impl SilentUpdater {
     }
 
     async fn prepare_install(
+        &self,
         app_handle: &tauri::AppHandle,
         version: &str,
         on_event: &(impl Fn(DownloadEvent) + Sync),
@@ -439,6 +430,7 @@ impl SilentUpdater {
         else {
             return Ok(None);
         };
+        let _download_guard = self.download_lock.lock().await;
         let bytes = match Self::verified_cache(&update) {
             Some(bytes) => bytes,
             None => download(&update, on_event).await?,
@@ -459,7 +451,6 @@ impl SilentUpdater {
         if let Some(cancel) = cancel {
             cancel.cancel();
         }
-        self.update_ready.store(false, Ordering::Release);
         Self::delete_cache();
     }
 }
@@ -494,26 +485,6 @@ impl SilentUpdater {
     fn show_update_splash(app_handle: &tauri::AppHandle, version: &str) {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
 
-        let window = match WebviewWindowBuilder::new(app_handle, "update-splash", WebviewUrl::App("index.html".into()))
-            .title("Clash Verge - Updating")
-            .inner_size(300.0, 180.0)
-            .resizable(false)
-            .maximizable(false)
-            .minimizable(false)
-            .closable(false)
-            .decorations(false)
-            .center()
-            .always_on_top(true)
-            .visible(true)
-            .build()
-        {
-            Ok(w) => w,
-            Err(e) => {
-                logging!(warn, Type::System, "Failed to create update splash: {e}");
-                return;
-            }
-        };
-
         let js = format!(
             r#"
             document.documentElement.innerHTML = `
@@ -547,17 +518,27 @@ impl SilentUpdater {
             "#
         );
 
-        // The new webview may not accept evaluation immediately.
-        std::thread::spawn(move || {
-            use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
-            let _ = retry_sync(
-                RetryPolicy::fixed(std::num::NonZeroUsize::MIN.saturating_add(9), std::time::Duration::ZERO),
-                |index| {
-                    std::thread::sleep(std::time::Duration::from_millis(100 * (index as u64 + 1)));
-                    window.eval(&js).map_err(RetryError::Retry)
-                },
-            );
-        });
+        let Ok(url) = tauri::Url::parse("about:blank") else {
+            logging!(warn, Type::System, "Failed to parse the splash URL");
+            return;
+        };
+        if let Err(e) = WebviewWindowBuilder::new(app_handle, "update-splash", WebviewUrl::CustomProtocol(url))
+            .initialization_script(&js)
+            .title("Clash Verge - Updating")
+            .inner_size(300.0, 180.0)
+            .resizable(false)
+            .maximizable(false)
+            .minimizable(false)
+            .closable(false)
+            .decorations(false)
+            .center()
+            .always_on_top(true)
+            .visible(true)
+            .build()
+        {
+            logging!(warn, Type::System, "Failed to create update splash: {e}");
+            return;
+        }
 
         logging!(info, Type::System, "Update splash window shown");
     }
@@ -582,11 +563,6 @@ impl SilentUpdater {
             return Ok(());
         }
 
-        if self.is_update_ready() {
-            logging!(debug, Type::System, "Silent update skipped: update already pending");
-            return Ok(());
-        }
-
         logging!(info, Type::System, "Silent updater: checking for updates...");
 
         let updater = app_handle.updater()?;
@@ -605,18 +581,9 @@ impl SilentUpdater {
         let version = update.version.as_str();
         logging!(info, Type::System, "Silent updater: update available: v{version}");
 
-        if let Some(body) = &update.body
-            && body.to_lowercase().contains("break change")
-        {
-            logging!(
-                info,
-                Type::System,
-                "Silent updater: breaking change detected in v{version}, notifying frontend"
-            );
-            super::handle::Handle::notice(
-                super::notify::NoticeStatus::Info,
-                format!("New version v{version} contains breaking changes. Please update manually."),
-            );
+        let download_guard = self.download_lock.lock().await;
+        // A discard that arrived while waiting for the lock must not start a doomed download.
+        if cancel.is_cancelled() {
             return Ok(());
         }
 
@@ -636,6 +603,7 @@ impl SilentUpdater {
             logging!(info, Type::System, "Silent updater: download complete");
             Self::write_cache(&bytes, version)?;
         }
+        drop(download_guard);
 
         // Serialized with `discard_pending` in the verge patch, which holds the same lock.
         let _config_write = Config::lock_config_write().await;
@@ -648,8 +616,6 @@ impl SilentUpdater {
             Self::delete_cache();
             return Ok(());
         }
-
-        self.update_ready.store(true, Ordering::Release);
 
         logging!(
             info,
@@ -672,5 +638,35 @@ impl SilentUpdater {
 
             tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{is_build_to_stable, version_lte};
+
+    #[test]
+    fn version_lte_orders_prereleases_below_their_release() {
+        assert!(version_lte("2.2.0-beta.1", "2.2.0"));
+        assert!(!version_lte("2.2.0", "2.2.0-alpha.1"));
+        assert!(version_lte("2.2.0", "2.2.0"));
+        assert!(version_lte("2.1.9", "2.2.0"));
+        assert!(!version_lte("2.2.1", "2.2.0"));
+    }
+
+    #[test]
+    fn version_lte_strips_prefixes_and_falls_back_to_equality() {
+        assert!(version_lte("v2.2.0", "2.2.0"));
+        assert!(version_lte("2.2.0+5", "2.2.1"));
+        assert!(version_lte("2.1.1臻fix", "2.1.1臻fix"));
+        assert!(!version_lte("2.1.1臻fix", "2.2.0"));
+    }
+
+    #[test]
+    fn is_build_to_stable_matches_build_metadata_to_the_same_base() {
+        assert!(is_build_to_stable("2.4.3+5", "2.4.3"));
+        assert!(!is_build_to_stable("2.4.3+5", "2.4.4"));
+        assert!(!is_build_to_stable("2.4.3", "2.4.3"));
+        assert!(!is_build_to_stable("2.4.3-beta+5", "2.4.3"));
     }
 }
