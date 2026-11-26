@@ -1,8 +1,6 @@
 #[cfg(target_os = "macos")]
 pub mod connections_stream;
 pub mod dirs;
-#[cfg(target_os = "linux")]
-pub mod elevated;
 pub mod help;
 pub mod init;
 #[cfg(target_os = "linux")]
