@@ -38,7 +38,7 @@ const buildInitialValues = (verge?: IVergeConfig | null) => ({
   autoCloseConnection: verge?.auto_close_connection ?? true,
   autoSwitchSelectorGroup: verge?.auto_switch_selector_group ?? true,
   autoCheckUpdate: verge?.auto_check_update ?? true,
-  updateChannel: verge?.update_channel || 'auto',
+  updateChannel: verge?.update_channel ?? 0,
   enableBuiltinEnhanced: verge?.enable_builtin_enhanced ?? true,
   proxyLayoutColumn: verge?.proxy_layout_column || 6,
   enableAutoDelayDetection: verge?.enable_auto_delay_detection ?? false,
@@ -306,17 +306,17 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
-                updateChannel: e.target.value as string,
+                updateChannel: e.target.value as number,
               }))
             }
           >
-            <MenuItem value="auto">
+            <MenuItem value={0}>
               {t('settings.modals.misc.options.updateChannel.auto')}
             </MenuItem>
-            <MenuItem value="github">
+            <MenuItem value={1}>
               {t('settings.modals.misc.options.updateChannel.github')}
             </MenuItem>
-            <MenuItem value="github_proxy">
+            <MenuItem value={2}>
               {t('settings.modals.misc.options.updateChannel.githubProxy')}
             </MenuItem>
           </Select>
