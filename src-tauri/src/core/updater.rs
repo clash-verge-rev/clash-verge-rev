@@ -1,8 +1,10 @@
 use crate::{config::Config, utils::dirs};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
+use futures::FutureExt as _;
 use serde::{Deserialize, Serialize};
 use std::{
+    panic::AssertUnwindSafe,
     path::PathBuf,
     sync::{
         OnceLock,
@@ -89,36 +91,42 @@ impl SilentUpdater {
     }
 
     /// Writes the payload through a temp file so a crash leaves no partial `pending_update.bin`;
-    /// installer-sized IO stays off the async runtime.
+    /// installer-sized IO stays off the async runtime. Only the detachable blocking task writes
+    /// the temp file — the rename that publishes the cache runs after its await, so a command
+    /// preempting this future cannot leave a published cache behind the preemption.
     async fn write_cache(bytes: Vec<u8>, version: &str) -> Result<()> {
         let cache_dir = Self::cache_dir()?;
+        let size = bytes.len();
         let version = version.to_owned();
-        tokio::task::spawn_blocking(move || -> Result<()> {
-            std::fs::create_dir_all(&cache_dir)
-                .with_context(|| format!("failed to create update cache directory {}", cache_dir.display()))?;
-
-            let bin_path = cache_dir.join("pending_update.bin");
-            let tmp_path = cache_dir.join("pending_update.bin.tmp");
-            std::fs::write(&tmp_path, &bytes)
-                .with_context(|| format!("failed to write update cache {}", tmp_path.display()))?;
-            std::fs::rename(&tmp_path, &bin_path)
-                .with_context(|| format!("failed to rename update cache {}", bin_path.display()))?;
-
-            let meta = UpdateCacheMeta { version };
-            let meta_path = cache_dir.join("pending_update.json");
-            std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
-                .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
-
-            logging!(
-                info,
-                Type::System,
-                "Update cache written: version={}, size={} bytes",
-                meta.version,
-                bytes.len()
-            );
-            Ok(())
-        })
-        .await?
+        let bin_path = cache_dir.join("pending_update.bin");
+        let tmp_path = cache_dir.join("pending_update.bin.tmp");
+        let meta_path = cache_dir.join("pending_update.json");
+        let write_tmp = {
+            let cache_dir = cache_dir.clone();
+            let tmp_path = tmp_path.clone();
+            move || -> Result<()> {
+                std::fs::create_dir_all(&cache_dir)
+                    .with_context(|| format!("failed to create update cache directory {}", cache_dir.display()))?;
+                std::fs::write(&tmp_path, &bytes)
+                    .with_context(|| format!("failed to write update cache {}", tmp_path.display()))?;
+                Ok(())
+            }
+        };
+        tokio::task::spawn_blocking(write_tmp).await??;
+        // Metadata-sized, so inline on the actor thread rather than a detachable task.
+        std::fs::rename(&tmp_path, &bin_path)
+            .with_context(|| format!("failed to rename update cache {}", bin_path.display()))?;
+        let meta = UpdateCacheMeta { version };
+        std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
+            .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
+        logging!(
+            info,
+            Type::System,
+            "Update cache written: version={}, size={} bytes",
+            meta.version,
+            size
+        );
+        Ok(())
     }
 
     async fn read_cache_bytes() -> Result<Vec<u8>> {
@@ -135,13 +143,35 @@ impl SilentUpdater {
         Ok(serde_json::from_str(&content)?)
     }
 
+    /// Invalidates the cache by renaming it out of the way, then removes the renamed directory
+    /// in a detached task: the awaited part is metadata-sized — bar clearing residue left by a
+    /// crashed detached removal — so a discard ack is never owed for the bulk unlink while the
+    /// config write lock is held.
     async fn delete_cache() {
         if let Ok(cache_dir) = Self::cache_dir()
             && cache_dir.exists()
         {
+            let discarding = cache_dir.with_file_name("update_cache_discarding");
             let display = cache_dir.display().to_string();
-            match tokio::task::spawn_blocking(move || std::fs::remove_dir_all(&cache_dir)).await {
-                Ok(Ok(())) => logging!(info, Type::System, "Update cache deleted"),
+            let invalidate = {
+                let discarding = discarding.clone();
+                move || -> std::io::Result<()> {
+                    // Best-effort: the rename is the invalidation, and a failed residue clear
+                    // surfaces as the rename's own error.
+                    if discarding.exists()
+                        && let Err(e) = std::fs::remove_dir_all(&discarding)
+                    {
+                        logging!(warn, Type::System, "Failed to clear update cache discard residue: {e}");
+                    }
+                    std::fs::rename(&cache_dir, &discarding)
+                }
+            };
+            match tokio::task::spawn_blocking(invalidate).await {
+                Ok(Ok(())) => {
+                    logging!(info, Type::System, "Update cache deleted");
+                    // Nothing reads the discarding name, so the bulk unlink may detach.
+                    tokio::task::spawn_blocking(move || std::fs::remove_dir_all(&discarding));
+                }
                 Ok(Err(e)) => logging!(warn, Type::System, "Failed to delete update cache {display}: {e}"),
                 Err(e) => logging!(warn, Type::System, "Failed to delete update cache {display}: {e}"),
             }
@@ -220,6 +250,8 @@ const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"
 /// A source delivering less than this per window is dropped for the next one.
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
+/// How long the actor waits after a panic before re-arming the daily check.
+const PANIC_BACKOFF: Duration = Duration::from_secs(600);
 #[cfg(target_os = "windows")]
 const INSTALL_TIMEOUT: Duration = Duration::from_secs(30);
 #[cfg(not(target_os = "windows"))]
@@ -372,20 +404,43 @@ impl SilentUpdater {
 }
 
 impl SilentUpdater {
-    /// The actor loop: idle until a command or the daily check, then run the work. Commands
-    /// preempt running work; a preempting command re-enters the dispatch after the preempted
-    /// work is dropped.
+    /// The actor's supervisor: one `serve` epoch at a time. A panic drops the epoch — its
+    /// in-flight work and any reply it still owed — but not the mailbox, so the actor restarts
+    /// instead of leaving updating dead for the rest of the process.
     async fn run(app_handle: tauri::AppHandle, mut rx: mpsc::Receiver<Cmd>) {
         logging!(info, Type::System, "Silent updater: background task started");
 
         let mut next_check = tokio::time::Instant::now() + Duration::from_secs(10);
+        loop {
+            match AssertUnwindSafe(Self::serve(&app_handle, &mut rx, &mut next_check))
+                .catch_unwind()
+                .await
+            {
+                // The mailbox closed; the handle holds the only sender, so this is shutdown.
+                Ok(()) => return,
+                Err(_) => {
+                    // The global panic hook logged the payload; this marks the recovery. The
+                    // epoch future is dropped during the unwind, ending its borrows, so the
+                    // mailbox and the check schedule below are intact.
+                    logging!(error, Type::System, "Silent updater: actor panicked, restarting");
+                    // Back the daily check off so a persistently panicking path cannot hot-loop.
+                    next_check = next_check.max(tokio::time::Instant::now() + PANIC_BACKOFF);
+                }
+            }
+        }
+    }
+
+    /// The actor loop: idle until a command or the daily check, then run the work. Commands
+    /// preempt running work; a preempting command re-enters the dispatch after the preempted
+    /// work is dropped.
+    async fn serve(app_handle: &tauri::AppHandle, rx: &mut mpsc::Receiver<Cmd>, next_check: &mut tokio::time::Instant) {
         loop {
             let mut wake = tokio::select! {
                 maybe = rx.recv() => match maybe {
                     Some(cmd) => Wake::Cmd(cmd),
                     None => return,
                 },
-                _ = tokio::time::sleep_until(next_check) => Wake::DailyCheck,
+                _ = tokio::time::sleep_until(*next_check) => Wake::DailyCheck,
             };
             loop {
                 match wake {
@@ -394,7 +449,7 @@ impl SilentUpdater {
                         on_event,
                         reply,
                     }) => {
-                        Self::run_install(&app_handle, &version, on_event, reply, &mut rx).await;
+                        Self::run_install(app_handle, &version, on_event, reply, rx).await;
                         break;
                     }
                     // The dialog's cancel only addresses a running install; idle it stops nothing.
@@ -404,8 +459,8 @@ impl SilentUpdater {
                         break;
                     }
                     Wake::DailyCheck => {
-                        let end = Self::run_background_cycle(&app_handle, &mut rx).await;
-                        next_check = tokio::time::Instant::now() + Duration::from_secs(24 * 60 * 60);
+                        let end = Self::run_background_cycle(app_handle, rx).await;
+                        *next_check = tokio::time::Instant::now() + Duration::from_secs(24 * 60 * 60);
                         match end {
                             CycleEnd::Completed(Ok(())) => break,
                             CycleEnd::Completed(Err(e)) => {
