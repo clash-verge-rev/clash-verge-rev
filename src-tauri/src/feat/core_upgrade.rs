@@ -29,7 +29,7 @@ const RELEASE_VERSION_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/
 const ALPHA_BASE_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha";
 const RELEASE_DOWNLOAD_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/download";
 const VERSION_TIMEOUT_SECS: u64 = 20;
-const PACKAGE_TIMEOUT_SECS: u64 = 300;
+const PACKAGE_STALL_SECS: u64 = 30;
 /// Well above any real core package, low enough that a wrong response cannot exhaust memory.
 const MAX_PACKAGE_BYTES: usize = 64 * 1024 * 1024;
 
@@ -330,7 +330,7 @@ async fn download_package(
         .get_bytes(
             &url,
             proxy,
-            Some(PACKAGE_TIMEOUT_SECS),
+            PACKAGE_STALL_SECS,
             MAX_PACKAGE_BYTES,
             &|chunk_length, content_length| {
                 if !started.swap(true, Ordering::Relaxed) {
