@@ -159,11 +159,7 @@ fn init_silent_updater() {
 
     logging!(debug, Type::Setup, "Initializing silent updater...");
 
-    let app_handle = Handle::app_handle();
-    let app_handle = app_handle.clone();
-    tokio::spawn(async move {
-        SilentUpdater::global().start_background_check(app_handle).await;
-    });
+    SilentUpdater::start(Handle::app_handle().clone());
 
     logging!(info, Type::Setup, "Silent updater initialized");
 }
