@@ -1,21 +1,20 @@
 use crate::{config::Config, singleton, utils::dirs};
 use anyhow::{Context as _, Result};
-use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
-    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
 use tauri_plugin_updater::{Update, UpdaterExt as _};
 use tokio_util::sync::CancellationToken;
 
 pub struct SilentUpdater {
-    update_ready: AtomicBool,
     manual_cancel: Mutex<Option<CancellationToken>>,
     background_cancel: Mutex<Option<CancellationToken>>,
+    download_lock: tokio::sync::Mutex<()>,
 }
 
 #[derive(Serialize, specta::Type)]
@@ -31,21 +30,16 @@ singleton!(SilentUpdater, SILENT_UPDATER);
 impl SilentUpdater {
     const fn new() -> Self {
         Self {
-            update_ready: AtomicBool::new(false),
             manual_cancel: Mutex::new(None),
             background_cancel: Mutex::new(None),
+            download_lock: tokio::sync::Mutex::const_new(()),
         }
-    }
-
-    pub fn is_update_ready(&self) -> bool {
-        self.update_ready.load(Ordering::Acquire)
     }
 }
 
 #[derive(Serialize, Deserialize)]
 struct UpdateCacheMeta {
     version: String,
-    downloaded_at: String,
 }
 
 impl SilentUpdater {
@@ -53,36 +47,45 @@ impl SilentUpdater {
         Ok(dirs::app_home_dir()?.join("update_cache"))
     }
 
-    fn write_cache(bytes: &[u8], version: &str) -> Result<()> {
+    /// Writes the payload through a temp file so a crash leaves no partial `pending_update.bin`;
+    /// installer-sized IO stays off the async runtime.
+    async fn write_cache(bytes: Vec<u8>, version: &str) -> Result<()> {
         let cache_dir = Self::cache_dir()?;
-        std::fs::create_dir_all(&cache_dir)
-            .with_context(|| format!("failed to create update cache directory {}", cache_dir.display()))?;
+        let version = version.to_owned();
+        tokio::task::spawn_blocking(move || -> Result<()> {
+            std::fs::create_dir_all(&cache_dir)
+                .with_context(|| format!("failed to create update cache directory {}", cache_dir.display()))?;
 
-        let bin_path = cache_dir.join("pending_update.bin");
-        std::fs::write(&bin_path, bytes)
-            .with_context(|| format!("failed to write update cache {}", bin_path.display()))?;
+            let bin_path = cache_dir.join("pending_update.bin");
+            let tmp_path = cache_dir.join("pending_update.bin.tmp");
+            std::fs::write(&tmp_path, &bytes)
+                .with_context(|| format!("failed to write update cache {}", tmp_path.display()))?;
+            std::fs::rename(&tmp_path, &bin_path)
+                .with_context(|| format!("failed to rename update cache {}", bin_path.display()))?;
 
-        let meta = UpdateCacheMeta {
-            version: version.to_string(),
-            downloaded_at: Utc::now().to_rfc3339(),
-        };
-        let meta_path = cache_dir.join("pending_update.json");
-        std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
-            .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
+            let meta = UpdateCacheMeta { version };
+            let meta_path = cache_dir.join("pending_update.json");
+            std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
+                .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
 
-        logging!(
-            info,
-            Type::System,
-            "Update cache written: version={}, size={} bytes",
-            version,
-            bytes.len()
-        );
-        Ok(())
+            logging!(
+                info,
+                Type::System,
+                "Update cache written: version={}, size={} bytes",
+                meta.version,
+                bytes.len()
+            );
+            Ok(())
+        })
+        .await?
     }
 
-    fn read_cache_bytes() -> Result<Vec<u8>> {
+    async fn read_cache_bytes() -> Result<Vec<u8>> {
         let bin_path = Self::cache_dir()?.join("pending_update.bin");
-        std::fs::read(&bin_path).with_context(|| format!("failed to read update cache {}", bin_path.display()))
+        tokio::task::spawn_blocking(move || {
+            std::fs::read(&bin_path).with_context(|| format!("failed to read update cache {}", bin_path.display()))
+        })
+        .await?
     }
 
     fn read_cache_meta() -> Result<UpdateCacheMeta> {
@@ -91,28 +94,31 @@ impl SilentUpdater {
         Ok(serde_json::from_str(&content)?)
     }
 
-    fn delete_cache() {
+    async fn delete_cache() {
         if let Ok(cache_dir) = Self::cache_dir()
             && cache_dir.exists()
         {
-            if let Err(e) = std::fs::remove_dir_all(&cache_dir) {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Failed to delete update cache {}: {e}",
-                    cache_dir.display()
-                );
-            } else {
-                logging!(info, Type::System, "Update cache deleted");
+            let display = cache_dir.display().to_string();
+            match tokio::task::spawn_blocking(move || std::fs::remove_dir_all(&cache_dir)).await {
+                Ok(Ok(())) => logging!(info, Type::System, "Update cache deleted"),
+                Ok(Err(e)) => logging!(warn, Type::System, "Failed to delete update cache {display}: {e}"),
+                Err(e) => logging!(warn, Type::System, "Failed to delete update cache {display}: {e}"),
             }
         }
     }
 
     /// Returns the cached installer for `update`, deleting a cache that does not match it.
-    fn verified_cache(update: &Update) -> Option<Vec<u8>> {
-        let meta = Self::read_cache_meta().ok()?;
+    async fn verified_cache(update: &Update) -> Option<Vec<u8>> {
+        let meta = match Self::read_cache_meta() {
+            Ok(meta) => meta,
+            // A bin without its meta comes from an interrupted write.
+            Err(_) => {
+                Self::delete_cache().await;
+                return None;
+            }
+        };
         let bytes = if meta.version == update.version {
-            Self::read_cache_bytes().and_then(|bytes| {
+            Self::read_cache_bytes().await.and_then(|bytes| {
                 update.verify(&bytes)?;
                 Ok(bytes)
             })
@@ -128,7 +134,7 @@ impl SilentUpdater {
                     "Update cache v{} is unusable: {e:#}, cleaning up",
                     meta.version
                 );
-                Self::delete_cache();
+                Self::delete_cache().await;
                 None
             }
         }
@@ -273,7 +279,7 @@ impl SilentUpdater {
     /// re-trigger. A timeout abandons the await, not the detached install task; a successful
     /// Windows install exits the process inside the plugin (#2558).
     async fn install(update: Update, bytes: Vec<u8>) -> Result<()> {
-        Self::delete_cache();
+        Self::delete_cache().await;
         let install = tokio::task::spawn_blocking(move || update.install(&bytes));
         match tokio::time::timeout(INSTALL_TIMEOUT, install).await {
             Ok(result) => Ok(result??),
@@ -292,9 +298,13 @@ impl SilentUpdater {
         on_event: impl Fn(DownloadEvent) + Sync,
     ) -> Result<InstallUpdateOutcome> {
         let cancel = CancellationToken::new();
-        *self.manual_cancel.lock() = Some(cancel.clone());
+        {
+            let mut slot = self.manual_cancel.lock();
+            anyhow::ensure!(slot.is_none(), "an update install is already in progress");
+            *slot = Some(cancel.clone());
+        }
         let prepared = tokio::select! {
-            prepared = Self::prepare_install(app_handle, version, &on_event) => Some(prepared),
+            prepared = self.prepare_install(app_handle, version, &on_event) => Some(prepared),
             () = cancel.cancelled() => None,
         };
         // `cancel_download` cancels under the lock, so once the token is taken back its state is
@@ -315,6 +325,7 @@ impl SilentUpdater {
     }
 
     async fn prepare_install(
+        &self,
         app_handle: &tauri::AppHandle,
         version: &str,
         on_event: &(impl Fn(DownloadEvent) + Sync),
@@ -325,7 +336,8 @@ impl SilentUpdater {
         else {
             return Ok(None);
         };
-        let bytes = match Self::verified_cache(&update) {
+        let _download_guard = self.download_lock.lock().await;
+        let bytes = match Self::verified_cache(&update).await {
             Some(bytes) => bytes,
             None => download(&update, on_event).await?,
         };
@@ -340,13 +352,12 @@ impl SilentUpdater {
     }
 
     /// Drops the downloaded update and aborts a background download in flight.
-    pub fn discard_pending(&self) {
+    pub async fn discard_pending(&self) {
         let cancel = self.background_cancel.lock().take();
         if let Some(cancel) = cancel {
             cancel.cancel();
         }
-        self.update_ready.store(false, Ordering::Release);
-        Self::delete_cache();
+        Self::delete_cache().await;
     }
 }
 
@@ -358,11 +369,6 @@ impl SilentUpdater {
         let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
         if !auto_check {
             logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");
-            return Ok(());
-        }
-
-        if self.is_update_ready() {
-            logging!(debug, Type::System, "Silent update skipped: update already pending");
             return Ok(());
         }
 
@@ -384,7 +390,13 @@ impl SilentUpdater {
         let version = update.version.as_str();
         logging!(info, Type::System, "Silent updater: update available: v{version}");
 
-        if Self::verified_cache(&update).is_some() {
+        let download_guard = self.download_lock.lock().await;
+        // A discard that arrived while waiting for the lock must not start a doomed download.
+        if cancel.is_cancelled() {
+            return Ok(());
+        }
+
+        if Self::verified_cache(&update).await.is_some() {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {
             logging!(info, Type::System, "Silent updater: downloading v{version}...");
@@ -398,27 +410,30 @@ impl SilentUpdater {
             };
             let bytes = bytes?;
             logging!(info, Type::System, "Silent updater: download complete");
-            Self::write_cache(&bytes, version)?;
+            Self::write_cache(bytes, version).await?;
         }
+        drop(download_guard);
 
-        // Serialized with `discard_pending` in the verge patch, which holds the same lock.
-        let _config_write = Config::lock_config_write().await;
-        if cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true) {
+        // Serialized with `discard_pending` in the verge patch, which holds the same lock;
+        // the deletion itself is idempotent, so it runs after the lock.
+        let discard = {
+            let _config_write = Config::lock_config_write().await;
+            cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true)
+        };
+        if discard {
             logging!(
                 info,
                 Type::System,
                 "Silent updater: auto check was disabled, discarding v{version}"
             );
-            Self::delete_cache();
+            Self::delete_cache().await;
             return Ok(());
         }
-
-        self.update_ready.store(true, Ordering::Release);
 
         logging!(
             info,
             Type::System,
-            "Silent updater: v{version} ready for startup install on next launch"
+            "Silent updater: v{version} ready to install from the update dialog"
         );
         Ok(())
     }
@@ -436,5 +451,18 @@ impl SilentUpdater {
 
             tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_build_to_stable;
+
+    #[test]
+    fn is_build_to_stable_matches_build_metadata_to_the_same_base() {
+        assert!(is_build_to_stable("2.4.3+5", "2.4.3"));
+        assert!(!is_build_to_stable("2.4.3+5", "2.4.4"));
+        assert!(!is_build_to_stable("2.4.3", "2.4.3"));
+        assert!(!is_build_to_stable("2.4.3-beta+5", "2.4.3"));
     }
 }
