@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: Скорый выход
     body: Clash Verge скоро завершит работу.
-  updateReady:
-    title: Обновление Clash Verge
-    body: Новая версия (v{version}) скачана и готова к установке.
-    installNow: Установить сейчас
-    later: Позже
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.

@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: Prestes a sair
     body: O Clash Verge está prestes a sair.
-  updateReady:
-    title: Atualização do Clash Verge
-    body: Uma nova versão (v{version}) foi baixada e está pronta para instalar.
-    installNow: Instalar agora
-    later: Depois
 service:
   adminInstallPrompt: A instalação do serviço do Clash Verge requer privilégios de administrador.
   adminUninstallPrompt: A desinstalação do serviço do Clash Verge requer privilégios de administrador.
