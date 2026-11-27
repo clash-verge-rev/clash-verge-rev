@@ -2,7 +2,7 @@ use crate::{config::Config, utils::dirs};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
 use futures::FutureExt as _;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::{
     panic::AssertUnwindSafe,
     path::PathBuf,
@@ -80,11 +80,6 @@ impl SilentUpdater {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct UpdateCacheMeta {
-    version: String,
-}
-
 impl SilentUpdater {
     fn cache_dir() -> Result<PathBuf> {
         Ok(dirs::app_home_dir()?.join("update_cache"))
@@ -97,10 +92,8 @@ impl SilentUpdater {
     async fn write_cache(bytes: Vec<u8>, version: &str) -> Result<()> {
         let cache_dir = Self::cache_dir()?;
         let size = bytes.len();
-        let version = version.to_owned();
         let bin_path = cache_dir.join("pending_update.bin");
         let tmp_path = cache_dir.join("pending_update.bin.tmp");
-        let meta_path = cache_dir.join("pending_update.json");
         let write_tmp = {
             let cache_dir = cache_dir.clone();
             let tmp_path = tmp_path.clone();
@@ -116,15 +109,10 @@ impl SilentUpdater {
         // Metadata-sized, so inline on the actor thread rather than a detachable task.
         std::fs::rename(&tmp_path, &bin_path)
             .with_context(|| format!("failed to rename update cache {}", bin_path.display()))?;
-        let meta = UpdateCacheMeta { version };
-        std::fs::write(&meta_path, serde_json::to_string_pretty(&meta)?)
-            .with_context(|| format!("failed to write update metadata {}", meta_path.display()))?;
         logging!(
             info,
             Type::System,
-            "Update cache written: version={}, size={} bytes",
-            meta.version,
-            size
+            "Update cache written: version={version}, size={size} bytes"
         );
         Ok(())
     }
@@ -135,12 +123,6 @@ impl SilentUpdater {
             std::fs::read(&bin_path).with_context(|| format!("failed to read update cache {}", bin_path.display()))
         })
         .await?
-    }
-
-    fn read_cache_meta() -> Result<UpdateCacheMeta> {
-        let meta_path = Self::cache_dir()?.join("pending_update.json");
-        let content = std::fs::read_to_string(meta_path)?;
-        Ok(serde_json::from_str(&content)?)
     }
 
     /// Invalidates the cache by renaming it out of the way, then removes the renamed directory
@@ -178,33 +160,25 @@ impl SilentUpdater {
         }
     }
 
-    /// Returns the cached installer for `update`, deleting a cache that does not match it.
+    /// Returns the cached installer for `update`, deleting a cache that does not verify. The
+    /// plugin's `verify` binds the bytes to the signed release version, so a cache left by an
+    /// earlier offer is rejected the same way as a corrupted one.
     async fn verified_cache(update: &Update) -> Option<Vec<u8>> {
-        let meta = match Self::read_cache_meta() {
-            Ok(meta) => meta,
-            // A bin without its meta comes from an interrupted write.
-            Err(_) => {
-                Self::delete_cache().await;
-                return None;
-            }
+        // A quiet miss for the common no-cache case; only a present-but-bad cache logs.
+        let Ok(bin_path) = Self::cache_dir().map(|dir| dir.join("pending_update.bin")) else {
+            return None;
         };
-        let bytes = if meta.version == update.version {
-            Self::read_cache_bytes().await.and_then(|bytes| {
-                update.verify(&bytes)?;
-                Ok(bytes)
-            })
-        } else {
-            Err(anyhow::anyhow!("server offers v{}", update.version))
-        };
+        if !bin_path.exists() {
+            return None;
+        }
+        let bytes = Self::read_cache_bytes().await.and_then(|bytes| {
+            update.verify(&bytes)?;
+            Ok(bytes)
+        });
         match bytes {
             Ok(bytes) => Some(bytes),
             Err(e) => {
-                logging!(
-                    info,
-                    Type::System,
-                    "Update cache v{} is unusable: {e:#}, cleaning up",
-                    meta.version
-                );
+                logging!(info, Type::System, "Update cache is unusable: {e:#}, cleaning up");
                 Self::delete_cache().await;
                 None
             }
