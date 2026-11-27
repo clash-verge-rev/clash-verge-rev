@@ -158,9 +158,11 @@ const EMPTY_DATA: ITrafficDataPoint[] = []
 export const useTrafficMonitorEnhanced = (options?: {
   subscribe?: boolean
   enabled?: boolean
+  onSnapshot?: (message: ITrafficWorkerSnapshotMessage) => void
 }) => {
   const subscribeToSnapshots = options?.subscribe ?? true
   const enabled = options?.enabled ?? true
+  const onSnapshot = options?.onSnapshot
   const isVisible = useVisibility()
   const [latestSnapshot, setLatestSnapshot] = useState<{
     dataPoints: ITrafficDataPoint[]
@@ -174,6 +176,8 @@ export const useTrafficMonitorEnhanced = (options?: {
   const currentRangeRef = useRef<number>(WORKER_CONFIG.defaultRangeMinutes)
   const isVisibleRef = useRef(isVisible)
   isVisibleRef.current = isVisible
+  const onSnapshotRef = useRef(onSnapshot)
+  onSnapshotRef.current = onSnapshot
 
   // 注册引用计数与Worker生命周期
   useEffect(() => {
@@ -186,9 +190,12 @@ export const useTrafficMonitorEnhanced = (options?: {
     client.start(currentRangeRef.current)
 
     let unsubscribe: (() => void) | undefined
-    if (subscribeToSnapshots) {
+    if (subscribeToSnapshots || onSnapshot) {
       unsubscribe = client.onSnapshot((message) => {
-        if (!isVisibleRef.current) return
+        // onSnapshot is the always-live channel (ignores visibility); the
+        // state mirror below keeps its original always-latest contract.
+        onSnapshotRef.current?.(message)
+        if (!subscribeToSnapshots || !isVisibleRef.current) return
         setLatestSnapshot({
           dataPoints: message.dataPoints,
           samplerStats: message.samplerStats,
@@ -203,14 +210,14 @@ export const useTrafficMonitorEnhanced = (options?: {
         client.stop()
       }
     }
-  }, [enabled, subscribeToSnapshots])
+  }, [enabled, subscribeToSnapshots, onSnapshot])
 
   // Re-prime snapshot ingestion after every visible transition
   useEffect(() => {
-    if (enabled && subscribeToSnapshots && isVisible) {
+    if (enabled && isVisible && (subscribeToSnapshots || onSnapshot)) {
       clientRef.current?.requestSnapshot()
     }
-  }, [enabled, subscribeToSnapshots, isVisible])
+  }, [enabled, subscribeToSnapshots, onSnapshot, isVisible])
 
   // 添加流量数据
   const appendData = useCallback(
@@ -244,8 +251,12 @@ export const useTrafficMonitorEnhanced = (options?: {
 /**
  * 图表数据Hook
  */
-export const useTrafficGraphDataEnhanced = () => {
-  const { graphData, samplerStats } = useTrafficMonitorEnhanced()
+export const useTrafficGraphDataEnhanced = (options?: {
+  subscribe?: boolean
+  enabled?: boolean
+  onSnapshot?: (message: ITrafficWorkerSnapshotMessage) => void
+}) => {
+  const { graphData, samplerStats } = useTrafficMonitorEnhanced(options)
 
   return {
     ...graphData,

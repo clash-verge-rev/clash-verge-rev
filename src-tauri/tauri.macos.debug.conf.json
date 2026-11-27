@@ -1,0 +1,9 @@
+{
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "macOS": {
+      "signingIdentity": "-",
+      "entitlements": "packages/macos/entitlements.debug.plist"
+    }
+  }
+}

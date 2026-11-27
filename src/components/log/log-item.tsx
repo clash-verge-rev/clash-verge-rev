@@ -2,6 +2,7 @@ import { styled, Box } from '@mui/material'
 import type { ReactNode } from 'react'
 
 import type { SearchState } from '@/components/base'
+import { buildRegex } from '@/utils/search-matcher'
 
 const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   padding: '8px 0',
@@ -47,62 +48,74 @@ interface Props {
   searchState?: SearchState
 }
 
+// Compiling per row multiplied by high-frequency log appends; searchState is
+// React state, so identity reuse is safe until the search inputs change.
+let highlightRegexCache: { state: SearchState; regex: RegExp | null } | null =
+  null
+
+const getHighlightRegex = (searchState: SearchState): RegExp | null => {
+  if (highlightRegexCache?.state === searchState)
+    return highlightRegexCache.regex
+
+  const searchText = searchState.text
+  let pattern: string
+
+  if (searchState.useRegularExpression) {
+    try {
+      new RegExp(searchText)
+      pattern = searchText
+    } catch {
+      pattern = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+  } else {
+    const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    pattern = searchState.matchWholeWord ? `\\b${escaped}\\b` : escaped
+  }
+
+  const flags = searchState.matchCase ? 'g' : 'gi'
+  const regex = buildRegex(pattern, flags)
+  highlightRegexCache = { state: searchState, regex }
+  return regex
+}
+
 const LogItem = ({ value, searchState }: Props) => {
   const renderHighlightText = (text: string) => {
     if (!searchState?.text.trim()) return text
 
-    try {
-      const searchText = searchState.text
-      let pattern: string
+    const regex = getHighlightRegex(searchState)
+    if (!regex) return text
 
-      if (searchState.useRegularExpression) {
-        try {
-          new RegExp(searchText)
-          pattern = searchText
-        } catch {
-          pattern = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        }
-      } else {
-        const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        pattern = searchState.matchWholeWord ? `\\b${escaped}\\b` : escaped
+    const elements: ReactNode[] = []
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = regex.exec(text)) !== null) {
+      const start = match.index
+      const matchText = match[0]
+
+      if (matchText === '') {
+        regex.lastIndex += 1
+        continue
       }
 
-      const flags = searchState.matchCase ? 'g' : 'gi'
-      const regex = new RegExp(pattern, flags)
-      const elements: ReactNode[] = []
-      let lastIndex = 0
-      let match: RegExpExecArray | null
-
-      while ((match = regex.exec(text)) !== null) {
-        const start = match.index
-        const matchText = match[0]
-
-        if (matchText === '') {
-          regex.lastIndex += 1
-          continue
-        }
-
-        if (start > lastIndex) {
-          elements.push(text.slice(lastIndex, start))
-        }
-
-        elements.push(
-          <span key={`highlight-${start}`} className="highlight">
-            {matchText}
-          </span>,
-        )
-
-        lastIndex = start + matchText.length
+      if (start > lastIndex) {
+        elements.push(text.slice(lastIndex, start))
       }
 
-      if (lastIndex < text.length) {
-        elements.push(text.slice(lastIndex))
-      }
+      elements.push(
+        <span key={`highlight-${start}`} className="highlight">
+          {matchText}
+        </span>,
+      )
 
-      return elements.length ? elements : text
-    } catch {
-      return text
+      lastIndex = start + matchText.length
     }
+
+    if (lastIndex < text.length) {
+      elements.push(text.slice(lastIndex))
+    }
+
+    return elements.length ? elements : text
   }
 
   return (

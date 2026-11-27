@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
 import delayManager, { type DelaySnapshot } from '@/services/delay'
 import type { ResolvedProxyMember } from '@/types/proxy-view'
@@ -32,7 +32,7 @@ export const useGroupsDelays = (
   groups: readonly string[],
 ): ReadonlyMap<string, DelaySnapshot> => {
   // Group membership must remain unambiguous when names contain spaces.
-  const groupKey = JSON.stringify(groups)
+  const groupKey = useMemo(() => JSON.stringify(groups), [groups])
 
   const subscribe = useCallback(
     (onSettle: () => void) => {

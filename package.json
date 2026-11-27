@@ -4,14 +4,11 @@
   "license": "GPL-3.0-only",
   "scripts": {
     "prepare": "husky || true",
-    "dev": "node scripts/dev.mjs dev",
-    "dev:service": "node scripts/dev.mjs service",
-    "dev:sidecar": "node scripts/dev.mjs sidecar",
-    "dev:diff": "node scripts/dev.mjs dev",
-    "dev:trace": "node scripts/dev.mjs trace",
+    "dev": "cross-env RUST_BACKTRACE=full tauri dev",
     "dev:tauri": "cross-env RUST_BACKTRACE=full tauri dev -f tauri-dev",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build",
     "build:fast": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build -- --profile fast-release",
+    "build:macos:debug": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tauri build --bundles app --config src-tauri/tauri.macos.debug.conf.json",
     "tauri": "tauri",
     "web:dev": "vite",
     "web:build": "tsrs -p . --noEmit && vite build",
@@ -67,7 +64,7 @@
     "js-yaml": "^5.4.2",
     "lodash-es": "^4.18.1",
     "meta-json-schema": "^1.19.31",
-    "monaco-editor": "^0.57.0",
+    "monaco-editor": "^0.58.0",
     "monaco-yaml": "^5.5.1",
     "nanoid": "^6.0.1",
     "qrcode.react": "^4.2.0",
@@ -82,6 +79,7 @@
     "rehype-sanitize": "^6.0.0",
     "swr": "^2.5.1",
     "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#main",
+    "tldts": "7.5.5",
     "types-pac": "^1.0.3",
     "validator": "^13.15.35"
   },
@@ -116,7 +114,7 @@
     "https-proxy-agent": "^9.1.0",
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
-    "knip": "6.47.0",
+    "knip": "6.48.0",
     "lint-staged": "^17.5.1",
     "sass": "^1.104.1",
     "tar": "^7.5.22",
@@ -138,5 +136,5 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@12.21.0"
+  "packageManager": "pnpm@12.23.0"
 }

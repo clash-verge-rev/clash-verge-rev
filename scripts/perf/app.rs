@@ -220,7 +220,7 @@ pub fn run() -> std::process::ExitCode {
                     .set_activation_policy(tauri::ActivationPolicy::Prohibited)?;
                 let scenario = std::env::var("PERF_SCENARIO").unwrap_or_else(|_| "traffic".into());
                 let layer = std::env::var("PERF_LAYER").unwrap_or_else(|_| "component".into());
-                if !matches!(scenario.as_str(), "traffic" | "logs" | "connections")
+                if !matches!(scenario.as_str(), "traffic" | "logs" | "connections" | "proxy")
                     || !matches!(layer.as_str(), "page" | "component" | "dom")
                 {
                     return Err("invalid perf scene".into());

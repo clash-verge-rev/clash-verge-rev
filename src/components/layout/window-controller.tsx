@@ -5,6 +5,8 @@ import { type PointerEvent, useCallback } from 'react'
 import { useWindowControls } from '@/hooks/use-window'
 import getSystem from '@/utils/get-system'
 
+const OS = getSystem()
+
 const RESIZE_HANDLES = [
   { direction: 'North', position: 'north' },
   { direction: 'NorthEast', position: 'north-east' },
@@ -38,7 +40,7 @@ export const WindowResizeHandles = () => {
     [currentWindow],
   )
 
-  if (getSystem() !== 'linux' || maximized) return null
+  if (OS !== 'linux' || maximized) return null
 
   return (
     <div
@@ -59,7 +61,6 @@ export const WindowResizeHandles = () => {
 }
 
 export const WindowControls = () => {
-  const OS = getSystem()
   const { maximized, minimize, close, toggleMaximize } = useWindowControls()
 
   // 通过前端对 tauri 窗口进行翻转全屏时会短暂地与系统图标重叠渲染。

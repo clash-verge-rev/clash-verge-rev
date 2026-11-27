@@ -27,13 +27,18 @@ use clash_verge_service_ipc::{
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
 use parking_lot::Mutex;
+#[cfg(target_os = "macos")]
+use std::sync::LazyLock;
 use std::{
     collections::HashMap,
     env::current_exe,
     future::Future,
     path::{Path, PathBuf},
     process::Command as StdCommand,
-    sync::atomic::{AtomicBool, AtomicU64, Ordering},
+    sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -98,23 +103,29 @@ fn app_data_owner_command(credentials: &OwnerCredentials) -> Option<String> {
 /// They are discarded with that session rather than cached across service upgrades.
 #[derive(Clone)]
 struct ActiveServiceSession {
-    proof: OwnerSessionProof,
+    proof: Arc<OwnerSessionProof>,
     supports_runtime_staging: bool,
     supports_runtime_file_read: bool,
     supports_runtime_geo_read: bool,
 }
 
 fn generate_service_session_token() -> Result<String> {
+    use std::fmt::Write as _;
+
     let mut bytes = [0_u8; 32];
     getrandom::fill(&mut bytes).context("failed to generate service owner session")?;
-    Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
+    let mut token = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        let _ = write!(token, "{byte:02x}");
+    }
+    Ok(token)
 }
 
-pub(crate) fn active_service_session() -> Result<OwnerSessionProof> {
+pub(crate) fn active_service_session() -> Result<Arc<OwnerSessionProof>> {
     ACTIVE_SERVICE_SESSION
         .lock()
         .as_ref()
-        .map(|session| session.proof.clone())
+        .map(|session| Arc::clone(&session.proof))
         .context("service owner session is not active")
 }
 
@@ -248,7 +259,7 @@ fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
 }
 
 #[cfg(target_os = "macos")]
-fn macos_service_install_markers() -> Vec<String> {
+static MACOS_SERVICE_INSTALL_MARKERS: LazyLock<Vec<String>> = LazyLock::new(|| {
     vec![
         format!(
             "/Library/LaunchDaemons/{}.plist",
@@ -258,16 +269,14 @@ fn macos_service_install_markers() -> Vec<String> {
             "/Library/PrivilegedHelperTools/{}.bundle",
             clash_verge_service_ipc::MACOS_SERVICE_ID
         ),
-        #[cfg(not(feature = "verge-dev"))]
         "/Library/LaunchDaemons/io.github.clashverge.helper.plist".to_owned(),
-        #[cfg(not(feature = "verge-dev"))]
         "/Library/PrivilegedHelperTools/io.github.clashverge.helper".to_owned(),
     ]
-}
+});
 
 #[cfg(target_os = "macos")]
 fn macos_service_install_marker_exists() -> std::io::Result<bool> {
-    for marker in macos_service_install_markers() {
+    for marker in MACOS_SERVICE_INSTALL_MARKERS.iter() {
         if path_entry_exists_without_follow(Path::new(&marker))? {
             return Ok(true);
         }
@@ -319,13 +328,11 @@ pub(crate) fn service_stop_reason() -> Result<Option<&'static str>> {
     if status.current_state != ServiceState::Stopped {
         return Ok(None);
     }
-    // The development channel registers an on-demand start.
-    if !cfg!(feature = "verge-dev")
-        && service
-            .query_config()
-            .context("failed to query Windows service configuration")?
-            .start_type
-            != ServiceStartType::AutoStart
+    if service
+        .query_config()
+        .context("failed to query Windows service configuration")?
+        .start_type
+        != ServiceStartType::AutoStart
     {
         return Ok(Some(SERVICE_NOT_AUTO_STARTED));
     }
@@ -362,201 +369,6 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
 /// Stateless legacy façade over [`RUN_STATE`] retained for existing call sites.
 pub struct ServiceManager;
 
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
-static SERVICE_CORE_STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
-
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
-fn create_service_core_staging_file(directory: &Path, core_name: &std::ffi::OsStr) -> Result<(PathBuf, std::fs::File)> {
-    use crate::utils::retry::{RetryError, RetryPolicy, retry_sync};
-    retry_sync(
-        RetryPolicy::fixed(
-            std::num::NonZeroUsize::MIN.saturating_add(31),
-            std::time::Duration::ZERO,
-        ),
-        |_| {
-            let generation = SERVICE_CORE_STAGING_GENERATION.fetch_add(1, Ordering::Relaxed);
-            let temporary_name = format!(
-                ".{}.{}.{generation}.tmp",
-                core_name.to_string_lossy(),
-                std::process::id()
-            );
-            let temporary_path = directory.join(temporary_name);
-            match std::fs::OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&temporary_path)
-            {
-                Ok(file) => Ok((temporary_path, file)),
-                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                    Err(RetryError::Retry(anyhow::anyhow!(
-                        "failed to create a unique temporary development Service core in {}",
-                        directory.display()
-                    )))
-                }
-                Err(error) => Err(RetryError::Stop(anyhow::Error::from(error).context({
-                    format!(
-                        "failed to create temporary development Service core {}",
-                        temporary_path.display()
-                    )
-                }))),
-            }
-        },
-    )
-}
-
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
-fn service_core_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
-    service_core_path_for_with_publisher(
-        source,
-        home,
-        stage_for_macos_dev,
-        "service-core",
-        |temporary_path, final_path| {
-            std::fs::rename(temporary_path, final_path).with_context(|| {
-                format!(
-                    "failed to publish development Service core {} over {}",
-                    temporary_path.display(),
-                    final_path.display()
-                )
-            })
-        },
-    )
-}
-
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), all(test, unix)))]
-fn service_tool_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
-    service_core_path_for_with_publisher(
-        source,
-        home,
-        stage_for_macos_dev,
-        "service-tools",
-        |temporary_path, final_path| {
-            std::fs::rename(temporary_path, final_path).with_context(|| {
-                format!(
-                    "failed to publish development Service tool {} over {}",
-                    temporary_path.display(),
-                    final_path.display()
-                )
-            })
-        },
-    )
-}
-
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
-#[cfg_attr(not(unix), allow(unreachable_code, unused_assignments, unused_variables))]
-fn service_core_path_for_with_publisher<F>(
-    source: &Path,
-    home: Option<&Path>,
-    stage_for_macos_dev: bool,
-    staging_directory_name: &str,
-    publisher: F,
-) -> Result<PathBuf>
-where
-    F: FnOnce(&Path, &Path) -> Result<()>,
-{
-    if !stage_for_macos_dev {
-        return Ok(source.to_path_buf());
-    }
-
-    let home = home
-        .filter(|path| !path.as_os_str().is_empty())
-        .context("HOME is unavailable for development Service core staging")?;
-    let core_name = source
-        .file_name()
-        .filter(|name| !name.is_empty())
-        .with_context(|| format!("development Service core source has no file name: {}", source.display()))?;
-    let source_metadata = std::fs::symlink_metadata(source)
-        .with_context(|| format!("failed to inspect development Service core source {}", source.display()))?;
-    if !source_metadata.file_type().is_file() {
-        bail!(
-            "development Service core source is not an ordinary file: {}",
-            source.display()
-        );
-    }
-    let mut source_file = std::fs::File::open(source)
-        .with_context(|| format!("failed to open development Service core source {}", source.display()))?;
-
-    let staging_directory = home
-        .join("Applications/.clash-verge-rev-dev")
-        .join(staging_directory_name);
-    std::fs::create_dir_all(&staging_directory).with_context(|| {
-        format!(
-            "failed to create development Service core staging directory {}",
-            staging_directory.display()
-        )
-    })?;
-    let final_path = staging_directory.join(core_name);
-    let (temporary_path, mut temporary_file) = create_service_core_staging_file(&staging_directory, core_name)?;
-
-    let publish_result = (|| -> Result<()> {
-        std::io::copy(&mut source_file, &mut temporary_file).with_context(|| {
-            format!(
-                "failed to copy development Service core from {} to {}",
-                source.display(),
-                temporary_path.display()
-            )
-        })?;
-
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt as _;
-
-            let mut permissions = temporary_file
-                .metadata()
-                .with_context(|| format!("failed to inspect temporary Service core {}", temporary_path.display()))?
-                .permissions();
-            permissions.set_mode(0o755);
-            temporary_file.set_permissions(permissions).with_context(|| {
-                format!(
-                    "failed to set executable permissions on temporary Service core {}",
-                    temporary_path.display()
-                )
-            })?;
-        }
-        #[cfg(not(unix))]
-        bail!("development Service core staging requires Unix executable permissions");
-
-        temporary_file
-            .sync_all()
-            .with_context(|| format!("failed to sync temporary Service core {}", temporary_path.display()))?;
-        drop(temporary_file);
-        publisher(&temporary_path, &final_path)?;
-        Ok(())
-    })();
-
-    if let Err(error) = publish_result {
-        match std::fs::remove_file(&temporary_path) {
-            Ok(()) => return Err(error),
-            Err(cleanup_error) if cleanup_error.kind() == std::io::ErrorKind::NotFound => return Err(error),
-            Err(cleanup_error) => {
-                return Err(error).with_context(|| {
-                    format!(
-                        "failed to clean temporary development Service core {}: {cleanup_error}",
-                        temporary_path.display()
-                    )
-                });
-            }
-        }
-    }
-
-    Ok(final_path)
-}
-
-#[cfg(target_os = "macos")]
-#[cfg_attr(not(feature = "verge-dev"), allow(clippy::unnecessary_wraps))]
-fn macos_service_tool_path(source: &Path) -> Result<PathBuf> {
-    #[cfg(feature = "verge-dev")]
-    {
-        let home = std::env::var_os("HOME")
-            .filter(|value| !value.is_empty())
-            .map(PathBuf::from);
-        service_tool_path_for(source, home.as_deref(), true)
-    }
-
-    #[cfg(not(feature = "verge-dev"))]
-    Ok(source.to_path_buf())
-}
-
 fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
     let sibling = current_exe()
         .map_err(|error| {
@@ -566,18 +378,8 @@ fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
         })?
         .with_file_name(format!("{clash_core}{bin_ext}"));
 
-    #[cfg(all(target_os = "macos", feature = "verge-dev"))]
-    {
-        let home = std::env::var_os("HOME")
-            .filter(|value| !value.is_empty())
-            .map(PathBuf::from);
-        service_core_path_for(&sibling, home.as_deref(), true)
-    }
-
-    #[cfg(not(all(target_os = "macos", feature = "verge-dev")))]
     Ok(sibling)
 }
-
 #[cfg(target_os = "macos")]
 fn escape_osascript_double_quoted_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
@@ -588,24 +390,12 @@ fn shell_single_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', r"'\''"))
 }
 
-fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
-    #[cfg(feature = "verge-dev")]
-    {
-        drop(packaged_path);
-        let directory = std::env::var_os("CLASH_VERGE_DEV_SERVICE_DIR")
-            .context("CLASH_VERGE_DEV_SERVICE_DIR is missing from the development session")?;
-        let directory = PathBuf::from(directory);
-        if !directory.is_absolute() {
-            bail!("CLASH_VERGE_DEV_SERVICE_DIR must be an absolute path");
-        }
-        Ok(directory.join(file_name))
+fn uninstaller_tool_path(packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
+    let uninstall_path = packaged_path()?;
+    if !uninstall_path.exists() {
+        bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
-
-    #[cfg(not(feature = "verge-dev"))]
-    {
-        let _ = file_name;
-        packaged_path()
-    }
+    Ok(uninstall_path)
 }
 
 #[cfg(target_os = "windows")]
@@ -636,14 +426,6 @@ pub(super) fn run_maybe_elevated(program: &Path, hide_window: bool) -> Result<st
     Ok(status)
 }
 
-fn uninstaller_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
-    let uninstall_path = packaged_service_tool_path(file_name, packaged_path)?;
-    if !uninstall_path.exists() {
-        bail!(format!("uninstaller not found: {uninstall_path:?}"));
-    }
-    Ok(uninstall_path)
-}
-
 fn ensure_uninstall_success(status: &std::process::ExitStatus) -> Result<()> {
     if !status.success() {
         bail!(
@@ -658,9 +440,8 @@ fn ensure_uninstall_success(status: &std::process::ExitStatus) -> Result<()> {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall.exe", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
-    })?;
+    let uninstall_path =
+        uninstaller_tool_path(|| Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe")))?;
 
     let status = run_maybe_elevated(&uninstall_path, true)?;
     ensure_uninstall_success(&status)
@@ -670,7 +451,7 @@ fn uninstall_service() -> Result<()> {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
+    let uninstall_path = uninstaller_tool_path(|| {
         Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall"))
     })?;
 
@@ -718,11 +499,9 @@ fn linux_running_as_root() -> bool {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = uninstaller_tool_path("clash-verge-service-uninstall", || {
-        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall"))
-    })?;
+    let uninstall_path =
+        uninstaller_tool_path(|| Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall")))?;
 
-    let uninstall_path = macos_service_tool_path(&uninstall_path)?;
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
@@ -735,7 +514,7 @@ fn uninstall_service() -> Result<()> {
 
     // logging!(debug, Type::Service, "uninstall command: {}", command);
 
-    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
+    let status = StdCommand::new("osascript").args(["-e", command.as_str()]).status()?;
 
     ensure_uninstall_success(&status)
 }
@@ -757,13 +536,10 @@ fn install_service() -> Result<()> {
 
 fn invoke_service_install(cores: &[clash_verge_service_ipc::management::CoreSource], core_only: bool) -> Result<()> {
     let name = format!("clash-verge-service-install{}", std::env::consts::EXE_SUFFIX);
-    let installer = packaged_service_tool_path(&name, || {
-        #[cfg(target_os = "linux")]
-        let executable = tauri::utils::platform::current_exe()?;
-        #[cfg(not(target_os = "linux"))]
-        let executable = dirs::service_path()?;
-        Ok(executable.with_file_name(&name))
-    })?;
+    #[cfg(target_os = "linux")]
+    let installer = tauri::utils::platform::current_exe()?.with_file_name(&name);
+    #[cfg(not(target_os = "linux"))]
+    let installer = dirs::service_path()?.with_file_name(&name);
     #[cfg(unix)]
     let gid = Some(tauri_plugin_clash_verge_sysinfo::current_gid());
     #[cfg(windows)]
@@ -917,10 +693,9 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
 
     let credentials = current_owner_credentials()?;
     let runtime = collect_service_runtime_bundle(config_file).await?;
-    let proposed_session_token = generate_service_session_token()?;
     let request = StartClashRequest {
         runtime,
-        proposed_session_token: proposed_session_token.clone(),
+        proposed_session_token: generate_service_session_token()?,
         macos_proxy: None,
     };
 
@@ -969,10 +744,10 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let capabilities = probe_service_capabilities().await;
     tracing::Span::current().record("staging", capabilities.runtime_staging);
     *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
-        proof: OwnerSessionProof {
+        proof: Arc::new(OwnerSessionProof {
             generation: result.session.generation,
-            token: proposed_session_token,
-        },
+            token: request.proposed_session_token,
+        }),
         supports_runtime_staging: capabilities.runtime_staging,
         supports_runtime_file_read: capabilities.runtime_file_read,
         supports_runtime_geo_read: capabilities.runtime_geo_read,
@@ -1254,7 +1029,11 @@ async fn sync_runtime_geo(
     let Ok(local) = tokio::fs::metadata(target).await else {
         return Ok(());
     };
-    let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, asset, u64::MAX).await? else {
+    let request = RuntimeFileRequest {
+        destination: asset.to_owned(),
+        offset: u64::MAX,
+    };
+    let Some((Some(_), _, Some(runtime_mtime_ns))) = read_chunk(credentials, session, &request).await? else {
         return Ok(());
     };
     // A newer local file is a change the next staging still has to copy into the runtime.
@@ -1301,7 +1080,7 @@ async fn publish_fetched(
     let manager = CoreManager::global();
     let _lifecycle = manager.lifecycle_lock.lock().await;
     let unchanged = matches!(*manager.get_running_mode(), RunningMode::Service)
-        && active_service_session().is_ok_and(|current| current == *session);
+        && active_service_session().is_ok_and(|current| *current == *session);
     let declared = if unchanged {
         match applied_remote_providers(runtime, app_dir) {
             Ok(declared) => declared,
@@ -1354,8 +1133,13 @@ async fn fetch_runtime_file(
 
     let mut written = 0_u64;
     let mut identity = None;
+    let mut request = RuntimeFileRequest {
+        destination: destination.to_owned(),
+        offset: 0,
+    };
     loop {
-        let (hex, len, mtime_ns) = match read_chunk(credentials, session, destination, written).await? {
+        request.offset = written;
+        let (hex, len, mtime_ns) = match read_chunk(credentials, session, &request).await? {
             Some(chunk) => chunk,
             None => return Ok(Fetch::SessionLost),
         };
@@ -1386,8 +1170,11 @@ async fn recheck_identity(
     session: &OwnerSessionProof,
     cache: &FetchedCache,
 ) -> Result<Fetch> {
-    let destination = &cache.declared.provider.destination;
-    Ok(match read_chunk(credentials, session, destination, cache.len).await? {
+    let request = RuntimeFileRequest {
+        destination: cache.declared.provider.destination.to_owned(),
+        offset: cache.len,
+    };
+    Ok(match read_chunk(credentials, session, &request).await? {
         None => Fetch::SessionLost,
         Some((Some(hex), len, mtime_ns)) if hex.is_empty() && (len, mtime_ns) == (cache.len, cache.mtime_ns) => {
             Fetch::Complete { len, mtime_ns }
@@ -1400,14 +1187,9 @@ async fn recheck_identity(
 async fn read_chunk(
     credentials: &OwnerCredentials,
     session: &OwnerSessionProof,
-    destination: &str,
-    offset: u64,
+    request: &RuntimeFileRequest,
 ) -> Result<Option<(Option<String>, u64, Option<u64>)>> {
-    let request = RuntimeFileRequest {
-        destination: destination.to_owned(),
-        offset,
-    };
-    let response = clash_verge_service_ipc::read_runtime_file(credentials, session, &request)
+    let response = clash_verge_service_ipc::read_runtime_file(credentials, session, request)
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code == ServiceErrorCode::NotActive as u16
@@ -1960,10 +1742,6 @@ impl ServiceManager {
     }
 
     pub async fn detect_startup_status(&self) {
-        if cfg!(feature = "dev-sidecar") {
-            RUN_STATE.accept_sidecar();
-            return;
-        }
         RUN_STATE.observe_current_health().await;
     }
 
@@ -1997,8 +1775,9 @@ impl ServiceManager {
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
         // Use the caller's action; a racing observation may clear the stored pending action.
         let Some(action) = requested_action(&status) else {
-            self.set_status(status.clone());
-            return report_non_actionable_status(status);
+            let reported = report_non_actionable_status(&status);
+            self.set_status(status);
+            return reported;
         };
         // Atomically record the request and capture the Sidecar allowance it clears.
         let sidecar_allowed_before = RUN_STATE.request_action(action);
@@ -2033,7 +1812,7 @@ async fn run_action_restoring_sidecar<E: RunStateEnv>(
 }
 
 /// Explain a status that asks for no privileged action, refusing the ones we cannot act on.
-fn report_non_actionable_status(status: ServiceStatus) -> Result<()> {
+fn report_non_actionable_status(status: &ServiceStatus) -> Result<()> {
     match status {
         ServiceStatus::Checking => bail!("service status is still being checked"),
         ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
@@ -2130,19 +1909,12 @@ mod tests {
     use super::{
         ServiceHealth, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
         generate_service_session_token, mark_service_unavailable_after_owner_loss, owner_recovery_policy,
-        service_core_path_for, session_matches_status,
+        session_matches_status,
     };
-    #[cfg(unix)]
-    use super::{service_core_path_for_with_publisher, service_tool_path_for};
     use crate::core::runstate::{FakeEnv, OwnerRecoveryReason, PendingAction, RunStateStore};
     use anyhow::bail;
     use clash_verge_service_ipc::OwnerSessionProof;
-    #[cfg(unix)]
-    use std::cell::Cell;
-    use std::{
-        path::{Path, PathBuf},
-        sync::atomic::{AtomicU64, Ordering},
-    };
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     /// A Run State backed by a scripted environment, so these tests never touch the global.
     fn fake_store() -> RunStateStore<FakeEnv> {
@@ -2156,197 +1928,6 @@ mod tests {
 
     async fn status_of_settled(store: &RunStateStore<FakeEnv>) -> ServiceStatus {
         ServiceStatus::from_run_state(&store.settled().await)
-    }
-
-    static TEST_DIRECTORY_GENERATION: AtomicU64 = AtomicU64::new(0);
-
-    struct TestDirectory(PathBuf);
-
-    impl TestDirectory {
-        fn new(label: &str) -> anyhow::Result<Self> {
-            let generation = TEST_DIRECTORY_GENERATION.fetch_add(1, Ordering::Relaxed);
-            let path = std::env::temp_dir().join(format!(
-                "clash-verge-rev-service-{label}-{}-{generation}",
-                std::process::id()
-            ));
-            std::fs::create_dir(&path)?;
-            Ok(Self(path))
-        }
-
-        fn path(&self) -> &Path {
-            &self.0
-        }
-    }
-
-    impl Drop for TestDirectory {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_dir_all(&self.0);
-        }
-    }
-
-    fn staging_directory(home: &Path) -> PathBuf {
-        home.join("Applications/.clash-verge-rev-dev/service-core")
-    }
-
-    #[cfg(unix)]
-    fn service_tools_staging_directory(home: &Path) -> PathBuf {
-        home.join("Applications/.clash-verge-rev-dev/service-tools")
-    }
-
-    #[cfg(unix)]
-    fn staging_temporary_entries(home: &Path, core_name: &str) -> anyhow::Result<Vec<PathBuf>> {
-        let directory = staging_directory(home);
-        if !directory.exists() {
-            return Ok(Vec::new());
-        }
-        Ok(std::fs::read_dir(directory)?
-            .filter_map(Result::ok)
-            .map(|entry| entry.path())
-            .filter(|path| {
-                path.file_name()
-                    .and_then(|name| name.to_str())
-                    .is_some_and(|name| name.starts_with(&format!(".{core_name}.")) && name.ends_with(".tmp"))
-            })
-            .collect())
-    }
-
-    #[test]
-    fn nondevelopment_service_core_selection_preserves_sibling_without_staging() -> anyhow::Result<()> {
-        let root = TestDirectory::new("release-path")?;
-        let home = root.path().join("home");
-        let source = root.path().join("target/debug/verge-mihomo");
-
-        let selected = service_core_path_for(&source, Some(&home), false)?;
-
-        assert_eq!(selected, source);
-        assert!(!staging_directory(&home).exists());
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn development_service_core_uses_exact_layout_and_executable_bytes() -> anyhow::Result<()> {
-        use std::os::unix::fs::PermissionsExt as _;
-
-        let root = TestDirectory::new("development-path")?;
-        let home = root.path().join("home");
-        let source = root.path().join("verge-mihomo");
-        std::fs::write(&source, b"development core")?;
-
-        let selected = service_core_path_for(&source, Some(&home), true)?;
-
-        assert_eq!(
-            selected,
-            home.join("Applications/.clash-verge-rev-dev/service-core/verge-mihomo")
-        );
-        assert_eq!(std::fs::read(&selected)?, b"development core");
-        let metadata = std::fs::symlink_metadata(&selected)?;
-        assert!(metadata.file_type().is_file());
-        assert_ne!(metadata.permissions().mode() & 0o111, 0);
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn development_service_tool_uses_safe_layout_and_executable_bytes() -> anyhow::Result<()> {
-        use std::os::unix::fs::PermissionsExt as _;
-
-        let root = TestDirectory::new("development-service-tool")?;
-        let home = root.path().join("home");
-        let source = root.path().join("clash-verge-service-install");
-        std::fs::write(&source, b"development installer")?;
-
-        let selected = service_tool_path_for(&source, Some(&home), true)?;
-
-        assert_eq!(
-            selected,
-            service_tools_staging_directory(&home).join("clash-verge-service-install")
-        );
-        assert_eq!(std::fs::read(&selected)?, b"development installer");
-        assert_ne!(std::fs::metadata(&selected)?.permissions().mode() & 0o111, 0);
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn development_service_core_refresh_atomically_replaces_bytes() -> anyhow::Result<()> {
-        let root = TestDirectory::new("refresh")?;
-        let home = root.path().join("home");
-        let source = root.path().join("verge-mihomo");
-        std::fs::write(&source, b"first core")?;
-        let selected = service_core_path_for(&source, Some(&home), true)?;
-        assert_eq!(
-            selected,
-            home.join("Applications/.clash-verge-rev-dev/service-core/verge-mihomo")
-        );
-
-        std::fs::write(&source, b"second core")?;
-        let refreshed = service_core_path_for(&source, Some(&home), true)?;
-
-        assert_eq!(refreshed, selected);
-        assert_eq!(std::fs::read(&refreshed)?, b"second core");
-        assert!(staging_temporary_entries(&home, "verge-mihomo")?.is_empty());
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn failed_development_refresh_preserves_good_core_and_cleans_temporary_entry() -> anyhow::Result<()> {
-        let root = TestDirectory::new("failed-refresh")?;
-        let home = root.path().join("home");
-        let source = root.path().join("verge-mihomo");
-        std::fs::write(&source, b"known good core")?;
-        let selected = service_core_path_for(&source, Some(&home), true)?;
-
-        std::fs::write(&source, b"replacement core")?;
-        let publish_attempted = Cell::new(false);
-        let result = service_core_path_for_with_publisher(
-            &source,
-            Some(&home),
-            true,
-            "service-core",
-            |temporary, final_path| {
-                publish_attempted.set(true);
-                assert_ne!(temporary, final_path, "publisher must receive the temporary path");
-                assert!(std::fs::symlink_metadata(temporary)?.file_type().is_file());
-                assert_eq!(std::fs::read(temporary)?, b"replacement core");
-                anyhow::bail!("injected post-creation publish failure")
-            },
-        );
-        let error = match result {
-            Ok(path) => anyhow::bail!("failed publication selected {}", path.display()),
-            Err(error) => error.to_string(),
-        };
-
-        assert!(publish_attempted.get());
-        assert!(error.contains("injected post-creation publish failure"));
-        assert_eq!(std::fs::read(&selected)?, b"known good core");
-        assert!(staging_temporary_entries(&home, "verge-mihomo")?.is_empty());
-        Ok(())
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn development_service_core_replaces_final_symlink_without_following_it() -> anyhow::Result<()> {
-        use std::os::unix::fs::symlink;
-
-        let root = TestDirectory::new("symlink")?;
-        let home = root.path().join("home");
-        let source = root.path().join("verge-mihomo");
-        std::fs::write(&source, b"selected core")?;
-        let final_path = home.join("Applications/.clash-verge-rev-dev/service-core/verge-mihomo");
-        std::fs::create_dir_all(final_path.parent().unwrap_or_else(|| Path::new(".")))?;
-        let symlink_target = root.path().join("must-not-change");
-        std::fs::write(&symlink_target, b"target bytes")?;
-        symlink(&symlink_target, &final_path)?;
-
-        let selected = service_core_path_for(&source, Some(&home), true)?;
-
-        assert_eq!(selected, final_path);
-        assert!(std::fs::symlink_metadata(&selected)?.file_type().is_file());
-        assert_eq!(std::fs::read(&selected)?, b"selected core");
-        assert_eq!(std::fs::read(&symlink_target)?, b"target bytes");
-        Ok(())
     }
 
     #[test]
@@ -2442,7 +2023,7 @@ mod tests {
                 &store,
                 super::ServiceStartRefusal {
                     code: code as u16,
-                    core_path: "/development/service-core/verge-mihomo".into(),
+                    core_path: "/fixture/service-core/verge-mihomo".into(),
                     message: "no administrator-approved copy is installed".into(),
                 },
             );
@@ -2468,7 +2049,7 @@ mod tests {
             &store,
             super::ServiceStartRefusal {
                 code: clash_verge_service_ipc::ServiceErrorCode::ProxyClearFailed as u16,
-                core_path: "/development/service-core/verge-mihomo".into(),
+                core_path: "/fixture/service-core/verge-mihomo".into(),
                 message: "SystemConfiguration operation failed: lock preferences (status 3002)".into(),
             },
         );
@@ -2553,7 +2134,7 @@ mod tests {
     #[test]
     fn legacy_socket_alone_is_not_install_evidence() {
         assert!(
-            !super::macos_service_install_markers()
+            !super::MACOS_SERVICE_INSTALL_MARKERS
                 .iter()
                 .any(|marker| marker == "/tmp/verge/clash-verge-service.sock")
         );

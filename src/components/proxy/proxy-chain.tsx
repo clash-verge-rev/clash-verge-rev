@@ -57,6 +57,8 @@ const chainPointerSensor = PointerSensor.configure({
   activationConstraints: () => undefined,
 })
 
+const CHAIN_SENSORS = [chainPointerSensor, KeyboardSensor]
+
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
 
 interface ProxyChainProps {
@@ -665,10 +667,7 @@ export const ProxyChain = ({
             </Button>
           </Box>
         ) : (
-          <DragDropProvider
-            sensors={[chainPointerSensor, KeyboardSensor]}
-            onDragEnd={handleDragEnd}
-          >
+          <DragDropProvider sensors={CHAIN_SENSORS} onDragEnd={handleDragEnd}>
             <Box sx={{ borderRadius: 1, minHeight: 60, p: 1 }}>
               {currentProxyChain.map((proxy, index) => (
                 <SortableProxyChainItem

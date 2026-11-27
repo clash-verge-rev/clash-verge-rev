@@ -12,6 +12,9 @@ const FLUSH_DELAY_MS = 50
 type LogType = ILogItem['type']
 
 const DEFAULT_LOG_TYPES: LogType[] = ['debug', 'info', 'warning', 'error']
+// Shared empty fallback: a fresh [] would give `refresh` a new identity on
+// every render and re-run the snapshot effect while logs stream.
+const EMPTY_LOGS: ILogItem[] = []
 const LOG_LEVEL_FILTERS: Record<LogLevel, LogType[]> = {
   DEBUG: DEFAULT_LOG_TYPES,
   INFO: ['info', 'warning', 'error'],
@@ -55,7 +58,7 @@ export const useLogData = () => {
 
   const { response, refresh, setData } = useMihomoWsSubscription<ILogItem[]>({
     subscriptionKey: enableLog ? 'getClashLog' : null,
-    fallbackData: [],
+    fallbackData: EMPTY_LOGS,
     connect: () => MihomoWebSocket.connect_logs(logLevel),
     setupHandlers: ({ next, scheduleReconnect, isMounted }) => {
       let flushTimer: ReturnType<typeof setTimeout> | null = null

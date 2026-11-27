@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -58,8 +58,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     dnsMode: '',
   })
 
-  const routeExcludeAddressItems = splitRouteExcludeAddress(
-    values.routeExcludeAddress,
+  const routeExcludeAddressItems = useMemo(
+    () => splitRouteExcludeAddress(values.routeExcludeAddress),
+    [values.routeExcludeAddress],
   )
   const routeExcludeAddressError =
     values.autoRoute &&
