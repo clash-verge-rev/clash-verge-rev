@@ -6,8 +6,6 @@ pub mod notification;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, specta::Type)]
 pub enum NoticeStatus {
-    #[serde(rename = "info")]
-    Info,
     #[serde(rename = "import_sub_url::ok")]
     ImportSubUrlOk,
     #[serde(rename = "import_sub_url::error")]
@@ -83,8 +81,7 @@ impl NoticeStatus {
     /// test both derive their variant list from here; expected strings stay
     /// hand-written in the test so renames cannot slip through.
     #[cfg(test)]
-    pub const ALL: [Self; 34] = [
-        Self::Info,
+    pub const ALL: [Self; 33] = [
         Self::ImportSubUrlOk,
         Self::ImportSubUrlError,
         Self::SetConfigError,
@@ -129,7 +126,6 @@ mod tests {
     fn notice_status_wire_contract() -> Result<(), serde_json::Error> {
         let statuses = NoticeStatus::ALL;
         let expected = [
-            "info",
             "import_sub_url::ok",
             "import_sub_url::error",
             "set_config::error",

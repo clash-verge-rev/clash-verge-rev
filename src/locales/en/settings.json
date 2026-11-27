@@ -445,7 +445,6 @@
         "update": "Update"
       },
       "messages": {
-        "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",
         "available": "A new version is available"
       },
       "alerts": {

@@ -445,7 +445,6 @@
         "update": "Perbarui"
       },
       "messages": {
-        "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual",
         "available": "Versi baru tersedia"
       },
       "alerts": {
