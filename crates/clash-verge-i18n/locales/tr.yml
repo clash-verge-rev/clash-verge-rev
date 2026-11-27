@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: Çıkış Yapılmak Üzere
     body: Clash Verge kapanmak üzere.
-  updateReady:
-    title: Clash Verge Güncellemesi
-    body: Yeni bir sürüm (v{version}) indirildi ve kurulmaya hazır.
-    installNow: Şimdi Kur
-    later: Daha Sonra
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.

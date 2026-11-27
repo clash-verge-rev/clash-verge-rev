@@ -164,7 +164,7 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
     match patch {
         Patch::Verge { patch, .. } => {
             if patch.auto_check_update == Some(false) {
-                SilentUpdater::global().discard_pending();
+                SilentUpdater::global().discard_pending().await;
             }
             if effects.contains(&Effect::ClashConfig) {
                 announce(Refresh::Clash);

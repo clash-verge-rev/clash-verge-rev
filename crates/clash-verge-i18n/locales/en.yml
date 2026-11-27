@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: About to Exit
     body: Clash Verge is about to exit.
-  updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
 service:
   adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
   adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.

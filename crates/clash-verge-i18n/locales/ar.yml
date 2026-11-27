@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: على وشك الخروج
     body: Clash Verge على وشك الخروج.
-  updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
 service:
   adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
   adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.

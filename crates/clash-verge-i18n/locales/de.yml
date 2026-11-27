@@ -29,11 +29,6 @@ notifications:
   appQuit:
     title: Beenden steht bevor
     body: Clash Verge wird gleich beendet.
-  updateReady:
-    title: Clash-Verge-Update
-    body: Eine neue Version (v{version}) wurde heruntergeladen und kann installiert werden.
-    installNow: Jetzt installieren
-    later: Später
 service:
   adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
   adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
