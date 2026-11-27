@@ -20,6 +20,7 @@ pub fn builder() -> tauri_specta::Builder<tauri::Wry> {
             cmd::restart_app,
             cmd::install_update,
             cmd::cancel_update_download,
+            cmd::get_staged_update,
             cmd::restart_core,
             cmd::upgrade_clash_core,
             cmd::get_runtime_state,

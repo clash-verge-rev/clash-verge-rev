@@ -1,3 +1,4 @@
+import { getStagedUpdate } from '@/services/cmds'
 import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
 import { checkForUpdate } from '@/services/update'
 
@@ -54,10 +55,16 @@ export const useUpdate = (enabled: boolean = true) => {
     refetchOnReconnect: false,
   })
 
+  const { data: stagedVersion } = useQuery({
+    queryKey: ['getStagedUpdate'],
+    queryFn: () => getStagedUpdate(),
+  })
+
   return {
     updateInfo,
     checkUpdate,
     loading: isValidating,
     lastCheckUpdate: lastCheckUpdate ?? null,
+    stagedVersion: stagedVersion ?? null,
   }
 }

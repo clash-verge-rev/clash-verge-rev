@@ -74,6 +74,12 @@ impl Handle {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
     }
 
+    /// A verified installer became ready (or was cleared); the frontend refetches the staged
+    /// version.
+    pub fn notify_staged_update_changed() {
+        Self::send_event(FrontendEvent::StagedUpdateChanged);
+    }
+
     pub fn notice(status: NoticeStatus, message: impl Into<Arc<str>>) {
         Self::send_event(FrontendEvent::NoticeMessage {
             status,

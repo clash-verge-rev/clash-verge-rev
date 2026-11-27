@@ -84,6 +84,16 @@ pub fn cancel_update_download() {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn get_staged_update() -> CmdResult<Option<std::string::String>> {
+    SilentUpdater::global()
+        .ok_or("silent updater is not running")?
+        .staged_version()
+        .await
+        .stringify_err()
+}
+
+#[tauri::command]
+#[specta::specta]
 pub fn get_app_dir() -> CmdResult<std::string::String> {
     let app_home_dir = dirs::app_home_dir().stringify_err()?.to_string_lossy().into();
     Ok(app_home_dir)

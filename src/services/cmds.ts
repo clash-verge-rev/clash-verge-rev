@@ -306,6 +306,10 @@ export async function cancelUpdateDownload() {
   return commands.cancelUpdateDownload()
 }
 
+export async function getStagedUpdate() {
+  return commands.getStagedUpdate()
+}
+
 export async function getAppDir() {
   return commands.getAppDir()
 }

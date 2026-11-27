@@ -1,9 +1,11 @@
-use anyhow::Result;
+use crate::{config::Config, core::handle::Handle, utils::dirs};
+use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
 use futures::FutureExt as _;
 use serde::Serialize;
 use std::{
     panic::AssertUnwindSafe,
+    path::PathBuf,
     sync::{
         OnceLock,
         atomic::{AtomicU64, Ordering},
@@ -35,6 +37,21 @@ enum Cmd {
         reply: oneshot::Sender<Result<InstallUpdateOutcome>>,
     },
     Cancel,
+    StagedVersion {
+        reply: oneshot::Sender<Option<String>>,
+    },
+}
+
+/// What wakes the idle actor.
+enum Wake {
+    Cmd(Cmd),
+    DailyCheck,
+}
+
+/// How a background cycle ended: `Displaced` carries the command that dropped it.
+enum CycleEnd {
+    Completed(Result<Option<String>>),
+    Displaced(Cmd),
 }
 
 /// How a dialog install's prepare phase ended.
@@ -60,6 +77,104 @@ impl SilentUpdater {
     pub fn global() -> Option<&'static Self> {
         UPDATER.get()
     }
+}
+
+impl SilentUpdater {
+    fn staging_dir() -> Result<PathBuf> {
+        Ok(dirs::app_home_dir()?.join("update_cache"))
+    }
+
+    /// Writes the installer under a name stamped with the version it was staged for, through
+    /// a temp file so a crash leaves no partial file; installer-sized IO stays off the async
+    /// runtime. Only the detachable blocking task writes the temp file — the rename that
+    /// stages it runs after its await, so a command preempting this future cannot publish
+    /// behind the preemption.
+    async fn write_staged(bytes: Vec<u8>, version: &str) -> Result<()> {
+        let staging_dir = Self::staging_dir()?;
+        let bin_name = staged_file_name(version);
+        let bin_path = staging_dir.join(&bin_name);
+        let tmp_path = staging_dir.join(format!("{bin_name}.tmp"));
+        let write_tmp = {
+            let staging_dir = staging_dir.clone();
+            let tmp_path = tmp_path.clone();
+            move || -> Result<()> {
+                std::fs::create_dir_all(&staging_dir)
+                    .with_context(|| format!("failed to create update staging directory {}", staging_dir.display()))?;
+                std::fs::write(&tmp_path, &bytes)
+                    .with_context(|| format!("failed to write update staging file {}", tmp_path.display()))?;
+                Ok(())
+            }
+        };
+        tokio::task::spawn_blocking(write_tmp).await??;
+        // Metadata-sized, so inline on the actor thread rather than a detachable task.
+        std::fs::rename(&tmp_path, &bin_path)
+            .with_context(|| format!("failed to publish update staging file {}", bin_path.display()))?;
+        Ok(())
+    }
+
+    /// Returns the staged installer for `update`: the staged name carries the version it was
+    /// staged for, and the plugin's `verify` binds the bytes to the signed release — both
+    /// must agree with the current offer. A stage that fails either is removed.
+    async fn staged_bytes(update: &Update) -> Option<Vec<u8>> {
+        // A quiet miss for the common nothing-staged case; only a present-but-bad file logs.
+        let Ok(bin_path) = Self::staging_dir().map(|dir| dir.join(staged_file_name(&update.version))) else {
+            return None;
+        };
+        if !bin_path.exists() {
+            return None;
+        }
+        let read = tokio::task::spawn_blocking(move || {
+            std::fs::read(&bin_path).with_context(|| format!("failed to read staged update {}", bin_path.display()))
+        })
+        .await;
+        let bytes = match read {
+            Ok(result) => result.and_then(|bytes| {
+                update.verify(&bytes)?;
+                Ok(bytes)
+            }),
+            Err(e) => Err(anyhow::anyhow!("staged update read failed: {e}")),
+        };
+        match bytes {
+            Ok(bytes) => Some(bytes),
+            Err(e) => {
+                logging!(info, Type::System, "Staged update is unusable: {e:#}, cleaning up");
+                Self::delete_staged().await;
+                None
+            }
+        }
+    }
+
+    /// Removes the staging directory; a failed removal leaves bytes the next cycle
+    /// re-verifies and replaces.
+    async fn delete_staged() {
+        if let Ok(staging_dir) = Self::staging_dir()
+            && staging_dir.exists()
+        {
+            let display = staging_dir.display().to_string();
+            match tokio::task::spawn_blocking(move || std::fs::remove_dir_all(&staging_dir)).await {
+                Ok(Ok(())) => logging!(info, Type::System, "Staged update removed"),
+                Ok(Err(e)) => logging!(warn, Type::System, "Failed to remove staged update {display}: {e}"),
+                Err(e) => logging!(warn, Type::System, "Failed to remove staged update {display}: {e}"),
+            }
+        }
+    }
+}
+
+/// Filesystem-safe staging name for `version`: the name itself asserts which version the
+/// staged installer belongs to, so an announcement can never adopt a stage of another
+/// version regardless of signature details.
+fn staged_file_name(version: &str) -> String {
+    let sanitized: String = version
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_') {
+                c
+            } else {
+                '_'
+            }
+        })
+        .collect();
+    format!("pending_update_{sanitized}.bin")
 }
 
 pub fn is_build_to_stable(current: &str, remote: &str) -> bool {
@@ -100,6 +215,8 @@ const MIRRORS: [&str; 2] = ["https://update.hwdns.net/", "https://gh-proxy.org/"
 /// A source delivering less than this per window is dropped for the next one.
 const MIN_PROGRESS: u64 = 1024 * 1024;
 const PROGRESS_WINDOW: Duration = Duration::from_secs(30);
+/// How long the actor waits after a panic before re-arming the daily check.
+const PANIC_BACKOFF: Duration = Duration::from_secs(600);
 #[cfg(target_os = "windows")]
 const INSTALL_TIMEOUT: Duration = Duration::from_secs(30);
 #[cfg(not(target_os = "windows"))]
@@ -196,9 +313,11 @@ impl SilentUpdater {
         Ok(updater_builder.build()?.check().await?)
     }
 
-    /// Installs verified bytes. A timeout abandons the await, not the detached install task;
-    /// a successful Windows install exits the process inside the plugin (#2558).
+    /// Installs verified bytes, consuming the staging copy first so a failed install leaves
+    /// nothing claiming readiness. A timeout abandons the await, not the detached install
+    /// task; a successful Windows install exits the process inside the plugin (#2558).
     async fn install(update: Update, bytes: Vec<u8>) -> Result<()> {
+        Self::delete_staged().await;
         let install = tokio::task::spawn_blocking(move || update.install(&bytes));
         match tokio::time::timeout(INSTALL_TIMEOUT, install).await {
             Ok(result) => Ok(result??),
@@ -210,8 +329,9 @@ impl SilentUpdater {
 }
 
 impl SilentUpdater {
-    /// Installs `version` for the update dialog; a changed offer must be confirmed again
-    /// before downloading or installing it.
+    /// Installs `version` for the update dialog, reusing the staged installer when it holds
+    /// that version; a changed offer must be confirmed again before downloading or
+    /// installing it.
     pub async fn install_update(
         &self,
         // The actor owns the app handle; the parameter keeps the command's call shape.
@@ -237,45 +357,168 @@ impl SilentUpdater {
         // try_send: a cancel must never block, and the mailbox never fills in practice.
         let _ = self.tx.try_send(Cmd::Cancel);
     }
+
+    /// The version whose installer is staged and ready for a one-action restart, or `None`.
+    pub async fn staged_version(&self) -> Result<Option<String>> {
+        let (reply, reply_rx) = oneshot::channel();
+        self.tx
+            .send(Cmd::StagedVersion { reply })
+            .await
+            .map_err(|_| anyhow::anyhow!("updater stopped"))?;
+        Ok(reply_rx.await.unwrap_or(None))
+    }
 }
 
 impl SilentUpdater {
     /// The actor's supervisor: one `serve` epoch at a time. A panic drops the epoch — its
-    /// in-flight work and any reply it still owed — but not the mailbox, so the actor restarts
-    /// instead of leaving updating dead for the rest of the process.
+    /// in-flight work and any reply it still owed — but not the mailbox or the staged
+    /// version, so the actor restarts instead of leaving updating dead for the rest of the
+    /// process.
     async fn run(app_handle: tauri::AppHandle, mut rx: mpsc::Receiver<Cmd>) {
         logging!(info, Type::System, "Silent updater: background task started");
 
+        let mut next_check = tokio::time::Instant::now() + Duration::from_secs(10);
+        let mut staged: Option<String> = None;
         loop {
-            match AssertUnwindSafe(Self::serve(&app_handle, &mut rx)).catch_unwind().await {
+            let epoch = AssertUnwindSafe(Self::serve(&app_handle, &mut rx, &mut next_check, &mut staged));
+            match epoch.catch_unwind().await {
                 // The mailbox closed; the handle holds the only sender, so this is shutdown.
                 Ok(()) => return,
                 Err(_) => {
                     // The global panic hook logged the payload; this marks the recovery. The
                     // epoch future is dropped during the unwind, ending its borrows, so the
-                    // mailbox below is intact.
+                    // mailbox, the schedule, and the staged version below are intact.
                     logging!(error, Type::System, "Silent updater: actor panicked, restarting");
+                    // Back the daily check off so a persistently panicking path cannot hot-loop.
+                    next_check = next_check.max(tokio::time::Instant::now() + PANIC_BACKOFF);
                 }
             }
         }
     }
 
-    /// The actor loop: idle until a command, then run the work. A cancel during the
-    /// cancellable phases drops the work future; a second install is declined in place.
-    async fn serve(app_handle: &tauri::AppHandle, rx: &mut mpsc::Receiver<Cmd>) {
-        while let Some(cmd) = rx.recv().await {
-            match cmd {
-                Cmd::Install {
-                    version,
-                    on_event,
-                    reply,
-                } => {
-                    Self::run_install(app_handle, &version, on_event, reply, rx).await;
+    /// The actor loop: idle until a command or the daily check, then run the work. A cancel
+    /// during the install's prepare phase drops the work future; a second install is
+    /// declined in place; an install displaces the daily cycle.
+    async fn serve(
+        app_handle: &tauri::AppHandle,
+        rx: &mut mpsc::Receiver<Cmd>,
+        next_check: &mut tokio::time::Instant,
+        staged: &mut Option<String>,
+    ) {
+        loop {
+            let mut wake = tokio::select! {
+                maybe = rx.recv() => match maybe {
+                    Some(cmd) => Wake::Cmd(cmd),
+                    None => return,
+                },
+                _ = tokio::time::sleep_until(*next_check) => Wake::DailyCheck,
+            };
+            loop {
+                match wake {
+                    Wake::Cmd(Cmd::Install {
+                        version,
+                        on_event,
+                        reply,
+                    }) => {
+                        Self::run_install(app_handle, &version, on_event, reply, rx, staged).await;
+                        break;
+                    }
+                    // The dialog's cancel only addresses a running install; idle it stops nothing.
+                    Wake::Cmd(Cmd::Cancel) => break,
+                    Wake::Cmd(Cmd::StagedVersion { reply }) => {
+                        let _ = reply.send(staged.clone());
+                        break;
+                    }
+                    Wake::DailyCheck => {
+                        let end = Self::run_background_cycle(app_handle, rx, staged).await;
+                        *next_check = tokio::time::Instant::now() + Duration::from_secs(24 * 60 * 60);
+                        match end {
+                            CycleEnd::Completed(Ok(new_staged)) => {
+                                if *staged != new_staged {
+                                    *staged = new_staged;
+                                    Handle::notify_staged_update_changed();
+                                }
+                                break;
+                            }
+                            CycleEnd::Completed(Err(e)) => {
+                                logging!(warn, Type::System, "Silent updater: cycle error: {e}");
+                                break;
+                            }
+                            CycleEnd::Displaced(cmd) => wake = Wake::Cmd(cmd),
+                        }
+                    }
                 }
-                // The dialog's cancel only addresses a running install; idle it stops nothing.
-                Cmd::Cancel => {}
             }
         }
+    }
+
+    /// Runs one daily cycle, pre-empted by user commands: a cancel and a staged-version
+    /// query are answered in place; an install drops the cycle, and the cycle future is
+    /// gone before the follow-up dispatch runs.
+    async fn run_background_cycle(
+        app_handle: &tauri::AppHandle,
+        rx: &mut mpsc::Receiver<Cmd>,
+        staged: &Option<String>,
+    ) -> CycleEnd {
+        let cycle = Self::stage_update(app_handle);
+        tokio::pin!(cycle);
+        let mut mailbox_open = true;
+        loop {
+            let maybe = tokio::select! {
+                biased;
+                maybe = rx.recv(), if mailbox_open => maybe,
+                result = &mut cycle => return CycleEnd::Completed(result),
+            };
+            let Some(cmd) = maybe else {
+                mailbox_open = false;
+                continue;
+            };
+            match cmd {
+                Cmd::Cancel => {}
+                Cmd::StagedVersion { reply } => {
+                    let _ = reply.send(staged.clone());
+                }
+                Cmd::Install { .. } => return CycleEnd::Displaced(cmd),
+            }
+        }
+    }
+
+    /// Checks for an update and stages its installer for a one-action restart: the staged
+    /// bytes are downloaded only when they no longer verify against the current offer.
+    async fn stage_update(app_handle: &tauri::AppHandle) -> Result<Option<String>> {
+        let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
+        if !auto_check {
+            logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");
+            return Ok(None);
+        }
+
+        logging!(info, Type::System, "Silent updater: checking for updates...");
+        let update = match app_handle.updater()?.check().await {
+            Ok(Some(update)) => update,
+            Ok(None) => {
+                logging!(info, Type::System, "Silent updater: no update available");
+                return Ok(None);
+            }
+            Err(e) => {
+                logging!(warn, Type::System, "Silent updater: check failed: {e}");
+                return Err(e.into());
+            }
+        };
+
+        let version = update.version.clone();
+        logging!(info, Type::System, "Silent updater: update available: v{version}");
+        if Self::staged_bytes(&update).await.is_some() {
+            logging!(info, Type::System, "Silent updater: v{version} already staged");
+        } else {
+            logging!(info, Type::System, "Silent updater: downloading v{version}...");
+            let bytes = download(&update, |_| {}).await?;
+            logging!(info, Type::System, "Silent updater: download complete");
+            // Remove any stage left by an earlier offer before publishing the new one.
+            Self::delete_staged().await;
+            Self::write_staged(bytes, &version).await?;
+            logging!(info, Type::System, "Silent updater: v{version} ready to install");
+        }
+        Ok(Some(version))
     }
 
     /// One dialog install from prepare to install; every exit path answers `reply`.
@@ -285,8 +528,9 @@ impl SilentUpdater {
         on_event: Box<dyn Fn(DownloadEvent) + Send + Sync>,
         reply: oneshot::Sender<Result<InstallUpdateOutcome>>,
         rx: &mut mpsc::Receiver<Cmd>,
+        staged: &Option<String>,
     ) {
-        match Self::prepare_cancellable(app_handle, version, on_event.as_ref(), rx).await {
+        match Self::prepare_cancellable(app_handle, version, on_event.as_ref(), rx, staged).await {
             // The prepare work is already dropped, so a cancel racing the last poll still wins.
             Prepared::Dropped => {
                 logging!(info, Type::System, "Update v{version} cancelled");
@@ -302,19 +546,20 @@ impl SilentUpdater {
                 let (update, bytes) = *pair;
                 logging!(info, Type::System, "Installing update v{version}...");
                 on_event(DownloadEvent::Installing);
-                let result = Self::finish_install(update, bytes, rx).await;
+                let result = Self::finish_install(update, bytes, rx, staged).await;
                 let _ = reply.send(result.map(|_| InstallUpdateOutcome::Installed));
             }
         }
     }
 
-    /// The cancellable prepare phase: check, version filter, download. A second install is
-    /// declined in place; a cancel drops the work.
+    /// The cancellable prepare phase: check, version filter, staged reuse or download. A
+    /// second install is declined in place; a cancel drops the work.
     async fn prepare_cancellable(
         app_handle: &tauri::AppHandle,
         version: &str,
         on_event: &(impl Fn(DownloadEvent) + Sync + ?Sized),
         rx: &mut mpsc::Receiver<Cmd>,
+        staged: &Option<String>,
     ) -> Prepared {
         let prepare = Self::prepare_install(app_handle, version, on_event);
         tokio::pin!(prepare);
@@ -334,6 +579,9 @@ impl SilentUpdater {
             };
             match cmd {
                 Cmd::Cancel => return Prepared::Dropped,
+                Cmd::StagedVersion { reply } => {
+                    let _ = reply.send(staged.clone());
+                }
                 Cmd::Install { reply, .. } => Self::decline_install(reply),
             }
         }
@@ -350,13 +598,21 @@ impl SilentUpdater {
         else {
             return Ok(None);
         };
-        let bytes = download(&update, on_event).await?;
+        let bytes = match Self::staged_bytes(&update).await {
+            Some(bytes) => bytes,
+            None => download(&update, on_event).await?,
+        };
         Ok(Some((update, bytes)))
     }
 
     /// The install phase: once `install()` started it cannot be cancelled (the installer may
     /// already run); the mailbox still gets answers while it finishes.
-    async fn finish_install(update: Update, bytes: Vec<u8>, rx: &mut mpsc::Receiver<Cmd>) -> Result<()> {
+    async fn finish_install(
+        update: Update,
+        bytes: Vec<u8>,
+        rx: &mut mpsc::Receiver<Cmd>,
+        staged: &Option<String>,
+    ) -> Result<()> {
         let install = Self::install(update, bytes);
         tokio::pin!(install);
         let mut mailbox_open = true;
@@ -371,6 +627,9 @@ impl SilentUpdater {
             };
             match cmd {
                 Cmd::Cancel => {}
+                Cmd::StagedVersion { reply } => {
+                    let _ = reply.send(staged.clone());
+                }
                 Cmd::Install { reply, .. } => Self::decline_install(reply),
             }
         }

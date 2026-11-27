@@ -32,6 +32,7 @@ export const commands = {
       onEvent,
     }),
   cancelUpdateDownload: () => __TAURI_INVOKE<void>('cancel_update_download'),
+  getStagedUpdate: () => __TAURI_INVOKE<string | null>('get_staged_update'),
   restartCore: () => __TAURI_INVOKE<null>('restart_core'),
   /**  Replaces the managed core binary atomically instead of letting mihomo overwrite itself. */
   upgradeClashCore: (force: boolean) =>
@@ -1141,6 +1142,7 @@ export type VergeEventPayloads_Deserialize = {
   'profile-update-completed': ProfileUpdatePayload
   'verge://run-state-changed': RunStateView_Deserialize
   'verge://pending-failures-changed': null
+  'verge://staged-update-changed': null
 }
 
 export type VergeEventPayloads_Serialize = {
@@ -1155,6 +1157,7 @@ export type VergeEventPayloads_Serialize = {
   'profile-update-completed': ProfileUpdatePayload
   'verge://run-state-changed': RunStateView_Serialize
   'verge://pending-failures-changed': null
+  'verge://staged-update-changed': null
 }
 
 export type WebDavFile = {
