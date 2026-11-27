@@ -66,7 +66,8 @@ pub async fn install_update(
     on_event: Channel<DownloadEvent>,
 ) -> CmdResult<InstallUpdateOutcome> {
     SilentUpdater::global()
-        .install_update(&app_handle, &version, |event| {
+        .ok_or("silent updater is not running")?
+        .install_update(&app_handle, &version, move |event| {
             let _ = on_event.send(event);
         })
         .await
@@ -76,7 +77,9 @@ pub async fn install_update(
 #[tauri::command]
 #[specta::specta]
 pub fn cancel_update_download() {
-    SilentUpdater::global().cancel_download();
+    if let Some(updater) = SilentUpdater::global() {
+        updater.cancel_download();
+    }
 }
 
 #[tauri::command]

@@ -1,20 +1,21 @@
-use crate::{config::Config, singleton, utils::dirs};
+use crate::{config::Config, utils::dirs};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
-use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{
+        OnceLock,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Duration,
 };
 use tauri_plugin_updater::{Update, UpdaterExt as _};
-use tokio_util::sync::CancellationToken;
+use tokio::sync::{mpsc, oneshot};
 
+/// App-global handle to the updater actor, the single task that runs every updater operation.
 pub struct SilentUpdater {
-    manual_cancel: Mutex<Option<CancellationToken>>,
-    background_cancel: Mutex<Option<CancellationToken>>,
-    download_lock: tokio::sync::Mutex<()>,
+    tx: mpsc::Sender<Cmd>,
 }
 
 #[derive(Serialize, specta::Type)]
@@ -25,15 +26,55 @@ pub enum InstallUpdateOutcome {
     UpdateChanged,
 }
 
-singleton!(SilentUpdater, SILENT_UPDATER);
+static UPDATER: OnceLock<SilentUpdater> = OnceLock::new();
+
+enum Cmd {
+    Install {
+        version: String,
+        on_event: Box<dyn Fn(DownloadEvent) + Send + Sync>,
+        reply: oneshot::Sender<Result<InstallUpdateOutcome>>,
+    },
+    Cancel,
+    Discard {
+        reply: oneshot::Sender<()>,
+    },
+}
+
+/// What wakes the idle actor.
+enum Wake {
+    Cmd(Cmd),
+    DailyCheck,
+}
+
+/// How a background cycle ended: `Displaced` carries the command that dropped it.
+enum CycleEnd {
+    Completed(Result<()>),
+    Displaced(Cmd),
+}
+
+/// `Dropped`'s ack is present when a discard is waiting for the cache deletion.
+enum Prepared {
+    /// The verified bytes with their update record, or `None` when the offer changed.
+    Ready(Option<Box<(Update, Vec<u8>)>>),
+    Failed(anyhow::Error),
+    Dropped {
+        ack: Option<oneshot::Sender<()>>,
+    },
+}
 
 impl SilentUpdater {
-    const fn new() -> Self {
-        Self {
-            manual_cancel: Mutex::new(None),
-            background_cancel: Mutex::new(None),
-            download_lock: tokio::sync::Mutex::const_new(()),
-        }
+    /// Spawns the updater actor and installs the app-global handle.
+    pub fn start(app_handle: tauri::AppHandle) -> &'static Self {
+        UPDATER.get_or_init(|| {
+            let (tx, rx) = mpsc::channel(16);
+            tokio::spawn(Self::run(app_handle, rx));
+            Self { tx }
+        })
+    }
+
+    /// `None` only before `start`, which setup runs before any command can arrive.
+    pub fn global() -> Option<&'static Self> {
+        UPDATER.get()
     }
 }
 
@@ -288,84 +329,126 @@ impl SilentUpdater {
             )),
         }
     }
+}
 
+impl SilentUpdater {
     /// Installs `version` for the update dialog, reusing the cache when it holds that version;
     /// A changed offer must be confirmed again before downloading or installing it.
     pub async fn install_update(
         &self,
-        app_handle: &tauri::AppHandle,
+        // The actor owns the app handle; the parameter keeps the command's call shape.
+        _app_handle: &tauri::AppHandle,
         version: &str,
-        on_event: impl Fn(DownloadEvent) + Sync,
+        on_event: impl Fn(DownloadEvent) + Send + Sync + 'static,
     ) -> Result<InstallUpdateOutcome> {
-        let cancel = CancellationToken::new();
-        {
-            let mut slot = self.manual_cancel.lock();
-            anyhow::ensure!(slot.is_none(), "an update install is already in progress");
-            *slot = Some(cancel.clone());
-        }
-        let prepared = tokio::select! {
-            prepared = self.prepare_install(app_handle, version, &on_event) => Some(prepared),
-            () = cancel.cancelled() => None,
-        };
-        // `cancel_download` cancels under the lock, so once the token is taken back its state is
-        // final; a cancel during the last synchronous poll of `prepare_install` still wins.
-        self.manual_cancel.lock().take();
-        let Some(prepared) = prepared.filter(|_| !cancel.is_cancelled()).transpose()? else {
-            logging!(info, Type::System, "Update v{version} cancelled");
-            return Ok(InstallUpdateOutcome::Cancelled);
-        };
-        let Some((update, bytes)) = prepared else {
-            return Ok(InstallUpdateOutcome::UpdateChanged);
-        };
-
-        logging!(info, Type::System, "Installing update v{version}...");
-        on_event(DownloadEvent::Installing);
-        Self::install(update, bytes).await?;
-        Ok(InstallUpdateOutcome::Installed)
-    }
-
-    async fn prepare_install(
-        &self,
-        app_handle: &tauri::AppHandle,
-        version: &str,
-        on_event: &(impl Fn(DownloadEvent) + Sync),
-    ) -> Result<Option<(Update, Vec<u8>)>> {
-        let Some(update) = Self::check(app_handle)
-            .await?
-            .filter(|update| update.version == version)
-        else {
-            return Ok(None);
-        };
-        let _download_guard = self.download_lock.lock().await;
-        let bytes = match Self::verified_cache(&update).await {
-            Some(bytes) => bytes,
-            None => download(&update, on_event).await?,
-        };
-        Ok(Some((update, bytes)))
+        let (reply, reply_rx) = oneshot::channel();
+        self.tx
+            .send(Cmd::Install {
+                version: version.to_owned(),
+                on_event: Box::new(on_event),
+                reply,
+            })
+            .await
+            .map_err(|_| anyhow::anyhow!("updater stopped"))?;
+        reply_rx
+            .await
+            .unwrap_or_else(|_| Err(anyhow::anyhow!("updater stopped")))
     }
 
     pub fn cancel_download(&self) {
-        let mut slot = self.manual_cancel.lock();
-        if let Some(cancel) = slot.take() {
-            cancel.cancel();
-        }
+        // try_send: a cancel must never block, and the mailbox never fills in practice.
+        let _ = self.tx.try_send(Cmd::Cancel);
     }
 
     /// Drops the downloaded update and aborts a background download in flight.
     pub async fn discard_pending(&self) {
-        let cancel = self.background_cancel.lock().take();
-        if let Some(cancel) = cancel {
-            cancel.cancel();
+        // Awaiting the ack serializes with the verge patch, which holds the config write
+        // lock until the actor has finished the abort and the deletion.
+        let (reply, reply_rx) = oneshot::channel();
+        if self.tx.send(Cmd::Discard { reply }).await.is_ok() {
+            let _ = reply_rx.await;
         }
-        Self::delete_cache().await;
     }
 }
 
 impl SilentUpdater {
-    async fn check_and_download(&self, app_handle: &tauri::AppHandle) -> Result<()> {
-        // Registered before reading the switch, so `discard_pending` either cancels it or ran first.
-        let cancel = CancellationToken::new();
-        *self.background_cancel.lock() = Some(cancel.clone());
+    /// The actor loop: idle until a command or the daily check, then run the work. Commands
+    /// preempt running work; a preempting command re-enters the dispatch after the preempted
+    /// work is dropped.
+    async fn run(app_handle: tauri::AppHandle, mut rx: mpsc::Receiver<Cmd>) {
+        logging!(info, Type::System, "Silent updater: background task started");
+
+        let mut next_check = tokio::time::Instant::now() + Duration::from_secs(10);
+        loop {
+            let mut wake = tokio::select! {
+                maybe = rx.recv() => match maybe {
+                    Some(cmd) => Wake::Cmd(cmd),
+                    None => return,
+                },
+                _ = tokio::time::sleep_until(next_check) => Wake::DailyCheck,
+            };
+            loop {
+                match wake {
+                    Wake::Cmd(Cmd::Install {
+                        version,
+                        on_event,
+                        reply,
+                    }) => {
+                        Self::run_install(&app_handle, &version, on_event, reply, &mut rx).await;
+                        break;
+                    }
+                    // The dialog's cancel only addresses a running install; idle it stops nothing.
+                    Wake::Cmd(Cmd::Cancel) => break,
+                    Wake::Cmd(Cmd::Discard { reply }) => {
+                        Self::run_discard(reply).await;
+                        break;
+                    }
+                    Wake::DailyCheck => {
+                        let end = Self::run_background_cycle(&app_handle, &mut rx).await;
+                        next_check = tokio::time::Instant::now() + Duration::from_secs(24 * 60 * 60);
+                        match end {
+                            CycleEnd::Completed(Ok(())) => break,
+                            CycleEnd::Completed(Err(e)) => {
+                                logging!(warn, Type::System, "Silent updater: cycle error: {e}");
+                                break;
+                            }
+                            CycleEnd::Displaced(cmd) => wake = Wake::Cmd(cmd),
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// Runs one daily cycle, pre-empted by user commands: a cancel is ignored; an install
+    /// or a discard drops the cycle, and the cycle future is gone before the follow-up
+    /// dispatch runs.
+    async fn run_background_cycle(app_handle: &tauri::AppHandle, rx: &mut mpsc::Receiver<Cmd>) -> CycleEnd {
+        let cycle = Self::check_and_download(app_handle);
+        tokio::pin!(cycle);
+        let mut mailbox_open = true;
+        loop {
+            let maybe = tokio::select! {
+                biased;
+                maybe = rx.recv(), if mailbox_open => maybe,
+                result = &mut cycle => return CycleEnd::Completed(result),
+            };
+            let Some(cmd) = maybe else {
+                mailbox_open = false;
+                continue;
+            };
+            match cmd {
+                Cmd::Cancel => {}
+                Cmd::Install { .. } => return CycleEnd::Displaced(cmd),
+                Cmd::Discard { .. } => {
+                    logging!(info, Type::System, "Silent updater: background cycle discarded");
+                    return CycleEnd::Displaced(cmd);
+                }
+            }
+        }
+    }
+
+    async fn check_and_download(app_handle: &tauri::AppHandle) -> Result<()> {
         let auto_check = Config::verge().await.latest_arc().auto_check_update.unwrap_or(true);
         if !auto_check {
             logging!(debug, Type::System, "Silent update skipped: auto_check_update is false");
@@ -390,35 +473,20 @@ impl SilentUpdater {
         let version = update.version.as_str();
         logging!(info, Type::System, "Silent updater: update available: v{version}");
 
-        let download_guard = self.download_lock.lock().await;
-        // A discard that arrived while waiting for the lock must not start a doomed download.
-        if cancel.is_cancelled() {
-            return Ok(());
-        }
-
         if Self::verified_cache(&update).await.is_some() {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {
             logging!(info, Type::System, "Silent updater: downloading v{version}...");
-            let downloaded = tokio::select! {
-                bytes = download(&update, |_| {}) => Some(bytes),
-                () = cancel.cancelled() => None,
-            };
-            let Some(bytes) = downloaded else {
-                logging!(info, Type::System, "Silent updater: download cancelled");
-                return Ok(());
-            };
-            let bytes = bytes?;
+            let bytes = download(&update, |_| {}).await?;
             logging!(info, Type::System, "Silent updater: download complete");
             Self::write_cache(bytes, version).await?;
         }
-        drop(download_guard);
 
-        // Serialized with `discard_pending` in the verge patch, which holds the same lock;
-        // the deletion itself is idempotent, so it runs after the lock.
+        // The verge patch's discard holds this lock while awaiting the actor's ack, so a
+        // discard arriving during this wait preempts the cycle rather than deadlock on it.
         let discard = {
             let _config_write = Config::lock_config_write().await;
-            cancel.is_cancelled() || !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true)
+            !Config::verge().await.latest_arc().auto_check_update.unwrap_or(true)
         };
         if discard {
             logging!(
@@ -438,19 +506,123 @@ impl SilentUpdater {
         Ok(())
     }
 
-    pub async fn start_background_check(&self, app_handle: tauri::AppHandle) {
-        // Permanent watcher: daily update cycles for the lifetime of the app.
-        logging!(info, Type::System, "Silent updater: background task started");
-
-        tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-
-        loop {
-            if let Err(e) = self.check_and_download(&app_handle).await {
-                logging!(warn, Type::System, "Silent updater: cycle error: {e}");
+    /// One dialog install from prepare to install; every exit path answers `reply`.
+    async fn run_install(
+        app_handle: &tauri::AppHandle,
+        version: &str,
+        on_event: Box<dyn Fn(DownloadEvent) + Send + Sync>,
+        reply: oneshot::Sender<Result<InstallUpdateOutcome>>,
+        rx: &mut mpsc::Receiver<Cmd>,
+    ) {
+        match Self::prepare_cancellable(app_handle, version, on_event.as_ref(), rx).await {
+            // The prepare work is already dropped, so a cancel racing the last poll still wins.
+            Prepared::Dropped { ack } => {
+                logging!(info, Type::System, "Update v{version} cancelled");
+                let _ = reply.send(Ok(InstallUpdateOutcome::Cancelled));
+                if let Some(ack) = ack {
+                    Self::delete_cache().await;
+                    let _ = ack.send(());
+                }
             }
-
-            tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
+            Prepared::Failed(e) => {
+                let _ = reply.send(Err(e));
+            }
+            Prepared::Ready(None) => {
+                let _ = reply.send(Ok(InstallUpdateOutcome::UpdateChanged));
+            }
+            Prepared::Ready(Some(pair)) => {
+                let (update, bytes) = *pair;
+                logging!(info, Type::System, "Installing update v{version}...");
+                on_event(DownloadEvent::Installing);
+                let result = Self::finish_install(update, bytes, rx).await;
+                let _ = reply.send(result.map(|_| InstallUpdateOutcome::Installed));
+            }
         }
+    }
+
+    /// The cancellable prepare phase: check, version filter, cache reuse or download. A
+    /// second install is declined in place; a cancel or a discard drops the work.
+    async fn prepare_cancellable(
+        app_handle: &tauri::AppHandle,
+        version: &str,
+        on_event: &(impl Fn(DownloadEvent) + Sync + ?Sized),
+        rx: &mut mpsc::Receiver<Cmd>,
+    ) -> Prepared {
+        let prepare = Self::prepare_install(app_handle, version, on_event);
+        tokio::pin!(prepare);
+        let mut mailbox_open = true;
+        loop {
+            let maybe = tokio::select! {
+                biased;
+                maybe = rx.recv(), if mailbox_open => maybe,
+                prepared = &mut prepare => return match prepared {
+                    Ok(prepared) => Prepared::Ready(prepared.map(Box::new)),
+                    Err(e) => Prepared::Failed(e),
+                },
+            };
+            let Some(cmd) = maybe else {
+                mailbox_open = false;
+                continue;
+            };
+            match cmd {
+                Cmd::Cancel => return Prepared::Dropped { ack: None },
+                Cmd::Discard { reply: ack } => return Prepared::Dropped { ack: Some(ack) },
+                Cmd::Install { reply, .. } => Self::decline_install(reply),
+            }
+        }
+    }
+
+    async fn prepare_install(
+        app_handle: &tauri::AppHandle,
+        version: &str,
+        on_event: &(impl Fn(DownloadEvent) + Sync + ?Sized),
+    ) -> Result<Option<(Update, Vec<u8>)>> {
+        let Some(update) = Self::check(app_handle)
+            .await?
+            .filter(|update| update.version == version)
+        else {
+            return Ok(None);
+        };
+        let bytes = match Self::verified_cache(&update).await {
+            Some(bytes) => bytes,
+            None => download(&update, on_event).await?,
+        };
+        Ok(Some((update, bytes)))
+    }
+
+    /// The install phase: once `install()` started it cannot be cancelled (the installer may
+    /// already run); the mailbox still gets answers while it finishes.
+    async fn finish_install(update: Update, bytes: Vec<u8>, rx: &mut mpsc::Receiver<Cmd>) -> Result<()> {
+        let install = Self::install(update, bytes);
+        tokio::pin!(install);
+        let mut mailbox_open = true;
+        loop {
+            let maybe = tokio::select! {
+                result = &mut install => return result,
+                maybe = rx.recv(), if mailbox_open => maybe,
+            };
+            let Some(cmd) = maybe else {
+                mailbox_open = false;
+                continue;
+            };
+            match cmd {
+                Cmd::Cancel => {}
+                Cmd::Install { reply, .. } => Self::decline_install(reply),
+                Cmd::Discard { reply } => {
+                    // install() drops the cache before launching, so the ack is all that is owed.
+                    let _ = reply.send(());
+                }
+            }
+        }
+    }
+
+    fn decline_install(reply: oneshot::Sender<Result<InstallUpdateOutcome>>) {
+        let _ = reply.send(Err(anyhow::anyhow!("an update install is already in progress")));
+    }
+
+    async fn run_discard(reply: oneshot::Sender<()>) {
+        Self::delete_cache().await;
+        let _ = reply.send(());
     }
 }
 
