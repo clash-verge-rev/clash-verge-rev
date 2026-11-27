@@ -61,6 +61,31 @@ const round = keyframes`
   to { transform: rotate(360deg); }
 `
 
+type ContextMenuItem = {
+  label: string
+  handler: () => void
+  disabled: boolean
+}
+
+const menuLabels: Record<string, TranslationKey> = {
+  home: 'profiles.components.menu.home',
+  select: 'profiles.components.menu.select',
+  shareQrCode: 'profiles.components.menu.shareQrCode',
+  editInfo: 'profiles.components.menu.editInfo',
+  editFile: 'profiles.components.menu.editFile',
+  editRules: 'profiles.components.menu.editRules',
+  editProxies: 'profiles.components.menu.editProxies',
+  editGroups: 'profiles.components.menu.editGroups',
+  extendConfig: 'profiles.components.menu.extendConfig',
+  extendScript: 'profiles.components.menu.extendScript',
+  openFile: 'profiles.components.menu.openFile',
+  update: 'profiles.components.menu.update',
+  updateViaProxy: 'profiles.components.menu.updateViaProxy',
+  delete: 'shared.actions.delete',
+} as const
+
+const EMPTY_CONTEXT_MENU: ContextMenuItem[] = []
+
 export interface ProfileItemProps {
   id: string
   index: number
@@ -68,13 +93,13 @@ export interface ProfileItemProps {
   activating: boolean
   itemData: IProfileItem
   mutateProfiles: () => Promise<void>
-  onSelect: (force: boolean) => void
-  onEdit: () => void
-  onSave?: (prev?: string, curr?: string) => void
-  onDelete: () => void
+  onSelect: (uid: string, force: boolean) => void
+  onEdit: (item: IProfileItem) => void
+  onSave?: (uid: string, prev?: string, curr?: string) => void
+  onDelete: (uid: string) => void
   batchMode?: boolean
   isSelected?: boolean
-  onSelectionChange?: () => void
+  onSelectionChange?: (uid: string) => void
   timerUpdateRevision: number
   completedUpdateRevision: number
 }
@@ -322,7 +347,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const onEditInfo = () => {
     setAnchorEl(null)
-    onEdit()
+    onEdit(itemData)
   }
 
   const onShareQrCode = () => {
@@ -362,7 +387,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const onForceSelect = () => {
     setAnchorEl(null)
-    onSelect(true)
+    onSelect(id, true)
   }
 
   const onOpenFile = useLockFn(async () => {
@@ -412,175 +437,158 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     }
   })
 
-  type ContextMenuItem = {
-    label: string
-    handler: () => void
-    disabled: boolean
-  }
-
-  const menuLabels: Record<string, TranslationKey> = {
-    home: 'profiles.components.menu.home',
-    select: 'profiles.components.menu.select',
-    shareQrCode: 'profiles.components.menu.shareQrCode',
-    editInfo: 'profiles.components.menu.editInfo',
-    editFile: 'profiles.components.menu.editFile',
-    editRules: 'profiles.components.menu.editRules',
-    editProxies: 'profiles.components.menu.editProxies',
-    editGroups: 'profiles.components.menu.editGroups',
-    extendConfig: 'profiles.components.menu.extendConfig',
-    extendScript: 'profiles.components.menu.extendScript',
-    openFile: 'profiles.components.menu.openFile',
-    update: 'profiles.components.menu.update',
-    updateViaProxy: 'profiles.components.menu.updateViaProxy',
-    delete: 'shared.actions.delete',
-  } as const
-
-  const urlModeMenu: ContextMenuItem[] = [
-    ...(hasHome
-      ? [
-          {
-            label: menuLabels.home,
-            handler: onOpenHome,
-            disabled: false,
-          } satisfies ContextMenuItem,
-        ]
-      : []),
-    {
-      label: menuLabels.select,
-      handler: onForceSelect,
-      disabled: false,
-    },
-    {
-      label: menuLabels.shareQrCode,
-      handler: onShareQrCode,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editInfo,
-      handler: onEditInfo,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editFile,
-      handler: onEditFile,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editRules,
-      handler: onEditRules,
-      disabled: !option?.rules,
-    },
-    {
-      label: menuLabels.editProxies,
-      handler: onEditProxies,
-      disabled: !option?.proxies,
-    },
-    {
-      label: menuLabels.editGroups,
-      handler: onEditGroups,
-      disabled: !option?.groups,
-    },
-    {
-      label: menuLabels.extendConfig,
-      handler: onEditMerge,
-      disabled: !option?.merge,
-    },
-    {
-      label: menuLabels.extendScript,
-      handler: onEditScript,
-      disabled: !option?.script,
-    },
-    {
-      label: menuLabels.openFile,
-      handler: onOpenFile,
-      disabled: false,
-    },
-    {
-      label: menuLabels.update,
-      handler: () => onUpdate(0),
-      disabled: false,
-    },
-    {
-      label: menuLabels.updateViaProxy,
-      handler: () => onUpdate(2),
-      disabled: false,
-    },
-    {
-      label: menuLabels.delete,
-      handler: () => {
-        setAnchorEl(null)
-        if (batchMode) {
-          if (onSelectionChange) {
-            onSelectionChange()
-          }
-        } else {
-          setConfirmOpen(true)
-        }
-      },
-      disabled: false,
-    },
-  ]
-  const fileModeMenu: ContextMenuItem[] = [
-    {
-      label: menuLabels.select,
-      handler: onForceSelect,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editInfo,
-      handler: onEditInfo,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editFile,
-      handler: onEditFile,
-      disabled: false,
-    },
-    {
-      label: menuLabels.editRules,
-      handler: onEditRules,
-      disabled: !option?.rules,
-    },
-    {
-      label: menuLabels.editProxies,
-      handler: onEditProxies,
-      disabled: !option?.proxies,
-    },
-    {
-      label: menuLabels.editGroups,
-      handler: onEditGroups,
-      disabled: !option?.groups,
-    },
-    {
-      label: menuLabels.extendConfig,
-      handler: onEditMerge,
-      disabled: !option?.merge,
-    },
-    {
-      label: menuLabels.extendScript,
-      handler: onEditScript,
-      disabled: !option?.script,
-    },
-    {
-      label: menuLabels.openFile,
-      handler: onOpenFile,
-      disabled: false,
-    },
-    {
-      label: menuLabels.delete,
-      handler: () => {
-        setAnchorEl(null)
-        if (batchMode) {
-          if (onSelectionChange) {
-            onSelectionChange()
-          }
-        } else {
-          setConfirmOpen(true)
-        }
-      },
-      disabled: false,
-    },
-  ]
+  // The context menu is closed on almost every render; building its items
+  // only while open keeps the idle path allocation-free.
+  const menuItems: ContextMenuItem[] =
+    anchorEl === null
+      ? EMPTY_CONTEXT_MENU
+      : hasUrl
+        ? [
+            ...(hasHome
+              ? [
+                  {
+                    label: menuLabels.home,
+                    handler: onOpenHome,
+                    disabled: false,
+                  } satisfies ContextMenuItem,
+                ]
+              : []),
+            {
+              label: menuLabels.select,
+              handler: onForceSelect,
+              disabled: false,
+            },
+            {
+              label: menuLabels.shareQrCode,
+              handler: onShareQrCode,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editInfo,
+              handler: onEditInfo,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editFile,
+              handler: onEditFile,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editRules,
+              handler: onEditRules,
+              disabled: !option?.rules,
+            },
+            {
+              label: menuLabels.editProxies,
+              handler: onEditProxies,
+              disabled: !option?.proxies,
+            },
+            {
+              label: menuLabels.editGroups,
+              handler: onEditGroups,
+              disabled: !option?.groups,
+            },
+            {
+              label: menuLabels.extendConfig,
+              handler: onEditMerge,
+              disabled: !option?.merge,
+            },
+            {
+              label: menuLabels.extendScript,
+              handler: onEditScript,
+              disabled: !option?.script,
+            },
+            {
+              label: menuLabels.openFile,
+              handler: onOpenFile,
+              disabled: false,
+            },
+            {
+              label: menuLabels.update,
+              handler: () => onUpdate(0),
+              disabled: false,
+            },
+            {
+              label: menuLabels.updateViaProxy,
+              handler: () => onUpdate(2),
+              disabled: false,
+            },
+            {
+              label: menuLabels.delete,
+              handler: () => {
+                setAnchorEl(null)
+                if (batchMode) {
+                  if (onSelectionChange) {
+                    onSelectionChange(id)
+                  }
+                } else {
+                  setConfirmOpen(true)
+                }
+              },
+              disabled: false,
+            },
+          ]
+        : [
+            {
+              label: menuLabels.select,
+              handler: onForceSelect,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editInfo,
+              handler: onEditInfo,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editFile,
+              handler: onEditFile,
+              disabled: false,
+            },
+            {
+              label: menuLabels.editRules,
+              handler: onEditRules,
+              disabled: !option?.rules,
+            },
+            {
+              label: menuLabels.editProxies,
+              handler: onEditProxies,
+              disabled: !option?.proxies,
+            },
+            {
+              label: menuLabels.editGroups,
+              handler: onEditGroups,
+              disabled: !option?.groups,
+            },
+            {
+              label: menuLabels.extendConfig,
+              handler: onEditMerge,
+              disabled: !option?.merge,
+            },
+            {
+              label: menuLabels.extendScript,
+              handler: onEditScript,
+              disabled: !option?.script,
+            },
+            {
+              label: menuLabels.openFile,
+              handler: onOpenFile,
+              disabled: false,
+            },
+            {
+              label: menuLabels.delete,
+              handler: () => {
+                setAnchorEl(null)
+                if (batchMode) {
+                  if (onSelectionChange) {
+                    onSelectionChange(id)
+                  }
+                } else {
+                  setConfirmOpen(true)
+                }
+              },
+              disabled: false,
+            },
+          ]
 
   const boxStyle = {
     height: 26,
@@ -599,7 +607,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       await profileDocument.reload()
       return
     }
-    onSave?.(profileDocument.savedValue, currentValue)
+    onSave?.(id, profileDocument.savedValue, currentValue)
     profileDocument.markSaved(currentValue)
   })
 
@@ -614,7 +622,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       await mergeDocument.reload()
       return
     }
-    onSave?.(mergeDocument.savedValue, currentValue)
+    onSave?.(id, mergeDocument.savedValue, currentValue)
     mergeDocument.markSaved(currentValue)
   })
 
@@ -632,7 +640,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       await scriptDocument.reload()
       return
     }
-    onSave?.(scriptDocument.savedValue, currentValue)
+    onSave?.(id, scriptDocument.savedValue, currentValue)
     scriptDocument.markSaved(currentValue)
   })
 
@@ -646,7 +654,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             e.stopPropagation()
             return
           }
-          onSelect(false)
+          onSelect(id, false)
         }}
         onContextMenu={(event) => {
           const { clientX, clientY } = event
@@ -687,7 +695,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
                 onClick={(e) => {
                   e.stopPropagation()
                   if (onSelectionChange) {
-                    onSelectionChange()
+                    onSelectionChange(id)
                   }
                 }}
               >
@@ -853,7 +861,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
           e.preventDefault()
         }}
       >
-        {(hasUrl ? urlModeMenu : fileModeMenu).map((item) => (
+        {menuItems.map((item) => (
           <MenuItem
             key={item.label}
             onClick={item.handler}
@@ -897,7 +905,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
           profileUid={uid!}
           property={option?.rules ?? ''}
           open={true}
-          onSave={onSave}
+          onSave={(prev, curr) => onSave?.(id, prev, curr)}
           onClose={() => setRulesOpen(false)}
         />
       )}
@@ -906,7 +914,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
           profileUid={uid!}
           property={option?.proxies ?? ''}
           open={true}
-          onSave={onSave}
+          onSave={(prev, curr) => onSave?.(id, prev, curr)}
           onClose={() => setProxiesOpen(false)}
         />
       )}
@@ -917,7 +925,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
           profileUid={uid!}
           property={option?.groups ?? ''}
           open={true}
-          onSave={onSave}
+          onSave={(prev, curr) => onSave?.(id, prev, curr)}
           onClose={() => {
             setGroupsOpen(false)
           }}
@@ -963,7 +971,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
         onCancel={() => setConfirmOpen(false)}
         onClose={() => setConfirmOpen(false)}
         onOk={() => {
-          onDelete()
+          onDelete(id)
           setConfirmOpen(false)
         }}
       >

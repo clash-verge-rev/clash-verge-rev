@@ -8,14 +8,14 @@ use std::{
 };
 use tauri::Manager as _;
 
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(not(debug_assertions))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
-#[cfg(not(feature = "verge-dev"))]
+#[cfg(not(debug_assertions))]
 pub static BACKUP_DIR: &str = "clash-verge-rev-backup";
 
-#[cfg(feature = "verge-dev")]
+#[cfg(debug_assertions)]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev.dev";
-#[cfg(feature = "verge-dev")]
+#[cfg(debug_assertions)]
 pub static BACKUP_DIR: &str = "clash-verge-rev-backup-dev";
 
 pub static CLASH_CONFIG: &str = "config.yaml";
@@ -219,9 +219,9 @@ fn sidecar_ipc_path_for(
 
     let root = std::ffi::CStr::from_bytes_until_nul(&buffer)
         .map_err(|_| anyhow::anyhow!("macOS per-user temporary directory is not NUL-terminated"))?;
-    #[cfg(feature = "verge-dev")]
+    #[cfg(debug_assertions)]
     let filename = "verge-mihomo-dev.sock";
-    #[cfg(not(feature = "verge-dev"))]
+    #[cfg(not(debug_assertions))]
     let filename = "verge-mihomo.sock";
     let path = PathBuf::from(OsStr::from_bytes(root.to_bytes())).join(filename);
 
@@ -238,7 +238,7 @@ fn sidecar_ipc_path_for(
 
 #[cfg(windows)]
 fn sidecar_ipc_path_for(_app_root: &std::path::Path, identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
-    PathBuf::from(sidecar_pipe_name(identity, cfg!(feature = "verge-dev")))
+    PathBuf::from(sidecar_pipe_name(identity, cfg!(debug_assertions)))
 }
 
 #[cfg(any(windows, test))]
@@ -285,9 +285,9 @@ mod ipc_tests {
 
         assert!(!path.starts_with(app_root));
         assert!(path.as_os_str().as_bytes().len() < 104);
-        #[cfg(feature = "verge-dev")]
+        #[cfg(debug_assertions)]
         assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo-dev.sock")));
-        #[cfg(not(feature = "verge-dev"))]
+        #[cfg(not(debug_assertions))]
         assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo.sock")));
         assert_eq!(path, sidecar_ipc_path_for(Path::new("/different/root"), &identity)?);
         assert!(path.parent().is_some_and(Path::is_dir));
@@ -312,7 +312,7 @@ mod ipc_tests {
             path,
             Path::new(&format!(
                 r"\\.\pipe\verge-mihomo-sidecar-{}-{}",
-                if cfg!(feature = "verge-dev") { "dev" } else { "release" },
+                if cfg!(debug_assertions) { "dev" } else { "release" },
                 clash_verge_service_ipc::owner_key(&identity)
             ))
         );

@@ -60,6 +60,23 @@ const ProxyGroupsChain = lazy(() =>
   })),
 )
 
+const SCROLL_POSITIONS_KEY = 'proxy-scroll-positions'
+type ScrollPositions = Record<string, number>
+let scrollPositionsCache: ScrollPositions | undefined
+
+// Scroll handling runs per frame and is throttled to 500ms writes; keep the
+// parsed object so saves do not re-read and re-parse localStorage each time.
+const readScrollPositions = (): ScrollPositions | undefined => {
+  if (scrollPositionsCache) return scrollPositionsCache
+  try {
+    const raw = localStorage.getItem(SCROLL_POSITIONS_KEY)
+    if (raw) scrollPositionsCache = JSON.parse(raw) as ScrollPositions
+  } catch (e) {
+    console.error('Error restoring scroll position:', e)
+  }
+  return scrollPositionsCache
+}
+
 function useStableCallback<T extends (...args: any[]) => any>(fn: T): T {
   const ref = useRef(fn)
   ref.current = fn
@@ -150,13 +167,12 @@ function useProxyRenderState(
 
   const saveScrollPosition = useCallback(
     (scrollTop: number) => {
-      const scrollPositions = localStorage.getItem('proxy-scroll-positions')
-        ? JSON.parse(localStorage.getItem('proxy-scroll-positions') ?? '{}')
-        : {}
+      const scrollPositions = readScrollPositions() ?? {}
       scrollPositions[scrollPositionKey] = scrollTop
+      scrollPositionsCache = scrollPositions
       try {
         localStorage.setItem(
-          'proxy-scroll-positions',
+          SCROLL_POSITIONS_KEY,
           JSON.stringify(scrollPositions),
         )
       } catch (e) {
@@ -167,15 +183,10 @@ function useProxyRenderState(
   )
 
   const getScrollPosition = useCallback(() => {
-    try {
-      const savedPositions = localStorage.getItem('proxy-scroll-positions')
-      if (savedPositions) {
-        const positions = JSON.parse(savedPositions)
-        const savedPosition = positions[scrollPositionKey]
-        return savedPosition ?? 0
-      }
-    } catch (e) {
-      console.error('Error restoring scroll position:', e)
+    const savedPositions = readScrollPositions()
+    if (savedPositions) {
+      const savedPosition = savedPositions[scrollPositionKey]
+      return savedPosition ?? 0
     }
   }, [scrollPositionKey])
 
@@ -240,9 +251,13 @@ function ChainProxyGroups(props: {
 
   const rangeExtractor = useCallback(
     (range: Parameters<typeof defaultRangeExtractor>[0]) => {
-      const activeStickyIndex = [...stickyGroupIndexes]
-        .reverse()
-        .find((index) => index <= range.startIndex)
+      let activeStickyIndex: number | undefined
+      for (let i = stickyGroupIndexes.length - 1; i >= 0; i--) {
+        if (stickyGroupIndexes[i] <= range.startIndex) {
+          activeStickyIndex = stickyGroupIndexes[i]
+          break
+        }
+      }
       activeStickyIndexRef.current = activeStickyIndex ?? null
 
       const indexes = defaultRangeExtractor(range)
@@ -324,16 +339,20 @@ function ChainProxyGroups(props: {
     scrollTopRef.current = 0
   }, [])
 
-  const handleLocation = useStableCallback((group: ProxyGroupView) => {
-    if (!group) return
-    const { name, now } = group
+  const handleLocation = useStableCallback((groupName: string) => {
+    // Flat (type 1) headers such as GLOBAL carry the same live group.
+    const headerIndex = renderList.findIndex(
+      (e) => (e.type === 0 || e.type === 1) && e.group?.name === groupName,
+    )
+    const now = renderList[headerIndex]?.group?.now
+    if (!now) return
 
     const index = renderList.findIndex(
-      (item) =>
-        item.group?.name === name &&
-        ((item.type === 2 && item.member?.member.ref.name === now) ||
-          (item.type === 4 &&
-            item.memberCol?.some(({ member }) => member.ref.name === now))),
+      (e) =>
+        e.group?.name === groupName &&
+        ((e.type === 2 && e.member?.member.ref.name === now) ||
+          (e.type === 4 &&
+            e.memberCol?.some(({ member }) => member.ref.name === now))),
     )
 
     if (index >= 0) {
@@ -496,13 +515,17 @@ function NormalProxyGroups(props: { mode: string }) {
     [globalGroupName, select, setHeadState],
   )
 
-  const handleLocation = useStableCallback((group: ProxyGroupView) => {
-    if (!group) return
-    const { name, now } = group
+  const handleLocation = useStableCallback((groupName: string) => {
+    // Flat (type 1) headers such as GLOBAL carry the same live group.
+    const headerIndex = renderList.findIndex(
+      (e) => (e.type === 0 || e.type === 1) && e.group?.name === groupName,
+    )
+    const now = renderList[headerIndex]?.group?.now
+    if (!now) return
 
     const index = renderList.findIndex(
       (e) =>
-        e.group?.name === name &&
+        e.group?.name === groupName &&
         ((e.type === 2 && e.member?.member.ref.name === now) ||
           (e.type === 4 &&
             e.memberCol?.some(({ member }) => member.ref.name === now))),
@@ -516,21 +539,20 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   })
 
-  const handleGroupLocationByName = useCallback(
-    (groupName: string) => {
-      const index = renderList.findIndex(
-        (item) => item.type === 0 && item.group?.name === groupName,
-      )
+  // Stable identity: this feeds the sticky-header render callback; a
+  // [renderList] dep would re-create it on every list rebuild.
+  const handleGroupLocationByName = useStableCallback((groupName: string) => {
+    const index = renderList.findIndex(
+      (item) => item.type === 0 && item.group?.name === groupName,
+    )
 
-      if (index >= 0) {
-        stickyListRef.current?.scrollToIndex(index, {
-          align: 'start',
-          behavior: 'smooth',
-        })
-      }
-    },
-    [renderList],
-  )
+    if (index >= 0) {
+      stickyListRef.current?.scrollToIndex(index, {
+        align: 'start',
+        behavior: 'smooth',
+      })
+    }
+  })
 
   const proxyGroupNames = useMemo(() => {
     const names = renderList

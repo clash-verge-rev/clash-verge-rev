@@ -51,6 +51,25 @@ const Item = styled(ListItem)(() => ({
   },
 }))
 
+// Static editor settings; a per-render object would re-trigger Monaco's
+// updateOptions and listener resubscription on every keystroke. The minimap
+// depends on the live window width and is applied at editor mount instead.
+const MONACO_OPTIONS = {
+  tabSize: 2,
+  mouseWheelZoom: true,
+  quickSuggestions: {
+    strings: true,
+    comments: true,
+    other: true,
+  },
+  padding: {
+    top: 33,
+  },
+  fontFamily: MONACO_FONT_FAMILY,
+  fontLigatures: false,
+  smoothScrolling: true,
+} as const
+
 type NameserverPolicy = Record<string, any>
 
 function parseNameserverPolicy(str: string): NameserverPolicy {
@@ -520,9 +539,21 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   })
 
-  const handleYamlChange = (value?: string) => {
+  const handleYamlChange = useCallback((value?: string) => {
     setYamlContent(value || '')
-  }
+  }, [])
+
+  const handleEditorMount = useCallback(
+    (editorInstance: MonacoEditorInstance) => {
+      editorRef.current = editorInstance
+      editorInstance.updateOptions({
+        minimap: {
+          enabled: document.documentElement.clientWidth >= 1500,
+        },
+      })
+    },
+    [],
+  )
 
   const handleChange = (field: string) => (event: any) => {
     const value =
@@ -1052,27 +1083,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           value={yamlContent}
           theme={themeMode === 'light' ? 'light' : 'vs-dark'}
           className="flex-grow"
-          onMount={(editorInstance) => {
-            editorRef.current = editorInstance
-          }}
-          options={{
-            tabSize: 2,
-            minimap: {
-              enabled: document.documentElement.clientWidth >= 1500,
-            },
-            mouseWheelZoom: true,
-            quickSuggestions: {
-              strings: true,
-              comments: true,
-              other: true,
-            },
-            padding: {
-              top: 33,
-            },
-            fontFamily: MONACO_FONT_FAMILY,
-            fontLigatures: false,
-            smoothScrolling: true,
-          }}
+          onMount={handleEditorMount}
+          options={MONACO_OPTIONS}
           onChange={handleYamlChange}
         />
       )}

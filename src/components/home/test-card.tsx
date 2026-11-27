@@ -23,6 +23,8 @@ import { emitTestAll } from '@/services/bus'
 
 import { EnhancedCard } from './enhanced-card'
 
+const TEST_LIST_SENSORS = [PointerSensor]
+
 // 自定义滚动条样式
 const ScrollBox = styled(Box)(({ theme }) => ({
   maxHeight: '180px',
@@ -87,18 +89,18 @@ export const TestCard = () => {
         x.uid === uid ? { ...x, ...patch } : x,
       )
 
-      mutateVerge({ ...verge, test_list: newList })
+      mutateVerge((prev) => ({ ...prev, test_list: newList }))
     },
-    [testList, verge, mutateVerge],
+    [testList, mutateVerge],
   )
 
   const onDeleteTestListItem = useCallback(
     (uid: string) => {
       const newList = testList.filter((x) => x.uid !== uid)
       patchVerge({ test_list: newList })
-      mutateVerge({ ...verge, test_list: newList })
+      mutateVerge((prev) => ({ ...prev, test_list: newList }))
     },
-    [testList, verge, patchVerge, mutateVerge],
+    [testList, patchVerge, mutateVerge],
   )
 
   const onDragEnd = useCallback(
@@ -129,7 +131,7 @@ export const TestCard = () => {
       newList.splice(newIndex, 0, removed)
 
       // 优化：先本地更新，再异步 patch，避免UI卡死
-      mutateVerge({ ...verge, test_list: newList })
+      mutateVerge((prev) => ({ ...prev, test_list: newList }))
       const patchFn = () => {
         try {
           patchVerge({ test_list: newList })
@@ -141,7 +143,7 @@ export const TestCard = () => {
         setTimeout(patchFn, 0)
       }
     },
-    [testList, verge, mutateVerge, patchVerge],
+    [testList, mutateVerge, patchVerge],
   )
 
   // 仅在verge首次加载时初始化测试列表
@@ -205,7 +207,7 @@ export const TestCard = () => {
       }
     >
       <ScrollBox>
-        <DragDropProvider sensors={[PointerSensor]} onDragEnd={onDragEnd}>
+        <DragDropProvider sensors={TEST_LIST_SENSORS} onDragEnd={onDragEnd}>
           {renderTestItems}
         </DragDropProvider>
       </ScrollBox>

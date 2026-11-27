@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import getSystem from '@/utils/get-system'
@@ -20,6 +20,9 @@ import {
   SettingsSearchContext,
   type SearchDialog,
 } from './settings-search-context'
+
+// Constant for the runtime; module-level like the other getSystem() callers.
+const OS = getSystem()
 
 export function SettingsSearch({
   children,
@@ -40,11 +43,17 @@ export function SettingsSearch({
   const originalScrollRef = useRef(0)
   const resultScrollRef = useRef(0)
   const cancelLocateRef = useRef<() => void>(() => {})
-  const results = searchSettings(
-    query,
-    getSystem(),
-    (key) => t(key),
-    (key) => t(key, { lng: 'en' }),
+  // The catalog scan touches every entry with translations; memoizing keeps
+  // unrelated state (arrow-key selection) from re-running it.
+  const results = useMemo(
+    () =>
+      searchSettings(
+        query,
+        OS,
+        (key) => t(key),
+        (key) => t(key, { lng: 'en' }),
+      ),
+    [query, t],
   )
   const searching = !!query.trim()
   const scroller = () =>

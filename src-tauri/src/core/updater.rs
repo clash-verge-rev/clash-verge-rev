@@ -596,7 +596,7 @@ impl SilentUpdater {
             }
         };
 
-        let version = update.version.clone();
+        let version = update.version.as_str();
         logging!(info, Type::System, "Silent updater: update available: v{version}");
 
         if let Some(body) = &update.body
@@ -628,7 +628,7 @@ impl SilentUpdater {
             };
             let bytes = bytes?;
             logging!(info, Type::System, "Silent updater: download complete");
-            Self::write_cache(&bytes, &version)?;
+            Self::write_cache(&bytes, version)?;
         }
 
         // Serialized with `discard_pending` in the verge patch, which holds the same lock.

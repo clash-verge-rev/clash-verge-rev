@@ -5,10 +5,24 @@ import { useCallback, useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
+import { useProfiles } from '@/hooks/use-profiles'
 import parseTraffic from '@/utils/parse-traffic'
 
+import {
+  getConnectionRuleTargets,
+  type ConnectionRuleKind,
+} from './connection-rule'
+import {
+  ConnectionRuleDialog,
+  type ConnectionRuleTarget,
+} from './connection-rule-dialog'
+
 export interface ConnectionDetailRef {
-  open: (detail: IConnectionsItem, closed: boolean) => void
+  open: (
+    detail: IConnectionsItem,
+    closed: boolean,
+    preferredKind?: ConnectionRuleKind,
+  ) => void
   close: () => void
 }
 
@@ -16,7 +30,12 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<IConnectionsItem | null>(null)
   const [closed, setClosed] = useState(false)
+  const [preferredKind, setPreferredKind] =
+    useState<ConnectionRuleKind>('domain')
   const theme = useTheme()
+  const [ruleTarget, setRuleTarget] = useState<ConnectionRuleTarget | null>(
+    null,
+  )
 
   const onClose = useCallback(() => {
     setOpen(false)
@@ -25,51 +44,90 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   }, [])
 
   useImperativeHandle(ref, () => ({
-    open: (detail: IConnectionsItem, closed: boolean) => {
+    open: (
+      detail: IConnectionsItem,
+      closed: boolean,
+      preferredKind = 'domain',
+    ) => {
       if (open) return
       setOpen(true)
       setDetail(detail)
       setClosed(closed)
+      setPreferredKind(preferredKind)
     },
     close: onClose,
   }))
 
   return (
-    <Snackbar
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      open={open}
-      onClose={onClose}
-      sx={{
-        '.MuiSnackbarContent-root': {
-          maxWidth: '520px',
-          maxHeight: '480px',
-          overflowY: 'auto',
-          backgroundColor: theme.palette.background.paper,
-          color: theme.palette.text.primary,
-        },
-      }}
-      message={
-        detail ? (
-          <InnerConnectionDetail
-            data={detail}
-            closed={closed}
-            onClose={onClose}
-          />
-        ) : null
-      }
-    />
+    <>
+      <Snackbar
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        open={open}
+        onClose={onClose}
+        sx={{
+          '.MuiSnackbarContent-root': {
+            width: '520px',
+            maxWidth: 'calc(100vw - 32px)',
+            boxSizing: 'border-box',
+            maxHeight: '480px',
+            overflowY: 'auto',
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+          },
+          '.MuiSnackbarContent-message': { width: '100%', minWidth: 0 },
+        }}
+        message={
+          detail ? (
+            <InnerConnectionDetail
+              data={detail}
+              closed={closed}
+              preferredKind={preferredKind}
+              onClose={onClose}
+              onAddRule={(target) => {
+                setRuleTarget(target)
+                onClose()
+              }}
+            />
+          ) : null
+        }
+      />
+      {ruleTarget && (
+        <ConnectionRuleDialog
+          target={ruleTarget}
+          onClose={() => setRuleTarget(null)}
+        />
+      )}
+    </>
   )
 }
 
 interface InnerProps {
   data: IConnectionsItem
   closed: boolean
+  preferredKind: ConnectionRuleKind
   onClose?: () => void
+  onAddRule: (target: ConnectionRuleTarget) => void
 }
 
-const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
+const InnerConnectionDetail = ({
+  data,
+  closed,
+  preferredKind,
+  onClose,
+  onAddRule,
+}: InnerProps) => {
   const { t } = useTranslation()
+  const { current } = useProfiles()
   const { metadata, rulePayload } = data
+  const targets = getConnectionRuleTargets(metadata)
+  const canAddRule = Boolean(
+    current?.uid &&
+      current.option?.rules &&
+      (targets.domain ||
+        targets.process ||
+        targets.source ||
+        targets.destination),
+  )
   const theme = useTheme()
   const chains = [...data.chains].reverse().join(' / ')
   const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule
@@ -105,7 +163,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
     { label: t('connections.components.fields.rule'), value: rule },
     {
       label: t('connections.components.fields.process'),
-      value: `${metadata.process}${metadata.processPath ? `(${metadata.processPath})` : ''}`,
+      value: `${metadata.process ?? ''}${metadata.processPath ? `(${metadata.processPath})` : ''}`,
     },
     {
       label: t('connections.components.fields.time'),
@@ -132,7 +190,14 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const onDelete = useLockFn(async () => closeConnection(data.id))
 
   return (
-    <Box sx={{ userSelect: 'text', color: theme.palette.text.secondary }}>
+    <Box
+      sx={{
+        width: '100%',
+        minWidth: 0,
+        userSelect: 'text',
+        color: theme.palette.text.secondary,
+      }}
+    >
       {information.map((each) => (
         <div key={each.label}>
           <b>{each.label}</b>
@@ -147,8 +212,32 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
         </div>
       ))}
 
-      {!closed && (
-        <Box sx={{ textAlign: 'right' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 1,
+          flexWrap: 'wrap',
+          mt: 1,
+        }}
+      >
+        <Button
+          variant="outlined"
+          disabled={!canAddRule}
+          onClick={() => {
+            if (!current?.uid || !current.option?.rules) return
+            onAddRule({
+              metadata: { ...metadata },
+              profileUid: current.uid,
+              profileName: current.name || current.uid,
+              rulesUid: current.option.rules,
+              preferredKind,
+            })
+          }}
+        >
+          {t('connections.ruleDialog.entry')}
+        </Button>
+        {!closed && (
           <Button
             variant="contained"
             title={t('connections.components.actions.closeConnection')}
@@ -159,6 +248,18 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
           >
             {t('connections.components.actions.closeConnection')}
           </Button>
+        )}
+      </Box>
+      {!canAddRule && (
+        <Box sx={{ mt: 1, typography: 'caption' }}>
+          {t(
+            targets.domain ||
+              targets.process ||
+              targets.source ||
+              targets.destination
+              ? 'connections.ruleDialog.noProfile'
+              : 'connections.ruleDialog.noMetadata',
+          )}
         </Box>
       )}
     </Box>
