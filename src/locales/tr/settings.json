@@ -305,6 +305,11 @@
       "variants": {
         "release": "Kararlı Sürüm",
         "alpha": "Alfa Sürümü"
+      },
+      "download": {
+        "title": "Çekirdeği İndir",
+        "message": "{{name}} uygulamayla birlikte gelmez ve kullanılmadan önce indirilmesi gerekir.",
+        "confirm": "İndir"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "Zaten en yeni çekirdek sürümünü kullanıyorsunuz",
         "changeSuccess": "Çekirdek başarıyla değiştirildi",
         "changeFailed": "Çekirdek değiştirilemedi",
+        "coreFallback": "Mihomo Alpha artık uygulamayla birlikte gelmediği için Mihomo çekirdeğine geri dönüldü. İndirmek için Clash Çekirdeği ayarlarından yeniden seçin.",
         "geoDataUpdated": "GeoData Güncellendi"
       },
       "clashService": {

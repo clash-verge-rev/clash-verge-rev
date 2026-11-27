@@ -314,6 +314,7 @@ impl NetworkManager {
         proxy_type: ProxyType,
         timeout_secs: Option<u64>,
         max_bytes: usize,
+        on_chunk: &(dyn Fn(usize, Option<u64>) + Sync),
         tls_root_mode: TlsRootMode,
     ) -> Result<Vec<u8>> {
         let client = self
@@ -331,6 +332,7 @@ impl NetworkManager {
             anyhow::bail!("request failed with status {status}");
         }
 
+        let content_length = response.content_length();
         let mut body = Vec::new();
         while let Some(chunk) = response
             .chunk()
@@ -341,21 +343,24 @@ impl NetworkManager {
                 anyhow::bail!("response exceeded the {max_bytes} byte limit");
             }
             body.extend_from_slice(&chunk);
+            on_chunk(chunk.len(), content_length);
         }
 
         Ok(body)
     }
 
     /// Downloads a binary body, mirroring the TLS fallback of [`Self::get`].
+    /// `on_chunk` receives each chunk's length and the announced total.
     pub async fn get_bytes(
         &self,
         url: &str,
         proxy_type: ProxyType,
         timeout_secs: Option<u64>,
         max_bytes: usize,
+        on_chunk: &(dyn Fn(usize, Option<u64>) + Sync),
     ) -> Result<Vec<u8>> {
         Self::request_with_static_webpki_fallback(true, |tls_root_mode| async move {
-            self.get_bytes_with_tls_mode(url, proxy_type, timeout_secs, max_bytes, tls_root_mode)
+            self.get_bytes_with_tls_mode(url, proxy_type, timeout_secs, max_bytes, on_chunk, tls_root_mode)
                 .await
         })
         .await

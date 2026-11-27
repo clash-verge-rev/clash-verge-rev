@@ -2,6 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 
 import {
   getCoreStartupError,
+  takeCoreFallbackNotice,
   takeDiscardedKeysNotice,
   takeDnsOverrideNotice,
   takeServiceFallbackNotice,
@@ -26,13 +27,16 @@ export const forgetShownStartupError = () => {
   settledStartupErrorRead = ++startupErrorReads
 }
 
+/** Polled by the window only: startup settles it before any event can be delivered. */
+type PolledNoticeStatus = 'config_core::fallback'
+
 /**
  * Exhaustive notice table: one entry per contract `NoticeStatus`. The Record
  * type makes a backend status without a frontend entry a compile error (and
  * contract regeneration keeps the union in sync).
  */
 const handlers: Record<
-  NoticeStatus,
+  NoticeStatus | PolledNoticeStatus,
   (msg: string, navigate: NavigateFunction) => void
 > = {
   'import_sub_url::ok': (_msg, navigate) => {
@@ -220,6 +224,17 @@ const handlers: Record<
     ),
   'config_core::change_error': (msg) =>
     showNotice.error('settings.feedback.notifications.clash.changeFailed', msg),
+  'config_core::fallback': () => {
+    void takeCoreFallbackNotice()
+      .then((pending) => {
+        if (pending) {
+          showNotice.info('settings.feedback.notifications.clash.coreFallback')
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to read the pending core fallback notice', error)
+      })
+  },
   'mixed_port::fallback': (msg) => {
     const [oldPort, newPort] = msg.split(',')
     showNotice.info('settings.modals.clashPort.messages.automaticFallback', {
@@ -239,7 +254,7 @@ export const handleNoticeMessage = (
   msg: string,
   navigate: NavigateFunction,
 ) => {
-  const handler = handlers[status as NoticeStatus]
+  const handler = handlers[status as keyof typeof handlers]
   if (handler) {
     handler(msg, navigate)
   } else {

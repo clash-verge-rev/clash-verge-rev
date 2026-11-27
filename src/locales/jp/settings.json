@@ -305,6 +305,11 @@
       "variants": {
         "release": "正式版",
         "alpha": "アルファ版"
+      },
+      "download": {
+        "title": "コアをダウンロード",
+        "message": "{{name}} コアはアプリに同梱されていないため、使用するにはダウンロードが必要です。",
+        "confirm": "ダウンロード"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "すでに最新のコアバージョンを使用しています。",
         "changeSuccess": "コアの切り替えに成功しました。",
         "changeFailed": "コアの切り替えに失敗しました。",
+        "coreFallback": "Mihomo Alpha コアはアプリに同梱されなくなったため、Mihomo コアに切り替えました。引き続き使用するには、Clashコア設定で選択し直してダウンロードしてください。",
         "geoDataUpdated": "GeoDataが更新されました。"
       },
       "clashService": {

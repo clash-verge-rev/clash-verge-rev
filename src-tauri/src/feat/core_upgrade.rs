@@ -7,20 +7,23 @@
 //! the running core is executing from, so no page validation can fail.
 
 use crate::{
-    config::Config,
-    core::{CoreManager, manager::RunningMode},
-    utils::network::{NetworkManager, ProxyType},
+    config::{Config, IVerge},
+    core::{CoreManager, manager::RunningMode, updater::DownloadEvent},
+    utils::{
+        dirs,
+        network::{NetworkManager, ProxyType},
+    },
 };
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use std::{
-    env::current_exe,
     ffi::OsStr,
     fs::File,
     path::{Path, PathBuf},
     process::Command,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
 };
+use tokio_util::sync::CancellationToken;
 
 const RELEASE_VERSION_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt";
 const ALPHA_BASE_URL: &str = "https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha";
@@ -33,6 +36,7 @@ const MAX_PACKAGE_BYTES: usize = 64 * 1024 * 1024;
 static STAGING_GENERATION: AtomicU64 = AtomicU64::new(0);
 /// `.rollback` and `.old` are fixed paths, so two upgrades must not overlap.
 static UPGRADE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+static DOWNLOAD_CANCEL: parking_lot::Mutex<Option<CancellationToken>> = parking_lot::Mutex::new(None);
 
 #[derive(Debug, serde::Serialize, specta::Type)]
 pub struct CoreUpgradeReport {
@@ -45,7 +49,7 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
     let core = Config::verge().await.latest_arc().get_valid_clash_core();
     tracing::Span::current().record("core", tracing::field::display(&core));
     let alpha = core.ends_with("-alpha");
-    let target = managed_core_path(&core)?;
+    let target = dirs::clash_core_path(&core)?;
 
     // A core already broken by the in-place updater cannot report a version; upgrading is the repair.
     let installed = read_core_version(&target).unwrap_or_else(|error| {
@@ -63,7 +67,7 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
         return Ok(CoreUpgradeReport { upgraded: false });
     }
 
-    let package = download_package(proxy, alpha, &latest).await?;
+    let package = download_package(proxy, alpha, &latest, &|_| {}).await?;
     let staged = stage_core(&target, &package, &latest)?;
 
     // A hard link keeps the previous core reachable without touching the inode the running
@@ -161,14 +165,48 @@ enum ServiceStaging {
     Refused,
 }
 
-/// The sidecar next to the app executable. On macOS development builds the Service runs a
-/// staged copy of this file, so writing here is what makes an upgrade survive the next start.
-fn managed_core_path(core: &str) -> Result<PathBuf> {
-    let extension = if cfg!(windows) { ".exe" } else { "" };
-    let path = current_exe()
-        .context("failed to locate the current executable")?
-        .with_file_name(format!("{core}{extension}"));
-    Ok(path)
+/// Installs a core that is not bundled with the app; returns false when cancelled.
+pub async fn download_core(core: &str, on_event: impl Fn(DownloadEvent) + Sync) -> Result<bool> {
+    if core == IVerge::BUNDLED_CLASH_CORE || !IVerge::VALID_CLASH_CORES.contains(&core) {
+        bail!("clash core {core} cannot be downloaded");
+    }
+    // A download waiting here has no cancel token yet, so it must not queue behind an upgrade.
+    let _serialized = UPGRADE_LOCK
+        .try_lock()
+        .context("another core upgrade or download is in progress")?;
+    let target = dirs::clash_core_path(core)?;
+    if target.is_file() {
+        return Ok(true);
+    }
+
+    let cancel = CancellationToken::new();
+    *DOWNLOAD_CANCEL.lock() = Some(cancel.clone());
+    let installed = tokio::select! {
+        installed = install_core(core, &target, &on_event) => installed,
+        () = cancel.cancelled() => Ok(()),
+    };
+    DOWNLOAD_CANCEL.lock().take();
+    installed?;
+    // A cancel that raced the last poll still wins.
+    Ok(!cancel.is_cancelled())
+}
+
+pub fn cancel_core_download() {
+    // Cancelled under the lock, so the state `download_core` reads after taking the token back is final.
+    let mut slot = DOWNLOAD_CANCEL.lock();
+    if let Some(cancel) = slot.take() {
+        cancel.cancel();
+    }
+}
+
+async fn install_core(core: &str, target: &Path, on_event: &(dyn Fn(DownloadEvent) + Sync)) -> Result<()> {
+    let alpha = core.ends_with("-alpha");
+    let (proxy, latest) = resolve_latest_version(alpha).await?;
+    let package = download_package(proxy, alpha, &latest, on_event).await?;
+    if let Some(directory) = target.parent() {
+        std::fs::create_dir_all(directory).with_context(|| format!("failed to create {}", directory.display()))?;
+    }
+    stage_core(target, &package, &latest)?.publish(target)
 }
 
 /// Pins the package to the resolved version, so a release moving on mid-upgrade cannot 404.
@@ -278,14 +316,33 @@ fn is_usable_version(version: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
 }
 
-async fn download_package(proxy: ProxyType, alpha: bool, version: &str) -> Result<Vec<u8>> {
+async fn download_package(
+    proxy: ProxyType,
+    alpha: bool,
+    version: &str,
+    on_event: &(dyn Fn(DownloadEvent) + Sync),
+) -> Result<Vec<u8>> {
     let url = package_url(alpha, version)?;
     logging!(info, Type::Core, "core upgrade: downloading {url}");
 
-    NetworkManager::new()
-        .get_bytes(&url, proxy, Some(PACKAGE_TIMEOUT_SECS), MAX_PACKAGE_BYTES)
+    let started = AtomicBool::new(false);
+    let package = NetworkManager::new()
+        .get_bytes(
+            &url,
+            proxy,
+            Some(PACKAGE_TIMEOUT_SECS),
+            MAX_PACKAGE_BYTES,
+            &|chunk_length, content_length| {
+                if !started.swap(true, Ordering::Relaxed) {
+                    on_event(DownloadEvent::Started { content_length });
+                }
+                on_event(DownloadEvent::Progress { chunk_length });
+            },
+        )
         .await
-        .with_context(|| format!("failed to download {url}"))
+        .with_context(|| format!("failed to download {url}"))?;
+    on_event(DownloadEvent::Finished);
+    Ok(package)
 }
 
 /// A staged core that is removed unless publishing renamed it away.

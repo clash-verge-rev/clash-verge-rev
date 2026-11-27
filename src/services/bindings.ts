@@ -36,6 +36,17 @@ export const commands = {
   /**  Replaces the managed core binary atomically instead of letting mihomo overwrite itself. */
   upgradeClashCore: (force: boolean) =>
     __TAURI_INVOKE<CoreUpgradeReport>('upgrade_clash_core', { force }),
+  isClashCoreInstalled: (clashCore: string) =>
+    __TAURI_INVOKE<boolean>('is_clash_core_installed', { clashCore }),
+  /**  Installs a core that is not bundled with the app; resolves to false when cancelled. */
+  downloadClashCore: (
+    clashCore: string,
+    onEvent: Channel<DownloadEvent_Deserialize>,
+  ) => __TAURI_INVOKE<boolean>('download_clash_core', { clashCore, onEvent }),
+  cancelClashCoreDownload: () =>
+    __TAURI_INVOKE<void>('cancel_clash_core_download'),
+  takeCoreFallbackNotice: () =>
+    __TAURI_INVOKE<boolean>('take_core_fallback_notice'),
   /**  Returns one coherent core/service snapshot instead of independently refreshed state. */
   getRuntimeState: () =>
     __TAURI_INVOKE<RunStateView_Serialize>('get_runtime_state'),

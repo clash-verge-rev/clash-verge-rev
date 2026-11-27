@@ -305,6 +305,11 @@
       "variants": {
         "release": "نسخه نهایی",
         "alpha": "نسخه آلفا"
+      },
+      "download": {
+        "title": "دانلود هسته",
+        "message": "{{name}} همراه برنامه ارائه نمی‌شود و پیش از استفاده باید دانلود شود.",
+        "confirm": "دانلود"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "در حال حاضر از آخرین نسخه هسته استفاده می‌کنید",
         "changeSuccess": "هسته با موفقیت تغییر کرد",
         "changeFailed": "تغییر هسته ناموفق بود",
+        "coreFallback": "Mihomo Alpha دیگر همراه برنامه ارائه نمی‌شود، بنابراین هسته به Mihomo بازگردانده شد. برای دانلود، آن را دوباره در تنظیمات هسته Clash انتخاب کنید.",
         "geoDataUpdated": "GeoData به‌روزرسانی شد"
       },
       "clashService": {

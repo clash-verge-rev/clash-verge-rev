@@ -7,9 +7,11 @@ import {
   Button,
   Chip,
   CircularProgress,
+  LinearProgress,
   List,
   ListItemButton,
   ListItemText,
+  Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
@@ -20,9 +22,17 @@ import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
-import { changeClashCore, restartCore, upgradeClashCore } from '@/services/cmds'
+import {
+  cancelClashCoreDownload,
+  changeClashCore,
+  downloadClashCore,
+  isClashCoreInstalled,
+  restartCore,
+  upgradeClashCore,
+} from '@/services/cmds'
 import { mutate } from '@/services/mutate'
 import { showNotice } from '@/services/notice-service'
+import parseTraffic from '@/utils/parse-traffic'
 
 import { useSettingDialog } from '../settings-search-context'
 
@@ -50,6 +60,14 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [upgrading, setUpgrading] = useState(false)
   const [restarting, setRestarting] = useState(false)
   const [changingCore, setChangingCore] = useState<string | null>(null)
+  const [downloadCore, setDownloadCore] = useState('')
+  const [downloadOpen, setDownloadOpen] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const [download, setDownload] = useState({ downloaded: 0, total: 0 })
+  const progress =
+    download.total <= 0
+      ? 0
+      : Math.min((download.downloaded / download.total) * 100, 100)
 
   useSettingDialog(ref, 'clash-core-viewer', open, () => ({
     open: () => setOpen(true),
@@ -58,9 +76,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const { clash_core = 'verge-mihomo' } = verge ?? {}
 
-  const onCoreChange = useLockFn(async (core: string) => {
-    if (core === clash_core) return
-
+  const switchCore = async (core: string) => {
     try {
       setChangingCore(core)
       void mutate(() => closeAllConnections(), {
@@ -89,7 +105,69 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     } finally {
       setChangingCore(null)
     }
+  }
+
+  const onCoreChange = useLockFn(async (core: string) => {
+    if (core === clash_core) return
+
+    let installed: boolean
+    try {
+      installed = await isClashCoreInstalled(core)
+    } catch (err) {
+      showNotice.error(err)
+      return
+    }
+    if (installed) {
+      await switchCore(core)
+    } else {
+      setDownloadCore(core)
+      setDownloadOpen(true)
+    }
   })
+
+  const onDownload = useLockFn(async () => {
+    const core = downloadCore
+
+    setDownloading(true)
+    setDownload({ downloaded: 0, total: 0 })
+    try {
+      const result = await mutate(
+        () =>
+          downloadClashCore(core, (event) => {
+            if (event.event === 'Started') {
+              setDownload({
+                downloaded: 0,
+                total: event.data.contentLength ?? 0,
+              })
+            } else if (event.event === 'Progress') {
+              setDownload((prev) => ({
+                ...prev,
+                downloaded: prev.downloaded + event.data.chunkLength,
+              }))
+            }
+          }),
+        { id: 'download-clash-core' },
+      )
+      // false means the download was cancelled
+      if (!result.value) return
+      setDownloadOpen(false)
+      await switchCore(core)
+    } catch {
+      // the funnel already notified
+    } finally {
+      setDownloading(false)
+    }
+  })
+
+  const onCancelDownload = () => {
+    if (downloading) {
+      void mutate(() => cancelClashCoreDownload(), {
+        id: 'cancel-clash-core-download',
+        errorNotice: false,
+      })
+    }
+    setDownloadOpen(false)
+  }
 
   const onRestart = useLockFn(async () => {
     try {
@@ -196,6 +274,41 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </ListItemButton>
         ))}
       </List>
+      <BaseDialog
+        open={downloadOpen}
+        title={t('settings.modals.clashCore.download.title')}
+        contentSx={{ width: 360 }}
+        okBtn={t('settings.modals.clashCore.download.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        loading={downloading}
+        onOk={onDownload}
+        onCancel={onCancelDownload}
+        onClose={downloading ? undefined : onCancelDownload}
+      >
+        <Typography variant="body2">
+          {t('settings.modals.clashCore.download.message', {
+            name: VALID_CORE.find((each) => each.core === downloadCore)?.name,
+          })}
+        </Typography>
+        {downloading && (
+          <>
+            <LinearProgress
+              variant={download.total > 0 ? 'determinate' : 'indeterminate'}
+              value={progress}
+              sx={{ mt: 2 }}
+            />
+            {download.total > 0 && (
+              <Typography
+                variant="caption"
+                sx={{ display: 'block', mt: 0.5, color: 'text.secondary' }}
+              >
+                {parseTraffic(download.downloaded).join(' ')} /{' '}
+                {parseTraffic(download.total).join(' ')}
+              </Typography>
+            )}
+          </>
+        )}
+      </BaseDialog>
     </BaseDialog>
   )
 }

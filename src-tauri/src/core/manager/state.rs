@@ -15,7 +15,6 @@ use log::Level;
 use std::num::NonZeroUsize;
 use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
-use tauri_plugin_shell::ShellExt as _;
 
 pub(super) fn explain_core_occupancy(error: anyhow::Error) -> anyhow::Error {
     let detail = error.to_string();
@@ -181,7 +180,6 @@ impl CoreManager {
         };
         #[cfg(not(target_os = "windows"))]
         let config_file = Config::generate_file().await?;
-        let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
         #[cfg(unix)]
@@ -189,9 +187,7 @@ impl CoreManager {
 
         #[cfg(unix)]
         let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
-        let command = app_handle
-            .shell()
-            .sidecar(clash_core.as_str())
+        let command = super::core_command(clash_core.as_str())
             .map_err(|error| anyhow::anyhow!("failed to build sidecar command for core {clash_core:?}: {error:#}"))?;
         let command = command.args([
             "-d",

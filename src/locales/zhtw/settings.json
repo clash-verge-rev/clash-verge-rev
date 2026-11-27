@@ -305,6 +305,11 @@
       "variants": {
         "release": "正式版",
         "alpha": "預覽版"
+      },
+      "download": {
+        "title": "下載內核",
+        "message": "{{name}} 內核未隨應用程式內建，需要下載後才能使用。",
+        "confirm": "下載"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "已經是最新內核版本",
         "changeSuccess": "內核切換成功",
         "changeFailed": "無法切換內核",
+        "coreFallback": "Mihomo Alpha 內核不再隨應用程式內建，已切換回 Mihomo 內核。如需繼續使用，請在 Clash 內核設定中重新選擇並下載。",
         "geoDataUpdated": "已更新 GeoData"
       },
       "clashService": {

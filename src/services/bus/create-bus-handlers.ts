@@ -96,6 +96,7 @@ export const createEventBus = (deps: BusHandlerDeps) => {
     deps.handleNotice(['service_core::repair_required', ''])
     deps.handleNotice(['service_core::app_data_not_owned', ''])
     deps.handleNotice(['core_start::error', ''])
+    deps.handleNotice(['config_core::fallback', ''])
   }
 
   const onWindowFocus = () => {

@@ -28,8 +28,7 @@
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
       "./sidecar/clash-verge-service-uninstall",
-      "./sidecar/verge-mihomo",
-      "./sidecar/verge-mihomo-alpha"
+      "./sidecar/verge-mihomo"
     ]
   }
 }

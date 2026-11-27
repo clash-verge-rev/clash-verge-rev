@@ -305,6 +305,11 @@
       "variants": {
         "release": "Versão Release",
         "alpha": "Versão Alpha"
+      },
+      "download": {
+        "title": "Baixar Núcleo",
+        "message": "{{name}} não vem incluído no aplicativo e precisa ser baixado antes de ser usado.",
+        "confirm": "Baixar"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "Já Está Usando a Versão Mais Recente do Núcleo",
         "changeSuccess": "Núcleo alterado com sucesso",
         "changeFailed": "Falha ao alterar o núcleo",
+        "coreFallback": "O Mihomo Alpha não vem mais incluído no aplicativo, por isso o núcleo voltou para o Mihomo. Selecione-o novamente nas configurações do Núcleo do Clash para baixá-lo.",
         "geoDataUpdated": "GeoData Atualizado"
       },
       "clashService": {

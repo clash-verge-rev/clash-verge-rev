@@ -8,6 +8,7 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tristr::alias::String;
 
 /// ### `verge.yaml` schema
@@ -231,8 +232,17 @@ pub struct IVergeTheme {
     pub css_injection: Option<String>,
 }
 
+/// Set when startup replaced a selected core that is no longer installed.
+static PENDING_CORE_FALLBACK_NOTICE: AtomicBool = AtomicBool::new(false);
+
+pub(crate) fn take_core_fallback_notice() -> bool {
+    PENDING_CORE_FALLBACK_NOTICE.swap(false, Ordering::Relaxed)
+}
+
 impl IVerge {
     pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
+    /// The only core shipped with the app; the others are downloaded on demand.
+    pub const BUNDLED_CLASH_CORE: &'static str = "verge-mihomo";
 
     pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
@@ -254,6 +264,18 @@ impl IVerge {
                 );
                 config.clash_core = Some("verge-mihomo".into());
                 needs_fix = true;
+            } else if core_str != Self::BUNDLED_CLASH_CORE
+                && !dirs::clash_core_path(core_str).is_ok_and(|path| path.is_file())
+            {
+                logging!(
+                    warn,
+                    Type::Config,
+                    "clash core {core} is not installed, falling back to {}",
+                    Self::BUNDLED_CLASH_CORE
+                );
+                config.clash_core = Some(Self::BUNDLED_CLASH_CORE.into());
+                needs_fix = true;
+                PENDING_CORE_FALLBACK_NOTICE.store(true, Ordering::Relaxed);
             }
         } else {
             logging!(

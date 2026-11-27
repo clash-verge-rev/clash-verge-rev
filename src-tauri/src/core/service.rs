@@ -31,7 +31,6 @@ use parking_lot::Mutex;
 use std::sync::LazyLock;
 use std::{
     collections::HashMap,
-    env::current_exe,
     future::Future,
     path::{Path, PathBuf},
     process::Command as StdCommand,
@@ -369,17 +368,6 @@ pub(crate) fn trusted_service_evidence() -> Result<bool> {
 /// Stateless legacy façade over [`RUN_STATE`] retained for existing call sites.
 pub struct ServiceManager;
 
-fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
-    let sibling = current_exe()
-        .map_err(|error| {
-            anyhow::anyhow!(
-                "failed to locate the current executable while resolving Service core {clash_core:?}: {error}"
-            )
-        })?
-        .with_file_name(format!("{clash_core}{bin_ext}"));
-
-    Ok(sibling)
-}
 #[cfg(target_os = "macos")]
 fn escape_osascript_double_quoted_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
@@ -520,17 +508,19 @@ fn uninstall_service() -> Result<()> {
 }
 
 fn install_service() -> Result<()> {
-    let executable = current_exe()?;
-    let cores = crate::config::IVerge::VALID_CLASH_CORES
-        .iter()
-        .map(|core| {
-            let name = format!("{core}{}", std::env::consts::EXE_SUFFIX);
-            clash_verge_service_ipc::management::CoreSource {
-                path: executable.with_file_name(&name),
-                name,
-            }
-        })
-        .collect::<Vec<_>>();
+    use crate::config::IVerge;
+
+    let mut cores = Vec::new();
+    for core in IVerge::VALID_CLASH_CORES {
+        let path = dirs::clash_core_path(core)?;
+        // A core that was never downloaded has nothing to approve.
+        if *core == IVerge::BUNDLED_CLASH_CORE || path.is_file() {
+            cores.push(clash_verge_service_ipc::management::CoreSource {
+                name: format!("{core}{}", std::env::consts::EXE_SUFFIX),
+                path,
+            });
+        }
+    }
     invoke_service_install(&cores, false)
 }
 
@@ -591,6 +581,29 @@ pub fn stage_approved_core(core_path: &Path) -> Result<()> {
     })
 }
 
+/// Stages a downloaded core unless the Service already approved these exact bytes.
+pub async fn ensure_approved_core(core_path: &Path) -> Result<()> {
+    let name = core_path
+        .file_name()
+        .context("core has no filename")?
+        .to_string_lossy()
+        .into_owned();
+    let source = core_path.to_path_buf();
+    let sha256 =
+        tokio::task::spawn_blocking(move || clash_verge_service_ipc::management::sha256_file(&source)).await??;
+    let required = [clash_verge_service_ipc::CoreRequirement {
+        name,
+        sha256: Some(sha256),
+    }];
+    if clash_verge_service_ipc::inspect_installation(&required)
+        .await
+        .is_ok_and(|status| status.satisfies(&required))
+    {
+        return Ok(());
+    }
+    stage_approved_core(core_path)
+}
+
 /// Dispatches a privileged platform operation on a blocking thread.
 pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()> {
     let (operation, label): (fn() -> Result<()>, &'static str) = match action {
@@ -608,8 +621,7 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
     let clash_core = verge_config.latest_arc().get_valid_clash_core();
     drop(verge_config);
 
-    let bin_ext = if cfg!(windows) { ".exe" } else { "" };
-    let bin_path = service_core_path(&clash_core, bin_ext)?;
+    let bin_path = dirs::clash_core_path(&clash_core)?;
     collect_runtime_bundle(config_file, &bin_path).await
 }
 
