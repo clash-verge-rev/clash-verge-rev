@@ -267,6 +267,9 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
   })
   const { downloaded, total } = download
 
+  // Install cannot be cancelled; only the download can.
+  const [installing, setInstalling] = useState(false)
+
   const progress = total <= 0 ? 0 : Math.min((downloaded / total) * 100, 100)
 
   useImperativeHandle(ref, () => ({
@@ -333,6 +336,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
           ...prev,
           total: prev.total || prev.downloaded,
         }))
+      } else if (event.event === 'Installing') {
+        setInstalling(true)
       }
     }
 
@@ -366,6 +371,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
     } finally {
       setUpdateState(false)
       setDownload({ downloaded: 0, total: 0 })
+      setInstalling(false)
     }
   })
 
@@ -419,6 +425,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
       }}
       okBtn={t('settings.modals.update.actions.update')}
       cancelBtn={t('shared.actions.cancel')}
+      disableCancel={installing}
       onClose={() => setOpen(false)}
       onCancel={() => {
         if (updateState) {
@@ -560,7 +567,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<UpdateViewerRef> }) {
       </Box>
       {updateState && (
         <LinearProgress
-          variant={total > 0 ? 'determinate' : 'indeterminate'}
+          variant={total > 0 && !installing ? 'determinate' : 'indeterminate'}
           value={progress}
           sx={{ mt: 1 }}
         />

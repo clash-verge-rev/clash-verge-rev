@@ -260,10 +260,16 @@ export type DnsOverrideOutcome =
   | { status: 'applied' }
   | { status: 'confirmation_required'; source: string }
 
-/**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
+/**
+ *  Same wire shape as the updater plugin's JS `DownloadEvent`, plus `Installing` when the
+ *  install starts.
+ */
 export type DownloadEvent = DownloadEvent_Serialize | DownloadEvent_Deserialize
 
-/**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
+/**
+ *  Same wire shape as the updater plugin's JS `DownloadEvent`, plus `Installing` when the
+ *  install starts.
+ */
 export type DownloadEvent_Deserialize =
   | {
       event: 'Started'
@@ -278,8 +284,12 @@ export type DownloadEvent_Deserialize =
       }
     }
   | { event: 'Finished' }
+  | { event: 'Installing' }
 
-/**  Same wire shape as the updater plugin's JS `DownloadEvent`. */
+/**
+ *  Same wire shape as the updater plugin's JS `DownloadEvent`, plus `Installing` when the
+ *  install starts.
+ */
 export type DownloadEvent_Serialize =
   | {
       event: 'Started'
@@ -294,6 +304,7 @@ export type DownloadEvent_Serialize =
       }
     }
   | { event: 'Finished' }
+  | { event: 'Installing' }
 
 /**  Operation associated with a pending failure. */
 export type FailedOperation =
