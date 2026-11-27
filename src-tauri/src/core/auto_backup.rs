@@ -18,6 +18,7 @@ use std::{
 use tokio::{
     fs,
     sync::{Mutex, watch},
+    time::Instant,
 };
 
 const DEFAULT_INTERVAL_HOURS: u64 = 24;
@@ -150,8 +151,10 @@ impl AutoBackupManager {
 
     async fn run_scheduler(rx: &mut watch::Receiver<AutoBackupSettings>) {
         let mut current = *rx.borrow();
+        let mut deadline = None;
         loop {
             if !current.schedule_enabled {
+                deadline = None;
                 if rx.changed().await.is_err() {
                     break;
                 }
@@ -159,12 +162,14 @@ impl AutoBackupManager {
                 continue;
             }
 
-            let duration = Duration::from_secs(current.interval_hours.saturating_mul(3600));
-            let sleeper = tokio::time::sleep(duration);
-            tokio::pin!(sleeper);
+            // Every saved Verge patch republishes the settings; only an interval change restarts the countdown.
+            let at = *deadline.get_or_insert_with(|| {
+                Instant::now() + Duration::from_secs(current.interval_hours.saturating_mul(3600))
+            });
 
             tokio::select! {
-                _ = &mut sleeper => {
+                _ = tokio::time::sleep_until(at) => {
+                    deadline = None;
                     if let Err(err) = Self::global()
                         .execute_trigger(AutoBackupTrigger::Scheduled)
                         .await
@@ -180,7 +185,11 @@ impl AutoBackupManager {
                     if changed.is_err() {
                         break;
                     }
-                    current = *rx.borrow();
+                    let next = *rx.borrow();
+                    if next.interval_hours != current.interval_hours {
+                        deadline = None;
+                    }
+                    current = next;
                 }
             }
         }
