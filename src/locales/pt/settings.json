@@ -445,7 +445,6 @@
         "update": "Atualizar"
       },
       "messages": {
-        "breakChangeError": "Esta versão é uma atualização importante e não oferece suporte a atualizações dentro do aplicativo. Desinstale-a e baixe e instale a nova versão manualmente",
         "available": "Uma nova versão está disponível"
       },
       "alerts": {

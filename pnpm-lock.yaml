@@ -245,9 +245,6 @@ importers:
       cidr-block:
         specifier: ^2.3.0
         version: 2.3.0
-      compare-versions:
-        specifier: ^6.1.1
-        version: 6.1.1
       dayjs:
         specifier: 1.11.23
         version: 1.11.23

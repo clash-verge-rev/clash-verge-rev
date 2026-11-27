@@ -605,21 +605,6 @@ impl SilentUpdater {
         let version = update.version.as_str();
         logging!(info, Type::System, "Silent updater: update available: v{version}");
 
-        if let Some(body) = &update.body
-            && body.to_lowercase().contains("break change")
-        {
-            logging!(
-                info,
-                Type::System,
-                "Silent updater: breaking change detected in v{version}, notifying frontend"
-            );
-            super::handle::Handle::notice(
-                super::notify::NoticeStatus::Info,
-                format!("New version v{version} contains breaking changes. Please update manually."),
-            );
-            return Ok(());
-        }
-
         if Self::verified_cache(&update).is_some() {
             logging!(info, Type::System, "Silent updater: v{version} already cached");
         } else {

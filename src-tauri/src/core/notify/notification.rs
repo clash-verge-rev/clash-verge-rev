@@ -387,11 +387,11 @@ fn sample_frontend_events(uid: &str) -> Vec<(FrontendEvent<'_>, &'static str, se
         ),
         (
             FrontendEvent::NoticeMessage {
-                status: NoticeStatus::Info,
+                status: NoticeStatus::UpdateFailed,
                 message: Arc::from("ok"),
             },
             "verge://notice-message",
-            json!(["info", "ok"]),
+            json!(["update_failed", "ok"]),
         ),
         (
             FrontendEvent::TimerUpdated { profile_index: uid },

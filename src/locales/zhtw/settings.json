@@ -445,7 +445,6 @@
         "update": "更新"
       },
       "messages": {
-        "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝",
         "available": "有新版本可用"
       },
       "alerts": {

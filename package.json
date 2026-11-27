@@ -56,7 +56,6 @@
     "@tauri-apps/plugin-updater": "2.14.1",
     "ahooks": "^3.10.0",
     "cidr-block": "^2.3.0",
-    "compare-versions": "^6.1.1",
     "dayjs": "1.11.23",
     "foxact": "^0.3.12",
     "foxts": "^5.9.1",
