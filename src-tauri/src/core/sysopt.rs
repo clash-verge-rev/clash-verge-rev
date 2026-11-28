@@ -436,7 +436,13 @@ impl Sysopt {
             sys.host = proxy_host.into();
             sys.port = port;
             sys.bypass = bypass.into();
-            auto.url = format!("http://{proxy_host}:{pac_port}/commands/pac");
+            auto.url = server::pac_auto_url(
+                proxy_host,
+                pac_port,
+                // Hash the rendered script, not the raw template: `%mixed-port%` expansion and
+                // the default-PAC fallback both change what the endpoint serves.
+                &server::pac_script(verge.pac_file_content.as_deref()).await,
+            );
 
             // `enable_system_proxy` is the master switch.
             // When disabled, force clear both global proxy and PAC at OS level.
