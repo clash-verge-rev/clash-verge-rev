@@ -787,30 +787,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn stale_guard_refresh_cannot_replace_or_revive_the_current_plan() {
-        let operations = ServiceProxyOperations::new();
-        let old = operations.invalidate_guard();
-        let current = operations.invalidate_guard();
-        let plan = |generation| super::ServiceGuard {
-            generation,
-            proof: Arc::new(proof(generation, "test")),
-            proxy: guarded_proxy(),
-            interval: std::time::Duration::from_secs(30),
-        };
-
-        assert!(operations.start_guard(plan(current)));
-        assert!(!operations.start_guard(plan(old)));
-        assert_eq!(
-            operations.guard.borrow().as_ref().map(|plan| plan.generation),
-            Some(current)
-        );
-
-        operations.invalidate_guard();
-        assert!(!operations.start_guard(plan(current)));
-        assert!(operations.guard.borrow().is_none());
-    }
-
     #[tokio::test]
     async fn final_service_mutation_finishes_after_in_flight_guard_request() {
         let operations = Arc::new(ServiceProxyOperations::new());

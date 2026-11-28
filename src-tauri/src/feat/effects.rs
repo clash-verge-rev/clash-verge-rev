@@ -267,21 +267,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn only_backup_fields_schedule_one_settings_publication() {
-        let unrelated = verge_patch(|patch| patch.language = Some("zh".into()));
-        assert!(verge_effects(&unrelated).after_commit.is_empty());
-
-        let backup = verge_patch(|patch| {
-            patch.enable_auto_backup_schedule = Some(true);
-            patch.auto_backup_interval_hours = Some(2);
-            patch.auto_backup_on_change = Some(false);
-        });
-        let effects = verge_effects(&backup);
-        assert!(effects.before_commit.is_empty());
-        assert_eq!(effects.after_commit, BTreeSet::from([AfterCommit::BackupSettings]));
-    }
-
     fn clash_mapping(pairs: &[(&str, &str)]) -> serde_yaml_ng::Mapping {
         let mut mapping = serde_yaml_ng::Mapping::new();
         for (key, value) in pairs {

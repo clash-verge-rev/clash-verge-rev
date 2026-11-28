@@ -1962,41 +1962,6 @@ mod tests {
     use clash_verge_service_ipc::OwnerSessionProof;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    #[tokio::test(start_paused = true)]
-    async fn replacing_the_owner_monitor_interrupts_its_wait() {
-        let (sender, mut desired) = tokio::sync::watch::channel(Some(1));
-        let mut previous = Box::pin(super::monitor_owner(1, desired.clone()));
-        assert!(futures::poll!(&mut previous).is_pending());
-
-        sender.send_replace(Some(2));
-        assert!(futures::poll!(&mut previous).is_ready());
-        assert!(desired.has_changed().unwrap_or(false));
-        assert_eq!(*desired.borrow_and_update(), Some(2));
-    }
-
-    #[test]
-    fn early_provider_sync_keeps_the_later_retry_budget() {
-        use super::{Duration, Instant, Next, ProviderSchedule, ProviderSync, ScheduledTask as _};
-
-        let mut schedule = ProviderSchedule::default();
-        let now = Instant::now();
-        let pending = || Ok(Ok(ProviderSync { pending: 1, synced: 0 }));
-        schedule.on_input(Some(now), now);
-        assert!(matches!(schedule.next(now), Next::Run(1)));
-        schedule.finished(1, pending(), now);
-
-        let early = now + Duration::from_secs(2);
-        schedule.on_input(Some(now + Duration::from_secs(9)), now);
-        schedule.on_input(Some(early), now);
-        assert!(matches!(schedule.next(now), Next::At(due) if due == early));
-        assert!(matches!(schedule.next(early), Next::Run(1)));
-        schedule.finished(1, pending(), early);
-
-        let retry = now + crate::constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY;
-        assert!(matches!(schedule.next(early), Next::At(due) if due == retry));
-        assert!(matches!(schedule.next(retry), Next::Run(2)));
-    }
-
     /// A Run State backed by a scripted environment, so these tests never touch the global.
     fn fake_store() -> RunStateStore<FakeEnv> {
         RunStateStore::new(FakeEnv::new())

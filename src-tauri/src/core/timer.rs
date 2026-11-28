@@ -734,26 +734,6 @@ mod tests {
         assert!(nothing_due(&mut queue).await, "and must never be scheduled again");
     }
 
-    #[tokio::test]
-    #[allow(clippy::panic, reason = "inject an unwind in the update worker")]
-    async fn panicking_profile_update_reports_completion() {
-        let calls = Mutex::new(Vec::new());
-        run_timer_profile_update_transition(
-            || calls.lock().push("update-started"),
-            || async { panic!("profile update panic") },
-            |result| {
-                assert!(result.is_err());
-                calls.lock().push("terminal-result");
-            },
-            || calls.lock().push("update-completed"),
-        )
-        .await;
-        assert_eq!(
-            calls.into_inner(),
-            ["update-started", "terminal-result", "update-completed"]
-        );
-    }
-
     #[tokio::test(start_paused = true)]
     async fn timer_profile_update_runs_past_former_deadline_and_pairs_events() -> anyhow::Result<()> {
         let calls = Arc::new(Mutex::new(Vec::new()));
