@@ -25,7 +25,9 @@ These rules supplement the repository's root `AGENTS.md`.
   Cancel work only at cancellation-safe boundaries. Keep issued side effects
   owned through completion or explicit reconciliation. Preserve shared
   transaction boundaries and ensure a task can reply without acquiring a lock
-  held by the waiting caller.
+  held by the waiting caller. Reuse the drivers in
+  [`clash-verge-task`](../crates/clash-verge-task/src/lib.rs) for coalescing
+  jobs and replaceable sessions. Keep domain policy and runtime startup local.
 - **Retry ownership.** Bounded retries share backend policy while preserving
   attempts, delays and terminal errors. Background monitors own their lifetime
   and cancellation separately; waiting for a condition or traversing distinct

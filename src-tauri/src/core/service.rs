@@ -19,7 +19,6 @@ use crate::{
     process::{
         AsyncHandler,
         scheduled_task::{self, Mailbox, Next, ScheduledTask},
-        watch_task,
     },
 };
 use anyhow::{Context as _, Result, anyhow, bail};
@@ -30,6 +29,7 @@ use clash_verge_service_ipc::{
     RuntimeBundle, RuntimeFileOutcome, RuntimeFileRequest, ServiceErrorCode, ServiceStatusSnapshot,
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
+use clash_verge_task::watch_task;
 use parking_lot::Mutex;
 use std::{
     collections::HashMap,

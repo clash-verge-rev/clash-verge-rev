@@ -8,7 +8,7 @@ use crate::{
         service,
         sysopt::{Sysopt, format_bypass},
     },
-    process::{AsyncHandler, watch_task},
+    process::AsyncHandler,
     utils::{
         notification::{NotificationEvent, needs_system_notification, notify_event},
         server,
@@ -18,6 +18,7 @@ use crate::{
 use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
+use clash_verge_task::watch_task;
 use std::{
     borrow::Borrow,
     future::Future,

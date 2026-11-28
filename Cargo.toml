@@ -2,6 +2,7 @@
 members = [
   "src-tauri",
   "crates/clash-verge-draft",
+  "crates/clash-verge-task",
   "crates/clash-verge-media-unlock",
   "crates/clash-verge-logging",
   "crates/clash-verge-signal",
@@ -52,6 +53,7 @@ muda = { git = "https://github.com/wonfen/muda.git", rev = "547de49352791653fbdf
 
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
+clash-verge-task = { path = "crates/clash-verge-task" }
 clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
 clash-verge-signal = { path = "crates/clash-verge-signal" }
@@ -65,6 +67,7 @@ tauri = { version = "2.12.7" }
 tauri-plugin-clipboard-manager = "2.5.0"
 parking_lot = "0.13.0"
 anyhow = "1.0.105"
+futures = "0.3.34"
 chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
 tokio = { version = "1.54.1", features = [

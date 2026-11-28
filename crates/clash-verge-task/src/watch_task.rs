@@ -2,11 +2,14 @@ use futures::FutureExt as _;
 use std::{future::Future, panic::AssertUnwindSafe};
 use tokio::sync::watch;
 
-pub(crate) async fn run<T, F, Fut>(
-    mut desired: watch::Receiver<Option<T>>,
-    mut run: F,
-    mut on_panic: impl FnMut(T) + Send,
-) where
+/// Run a session for each observed nonempty plan, beginning on the first change.
+///
+/// Subscribe while the plan is `None` before publishing the first session.
+/// While a session runs, plans may coalesce to the latest value. The callback
+/// chooses where to observe replacements and owns any issued effects until it
+/// returns. An unwinding callback is reported before observing the next plan.
+pub async fn run<T, F, Fut>(mut desired: watch::Receiver<Option<T>>, mut run: F, mut on_panic: impl FnMut(T) + Send)
+where
     T: Clone + Send + Sync,
     F: FnMut(T, watch::Receiver<Option<T>>) -> Fut + Send,
     Fut: Future<Output = ()> + Send,
