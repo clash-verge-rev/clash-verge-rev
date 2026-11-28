@@ -10,6 +10,7 @@ use clash_verge_task::countdown::{self, Countdown};
 use crate::utils::window_manager::WindowManager;
 use anyhow::Result;
 use parking_lot::Mutex;
+use std::future::Future;
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use std::time::Duration;
@@ -89,21 +90,7 @@ static WINDOW_LISTENERS: Mutex<WindowListeners> = Mutex::new(WindowListeners {
 static TIMER_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 static COUNTDOWN: LazyLock<Countdown<u64>> = LazyLock::new(|| {
-    let (countdown, driver) = countdown::new(
-        // Unlisten can be deferred while Tauri is delivering an event.
-        |generation| (generation == TIMER_GENERATION.load(Ordering::Acquire)).then(light_weight_delay),
-        |generation| {
-            if generation == TIMER_GENERATION.load(Ordering::Acquire) {
-                logging!(
-                    info,
-                    Type::Timer,
-                    "Lightweight mode timer expired, entering lightweight mode"
-                );
-                begin_lightweight_mode();
-                AsyncHandler::spawn(refresh_lightweight_tray_state);
-            }
-        },
-    );
+    let (countdown, driver) = countdown::new(prepare_countdown, enter_lightweight_on_timeout);
     AsyncHandler::spawn(move || driver);
     countdown
 });
@@ -250,13 +237,34 @@ fn setup_auto_light_weight_listeners(generation: u64) {
     });
 }
 
-async fn light_weight_delay() -> Duration {
-    let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
+fn prepare_countdown(generation: u64) -> Option<impl Future<Output = Duration>> {
+    // Unlisten can be deferred while Tauri is delivering an event.
+    if generation != TIMER_GENERATION.load(Ordering::Acquire) {
+        return None;
+    }
+
+    Some(async {
+        let minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
+        logging!(
+            info,
+            Type::Timer,
+            "Lightweight mode timer set, entering lightweight mode in {} minutes",
+            minutes
+        );
+        Duration::from_secs(minutes.saturating_mul(60))
+    })
+}
+
+fn enter_lightweight_on_timeout(generation: u64) {
+    if generation != TIMER_GENERATION.load(Ordering::Acquire) {
+        return;
+    }
+
     logging!(
         info,
         Type::Timer,
-        "Lightweight mode timer set, entering lightweight mode in {} minutes",
-        once_by_minutes
+        "Lightweight mode timer expired, entering lightweight mode"
     );
-    Duration::from_secs(once_by_minutes.saturating_mul(60))
+    begin_lightweight_mode();
+    AsyncHandler::spawn(refresh_lightweight_tray_state);
 }
