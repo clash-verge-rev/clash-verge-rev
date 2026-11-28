@@ -7,13 +7,16 @@ use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use std::{mem::DropGuard, path::Path};
-#[cfg(target_os = "windows")]
-use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tristr::alias::String;
 
 #[cfg(any(target_os = "windows", test))]
-const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admin: bool) -> bool {
-    tun_enabled && !service_ready && !is_admin
+const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, service_installed: bool) -> bool {
+    // TUN needs a stable owner before its auto-route takes over the default route.
+    // Elevation alone must not skip the wait: a cold-starting installed service may
+    // become ready within the wait window, while an elevated Sidecar would publish
+    // the TUN route before DNS and the outbound interface are ready.
+    // An absent service has nothing to wait for and can fall back immediately.
+    tun_enabled && !service_ready && service_installed
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -854,17 +857,14 @@ impl CoreManager {
         use crate::{config::Config, constants::timing};
 
         let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
-        let service_ready = matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready);
-        let is_admin = is_current_app_handle_admin(Handle::app_handle());
+        let status = SERVICE_MANAGER.current().await;
+        let service_ready = matches!(status, ServiceStatus::Ready);
+        // Only a confirmed absent service has nothing to wait for. A cold-starting
+        // installed service reports Checking/Unavailable, and is worth waiting for
+        // regardless of whether the app itself is elevated.
+        let service_installed = !matches!(status, ServiceStatus::NotInstalled);
 
-        if !should_wait_for_service(tun_enabled, service_ready, is_admin) {
-            if tun_enabled && !service_ready && is_admin {
-                logging!(
-                    info,
-                    Type::Core,
-                    "service unavailable while app is elevated; starting sidecar immediately"
-                );
-            }
+        if !should_wait_for_service(tun_enabled, service_ready, service_installed) {
             return;
         }
 
@@ -1542,11 +1542,11 @@ mod tests {
     }
 
     #[test]
-    fn service_wait_is_only_required_for_non_admin_tun() {
-        assert!(should_wait_for_service(true, false, false));
-        assert!(!should_wait_for_service(true, false, true));
-        assert!(!should_wait_for_service(true, true, false));
-        assert!(!should_wait_for_service(false, false, false));
+    fn service_wait_is_required_for_installed_service_with_tun() {
+        assert!(should_wait_for_service(true, false, true));
+        assert!(!should_wait_for_service(true, false, false));
+        assert!(!should_wait_for_service(true, true, true));
+        assert!(!should_wait_for_service(false, false, true));
     }
 
     #[test]
