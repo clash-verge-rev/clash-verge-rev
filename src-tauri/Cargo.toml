@@ -27,7 +27,7 @@ perf-harness = ["dep:tauri-plugin-wdio-webdriver"]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.7.6", features = [] }
+tauri-build = { version = "2.8.0", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
