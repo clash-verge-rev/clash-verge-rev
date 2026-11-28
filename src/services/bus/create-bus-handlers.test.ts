@@ -22,6 +22,7 @@ vi.mock('@tauri-apps/api/window', () => ({
 vi.mock('@/services/cmds', () => ({
   getCoreStartupError: vi.fn().mockResolvedValue(null),
   getPendingFailures: vi.fn().mockResolvedValue([]),
+  takeCoreFallbackNotice: vi.fn().mockResolvedValue(false),
   takeDiscardedKeysNotice: vi.fn().mockResolvedValue(null),
   takeDnsOverrideNotice: vi.fn().mockResolvedValue(false),
   takeServiceFallbackNotice: vi.fn().mockResolvedValue(null),

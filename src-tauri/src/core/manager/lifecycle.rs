@@ -824,6 +824,14 @@ impl CoreManager {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
             anyhow::bail!("invalid clash core: {clash_core}");
         }
+        let core_path = crate::utils::dirs::clash_core_path(clash_core)?;
+        if !core_path.is_file() {
+            anyhow::bail!("clash core {clash_core} is not installed");
+        }
+        // The Service only runs approved copies, which a freshly downloaded core does not have yet.
+        if clash_core != IVerge::BUNDLED_CLASH_CORE && matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
+            crate::core::service::ensure_approved_core(&core_path).await?;
+        }
 
         Config::verge().await.edit_draft(|d| {
             d.clash_core = Some(clash_core.to_owned());

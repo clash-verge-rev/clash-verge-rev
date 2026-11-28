@@ -305,6 +305,11 @@
       "variants": {
         "release": "안정 버전",
         "alpha": "알파 버전"
+      },
+      "download": {
+        "title": "코어 다운로드",
+        "message": "{{name}} 코어는 앱에 포함되어 있지 않아 사용하려면 다운로드해야 합니다.",
+        "confirm": "다운로드"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "이미 최신 코어 버전을 사용 중입니다",
         "changeSuccess": "코어 변경 성공",
         "changeFailed": "코어 변경 실패",
+        "coreFallback": "Mihomo Alpha 코어가 더 이상 앱에 포함되지 않아 Mihomo 코어로 전환되었습니다. 계속 사용하려면 Clash 코어 설정에서 다시 선택하여 다운로드하세요.",
         "geoDataUpdated": "GeoData가 업데이트되었습니다"
       },
       "clashService": {

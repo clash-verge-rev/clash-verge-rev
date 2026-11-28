@@ -883,6 +883,7 @@ export interface TranslationResources {
             alreadyLatestVersion: string
             changeFailed: string
             changeSuccess: string
+            coreFallback: string
             geoDataUpdated: string
             restartSuccess: string
             versionUpdated: string
@@ -984,6 +985,11 @@ export interface TranslationResources {
           }
         }
         clashCore: {
+          download: {
+            confirm: string
+            message: string
+            title: string
+          }
           variants: {
             alpha: string
             release: string

@@ -1,5 +1,5 @@
 use crate::config::MixedPort;
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::{
     Client, Proxy, StatusCode,
@@ -312,18 +312,20 @@ impl NetworkManager {
         &self,
         url: &str,
         proxy_type: ProxyType,
-        timeout_secs: Option<u64>,
+        stall_secs: u64,
         max_bytes: usize,
+        on_chunk: &(dyn Fn(usize, Option<u64>) + Sync),
         tls_root_mode: TlsRootMode,
     ) -> Result<Vec<u8>> {
         let client = self
-            .create_request_with_tls_mode(proxy_type, timeout_secs, None, false, tls_root_mode)
+            .create_request_with_tls_mode(proxy_type, None, None, false, tls_root_mode)
             .await?;
+        let stall = Duration::from_secs(stall_secs);
+        let stalled = || format!("no data received for {stall_secs} s");
 
-        let mut response = client
-            .get(url)
-            .send()
+        let mut response = tokio::time::timeout(stall, client.get(url).send())
             .await
+            .with_context(stalled)?
             .map_err(|e| Self::context_reqwest_error(e, "Request failed"))?;
 
         let status = response.status();
@@ -331,31 +333,36 @@ impl NetworkManager {
             anyhow::bail!("request failed with status {status}");
         }
 
+        let content_length = response.content_length();
         let mut body = Vec::new();
-        while let Some(chunk) = response
-            .chunk()
+        while let Some(chunk) = tokio::time::timeout(stall, response.chunk())
             .await
+            .with_context(stalled)?
             .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
         {
             if body.len() + chunk.len() > max_bytes {
                 anyhow::bail!("response exceeded the {max_bytes} byte limit");
             }
             body.extend_from_slice(&chunk);
+            on_chunk(chunk.len(), content_length);
         }
 
         Ok(body)
     }
 
     /// Downloads a binary body, mirroring the TLS fallback of [`Self::get`].
+    /// `on_chunk` receives each chunk's length and the announced total.
+    /// Fails only after `stall_secs` without data, so slow but steady downloads finish.
     pub async fn get_bytes(
         &self,
         url: &str,
         proxy_type: ProxyType,
-        timeout_secs: Option<u64>,
+        stall_secs: u64,
         max_bytes: usize,
+        on_chunk: &(dyn Fn(usize, Option<u64>) + Sync),
     ) -> Result<Vec<u8>> {
         Self::request_with_static_webpki_fallback(true, |tls_root_mode| async move {
-            self.get_bytes_with_tls_mode(url, proxy_type, timeout_secs, max_bytes, tls_root_mode)
+            self.get_bytes_with_tls_mode(url, proxy_type, stall_secs, max_bytes, on_chunk, tls_root_mode)
                 .await
         })
         .await

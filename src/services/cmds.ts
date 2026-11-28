@@ -289,6 +289,27 @@ export async function upgradeClashCore(force = false) {
   return commands.upgradeClashCore(force)
 }
 
+export async function isClashCoreInstalled(clashCore: string) {
+  return commands.isClashCoreInstalled(clashCore)
+}
+
+export async function downloadClashCore(
+  clashCore: string,
+  onEvent: (event: DownloadEvent) => void,
+) {
+  const channel = new Channel<DownloadEvent>()
+  channel.onmessage = onEvent
+  return commands.downloadClashCore(clashCore, channel)
+}
+
+export async function cancelClashCoreDownload() {
+  return commands.cancelClashCoreDownload()
+}
+
+export async function takeCoreFallbackNotice() {
+  return commands.takeCoreFallbackNotice()
+}
+
 export async function restartApp() {
   return commands.restartApp()
 }

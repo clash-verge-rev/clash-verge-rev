@@ -305,6 +305,11 @@
       "variants": {
         "release": "Release Version",
         "alpha": "Alpha Version"
+      },
+      "download": {
+        "title": "Download Core",
+        "message": "{{name}} is not bundled with the app and must be downloaded before it can be used.",
+        "confirm": "Download"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "Already Using Latest Core Version",
         "changeSuccess": "Core changed successfully",
         "changeFailed": "Failed to change core",
+        "coreFallback": "Mihomo Alpha is no longer bundled with the app, so the core was switched back to Mihomo. Select it again in the Clash Core settings to download it.",
         "geoDataUpdated": "GeoData Updated"
       },
       "clashService": {

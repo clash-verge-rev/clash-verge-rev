@@ -7,7 +7,6 @@ use std::{
     sync::LazyLock,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tristr::alias::String;
 
@@ -26,16 +25,14 @@ async fn validation_fingerprint(yaml: &str) -> u64 {
     let mut hasher = DefaultHasher::new();
     yaml.hash(&mut hasher);
     core.as_str().hash(&mut hasher);
-    let binary = std::env::current_exe()
-        .into_iter()
-        .map(|exe| exe.with_file_name(format!("{}{}", core.as_str(), std::env::consts::EXE_SUFFIX)));
+    let binary = dirs::clash_core_path(core.as_str());
     // The test run reads geo databases from the app dir; a geo update must revalidate.
     let geo = dirs::app_home_dir().into_iter().flat_map(|dir| {
         super::runtime_bundle::GEO_ASSETS
             .iter()
             .map(move |asset| dir.join(asset))
     });
-    for path in binary.chain(geo) {
+    for path in binary.into_iter().chain(geo) {
         match std::fs::metadata(&path) {
             Ok(meta) => {
                 meta.len().hash(&mut hasher);
@@ -354,12 +351,11 @@ impl CoreConfigValidator {
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         logging!(info, Type::Validate, "使用内核: {}", clash_core);
 
-        let app_handle = handle::Handle::app_handle();
         let app_dir = dirs::app_home_dir()?;
         let app_dir_str = dirs::path_to_str(&app_dir)?;
         logging!(info, Type::Validate, "验证目录: {}", app_dir_str);
 
-        let command = app_handle.shell().sidecar(clash_core.as_str()).map_err(|error| {
+        let command = crate::core::manager::core_command(clash_core.as_str()).map_err(|error| {
             anyhow::anyhow!("failed to build validation command for core {clash_core:?}: {error:#}")
         })?;
         let command = command.args(["-t", "-d", app_dir_str, "-f", config_path]);

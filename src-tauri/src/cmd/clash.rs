@@ -4,10 +4,11 @@ use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
     cmd::StringifyErr as _,
-    config::{ClashInfo, Config, profiles::profiles_save_file_safe},
+    config::{ClashInfo, Config, IVerge, profiles::profiles_save_file_safe},
     constants,
     core::{
         CoreManager, handle,
+        updater::DownloadEvent,
         validate::{CoreConfigValidator, ValidationOutcome},
     },
 };
@@ -97,6 +98,39 @@ pub async fn restart_core() -> CmdResult {
         handle::Handle::refresh_clash();
     }
     result
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn is_clash_core_installed(clash_core: std::string::String) -> CmdResult<bool> {
+    Ok(IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str())
+        && dirs::clash_core_path(&clash_core).stringify_err()?.is_file())
+}
+
+/// Installs a core that is not bundled with the app; resolves to false when cancelled.
+#[tauri::command]
+#[specta::specta]
+pub async fn download_clash_core(
+    clash_core: std::string::String,
+    on_event: tauri::ipc::Channel<DownloadEvent>,
+) -> CmdResult<bool> {
+    feat::download_core(&clash_core, |event| {
+        let _ = on_event.send(event);
+    })
+    .await
+    .with_error_code("CORE_DOWNLOAD_FAILED")
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn cancel_clash_core_download() {
+    feat::cancel_core_download();
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn take_core_fallback_notice() -> bool {
+    crate::config::take_core_fallback_notice()
 }
 
 /// Replaces the managed core binary atomically instead of letting mihomo overwrite itself.

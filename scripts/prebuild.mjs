@@ -159,29 +159,10 @@ async function updateHashCache(targetPath) {
 }
 
 // Mihomo release maps
-const META_ALPHA_VERSION_URL =
-  'https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt'
-const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`
-let META_ALPHA_VERSION
-
 const META_VERSION_URL =
   'https://github.com/MetaCubeX/mihomo/releases/latest/download/version.txt'
 const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`
 let META_VERSION
-
-const META_ALPHA_MAP = {
-  'win32-x64': 'mihomo-windows-amd64-v2',
-  'win32-ia32': 'mihomo-windows-386',
-  'win32-arm64': 'mihomo-windows-arm64',
-  'darwin-x64': 'mihomo-darwin-amd64-v1-go122',
-  'darwin-arm64': 'mihomo-darwin-arm64-go122',
-  'linux-x64': 'mihomo-linux-amd64-v2',
-  'linux-ia32': 'mihomo-linux-386',
-  'linux-arm64': 'mihomo-linux-arm64',
-  'linux-arm': 'mihomo-linux-armv7',
-  'linux-riscv64': 'mihomo-linux-riscv64',
-  'linux-loong64': 'mihomo-linux-loong64',
-}
 
 const META_MAP = {
   'win32-x64': 'mihomo-windows-amd64-v2',
@@ -198,40 +179,6 @@ const META_MAP = {
 }
 
 // Release discovery
-async function getLatestAlphaVersion() {
-  if (!FORCE) {
-    const cached = await getCachedVersion('META_ALPHA_VERSION')
-    if (cached) {
-      META_ALPHA_VERSION = cached
-      return
-    }
-  }
-  const options = {}
-  const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy
-  if (httpProxy) options.agent = new HttpsProxyAgent(httpProxy)
-
-  try {
-    const response = await fetch(META_ALPHA_VERSION_URL, {
-      ...options,
-      method: 'GET',
-    })
-    if (!response.ok)
-      throw new Error(
-        `Failed to fetch ${META_ALPHA_VERSION_URL}: ${response.status}`,
-      )
-    META_ALPHA_VERSION = (await response.text()).trim()
-    log_info(`Latest alpha version: ${META_ALPHA_VERSION}`)
-    await setCachedVersion('META_ALPHA_VERSION', META_ALPHA_VERSION)
-  } catch (err) {
-    log_error('Error fetching latest alpha version:', err.message)
-    process.exit(1)
-  }
-}
-
 async function getLatestReleaseVersion() {
   if (!FORCE) {
     const cached = await getCachedVersion('META_VERSION')
@@ -266,22 +213,6 @@ async function getLatestReleaseVersion() {
 
 if (!META_MAP[`${platform}-${arch}`]) {
   throw new Error(`mihomo unsupported platform "${platform}-${arch}"`)
-}
-if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
-  throw new Error(`mihomo alpha unsupported platform "${platform}-${arch}"`)
-}
-
-function mihomoAlpha() {
-  const name = META_ALPHA_MAP[`${platform}-${arch}`]
-  const isWin = platform === 'win32'
-  const urlExt = isWin ? 'zip' : 'gz'
-  return {
-    name: 'verge-mihomo-alpha',
-    targetFile: `verge-mihomo-alpha-${SIDECAR_HOST}${isWin ? '.exe' : ''}`,
-    exeFile: `${name}${isWin ? '.exe' : ''}`,
-    zipFile: `${name}-${META_ALPHA_VERSION}.${urlExt}`,
-    downloadURL: `${META_ALPHA_URL_PREFIX}/${name}-${META_ALPHA_VERSION}.${urlExt}`,
-  }
 }
 
 function mihomo() {
@@ -665,9 +596,9 @@ async function resolveServiceBundle() {
   }
 }
 
-/// The NSIS installer publishes the bundled cores into the service's approved directory and must
-/// attest exactly the bytes it unpacked. The digests are computed here, where the sidecars land,
-/// and reach installer.nsi through the installerHooks include (see tauri.windows.conf.json).
+/// The NSIS installer publishes the bundled core into the service's approved directory and must
+/// attest exactly the bytes it unpacked. The digest is computed here, where the sidecar lands,
+/// and reaches installer.nsi through the installerHooks include (see tauri.windows.conf.json).
 const CORE_HASHES_NSH = path.join(
   cwd,
   'src-tauri',
@@ -676,18 +607,11 @@ const CORE_HASHES_NSH = path.join(
   'core-hashes.nsh',
 )
 async function resolveCoreHashes() {
-  const lines = []
-  for (const [define, name] of [
-    ['MIHOMO_SHA256', 'verge-mihomo'],
-    ['MIHOMO_ALPHA_SHA256', 'verge-mihomo-alpha'],
-  ]) {
-    const sidecar = path.join(SIDECAR_DIR, `${name}-${SIDECAR_HOST}.exe`)
-    const digest = createHash('sha256')
-      .update(await fsp.readFile(sidecar))
-      .digest('hex')
-    lines.push(`!define ${define} "${digest}"`)
-  }
-  await fsp.writeFile(CORE_HASHES_NSH, `${lines.join('\n')}\n`)
+  const sidecar = path.join(SIDECAR_DIR, `verge-mihomo-${SIDECAR_HOST}.exe`)
+  const digest = createHash('sha256')
+    .update(await fsp.readFile(sidecar))
+    .digest('hex')
+  await fsp.writeFile(CORE_HASHES_NSH, `!define MIHOMO_SHA256 "${digest}"\n`)
   log_success(`Generated ${CORE_HASHES_NSH}`)
 }
 
@@ -730,17 +654,11 @@ const resolveUnSetDnsScript = () =>
 
 const tasks = [
   {
-    name: 'verge-mihomo-alpha',
-    func: () =>
-      getLatestAlphaVersion().then(() => resolveSidecar(mihomoAlpha())),
-    retry: 5,
-  },
-  {
     name: 'verge-mihomo',
     func: () => getLatestReleaseVersion().then(() => resolveSidecar(mihomo())),
     retry: 5,
   },
-  // After both sidecar tasks: it hashes what they downloaded.
+  // After the sidecar task: it hashes what that downloaded.
   { name: 'core_hashes', func: resolveCoreHashes, retry: 1, winOnly: true },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
   { name: 'service', func: resolveServiceBundle, retry: 5 },

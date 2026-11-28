@@ -305,6 +305,11 @@
       "variants": {
         "release": "Versi Rilis",
         "alpha": "Versi Alpha"
+      },
+      "download": {
+        "title": "Unduh Inti",
+        "message": "{{name}} tidak disertakan dalam aplikasi dan harus diunduh sebelum dapat digunakan.",
+        "confirm": "Unduh"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "Sudah menggunakan versi inti terbaru",
         "changeSuccess": "Inti berhasil diubah",
         "changeFailed": "Gagal mengubah inti",
+        "coreFallback": "Mihomo Alpha tidak lagi disertakan dalam aplikasi, sehingga inti dikembalikan ke Mihomo. Pilih lagi di pengaturan Inti Clash untuk mengunduhnya.",
         "geoDataUpdated": "GeoData Diperbarui"
       },
       "clashService": {

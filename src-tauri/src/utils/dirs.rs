@@ -74,6 +74,22 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     icon_path.map(|path| path_to_str(&path).map(|s| s.into())).transpose()
 }
 
+/// Downloaded cores sit beside the app home, which is the core's own home dir and writable by subscriptions.
+pub fn clash_core_path(core: &str) -> Result<PathBuf> {
+    anyhow::ensure!(
+        crate::config::IVerge::VALID_CLASH_CORES.contains(&core),
+        "invalid clash core: {core}"
+    );
+    let name = format!("{core}{}", std::env::consts::EXE_SUFFIX);
+    if core == crate::config::IVerge::BUNDLED_CLASH_CORE {
+        Ok(std::env::current_exe()?.with_file_name(name))
+    } else {
+        ::dirs::data_dir()
+            .map(|root| root.join(format!("{APP_ID}-cores")).join(name))
+            .ok_or_else(|| anyhow::anyhow!("Failed to get the core directory"))
+    }
+}
+
 pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }

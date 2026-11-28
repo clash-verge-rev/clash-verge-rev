@@ -305,6 +305,11 @@
       "variants": {
         "release": "الإصدار المستقر",
         "alpha": "الإصدار التجريبي"
+      },
+      "download": {
+        "title": "تنزيل النواة",
+        "message": "{{name}} غير مضمّنة في التطبيق ويجب تنزيلها قبل استخدامها.",
+        "confirm": "تنزيل"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "أنت تستخدم بالفعل أحدث إصدار من النواة",
         "changeSuccess": "تم تغيير النواة بنجاح",
         "changeFailed": "فشل تغيير النواة",
+        "coreFallback": "لم تعد Mihomo Alpha مضمّنة في التطبيق، لذلك تم الرجوع إلى نواة Mihomo. اخترها مجددًا من إعدادات نواة Clash لتنزيلها.",
         "geoDataUpdated": "تم تحديث البيانات الجغرافية"
       },
       "clashService": {

@@ -23,6 +23,18 @@ use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: LazyLock<Arc<LogRing>> = LazyLock::new(|| Arc::new(LogRing::new()));
 
+/// Only the bundled core is a Tauri sidecar; a downloaded core runs from its own data directory.
+pub(crate) fn core_command(clash_core: &str) -> Result<tauri_plugin_shell::process::Command> {
+    use tauri_plugin_shell::ShellExt as _;
+
+    let shell = crate::core::handle::Handle::app_handle().shell();
+    if clash_core == crate::config::IVerge::BUNDLED_CLASH_CORE {
+        Ok(shell.sidecar(clash_core)?)
+    } else {
+        Ok(shell.command(crate::utils::dirs::clash_core_path(clash_core)?))
+    }
+}
+
 tokio::task_local! {
     static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
 }

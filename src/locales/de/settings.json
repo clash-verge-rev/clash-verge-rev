@@ -305,6 +305,11 @@
       "variants": {
         "release": "Stabile Version",
         "alpha": "Alpha-Version"
+      },
+      "download": {
+        "title": "Kern herunterladen",
+        "message": "{{name}} ist nicht in der App enthalten und muss vor der Verwendung heruntergeladen werden.",
+        "confirm": "Herunterladen"
       }
     },
     "liteMode": {
@@ -688,6 +693,7 @@
         "alreadyLatestVersion": "Bereits die neueste Kernversion in Verwendung",
         "changeSuccess": "Kern erfolgreich gewechselt",
         "changeFailed": "Kernwechsel fehlgeschlagen",
+        "coreFallback": "Mihomo Alpha ist nicht mehr in der App enthalten, daher wurde auf den Mihomo-Kern zurückgewechselt. Wählen Sie ihn in den Clash-Kern-Einstellungen erneut aus, um ihn herunterzuladen.",
         "geoDataUpdated": "Geo-Daten wurden aktualisiert"
       },
       "clashService": {
