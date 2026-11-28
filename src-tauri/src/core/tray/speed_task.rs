@@ -2,28 +2,18 @@ use crate::core::handle;
 use crate::process::AsyncHandler;
 use crate::utils::{connections_stream, tray_speed};
 use crate::{Type, logging};
-use parking_lot::Mutex;
-use std::sync::Arc;
+use std::sync::OnceLock;
 use std::time::Duration;
-use tauri::async_runtime::JoinHandle;
-use tauri_plugin_mihomo::models::WsConnectionId;
+use tokio::sync::watch;
+
+use connections_stream::{MihomoWsEventStream, StreamConsumeState, TrafficSpeedEvent};
 
 const TRAY_SPEED_RETRY_DELAY: Duration = Duration::from_secs(1);
 const TRAY_SPEED_STALE_TIMEOUT: Duration = Duration::from_secs(5);
 
-#[derive(Clone)]
+#[derive(Default)]
 pub struct TraySpeedController {
-    speed_task: Arc<Mutex<Option<JoinHandle<()>>>>,
-    speed_connection_id: Arc<Mutex<Option<WsConnectionId>>>,
-}
-
-impl Default for TraySpeedController {
-    fn default() -> Self {
-        Self {
-            speed_task: Arc::new(Mutex::new(None)),
-            speed_connection_id: Arc::new(Mutex::new(None)),
-        }
-    }
+    enabled: OnceLock<watch::Sender<bool>>,
 }
 
 impl TraySpeedController {
@@ -32,104 +22,102 @@ impl TraySpeedController {
     }
 
     pub fn update_task(&self, enable_tray_speed: bool) {
-        if enable_tray_speed {
-            self.start_task();
-        } else {
-            self.stop_task();
+        let enabled = self.enabled.get_or_init(|| {
+            let (enabled, receiver) = watch::channel(false);
+            AsyncHandler::spawn(move || Self::run(receiver));
+            enabled
+        });
+        enabled.send_replace(enable_tray_speed);
+    }
+
+    async fn run(mut enabled: watch::Receiver<bool>) {
+        while enabled.changed().await.is_ok() {
+            let should_run = *enabled.borrow_and_update();
+            if should_run {
+                Self::run_enabled(&mut enabled).await;
+            } else {
+                Self::clear_tray_speed();
+            }
         }
     }
 
-    fn start_task(&self) {
-        if handle::Handle::global().is_exiting() {
-            return;
-        }
+    async fn run_enabled(enabled: &mut watch::Receiver<bool>) {
+        while !handle::Handle::global().is_exiting() {
+            if !Self::has_main_tray() {
+                logging!(warn, Type::Tray, "托盘不可用，停止托盘速率任务");
+                return;
+            }
 
-        if !Self::has_main_tray() {
-            logging!(warn, Type::Tray, "托盘不可用，跳过启动托盘速率任务");
-            return;
-        }
-
-        let mut guard = self.speed_task.lock();
-        if guard.as_ref().is_some_and(|task| !task.inner().is_finished()) {
-            return;
-        }
-
-        let speed_connection_id = Arc::clone(&self.speed_connection_id);
-        let task = AsyncHandler::spawn(move || async move {
-            loop {
-                if handle::Handle::global().is_exiting() {
-                    break;
-                }
-
-                if !Self::has_main_tray() {
-                    logging!(warn, Type::Tray, "托盘已不可用，停止托盘速率任务");
-                    break;
-                }
-
-                let stream_connect_result = connections_stream::connect_traffic_stream().await;
-                let mut speed_stream = match stream_connect_result {
-                    Ok(stream) => stream,
-                    Err(err) => {
-                        logging!(debug, Type::Tray, "托盘速率流连接失败，稍后重试: {err}");
-                        Self::apply_tray_speed(0, 0);
-                        tokio::time::sleep(TRAY_SPEED_RETRY_DELAY).await;
-                        continue;
+            // Keep the registered stream outside the cancellable future until it is disconnected.
+            let mut stream = None;
+            let disabled = tokio::select! {
+                biased;
+                _ = Self::wait_until_disabled(enabled) => true,
+                _ = Self::read_speed(&mut stream) => false,
+            };
+            if disabled {
+                Self::clear_tray_speed();
+            }
+            if let Some(stream) = stream {
+                let disconnect = connections_stream::disconnect_connection(stream.connection_id);
+                tokio::pin!(disconnect);
+                tokio::select! {
+                    biased;
+                    _ = Self::wait_until_disabled(enabled), if !disabled => {
+                        Self::clear_tray_speed();
+                        disconnect.await;
+                        return;
                     }
-                };
-
-                Self::set_speed_connection_id(&speed_connection_id, Some(speed_stream.connection_id));
-
-                loop {
-                    let next_state = speed_stream
-                        .next_event(TRAY_SPEED_STALE_TIMEOUT, || handle::Handle::global().is_exiting())
-                        .await;
-
-                    match next_state {
-                        connections_stream::StreamConsumeState::Event(speed_event) => {
-                            Self::apply_tray_speed(speed_event.up, speed_event.down);
-                        }
-                        connections_stream::StreamConsumeState::Stale => {
-                            logging!(debug, Type::Tray, "托盘速率流长时间未收到有效数据，触发重连");
-                            Self::apply_tray_speed(0, 0);
-                            break;
-                        }
-                        connections_stream::StreamConsumeState::Closed
-                        | connections_stream::StreamConsumeState::ExitRequested => {
-                            break;
-                        }
-                    }
+                    _ = &mut disconnect => {}
                 }
+            }
+            if disabled || handle::Handle::global().is_exiting() || !Self::has_main_tray() {
+                return;
+            }
 
-                Self::disconnect_speed_connection(&speed_connection_id).await;
-
-                if handle::Handle::global().is_exiting() || !Self::has_main_tray() {
-                    break;
-                }
-
-                // `Stale` already reset the display; this covers remote close.
+            if *enabled.borrow() {
                 Self::apply_tray_speed(0, 0);
-                tokio::time::sleep(TRAY_SPEED_RETRY_DELAY).await;
             }
-
-            Self::set_speed_connection_id(&speed_connection_id, None);
-        });
-
-        *guard = Some(task);
+            if tokio::time::timeout(TRAY_SPEED_RETRY_DELAY, Self::wait_until_disabled(enabled))
+                .await
+                .is_ok()
+            {
+                Self::clear_tray_speed();
+                return;
+            }
+        }
     }
 
-    fn stop_task(&self) {
-        let task = self.speed_task.lock().take();
-        let speed_connection_id = Arc::clone(&self.speed_connection_id);
+    async fn wait_until_disabled(enabled: &mut watch::Receiver<bool>) {
+        let _ = enabled.wait_for(|enabled| !enabled).await;
+    }
 
-        AsyncHandler::spawn(move || async move {
-            // Await abort before disconnect so the task cannot consume and lose the connection ID.
-            if let Some(task) = task {
-                task.abort();
-                let _ = task.await;
+    async fn read_speed(stream: &mut Option<MihomoWsEventStream<TrafficSpeedEvent>>) {
+        let speed_stream = match connections_stream::connect_traffic_stream().await {
+            Ok(connected) => stream.insert(connected),
+            Err(err) => {
+                logging!(debug, Type::Tray, "托盘速率流连接失败，稍后重试: {err}");
+                return;
             }
-            Self::disconnect_speed_connection(&speed_connection_id).await;
-        });
+        };
 
+        loop {
+            match speed_stream
+                .next_event(TRAY_SPEED_STALE_TIMEOUT, || handle::Handle::global().is_exiting())
+                .await
+            {
+                StreamConsumeState::Event(event) => Self::apply_tray_speed(event.up, event.down),
+                StreamConsumeState::Stale => {
+                    logging!(debug, Type::Tray, "托盘速率流长时间未收到有效数据，触发重连");
+                    Self::apply_tray_speed(0, 0);
+                    return;
+                }
+                StreamConsumeState::Closed | StreamConsumeState::ExitRequested => return,
+            }
+        }
+    }
+
+    fn clear_tray_speed() {
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id(super::TRAY_ID) {
             let result = tray.with_inner_tray_icon(|inner| {
@@ -145,23 +133,6 @@ impl TraySpeedController {
 
     fn has_main_tray() -> bool {
         handle::Handle::app_handle().tray_by_id(super::TRAY_ID).is_some()
-    }
-
-    fn set_speed_connection_id(
-        speed_connection_id: &Arc<Mutex<Option<WsConnectionId>>>,
-        connection_id: Option<WsConnectionId>,
-    ) {
-        *speed_connection_id.lock() = connection_id;
-    }
-
-    fn take_speed_connection_id(speed_connection_id: &Arc<Mutex<Option<WsConnectionId>>>) -> Option<WsConnectionId> {
-        speed_connection_id.lock().take()
-    }
-
-    async fn disconnect_speed_connection(speed_connection_id: &Arc<Mutex<Option<WsConnectionId>>>) {
-        if let Some(connection_id) = Self::take_speed_connection_id(speed_connection_id) {
-            connections_stream::disconnect_connection(connection_id).await;
-        }
     }
 
     fn apply_tray_speed(up: u64, down: u64) {

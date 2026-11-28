@@ -7,10 +7,11 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
-use futures::StreamExt as _;
+use futures::{FutureExt as _, StreamExt as _};
 use parking_lot::{Mutex, RwLock};
 use std::{
     collections::HashMap,
+    panic::AssertUnwindSafe,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -70,11 +71,11 @@ async fn run_timer_profile_update_transition<Started, Update, UpdateFuture, Fini
     Started: FnOnce(),
     Update: FnOnce() -> UpdateFuture,
     UpdateFuture: std::future::Future<Output = Output>,
-    Finished: FnOnce(Output),
+    Finished: FnOnce(std::thread::Result<Output>),
     Completed: FnOnce(),
 {
     update_started();
-    let result = update_profile().await;
+    let result = AssertUnwindSafe(async { update_profile().await }).catch_unwind().await;
     update_finished(result);
     update_completed();
 }
@@ -474,12 +475,13 @@ impl Timer {
             || Self::emit_update_event(uid, true),
             || feat::update_profile(uid, None, false),
             |result| match result {
-                Ok(_) => {
+                Ok(Ok(_)) => {
                     logging!(debug, Type::Timer, "timer task completed for uid: {}", uid);
                 }
-                Err(e) => {
+                Ok(Err(e)) => {
                     logging_error!(Type::Timer, "Failed to update profile uid {}: {e:#}", uid);
                 }
+                Err(_) => logging!(error, Type::Timer, "Profile update worker panicked for uid: {uid}"),
             },
             || Self::emit_update_event(uid, false),
         )
@@ -732,6 +734,26 @@ mod tests {
         assert!(nothing_due(&mut queue).await, "and must never be scheduled again");
     }
 
+    #[tokio::test]
+    #[allow(clippy::panic, reason = "inject an unwind in the update worker")]
+    async fn panicking_profile_update_reports_completion() {
+        let calls = Mutex::new(Vec::new());
+        run_timer_profile_update_transition(
+            || calls.lock().push("update-started"),
+            || async { panic!("profile update panic") },
+            |result| {
+                assert!(result.is_err());
+                calls.lock().push("terminal-result");
+            },
+            || calls.lock().push("update-completed"),
+        )
+        .await;
+        assert_eq!(
+            calls.into_inner(),
+            ["update-started", "terminal-result", "update-completed"]
+        );
+    }
+
     #[tokio::test(start_paused = true)]
     async fn timer_profile_update_runs_past_former_deadline_and_pairs_events() -> anyhow::Result<()> {
         let calls = Arc::new(Mutex::new(Vec::new()));
@@ -763,8 +785,8 @@ mod tests {
             },
             {
                 let calls = Arc::clone(&calls);
-                move |result: anyhow::Result<()>| {
-                    assert!(result.is_ok());
+                move |result| {
+                    assert!(matches!(result, Ok(Ok(()))));
                     calls.lock().push("terminal-result");
                 }
             },

@@ -3,7 +3,7 @@ use crate::{
     cmd::StringifyErr as _,
     cmd::validate::{ValidationNoticeTarget, handle_validation_notice},
     config::{Config, IProfiles, PrfItem},
-    core::auto_backup::{AutoBackupManager, AutoBackupTrigger},
+    core::auto_backup::{self, AutoBackupTrigger},
     core::{
         CoreManager, handle,
         validate::{CoreConfigValidator, ValidationOutcome},
@@ -86,7 +86,7 @@ pub async fn save_profile_file(
     if changes_applied.is_valid()
         && let Some(trigger) = backup_trigger
     {
-        AutoBackupManager::trigger_backup(trigger);
+        auto_backup::trigger_backup(trigger);
     }
 
     Ok(changes_applied)

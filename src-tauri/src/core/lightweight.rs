@@ -9,9 +9,10 @@ use clash_verge_logging::{Type, logging};
 use crate::utils::window_manager::WindowManager;
 use anyhow::Result;
 use parking_lot::Mutex;
-use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
+use std::sync::LazyLock;
+use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
 use tauri::Listener as _;
-use tokio::sync::oneshot;
+use tokio::sync::mpsc;
 use tokio::time::{Duration, sleep};
 
 #[repr(u8)]
@@ -41,27 +42,24 @@ impl LightweightState {
 static LIGHTWEIGHT_STATE: AtomicU8 = AtomicU8::new(LightweightState::Normal as u8);
 
 struct WindowListener {
-    handler_id: AtomicU32,
+    handler_id: Option<tauri::EventId>,
     event: &'static str,
     label: &'static str,
 }
 
 impl WindowListener {
-    fn setup(&self, on_event: impl Fn() + Send + 'static) {
+    fn setup(&mut self, on_event: impl Fn() + Send + 'static) {
         if let Some(window) = WindowManager::get_main_window() {
-            let previous_handler_id = self.handler_id.swap(0, Ordering::AcqRel);
-            if previous_handler_id != 0 {
-                window.unlisten(previous_handler_id);
+            if let Some(id) = self.handler_id.take() {
+                window.unlisten(id);
                 logging!(debug, Type::Lightweight, "覆盖旧的{}监听", self.label);
             }
-            let handler_id = window.listen(self.event, move |_event| on_event());
-            self.handler_id.store(handler_id, Ordering::Release);
+            self.handler_id = Some(window.listen(self.event, move |_event| on_event()));
         }
     }
 
-    fn cancel(&self) {
-        let id = self.handler_id.swap(0, Ordering::AcqRel);
-        if id != 0 {
+    fn cancel(&mut self) {
+        if let Some(id) = self.handler_id.take() {
             if let Some(window) = WindowManager::get_main_window() {
                 window.unlisten(id);
             }
@@ -70,19 +68,36 @@ impl WindowListener {
     }
 }
 
-static WINDOW_CLOSE_LISTENER: WindowListener = WindowListener {
-    handler_id: AtomicU32::new(0),
-    event: "tauri://close-requested",
-    label: "窗口关闭",
-};
+struct WindowListeners {
+    close: WindowListener,
+    focus: WindowListener,
+}
 
-static WEBVIEW_FOCUS_LISTENER: WindowListener = WindowListener {
-    handler_id: AtomicU32::new(0),
-    event: "tauri://focus",
-    label: "窗口焦点",
-};
+static WINDOW_LISTENERS: Mutex<WindowListeners> = Mutex::new(WindowListeners {
+    close: WindowListener {
+        handler_id: None,
+        event: "tauri://close-requested",
+        label: "窗口关闭",
+    },
+    focus: WindowListener {
+        handler_id: None,
+        event: "tauri://focus",
+        label: "窗口焦点",
+    },
+});
 
-static CANCEL_TX: Mutex<Option<oneshot::Sender<()>>> = Mutex::new(None);
+enum TimerCommand {
+    Arm(u64),
+    Disarm,
+}
+
+static TIMER_GENERATION: AtomicU64 = AtomicU64::new(0);
+
+static TIMER_COMMANDS: LazyLock<mpsc::UnboundedSender<TimerCommand>> = LazyLock::new(|| {
+    let (sender, receiver) = mpsc::unbounded_channel();
+    AsyncHandler::spawn(move || run_light_weight_timer(receiver));
+    sender
+});
 
 #[inline]
 fn get_state() -> LightweightState {
@@ -118,11 +133,12 @@ async fn refresh_lightweight_tray_state() {
 }
 
 pub async fn auto_lightweight_boot() -> Result<()> {
+    let generation = TIMER_GENERATION.load(Ordering::Acquire);
     let verge_config = Config::verge().await;
     let is_enable_auto = verge_config.data_arc().enable_auto_light_weight_mode.unwrap_or(false);
     let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
-    if is_enable_auto {
-        enable_auto_light_weight_mode().await;
+    if is_enable_auto && verge_config.latest_arc().enable_auto_light_weight_mode.unwrap_or(false) {
+        enable_auto_light_weight_mode_at(generation).await;
     }
     if is_silent_start {
         entry_lightweight_mode().await;
@@ -131,32 +147,43 @@ pub async fn auto_lightweight_boot() -> Result<()> {
 }
 
 pub async fn enable_auto_light_weight_mode() {
+    enable_auto_light_weight_mode_at(TIMER_GENERATION.load(Ordering::Acquire)).await;
+}
+
+async fn enable_auto_light_weight_mode_at(generation: u64) {
     if let Err(e) = Timer::global().init().await {
         logging!(error, Type::Lightweight, "Failed to initialize timer: {e}");
         return;
     }
     logging!(info, Type::Lightweight, "开启自动轻量模式");
-    setup_window_close_listener();
-    setup_webview_focus_listener();
+    setup_auto_light_weight_listeners(generation);
 }
 
 pub fn disable_auto_light_weight_mode() {
     logging!(info, Type::Lightweight, "关闭自动轻量模式");
+    TIMER_GENERATION.fetch_add(1, Ordering::AcqRel);
     cancel_light_weight_timer();
-    cancel_window_close_listener();
-    cancel_webview_focus_listener();
+    let mut listeners = WINDOW_LISTENERS.lock();
+    listeners.close.cancel();
+    listeners.focus.cancel();
 }
 
 pub async fn entry_lightweight_mode() -> bool {
+    let entered = begin_lightweight_mode();
+    if entered {
+        cancel_light_weight_timer();
+    }
+    refresh_lightweight_tray_state().await;
+    entered
+}
+
+fn begin_lightweight_mode() -> bool {
     if !try_transition(LightweightState::Normal, LightweightState::In) {
         logging!(debug, Type::Lightweight, "无需进入轻量模式，跳过调用");
-        refresh_lightweight_tray_state().await;
         return false;
     }
     record_state_and_log(LightweightState::In);
     WindowManager::destroy_main_window();
-    cancel_light_weight_timer();
-    refresh_lightweight_tray_state().await;
     true
 }
 
@@ -172,14 +199,9 @@ pub async fn exit_lightweight_mode() -> bool {
     }
     record_state_and_log(LightweightState::Exiting);
     WindowManager::show_main_window().await;
-    let enable_auto_light_weight_mode = Config::verge()
-        .await
-        .data_arc()
-        .enable_auto_light_weight_mode
-        .unwrap_or(false);
-    if enable_auto_light_weight_mode {
-        setup_window_close_listener();
-        setup_webview_focus_listener();
+    let generation = TIMER_GENERATION.load(Ordering::Acquire);
+    if auto_light_weight_is_enabled().await {
+        setup_auto_light_weight_listeners(generation);
     }
     cancel_light_weight_timer();
     record_state_and_log(LightweightState::Normal);
@@ -189,78 +211,80 @@ pub async fn exit_lightweight_mode() -> bool {
 
 #[cfg(target_os = "macos")]
 pub async fn add_light_weight_timer() {
-    setup_light_weight_timer().await;
+    let generation = TIMER_GENERATION.load(Ordering::Acquire);
+    if auto_light_weight_is_enabled().await {
+        let _ = TIMER_COMMANDS.send(TimerCommand::Arm(generation));
+    }
 }
 
-fn setup_window_close_listener() {
-    WINDOW_CLOSE_LISTENER.setup(|| {
-        std::mem::drop(AsyncHandler::spawn(|| async {
-            setup_light_weight_timer().await;
-        }));
-        logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
-    });
+async fn auto_light_weight_is_enabled() -> bool {
+    let verge = Config::verge().await;
+    // A disable applies before persistence. A rollback restores eligibility for future hides.
+    verge.data_arc().enable_auto_light_weight_mode.unwrap_or(false)
+        && verge.latest_arc().enable_auto_light_weight_mode.unwrap_or(false)
 }
 
-fn cancel_window_close_listener() {
-    WINDOW_CLOSE_LISTENER.cancel();
-}
-
-fn setup_webview_focus_listener() {
-    WEBVIEW_FOCUS_LISTENER.setup(|| {
-        cancel_light_weight_timer();
-        logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
-    });
-}
-
-fn cancel_webview_focus_listener() {
-    WEBVIEW_FOCUS_LISTENER.cancel();
-}
-
-async fn setup_light_weight_timer() {
-    let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
-
-    let mut cancel_tx_guard = CANCEL_TX.lock();
-    if cancel_tx_guard.is_some() {
-        logging!(
-            debug,
-            Type::Timer,
-            "Lightweight mode timer already exists, skipping setup"
-        );
+fn setup_auto_light_weight_listeners(generation: u64) {
+    let mut listeners = WINDOW_LISTENERS.lock();
+    if generation != TIMER_GENERATION.load(Ordering::Acquire) {
         return;
     }
-
-    let (tx, rx) = oneshot::channel::<()>();
-    *cancel_tx_guard = Some(tx);
-    drop(cancel_tx_guard);
-
-    AsyncHandler::spawn(move || async move {
-        tokio::select! {
-            _ = sleep(Duration::from_secs(once_by_minutes.saturating_mul(60))) => {
-                logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
-                {
-                    let mut guard = CANCEL_TX.lock();
-                    *guard = None;
-                }
-                entry_lightweight_mode().await;
-            }
-            _ = rx => {
-                logging!(debug, Type::Timer, "Received cancel signal, stopping lightweight mode timer");
-            }
+    listeners.close.setup(move || {
+        let _ = TIMER_COMMANDS.send(TimerCommand::Arm(generation));
+        logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
+    });
+    listeners.focus.setup(move || {
+        if generation == TIMER_GENERATION.load(Ordering::Acquire) {
+            cancel_light_weight_timer();
+            logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
         }
     });
+}
 
+async fn run_light_weight_timer(mut commands: mpsc::UnboundedReceiver<TimerCommand>) {
+    while let Some(command) = commands.recv().await {
+        let TimerCommand::Arm(generation) = command else {
+            continue;
+        };
+        // Unlisten can be deferred while Tauri is delivering an event.
+        if generation != TIMER_GENERATION.load(Ordering::Acquire) {
+            continue;
+        }
+
+        let countdown = wait_for_light_weight_timeout();
+        tokio::pin!(countdown);
+        loop {
+            tokio::select! {
+                biased;
+                command = commands.recv() => match command {
+                    Some(TimerCommand::Arm(_)) => {}
+                    Some(TimerCommand::Disarm) => break,
+                    None => return,
+                },
+                () = &mut countdown => {
+                    if generation == TIMER_GENERATION.load(Ordering::Acquire) {
+                        logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
+                        begin_lightweight_mode();
+                        AsyncHandler::spawn(refresh_lightweight_tray_state);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+async fn wait_for_light_weight_timeout() {
+    let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
     logging!(
         info,
         Type::Timer,
         "Lightweight mode timer set, entering lightweight mode in {} minutes",
         once_by_minutes
     );
+    sleep(Duration::from_secs(once_by_minutes.saturating_mul(60))).await;
 }
 
 fn cancel_light_weight_timer() {
-    let mut cancel_tx_guard = CANCEL_TX.lock();
-    if let Some(tx) = cancel_tx_guard.take() {
-        let _ = tx.send(());
-        logging!(debug, Type::Timer, "Timer cancelled");
-    }
+    let _ = TIMER_COMMANDS.send(TimerCommand::Disarm);
 }

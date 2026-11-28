@@ -3,12 +3,50 @@
 //! Proxy settings live per network service. A write that found no service wrote nothing, and a
 //! switch to another service leaves the proxy on the old one; both need the write repeated.
 
-use crate::{config::Config, core::CoreManager, core::proxy_control, process::AsyncHandler};
+use crate::{
+    config::Config,
+    core::{CoreManager, proxy_control},
+    process::scheduled_task::{self, Mailbox, Next, ScheduledTask},
+};
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
+use std::sync::{Arc, LazyLock};
 use sysproxy::NetworkServiceMonitor;
+use tokio::time::Instant;
 
 static MONITOR: Mutex<Option<NetworkServiceMonitor>> = Mutex::new(None);
+
+static REAPPLY_REQUESTS: LazyLock<Arc<Mailbox<bool>>> =
+    LazyLock::new(|| scheduled_task::spawn(NetworkReapply::default(), |()| reapply()));
+
+#[derive(Default)]
+struct NetworkReapply {
+    pending: bool,
+}
+
+impl ScheduledTask for NetworkReapply {
+    type Input = bool;
+    type Work = ();
+    type Output = ();
+
+    fn on_input(&mut self, requested: bool, _: Instant) {
+        self.pending |= requested;
+    }
+
+    fn next(&mut self, _: Instant) -> Next<()> {
+        if std::mem::take(&mut self.pending) {
+            Next::Run(())
+        } else {
+            Next::Idle
+        }
+    }
+
+    fn finished(&mut self, (): (), result: std::thread::Result<()>, _: Instant) {
+        if result.is_err() {
+            logging!(error, Type::Core, "network proxy reapply panicked");
+        }
+    }
+}
 
 pub fn is_armed() -> bool {
     MONITOR.lock().is_some()
@@ -18,7 +56,7 @@ pub fn is_armed() -> bool {
 /// appearing from here on is never missed.
 pub fn start() {
     match NetworkServiceMonitor::start(|| {
-        AsyncHandler::spawn(reapply);
+        REAPPLY_REQUESTS.update(|pending| !std::mem::replace(pending, true));
     }) {
         Ok(monitor) => {
             *MONITOR.lock() = Some(monitor);

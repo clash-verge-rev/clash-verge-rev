@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IClashTemp, IProfiles, IVerge},
-    core::{CoreManager, backup, proxy_control, proxy_control::SystemProxyStateUnknown},
+    core::{CoreManager, auto_backup, backup, proxy_control, proxy_control::SystemProxyStateUnknown},
     process::AsyncHandler,
     utils::{
         dirs::{PathBufExec as _, app_home_dir, local_backup_dir, verge_path},
@@ -58,6 +58,7 @@ async fn finalize_restored_verge_config(
         *d = restored.clone();
     });
     verge_draft.apply();
+    auto_backup::publish_settings(&verge_draft.data_arc());
 
     // Turn it off here; a failing core side effect below would otherwise skip this step.
     if !restored.enable_system_proxy.unwrap_or_default() {

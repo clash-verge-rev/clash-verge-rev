@@ -16,7 +16,11 @@ use crate::{
         runtime_bundle::{GEO_ASSETS, RemoteProviderRef, collect_runtime_bundle, remote_providers_of},
         tray::Tray,
     },
-    process::AsyncHandler,
+    process::{
+        AsyncHandler,
+        scheduled_task::{self, Mailbox, Next, ScheduledTask},
+        watch_task,
+    },
 };
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::Draft;
@@ -27,8 +31,6 @@ use clash_verge_service_ipc::{
     StageRuntimeOutcome, StartClashRequest, WriterConfig,
 };
 use parking_lot::Mutex;
-#[cfg(target_os = "macos")]
-use std::sync::LazyLock;
 use std::{
     collections::HashMap,
     env::current_exe,
@@ -36,11 +38,12 @@ use std::{
     path::{Path, PathBuf},
     process::Command as StdCommand,
     sync::{
-        Arc,
+        Arc, LazyLock,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
+use tokio::{sync::watch, time::Instant};
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 static ACTIVE_SERVICE_SESSION: Mutex<Option<ActiveServiceSession>> = Mutex::new(None);
@@ -838,61 +841,82 @@ fn decode_hex(encoded: &str) -> Result<Vec<u8>> {
         .collect()
 }
 
-static PROVIDER_SYNC_QUEUED: AtomicBool = AtomicBool::new(false);
-// Serializing the whole read-and-publish pass prevents an older cache from replacing a newer one.
-static PROVIDER_SYNC_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+static PROVIDER_SYNC_REQUESTS: LazyLock<Arc<Mailbox<Option<Instant>>>> =
+    LazyLock::new(|| scheduled_task::spawn(ProviderSchedule::default(), |_| sync_runtime_providers_by_service()));
 static SYNC_TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 const RUNTIME_PROVIDER_SYNC_ATTEMPTS: u32 = 4;
 const CONTENT_COMPARE_CHUNK: usize = 64 * 1024;
 
 pub(crate) fn request_runtime_provider_sync(delay: Duration) {
-    if PROVIDER_SYNC_QUEUED.swap(true, Ordering::AcqRel) {
-        return;
-    }
-    AsyncHandler::spawn(move || async move {
-        tokio::time::sleep(delay).await;
-        use crate::utils::retry::{RetryError, RetryPolicy, retry};
-        let _ = retry(
-            RetryPolicy::fixed(
-                std::num::NonZeroUsize::MIN.saturating_add((RUNTIME_PROVIDER_SYNC_ATTEMPTS - 1) as usize),
-                constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY,
-            ),
-            |index| async move {
-                let attempt = index as u32 + 1;
-                let outcome = {
-                    let _serial = PROVIDER_SYNC_SERIAL.lock().await;
-                    if attempt == 1 {
-                        PROVIDER_SYNC_QUEUED.store(false, Ordering::Release);
-                    }
-                    sync_runtime_providers_by_service().await
-                };
-                match outcome {
-                    Ok(ProviderSync { pending: 0, .. }) => Ok(()),
-                    Ok(ProviderSync { pending, .. }) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
-                        logging!(
-                            info,
-                            Type::Service,
-                            "{pending} provider caches are not ready yet; retrying"
-                        );
-                        Err(RetryError::Retry(()))
-                    }
-                    Ok(ProviderSync { pending, .. }) => {
-                        logging!(warn, Type::Service, "{pending} provider caches were not synced");
-                        Ok(())
-                    }
-                    Err(error) => {
-                        logging!(
-                            warn,
-                            Type::Service,
-                            "failed to sync provider caches from the service: {error:#}"
-                        );
-                        Ok(())
-                    }
-                }
-            },
-        )
-        .await;
+    let due = Instant::now() + delay;
+    PROVIDER_SYNC_REQUESTS.update(|pending| {
+        if pending.is_some_and(|current| current <= due) {
+            return false;
+        }
+        *pending = Some(due);
+        true
     });
+}
+
+#[derive(Default)]
+struct ProviderSchedule {
+    requested: Option<Instant>,
+    retry: Option<(Instant, u32)>,
+}
+
+impl ScheduledTask for ProviderSchedule {
+    type Input = Option<Instant>;
+    type Work = u32;
+    type Output = Result<ProviderSync>;
+
+    fn on_input(&mut self, requested: Self::Input, _: Instant) {
+        if let Some(requested) = requested {
+            self.requested = Some(self.requested.map_or(requested, |current| current.min(requested)));
+        }
+    }
+
+    fn next(&mut self, now: Instant) -> Next<u32> {
+        let Some(due) = self.requested.into_iter().chain(self.retry.map(|(due, _)| due)).min() else {
+            return Next::Idle;
+        };
+        if due > now {
+            return Next::At(due);
+        }
+
+        self.requested.take_if(|due| *due <= now);
+        Next::Run(
+            self.retry
+                .take_if(|(due, _)| *due <= now)
+                .map_or(1, |(_, attempt)| attempt),
+        )
+    }
+
+    fn finished(&mut self, attempt: u32, result: std::thread::Result<Self::Output>, now: Instant) {
+        match result {
+            Ok(Ok(ProviderSync { pending: 0, .. })) => self.retry = None,
+            Ok(Ok(ProviderSync { pending, .. })) if attempt < RUNTIME_PROVIDER_SYNC_ATTEMPTS => {
+                logging!(
+                    info,
+                    Type::Service,
+                    "{pending} provider caches are not ready yet; retrying"
+                );
+                // A new request during backoff leaves the existing retry deadline and budget intact.
+                self.retry
+                    .get_or_insert_with(|| (now + constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY, attempt + 1));
+            }
+            Ok(Ok(ProviderSync { pending, .. })) => {
+                logging!(warn, Type::Service, "{pending} provider caches were not synced");
+            }
+            Ok(Err(error)) => {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "failed to sync provider caches from the service: {error:#}"
+                );
+            }
+            Err(_) => logging!(error, Type::Service, "provider cache sync panicked"),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -1451,55 +1475,74 @@ const OWNER_MONITOR_INTERVAL: Duration = Duration::from_secs(5);
 /// Mirrors `OwnerWatch`'s tolerance, for the log line only.
 const SUSTAINED_OWNER_SAMPLES: u8 = 3;
 
-fn start_owner_monitor() {
-    let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
-    AsyncHandler::spawn(move || async move {
-        logging!(debug, Type::Service, "owner monitor started (generation {generation})");
-        let mut watch = OwnerWatch::new();
-        let mut core_restarts = None;
-        loop {
-            tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
-            if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
-                logging!(
-                    debug,
-                    Type::Service,
-                    "owner monitor superseded (generation {generation})"
-                );
-                break;
-            }
-            if !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
-                logging!(
-                    debug,
-                    Type::Service,
-                    "owner monitor stopped; core no longer in service mode (generation {generation})"
-                );
-                break;
-            }
-
-            let (sample, status) = read_owner_sample().await;
-            if let Some(status) = &status {
-                log_core_restarts(&mut core_restarts, status);
-            }
-            let mut step = watch.observe(sample);
-            if matches!(step, OwnerStep::VerifyTransport) {
-                if watch.just_became_sustained() {
-                    logging!(
-                        warn,
-                        Type::Service,
-                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples (generation {generation}); \
-                         preserving local proxy state while the core endpoint still answers"
-                    );
-                }
-                let owner_endpoint_available = Handle::mihomo().get_version().await.is_ok();
-                step = watch.resolve_transport(owner_endpoint_available);
-            }
-
-            if let OwnerStep::Recover(reason) = step {
-                recover_after_owner_loss(generation, reason, status.as_ref()).await;
-                break;
-            }
-        }
+static OWNER_MONITOR: LazyLock<watch::Sender<Option<u64>>> = LazyLock::new(|| {
+    let (sender, receiver) = watch::channel(None);
+    AsyncHandler::spawn(move || {
+        watch_task::run(receiver, monitor_owner, |generation| {
+            logging!(error, Type::Service, "owner monitor panicked (generation {generation})");
+        })
     });
+    sender
+});
+
+fn start_owner_monitor() {
+    OWNER_MONITOR.send_modify(|active| {
+        *active = Some(OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel).wrapping_add(1));
+    });
+}
+
+async fn monitor_owner(generation: u64, mut updates: watch::Receiver<Option<u64>>) {
+    logging!(debug, Type::Service, "owner monitor started (generation {generation})");
+    let mut watch = OwnerWatch::new();
+    let mut core_restarts = None;
+    loop {
+        let (step, status) = tokio::select! {
+            biased;
+            _ = updates.changed() => return,
+            result = async {
+                tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
+                if owner_monitor_generation() != generation
+                    || !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service)
+                {
+                    return None;
+                }
+                Some(probe_owner(generation, &mut watch, &mut core_restarts).await)
+            } => match result {
+                Some(observation) => observation,
+                None => return,
+            }
+        };
+
+        if let OwnerStep::Recover(reason) = step {
+            recover_after_owner_loss(generation, reason, status.as_ref()).await;
+            return;
+        }
+    }
+}
+
+async fn probe_owner(
+    generation: u64,
+    watch: &mut OwnerWatch,
+    core_restarts: &mut Option<u32>,
+) -> (OwnerStep, Option<ServiceStatusSnapshot>) {
+    let (sample, status) = read_owner_sample().await;
+    if let Some(status) = &status {
+        log_core_restarts(core_restarts, status);
+    }
+    let mut step = watch.observe(sample);
+    if matches!(step, OwnerStep::VerifyTransport) {
+        if watch.just_became_sustained() {
+            logging!(
+                warn,
+                Type::Service,
+                "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples (generation {generation}); \
+                 preserving local proxy state while the core endpoint still answers"
+            );
+        }
+        let owner_endpoint_available = Handle::mihomo().get_version().await.is_ok();
+        step = watch.resolve_transport(owner_endpoint_available);
+    }
+    (step, status)
 }
 
 /// The Service logs its watchdog restarts where the app cannot read them.
@@ -1583,7 +1626,10 @@ fn session_matches_active_status(is_active: bool, active_generation: Option<u64>
 }
 
 fn cancel_owner_monitors() {
-    OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
+    OWNER_MONITOR.send_modify(|active| {
+        OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
+        *active = None;
+    });
 }
 
 pub(crate) fn owner_monitor_generation() -> u64 {
@@ -1915,6 +1961,41 @@ mod tests {
     use anyhow::bail;
     use clash_verge_service_ipc::OwnerSessionProof;
     use std::sync::atomic::{AtomicU64, Ordering};
+
+    #[tokio::test(start_paused = true)]
+    async fn replacing_the_owner_monitor_interrupts_its_wait() {
+        let (sender, mut desired) = tokio::sync::watch::channel(Some(1));
+        let mut previous = Box::pin(super::monitor_owner(1, desired.clone()));
+        assert!(futures::poll!(&mut previous).is_pending());
+
+        sender.send_replace(Some(2));
+        assert!(futures::poll!(&mut previous).is_ready());
+        assert!(desired.has_changed().unwrap_or(false));
+        assert_eq!(*desired.borrow_and_update(), Some(2));
+    }
+
+    #[test]
+    fn early_provider_sync_keeps_the_later_retry_budget() {
+        use super::{Duration, Instant, Next, ProviderSchedule, ProviderSync, ScheduledTask as _};
+
+        let mut schedule = ProviderSchedule::default();
+        let now = Instant::now();
+        let pending = || Ok(Ok(ProviderSync { pending: 1, synced: 0 }));
+        schedule.on_input(Some(now), now);
+        assert!(matches!(schedule.next(now), Next::Run(1)));
+        schedule.finished(1, pending(), now);
+
+        let early = now + Duration::from_secs(2);
+        schedule.on_input(Some(now + Duration::from_secs(9)), now);
+        schedule.on_input(Some(early), now);
+        assert!(matches!(schedule.next(now), Next::At(due) if due == early));
+        assert!(matches!(schedule.next(early), Next::Run(1)));
+        schedule.finished(1, pending(), early);
+
+        let retry = now + crate::constants::timing::RUNTIME_PROVIDER_SYNC_RETRY_DELAY;
+        assert!(matches!(schedule.next(early), Next::At(due) if due == retry));
+        assert!(matches!(schedule.next(retry), Next::Run(2)));
+    }
 
     /// A Run State backed by a scripted environment, so these tests never touch the global.
     fn fake_store() -> RunStateStore<FakeEnv> {
