@@ -481,7 +481,7 @@ impl Timer {
                 Ok(Err(e)) => {
                     logging_error!(Type::Timer, "Failed to update profile uid {}: {e:#}", uid);
                 }
-                Err(_) => logging!(error, Type::Timer, "Profile update worker panicked for uid: {uid}"),
+                Err(_) => logging!(error, Type::Timer, "Profile update worker panicked"),
             },
             || Self::emit_update_event(uid, false),
         )
