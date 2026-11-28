@@ -29,6 +29,20 @@ pub async fn get_clash_info() -> CmdResult<ClashInfo> {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn get_external_controller() -> CmdResult<feat::ExternalControllerSettings> {
+    Ok(feat::get_external_controller().await)
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn save_external_controller(settings: feat::ExternalControllerSettings) -> CmdResult {
+    feat::save_external_controller(settings)
+        .await
+        .map_err(|error| proxy_aware_coded_error(&error, "EXTERNAL_CONTROLLER_SAVE_FAILED"))
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn patch_clash_config(payload: crate::ipc::YamlMapping) -> CmdResult {
     feat::patch_clash(&payload.0)
         .await
