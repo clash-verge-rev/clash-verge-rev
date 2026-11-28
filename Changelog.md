@@ -59,6 +59,7 @@
 **🐧 Linux**
 
 - 修复 Linux OpenRC 环境下服务安装失败
+- 修复 Linux 未安装 `gsettings` 时，未开启系统代理也无法保存端口设置
 
 </details>
 

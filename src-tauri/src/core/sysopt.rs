@@ -186,6 +186,12 @@ fn skip_without_network_service(enabling: bool, outcome: sysproxy::Result<()>) -
             logging!(warn, Type::Core, "no active network service, nothing to turn off");
             Ok(false)
         }
+        // Without the desktop's proxy tool the app could never have turned the proxy on.
+        #[cfg(target_os = "linux")]
+        Err(sysproxy::Error::MissingCommand(command)) if !enabling => {
+            logging!(warn, Type::Core, "`{command}` is not installed, nothing to turn off");
+            Ok(false)
+        }
         other => other.map(|()| true).map_err(anyhow::Error::from),
     }
 }
