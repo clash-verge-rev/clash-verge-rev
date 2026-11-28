@@ -73,4 +73,4 @@ Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML 
 
 - File an issue for missing context, tooling bugs, or localization gaps so we can track them.
 - PRs that touch UI should include screenshots or GIFs whenever text length may affect layout.
-- Mention the commands you ran (formatting, type generation, tests) in the PR checklist. If you need extra context or review help, request it via a PR comment.
+- Keep routine command results in the working conversation rather than the PR body; report only material localization or layout gaps. If you need extra context or review help, request it via a PR comment.
