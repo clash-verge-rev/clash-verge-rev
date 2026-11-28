@@ -304,17 +304,7 @@ async fn clean_session_ending_best_effort() -> CleanupResult {
 
 #[cfg(target_os = "macos")]
 pub async fn hide() {
-    use crate::core::lightweight::add_light_weight_timer;
-
-    let enable_auto_light_weight_mode = Config::verge()
-        .await
-        .data_arc()
-        .enable_auto_light_weight_mode
-        .unwrap_or(false);
-
-    if enable_auto_light_weight_mode {
-        add_light_weight_timer().await;
-    }
+    crate::core::lightweight::add_light_weight_timer().await;
 
     if let Some(window) = WindowManager::get_main_window()
         && window.is_visible().unwrap_or(false)

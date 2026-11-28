@@ -21,24 +21,38 @@ pub(super) enum Effect {
 
 pub(super) type Effects = BTreeSet<Effect>;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) enum AfterCommit {
+    BackupSettings,
+}
+
+#[derive(Default)]
+pub(super) struct EffectPlan {
+    pub(super) before_commit: Effects,
+    pub(super) after_commit: BTreeSet<AfterCommit>,
+}
+
 macro_rules! select_field {
     ($effects:ident, $field:ident, NoEffect) => { let _ = $field; };
     ($effects:ident, $field:ident, [$($effect:ident),*]) => {
-        if $field.is_some() { $effects.extend([$(Effect::$effect),*]); }
+        if $field.is_some() { $effects.before_commit.extend([$(Effect::$effect),*]); }
+    };
+    ($effects:ident, $field:ident, (AfterCommit $effect:ident)) => {
+        if $field.is_some() { $effects.after_commit.insert(AfterCommit::$effect); }
     };
     ($effects:ident, $field:ident, Tun) => {
         select_field!($effects, $field, [ClashConfig, TrayMenu, TrayTooltip, TrayIcon]);
         #[cfg(target_os = "linux")]
-        if *$field == Some(true) { $effects.insert(Effect::RestartCore); }
+        if *$field == Some(true) { $effects.before_commit.insert(Effect::RestartCore); }
     };
 }
 
 macro_rules! verge_registry {
     ($( $(#[$cfg:meta])* $field:ident => $rule:tt; )*) => {
-        pub(super) fn verge_effects(patch: &IVerge) -> Effects {
+        pub(super) fn verge_effects(patch: &IVerge) -> EffectPlan {
             // No rest pattern: even fields omitted by serde must be classified at compile time.
             let IVerge { $( $(#[$cfg])* $field, )* } = patch;
-            let mut effects = Effects::new();
+            let mut effects = EffectPlan::default();
             $( $(#[$cfg])* { select_field!(effects, $field, $rule); } )*
             effects
         }
@@ -100,9 +114,9 @@ verge_registry! {
     proxy_layout_column => NoEffect;
     test_list => NoEffect;
     auto_log_clean => NoEffect;
-    enable_auto_backup_schedule => NoEffect;
-    auto_backup_interval_hours => NoEffect;
-    auto_backup_on_change => NoEffect;
+    enable_auto_backup_schedule => (AfterCommit BackupSettings);
+    auto_backup_interval_hours => (AfterCommit BackupSettings);
+    auto_backup_on_change => (AfterCommit BackupSettings);
     #[cfg(not(target_os = "windows"))]
     verge_redir_port => [RestartCore];
     #[cfg(not(target_os = "windows"))]
@@ -130,7 +144,7 @@ verge_registry! {
     enable_external_controller => [RestartCore];
 }
 
-pub(super) fn clash_effects(patch: &serde_yaml_ng::Mapping) -> Effects {
+pub(super) fn clash_effects(patch: &serde_yaml_ng::Mapping) -> EffectPlan {
     use clash_verge_logging::{Type, logging};
     let mut effects = Effects::new();
     for key in patch.keys() {
@@ -157,7 +171,10 @@ pub(super) fn clash_effects(patch: &serde_yaml_ng::Mapping) -> Effects {
     if patch.is_empty() {
         effects.insert(Effect::ClashConfig);
     }
-    effects
+    EffectPlan {
+        before_commit: effects,
+        ..Default::default()
+    }
 }
 
 #[cfg(test)]
@@ -172,7 +189,7 @@ mod tests {
 
     #[test]
     fn representative_verge_patches_map_to_frozen_effects() {
-        assert_eq!(verge_effects(&IVerge::default()), Effects::new());
+        assert_eq!(verge_effects(&IVerge::default()).before_commit, Effects::new());
 
         let cases: [(IVerge, &[Effect]); 9] = [
             (
@@ -216,7 +233,7 @@ mod tests {
         ];
         for (patch, expected) in cases {
             assert_eq!(
-                verge_effects(&patch),
+                verge_effects(&patch).before_commit,
                 expected.iter().copied().collect::<Effects>(),
                 "patch mapping drifted for {expected:?}"
             );
@@ -225,7 +242,7 @@ mod tests {
         let tun = verge_patch(|p| p.enable_tun_mode = Some(true));
         #[cfg(target_os = "linux")]
         assert_eq!(
-            verge_effects(&tun),
+            verge_effects(&tun).before_commit,
             [
                 Effect::RestartCore,
                 Effect::ClashConfig,
@@ -238,7 +255,7 @@ mod tests {
         );
         #[cfg(not(target_os = "linux"))]
         assert_eq!(
-            verge_effects(&tun),
+            verge_effects(&tun).before_commit,
             [
                 Effect::ClashConfig,
                 Effect::TrayIcon,
@@ -281,7 +298,7 @@ mod tests {
         ];
         for (patch, expected) in cases {
             assert_eq!(
-                clash_effects(&patch),
+                clash_effects(&patch).before_commit,
                 expected.iter().copied().collect::<Effects>(),
                 "clash mapping drifted for {expected:?}"
             );

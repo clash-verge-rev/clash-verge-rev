@@ -1,11 +1,11 @@
-use super::effects::{Effect, Effects};
+use super::effects::{AfterCommit, Effect, EffectPlan};
 use crate::core::notify::{Refresh, announce};
 use crate::{
     config::{
         Config, IVerge,
         snapshot::{capture_config_files, restore_files},
     },
-    core::auto_backup::AutoBackupManager,
+    core::auto_backup,
     core::{
         CoreManager, SilentUpdater, autostart, hotkey, lightweight, logger, manager::ConfigUpdateGuard, proxy_control,
         tray,
@@ -108,7 +108,7 @@ async fn ensure_effect(
     Ok(())
 }
 
-pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: Effects) -> Result<()> {
+pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, effects: EffectPlan) -> Result<()> {
     let manager = CoreManager::global();
     let update = manager.claim_config_update(config_write)?;
     let clash = Config::clash().await;
@@ -130,7 +130,7 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
         Patch::Clash(patch) => clash.edit_draft(|draft| draft.patch_config(patch)),
     }
     let result: Result<()> = async {
-        for effect in effects.iter().copied() {
+        for effect in effects.before_commit.iter().copied() {
             let result = Box::pin(ensure_effect(effect, verge_patch, manager, &update)).await;
             if matches!(patch, Patch::Clash(_)) && matches!(effect, Effect::TrayMenu | Effect::TrayIcon) {
                 // Tray failures must not reject an applied Clash mode change.
@@ -166,10 +166,14 @@ pub(super) async fn apply(config_write: &MutexGuard<'_, ()>, patch: Patch<'_>, e
             if patch.auto_check_update == Some(false) {
                 SilentUpdater::global().discard_pending().await;
             }
-            if effects.contains(&Effect::ClashConfig) {
+            if effects.before_commit.contains(&Effect::ClashConfig) {
                 announce(Refresh::Clash);
             }
-            logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
+            for effect in effects.after_commit {
+                match effect {
+                    AfterCommit::BackupSettings => auto_backup::publish_settings(&verge.data_arc()),
+                }
+            }
             announce(Refresh::Verge);
         }
         Patch::Clash(_) => announce(Refresh::Clash),

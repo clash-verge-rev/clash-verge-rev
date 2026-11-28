@@ -7,10 +7,11 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
-use futures::StreamExt as _;
+use futures::{FutureExt as _, StreamExt as _};
 use parking_lot::{Mutex, RwLock};
 use std::{
     collections::HashMap,
+    panic::AssertUnwindSafe,
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -70,11 +71,11 @@ async fn run_timer_profile_update_transition<Started, Update, UpdateFuture, Fini
     Started: FnOnce(),
     Update: FnOnce() -> UpdateFuture,
     UpdateFuture: std::future::Future<Output = Output>,
-    Finished: FnOnce(Output),
+    Finished: FnOnce(std::thread::Result<Output>),
     Completed: FnOnce(),
 {
     update_started();
-    let result = update_profile().await;
+    let result = AssertUnwindSafe(async { update_profile().await }).catch_unwind().await;
     update_finished(result);
     update_completed();
 }
@@ -474,12 +475,13 @@ impl Timer {
             || Self::emit_update_event(uid, true),
             || feat::update_profile(uid, None, false),
             |result| match result {
-                Ok(_) => {
+                Ok(Ok(_)) => {
                     logging!(debug, Type::Timer, "timer task completed for uid: {}", uid);
                 }
-                Err(e) => {
+                Ok(Err(e)) => {
                     logging_error!(Type::Timer, "Failed to update profile uid {}: {e:#}", uid);
                 }
+                Err(_) => logging!(error, Type::Timer, "Profile update worker panicked"),
             },
             || Self::emit_update_event(uid, false),
         )
@@ -763,8 +765,8 @@ mod tests {
             },
             {
                 let calls = Arc::clone(&calls);
-                move |result: anyhow::Result<()>| {
-                    assert!(result.is_ok());
+                move |result| {
+                    assert!(matches!(result, Ok(Ok(()))));
                     calls.lock().push("terminal-result");
                 }
             },

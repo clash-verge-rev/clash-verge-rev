@@ -1,29 +1,22 @@
 use crate::{
     config::{Config, IVerge},
     feat::create_local_backup_with_namer,
-    process::AsyncHandler,
+    process::scheduled_task::{self, Mailbox, Next, ScheduledTask},
     utils::dirs::local_backup_dir,
 };
 use anyhow::Result;
-use chrono::Local;
 use clash_verge_logging::{Type, logging};
 use std::{
     path::PathBuf,
-    sync::{
-        OnceLock,
-        atomic::{AtomicBool, AtomicI64, Ordering},
-    },
+    sync::{Arc, LazyLock},
     time::{Duration, UNIX_EPOCH},
 };
-use tokio::{
-    fs,
-    sync::{Mutex, watch},
-};
+use tokio::{fs, time::Instant};
 
 const DEFAULT_INTERVAL_HOURS: u64 = 24;
 const MIN_INTERVAL_HOURS: u64 = 1;
 const MAX_INTERVAL_HOURS: u64 = 168;
-const MIN_BACKUP_INTERVAL_SECS: i64 = 60;
+const MIN_BACKUP_INTERVAL: Duration = Duration::from_secs(60);
 const AUTO_BACKUP_KEEP: usize = 20;
 const AUTO_MARKER: &str = "-auto-";
 
@@ -42,13 +35,9 @@ impl AutoBackupTrigger {
             Self::GlobalScript => "script",
         }
     }
-
-    const fn is_schedule(self) -> bool {
-        matches!(self, Self::Scheduled)
-    }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct AutoBackupSettings {
     schedule_enabled: bool,
     interval_hours: u64,
@@ -56,6 +45,11 @@ struct AutoBackupSettings {
 }
 
 impl AutoBackupSettings {
+    fn interval(self) -> Option<Duration> {
+        self.schedule_enabled
+            .then(|| Duration::from_secs(self.interval_hours * 3600))
+    }
+
     fn from_verge(verge: &IVerge) -> Self {
         let interval = verge
             .auto_backup_interval_hours
@@ -80,155 +74,139 @@ impl Default for AutoBackupSettings {
     }
 }
 
-pub struct AutoBackupManager {
-    settings_tx: watch::Sender<AutoBackupSettings>,
-    // The watch channel is the single settings store; no duplicate copies.
-    settings_rx: watch::Receiver<AutoBackupSettings>,
-    runner_started: AtomicBool,
-    exec_lock: Mutex<()>,
-    last_backup: AtomicI64,
+#[derive(Default)]
+struct BackupInput {
+    settings: Option<AutoBackupSettings>,
+    restart_schedule: bool,
+    clear_pending_edit: bool,
+    edit_before_settings: Option<AutoBackupTrigger>,
+    edit: Option<AutoBackupTrigger>,
 }
 
-impl AutoBackupManager {
-    pub fn global() -> &'static Self {
-        static INSTANCE: OnceLock<AutoBackupManager> = OnceLock::new();
-        INSTANCE.get_or_init(|| {
-            let (settings_tx, settings_rx) = watch::channel(AutoBackupSettings::default());
-            Self {
-                settings_tx,
-                settings_rx,
-                runner_started: AtomicBool::new(false),
-                exec_lock: Mutex::new(()),
-                last_backup: AtomicI64::new(0),
+impl BackupInput {
+    fn update_settings(&mut self, settings: AutoBackupSettings) -> bool {
+        if self.settings == Some(settings) {
+            return false;
+        }
+        // A pending off/on or interval round trip still restarts the countdown.
+        self.restart_schedule |= self
+            .settings
+            .is_some_and(|previous| previous.interval() != settings.interval());
+        self.settings = Some(settings);
+        if !settings.change_enabled {
+            self.clear_pending_edit = true;
+            self.edit = None;
+            self.edit_before_settings = None;
+        }
+        true
+    }
+
+    const fn request_edit(&mut self, trigger: AutoBackupTrigger) -> bool {
+        let pending = match self.settings {
+            Some(settings) if settings.change_enabled => &mut self.edit,
+            Some(_) => return false,
+            None => &mut self.edit_before_settings,
+        };
+        if pending.is_some() {
+            return false;
+        }
+        *pending = Some(trigger);
+        true
+    }
+}
+
+static BACKUP_REQUESTS: LazyLock<Arc<Mailbox<BackupInput>>> =
+    LazyLock::new(|| scheduled_task::spawn(BackupSchedule::default(), execute_backup));
+
+pub(crate) async fn init() {
+    let _write = Config::lock_config_write().await;
+    publish_settings(&Config::verge().await.data_arc());
+}
+
+pub(crate) fn publish_settings(verge: &IVerge) {
+    let settings = AutoBackupSettings::from_verge(verge);
+    BACKUP_REQUESTS.update(|pending| pending.update_settings(settings));
+}
+
+pub(crate) fn trigger_backup(trigger: AutoBackupTrigger) {
+    BACKUP_REQUESTS.update(|pending| pending.request_edit(trigger));
+}
+
+#[derive(Default)]
+struct BackupSchedule {
+    settings: AutoBackupSettings,
+    due: Option<Instant>,
+    edit: Option<AutoBackupTrigger>,
+    last_backup: Option<Instant>,
+}
+
+impl ScheduledTask for BackupSchedule {
+    type Input = BackupInput;
+    type Work = AutoBackupTrigger;
+    type Output = Result<Instant>;
+
+    fn on_input(&mut self, input: BackupInput, now: Instant) {
+        if input.clear_pending_edit {
+            self.edit = None;
+        }
+        let previous_edit = if self.settings.change_enabled {
+            input.edit_before_settings
+        } else {
+            None
+        };
+        if let Some(settings) = input.settings {
+            if input.restart_schedule || self.settings.interval() != settings.interval() {
+                self.due = settings.interval().map(|interval| now + interval);
             }
-        })
+            self.settings = settings;
+        }
+        if self.settings.change_enabled {
+            self.edit = self.edit.or(previous_edit).or(input.edit);
+        } else {
+            self.edit = None;
+        }
     }
 
-    pub async fn init(&self) -> Result<()> {
-        let settings = Self::load_settings().await;
-        let _ = self.settings_tx.send_replace(settings);
-        self.maybe_start_runner(settings);
-        Ok(())
-    }
-
-    pub async fn refresh_settings(&self) -> Result<()> {
-        let settings = Self::load_settings().await;
-        let _ = self.settings_tx.send_replace(settings);
-        self.maybe_start_runner(settings);
-        Ok(())
-    }
-
-    pub fn trigger_backup(trigger: AutoBackupTrigger) {
-        AsyncHandler::spawn(move || async move {
-            if let Err(err) = Self::global().execute_trigger(trigger).await {
-                logging!(
-                    warn,
-                    Type::Backup,
-                    "Auto backup execution failed ({:?}): {err:#?}",
-                    trigger
-                );
+    fn next(&mut self, now: Instant) -> Next<AutoBackupTrigger> {
+        let throttled = self.last_backup.is_some_and(|last| now - last < MIN_BACKUP_INTERVAL);
+        if self.due.is_some_and(|due| due <= now) {
+            self.due = None;
+            if !throttled {
+                return Next::Run(AutoBackupTrigger::Scheduled);
             }
-        });
+            self.due = self.settings.interval().map(|interval| now + interval);
+        }
+
+        if let Some(edit) = self.edit.take()
+            && !throttled
+        {
+            return Next::Run(edit);
+        }
+        self.due.map_or(Next::Idle, Next::At)
     }
 
-    fn maybe_start_runner(&self, settings: AutoBackupSettings) {
-        if settings.schedule_enabled {
-            self.ensure_runner();
+    fn finished(&mut self, trigger: AutoBackupTrigger, result: std::thread::Result<Self::Output>, now: Instant) {
+        if trigger == AutoBackupTrigger::Scheduled {
+            self.due = self.settings.interval().map(|interval| now + interval);
+        }
+        match result {
+            Ok(Ok(created_at)) => self.last_backup = Some(created_at),
+            Ok(Err(err)) => logging!(warn, Type::Backup, "Auto backup failed ({trigger:?}): {err:#}"),
+            Err(_) => logging!(error, Type::Backup, "Auto backup panicked ({trigger:?})"),
         }
     }
+}
 
-    fn ensure_runner(&self) {
-        if self.runner_started.swap(true, Ordering::SeqCst) {
-            return;
-        }
+async fn execute_backup(trigger: AutoBackupTrigger) -> Result<Instant> {
+    let file_name = create_local_backup_with_namer(|name| append_auto_suffix(name, trigger.slug()).into()).await?;
+    let created_at = Instant::now();
 
-        let mut rx = self.settings_tx.subscribe();
-        AsyncHandler::spawn(move || async move {
-            Self::run_scheduler(&mut rx).await;
-        });
+    if let Err(err) = cleanup_auto_backups().await {
+        logging!(warn, Type::Backup, "Failed to cleanup old auto backups: {err:#?}");
     }
 
-    async fn run_scheduler(rx: &mut watch::Receiver<AutoBackupSettings>) {
-        let mut current = *rx.borrow();
-        loop {
-            if !current.schedule_enabled {
-                if rx.changed().await.is_err() {
-                    break;
-                }
-                current = *rx.borrow();
-                continue;
-            }
-
-            let duration = Duration::from_secs(current.interval_hours.saturating_mul(3600));
-            let sleeper = tokio::time::sleep(duration);
-            tokio::pin!(sleeper);
-
-            tokio::select! {
-                _ = &mut sleeper => {
-                    if let Err(err) = Self::global()
-                        .execute_trigger(AutoBackupTrigger::Scheduled)
-                        .await
-                    {
-                        logging!(
-                            warn,
-                            Type::Backup,
-                            "Scheduled auto backup failed: {err:#?}"
-                        );
-                    }
-                }
-                changed = rx.changed() => {
-                    if changed.is_err() {
-                        break;
-                    }
-                    current = *rx.borrow();
-                }
-            }
-        }
-    }
-
-    async fn execute_trigger(&self, trigger: AutoBackupTrigger) -> Result<()> {
-        let snapshot = *self.settings_rx.borrow();
-
-        if trigger.is_schedule() && !snapshot.schedule_enabled {
-            return Ok(());
-        }
-        if !trigger.is_schedule() && !snapshot.change_enabled {
-            return Ok(());
-        }
-
-        if !self.should_run_now() {
-            return Ok(());
-        }
-
-        let _guard = self.exec_lock.lock().await;
-        if !self.should_run_now() {
-            return Ok(());
-        }
-
-        let file_name = create_local_backup_with_namer(|name| append_auto_suffix(name, trigger.slug()).into()).await?;
-        self.last_backup.store(Local::now().timestamp(), Ordering::Release);
-
-        if let Err(err) = cleanup_auto_backups().await {
-            logging!(warn, Type::Backup, "Failed to cleanup old auto backups: {err:#?}");
-        }
-
-        logging!(info, Type::Backup, "Auto backup created ({:?}): {}", trigger, file_name);
-        Ok(())
-    }
-
-    fn should_run_now(&self) -> bool {
-        let last = self.last_backup.load(Ordering::Acquire);
-        if last == 0 {
-            return true;
-        }
-        let now = Local::now().timestamp();
-        now.saturating_sub(last) >= MIN_BACKUP_INTERVAL_SECS
-    }
-
-    async fn load_settings() -> AutoBackupSettings {
-        let verge = Config::verge().await;
-        AutoBackupSettings::from_verge(&verge.latest_arc())
-    }
+    logging!(info, Type::Backup, "Auto backup created ({trigger:?}): {file_name}");
+    Ok(created_at)
 }
 
 fn append_auto_suffix(file_name: &str, slug: &str) -> String {

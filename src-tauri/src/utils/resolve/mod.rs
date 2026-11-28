@@ -12,7 +12,7 @@ use crate::{
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
-    core::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
+    core::{auto_backup, lightweight::auto_lightweight_boot},
     feat,
     process::AsyncHandler,
     utils::{init, server, window_manager::WindowManager},
@@ -150,7 +150,7 @@ async fn init_auto_lightweight_boot() {
 }
 
 async fn init_auto_backup() {
-    logging_error!(Type::Setup, AutoBackupManager::global().init().await);
+    auto_backup::init().await;
 }
 
 fn init_silent_updater() {

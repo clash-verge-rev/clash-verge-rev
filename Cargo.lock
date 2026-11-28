@@ -1098,6 +1098,7 @@ dependencies = [
  "clash-verge-logging",
  "clash-verge-media-unlock",
  "clash-verge-signal",
+ "clash-verge-task",
  "clash_verge_service_ipc",
  "dark-light",
  "deelevate",
@@ -1219,6 +1220,15 @@ version = "0.1.0"
 dependencies = [
  "clash-verge-logging",
  "log",
+ "tokio",
+]
+
+[[package]]
+name = "clash-verge-task"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "parking_lot 0.13.0",
  "tokio",
 ]
 

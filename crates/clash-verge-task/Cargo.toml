@@ -1,0 +1,16 @@
+[package]
+name = "clash-verge-task"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+futures = { workspace = true }
+parking_lot = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+
+[lints]
+workspace = true

@@ -1,24 +1,19 @@
 # Backend Architecture Guardrails
 
-These rules supplement the repository's root `AGENTS.md`.
+Use [Workspace Crate Architecture](../crates/AGENTS.md) when extracting backend
+capabilities or changing background task ownership.
 
-- **Configuration ownership.** `config` owns source configuration, drafts and
-  persistence. The effects layer owns patch orchestration. Rollbackable
-  transactions publish state after persistence and commit; already applied
-  runtime and independently committed state remain authoritative even when a
-  later step fails. Preserve that state, its notifications and the error.
-- **Effect ownership.** The declarative registry classifies every Verge patch field,
-  including fields without effects and platform-specific fields. Effects
-  reconcile toward the requested state with explicit dependencies and ordering.
-  Configuration rollback does not imply reversal of OS or lifecycle effects.
-- **Shared wire contract.** Notifications are typed. Event names, status values
-  and payload shapes stay compatible with frontend producers and consumers.
-- **Synchronization ownership.** Configuration-write serialization precedes
-  configuration-update ownership, which precedes Core lifecycle ownership.
-  When both are held, the lifecycle lock precedes the DNS lock. Independent
-  transactions retain their ownership boundaries; asynchronous work does not
-  hold synchronous data guards across suspension.
-- **Retry ownership.** Bounded retries share backend policy while preserving
-  attempts, delays and terminal errors. Background monitors own their lifetime
-  and cancellation separately; waiting for a condition or traversing distinct
-  candidates is not a retry policy.
+- **Configuration and effects.** `config` owns source configuration, drafts, and
+  persistence. The effects layer classifies every Verge patch field, including
+  fields without effects and platform-specific fields, and reconciles requested
+  state in dependency order. Publish rollbackable state after persistence and
+  commit. On failure, preserve already applied runtime effects, independently
+  committed state, their notifications, and the error.
+- **Wire contract.** Use typed notifications and preserve event names, status
+  values, and payload compatibility with frontend consumers.
+- **Lock order.** Acquire configuration-write, configuration-update, Core
+  lifecycle, and DNS ownership in that order when needed. Preserve independent
+  transaction boundaries and release synchronous guards before suspension.
+- **Retries.** Reuse the backend retry policy and preserve attempts, delays, and
+  terminal errors. Keep monitor lifetime, condition waits, and candidate fallback
+  under their own contracts.

@@ -18,13 +18,20 @@ use crate::{
 use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
+use clash_verge_task::watch_task;
 use std::{
     borrow::Borrow,
     future::Future,
-    sync::atomic::{AtomicU64, Ordering},
+    sync::{
+        Arc, LazyLock, Once,
+        atomic::{AtomicU64, Ordering},
+    },
     time::Duration,
 };
-use tokio::{sync::Mutex, time::timeout};
+use tokio::{
+    sync::{Mutex, watch},
+    time::timeout,
+};
 
 const CLEAR_ATTEMPTS: u32 = 3;
 const CLEAR_RETRY_DELAY: Duration = Duration::from_millis(100);
@@ -215,23 +222,40 @@ const fn refusal_classification(service_usable: Option<bool>) -> SysproxyFailure
 const LOOPBACK_HOST: &str = "127.0.0.1";
 const MAX_SERVICE_BYPASS_LEN: usize = 8192;
 
-static SERVICE_PROXY_OPERATIONS: ServiceProxyOperations = ServiceProxyOperations::new();
+static SERVICE_PROXY_OPERATIONS: LazyLock<ServiceProxyOperations> = LazyLock::new(ServiceProxyOperations::new);
 
 struct ServiceProxyOperations {
+    guard: watch::Sender<Option<Arc<ServiceGuard>>>,
     guard_generation: AtomicU64,
     operation_lock: Mutex<()>,
 }
 
 impl ServiceProxyOperations {
-    const fn new() -> Self {
+    fn new() -> Self {
         Self {
+            guard: watch::channel(None).0,
             guard_generation: AtomicU64::new(0),
             operation_lock: Mutex::const_new(()),
         }
     }
 
     fn invalidate_guard(&self) -> u64 {
-        self.guard_generation.fetch_add(1, Ordering::AcqRel).wrapping_add(1)
+        let mut generation = 0;
+        self.guard.send_if_modified(|active| {
+            generation = self.guard_generation.fetch_add(1, Ordering::AcqRel).wrapping_add(1);
+            active.take().is_some()
+        });
+        generation
+    }
+
+    fn start_guard(&self, guard: ServiceGuard) -> bool {
+        self.guard.send_if_modified(|active| {
+            if !guard_generation_is_current(&self.guard_generation, guard.generation) {
+                return false;
+            }
+            *active = Some(Arc::new(guard));
+            true
+        })
     }
 
     async fn run_service_operation<F, Fut, T>(&self, operation: F) -> T
@@ -606,51 +630,90 @@ pub async fn refresh_guard() -> Result<()> {
     let proxy = current_service_proxy_config(&verge).await?;
     let proof = service::active_service_session()?;
     let interval = Duration::from_secs(verge.proxy_guard_duration.unwrap_or(30).max(1));
-    AsyncHandler::spawn(move || async move {
-        let mut consecutive_failures = 0u32;
-        loop {
-            tokio::time::sleep(interval).await;
-            match SERVICE_PROXY_OPERATIONS
-                .run_guard_request(
-                    generation,
-                    &proof,
-                    &proxy,
-                    || matches!(*CoreManager::global().get_running_mode(), RunningMode::Service),
-                    service::active_service_session,
-                    || service::set_system_proxy_by_service_with_session(&proxy, &proof),
-                )
-                .await
-            {
-                Ok(true) => consecutive_failures = 0,
-                Ok(false) => {
-                    logging!(debug, Type::Core, "proxy guard superseded (generation {generation})");
-                    break;
-                }
-                Err(error) if is_missing_network_service_failure(&error) => {
-                    consecutive_failures = 0;
-                    logging!(debug, Type::Core, "system proxy guard waits for a network service");
-                }
-                Err(error) => {
-                    consecutive_failures += 1;
-                    logging!(
-                        warn,
-                        Type::Core,
-                        "failed to refresh system proxy through Service (generation {generation}, {}/{}): {:#}",
-                        consecutive_failures,
-                        GUARD_FAILURES_BEFORE_STOPPING,
-                        error
-                    );
-                    if consecutive_failures >= GUARD_FAILURES_BEFORE_STOPPING {
-                        report_guard_stopped(generation, &error).await;
-                        break;
-                    }
+    static START_GUARD_MONITOR: Once = Once::new();
+    START_GUARD_MONITOR.call_once(|| {
+        let receiver = SERVICE_PROXY_OPERATIONS.guard.subscribe();
+        AsyncHandler::spawn(move || {
+            watch_task::run(receiver, monitor_guard, |guard| {
+                let generation = guard.generation;
+                logging!(
+                    error,
+                    Type::Core,
+                    "service proxy guard panicked (generation {generation})"
+                );
+            })
+        });
+    });
+    if SERVICE_PROXY_OPERATIONS.start_guard(ServiceGuard {
+        generation,
+        proof,
+        proxy,
+        interval,
+    }) {
+        notification::retire_guard_failures();
+    }
+    Ok(())
+}
+
+struct ServiceGuard {
+    generation: u64,
+    proof: Arc<OwnerSessionProof>,
+    proxy: MacosProxyConfig,
+    interval: Duration,
+}
+
+async fn monitor_guard(guard: Arc<ServiceGuard>, mut updates: watch::Receiver<Option<Arc<ServiceGuard>>>) {
+    let ServiceGuard {
+        generation,
+        proof,
+        proxy,
+        interval,
+    } = guard.as_ref();
+    let mut consecutive_failures = 0u32;
+    loop {
+        tokio::select! {
+            biased;
+            _ = updates.changed() => return,
+            () = tokio::time::sleep(*interval) => {}
+        }
+
+        match SERVICE_PROXY_OPERATIONS
+            .run_guard_request(
+                *generation,
+                proof,
+                proxy,
+                || matches!(*CoreManager::global().get_running_mode(), RunningMode::Service),
+                service::active_service_session,
+                || service::set_system_proxy_by_service_with_session(proxy, proof),
+            )
+            .await
+        {
+            Ok(true) => consecutive_failures = 0,
+            Ok(false) => {
+                logging!(debug, Type::Core, "proxy guard superseded (generation {generation})");
+                return;
+            }
+            Err(error) if is_missing_network_service_failure(&error) => {
+                consecutive_failures = 0;
+                logging!(debug, Type::Core, "system proxy guard waits for a network service");
+            }
+            Err(error) => {
+                consecutive_failures += 1;
+                logging!(
+                    warn,
+                    Type::Core,
+                    "failed to refresh system proxy through Service (generation {generation}, {}/{}): {:#}",
+                    consecutive_failures,
+                    GUARD_FAILURES_BEFORE_STOPPING,
+                    error
+                );
+                if consecutive_failures >= GUARD_FAILURES_BEFORE_STOPPING {
+                    report_guard_stopped(*generation, &error).await;
+                    return;
                 }
             }
         }
-    });
-    // Retire only after the replacement guard starts successfully.
-    notification::retire_guard_failures();
-    Ok(())
+    }
 }
 
 const GUARD_FAILURES_BEFORE_STOPPING: u32 = 3;
