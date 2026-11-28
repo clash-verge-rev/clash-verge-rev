@@ -13,7 +13,7 @@ use crate::{
     },
     enhance,
     process::AsyncHandler,
-    utils::{dirs, help},
+    utils::{dirs, help, yaml_emitter},
 };
 use anyhow::{Result, anyhow};
 use backon::{ExponentialBuilder, Retryable as _};
@@ -226,7 +226,7 @@ impl Config {
             {
                 return Ok(std::sync::Arc::clone(cached));
             }
-            let yaml_str = std::sync::Arc::new(serde_yaml_ng::to_string(config)?);
+            let yaml_str = std::sync::Arc::new(yaml_emitter::to_mihomo_config_string(config)?);
             *RUNTIME_YAML_CACHE.lock() = Some((key, std::sync::Arc::clone(&yaml_str)));
             Ok(yaml_str)
         })
