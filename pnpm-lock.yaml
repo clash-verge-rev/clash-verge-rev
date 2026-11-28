@@ -312,8 +312,8 @@ importers:
         specifier: github:clash-verge-rev/tauri-plugin-mihomo#main
         version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/7e4fa8642cf6c394ed88b5a969420d8eab60087f
       tldts:
-        specifier: 7.6.1
-        version: 7.6.1
+        specifier: 7.6.2
+        version: 7.6.2
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
@@ -4057,11 +4057,11 @@ packages:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
 
-  tldts-core@7.6.1:
-    resolution: {integrity: sha512-FzTCzmZVba1BJVZQJTGVfaRUV5dxPNV4nQZZuFrSitnsXS3k81XyDBhOUzB9/41cyVKdt2TW3YfIv9KKCBMMXg==}
+  tldts-core@7.6.2:
+    resolution: {integrity: sha512-/ZG+gignPzfgtpWNnbS7AKcU1ptt9jDqhIlr7vHOaw/Psz6HjXyB2CeFS3RrUGYwER/Q4F6IS8+9rZuYfRUz+Q==}
 
-  tldts@7.6.1:
-    resolution: {integrity: sha512-+q5zzJwjNwBPQV30jnqIaQMeZ/nQfc790uMq1vDj3kCGKNfokh+HYfwtd1d80OdSPNVS+mHV8vMd+yDtlK/+mQ==}
+  tldts@7.6.2:
+    resolution: {integrity: sha512-IylRLICacWmPVf5tQIOvKkZzf2Vp8qJT3bAZox+3bWXj5P/pn45PC1a9l86loP7D/ywbSt/h/NnyIoR0fg4utA==}
     hasBin: true
 
   trim-lines@3.0.1:
@@ -8170,11 +8170,11 @@ snapshots:
       fdir: 6.5.0(picomatch@4.0.7)
       picomatch: 4.0.7
 
-  tldts-core@7.6.1: {}
+  tldts-core@7.6.2: {}
 
-  tldts@7.6.1:
+  tldts@7.6.2:
     dependencies:
-      tldts-core: 7.6.1
+      tldts-core: 7.6.2
 
   trim-lines@3.0.1: {}
 
