@@ -5,15 +5,15 @@ use crate::{
 };
 
 use clash_verge_logging::{Type, logging};
+use clash_verge_task::countdown::{self, Countdown};
 
 use crate::utils::window_manager::WindowManager;
 use anyhow::Result;
 use parking_lot::Mutex;
 use std::sync::LazyLock;
 use std::sync::atomic::{AtomicU8, AtomicU64, Ordering};
+use std::time::Duration;
 use tauri::Listener as _;
-use tokio::sync::mpsc;
-use tokio::time::{Duration, sleep};
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -86,17 +86,26 @@ static WINDOW_LISTENERS: Mutex<WindowListeners> = Mutex::new(WindowListeners {
     },
 });
 
-enum TimerCommand {
-    Arm(u64),
-    Disarm,
-}
-
 static TIMER_GENERATION: AtomicU64 = AtomicU64::new(0);
 
-static TIMER_COMMANDS: LazyLock<mpsc::UnboundedSender<TimerCommand>> = LazyLock::new(|| {
-    let (sender, receiver) = mpsc::unbounded_channel();
-    AsyncHandler::spawn(move || run_light_weight_timer(receiver));
-    sender
+static COUNTDOWN: LazyLock<Countdown<u64>> = LazyLock::new(|| {
+    let (countdown, driver) = countdown::new(
+        // Unlisten can be deferred while Tauri is delivering an event.
+        |generation| (generation == TIMER_GENERATION.load(Ordering::Acquire)).then(light_weight_delay),
+        |generation| {
+            if generation == TIMER_GENERATION.load(Ordering::Acquire) {
+                logging!(
+                    info,
+                    Type::Timer,
+                    "Lightweight mode timer expired, entering lightweight mode"
+                );
+                begin_lightweight_mode();
+                AsyncHandler::spawn(refresh_lightweight_tray_state);
+            }
+        },
+    );
+    AsyncHandler::spawn(move || driver);
+    countdown
 });
 
 #[inline]
@@ -162,7 +171,7 @@ async fn enable_auto_light_weight_mode_at(generation: u64) {
 pub fn disable_auto_light_weight_mode() {
     logging!(info, Type::Lightweight, "关闭自动轻量模式");
     TIMER_GENERATION.fetch_add(1, Ordering::AcqRel);
-    cancel_light_weight_timer();
+    COUNTDOWN.disarm();
     let mut listeners = WINDOW_LISTENERS.lock();
     listeners.close.cancel();
     listeners.focus.cancel();
@@ -171,7 +180,7 @@ pub fn disable_auto_light_weight_mode() {
 pub async fn entry_lightweight_mode() -> bool {
     let entered = begin_lightweight_mode();
     if entered {
-        cancel_light_weight_timer();
+        COUNTDOWN.disarm();
     }
     refresh_lightweight_tray_state().await;
     entered
@@ -203,7 +212,7 @@ pub async fn exit_lightweight_mode() -> bool {
     if auto_light_weight_is_enabled().await {
         setup_auto_light_weight_listeners(generation);
     }
-    cancel_light_weight_timer();
+    COUNTDOWN.disarm();
     record_state_and_log(LightweightState::Normal);
     refresh_lightweight_tray_state().await;
     true
@@ -213,7 +222,7 @@ pub async fn exit_lightweight_mode() -> bool {
 pub async fn add_light_weight_timer() {
     let generation = TIMER_GENERATION.load(Ordering::Acquire);
     if auto_light_weight_is_enabled().await {
-        let _ = TIMER_COMMANDS.send(TimerCommand::Arm(generation));
+        COUNTDOWN.arm(generation);
     }
 }
 
@@ -230,51 +239,18 @@ fn setup_auto_light_weight_listeners(generation: u64) {
         return;
     }
     listeners.close.setup(move || {
-        let _ = TIMER_COMMANDS.send(TimerCommand::Arm(generation));
+        COUNTDOWN.arm(generation);
         logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
     });
     listeners.focus.setup(move || {
         if generation == TIMER_GENERATION.load(Ordering::Acquire) {
-            cancel_light_weight_timer();
+            COUNTDOWN.disarm();
             logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
         }
     });
 }
 
-async fn run_light_weight_timer(mut commands: mpsc::UnboundedReceiver<TimerCommand>) {
-    while let Some(command) = commands.recv().await {
-        let TimerCommand::Arm(generation) = command else {
-            continue;
-        };
-        // Unlisten can be deferred while Tauri is delivering an event.
-        if generation != TIMER_GENERATION.load(Ordering::Acquire) {
-            continue;
-        }
-
-        let countdown = wait_for_light_weight_timeout();
-        tokio::pin!(countdown);
-        loop {
-            tokio::select! {
-                biased;
-                command = commands.recv() => match command {
-                    Some(TimerCommand::Arm(_)) => {}
-                    Some(TimerCommand::Disarm) => break,
-                    None => return,
-                },
-                () = &mut countdown => {
-                    if generation == TIMER_GENERATION.load(Ordering::Acquire) {
-                        logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
-                        begin_lightweight_mode();
-                        AsyncHandler::spawn(refresh_lightweight_tray_state);
-                    }
-                    break;
-                }
-            }
-        }
-    }
-}
-
-async fn wait_for_light_weight_timeout() {
+async fn light_weight_delay() -> Duration {
     let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
     logging!(
         info,
@@ -282,9 +258,5 @@ async fn wait_for_light_weight_timeout() {
         "Lightweight mode timer set, entering lightweight mode in {} minutes",
         once_by_minutes
     );
-    sleep(Duration::from_secs(once_by_minutes.saturating_mul(60))).await;
-}
-
-fn cancel_light_weight_timer() {
-    let _ = TIMER_COMMANDS.send(TimerCommand::Disarm);
+    Duration::from_secs(once_by_minutes.saturating_mul(60))
 }

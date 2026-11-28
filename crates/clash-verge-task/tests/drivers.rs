@@ -1,8 +1,9 @@
 use clash_verge_task::{
+    countdown,
     scheduled_task::{self, Mailbox, Next, ScheduledTask},
     watch_task,
 };
-use std::{error::Error, time::Duration};
+use std::{error::Error, future::ready, time::Duration};
 use tokio::{
     sync::{mpsc, oneshot, watch},
     time::{Instant, advance, timeout},
@@ -54,6 +55,58 @@ async fn receive<T: Send>(receiver: &mut mpsc::UnboundedReceiver<T>) -> Result<T
     timeout(Duration::from_secs(10), receiver.recv())
         .await?
         .ok_or_else(|| "driver event channel closed".into())
+}
+
+#[tokio::test(start_paused = true)]
+async fn countdown_keeps_the_first_arm_until_it_expires() -> TestResult {
+    let delay = Duration::from_secs(4);
+    let (elapsed, mut events) = mpsc::unbounded_channel();
+    let (countdown, driver) = countdown::new(
+        move |_| Some(ready(delay)),
+        move |input| {
+            let _ = elapsed.send(input);
+        },
+    );
+    let mut driver = Box::pin(driver);
+    let start = Instant::now();
+    countdown.arm(1);
+    assert!(futures::poll!(driver.as_mut()).is_pending());
+    advance(Duration::from_secs(2)).await;
+    countdown.arm(2);
+    let driver = tokio::spawn(driver);
+
+    assert_eq!(receive(&mut events).await?, 1);
+    assert_eq!(Instant::now() - start, delay);
+    drop(countdown);
+    driver.await?;
+    assert!(events.try_recv().is_err());
+    Ok(())
+}
+
+#[tokio::test(start_paused = true)]
+async fn ready_disarm_wins_and_the_next_arm_starts_a_new_countdown() -> TestResult {
+    let delay = Duration::from_secs(4);
+    let (elapsed, mut events) = mpsc::unbounded_channel();
+    let (countdown, driver) = countdown::new(
+        move |_| Some(ready(delay)),
+        move |input| {
+            let _ = elapsed.send(input);
+        },
+    );
+    let mut driver = Box::pin(driver);
+    countdown.arm(1);
+    assert!(futures::poll!(driver.as_mut()).is_pending());
+    advance(delay).await;
+    countdown.disarm();
+    countdown.arm(2);
+    let rearmed_at = Instant::now();
+    let driver = tokio::spawn(driver);
+
+    assert_eq!(receive(&mut events).await?, 2);
+    assert_eq!(Instant::now() - rearmed_at, delay);
+    drop(countdown);
+    driver.await?;
+    Ok(())
 }
 
 #[tokio::test(start_paused = true)]
